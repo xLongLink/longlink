@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "viavai"
+version = "0.0.0"
+dependencies = [
+    "alembic",
+    "click"
+]
+requires-python = ">=3.13"
+authors = [
+    {name = "Leonardo Saurwein"}
+]
+maintainers = []
+description = "Lovely Spam! Wonderful Spam!"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE*"]
+keywords = ["egg", "bacon", "sausage", "tomatoes", "Lobster Thermidor"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+
+[project.optional-dependencies]
+cli = [
+  "rich",
+  "click",
+]
+
+[project.urls]
+Homepage = "https://example.com"
+Documentation = "https://readthedocs.org"
+Repository = "https://github.com/me/spam.git"
+"Bug Tracker" = "https://github.com/me/spam/issues"
+Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+
+[project.scripts]
+viavai = "viavai.cli:main"
