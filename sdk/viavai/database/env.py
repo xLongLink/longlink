@@ -1,6 +1,6 @@
 from alembic import context
-from app.db import Base, engine
-from app import models
+from viavai.database.base import Base, engine
+
 
 target_metadata = Base.metadata
 
@@ -11,7 +11,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
-        render_as_batch=True,  # REQUIRED for SQLite
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -24,7 +24,7 @@ def run_migrations_online():
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
-            render_as_batch=True,  # REQUIRED for SQLite
+            render_as_batch=True,
         )
 
         with context.begin_transaction():

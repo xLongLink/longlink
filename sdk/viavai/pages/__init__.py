@@ -1,1 +1,0 @@
-# Default pages -> Issues / Settings / ecc
