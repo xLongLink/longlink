@@ -68,7 +68,6 @@ const modules = [
 export function MarketingPage() {
     return (
         <div className="min-h-screen bg-[#0b0f14] text-white">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_rgba(11,15,20,0.85)_55%)]" />
             <div className="relative">
                 <header className="border-b border-white/10">
                     <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
@@ -204,7 +203,7 @@ export function MarketingPage() {
                                     ))}
                                 </div>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800/60 p-6">
+                            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
                                 <div className="space-y-3">
                                     <div className="h-2 w-full rounded-full bg-white/10">
                                         <div className="h-2 w-3/4 rounded-full bg-blue-500" />
@@ -223,7 +222,7 @@ export function MarketingPage() {
                     </section>
 
                     <section className="mt-20" id="careers">
-                        <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-r from-blue-950 via-blue-900/50 to-slate-900 px-8 py-10 text-center">
+                        <div className="rounded-3xl border border-white/10 bg-white/5 px-8 py-10 text-center">
                             <h2 className="text-3xl font-semibold">
                                 Ready to get started?
                             </h2>

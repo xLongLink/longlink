@@ -2,7 +2,7 @@ from viavai.controllers.routes import routes
 
 
 class ViaVai:
-    def __init__(self, title: str, description: str, version: str):
+    def __init__(self, title: str = "Sample", description: str = "Sample description", version: str = "0.0.0"):
         self.title = title
         self.description = description
         self.version = version
