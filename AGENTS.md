@@ -14,6 +14,7 @@ If there were any edits in `web` run:
 
 ```bash
 bun run lint
+bun run format
 bun run build
 ```
 
