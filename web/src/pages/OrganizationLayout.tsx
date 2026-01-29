@@ -25,19 +25,17 @@ export function OrganizationLayout() {
 
     return (
         <div className="min-h-screen bg-[#0b0f14] text-white">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_rgba(11,15,20,0.9)_55%)]" />
             <div className="relative">
                 <header className="border-b border-white/10">
                     <div className="mx-auto w-full max-w-6xl px-6 pb-2 pt-4">
                         <div className="flex items-center justify-between gap-6">
                             <div className="flex items-center gap-4 text-white/80">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-blue-300">
+                                <NavLink
+                                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-blue-300 transition hover:bg-white/10"
+                                    to="/"
+                                >
                                     <BarChart3 className="h-5 w-5" />
-                                </div>
-                                <span className="text-base font-semibold text-white">
-                                    xPlan
-                                </span>
-                                <span className="text-white/30">|</span>
+                                </NavLink>
                                 <span className="text-sm font-semibold text-white/70">
                                     {organizationName}
                                 </span>

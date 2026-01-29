@@ -1,7 +1,6 @@
 from typing import Callable, Awaitable, Any
 
 
-
 routes: dict[str, Callable[..., Awaitable[Any]]] = {}
 
 
