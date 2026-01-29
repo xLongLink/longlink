@@ -41,7 +41,6 @@ async def sample_post_endpoint_with_params(object: int, start: int = 0, end: int
     return "Sample POST endpoint response"
 
 
-
 # Example that return a Pydantic model
 @post("/sample/user")
 async def sample_post_user_endpoint() -> UserModel:

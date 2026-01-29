@@ -1,10 +1,8 @@
 import unittest
 from httpx import AsyncClient, ASGITransport
-
-from pydantic import BaseModel
-
 from viavai import ViaVai, post
-
+from pydantic import BaseModel
+from typing import Any
 
 app = ViaVai()
 
@@ -21,10 +19,15 @@ async def valid_user() -> UserModel:
 
 @post("/user/bad")
 async def invalid_user() -> UserModel:
-    return {"id": 2, "username": "bad"}
+    obj: Any = {"id": 2, "username": "bad"}
+    return obj
 
 
 class TestResponseModelEnforcement(unittest.IsolatedAsyncioTestCase):
+    """
+    Test that the response model enforcement works correctly
+    """
+    
     async def test_returns_model_when_type_hint_matches(self):
         transport = ASGITransport(app=app)
 
