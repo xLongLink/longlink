@@ -7,7 +7,8 @@ name = "viavai"
 version = "0.0.0"
 dependencies = [
     "alembic",
-    "click"
+    "click",
+    "uvicorn"
 ]
 requires-python = ">=3.13"
 authors = [
