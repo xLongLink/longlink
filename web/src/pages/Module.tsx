@@ -1,50 +1,30 @@
 import { Navigation } from '@/components/navigation';
-import { Route, Routes, useParams } from 'react-router';
-import { Overview } from '@/components/overview';
+import { Navigate, Route, Routes, useParams } from 'react-router';
 import { Tools } from '@/components/tools';
 import { Workflows } from '@/components/workflows';
 import { Solutions } from '@/components/solutions';
-import {
-    GitBranch,
-    LayoutGrid,
-    Layers,
-    Users,
-    Wrench,
-} from 'lucide-react';
+import { FileText, Settings, Ticket } from 'lucide-react';
 
-const orgTabs = [
+const moduleTabs = [
     {
-        value: 'overview',
-        label: 'Overview',
-        path: '',
-        icon: LayoutGrid,
+        value: 'files',
+        label: 'Files',
+        path: 'files',
+        icon: FileText,
     },
     {
-        value: 'tools',
-        label: 'Tools',
-        path: 'tools',
-        icon: Wrench,
+        value: 'tickets',
+        label: 'Tickets',
+        path: 'tickets',
+        icon: Ticket,
     },
     {
-        value: 'solutions',
-        label: 'Solutions',
-        path: 'solutions',
-        icon: Layers,
-    },
-    {
-        value: 'workflows',
-        label: 'Workflows',
-        path: 'workflows',
-        icon: GitBranch,
-    },
-    {
-        value: 'people',
-        label: 'People',
-        path: 'people',
-        icon: Users,
+        value: 'settings',
+        label: 'Settings',
+        path: 'settings',
+        icon: Settings,
     },
 ];
-
 
 export function Module() {
     const { tool } = useParams();
@@ -52,8 +32,15 @@ export function Module() {
 
     return (
         <Routes>
-            <Route element={<Navigation tabs={orgTabs} basePathSuffix={basePathSuffix} />}>
-                <Route index element={<Overview />} />
+            <Route
+                element={
+                    <Navigation
+                        tabs={moduleTabs}
+                        basePathSuffix={basePathSuffix}
+                    />
+                }
+            >
+                <Route index element={<Navigate to="files" replace />} />
                 <Route path="files" element={<Tools />} />
                 <Route path="tickets" element={<Solutions />} />
                 <Route path="settings" element={<Workflows />} />
