@@ -18,7 +18,10 @@ class ViaVai:
         method = scope["method"]
         path = scope["path"]
 
-        handler, params = match_route(method, path)
+        query_string = scope.get("query_string", b"")
+        if isinstance(query_string, bytes):
+            query_string = query_string.decode()
+        handler, params = match_route(method, path, query_string=query_string)
 
         if not handler:
             await send({

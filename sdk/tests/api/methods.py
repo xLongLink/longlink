@@ -15,6 +15,10 @@ async def sample_get():
 async def sample_post():
     return "POST response"
 
+@post("/params/{object}?{start}&{end}")
+async def sample_post_endpoint_with_params(object: int, start: int = 0, end: int = 10):
+    return "Sample POST endpoint response"
+
 @put("/")
 async def sample_put():
     return "PUT response"
@@ -46,6 +50,24 @@ class TestSimpleMethods(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.text, "POST response")
+
+    async def test_post_with_params(self):
+        transport = ASGITransport(app=app)
+
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.post("/params/5?start=2&end=8")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.text, "Sample POST endpoint response")
+
+    async def test_post_with_params_defaults(self):
+        transport = ASGITransport(app=app)
+
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.post("/params/5")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.text, "Sample POST endpoint response")
 
     async def test_put(self):
         transport = ASGITransport(app=app)
