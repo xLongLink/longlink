@@ -17,10 +17,10 @@ export function OrganizationLayout() {
     const organizationName = formatOrganizationName(org || 'org');
     const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
         [
-            'flex items-center gap-2 border-b-2 border-transparent px-1 py-3 text-sm font-medium transition',
+            'relative flex items-center gap-2 px-1 py-3 text-sm font-medium transition',
             isActive
-                ? 'border-blue-500 text-white'
-                : 'text-white/70 hover:text-white hover:border-white/20',
+                ? 'text-white after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:bg-blue-500'
+                : 'text-white/70 hover:text-white',
         ].join(' ');
 
     return (
@@ -41,59 +41,52 @@ export function OrganizationLayout() {
                                 </span>
                             </div>
                         </div>
-                        <nav className="flex flex-wrap items-center gap-6 text-sm">
-                            <NavLink
-                                className={navLinkClasses}
-                                end
-                                to={`/${org}`}
-                            >
-                                <LayoutGrid className="h-4 w-4" />
-                                Overview
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
-                                to={`/${org}/projects`}
-                            >
-                                <FolderKanban className="h-4 w-4" />
-                                Projects
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
-                                to={`/${org}/offering`}
-                            >
-                                <Briefcase className="h-4 w-4" />
-                                Offerings
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
-                                to={`/${org}/careers`}
-                            >
-                                <Building2 className="h-4 w-4" />
-                                Careers
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
-                                to={`/${org}/news`}
-                            >
-                                <Newspaper className="h-4 w-4" />
-                                News
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
-                                to={`/${org}/people`}
-                            >
-                                <Users className="h-4 w-4" />
-                                People
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
-                                to={`/${org}/documents`}
-                            >
-                                <BookOpen className="h-4 w-4" />
-                                Documents
-                            </NavLink>
-                        </nav>
                     </div>
+                    <nav className="flex w-full flex-wrap items-center gap-6 px-6 pb-2 text-sm">
+                        <NavLink className={navLinkClasses} end to={`/${org}`}>
+                            <LayoutGrid className="h-4 w-4" />
+                            Overview
+                        </NavLink>
+                        <NavLink
+                            className={navLinkClasses}
+                            to={`/${org}/projects`}
+                        >
+                            <FolderKanban className="h-4 w-4" />
+                            Projects
+                        </NavLink>
+                        <NavLink
+                            className={navLinkClasses}
+                            to={`/${org}/offering`}
+                        >
+                            <Briefcase className="h-4 w-4" />
+                            Offerings
+                        </NavLink>
+                        <NavLink
+                            className={navLinkClasses}
+                            to={`/${org}/careers`}
+                        >
+                            <Building2 className="h-4 w-4" />
+                            Careers
+                        </NavLink>
+                        <NavLink className={navLinkClasses} to={`/${org}/news`}>
+                            <Newspaper className="h-4 w-4" />
+                            News
+                        </NavLink>
+                        <NavLink
+                            className={navLinkClasses}
+                            to={`/${org}/people`}
+                        >
+                            <Users className="h-4 w-4" />
+                            People
+                        </NavLink>
+                        <NavLink
+                            className={navLinkClasses}
+                            to={`/${org}/documents`}
+                        >
+                            <BookOpen className="h-4 w-4" />
+                            Documents
+                        </NavLink>
+                    </nav>
                 </header>
 
                 <main className="mx-auto grid w-full max-w-6xl gap-8 px-6 pb-16 pt-10 lg:grid-cols-[320px_1fr]">
