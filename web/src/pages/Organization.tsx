@@ -7,7 +7,7 @@ import { GitBranch, LayoutGrid, Layers, Users, Wrench } from 'lucide-react';
 import { Navigation } from '@/components/navigation';
 
 
-function OrganizationLayout() {
+export function Organization() {
     const orgTabs = [
         { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
         { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
@@ -16,14 +16,9 @@ function OrganizationLayout() {
         { value: 'people', label: 'People', path: 'people', icon: Users },
     ];
 
-    return <Navigation tabs={orgTabs} />;
-}
-
-
-export function Organization() {
     return (
         <Routes>
-            <Route element={<OrganizationLayout />}>
+            <Route element={<Navigation tabs={orgTabs} />}>
                 <Route index element={<Overview />} />
                 <Route path="tools" element={<Tools />} />
                 <Route path="solutions" element={<Solutions />} />
