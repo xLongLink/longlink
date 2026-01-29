@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 
 
 export function Tools() {
+    const tools = [
+        { id: 1, name: 'sample' },
+        { id: 2, name: 'test' }
+    ];
 
     return (
         <div className="space-y-6">
@@ -17,7 +21,7 @@ export function Tools() {
                             Tools
                         </h1>
                         <p className="text-sm text-white/60">
-                            0 tools
+                            {tools.length} tools
                         </p>
                     </div>
                 </div>
@@ -27,17 +31,13 @@ export function Tools() {
                 </Button>
             </div>
 
-            <Card className="p-10 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-500/10 text-blue-300 ring-1 ring-blue-500/30">
-                    <Sparkles className="h-7 w-7" />
-                </div>
-                <h2 className="mt-6 text-lg font-semibold">
-                    No tools yet
-                </h2>
-                <p className="mt-2 text-sm text-white/60">
-                    Tools are organizations level applications.
-                </p>
-            </Card>
+            <div className="grid gap-4">
+                {tools.map(tool => (
+                    <Card key={tool.id} className="p-6">
+                        <h3 className="font-semibold text-white">{tool.name}</h3>
+                    </Card>
+                ))}
+            </div>
         </div>
     );
 }

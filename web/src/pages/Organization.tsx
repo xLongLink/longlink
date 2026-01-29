@@ -2,32 +2,35 @@ import { Overview } from '@/components/overview';
 import { Tools } from '@/components/tools';
 import { Workflows } from '@/components/workflows';
 import { Solutions } from '@/components/solutions';
-import { Routes, Route } from '@/components/navigation';
-import { GitBranch, LayoutGrid, Layers, Users, Wrench, BarChart3 } from 'lucide-react';
+import { Route, Routes } from 'react-router';
+import { GitBranch, LayoutGrid, Layers, Users, Wrench } from 'lucide-react';
+import { Navigation } from '@/components/navigation';
+
+
+function OrganizationLayout() {
+    const orgTabs = [
+        { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+        { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
+        { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
+        { value: 'workflows', label: 'Workflows', path: 'workflows', icon: GitBranch },
+        { value: 'people', label: 'People', path: 'people', icon: Users },
+    ];
+
+    return <Navigation tabs={orgTabs} />;
+}
 
 
 export function Organization() {
     return (
         <Routes>
-            <Route value="overview" label="Overview" path="" icon={<LayoutGrid />}>
-                <Overview />
-            </Route>
-            <Route value="tools" label="Tools" path="tools" icon={<Wrench />}>
-                <Tools />
-            </Route>
-            <Route value="solutions" label="Solutions" path="solutions" icon={<Layers />}>
-                <Solutions />
-            </Route>
-            <Route value="workflows" label="Workflows" path="workflows" icon={<GitBranch />}>
-                <Workflows />
-            </Route>
-            <Route value="people" label="People" path="people" icon={<Users />}>
-                <h1>People</h1>
-            </Route>
-            <Route value="notfound" label="Not Found" path="*" icon={<BarChart3 />}>
-                <h1>Not Found</h1>
+            <Route element={<OrganizationLayout />}>
+                <Route index element={<Overview />} />
+                <Route path="tools" element={<Tools />} />
+                <Route path="solutions" element={<Solutions />} />
+                <Route path="workflows" element={<Workflows />} />
+                <Route path="people" element={<div>People Page</div>} />
+                <Route path="*" element={<div>Not Found</div>} />
             </Route>
         </Routes>
-
     );
 }
