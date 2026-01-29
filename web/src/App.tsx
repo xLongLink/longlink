@@ -1,8 +1,7 @@
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import { Home } from './pages/Home';
 import { Organization } from './pages/Organization';
-import { OrganizationOverview } from './pages/OrganizationOverview';
-import { OrganizationPlaceholder } from './pages/OrganizationPlaceholder';
+import { Placeholder } from './pages/Placeholder';
 
 
 import { ThemeProvider } from "@/components/theme-provider"
@@ -16,12 +15,11 @@ const router = createBrowserRouter([
         path: '/:org',
         element: <Organization />,
         children: [
-            { index: true, element: <OrganizationOverview /> },
-            { path: 'projects', element: <OrganizationPlaceholder title="Projects" /> },
-            {
-                path: 'people',
-                element: <OrganizationPlaceholder title="People" />,
-            }
+            { index: true, element: <Placeholder title="Overview" /> },
+            { path: 'tools', element: <Placeholder title="Tools" /> },
+            { path: 'solutions', element: <Placeholder title="Solutions" /> },
+            { path: 'workflows', element: <Placeholder title="Workflows" /> },
+            { path: 'people', element: <Placeholder title="People" /> }
         ],
     },
 ]);

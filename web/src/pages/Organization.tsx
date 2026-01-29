@@ -1,6 +1,12 @@
 import {
-    BarChart3, FolderKanban, LayoutGrid,
-    Users, Settings, MapPin
+    BarChart3,
+    GitBranch,
+    LayoutGrid,
+    Layers,
+    Users,
+    Settings,
+    MapPin,
+    Wrench,
 } from 'lucide-react';
 
 import {
@@ -22,9 +28,10 @@ export function Organization() {
         const path = location.pathname;
 
         if (path === base) return 'overview';
-        if (path.startsWith(`${base}/projects`)) return 'projects';
+        if (path.startsWith(`${base}/tools`)) return 'tools';
+        if (path.startsWith(`${base}/solutions`)) return 'solutions';
+        if (path.startsWith(`${base}/workflows`)) return 'workflows';
         if (path.startsWith(`${base}/people`)) return 'people';
-        if (path.startsWith(`${base}/documents`)) return 'documents';
 
         return 'overview';
     })();
@@ -55,8 +62,14 @@ export function Organization() {
                                 case 'overview':
                                     navigate(`/${org}`);
                                     break;
-                                case 'projects':
-                                    navigate(`/${org}/projects`);
+                                case 'tools':
+                                    navigate(`/${org}/tools`);
+                                    break;
+                                case 'solutions':
+                                    navigate(`/${org}/solutions`);
+                                    break;
+                                case 'workflows':
+                                    navigate(`/${org}/workflows`);
                                     break;
                                 case 'people':
                                     navigate(`/${org}/people`);
@@ -64,20 +77,28 @@ export function Organization() {
                             }
                         }}
                     >
-                        <TabsList variant="line">
-                            <TabsTrigger value="overview">
-                                <LayoutGrid className="h-4 w-4" />
-                                Overview
-                            </TabsTrigger>
-                            <TabsTrigger value="projects">
-                                <FolderKanban className="h-4 w-4" />
-                                Projects
-                            </TabsTrigger>
-                            <TabsTrigger value="people">
-                                <Users className="h-4 w-4" />
-                                People
-                            </TabsTrigger>
-                        </TabsList>
+                    <TabsList variant="line" className="gap-4">
+                        <TabsTrigger value="overview" className="cursor-pointer">
+                            <LayoutGrid className="h-4 w-4" />
+                            Overview
+                        </TabsTrigger>
+                        <TabsTrigger value="tools" className="cursor-pointer">
+                            <Wrench className="h-4 w-4" />
+                            Tools
+                        </TabsTrigger>
+                        <TabsTrigger value="solutions" className="cursor-pointer">
+                            <Layers className="h-4 w-4" />
+                            Solutions
+                        </TabsTrigger>
+                        <TabsTrigger value="workflows" className="cursor-pointer">
+                            <GitBranch className="h-4 w-4" />
+                            Workflows
+                        </TabsTrigger>
+                        <TabsTrigger value="people" className="cursor-pointer">
+                            <Users className="h-4 w-4" />
+                            People
+                        </TabsTrigger>
+                    </TabsList>
                     </Tabs>
                 </div>
             </header>
