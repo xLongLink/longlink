@@ -42,55 +42,64 @@ export function OrganizationLayout() {
                             </div>
                         </div>
                     </div>
-                    <nav className="flex w-full flex-wrap items-center gap-6 px-6 pb-2 text-sm">
-                        <NavLink className={navLinkClasses} end to={`/${org}`}>
-                            <LayoutGrid className="h-4 w-4" />
-                            Overview
-                        </NavLink>
-                        <NavLink
-                            className={navLinkClasses}
-                            to={`/${org}/projects`}
-                        >
-                            <FolderKanban className="h-4 w-4" />
-                            Projects
-                        </NavLink>
-                        <NavLink
-                            className={navLinkClasses}
-                            to={`/${org}/offering`}
-                        >
-                            <Briefcase className="h-4 w-4" />
-                            Offerings
-                        </NavLink>
-                        <NavLink
-                            className={navLinkClasses}
-                            to={`/${org}/careers`}
-                        >
-                            <Building2 className="h-4 w-4" />
-                            Careers
-                        </NavLink>
-                        <NavLink className={navLinkClasses} to={`/${org}/news`}>
-                            <Newspaper className="h-4 w-4" />
-                            News
-                        </NavLink>
-                        <NavLink
-                            className={navLinkClasses}
-                            to={`/${org}/people`}
-                        >
-                            <Users className="h-4 w-4" />
-                            People
-                        </NavLink>
-                        <NavLink
-                            className={navLinkClasses}
-                            to={`/${org}/documents`}
-                        >
-                            <BookOpen className="h-4 w-4" />
-                            Documents
-                        </NavLink>
+                    <nav className="w-full pb-2 text-sm">
+                        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-6 px-6">
+                            <NavLink
+                                className={navLinkClasses}
+                                end
+                                to={`/${org}`}
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                                Overview
+                            </NavLink>
+                            <NavLink
+                                className={navLinkClasses}
+                                to={`/${org}/projects`}
+                            >
+                                <FolderKanban className="h-4 w-4" />
+                                Projects
+                            </NavLink>
+                            <NavLink
+                                className={navLinkClasses}
+                                to={`/${org}/offering`}
+                            >
+                                <Briefcase className="h-4 w-4" />
+                                Offerings
+                            </NavLink>
+                            <NavLink
+                                className={navLinkClasses}
+                                to={`/${org}/careers`}
+                            >
+                                <Building2 className="h-4 w-4" />
+                                Careers
+                            </NavLink>
+                            <NavLink
+                                className={navLinkClasses}
+                                to={`/${org}/news`}
+                            >
+                                <Newspaper className="h-4 w-4" />
+                                News
+                            </NavLink>
+                            <NavLink
+                                className={navLinkClasses}
+                                to={`/${org}/people`}
+                            >
+                                <Users className="h-4 w-4" />
+                                People
+                            </NavLink>
+                            <NavLink
+                                className={navLinkClasses}
+                                to={`/${org}/documents`}
+                            >
+                                <BookOpen className="h-4 w-4" />
+                                Documents
+                            </NavLink>
+                        </div>
                     </nav>
                 </header>
 
                 <main className="mx-auto grid w-full max-w-6xl gap-8 px-6 pb-16 pt-10 lg:grid-cols-[320px_1fr]">
-                    <aside className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+                    <aside className="p-6">
                         <div className="flex flex-col items-center text-center">
                             <div className="relative">
                                 <div className="flex h-40 w-40 items-center justify-center rounded-full bg-blue-600 text-5xl font-semibold">
@@ -103,15 +112,14 @@ export function OrganizationLayout() {
                             <h2 className="mt-5 text-2xl font-semibold">
                                 {organizationName}
                             </h2>
-                            <p className="text-sm text-white/60">
-                                org-{org || 'workspace'}
-                            </p>
-                            <p className="mt-3 text-sm text-white/60">
-                                Your organization workspace
-                            </p>
-                            <button className="mt-5 w-full rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500">
-                                Edit profile
-                            </button>
+                            <a
+                                className="mt-3 text-sm text-blue-300 transition hover:text-blue-200"
+                                href="https://longlink.ch"
+                                rel="noreferrer"
+                                target="_blank"
+                            >
+                                longlink.ch
+                            </a>
                             <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-white/70">
                                 <Users className="h-4 w-4 text-blue-400" />5
                                 followers · 0 following
