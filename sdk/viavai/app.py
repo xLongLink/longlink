@@ -1,4 +1,5 @@
 import uvicorn
+from viavai.controllers.routes import routes
 
 
 class ViaVai:
@@ -6,20 +7,14 @@ class ViaVai:
         self.title = title
         self.description = description
         self.version = version
-        self.routes = {}
-
-    def route(self, path: str):
-        def decorator(func):
-            self.routes[path] = func
-            return func
-        return decorator
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return
 
         path = scope["path"]
-        handler = self.routes.get(path)
+
+        handler = routes.get(path)
 
         if not handler:
             await send({
@@ -33,7 +28,7 @@ class ViaVai:
             })
             return
 
-        body = handler()
+        body = await handler()
 
         await send({
             "type": "http.response.start",
@@ -47,12 +42,9 @@ class ViaVai:
 
 
 
-
-
-
-@app.route("/")
-def home():
-    return "Hello World"
+# @app.route("/")
+# def home():
+#     return "Hello World"
 
 
 if __name__ == "__main__":
