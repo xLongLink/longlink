@@ -17,24 +17,26 @@ export type NavigationTab = {
 
 type NavigationProps = {
     tabs: NavigationTab[];
+    basePathSuffix?: string;
 };
 
-export function Navigation({ tabs }: NavigationProps) {
+export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
     const { org = '' } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
     const organizationName = formatOrganizationName(org || 'org');
+    const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
+    const basePath = normalizedSuffix ? `/${org}/${normalizedSuffix}` : `/${org}`;
 
     const activeTab = (() => {
-        const base = `/${org}`;
         const path = location.pathname;
         const matchedTab = tabs.find((tab) => {
             const tabPath = tab.path ?? '';
             if (tabPath === '') {
-                return path === base;
+                return path === basePath;
             }
-            return path.startsWith(`${base}/${tabPath}`);
+            return path.startsWith(`${basePath}/${tabPath}`);
         });
 
         return matchedTab?.value ?? tabs[0]?.value ?? 'overview';
@@ -67,7 +69,7 @@ export function Navigation({ tabs }: NavigationProps) {
                                 return;
                             }
                             const nextPath = nextTab.path ?? '';
-                            navigate(nextPath === '' ? `/${org}` : `/${org}/${nextPath}`);
+                            navigate(nextPath === '' ? basePath : `${basePath}/${nextPath}`);
                         }}
                     >
                         <TabsList variant="line" className="gap-4">

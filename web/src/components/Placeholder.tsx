@@ -21,9 +21,9 @@ export function Placeholder({ title }: { title: string }) {
                         </p>
                     </div>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline">
                     <Plus className="h-4 w-4" />
-                    Add {title}
+                    New {title}
                 </Button>
             </div>
 

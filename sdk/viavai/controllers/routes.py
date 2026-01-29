@@ -131,3 +131,14 @@ def match_route(method: str, path: str, query_string: str = "") -> tuple[Handler
             return route_handler, params
 
     return None, {}
+
+
+
+# Query string parameters
+# Automatically encoded as application/x-www-form-urlencoded
+# 
+# Filtering
+# Searching
+# Pagination
+# Sorting
+
