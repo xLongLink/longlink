@@ -1,9 +1,9 @@
 # AGENTS.md
 
-ViaVai is composed on a platform and a sdk to create modules for the platform.
-
-## Repository Structure
+The repository is divided into three sections:
 
 - `api` - Backend API
 - `sdk` - Python SDK for module development
 - `web` - Static Frontend web application
+
+Each folder contains its own AGENTS.md file with specific instructions for that section.

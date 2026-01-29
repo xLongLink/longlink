@@ -12,7 +12,7 @@ dependencies = [
     "pydantic",
     "httpx"
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 authors = [
     {name = "Leonardo Saurwein"}
 ]
