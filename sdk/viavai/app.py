@@ -1,3 +1,7 @@
+from typing import get_type_hints
+
+from pydantic import BaseModel
+
 from viavai.controllers.routes import match_route
 
 
@@ -33,12 +37,39 @@ class ViaVai:
         else:
             body = await handler()
 
+        return_type = get_type_hints(handler).get("return")
+        if return_type and isinstance(return_type, type) and issubclass(return_type, BaseModel):
+            if not isinstance(body, return_type):
+                await send({
+                    "type": "http.response.start",
+                    "status": 500,
+                    "headers": [(b"content-type", b"text/plain")],
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": f"Invalid response type. Expected {return_type.__name__}.".encode(),
+                })
+                return
+
+            if hasattr(body, "model_dump_json"):
+                response_body = body.model_dump_json()
+            else:
+                response_body = body.json()
+            headers = [(b"content-type", b"application/json")]
+            body_bytes = response_body.encode()
+        else:
+            headers = [(b"content-type", b"text/plain")]
+            if isinstance(body, bytes):
+                body_bytes = body
+            else:
+                body_bytes = str(body).encode()
+
         await send({
             "type": "http.response.start",
             "status": 200,
-            "headers": [(b"content-type", b"text/plain")],
+            "headers": headers,
         })
         await send({
             "type": "http.response.body",
-            "body": body.encode(),
+            "body": body_bytes,
         })
