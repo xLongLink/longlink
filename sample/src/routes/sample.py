@@ -29,9 +29,17 @@ async def sample_patch_endpoint():
 
 
 # Example with dynamic URL parameter
-@post("/sample/<object>")
+@post("/dynamic/{object}")
 async def sample_post_endpoint_with_object(object: int):
     return "Sample POST endpoint response"
+
+
+# Example with params
+# Params must have a default value
+@post("/params/{object}?{start}&{end}")
+async def sample_post_endpoint_with_params(object: int, start: int = 0, end: int = 10):
+    return "Sample POST endpoint response"
+
 
 
 # Example that return a Pydantic model
