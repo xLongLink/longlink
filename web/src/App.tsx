@@ -1,12 +1,16 @@
 import {
   ArrowRight,
+  BarChart3,
+  BookOpen,
   Box,
   Briefcase,
+  Building2,
   FolderKanban,
   LayoutGrid,
   Layers,
   Lock,
   MapPin,
+  Newspaper,
   Plus,
   Plug,
   Settings,
@@ -82,6 +86,13 @@ const router = createBrowserRouter([
       { index: true, element: <OrganizationOverview /> },
       { path: "projects", element: <OrganizationProjects /> },
       { path: "offering", element: <OrganizationOffering /> },
+      { path: "careers", element: <OrganizationPlaceholder title="Careers" /> },
+      { path: "news", element: <OrganizationPlaceholder title="News" /> },
+      { path: "people", element: <OrganizationPlaceholder title="People" /> },
+      {
+        path: "documents",
+        element: <OrganizationPlaceholder title="Documents" />,
+      },
     ],
   },
 ]);
@@ -255,10 +266,10 @@ function OrganizationLayout() {
   const organizationName = formatOrganizationName(org || "org");
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
     [
-      "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition",
+      "flex items-center gap-2 border-b-2 border-transparent px-1 py-3 text-sm font-medium transition",
       isActive
-        ? "bg-white/10 text-white"
-        : "text-white/70 hover:text-white",
+        ? "border-blue-500 text-white"
+        : "text-white/70 hover:text-white hover:border-white/20",
     ].join(" ");
 
   return (
@@ -266,16 +277,22 @@ function OrganizationLayout() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_rgba(11,15,20,0.9)_55%)]" />
       <div className="relative">
         <header className="border-b border-white/10">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600/20 text-blue-300">
-                <Layers className="h-5 w-5" />
-              </div>
-              <div className="text-sm font-semibold text-white/80">
-                {organizationName}
+          <div className="mx-auto w-full max-w-6xl px-6 pb-2 pt-4">
+            <div className="flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4 text-white/80">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-blue-300">
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+                <span className="text-base font-semibold text-white">
+                  xPlan
+                </span>
+                <span className="text-white/30">|</span>
+                <span className="text-sm font-semibold text-white/70">
+                  {organizationName}
+                </span>
               </div>
             </div>
-            <nav className="hidden items-center gap-2 text-sm md:flex">
+            <nav className="flex flex-wrap items-center gap-6 text-sm">
               <NavLink className={navLinkClasses} end to={`/${org}`}>
                 <LayoutGrid className="h-4 w-4" />
                 Overview
@@ -288,11 +305,23 @@ function OrganizationLayout() {
                 <Briefcase className="h-4 w-4" />
                 Offerings
               </NavLink>
+              <NavLink className={navLinkClasses} to={`/${org}/careers`}>
+                <Building2 className="h-4 w-4" />
+                Careers
+              </NavLink>
+              <NavLink className={navLinkClasses} to={`/${org}/news`}>
+                <Newspaper className="h-4 w-4" />
+                News
+              </NavLink>
+              <NavLink className={navLinkClasses} to={`/${org}/people`}>
+                <Users className="h-4 w-4" />
+                People
+              </NavLink>
+              <NavLink className={navLinkClasses} to={`/${org}/documents`}>
+                <BookOpen className="h-4 w-4" />
+                Documents
+              </NavLink>
             </nav>
-            <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:border-white/20">
-              <Settings className="h-4 w-4" />
-              Workspace settings
-            </button>
           </div>
         </header>
 
@@ -300,28 +329,28 @@ function OrganizationLayout() {
           <aside className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
             <div className="flex flex-col items-center text-center">
               <div className="relative">
-                <div className="flex h-28 w-28 items-center justify-center rounded-full bg-blue-600 text-3xl font-semibold">
+                <div className="flex h-40 w-40 items-center justify-center rounded-full bg-blue-600 text-5xl font-semibold">
                   {getOrganizationInitials(organizationName)}
                 </div>
-                <button className="absolute bottom-0 right-1 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-slate-900/80 text-white/70">
+                <button className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-[#0b0f14]/80 text-white/70 shadow-lg">
                   <Settings className="h-4 w-4" />
                 </button>
               </div>
-              <h2 className="mt-4 text-xl font-semibold">
+              <h2 className="mt-5 text-2xl font-semibold">
                 {organizationName}
               </h2>
               <p className="text-sm text-white/60">org-{org || "workspace"}</p>
-              <p className="mt-4 text-sm text-white/60">
+              <p className="mt-3 text-sm text-white/60">
                 Your organization workspace
               </p>
-              <button className="mt-4 w-full rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500">
+              <button className="mt-5 w-full rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500">
                 Edit profile
               </button>
-              <div className="mt-6 flex items-center gap-2 text-xs text-white/60">
+              <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-white/70">
                 <Users className="h-4 w-4 text-blue-400" />
                 5 followers · 0 following
               </div>
-              <div className="mt-2 flex items-center gap-2 text-xs text-white/50">
+              <div className="mt-2 flex items-center gap-2 text-xs text-white/60">
                 <MapPin className="h-4 w-4" />
                 Switzerland
               </div>
@@ -453,29 +482,38 @@ function OrganizationOffering() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Products & Services</h1>
-          <p className="mt-2 text-sm text-white/65">
-            Showcase the offerings, internal services, and bundled programs that
-            power your organization.
-          </p>
+          <p className="mt-1 text-sm text-white/50">0 active offerings</p>
         </div>
-        <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20">
+        <button className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20">
           <Plus className="h-4 w-4" />
           Add Offering
         </button>
       </div>
-      <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-10 text-center">
+      <div className="rounded-3xl border border-dashed border-white/15 bg-slate-900/60 p-12 text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600/20 text-blue-300">
-          <Briefcase className="h-6 w-6" />
+          <Sparkles className="h-6 w-6" />
         </div>
         <h2 className="mt-4 text-lg font-semibold">No offerings yet</h2>
         <p className="mt-2 text-sm text-white/60">
-          Start with a flagship offering to communicate how you deliver value.
+          Showcase your products and services to potential customers
         </p>
         <button className="mt-6 inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500">
           <Plus className="h-4 w-4" />
           Create First Offering
         </button>
       </div>
+    </div>
+  );
+}
+
+function OrganizationPlaceholder({ title }: { title: string }) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+      <h1 className="text-2xl font-semibold">{title}</h1>
+      <p className="mt-2 text-sm text-white/60">
+        This section will surface {title.toLowerCase()} updates for your
+        organization.
+      </p>
     </div>
   );
 }
