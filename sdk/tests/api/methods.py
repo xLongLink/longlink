@@ -15,6 +15,10 @@ async def sample_get():
 async def sample_post():
     return "POST response"
 
+@post("/items/<object>")
+async def sample_post_object(object: id):
+    return f"POST response for {object}"
+
 @put("/")
 async def sample_put():
     return "PUT response"
@@ -55,6 +59,15 @@ class TestViaVaiHTTP(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.text, "PUT response")
+
+    async def test_post_with_object(self):
+        transport = ASGITransport(app=app)
+
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.post("/items/abc123")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.text, "POST response for abc123")
 
     async def test_delete(self):
         transport = ASGITransport(app=app)
