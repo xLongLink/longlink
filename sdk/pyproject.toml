@@ -8,7 +8,8 @@ version = "0.0.0"
 dependencies = [
     "alembic",
     "click",
-    "uvicorn"
+    "uvicorn",
+    "pydantic"
 ]
 requires-python = ">=3.13"
 authors = [
