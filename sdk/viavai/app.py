@@ -1,14 +1,39 @@
 import uvicorn
 
+
 class ViaVai:
     def __init__(self, title: str, description: str, version: str):
         self.title = title
         self.description = description
         self.version = version
+        self.routes = {}
+
+    def route(self, path: str):
+        def decorator(func):
+            self.routes[path] = func
+            return func
+        return decorator
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return
+
+        path = scope["path"]
+        handler = self.routes.get(path)
+
+        if not handler:
+            await send({
+                "type": "http.response.start",
+                "status": 404,
+                "headers": [],
+            })
+            await send({
+                "type": "http.response.body",
+                "body": b"Not Found",
+            })
+            return
+
+        body = handler()
 
         await send({
             "type": "http.response.start",
@@ -17,15 +42,17 @@ class ViaVai:
         })
         await send({
             "type": "http.response.body",
-            "body": b"Hello from ViaVai",
+            "body": body.encode(),
         })
 
 
-app = ViaVai(
-    title="FastAPI Feature Demo",
-    description="Single-file example of common FastAPI features",
-    version="1.0.0"
-)
+
+
+
+
+@app.route("/")
+def home():
+    return "Hello World"
 
 
 if __name__ == "__main__":
@@ -36,4 +63,3 @@ if __name__ == "__main__":
         reload=True,
         access_log=False,
     )
-   

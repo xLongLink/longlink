@@ -8,6 +8,7 @@ def main():
     pass
 
 
+# viavai init --folder sample
 @main.command()
 @click.option('--folder', prompt='Enter folder name', help='Folder to initialize')
 def init(folder):
@@ -22,8 +23,16 @@ def init(folder):
 
     os.makedirs(os.path.join(folder, 'tests'), exist_ok=True)
     
+    # Read template from viavai library root
+    template_path = os.path.join(os.path.dirname(__file__), '..', '..', 'sample', 'main.py')
     main_py_path = os.path.join(folder, 'main.py')
-    if not os.path.exists(main_py_path):
+    
+    if os.path.exists(template_path):
+        with open(template_path, 'r') as src:
+            template_content = src.read()
+        with open(main_py_path, 'w') as dst:
+            dst.write(template_content)
+    else:
         with open(main_py_path, 'w') as f:
             f.write('# ViaVai Project Entry Point\n')
 
@@ -31,6 +40,6 @@ def init(folder):
 
 
 
-
+# TODO: Add commands for database migration using Alembic
 # alembic revision --autogenerate
 # alembic upgrade head
