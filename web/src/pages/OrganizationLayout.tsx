@@ -61,27 +61,6 @@ export function OrganizationLayout() {
                             </NavLink>
                             <NavLink
                                 className={navLinkClasses}
-                                to={`/${org}/offering`}
-                            >
-                                <Briefcase className="h-4 w-4" />
-                                Offerings
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
-                                to={`/${org}/careers`}
-                            >
-                                <Building2 className="h-4 w-4" />
-                                Careers
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
-                                to={`/${org}/news`}
-                            >
-                                <Newspaper className="h-4 w-4" />
-                                News
-                            </NavLink>
-                            <NavLink
-                                className={navLinkClasses}
                                 to={`/${org}/people`}
                             >
                                 <Users className="h-4 w-4" />

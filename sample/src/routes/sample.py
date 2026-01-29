@@ -8,7 +8,7 @@ async def sample_post_endpoint():
 
 
 @post("/sample/<object>")
-async def sample_get_endpoint(object: id):
+async def sample_get_endpoint(object: int):
     return "Sample GET endpoint response"
 
 
