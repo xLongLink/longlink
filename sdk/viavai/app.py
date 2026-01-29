@@ -11,9 +11,10 @@ class ViaVai:
         if scope["type"] != "http":
             return
 
+        method = scope["method"]
         path = scope["path"]
 
-        handler = routes.get(path)
+        handler = routes.get((method, path))
 
         if not handler:
             await send({
