@@ -8,4 +8,4 @@ app = ViaVai(
 )
 
 # Import to register the route
-import sample.src.routes.sample  
+import src.routes.sample  

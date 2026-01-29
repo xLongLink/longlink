@@ -9,6 +9,24 @@ def main():
     pass
 
 
+# viavai dev
+@main.command()
+def dev():
+    import sys
+    import os
+    import uvicorn
+
+    # add CWD to import path
+    sys.path.insert(0, os.getcwd())
+
+    uvicorn.run(
+        "src.app:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )
+
+
 # viavai init --folder sample
 @main.command()
 @click.option('--folder', prompt='Enter folder name', help='Folder to initialize')
