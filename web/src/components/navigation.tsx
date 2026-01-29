@@ -2,8 +2,6 @@ import { BarChart3 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Route as ReactRoute, Routes as ReactRoutes } from 'react-router';
-import { GitBranch, LayoutGrid, Layers, Users, Wrench } from 'lucide-react';
 
 
 export type NavigationTab = {
@@ -12,6 +10,7 @@ export type NavigationTab = {
     path?: string;
     icon: LucideIcon;
 };
+
 
 type NavigationProps = {
     tabs: NavigationTab[];
@@ -98,61 +97,6 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
         </div>
     );
 }
-
-
-export function Route({ value, label, path, icon, children }: { value: string; label: string; path: string; icon: React.ReactNode; children: React.ReactNode }) {
-
-    return (
-        <ReactRoute path={path} element={children} />
-    )
-}
-
-
-
-export function Routes({ children }: { children: typeof Route }) {
-
-    const orgTabs = [
-        {
-            value: 'overview',
-            label: 'Overview',
-            path: '',
-            icon: LayoutGrid,
-        },
-        {
-            value: 'tools',
-            label: 'Tools',
-            path: 'tools',
-            icon: Wrench,
-        },
-        {
-            value: 'solutions',
-            label: 'Solutions',
-            path: 'solutions',
-            icon: Layers,
-        },
-        {
-            value: 'workflows',
-            label: 'Workflows',
-            path: 'workflows',
-            icon: GitBranch,
-        },
-        {
-            value: 'people',
-            label: 'People',
-            path: 'people',
-            icon: Users,
-        },
-    ];
-
-    return (
-        <ReactRoutes>
-            <ReactRoute element={<Navigation tabs={orgTabs} />}>
-                {children}
-            </ReactRoute>
-        </ReactRoutes>
-    )
-}
-
 
 
 function formatOrganizationName(value: string) {

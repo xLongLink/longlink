@@ -1,10 +1,17 @@
 import { Plus, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+    Empty,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
 
 
 export function Workflows() {
-
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -28,15 +35,21 @@ export function Workflows() {
             </div>
 
             <Card className="p-10 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-500/10 text-blue-300 ring-1 ring-blue-500/30">
-                    <Sparkles className="h-7 w-7" />
-                </div>
-                <h2 className="mt-6 text-lg font-semibold">
-                    No workflows yet
-                </h2>
-                <p className="mt-2 text-sm text-white/60">
-                    Workflows are short lived project specific processes.
-                </p>
+                <Empty>
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <Sparkles />
+                        </EmptyMedia>
+                        <EmptyTitle>No Workflows Yet</EmptyTitle>
+                        <EmptyDescription>
+                            You haven&apos;t created any workflows yet. Get started by creating your first workflow.
+                        </EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent className="flex-row justify-center gap-2">
+                        <Button>Create Workflow</Button>
+                        <Button variant="outline">Import Workflow</Button>
+                    </EmptyContent>
+                </Empty>
             </Card>
         </div>
     );

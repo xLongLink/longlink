@@ -1,5 +1,5 @@
 import { Navigation } from '@/components/navigation';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, useParams } from 'react-router';
 import { Overview } from '@/components/overview';
 import { Tools } from '@/components/tools';
 import { Workflows } from '@/components/workflows';
@@ -47,9 +47,12 @@ const orgTabs = [
 
 
 export function Module() {
+    const { tool } = useParams();
+    const basePathSuffix = tool ? `tools/${tool}` : 'tools';
+
     return (
         <Routes>
-            <Route element={<Navigation tabs={orgTabs} />}>
+            <Route element={<Navigation tabs={orgTabs} basePathSuffix={basePathSuffix} />}>
                 <Route index element={<Overview />} />
                 <Route path="files" element={<Tools />} />
                 <Route path="tickets" element={<Solutions />} />
