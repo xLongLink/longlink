@@ -1,5 +1,5 @@
 import {
-    BarChart3, BookOpen, FolderKanban, LayoutGrid,
+    BarChart3, FolderKanban, LayoutGrid,
     Users, Settings, MapPin
 } from 'lucide-react';
 
@@ -61,9 +61,6 @@ export function Organization() {
                                 case 'people':
                                     navigate(`/${org}/people`);
                                     break;
-                                case 'documents':
-                                    navigate(`/${org}/documents`);
-                                    break;
                             }
                         }}
                     >
@@ -79,10 +76,6 @@ export function Organization() {
                             <TabsTrigger value="people">
                                 <Users className="h-4 w-4" />
                                 People
-                            </TabsTrigger>
-                            <TabsTrigger value="documents">
-                                <BookOpen className="h-4 w-4" />
-                                Documents
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
