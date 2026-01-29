@@ -30,3 +30,45 @@ def patch(path: str):
 
 def delete(path: str):
     return _route("DELETE", path)
+
+
+def _split_path(path: str) -> list[str]:
+    stripped = path.strip("/")
+    if not stripped:
+        return []
+    return stripped.split("/")
+
+
+def _match_route_path(route_path: str, path: str) -> dict[str, str] | None:
+    route_parts = _split_path(route_path)
+    path_parts = _split_path(path)
+
+    if len(route_parts) != len(path_parts):
+        return None
+
+    params: dict[str, str] = {}
+    for route_part, path_part in zip(route_parts, path_parts):
+        if route_part.startswith("<") and route_part.endswith(">"):
+            param_name = route_part[1:-1].strip()
+            if not param_name:
+                return None
+            params[param_name] = path_part
+            continue
+        if route_part != path_part:
+            return None
+    return params
+
+
+def match_route(method: str, path: str) -> tuple[Handler | None, dict[str, str]]:
+    handler = routes.get((method.upper(), path))
+    if handler:
+        return handler, {}
+
+    for (route_method, route_path), route_handler in routes.items():
+        if route_method != method.upper():
+            continue
+        params = _match_route_path(route_path, path)
+        if params is not None:
+            return route_handler, params
+
+    return None, {}
