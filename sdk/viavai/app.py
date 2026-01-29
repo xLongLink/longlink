@@ -1,4 +1,4 @@
-from viavai.controllers.routes import routes
+from viavai.controllers.routes import match_route
 
 
 class ViaVai:
@@ -14,7 +14,7 @@ class ViaVai:
         method = scope["method"]
         path = scope["path"]
 
-        handler = routes.get((method, path))
+        handler, params = match_route(method, path)
 
         if not handler:
             await send({
@@ -28,7 +28,10 @@ class ViaVai:
             })
             return
 
-        body = await handler()
+        if params:
+            body = await handler(**params)
+        else:
+            body = await handler()
 
         await send({
             "type": "http.response.start",
@@ -39,4 +42,3 @@ class ViaVai:
             "type": "http.response.body",
             "body": body.encode(),
         })
-
