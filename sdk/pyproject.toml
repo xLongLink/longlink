@@ -9,7 +9,8 @@ dependencies = [
     "alembic",
     "click",
     "uvicorn",
-    "pydantic"
+    "pydantic",
+    "httpx"
 ]
 requires-python = ">=3.13"
 authors = [
@@ -30,9 +31,6 @@ classifiers = [
 cli = [
   "rich",
   "click",
-]
-dev = [
-    "httpx",
 ]
 
 [project.urls]
