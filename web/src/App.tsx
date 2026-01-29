@@ -12,7 +12,7 @@ const router = createBrowserRouter([
         element: <Organization />,
     },
     {
-        path: '/:org/tools/:tool*',
+        path: '/:org/tools/:tool/*',
         element: <Module />,
     },
 ]);
