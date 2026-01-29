@@ -1,4 +1,3 @@
-import uvicorn
 from viavai.controllers.routes import routes
 
 
@@ -40,18 +39,3 @@ class ViaVai:
             "body": body.encode(),
         })
 
-
-
-# @app.route("/")
-# def home():
-#     return "Hello World"
-
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        access_log=False,
-    )
