@@ -33,6 +33,10 @@ async def sample_patch():
 
 
 class TestSimpleMethods(unittest.IsolatedAsyncioTestCase):
+    """
+    Test the simple HTTP methods: GET, POST, PUT, DELETE, PATCH
+    """
+
     async def test_get(self):
         transport = ASGITransport(app=app)
 
