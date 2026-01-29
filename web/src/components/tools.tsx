@@ -1,14 +1,9 @@
 import { Plus, Sparkles } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ModuleCard } from '@/components/module';
 
 
 export function Tools() {
-    const tools = [
-        { id: 1, name: 'sample' },
-        { id: 2, name: 'test' }
-    ];
-
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -21,7 +16,7 @@ export function Tools() {
                             Tools
                         </h1>
                         <p className="text-sm text-white/60">
-                            {tools.length} tools
+                            2 tools
                         </p>
                     </div>
                 </div>
@@ -31,12 +26,17 @@ export function Tools() {
                 </Button>
             </div>
 
-            <div className="grid gap-4">
-                {tools.map(tool => (
-                    <Card key={tool.id} className="p-6">
-                        <h3 className="font-semibold text-white">{tool.name}</h3>
-                    </Card>
-                ))}
+            <div className="grid grid-cols-4 gap-4">
+                <ModuleCard
+                    name="Accounting"
+                    description="Streamline financial operations, manage invoices, and track business expenses in real-time."
+                    href="/tools/accounting"
+                />
+                <ModuleCard
+                    name="Workforce"
+                    description="Optimize team management, monitor productivity, and coordinate resource allocation."
+                    href="/tools/workforce"
+                />
             </div>
         </div>
     );
