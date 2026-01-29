@@ -39,4 +39,4 @@ Repository = "https://github.com/me/spam.git"
 Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
 [project.scripts]
-viavai = "viavai.cli:main"
+viavai = "viavai.__main__:main"
