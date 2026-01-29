@@ -1,15 +1,15 @@
 from viavai import get, post, put, delete, patch
-
+from src.types.sample import UserModel
 
 
 @get("/sample",)
+async def sample_get_endpoint():
+    return "Sample GET endpoint received data"
+
+
+@post("/sample")
 async def sample_post_endpoint():
-    return "Sample POST endpoint received data"
-
-
-@post("/sample/<object>")
-async def sample_get_endpoint(object: int):
-    return "Sample GET endpoint response"
+    return "Sample POST endpoint response"
 
 
 @put("/sample")
@@ -26,3 +26,23 @@ async def sample_delete_endpoint():
 @patch("/sample")
 async def sample_patch_endpoint():
     return f"Sample PATCH endpoint patched item"
+
+
+# Example with dynamic URL parameter
+@post("/sample/<object>")
+async def sample_post_endpoint_with_object(object: int):
+    return "Sample POST endpoint response"
+
+
+# Example that return a Pydantic model
+@post("/sample/user")
+async def sample_post_user_endpoint() -> UserModel:
+    return UserModel(
+        id=1,
+        username="testuser",
+        email="testuser@example.com",
+        is_active=True,
+        age=30
+    )
+
+
