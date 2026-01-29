@@ -1,41 +1,36 @@
 import { RouterProvider, createBrowserRouter } from 'react-router';
-import { MarketingPage } from './pages/MarketingPage';
-import { OrganizationLayout } from './pages/OrganizationLayout';
-import { OrganizationOffering } from './pages/OrganizationOffering';
+import { Home } from './pages/Home';
+import { Organization } from './pages/Organization';
 import { OrganizationOverview } from './pages/OrganizationOverview';
 import { OrganizationPlaceholder } from './pages/OrganizationPlaceholder';
-import { OrganizationProjects } from './pages/OrganizationProjects';
+
+
+import { ThemeProvider } from "@/components/theme-provider"
 
 const router = createBrowserRouter([
     {
         path: '/',
-        element: <MarketingPage />,
+        element: <Home />,
     },
     {
         path: '/:org',
-        element: <OrganizationLayout />,
+        element: <Organization />,
         children: [
             { index: true, element: <OrganizationOverview /> },
-            { path: 'projects', element: <OrganizationProjects /> },
-            { path: 'offering', element: <OrganizationOffering /> },
-            {
-                path: 'careers',
-                element: <OrganizationPlaceholder title="Careers" />,
-            },
-            { path: 'news', element: <OrganizationPlaceholder title="News" /> },
+            { path: 'projects', element: <OrganizationPlaceholder title="Projects" /> },
             {
                 path: 'people',
                 element: <OrganizationPlaceholder title="People" />,
-            },
-            {
-                path: 'documents',
-                element: <OrganizationPlaceholder title="Documents" />,
-            },
+            }
         ],
     },
 ]);
 
 export function App() {
-    return <RouterProvider router={router} />;
+    return (
+        <ThemeProvider>
+            <RouterProvider router={router} />
+        </ThemeProvider>
+    );
 }
 export default App;
