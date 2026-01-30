@@ -1,9 +1,9 @@
 import { Navigation } from '@/components/navigation';
 import { Navigate, Route, Routes, useParams } from 'react-router';
-import { Tools } from '@/components/tools';
 import { Workflows } from '@/components/workflows';
 import { Solutions } from '@/components/solutions';
 import { FileText, Settings, Ticket } from 'lucide-react';
+import { Files } from '@/components/files';
 
 const moduleTabs = [
     {
@@ -41,7 +41,7 @@ export function Module() {
                 }
             >
                 <Route index element={<Navigate to="files" replace />} />
-                <Route path="files" element={<Tools />} />
+                <Route path="files" element={<Files />} />
                 <Route path="tickets" element={<Solutions />} />
                 <Route path="settings" element={<Workflows />} />
             </Route>
