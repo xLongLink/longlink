@@ -235,27 +235,20 @@ Projects = structured lists with metadata
 
 Required table capabilities
 
-Column sorting
-
-Filtering (by status, owner, date)
-
-Inline editing
+- Column sorting
+- Filtering (by status, owner, date)
+- Inline editing
 
 Bulk actions
 
-Row-level actions (open, approve, reject)
+- Row-level actions (open, approve, reject)
+- Pagination or virtualization
+- Status indicators (badges)
+- Examples
 
-Pagination or virtualization
-
-Status indicators (badges)
-
-Examples
-
-Tasks
-
-Tickets
-
-Approvals
+- Tasks
+- Tickets
+- Approvals
 
 Transactions
 
@@ -265,7 +258,7 @@ Steps in a workflow
 
 If tables are weak, the platform fails.
 
-2. Forms (state mutation)
+1. Forms (state mutation)
 
 Every workflow needs controlled state changes.
 

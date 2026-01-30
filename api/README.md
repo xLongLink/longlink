@@ -2,9 +2,6 @@
 
 - Core login of the Application.
 - Handle authentication, and routing to modules.
-
-https://github.com/casbin/pycasbin
-
 - This shall have proper migrations and databases with Alembic and SQLAlchemy.
 
 CREATE TABLE users (
@@ -43,19 +40,6 @@ OR
 )
 );
 
-CREATE TABLE teams (
-id BIGSERIAL PRIMARY KEY,
-organization_id BIGINT REFERENCES organizations(id),
-name VARCHAR(100),
-UNIQUE (organization_id, name)
-);
-
-CREATE TABLE team_memberships (
-team_id BIGINT REFERENCES teams(id),
-user_id BIGINT REFERENCES users(id),
-PRIMARY KEY (team_id, user_id)
-);
-
 CREATE TABLE repository_user_permissions (
 repository_id BIGINT REFERENCES repositories(id),
 user_id BIGINT REFERENCES users(id),
@@ -63,15 +47,6 @@ permission VARCHAR(20) CHECK (
 permission IN ('read', 'write', 'maintain', 'admin')
 ),
 PRIMARY KEY (repository_id, user_id)
-);
-
-CREATE TABLE repository_team_permissions (
-repository_id BIGINT REFERENCES repositories(id),
-team_id BIGINT REFERENCES teams(id),
-permission VARCHAR(20) CHECK (
-permission IN ('read', 'write', 'maintain', 'admin')
-),
-PRIMARY KEY (repository_id, team_id)
 );
 
 CREATE TABLE user_settings (
@@ -87,26 +62,3 @@ issues_enabled BOOLEAN DEFAULT TRUE,
 wiki_enabled BOOLEAN DEFAULT FALSE,
 discussions_enabled BOOLEAN DEFAULT FALSE
 );
-
-```
-PostgreSQL (SQLAlchemy)
-  ├── users
-  ├── organizations
-  ├── teams
-  ├── repositories
-  └── memberships / ownership
-
-Casbin
-  ├── evaluates access rules
-  └── does NOT own data
-
-FastAPI
-  ├── loads relations from DB
-  ├── feeds them into Casbin
-  └── enforces permissions
-
-(Optional but required at scale)
-Redis
-  └── cache (user, repo, action) → allow/deny
-
-```
