@@ -1,11 +1,14 @@
 import {
     ArrowRight, Box, Briefcase, FolderKanban, Layers, Plug, ShieldCheck, Sparkles, Users, Zap,
 } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from "@/components/ui/card"
 
 export function Home() {
+    const navigate = useNavigate();
+
     return (
         <div className="min-h-screen text-white">
             <div className="relative">
@@ -19,7 +22,10 @@ export function Home() {
                                 ViaVai
                             </span>
                         </div>
-                        <Button className="flex items-center gap-2 bg-blue-600 px-4 py-2 font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500">
+                        <Button
+                            className="flex items-center gap-2 bg-blue-600 px-4 py-2 font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500"
+                            onClick={() => navigate('/login')}
+                        >
                             Login
                             <ArrowRight className="h-4 w-4" />
                         </Button>
