@@ -1,43 +1,46 @@
-Read
+import os
+import time
+import src.db as db
+from fastapi import Cookie, Depends, HTTPException, status
+from authlib.integrations.starlette_client import OAuth
 
-View code, issues, pull requests
 
-Clone the repository
+oauth = OAuth()
+oauth.register(
+    name="github",
+    client_id=os.getenv("GITHUB_CLIENT_ID"),
+    client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
+    access_token_url="https://github.com/login/oauth/access_token",
+    authorize_url="https://github.com/login/oauth/authorize",
+    api_base_url="https://api.github.com/",
+    userinfo_endpoint="https://api.github.com/user",
+    client_kwargs={"scope": "read:user user:email"},
+    redirect_uri=f"https://api.swissgpu.ch/auth/github",
+)
 
-No write or management permissions
 
-Triage
+oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
+    client_kwargs={"scope": "openid email profile"},
+    redirect_uri=f"https://api.swissgpu.ch/auth/google",
+)
 
-Manage issues and pull requests (label, assign, close)
 
-Cannot push code or manage settings
+async def user(request: Request) -> db.User:
+    session_user = request.session.get("user")
+    if not session_user:
+        raise HTTPException(401, "Not authenticated")
 
-Designed for non-code contributors
+    obj = await db.get_user_by_oauth_id(
+        provider=session_user["provider"],
+        oauth_id=session_user["id"],
+    )
+    if not obj:
+        raise HTTPException(404, "User not found")
 
-Write
+    return obj
 
-Push code to the repository
-
-Create branches
-
-Manage issues and pull requests
-
-Cannot change repository settings or permissions
-
-Maintain
-
-Everything in Write
-
-Manage repository settings (except destructive actions)
-
-Manage collaborators
-
-Cannot delete the repository or transfer ownership
-
-Admin
-
-Full control
-
-Manage permissions and settings
-
-Delete or transfer the repository
