@@ -218,3 +218,247 @@ A credible GitHub clone usually means:
 - Facilities management
 - Travel & expense booking
 - Meeting room scheduling
+
+# see state, change state, and understand impact with minimal friction.
+
+1. Tables (the most important element)
+
+Tables are the backbone of any process/workflow system.
+
+Why
+
+Processes = collections of records
+
+Workflows = records moving through states
+
+Projects = structured lists with metadata
+
+Required table capabilities
+
+Column sorting
+
+Filtering (by status, owner, date)
+
+Inline editing
+
+Bulk actions
+
+Row-level actions (open, approve, reject)
+
+Pagination or virtualization
+
+Status indicators (badges)
+
+Examples
+
+Tasks
+
+Tickets
+
+Approvals
+
+Transactions
+
+Requests
+
+Steps in a workflow
+
+If tables are weak, the platform fails.
+
+2. Forms (state mutation)
+
+Every workflow needs controlled state changes.
+
+Required form patterns
+
+Create / edit entity
+
+Step-specific forms (different fields per state)
+
+Validation (sync + async)
+
+Draft vs submit
+
+Modal-based editing (preferred)
+
+Important
+
+Forms must be fast and forgiving
+
+Errors must be precise
+
+Partial save is often necessary
+
+3. Workflow state visualization
+
+Users must instantly answer:
+
+“Where is this thing right now?”
+
+Effective patterns
+
+Status badges (Pending, Approved, Blocked)
+
+Stepper / progress bar
+
+Kanban board (optional, not mandatory)
+
+Timeline / activity log
+
+Avoid overengineering BPMN diagrams unless your users explicitly need them.
+
+4. Detail views (single-record focus)
+
+For any table row, you need a detail page or panel.
+
+Must include
+
+Core fields
+
+Current state
+
+History / audit trail
+
+Comments / discussion
+
+Attachments
+
+Actions available now
+
+This is where decisions happen.
+
+5. Activity & audit log (critical)
+
+For company processes, auditability is non-negotiable.
+
+Should track
+
+Who changed what
+
+When
+
+Previous value → new value
+
+Automated vs manual action
+
+This is often more important than dashboards.
+
+6. Search (global and scoped)
+
+Users don’t navigate; they search.
+
+Required
+
+Global search (ID, name, keyword)
+
+Scoped search (within project/process)
+
+Saved filters
+
+This drastically reduces UI complexity.
+
+7. Permissions & roles (foundational)
+
+Every workflow tool fails without correct access control.
+
+Must support
+
+Role-based access (viewer, editor, approver)
+
+State-based permissions
+
+Field-level visibility (optional but valuable)
+
+Permissions often drive UI rendering.
+
+9. Charts & dashboards (secondary, not primary)
+
+Charts are useful but not core.
+
+Where they help
+
+Workload overview
+
+Bottleneck detection
+
+SLA tracking
+
+Trend analysis
+
+Where they don’t
+
+Day-to-day task execution
+
+Decision making on single items
+
+Use:
+
+Bar charts
+
+Line charts
+
+Simple counters
+
+Avoid:
+
+Complex visualizations
+
+Real-time animations
+
+Vanity metrics
+
+Build a server-driven process, project, and workflow management platform where the backend is the single source of truth and the frontend is a generic renderer.
+
+The system must support record-based workflows with clear state, controlled mutations, and full auditability.
+
+Core functional requirements
+
+Tables as the primary UI for listing records
+(sorting, filtering, pagination, bulk actions, status indicators)
+
+Detail views for single records
+(current state, fields, actions, comments, attachments)
+
+Forms for creating and editing records
+(modal-based, validated, state-aware)
+
+Workflow state management
+(statuses, allowed transitions, role-based actions)
+
+Audit log tracking all changes
+(who, what, when, old → new value)
+
+Search (global and scoped)
+
+Role & permission system
+(entity-, state-, and action-level access control)
+
+Notifications for relevant state changes
+
+Technical requirements
+
+Backend exposes page endpoints returning JSON UI schemas
+
+Frontend is static and renders components dynamically from JSON
+
+All mutations trigger HTTP requests and page refetch + re-render
+
+No full page reloads for in-context actions
+
+Performance target: <200 ms perceived latency per interaction
+
+Deterministic, cacheable, and idempotent endpoints
+
+Non-goals (v1)
+
+Real-time collaboration
+
+Complex visualizations
+
+Heavy client-side state logic
+
+Custom theming or animations
+
+Design principle
+
+Optimize for clarity, consistency, and auditability over visual richness or SPA complexity.

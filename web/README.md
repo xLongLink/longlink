@@ -2,4 +2,8 @@
 
 This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
 
-# Update
+## Component Usage
+
+- Shadcn Components are listred in `src/components/ui/`.
+- Prefer Shadcn components over custom UI.
+- Use consistent Tailwind utility classes.
