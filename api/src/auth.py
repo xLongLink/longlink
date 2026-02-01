@@ -1,7 +1,5 @@
 import os
-import time
-import src.db as db
-from fastapi import Cookie, Depends, HTTPException, status
+from fastapi import HTTPException, Request
 from authlib.integrations.starlette_client import OAuth
 
 
@@ -30,17 +28,17 @@ oauth.register(
 )
 
 
-async def user(request: Request) -> db.User:
+async def user(request: Request) -> dict:
     session_user = request.session.get("user")
     if not session_user:
         raise HTTPException(401, "Not authenticated")
 
-    obj = await db.get_user_by_oauth_id(
-        provider=session_user["provider"],
-        oauth_id=session_user["id"],
-    )
-    if not obj:
-        raise HTTPException(404, "User not found")
-
-    return obj
-
+    # obj = await db.get_user_by_oauth_id(
+    #     provider=session_user["provider"],
+    #     oauth_id=session_user["id"],
+    # )
+    # if not obj:
+    #     raise HTTPException(404, "User not found")
+# 
+    # return obj
+    return {}
