@@ -1,6 +1,6 @@
+from sqlalchemy import select
 from src.db.models import User
 from src.db.session import get_session
-from sqlalchemy import desc, func, select
 
 
 async def add_user(name: str, email: str, avatar: str, *, oauth_github_id: int | None) -> User:
