@@ -1,0 +1,250 @@
+import {
+    type ColumnDef,
+    flexRender,
+    getCoreRowModel,
+    getPaginationRowModel,
+    useReactTable,
+} from "@tanstack/react-table"
+import {
+    MoreHorizontal,
+    FileText,
+    CreditCard,
+    Landmark,
+} from "lucide-react"
+
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+
+/* =========================
+   DATA MODEL
+========================= */
+
+export type Invoice = {
+    id: string
+    clientName: string
+    clientEmail: string
+    invoiceNumber: string
+    issueDate: string
+    dueDate: string
+    status: "Paid" | "Pending" | "Overdue"
+    subtotal: number
+    vat: number
+    method: "Card" | "Bank Transfer"
+}
+
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function statusVariant(status: Invoice["status"]) {
+    switch (status) {
+        case "Paid":
+            return "default"
+        case "Pending":
+            return "secondary"
+        case "Overdue":
+            return "destructive"
+    }
+}
+
+/* =========================
+   COLUMNS
+========================= */
+
+const columns: ColumnDef<Invoice>[] = [
+    {
+        id: "select",
+        header: ({ table }) => (
+            <Checkbox
+                checked={table.getIsAllPageRowsSelected()}
+                onCheckedChange={(v) =>
+                    table.toggleAllPageRowsSelected(!!v)
+                }
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(v) =>
+                    row.toggleSelected(!!v)
+                }
+            />
+        ),
+        enableSorting: false,
+    },
+    {
+        header: "Client",
+        cell: ({ row }) => (
+            <div className="leading-tight">
+                <div className="text-sm font-medium">
+                    {row.original.clientName}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                    {row.original.clientEmail}
+                </div>
+            </div>
+        ),
+    },
+    {
+        header: "Invoice",
+        cell: ({ row }) => (
+            <div className="leading-tight">
+                <div className="flex items-center gap-1 text-sm font-medium">
+                    <FileText className="h-3.5 w-3.5" />
+                    {row.original.invoiceNumber}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                    Issued {row.original.issueDate}
+                </div>
+            </div>
+        ),
+    },
+    {
+        header: "Due",
+        accessorKey: "dueDate",
+        cell: ({ row }) => (
+            <div className="text-xs text-muted-foreground">
+                {row.original.dueDate}
+            </div>
+        ),
+    },
+    {
+        header: "Status",
+        accessorKey: "status",
+        cell: ({ row }) => (
+            <Badge variant={statusVariant(row.original.status)}>
+                {row.original.status}
+            </Badge>
+        ),
+    },
+    {
+        header: "Payment",
+        cell: ({ row }) => (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                {row.original.method === "Card" ? (
+                    <CreditCard className="h-4 w-4" />
+                ) : (
+                    <Landmark className="h-4 w-4" />
+                )}
+                {row.original.method}
+            </div>
+        ),
+    },
+    {
+        header: "Amount",
+        cell: ({ row }) => {
+            const total = row.original.subtotal + row.original.vat
+            return (
+                <div className="text-right leading-tight">
+                    <div className="text-sm font-medium">
+                        €{total.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                        VAT €{row.original.vat.toFixed(2)}
+                    </div>
+                </div>
+            )
+        },
+    },
+    {
+        id: "actions",
+        cell: () => (
+            <DropdownMenu>
+                <DropdownMenuTrigger className="inline-flex h-7 w-7 items-center justify-center hover:bg-muted">
+                    <MoreHorizontal className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem>View</DropdownMenuItem>
+                    <DropdownMenuItem>Download PDF</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive">
+                        Delete
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        ),
+    },
+]
+
+/* =========================
+   TABLE
+========================= */
+
+type DataTableProps = {
+    data: Invoice[]
+}
+
+export function DataTable({ data }: DataTableProps) {
+    const table = useReactTable({
+        data,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        initialState: {
+            pagination: {
+                pageSize: 5,
+            },
+        },
+    })
+
+    return (
+        <div className="border overflow-hidden">
+            <Table>
+                <TableHeader className="bg-muted/40 border-b">
+                    {table.getHeaderGroups().map((hg) => (
+                        <TableRow key={hg.id}>
+                            {hg.headers.map((header) => (
+                                <TableHead
+                                    key={header.id}
+                                    className="text-[11px] uppercase text-muted-foreground h-9"
+                                >
+                                    {header.isPlaceholder
+                                        ? null
+                                        : flexRender(
+                                            header.column.columnDef.header,
+                                            header.getContext()
+                                        )}
+                                </TableHead>
+                            ))}
+                        </TableRow>
+                    ))}
+                </TableHeader>
+
+                <TableBody>
+                    {table.getRowModel().rows.map((row) => (
+                        <TableRow
+                            key={row.id}
+                            className="h-11 hover:bg-muted/50"
+                        >
+                            {row.getVisibleCells().map((cell) => (
+                                <TableCell key={cell.id} className="py-1.5">
+                                    {flexRender(
+                                        cell.column.columnDef.cell,
+                                        cell.getContext()
+                                    )}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    )
+}

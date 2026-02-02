@@ -23,8 +23,9 @@ app.add_middleware(
     https_only=False,
 )
 
+
 # Register routers
-import src.routes.login
+import src.routes.auth
 app.include_router(router)
 
 

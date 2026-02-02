@@ -1,5 +1,9 @@
-from sqlalchemy import Column, BigInteger, String, DateTime, func
+from datetime import datetime
+from sqlalchemy import String, DateTime, BigInteger, func
+from sqlalchemy.orm import Mapped, mapped_column
 from src.db.models.__base__ import Base
+
+
 
 
 class Organization(Base):
@@ -8,12 +12,15 @@ class Organization(Base):
     """
     __tablename__ = "organizations"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    name = Column(String(100), unique=True, nullable=False)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     
-    legal_name = Column(String(200), nullable=True)
-    legal_form = Column(String(100), nullable=True)
-    business_description = Column(String(1000), nullable=True)
+    # Date tracking
+    date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+
+    # legal_name = Column(String(200), nullable=True)
+    # legal_form = Column(String(100), nullable=True)
+    # business_description = Column(String(1000), nullable=True)
 
     # incorporation_date
     # jurisdiction_country
@@ -28,9 +35,7 @@ class Organization(Base):
     # industry_code_system  (NACE / NAICS / NOGA / SIC)
     # business_description
     # fiscal_year_end
-
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
-
+    
 
 
 

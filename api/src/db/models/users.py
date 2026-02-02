@@ -1,8 +1,8 @@
-from sqlalchemy import String, Boolean, DateTime, BigInteger, func
-from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
+from sqlalchemy import Integer, String, DateTime, BigInteger, func
+from sqlalchemy.orm import Mapped, mapped_column
 from src.db.models.__base__ import Base
-from sqlalchemy import ForeignKey
+
 
 
 class User(Base):
@@ -14,14 +14,13 @@ class User(Base):
     __tablename__ = "users"
 
     # Basic user metadata
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     avatar: Mapped[str | None] = mapped_column(String(2048), nullable=True)
-    username: Mapped[str] = mapped_column(String(39), unique=True, nullable=False)
 
     # OAuth provider details, user can have multiple linked providers
-
+    oauth_github_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
     # Date tracking
     date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())

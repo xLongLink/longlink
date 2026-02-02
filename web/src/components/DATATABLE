@@ -1,0 +1,121 @@
+import { Card } from "@/components/ui/card"
+import { DataTable } from "@/components/DataTable"
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const data: any[] = [
+    {
+        id: "1",
+        client: {
+            name: "Adriano Saurwein",
+            email: "adriano@email.com"
+        },
+        invoiceNumber: "INV-001",
+        issueDate: "2024-01-10",
+        dueDate: "2024-01-20",
+        status: "Paid",
+        subtotal: 1000,
+        vat: 200,
+        method: "Card",
+    },
+    {
+        id: "2",
+        client: {
+            name: "Leonardo Saurwein",
+            email: "leo@email.com"
+        },
+        invoiceNumber: "INV-002",
+        issueDate: "2024-01-15",
+        dueDate: "2024-01-30",
+        status: "Pending",
+        subtotal: 450,
+        vat: 90,
+        method: "Bank Transfer",
+    },
+    {
+        id: "3",
+        client: {
+            name: "Bongo",
+            email: "bongo@email.com"
+        },
+        invoiceNumber: "INV-003",
+        issueDate: "2024-01-05",
+        dueDate: "2024-01-12",
+        status: "Overdue",
+        subtotal: 300,
+        vat: 60,
+        method: "Card",
+    },
+]
+
+export type ColumnSchema = {
+    key: string                // column header
+    align?: "left" | "center" | "right"
+    cell: string[]             // template lines
+}
+
+const schema: ColumnSchema[] = [
+    {
+        key: "Invoice",
+        align: "left",
+        cell: [
+            "{invoiceNumber}",
+            "Issued {issueDate}",
+            "Status: {status}",
+        ],
+    },
+    {
+        key: "Client",
+        cell: [
+            "{client.name}",
+            "{client.email}",
+        ],
+    },
+    {
+        key: "Due Date",
+        align: "left",
+        cell: [
+            "{dueDate}",
+        ],
+    },
+    {
+        key: "Amount",
+        align: "right",
+        cell: [
+            "€{subtotal}",
+            "VAT €{vat}",
+        ],
+    },
+    // TODO: Functions
+    // bold() -> makes text bold
+    // icon() -> adds an icon before the text
+    // i18n() -> translates text key to current locale
+    // badge() -> wraps text in a badge
+    // link() -> makes text a clickable link
+    // {
+    //     key: "Invoice",
+    //     align: "left",
+    //     cell: [
+    //         "{bold(invoiceNumber)}",
+    //         "i18n(Issued) {issueDate}",
+    //         "Status: {status}",
+    //     ],
+    // },
+
+]
+
+// TODO: Table actions
+// TODO: Filtering
+// TODO: Endpoint calling, ecc
+export function Test() {
+    return (
+        <>
+            <div className="flex justify-center p-6">
+                <Card className="w-full max-w-6xl p-0">
+                    <DataTable data={data} schema={schema} />
+                </Card>
+            </div>
+        </>
+
+    )
+}
