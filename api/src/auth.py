@@ -1,4 +1,5 @@
 import os
+from src.db import User, get_user_by_id
 from fastapi import HTTPException, Request
 from authlib.integrations.starlette_client import OAuth
 
@@ -17,20 +18,10 @@ oauth.register(
 )
 
 
-# oauth.register(
-#     name="google",
-#     client_id=os.getenv("GOOGLE_CLIENT_ID"),
-#     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-#     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-#     userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
-#     client_kwargs={"scope": "openid email profile"},
-#     redirect_uri=f"https://api.swissgpu.ch/auth/google",
-# )
-
-
-async def user(request: Request) -> dict:
-    session_user = request.session.get("user")
-    if not session_user:
+async def user(request: Request) -> User:
+    userid = request.session.get("userid")
+    if not userid:
         raise HTTPException(401, "Not authenticated")
 
-    return {}
+    user = await get_user_by_id(userid)
+    return user
