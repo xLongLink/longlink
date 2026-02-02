@@ -7,9 +7,6 @@ from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
 
-DOMAIN = "localhost"
-
-
 @router.get("/login/github")
 async def login_github(request: Request):
     github = cast(StarletteOAuth2App, oauth.create_client("github"))
@@ -30,18 +27,12 @@ async def auth_github(request: Request):
     # Ensure that the user exists in our database
     user = await add_user(
         name=userinfo.json().get("name") or userinfo.json().get("login"),
-        email=userinfo.json().get("email") or f"{userinfo.json().get('login')}@{DOMAIN}",
+        email=userinfo.json().get("email") or f"sample@localhost",
         avatar=userinfo.json().get("avatar_url"),
         oauth_github_id=userinfo.json().get("id"),
     )
 
-    request.session["user"] = {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "avatar": user.avatar,
-    }
-
+    request.session["userid"] = user.id
     return RedirectResponse("/")
 
 

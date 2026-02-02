@@ -1,15 +1,12 @@
 from datetime import datetime
-from sqlalchemy import String, DateTime, BigInteger, func
+from sqlalchemy import String, DateTime, BigInteger, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 from src.db.models.__base__ import Base
-
-
+from .users import User
 
 
 class Organization(Base):
-    """
-    Represent an organization account in the platform. 
-    """
+    """Represent an organization account in the platform"""
     __tablename__ = "organizations"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -36,6 +33,23 @@ class Organization(Base):
     # business_description
     # fiscal_year_end
     
+
+class OrganizationMember(Base):
+    """Represent a member of an organization"""
+    __tablename__ = "organizations_members"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+
+    id_org: Mapped[int] = mapped_column(BigInteger, ForeignKey("organizations.id"), nullable=False)
+    id_user: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)
+    
+    role = mapped_column(String(50), nullable=False)
+
+
+class OrganizationSetting(Base):
+    pass
+
+
 
 
 

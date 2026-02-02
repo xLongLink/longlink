@@ -45,3 +45,13 @@ async def get_user_by_github_id(github_id: int) -> User | None:
     async with Session() as session:
         result = await session.execute(select(User).where(User.oauth_github_id == github_id))
         return result.scalars().first()
+
+
+async def get_user_by_id(user_id: int) -> User | None:
+    """Retrieve a user by their internal user ID."""
+    
+    Session = await get_session()
+    async with Session() as session:
+        result = await session.execute(select(User).where(User.id == user_id))
+        return result.scalars().first()
+    
