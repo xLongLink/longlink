@@ -131,3 +131,6 @@ Thumbs.db
 TODO
 
 test.py
+
+
+*.db

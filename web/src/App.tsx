@@ -5,9 +5,11 @@ import { Login } from '@/pages/Login';
 import { Module } from '@/pages/Module';
 import { Organization } from '@/pages/Organization';
 
+import { Test } from '@/pages/Test';
 
 const router = createBrowserRouter([
-    { path: '/', element: <Home /> },
+    { path: '/', element: <Test /> },
+    { path: '/test', element: <Home /> },
     { path: '/login', element: <Login /> },
     {
         path: '/:org/*',

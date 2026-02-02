@@ -17,15 +17,15 @@ oauth.register(
 )
 
 
-oauth.register(
-    name="google",
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
-    client_kwargs={"scope": "openid email profile"},
-    redirect_uri=f"https://api.swissgpu.ch/auth/google",
-)
+# oauth.register(
+#     name="google",
+#     client_id=os.getenv("GOOGLE_CLIENT_ID"),
+#     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+#     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+#     userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
+#     client_kwargs={"scope": "openid email profile"},
+#     redirect_uri=f"https://api.swissgpu.ch/auth/google",
+# )
 
 
 async def user(request: Request) -> dict:
@@ -33,12 +33,4 @@ async def user(request: Request) -> dict:
     if not session_user:
         raise HTTPException(401, "Not authenticated")
 
-    # obj = await db.get_user_by_oauth_id(
-    #     provider=session_user["provider"],
-    #     oauth_id=session_user["id"],
-    # )
-    # if not obj:
-    #     raise HTTPException(404, "User not found")
-# 
-    # return obj
     return {}

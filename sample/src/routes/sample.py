@@ -55,3 +55,20 @@ async def sample_post_user_endpoint() -> UserModel:
 
 # TODO: Body
 # TODO: Token + Permissions
+
+
+
+# Example with params
+# Params must have a default value
+@get("/params/{object}?{start}&{end}")
+async def sample_get_endpoint_with_params(object: int, start: int = 0, end: int = 10):
+    return "Sample GET endpoint response"
+
+
+class Page:
+    pass
+
+
+@get("/params/{object}?{start}&{end}")
+async def sample_get_endpoint_with_params(object: int, start: int = 0, end: int = 10) -> Page:
+    return Page()

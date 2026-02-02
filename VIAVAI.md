@@ -9,8 +9,9 @@ A platform to manage company tools, processes, projects and workflows. It shall 
 The platform manage user authentication, permissions, roles, billing, modules, backups, ...
 
 - Each organization shall have a database and a storage space.
-- Each organization sits in a singe country
-- Mail intergations
+- Each organization sits in a country
+- Each organization has
+- viavai.com/<country_code>/<organization_name>
 
 ## The modules
 
