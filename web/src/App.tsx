@@ -1,5 +1,5 @@
 import { RouterProvider, createBrowserRouter } from 'react-router';
-import { ThemeProvider } from "@/components/theme"
+import { ThemeProvider } from '@/components/theme';
 import { Home } from '@/pages/Home';
 import { Login } from '@/pages/Login';
 import { Module } from '@/pages/Module';
@@ -20,7 +20,6 @@ const router = createBrowserRouter([
         element: <Module />,
     },
 ]);
-
 
 export function App() {
     return (
