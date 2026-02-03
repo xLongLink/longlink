@@ -8,8 +8,8 @@ import { Organization } from '@/pages/Organization';
 import { Test } from '@/pages/Test';
 
 const router = createBrowserRouter([
-    { path: '/', element: <Test /> },
-    { path: '/test', element: <Home /> },
+    { path: '/', element: <Home /> },
+    { path: '/test', element: <Test /> },
     { path: '/login', element: <Login /> },
     {
         path: '/:org/*',
