@@ -16,26 +16,38 @@ class Router:
             return func
         return decorator
 
-    def _match(self, method: str, path: str) -> Handler | None:
+    def match(self, method: str, path: str, query_string: str = "") -> tuple[Handler | None, dict[str, Any]]:
+        full_path = path
+        if query_string:
+            separator = "&" if "?" in path else "?"
+            full_path = f"{path}{separator}{query_string}"
+
         for route in self._routes:
             if route.method != method.upper():
                 continue
 
-            params = route.match(path)
+            params = route.match(full_path)
             if params is None:
                 continue
 
             sig = inspect.signature(route.handler)
-            bound = sig.bind_partial(**params)
+            filtered = {name: value for name, value in params.items() if name in sig.parameters}
+            bound = sig.bind_partial(**filtered)
             bound.apply_defaults()
+            return route.handler, bound.arguments
 
-            async def wrapper(*_):
-                return await route.handler(**bound.arguments)
+        return None, {}
 
-            wrapper.__name__ = route.handler.__name__
-            return wrapper
+    def _match(self, method: str, path: str, query_string: str = "") -> Handler | None:
+        handler, params = self.match(method, path, query_string=query_string)
+        if handler is None:
+            return None
 
-        return None
+        async def wrapper(*_):
+            return await handler(**params)
+
+        wrapper.__name__ = handler.__name__
+        return wrapper
 
     def get(self, path: str): return self._route("GET", path)
     def post(self, path: str): return self._route("POST", path)
@@ -49,10 +61,10 @@ if __name__ == "__main__":
     router = Router()
 
     @router.get("/users/{user_id}/posts?{filter}&sort={sort_order}")
-    async def get_user_posts(user_id: str, filter: str = "", sort: str = "asc"):
-        return {"user_id": user_id, "filter": filter, "sort": sort}
+    async def get_user_posts(user_id: str, filter: str = "", sort_order: str = "asc"):
+        return {"user_id": user_id, "filter": filter, "sort": sort_order}
 
-    fn = router._match("GET", "/users/admin/posts?filter=any&sort=desc")
+    fn, params = router.match("GET", "/users/admin/posts", query_string="filter=any&sort=desc")
     assert fn is not None, "Handler not found for registered route"
     assert fn.__name__ == "get_user_posts", "Handler function name does not match expected"
-
+    assert params == {"user_id": "admin", "filter": "any", "sort_order": "desc"}
