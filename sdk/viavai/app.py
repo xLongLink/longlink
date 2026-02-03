@@ -1,15 +1,17 @@
 from typing import get_type_hints
-
 from pydantic import BaseModel
-
 from viavai.controllers.routes import match_route
+from viavai.api import Api
+from viavai.cron import Cron
+from viavai.logs import Logs
 
 
-class ViaVai:
+class ViaVai(Api, Cron, Logs):
     def __init__(self, title: str = "Sample", description: str = "Sample description", version: str = "0.0.0"):
         self.title = title
         self.description = description
         self.version = version
+        super().__init__()
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -76,3 +78,5 @@ class ViaVai:
             "type": "http.response.body",
             "body": body_bytes,
         })
+
+    
