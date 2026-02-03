@@ -29,13 +29,3 @@ class OrganizationMember(Base):
     # Date tracking
     date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     
-
-class OrganizationSetting(Base):
-    pass
-
-
-
-
-
-
-
