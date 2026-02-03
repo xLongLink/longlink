@@ -4,6 +4,7 @@ import { Workflows } from '@/components/workflows';
 import { Solutions } from '@/components/solutions';
 import { FileText, Settings, Ticket } from 'lucide-react';
 import { Files } from '@/components/files';
+import { ViaVai } from '@/components/ViaVai';
 
 const moduleTabs = [
     {
@@ -24,6 +25,12 @@ const moduleTabs = [
         path: 'settings',
         icon: Settings,
     },
+    {
+        value: 'sample',
+        label: 'Sample',
+        path: 'sample',
+        icon: Settings,
+    }
 ];
 
 export function Module() {
@@ -32,18 +39,12 @@ export function Module() {
 
     return (
         <Routes>
-            <Route
-                element={
-                    <Navigation
-                        tabs={moduleTabs}
-                        basePathSuffix={basePathSuffix}
-                    />
-                }
-            >
+            <Route element={<Navigation tabs={moduleTabs} basePathSuffix={basePathSuffix} />}>
                 <Route index element={<Navigate to="files" replace />} />
                 <Route path="files" element={<Files />} />
                 <Route path="tickets" element={<Solutions />} />
                 <Route path="settings" element={<Workflows />} />
+                <Route path="sample" element={<ViaVai />} />
             </Route>
         </Routes>
     );
