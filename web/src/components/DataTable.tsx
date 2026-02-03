@@ -3,7 +3,7 @@ import {
     flexRender,
     getCoreRowModel,
     useReactTable,
-} from "@tanstack/react-table"
+} from '@tanstack/react-table';
 import {
     Table,
     TableBody,
@@ -11,17 +11,17 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table';
 
 /* =========================
    SCHEMA
 ========================= */
 
 export type ColumnSchema = {
-    key: string
-    align?: "left" | "center" | "right"
-    cell: string[]
-}
+    key: string;
+    align?: 'left' | 'center' | 'right';
+    cell: string[];
+};
 
 /* =========================
    TEMPLATE HELPERS
@@ -29,15 +29,14 @@ export type ColumnSchema = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function resolvePath(obj: any, path: string): any {
-    return path.split(".").reduce((acc, key) => acc?.[key], obj)
+    return path.split('.').reduce((acc, key) => acc?.[key], obj);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function renderTemplate(template: string, data: any): string {
-    return template.replace(
-        /\{([^}]+)\}/g,
-        (_, path) => String(resolvePath(data, path) ?? "")
-    )
+    return template.replace(/\{([^}]+)\}/g, (_, path) =>
+        String(resolvePath(data, path) ?? '')
+    );
 }
 
 /* =========================
@@ -50,17 +49,17 @@ function buildColumns<T extends object>(
     return schema.map((col) => ({
         header: col.key,
         meta: {
-            align: col.align ?? "left",
+            align: col.align ?? 'left',
         },
         cell: ({ row }) => (
-            <div className={`leading-tight text-${col.align ?? "left"}`}>
+            <div className={`leading-tight text-${col.align ?? 'left'}`}>
                 {col.cell.map((line, i) => (
                     <div
                         key={i}
                         className={
                             i === 0
-                                ? "text-sm font-medium"
-                                : "text-xs text-muted-foreground"
+                                ? 'text-sm font-medium'
+                                : 'text-xs text-muted-foreground'
                         }
                     >
                         {renderTemplate(line, row.original)}
@@ -68,7 +67,7 @@ function buildColumns<T extends object>(
                 ))}
             </div>
         ),
-    }))
+    }));
 }
 
 /* =========================
@@ -76,9 +75,9 @@ function buildColumns<T extends object>(
 ========================= */
 
 type DataTableProps<T> = {
-    data: T[]
-    schema: ColumnSchema[]
-}
+    data: T[];
+    schema: ColumnSchema[];
+};
 
 export function DataTable<T extends object>({
     data,
@@ -88,7 +87,7 @@ export function DataTable<T extends object>({
         data,
         columns: buildColumns<T>(schema),
         getCoreRowModel: getCoreRowModel(),
-    })
+    });
 
     return (
         <div className="border overflow-hidden">
@@ -98,7 +97,8 @@ export function DataTable<T extends object>({
                         <TableRow key={hg.id}>
                             {hg.headers.map((header) => {
                                 const align =
-                                    header.column.columnDef.meta?.align ?? "left"
+                                    header.column.columnDef.meta?.align ??
+                                    'left';
 
                                 return (
                                     <TableHead
@@ -108,11 +108,12 @@ export function DataTable<T extends object>({
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
+                                                  header.column.columnDef
+                                                      .header,
+                                                  header.getContext()
+                                              )}
                                     </TableHead>
-                                )
+                                );
                             })}
                         </TableRow>
                     ))}
@@ -123,7 +124,7 @@ export function DataTable<T extends object>({
                         <TableRow key={row.id}>
                             {row.getVisibleCells().map((cell) => {
                                 const align =
-                                    cell.column.columnDef.meta?.align ?? "left"
+                                    cell.column.columnDef.meta?.align ?? 'left';
 
                                 return (
                                     <TableCell
@@ -135,12 +136,12 @@ export function DataTable<T extends object>({
                                             cell.getContext()
                                         )}
                                     </TableCell>
-                                )
+                                );
                             })}
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
         </div>
-    )
+    );
 }

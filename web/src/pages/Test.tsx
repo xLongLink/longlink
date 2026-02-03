@@ -1,29 +1,39 @@
-import * as React from "react"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
+import * as React from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navigation } from '@/components/navigation';
 import { GitBranch, LayoutGrid, Layers, Users, Wrench } from 'lucide-react';
 
 export function Test() {
-    const [enabled, setEnabled] = React.useState(false)
-    const [textValue, setTextValue] = React.useState("")
-    const [numberValue, setNumberValue] = React.useState(10)
-    const [option, setOption] = React.useState("medium")
+    const [enabled, setEnabled] = React.useState(false);
+    const [textValue, setTextValue] = React.useState('');
+    const [numberValue, setNumberValue] = React.useState(10);
+    const [option, setOption] = React.useState('medium');
 
     const orgTabs = [
         { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
         { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
-        { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
-        { value: 'workflows', label: 'Workflows', path: 'workflows', icon: GitBranch },
+        {
+            value: 'solutions',
+            label: 'Solutions',
+            path: 'solutions',
+            icon: Layers,
+        },
+        {
+            value: 'workflows',
+            label: 'Workflows',
+            path: 'workflows',
+            icon: GitBranch,
+        },
         { value: 'people', label: 'People', path: 'people', icon: Users },
     ];
 
@@ -78,10 +88,12 @@ export function Test() {
                             type="number"
                             min={0}
                             max={100}
-                            value={Number.isFinite(numberValue) ? numberValue : 0}
+                            value={
+                                Number.isFinite(numberValue) ? numberValue : 0
+                            }
                             onChange={(e) => {
-                                const next = e.target.value
-                                setNumberValue(next === "" ? 0 : Number(next))
+                                const next = e.target.value;
+                                setNumberValue(next === '' ? 0 : Number(next));
                             }}
                         />
                     </div>
@@ -106,5 +118,5 @@ export function Test() {
                 </CardContent>
             </Card>
         </>
-    )
+    );
 }

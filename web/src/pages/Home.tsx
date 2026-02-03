@@ -1,10 +1,19 @@
 import {
-    ArrowRight, Box, Briefcase, FolderKanban, Layers, Plug, ShieldCheck, Sparkles, Users, Zap,
+    ArrowRight,
+    Box,
+    Briefcase,
+    FolderKanban,
+    Layers,
+    Plug,
+    ShieldCheck,
+    Sparkles,
+    Users,
+    Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from '@/components/ui/card';
 
 export function Home() {
     const navigate = useNavigate();
@@ -42,7 +51,8 @@ export function Home() {
                             <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
                                 The modular platform
                                 <span className="text-blue-400">
-                                    {" "} built for modern teams
+                                    {' '}
+                                    built for modern teams
                                 </span>
                             </h1>
                             <p className="mt-5 text-base text-white/70 md:text-lg">
@@ -77,7 +87,8 @@ export function Home() {
                                     Multi-Tenant Organizations
                                 </h3>
                                 <p className="mt-3 text-sm text-white/65">
-                                    Structure work across portfolios, business units, and compliance boundaries.
+                                    Structure work across portfolios, business
+                                    units, and compliance boundaries.
                                 </p>
                             </CardContent>
                         </Card>
@@ -90,7 +101,8 @@ export function Home() {
                                     Modular App System
                                 </h3>
                                 <p className="mt-3 text-sm text-white/65">
-                                    Install only the capabilities you need—from projects to audit workflows.
+                                    Install only the capabilities you need—from
+                                    projects to audit workflows.
                                 </p>
                             </CardContent>
                         </Card>
@@ -103,7 +115,8 @@ export function Home() {
                                     Developer-First
                                 </h3>
                                 <p className="mt-3 text-sm text-white/65">
-                                    Ship faster with Git-native workflows and programmable automations.
+                                    Ship faster with Git-native workflows and
+                                    programmable automations.
                                 </p>
                             </CardContent>
                         </Card>
@@ -116,7 +129,8 @@ export function Home() {
                                     Secure by Default
                                 </h3>
                                 <p className="mt-3 text-sm text-white/65">
-                                    Enterprise-grade controls for sensitive data, identity, and policy.
+                                    Enterprise-grade controls for sensitive
+                                    data, identity, and policy.
                                 </p>
                             </CardContent>
                         </Card>
@@ -129,7 +143,8 @@ export function Home() {
                                     Team Collaboration
                                 </h3>
                                 <p className="mt-3 text-sm text-white/65">
-                                    Keep delivery teams aligned with shared workspaces and live updates.
+                                    Keep delivery teams aligned with shared
+                                    workspaces and live updates.
                                 </p>
                             </CardContent>
                         </Card>
@@ -142,7 +157,8 @@ export function Home() {
                                     Extensible Platform
                                 </h3>
                                 <p className="mt-3 text-sm text-white/65">
-                                    Build custom modules or use pre-built apps for every operational need.
+                                    Build custom modules or use pre-built apps
+                                    for every operational need.
                                 </p>
                             </CardContent>
                         </Card>
@@ -157,67 +173,71 @@ export function Home() {
                             pre-built modules or custom apps.
                         </p>
 
-
-                        <Card className='mt-10'>
-                            <CardContent className='grid gap-6 p-8 text-left md:grid-cols-[1.1fr_1fr]'>
+                        <Card className="mt-10">
+                            <CardContent className="grid gap-6 p-8 text-left md:grid-cols-[1.1fr_1fr]">
                                 <div>
                                     <div className="flex items-center gap-3 text-lg font-semibold">
                                         <Briefcase className="h-5 w-5 text-blue-400" />
                                         Available Modules
                                     </div>
                                     <div className="mt-6 space-y-4">
-                                        <div className="flex gap-3" >
+                                        <div className="flex gap-3">
                                             <div className="mt-1 h-5 w-5 rounded-full border border-blue-500/40 bg-blue-500/20" />
                                             <div>
                                                 <p className="text-sm font-semibold">
                                                     Issues
                                                 </p>
                                                 <p className="text-xs text-white/60">
-                                                    Track bugs, risks, and operational tasks.
+                                                    Track bugs, risks, and
+                                                    operational tasks.
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3" >
+                                        <div className="flex gap-3">
                                             <div className="mt-1 h-5 w-5 rounded-full border border-blue-500/40 bg-blue-500/20" />
                                             <div>
                                                 <p className="text-sm font-semibold">
                                                     Docs
                                                 </p>
                                                 <p className="text-xs text-white/60">
-                                                    Team documentation and governance policies.
+                                                    Team documentation and
+                                                    governance policies.
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3" >
+                                        <div className="flex gap-3">
                                             <div className="mt-1 h-5 w-5 rounded-full border border-blue-500/40 bg-blue-500/20" />
                                             <div>
                                                 <p className="text-sm font-semibold">
                                                     Secrets
                                                 </p>
                                                 <p className="text-xs text-white/60">
-                                                    Secure credentials with audit trails.
+                                                    Secure credentials with
+                                                    audit trails.
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3" >
+                                        <div className="flex gap-3">
                                             <div className="mt-1 h-5 w-5 rounded-full border border-blue-500/40 bg-blue-500/20" />
                                             <div>
                                                 <p className="text-sm font-semibold">
                                                     Compliance
                                                 </p>
                                                 <p className="text-xs text-white/60">
-                                                    Ensure adherence to regulations and standards.
+                                                    Ensure adherence to
+                                                    regulations and standards.
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3" >
+                                        <div className="flex gap-3">
                                             <div className="mt-1 h-5 w-5 rounded-full border border-blue-500/40 bg-blue-500/20" />
                                             <div>
                                                 <p className="text-sm font-semibold">
                                                     Agents
                                                 </p>
                                                 <p className="text-xs text-white/60">
-                                                    AI automation for routine workflows.
+                                                    AI automation for routine
+                                                    workflows.
                                                 </p>
                                             </div>
                                         </div>
@@ -240,7 +260,6 @@ export function Home() {
                                 </div>
                             </CardContent>
                         </Card>
-
                     </section>
 
                     <section className="mt-20" id="careers">
@@ -250,8 +269,8 @@ export function Home() {
                                     Ready to get started?
                                 </h2>
                                 <p className="mt-3 text-sm text-white/70">
-                                    Join teams building better with ViaVai&apos;s
-                                    unified platform.
+                                    Join teams building better with
+                                    ViaVai&apos;s unified platform.
                                 </p>
                                 <Button className="mt-6 inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold shadow-lg shadow-blue-600/40 transition hover:bg-blue-500">
                                     Start Building Now
@@ -275,6 +294,6 @@ export function Home() {
                     </div>
                 </footer>
             </div>
-        </div >
+        </div>
     );
 }

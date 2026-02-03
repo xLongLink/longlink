@@ -2,7 +2,6 @@ import { Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModuleCard } from '@/components/module';
 
-
 export function Tools() {
     return (
         <div className="space-y-6">
@@ -15,9 +14,7 @@ export function Tools() {
                         <h1 className="text-lg font-semibold text-white">
                             Tools
                         </h1>
-                        <p className="text-sm text-white/60">
-                            2 tools
-                        </p>
+                        <p className="text-sm text-white/60">2 tools</p>
                     </div>
                 </div>
                 <Button variant="outline">

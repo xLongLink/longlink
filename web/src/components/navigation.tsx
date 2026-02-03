@@ -1,8 +1,13 @@
 import { BarChart3 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
+import {
+    Link,
+    Outlet,
+    useLocation,
+    useNavigate,
+    useParams,
+} from 'react-router';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 
 export type NavigationTab = {
     value: string;
@@ -11,12 +16,10 @@ export type NavigationTab = {
     icon: LucideIcon;
 };
 
-
 type NavigationProps = {
     tabs: NavigationTab[];
     basePathSuffix?: string;
 };
-
 
 export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
     const { org = '' } = useParams();
@@ -25,7 +28,9 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
 
     const organizationName = formatOrganizationName(org || 'org');
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
-    const basePath = normalizedSuffix ? `/${org}/${normalizedSuffix}` : `/${org}`;
+    const basePath = normalizedSuffix
+        ? `/${org}/${normalizedSuffix}`
+        : `/${org}`;
 
     const activeTab = (() => {
         const path = location.pathname;
@@ -62,12 +67,18 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                     <Tabs
                         value={activeTab}
                         onValueChange={(value) => {
-                            const nextTab = tabs.find((tab) => tab.value === value);
+                            const nextTab = tabs.find(
+                                (tab) => tab.value === value
+                            );
                             if (!nextTab) {
                                 return;
                             }
                             const nextPath = nextTab.path ?? '';
-                            navigate(nextPath === '' ? basePath : `${basePath}/${nextPath}`);
+                            navigate(
+                                nextPath === ''
+                                    ? basePath
+                                    : `${basePath}/${nextPath}`
+                            );
                         }}
                     >
                         <TabsList variant="line" className="gap-4">
@@ -98,7 +109,6 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
     );
 }
 
-
 function formatOrganizationName(value: string) {
     return value
         .split('-')
@@ -109,6 +119,5 @@ function formatOrganizationName(value: string) {
         )
         .join(' ');
 }
-
 
 export default Navigation;

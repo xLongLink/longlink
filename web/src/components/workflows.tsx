@@ -10,7 +10,6 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 
-
 export function Workflows() {
     return (
         <div className="space-y-6">
@@ -23,9 +22,7 @@ export function Workflows() {
                         <h1 className="text-lg font-semibold text-white">
                             Workflows
                         </h1>
-                        <p className="text-sm text-white/60">
-                            0 workflows
-                        </p>
+                        <p className="text-sm text-white/60">0 workflows</p>
                     </div>
                 </div>
                 <Button variant="outline">
@@ -42,7 +39,8 @@ export function Workflows() {
                         </EmptyMedia>
                         <EmptyTitle>No Workflows Yet</EmptyTitle>
                         <EmptyDescription>
-                            You haven&apos;t created any workflows yet. Get started by creating your first workflow.
+                            You haven&apos;t created any workflows yet. Get
+                            started by creating your first workflow.
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent className="flex-row justify-center gap-2">

@@ -16,9 +16,7 @@ export function Placeholder({ title }: { title: string }) {
                         <h1 className="text-lg font-semibold text-white">
                             {title}
                         </h1>
-                        <p className="text-sm text-white/60">
-                            0 {lowerTitle}
-                        </p>
+                        <p className="text-sm text-white/60">0 {lowerTitle}</p>
                     </div>
                 </div>
                 <Button variant="outline">

@@ -1,13 +1,17 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface ModuleCardProps {
     name: string;
     description: string;
     href: string;
 }
-
 
 export function ModuleCard({ name, description, href }: ModuleCardProps) {
     return (
