@@ -31,21 +31,14 @@ src/
 tests/
 ```
 
-Rule: API → Service → Repository → DB
+## Python Guidelines
 
-## `main.py`
+Sort imports alphabetically by length
 
-`main.py` should:
-
-- Create the FastAPI app
-- Register routers
-- Configure middleware
-
-## 4. API Layer (`api/`)
-
-- Routers are thin
-- Never reuse ORM models as response schemas.
-- One purpose per schema
-    - `NodeCreate`
-    - `NodeUpdate`
-    - `NodeRead`
+```python
+import os
+import sys
+from src.db import *
+from fastapi import *
+from src.auth import *
+```
