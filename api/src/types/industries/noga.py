@@ -1,11 +1,17 @@
 # https://www.kubb-tool.bfs.admin.ch/it/noga/2025
 # Used in: Switzerland
 
-class Noga:
-    includes = [
+class Section:
+    pass
 
-    ]
+class Division:
+    pass
 
-    excludes = [
-        
-    ]
+class Group:
+    pass
+
+class Class:
+    pass 
+
+class Category:
+    pass
