@@ -1,11 +1,10 @@
 from typing import get_type_hints
 from pydantic import BaseModel
 from viavai.cron import Cron
-from viavai.logs import Logs
 from viavai.router import Router
 
 
-class ViaVai(Router, Cron, Logs):
+class ViaVai(Router, Cron):
     def __init__(self, title: str = "Sample", description: str = "Sample description", version: str = "0.0.0"):
         self.title = title
         self.description = description
