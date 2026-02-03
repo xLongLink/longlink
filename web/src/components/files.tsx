@@ -136,7 +136,8 @@ export function Files() {
                                 </EmptyMedia>
                                 <EmptyTitle>No files found</EmptyTitle>
                                 <EmptyDescription>
-                                    Try adjusting your search query or browse the repository tree.
+                                    Try adjusting your search query or browse
+                                    the repository tree.
                                 </EmptyDescription>
                             </EmptyHeader>
                         </Empty>
