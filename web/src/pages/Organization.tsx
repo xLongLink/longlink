@@ -2,7 +2,6 @@ import { Overview } from '@/components/overview';
 import { Tools } from '@/components/tools';
 import { Workflows } from '@/components/workflows';
 import { Solutions } from '@/components/solutions';
-import { Text } from '@/components/text';
 import { Route, Routes } from 'react-router';
 import {
     FileText,
@@ -13,6 +12,7 @@ import {
     Wrench,
 } from 'lucide-react';
 import { Navigation } from '@/components/navigation';
+
 
 export function Organization() {
     const orgTabs = [
@@ -39,7 +39,6 @@ export function Organization() {
             <Route element={<Navigation tabs={orgTabs} />}>
                 <Route index element={<Overview />} />
                 <Route path="tools" element={<Tools />} />
-                <Route path="text" element={<Text />} />
                 <Route path="solutions" element={<Solutions />} />
                 <Route path="workflows" element={<Workflows />} />
                 <Route path="people" element={<div>People Page</div>} />

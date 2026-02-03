@@ -2,6 +2,7 @@ import { Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModuleCard } from '@/components/module';
 
+
 export function Tools() {
     return (
         <div className="space-y-6">
