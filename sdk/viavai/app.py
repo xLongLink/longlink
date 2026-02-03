@@ -1,12 +1,11 @@
 from typing import get_type_hints
 from pydantic import BaseModel
-from viavai.controllers.routes import match_route
-from viavai.api import Api
 from viavai.cron import Cron
 from viavai.logs import Logs
+from viavai.router import Router
 
 
-class ViaVai(Api, Cron, Logs):
+class ViaVai(Router, Cron, Logs):
     def __init__(self, title: str = "Sample", description: str = "Sample description", version: str = "0.0.0"):
         self.title = title
         self.description = description
@@ -23,6 +22,7 @@ class ViaVai(Api, Cron, Logs):
         query_string = scope.get("query_string", b"")
         if isinstance(query_string, bytes):
             query_string = query_string.decode()
+
         handler, params = match_route(method, path, query_string=query_string)
 
         if not handler:
