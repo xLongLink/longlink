@@ -22,7 +22,7 @@ class ViaVai(Router, Cron):
         if isinstance(query_string, bytes):
             query_string = query_string.decode()
 
-        handler, params = match_route(method, path, query_string=query_string)
+        handler, params = self.match(method, path, query_string=query_string)
 
         if not handler:
             await send({
