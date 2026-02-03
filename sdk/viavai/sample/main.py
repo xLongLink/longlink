@@ -1,8 +1,10 @@
-from viavai import ViaVai
+# TODO: Import everything here? 
+# TODO: Settings??
 
 
-app = ViaVai(
-    title="FastAPI Feature Demo",
-    description="Single-file example of common FastAPI features",
-    version="1.0.0"
-)
+from src.app import app
+
+
+# Import to register the route
+import src.routes.sample  
+

@@ -1,74 +1,23 @@
-# ViaVai
+<p align="center">
+  <img src="banner.png" alt="ViaVai" title="ViaVai">
+</p>
 
-## Goal??
+A platform to manage company tools, processes, projects and workflows. It shall help organizations to deal with burocracy though automatization and connections. It shall help companies from day zero of the company incorporation.
 
-A platform to manage all aspects of an organization's operations, projects, and compliance requirements, at the core:
+## The platform
 
-- Version control: Built around Git repositories for source code management.
-- CI/CD: Native continuous integration and continuous delivery pipelines.
-- Project management: Issues, epics, milestones, and Kanban-style boards.
-- Security & compliance: Static/dynamic analysis, dependency scanning, and policy controls.
-- Deployment & operations: Monitoring, environments, and release management.
+The platform manage user authentication, permissions, roles, billing, modules, backups, ...
 
-It can be seen as a GitHub for non-software projects, providing a unified interface to manage diverse organizational needs.
+- Each organization shall have a database and a storage space.
+- Each organization sits in a country
+- Each organization has
+- viavai.com/<country_code>/<organization_name>
 
-## Tools
+## The modules
 
-All the internal tooling required to run an organization, such as:
+Modules is the core part of the platform. Those can be installed with a single click.
+Each module provides specific functionalities to the organization, they are divided in 3 categories:
 
-- Accounting
-- Human Resources
-- Corporate Policy & Compliance Programs
-
-Here are included all the tools that group multiple projects to have a higher level view of the organization.
-
-## Repositories
-
-All the different types of projects/objects that an organization may need to manage, such as:
-
-- Construction & Engineering Projects
-- Facilities & Asset Management
-- Legal Case & Contract Management
-- Product Operations
-- Research & Technical Documentation Projects
-- Event & Program Management
-- Portfolio or Investment Management
-- Patient Medical Record
-
-### Issues
-
-Issues are simple tickers, those can be automatically created from emails or other external systems.
-
-### Settings
-
-```
-[ UI ]
-   |
-[ API Layer ]     ← transport, versioning, contracts
-   |
-[ Application / Domain Layer ]  ← rules, workflows, permissions
-   |
-[ Infrastructure Layer ]        ← DB, queues, logs
-```
-
-## View
-
-- Logs
-- Files
-- Settings
-
-## When deployed, cron shall be external
-
-## Deployment
-
-Mimimal:
-
-- 256 MB RAM
-- 0.5 vCPU
-
-# https://developer.hashicorp.com/nomad
-
-# https://developer.hashicorp.com/consul
-
-- SDK allows to create projects
-- A LongLink tool to automatically enroll users into the platform
+- `Tools`: Long living modules that provide core functionalities to the organization
+- `Entities`: Modules that represent real world entities, usually connected to a client or a supplier
+- `Projects`: Modules that represent projects, internal or external

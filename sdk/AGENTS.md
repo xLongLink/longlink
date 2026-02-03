@@ -24,3 +24,20 @@ To run the unit tests, use the following command:
 ```bash
 python -m unittest discover -s tests
 ```
+
+## Sample project Structure
+
+Created with the `viavai create <module_name>` command, the structure of the module is as follows:
+
+```txt
+main.py     # App entrypoint
+migrations  # DB migrations
+src/
+├── cron    # Cron jobs
+├── models  # Pydantic models
+├── pages   # Web app pages
+├── routes  # HTTP layer only
+├── types   # Pydantic models
+└── app.py  # App logic and validation
+tests/      # Unit tests
+```
