@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from src.db.models import Org, OrgMember
+from src.db.models import App, Org, OrgApp, OrgMember
 from src.db.session import get_session
 
 
@@ -37,3 +37,48 @@ class OrgsService:
         async with Session() as session:
             result = await session.execute(select(Org).where(Org.id == org_id))
             return result.scalars().first()
+
+    async def app(self, org_id: int, app_id: int) -> App | None:
+        """Retrieve an active app deployed in an organization."""
+
+        Session = await get_session()
+        async with Session() as session:
+            result = await session.execute(
+                select(App)
+                .join(OrgApp, OrgApp.id_app == App.id)
+                .where(
+                    OrgApp.id_org == org_id,
+                    OrgApp.id_app == app_id,
+                    OrgApp.active.is_(True),
+                )
+            )
+            return result.scalars().first()
+
+    async def deploy(self, org_id: int, app_id: int) -> OrgApp:
+        """Deploy an application to an organization."""
+
+        Session = await get_session()
+        async with Session() as session:
+            result = await session.execute(
+                select(OrgApp).where(
+                    OrgApp.id_org == org_id,
+                    OrgApp.id_app == app_id,
+                )
+            )
+            org_app = result.scalars().first()
+            if org_app:
+                if not org_app.active:
+                    org_app.active = True
+                    await session.commit()
+                    await session.refresh(org_app)
+                return org_app
+
+            org_app = OrgApp(
+                id_org=org_id,
+                id_app=app_id,
+                active=True,
+            )
+            session.add(org_app)
+            await session.commit()
+            await session.refresh(org_app)
+            return org_app
