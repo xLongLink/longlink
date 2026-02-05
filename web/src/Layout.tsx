@@ -1,9 +1,13 @@
 import type { LucideIcon } from 'lucide-react';
 import {
     BarChart3,
+    Building2,
     GitBranch,
     Layers,
     LayoutGrid,
+    LogOut,
+    Smile,
+    User,
     Users,
     Wrench,
 } from 'lucide-react';
@@ -21,7 +25,16 @@ import {
     BreadcrumbList,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export type NavigationTab = {
     value: string;
@@ -81,48 +94,97 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
         <div className="min-h-screen text-white">
             <header className="border-b border-white/10">
                 <div className="mx-auto w-full px-6 pb-2 pt-4">
-                    <div className="flex items-center gap-4 text-white/80">
-                        <Link
-                            to="/"
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-blue-300 transition hover:bg-white/10"
-                        >
-                            <BarChart3 className="h-5 w-5" />
-                        </Link>
-                        <Breadcrumb>
-                            <BreadcrumbList>
-                                <BreadcrumbItem>
-                                    <BreadcrumbLink
-                                        render={(props) => (
-                                            <Link
-                                                {...props}
-                                                to={org ? `/${org}` : '/'}
-                                                className="text-sm font-semibold text-white/70"
-                                            >
-                                                {organizationName}
-                                            </Link>
-                                        )}
+                    <div className="flex items-center justify-between gap-4 text-white/80">
+                        <div className="flex items-center gap-4">
+                            <Link
+                                to="/"
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-blue-300 transition hover:bg-white/10"
+                            >
+                                <BarChart3 className="h-5 w-5" />
+                            </Link>
+                            <Breadcrumb>
+                                <BreadcrumbList>
+                                    <BreadcrumbItem>
+                                        <BreadcrumbLink
+                                            render={(props) => (
+                                                <Link
+                                                    {...props}
+                                                    to={org ? `/${org}` : '/'}
+                                                    className="text-sm font-semibold text-white/70"
+                                                >
+                                                    {organizationName}
+                                                </Link>
+                                            )}
+                                        />
+                                    </BreadcrumbItem>
+                                    {appName ? (
+                                        <>
+                                            <BreadcrumbSeparator />
+                                            <BreadcrumbItem>
+                                                <BreadcrumbLink
+                                                    render={(props) => (
+                                                        <Link
+                                                            {...props}
+                                                            to={`/${org}/apps/${app}`}
+                                                            className="text-sm font-semibold text-white/70"
+                                                        >
+                                                            {appName}
+                                                        </Link>
+                                                    )}
+                                                />
+                                            </BreadcrumbItem>
+                                        </>
+                                    ) : null}
+                                </BreadcrumbList>
+                            </Breadcrumb>
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
+                                <Avatar className="size-7">
+                                    <AvatarImage
+                                        src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=facearea&w=80&h=80&q=80"
+                                        alt="User profile"
                                     />
-                                </BreadcrumbItem>
-                                {appName ? (
-                                    <>
-                                        <BreadcrumbSeparator />
-                                        <BreadcrumbItem>
-                                            <BreadcrumbLink
-                                                render={(props) => (
-                                                    <Link
-                                                        {...props}
-                                                        to={`/${org}/apps/${app}`}
-                                                        className="text-sm font-semibold text-white/70"
-                                                    >
-                                                        {appName}
-                                                    </Link>
-                                                )}
-                                            />
-                                        </BreadcrumbItem>
-                                    </>
-                                ) : null}
-                            </BreadcrumbList>
-                        </Breadcrumb>
+                                    <AvatarFallback>SS</AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm font-medium text-white/80">
+                                    Sau1707
+                                </span>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-64">
+                                <DropdownMenuLabel className="space-y-1">
+                                    <p className="text-sm font-semibold text-white">
+                                        Sau1707
+                                    </p>
+                                    <p className="text-xs text-white/60">
+                                        Leonardo Saurwein
+                                    </p>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>
+                                    <Smile className="mr-2 h-4 w-4 text-white/70" />
+                                    Set status
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <User className="mr-2 h-4 w-4 text-white/70" />
+                                    Profile
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Building2 className="mr-2 h-4 w-4 text-white/70" />
+                                    Organizations
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>
+                                    <Users className="mr-2 h-4 w-4 text-white/70" />
+                                    Settings
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-red-300 focus:text-red-200">
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Sign out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
 
