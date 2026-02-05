@@ -1,11 +1,9 @@
-import { useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
     BarChart3,
     GitBranch,
     Layers,
     LayoutGrid,
-    Plug,
     Users,
     Wrench,
 } from 'lucide-react';
@@ -16,6 +14,13 @@ import {
     useNavigate,
     useParams,
 } from 'react-router';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export type NavigationTab = {
@@ -44,35 +49,16 @@ const staticTabs: NavigationTab[] = [
 ];
 
 export default function Layout() {
-    const { app } = useParams();
-    const appTabs = useMemo<NavigationTab[]>(() => {
-        const apps = [
-            { slug: 'viavai', name: 'ViaVai' },
-            { slug: 'atlas', name: 'Atlas' },
-            { slug: 'pulse', name: 'Pulse' },
-        ];
-        return apps.map((app) => ({
-            value: `apps-${app.slug}`,
-            label: app.name,
-            path: `apps/${app.slug}`,
-            icon: Plug,
-        }));
-    }, []);
-
-    const tabs = useMemo(
-        () => (app ? appTabs : [...staticTabs, ...appTabs]),
-        [app, appTabs]
-    );
-
-    return <Navigation tabs={tabs} />;
+    return <Navigation tabs={staticTabs} />;
 }
 
 export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
-    const { org = '' } = useParams();
+    const { org = '', app } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
     const organizationName = formatOrganizationName(org || 'org');
+    const appName = app ? formatAppName(app) : undefined;
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
     const basePath = normalizedSuffix
         ? `/${org}/${normalizedSuffix}`
@@ -102,9 +88,41 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                         >
                             <BarChart3 className="h-5 w-5" />
                         </Link>
-                        <span className="text-sm font-semibold text-white/70">
-                            {organizationName}
-                        </span>
+                        <Breadcrumb>
+                            <BreadcrumbList>
+                                <BreadcrumbItem>
+                                    <BreadcrumbLink
+                                        render={(props) => (
+                                            <Link
+                                                {...props}
+                                                to={org ? `/${org}` : '/'}
+                                                className="text-sm font-semibold text-white/70"
+                                            >
+                                                {organizationName}
+                                            </Link>
+                                        )}
+                                    />
+                                </BreadcrumbItem>
+                                {appName ? (
+                                    <>
+                                        <BreadcrumbSeparator />
+                                        <BreadcrumbItem>
+                                            <BreadcrumbLink
+                                                render={(props) => (
+                                                    <Link
+                                                        {...props}
+                                                        to={`/${org}/apps/${app}`}
+                                                        className="text-sm font-semibold text-white/70"
+                                                    >
+                                                        {appName}
+                                                    </Link>
+                                                )}
+                                            />
+                                        </BreadcrumbItem>
+                                    </>
+                                ) : null}
+                            </BreadcrumbList>
+                        </Breadcrumb>
                     </div>
                 </div>
 
@@ -164,4 +182,13 @@ function formatOrganizationName(value: string) {
                 : segment
         )
         .join(' ');
+}
+
+function formatAppName(value: string) {
+    const appNames: Record<string, string> = {
+        viavai: 'ViaVai',
+        atlas: 'Atlas',
+        pulse: 'Pulse',
+    };
+    return appNames[value] ?? formatOrganizationName(value);
 }
