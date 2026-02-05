@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-export function Home() {
+export default function Home() {
     const navigate = useNavigate();
 
     return (

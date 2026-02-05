@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLocation } from 'react-router';
 
-export function Login() {
+export default function Login() {
     const location = useLocation();
     const apiBaseUrl =
         import.meta.env.VITE_API_BASE_URL?.toString() ??
@@ -72,5 +72,3 @@ export function Login() {
         </div>
     );
 }
-
-export default Login;

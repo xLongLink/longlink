@@ -1,12 +1,16 @@
+import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { FileText, GitBranch, LayoutGrid, Layers, Users, Wrench, BarChart3 } from 'lucide-react';
 import {
-    Link,
-    Outlet,
-    useLocation,
-    useNavigate,
-    useParams,
-} from 'react-router';
+    BarChart3,
+    FileText,
+    GitBranch,
+    Layers,
+    LayoutGrid,
+    Plug,
+    Users,
+    Wrench,
+} from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export type NavigationTab = {
@@ -21,6 +25,44 @@ type NavigationProps = {
     basePathSuffix?: string;
 };
 
+
+const staticTabs: NavigationTab[] = [
+    { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+    { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
+    { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
+    { value: 'workflows', label: 'Workflows', path: 'workflows', icon: GitBranch },
+    { value: 'people', label: 'People', path: 'people', icon: Users },
+];
+
+export default function Layout() {
+    const { org = '' } = useParams();
+    const [appTabs, setAppTabs] = useState<NavigationTab[]>([]);
+
+    useEffect(() => {
+        setAppTabs([]);
+        const timer = window.setTimeout(() => {
+            const apps = [
+                { slug: 'viavai', name: 'ViaVai' },
+                { slug: 'atlas', name: 'Atlas' },
+                { slug: 'pulse', name: 'Pulse' },
+            ];
+            setAppTabs(
+                apps.map((app) => ({
+                    value: `apps-${app.slug}`,
+                    label: app.name,
+                    path: `apps/${app.slug}`,
+                    icon: Plug,
+                }))
+            );
+        }, 450);
+
+        return () => window.clearTimeout(timer);
+    }, [org]);
+
+    const tabs = useMemo(() => [...staticTabs, ...appTabs], [appTabs]);
+
+    return <Navigation tabs={tabs} />;
+}
 
 export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
     const { org = '' } = useParams();
@@ -119,21 +161,4 @@ function formatOrganizationName(value: string) {
                 : segment
         )
         .join(' ');
-}
-
-export function Organization() {
-    const orgTabs = [
-        { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
-        { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
-        { value: 'text', label: 'Text', path: 'text', icon: FileText },
-        { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
-        { value: 'workflows', label: 'Workflows', path: 'workflows', icon: GitBranch },
-        { value: 'people', label: 'People', path: 'people', icon: Users },
-    ];
-
-    return (
-        <Navigation tabs={orgTabs}>
-            <Outlet />
-        </Navigation>
-    );
 }
