@@ -1,9 +1,13 @@
 import type { LucideIcon } from 'lucide-react';
 import {
     BarChart3,
+    Boxes,
+    FileText,
     GitBranch,
     Layers,
     LayoutGrid,
+    Settings,
+    Sparkles,
     Users,
     Wrench,
 } from 'lucide-react';
@@ -36,7 +40,7 @@ type NavigationProps = {
     basePathSuffix?: string;
 };
 
-const staticTabs: NavigationTab[] = [
+const organizationTabs: NavigationTab[] = [
     { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
     { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
     { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
@@ -49,8 +53,73 @@ const staticTabs: NavigationTab[] = [
     { value: 'people', label: 'People', path: 'people', icon: Users },
 ];
 
+const defaultAppTabs: NavigationTab[] = [
+    { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+    { value: 'data', label: 'Data', path: 'data', icon: FileText },
+    { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
+];
+
+const appTabsByName: Record<string, NavigationTab[]> = {
+    viavai: [
+        { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+        {
+            value: 'automations',
+            label: 'Automations',
+            path: 'automations',
+            icon: Sparkles,
+        },
+        {
+            value: 'integrations',
+            label: 'Integrations',
+            path: 'integrations',
+            icon: Boxes,
+        },
+        {
+            value: 'settings',
+            label: 'Settings',
+            path: 'settings',
+            icon: Settings,
+        },
+    ],
+    atlas: [
+        { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+        { value: 'models', label: 'Models', path: 'models', icon: Layers },
+        { value: 'reports', label: 'Reports', path: 'reports', icon: FileText },
+        {
+            value: 'settings',
+            label: 'Settings',
+            path: 'settings',
+            icon: Settings,
+        },
+    ],
+    pulse: [
+        { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+        {
+            value: 'streams',
+            label: 'Streams',
+            path: 'streams',
+            icon: Sparkles,
+        },
+        { value: 'alerts', label: 'Alerts', path: 'alerts', icon: Wrench },
+        {
+            value: 'settings',
+            label: 'Settings',
+            path: 'settings',
+            icon: Settings,
+        },
+    ],
+};
+
 export default function Layout() {
-    return <Navigation tabs={staticTabs} />;
+    const { app } = useParams();
+    const appTabs = app ? (appTabsByName[app] ?? defaultAppTabs) : null;
+
+    return (
+        <Navigation
+            tabs={appTabs ?? organizationTabs}
+            basePathSuffix={app ? `apps/${app}` : undefined}
+        />
+    );
 }
 
 export function Navigation({ tabs, basePathSuffix }: NavigationProps) {

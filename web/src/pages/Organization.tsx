@@ -14,8 +14,18 @@ export function Organization() {
         { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
         { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
         { value: 'text', label: 'Text', path: 'text', icon: FileText },
-        { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
-        { value: 'workflows', label: 'Workflows', path: 'workflows', icon: GitBranch },
+        {
+            value: 'solutions',
+            label: 'Solutions',
+            path: 'solutions',
+            icon: Layers,
+        },
+        {
+            value: 'workflows',
+            label: 'Workflows',
+            path: 'workflows',
+            icon: GitBranch,
+        },
         { value: 'people', label: 'People', path: 'people', icon: Users },
     ];
 
