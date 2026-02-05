@@ -37,3 +37,15 @@ class OrgsService:
         async with Session() as session:
             result = await session.execute(select(Organization).where(Organization.id == org_id))
             return result.scalars().first()
+
+    async def list_by_user(self, user_id: int) -> list[Organization]:
+        """Retrieve organizations assigned to a user."""
+
+        Session = await get_session()
+        async with Session() as session:
+            result = await session.execute(
+                select(Organization)
+                .join(OrganizationMember, Organization.id == OrganizationMember.id_org)
+                .where(OrganizationMember.id_user == user_id)
+            )
+            return list(result.scalars().all())

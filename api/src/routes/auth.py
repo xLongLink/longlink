@@ -1,7 +1,7 @@
 from typing import cast
 import src.db as db
-from fastapi import Request, HTTPException
 from src.auth import oauth
+from fastapi import Request
 from src.router import router
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
@@ -58,11 +58,3 @@ async def logout(request: Request):
     request.session.clear()
     return {'ok': True}
     
-
-
-@router.get('/me')
-async def me(request: Request):
-    user = request.session.get('user')
-    if not user:
-        raise HTTPException(401, 'Not authenticated')
-    return user
