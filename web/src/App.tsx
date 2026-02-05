@@ -5,7 +5,7 @@ import Layout from '@/Layout';
 // Import pages
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
-import Settings from '@/pages/Settings';
+import Profile from '@/pages/Profile';
 import Developer from '@/pages/Developer';
 import Organizations from '@/pages/Organizations';
 
@@ -17,14 +17,13 @@ import Overview from '@/pages/Overview';
 import Workflows from '@/pages/Workflows';
 import Solutions from '@/pages/Solutions';
 
-
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
     { path: '/login', element: <Login /> },
     {
-        path: '/settings',
+        path: '/profile',
         element: <Layout />,
-        children: [{ index: true, element: <Settings /> }],
+        children: [{ index: true, element: <Profile /> }],
     },
     {
         path: '/organizations',

@@ -65,17 +65,7 @@ export function UserProfile({
                     className="cursor-pointer transition-colors hover:bg-white/10 p-2"
                     onSelect={(event) => {
                         event.preventDefault();
-                        navigate('/settings/profile');
-                    }}
-                >
-                    <User className="mr-2 h-4 w-4 text-white/70" />
-                    Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                    className="cursor-pointer transition-colors hover:bg-white/10 p-2"
-                    onSelect={(event) => {
-                        event.preventDefault();
-                        navigate('/settings/organizations');
+                        navigate('/organizations');
                     }}
                 >
                     <Building2 className="mr-2 h-4 w-4 text-white/70" />
@@ -85,7 +75,17 @@ export function UserProfile({
                     className="cursor-pointer transition-colors hover:bg-white/10 p-2"
                     onSelect={(event) => {
                         event.preventDefault();
-                        navigate('/settings/developer');
+                        navigate('/profile');
+                    }}
+                >
+                    <User className="mr-2 h-4 w-4 text-white/70" />
+                    Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                    className="cursor-pointer transition-colors hover:bg-white/10 p-2"
+                    onSelect={(event) => {
+                        event.preventDefault();
+                        navigate('/developer');
                     }}
                 >
                     <Code2 className="mr-2 h-4 w-4 text-white/70" />
