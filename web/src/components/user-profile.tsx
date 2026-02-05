@@ -1,7 +1,8 @@
-import { Building2, LogOut, Smile, User, Users } from 'lucide-react';
+import { Building2, LogOut, User, Users } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
@@ -18,8 +19,7 @@ type UserProfileProps = {
 const defaultUser = {
     username: 'Sau1707',
     fullName: 'Leonardo Saurwein',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=facearea&w=80&h=80&q=80',
+    avatarUrl: '',
 };
 
 export function UserProfile({
@@ -29,44 +29,47 @@ export function UserProfile({
 }: UserProfileProps) {
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
-                <Avatar className="size-7">
+            <DropdownMenuTrigger className="group flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
+                <Avatar className="size-8">
                     <AvatarImage src={avatarUrl} alt={`${username} profile`} />
                     <AvatarFallback>
                         {username.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-white/80">
-                    {username}
-                </span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel className="space-y-1">
-                    <p className="text-sm font-semibold text-white">
-                        {username}
-                    </p>
-                    <p className="text-xs text-white/60">{fullName}</p>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                    <Smile className="mr-2 h-4 w-4 text-white/70" />
-                    Set status
-                </DropdownMenuItem>
-                <DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-64 p-2">
+                <DropdownMenuGroup>
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                        <Avatar className="size-9">
+                            <AvatarImage src={avatarUrl} alt={`${username} profile`} />
+                            <AvatarFallback>
+                                {username.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="">
+                            <p className="text-sm font-semibold text-white">
+                                {username}
+                            </p>
+                            <p className="text-xs text-white/60">{fullName}</p>
+                        </div>
+                    </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
                     <User className="mr-2 h-4 w-4 text-white/70" />
                     Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
                     <Building2 className="mr-2 h-4 w-4 text-white/70" />
                     Organizations
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
                     <Users className="mr-2 h-4 w-4 text-white/70" />
                     Settings
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-300 focus:text-red-200">
+                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuItem className="text-red-300 focus:text-red-200 cursor-pointer transition-colors hover:bg-white/10 p-2">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out
                 </DropdownMenuItem>
