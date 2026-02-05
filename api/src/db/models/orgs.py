@@ -1,7 +1,14 @@
+from enum import Enum
 from datetime import datetime
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, String, func
-from sqlalchemy.orm import Mapped, mapped_column
 from src.db.models.__base__ import Base
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import BigInteger, Boolean, DateTime, Enum as SqlEnum, ForeignKey, String, func
+
+
+class OrgRole(str, Enum):
+    owner = 'owner'
+    admin = 'admin'
+    member = 'member'
 
 
 class Org(Base):
@@ -24,7 +31,7 @@ class OrgMember(Base):
     id_org: Mapped[int] = mapped_column(BigInteger, ForeignKey('organizations.id'), nullable=False)
     id_user: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.id'), nullable=False)
     
-    role = mapped_column(String(50), nullable=False)
+    role: Mapped[OrgRole] = mapped_column(SqlEnum(OrgRole, name='org_role'), nullable=False)
     
     # Date tracking
     date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
