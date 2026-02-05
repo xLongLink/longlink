@@ -11,11 +11,12 @@ import ViaVai from '@/pages/ViaVai';
 import Overview from '@/pages/Overview';
 import Workflows from '@/pages/Workflows';
 import Solutions from '@/pages/Solutions';
-
+import Setting from '@/pages/Setting';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
     { path: '/login', element: <Login /> },
+    { path: '/setting', element: <Setting /> },
 
     {
         path: '/:org',
@@ -30,10 +31,10 @@ const router = createBrowserRouter([
             // dynamic modules
             {
                 path: 'apps/:app/*',
-                element: <ViaVai />
-            }
-        ]
-    }
+                element: <ViaVai />,
+            },
+        ],
+    },
 ]);
 
 export default function App() {
