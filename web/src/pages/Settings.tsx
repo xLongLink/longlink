@@ -8,7 +8,7 @@ import {
     KeyRound,
     Mail,
     Palette,
-    Settings,
+    Settings as SettingsIcon,
     ShieldCheck,
     User,
     Users,
@@ -29,8 +29,8 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 
 const mainItems = [
-    { label: 'Public profile', icon: User, active: true },
-    { label: 'Account', icon: Settings },
+    { label: 'General', icon: SettingsIcon, active: true },
+    { label: 'Profile', icon: User },
     { label: 'Appearance', icon: Palette },
     { label: 'Accessibility', icon: Accessibility },
     { label: 'Notifications', icon: Bell },
@@ -48,7 +48,7 @@ const accessItems = [
     { label: 'Moderation', icon: Gavel },
 ];
 
-export default function SettingsProfile() {
+export default function Settings() {
     return (
         <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
             <aside className="space-y-6">
@@ -96,9 +96,9 @@ export default function SettingsProfile() {
 
             <section className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-semibold">Public profile</h2>
+                    <h2 className="text-2xl font-semibold">General settings</h2>
                     <p className="mt-1 text-sm text-white/50">
-                        Manage how you appear across the platform.
+                        Manage your account preferences and profile details.
                     </p>
                 </div>
                 <Separator className="bg-white/10" />
