@@ -1,8 +1,8 @@
 import src.db as db
-from src.router import router
-from src.auth import user as get_user
-from src.types import OrgCreate, OrgRead
 from fastapi import Depends, HTTPException
+from src.auth import user as get_user
+from src.router import router
+from src.types import OrgCreate, OrgRead
 
 
 @router.post('/org', response_model=OrgRead)
