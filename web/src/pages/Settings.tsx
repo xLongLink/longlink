@@ -59,11 +59,10 @@ export default function Settings() {
                             <button
                                 key={item.label}
                                 type="button"
-                                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
-                                    item.active
-                                        ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(59,130,246,0.9)]'
-                                        : 'text-white/70 hover:bg-white/5 hover:text-white'
-                                }`}
+                                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${item.active
+                                    ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(59,130,246,0.9)]'
+                                    : 'text-white/70 hover:bg-white/5 hover:text-white'
+                                    }`}
                             >
                                 <Icon className="h-4 w-4 text-white/70" />
                                 {item.label}
