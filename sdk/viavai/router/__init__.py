@@ -10,6 +10,9 @@ class Router:
     def __init__(self) -> None:
         self._routes: list[Route] = []
 
+    def register(self, router: "Router") -> None:
+        self._routes.extend(router._routes)
+
     def _route(self, method: str, path: str):
         def decorator(func: Handler) -> Handler:
             self._routes.append(Route(method.upper(), path, func))
