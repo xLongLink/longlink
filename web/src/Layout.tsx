@@ -46,9 +46,6 @@ const staticTabs: NavigationTab[] = [
 export default function Layout() {
     const { app } = useParams();
     const appTabs = useMemo<NavigationTab[]>(() => {
-        if (!app) {
-            return [];
-        }
         const apps = [
             { slug: 'viavai', name: 'ViaVai' },
             { slug: 'atlas', name: 'Atlas' },
@@ -60,9 +57,12 @@ export default function Layout() {
             path: `apps/${app.slug}`,
             icon: Plug,
         }));
-    }, [app]);
+    }, []);
 
-    const tabs = useMemo(() => [...staticTabs, ...appTabs], [appTabs]);
+    const tabs = useMemo(
+        () => (app ? appTabs : [...staticTabs, ...appTabs]),
+        [app, appTabs]
+    );
 
     return <Navigation tabs={tabs} />;
 }
