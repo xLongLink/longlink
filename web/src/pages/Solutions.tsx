@@ -2,7 +2,8 @@ import { Plus, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-export function Solutions() {
+
+export default function Solutions() {
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -19,7 +20,7 @@ export function Solutions() {
                 </div>
                 <Button variant="outline">
                     <Plus className="h-4 w-4" />
-                    New Tools
+                    New Solution
                 </Button>
             </div>
 
@@ -35,5 +36,3 @@ export function Solutions() {
         </div>
     );
 }
-
-export default Solutions;

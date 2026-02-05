@@ -1,15 +1,17 @@
-import { RouterProvider, createBrowserRouter } from 'react-router';
 import { ThemeProvider } from '@/components/theme';
-import { Home } from '@/pages/Home';
-import { Login } from '@/pages/Login';
-import { Organization } from '@/pages/Organization';
+import { RouterProvider, createBrowserRouter } from 'react-router';
+import Layout from '@/Layout';
 
-import { Tools } from '@/components/tools';
-import { Solutions } from '@/components/solutions';
-import { Workflows } from '@/components/workflows';
-import { Overview } from '@/components/overview';
+// Import pages
+import Home from '@/pages/Home';
+import Login from '@/pages/Login';
+import Tools from '@/pages/Tools';
+import People from '@/pages/People';
+import ViaVai from '@/pages/ViaVai';
+import Overview from '@/pages/Overview';
+import Workflows from '@/pages/Workflows';
+import Solutions from '@/pages/Solutions';
 
-import { AppsRouter } from '@/Apps';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
@@ -17,18 +19,18 @@ const router = createBrowserRouter([
 
     {
         path: '/:org',
-        element: <Organization />,
+        element: <Layout />,
         children: [
             { index: true, element: <Overview /> },
             { path: 'tools', element: <Tools /> },
-            { path: 'people', element: <div>People Page</div> },
+            { path: 'people', element: <People /> },
             { path: 'solutions', element: <Solutions /> },
             { path: 'workflows', element: <Workflows /> },
 
             // dynamic modules
             {
-                path: ':apps/*',
-                element: <AppsRouter />
+                path: 'apps/:app/*',
+                element: <ViaVai />
             }
         ]
     }
