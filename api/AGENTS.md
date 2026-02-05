@@ -1,14 +1,6 @@
 ## AGENTS.md
 
-## Core Principles
-
-FastAPI should orchestrate, not contain business logic.
-
-- Clear separation of concerns
-- Explicit dependencies
-- Strict typing
-- API-first design
-- Framework used at the edges only
+You are working on the backend. Is a FastAPI application that handles authentication, permissions, and routing to various modules.
 
 ## Project Structure
 
@@ -33,7 +25,11 @@ tests/
 
 ## Python Guidelines
 
-Sort imports alphabetically by length
+- Strict typing
+- API-first design
+- Explicit dependencies
+- Clear separation of concerns
+- Sort imports alphabetically by length, for example:
 
 ```python
 import os
@@ -41,4 +37,16 @@ import sys
 from src.db import *
 from fastapi import *
 from src.auth import *
+```
+
+- Use single quotes for strings
+
+## Database Layer
+
+Define pydantic models in `src/db/models/` and database utility functions in `src/db/services/`.
+Finally import both the models (for type hinting) and the services (for DB operations) in `src/db/__init__.py` for easy access.
+In the rest of the application, import the database layer as follows:
+
+```python
+import src.db as db
 ```
