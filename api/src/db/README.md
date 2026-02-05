@@ -21,7 +21,7 @@ Import the database layer once and use the service instances:
 import src.db as db
 
 org = await db.orgs.create('Acme')
-await db.orgs.add(org.id, user.id, 'owner')
+await db.orgs.add(org.id, user.id, db.OrgRole.owner)
 app = await db.apps.create(org.id, 'Acme')
 ```
 
