@@ -14,7 +14,7 @@ import Solutions from '@/pages/Solutions';
 import SettingsDeveloper from '@/pages/SettingsDeveloper';
 import SettingsLayout from '@/pages/SettingsLayout';
 import SettingsOrganizations from '@/pages/SettingsOrganizations';
-import SettingsProfile from '@/pages/SettingsProfile';
+import Settings from '@/pages/Settings';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
@@ -23,8 +23,8 @@ const router = createBrowserRouter([
         path: '/settings',
         element: <SettingsLayout />,
         children: [
-            { index: true, element: <SettingsProfile /> },
-            { path: 'profile', element: <SettingsProfile /> },
+            { index: true, element: <Settings /> },
+            { path: 'settings', element: <Settings /> },
             { path: 'organizations', element: <SettingsOrganizations /> },
             { path: 'developer', element: <SettingsDeveloper /> },
         ],
