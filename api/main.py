@@ -27,6 +27,7 @@ app.add_middleware(
 # Register routers
 import src.routes.auth
 import src.routes.org
+import src.routes.user
 app.include_router(router)
 
 
