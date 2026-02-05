@@ -59,6 +59,17 @@ const defaultAppTabs: NavigationTab[] = [
     { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ];
 
+const accountTabs: NavigationTab[] = [
+    { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
+    {
+        value: 'organizations',
+        label: 'Organizations',
+        path: 'organizations',
+        icon: Users,
+    },
+    { value: 'developer', label: 'Developer', path: 'developer', icon: Wrench },
+];
+
 const appTabsByName: Record<string, NavigationTab[]> = {
     viavai: [
         { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
@@ -111,12 +122,13 @@ const appTabsByName: Record<string, NavigationTab[]> = {
 };
 
 export default function Layout() {
-    const { app } = useParams();
+    const { app, org } = useParams();
     const appTabs = app ? (appTabsByName[app] ?? defaultAppTabs) : null;
+    const tabs = org ? (appTabs ?? organizationTabs) : accountTabs;
 
     return (
         <Navigation
-            tabs={appTabs ?? organizationTabs}
+            tabs={tabs}
             basePathSuffix={app ? `apps/${app}` : undefined}
         />
     );
@@ -130,18 +142,23 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
     const organizationName = formatOrganizationName(org || 'org');
     const appName = app ? formatAppName(app) : undefined;
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
-    const basePath = normalizedSuffix
-        ? `/${org}/${normalizedSuffix}`
-        : `/${org}`;
+    const basePath = org
+        ? normalizedSuffix
+            ? `/${org}/${normalizedSuffix}`
+            : `/${org}`
+        : '';
 
     const activeTab = (() => {
         const path = location.pathname;
         const matchedTab = tabs.find((tab) => {
             const tabPath = tab.path ?? '';
             if (tabPath === '') {
-                return path === basePath;
+                return path === (basePath || '/');
             }
-            return path.startsWith(`${basePath}/${tabPath}`);
+            const tabFullPath = basePath
+                ? `${basePath}/${tabPath}`
+                : `/${tabPath}`;
+            return path.startsWith(tabFullPath);
         });
 
         return matchedTab?.value ?? tabs[0]?.value ?? 'overview';
@@ -211,11 +228,13 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                                 return;
                             }
                             const nextPath = nextTab.path ?? '';
-                            navigate(
+                            const targetPath =
                                 nextPath === ''
-                                    ? basePath
-                                    : `${basePath}/${nextPath}`
-                            );
+                                    ? basePath || '/'
+                                    : basePath
+                                      ? `${basePath}/${nextPath}`
+                                      : `/${nextPath}`;
+                            navigate(targetPath);
                         }}
                     >
                         <TabsList variant="line" className="gap-4">
