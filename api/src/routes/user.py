@@ -12,7 +12,7 @@ async def get_user_details(current_user: db.User = Depends(get_user)):
 
 @router.get('/user/orgs', response_model=list[OrgRead])
 async def get_user_orgs(current_user: db.User = Depends(get_user)):
-    orgs = await db.orgs.list_by_user(current_user.id)
+    orgs = await db.users.orgs(current_user.id)
     return [
         OrgRead(
             id=org.id,
