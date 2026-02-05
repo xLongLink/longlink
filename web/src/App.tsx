@@ -5,31 +5,37 @@ import Layout from '@/Layout';
 // Import pages
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
+import Settings from '@/pages/Settings';
+import Developer from '@/pages/Developer';
+import Organizations from '@/pages/Organizations';
+
+// Organization related pages
 import Tools from '@/pages/Tools';
 import People from '@/pages/People';
 import ViaVai from '@/pages/ViaVai';
 import Overview from '@/pages/Overview';
 import Workflows from '@/pages/Workflows';
 import Solutions from '@/pages/Solutions';
-import SettingsDeveloper from '@/pages/SettingsDeveloper';
-import SettingsLayout from '@/pages/SettingsLayout';
-import SettingsOrganizations from '@/pages/SettingsOrganizations';
-import Settings from '@/pages/Settings';
+
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
     { path: '/login', element: <Login /> },
     {
         path: '/settings',
-        element: <SettingsLayout />,
-        children: [
-            { index: true, element: <Settings /> },
-            { path: 'settings', element: <Settings /> },
-            { path: 'organizations', element: <SettingsOrganizations /> },
-            { path: 'developer', element: <SettingsDeveloper /> },
-        ],
+        element: <Layout />,
+        children: [{ index: true, element: <Settings /> }],
     },
-
+    {
+        path: '/organizations',
+        element: <Layout />,
+        children: [{ index: true, element: <Organizations /> }],
+    },
+    {
+        path: '/developer',
+        element: <Layout />,
+        children: [{ index: true, element: <Developer /> }],
+    },
     {
         path: '/:org',
         element: <Layout />,
