@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
     BarChart3,
@@ -9,7 +9,13 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
-import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
+import {
+    Link,
+    Outlet,
+    useLocation,
+    useNavigate,
+    useParams,
+} from 'react-router';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export type NavigationTab = {
@@ -24,39 +30,37 @@ type NavigationProps = {
     basePathSuffix?: string;
 };
 
-
 const staticTabs: NavigationTab[] = [
     { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
     { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
     { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
-    { value: 'workflows', label: 'Workflows', path: 'workflows', icon: GitBranch },
+    {
+        value: 'workflows',
+        label: 'Workflows',
+        path: 'workflows',
+        icon: GitBranch,
+    },
     { value: 'people', label: 'People', path: 'people', icon: Users },
 ];
 
 export default function Layout() {
-    const { org = '' } = useParams();
-    const [appTabs, setAppTabs] = useState<NavigationTab[]>([]);
-
-    useEffect(() => {
-        setAppTabs([]);
-        const timer = window.setTimeout(() => {
-            const apps = [
-                { slug: 'viavai', name: 'ViaVai' },
-                { slug: 'atlas', name: 'Atlas' },
-                { slug: 'pulse', name: 'Pulse' },
-            ];
-            setAppTabs(
-                apps.map((app) => ({
-                    value: `apps-${app.slug}`,
-                    label: app.name,
-                    path: `apps/${app.slug}`,
-                    icon: Plug,
-                }))
-            );
-        }, 450);
-
-        return () => window.clearTimeout(timer);
-    }, [org]);
+    const { app } = useParams();
+    const appTabs = useMemo<NavigationTab[]>(() => {
+        if (!app) {
+            return [];
+        }
+        const apps = [
+            { slug: 'viavai', name: 'ViaVai' },
+            { slug: 'atlas', name: 'Atlas' },
+            { slug: 'pulse', name: 'Pulse' },
+        ];
+        return apps.map((app) => ({
+            value: `apps-${app.slug}`,
+            label: app.name,
+            path: `apps/${app.slug}`,
+            icon: Plug,
+        }));
+    }, [app]);
 
     const tabs = useMemo(() => [...staticTabs, ...appTabs], [appTabs]);
 
