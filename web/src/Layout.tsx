@@ -122,7 +122,7 @@ const appTabsByName: Record<string, NavigationTab[]> = {
 };
 
 export default function Layout() {
-    const { app, org } = useParams();
+    const { app, country, org } = useParams();
     const appTabs = app ? (appTabsByName[app] ?? defaultAppTabs) : null;
     const tabs = org ? (appTabs ?? organizationTabs) : accountTabs;
 
@@ -135,7 +135,7 @@ export default function Layout() {
 }
 
 export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
-    const { org = '', app } = useParams();
+    const { country = '', org = '', app } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -144,8 +144,8 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
     const basePath = org
         ? normalizedSuffix
-            ? `/${org}/${normalizedSuffix}`
-            : `/${org}`
+            ? `/${country}/${org}/${normalizedSuffix}`
+            : `/${country}/${org}`
         : '';
 
     const activeTab = (() => {
@@ -183,7 +183,7 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                                             render={(props) => (
                                                 <Link
                                                     {...props}
-                                                    to={org ? `/${org}` : '/'}
+                                                    to={org ? `/${country}/${org}` : '/'}
                                                     className="text-sm font-semibold text-white/70"
                                                 >
                                                     {organizationName}
@@ -199,7 +199,7 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                                                     render={(props) => (
                                                         <Link
                                                             {...props}
-                                                            to={`/${org}/apps/${app}`}
+                                                            to={`/${country}/${org}/apps/${app}`}
                                                             className="text-sm font-semibold text-white/70"
                                                         >
                                                             {appName}
