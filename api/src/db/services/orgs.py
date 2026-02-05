@@ -1,6 +1,6 @@
 from sqlalchemy import select
-from src.db.models import App, Org, OrgApp, OrgMember
 from src.db.session import get_session
+from src.db.models import App, Org, OrgApp, OrgMember, OrgRole
 
 
 class OrgsService:
@@ -15,7 +15,7 @@ class OrgsService:
             await session.refresh(org)
             return org
 
-    async def add(self, org_id: int, user_id: int, role: str) -> OrgMember:
+    async def add(self, org_id: int, user_id: int, role: OrgRole) -> OrgMember:
         """Add a new member to an organization."""
 
         Session = await get_session()
