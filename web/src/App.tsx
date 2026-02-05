@@ -11,12 +11,12 @@ import ViaVai from '@/pages/ViaVai';
 import Overview from '@/pages/Overview';
 import Workflows from '@/pages/Workflows';
 import Solutions from '@/pages/Solutions';
-import Setting from '@/pages/Setting';
+import Settings from '@/pages/Settings';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
     { path: '/login', element: <Login /> },
-    { path: '/setting', element: <Setting /> },
+    { path: '/settings', element: <Settings /> },
 
     {
         path: '/:org',
