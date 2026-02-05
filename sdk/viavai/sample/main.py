@@ -3,8 +3,6 @@
 
 
 from src.app import app
+from src.routes.sample import router as sample_router
 
-
-# Import to register the route
-import src.routes.sample  
-
+app.register(sample_router)
