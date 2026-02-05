@@ -1,17 +1,17 @@
 import src.db as db
 from fastapi import Depends
-from src.router import router
+from src.auth import user
 from src.types import OrgRead
-from src.auth import user as get_user
+from src.router import router
 
 
 @router.get('/user')
-async def get_user_details(current_user: db.User = Depends(get_user)):
+async def get_user_details(current_user: db.User = Depends(user)):
     return current_user
 
 
 @router.get('/user/orgs', response_model=list[OrgRead])
-async def get_user_orgs(current_user: db.User = Depends(get_user)):
+async def get_user_orgs(current_user: db.User = Depends(user)):
     orgs = await db.users.orgs(current_user.id)
     return [
         OrgRead(
