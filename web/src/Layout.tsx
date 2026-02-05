@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
     BarChart3,
-    FileText,
     GitBranch,
     Layers,
     LayoutGrid,
