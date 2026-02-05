@@ -22,6 +22,7 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserProfile } from '@/components/user-profile';
 
 export type NavigationTab = {
     value: string;
@@ -81,48 +82,51 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
         <div className="min-h-screen text-white">
             <header className="border-b border-white/10">
                 <div className="mx-auto w-full px-6 pb-2 pt-4">
-                    <div className="flex items-center gap-4 text-white/80">
-                        <Link
-                            to="/"
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-blue-300 transition hover:bg-white/10"
-                        >
-                            <BarChart3 className="h-5 w-5" />
-                        </Link>
-                        <Breadcrumb>
-                            <BreadcrumbList>
-                                <BreadcrumbItem>
-                                    <BreadcrumbLink
-                                        render={(props) => (
-                                            <Link
-                                                {...props}
-                                                to={org ? `/${org}` : '/'}
-                                                className="text-sm font-semibold text-white/70"
-                                            >
-                                                {organizationName}
-                                            </Link>
-                                        )}
-                                    />
-                                </BreadcrumbItem>
-                                {appName ? (
-                                    <>
-                                        <BreadcrumbSeparator />
-                                        <BreadcrumbItem>
-                                            <BreadcrumbLink
-                                                render={(props) => (
-                                                    <Link
-                                                        {...props}
-                                                        to={`/${org}/apps/${app}`}
-                                                        className="text-sm font-semibold text-white/70"
-                                                    >
-                                                        {appName}
-                                                    </Link>
-                                                )}
-                                            />
-                                        </BreadcrumbItem>
-                                    </>
-                                ) : null}
-                            </BreadcrumbList>
-                        </Breadcrumb>
+                    <div className="flex items-center justify-between gap-4 text-white/80">
+                        <div className="flex items-center gap-4">
+                            <Link
+                                to="/"
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-blue-300 transition hover:bg-white/10"
+                            >
+                                <BarChart3 className="h-5 w-5" />
+                            </Link>
+                            <Breadcrumb>
+                                <BreadcrumbList>
+                                    <BreadcrumbItem>
+                                        <BreadcrumbLink
+                                            render={(props) => (
+                                                <Link
+                                                    {...props}
+                                                    to={org ? `/${org}` : '/'}
+                                                    className="text-sm font-semibold text-white/70"
+                                                >
+                                                    {organizationName}
+                                                </Link>
+                                            )}
+                                        />
+                                    </BreadcrumbItem>
+                                    {appName ? (
+                                        <>
+                                            <BreadcrumbSeparator />
+                                            <BreadcrumbItem>
+                                                <BreadcrumbLink
+                                                    render={(props) => (
+                                                        <Link
+                                                            {...props}
+                                                            to={`/${org}/apps/${app}`}
+                                                            className="text-sm font-semibold text-white/70"
+                                                        >
+                                                            {appName}
+                                                        </Link>
+                                                    )}
+                                                />
+                                            </BreadcrumbItem>
+                                        </>
+                                    ) : null}
+                                </BreadcrumbList>
+                            </Breadcrumb>
+                        </div>
+                        <UserProfile />
                     </div>
                 </div>
 
