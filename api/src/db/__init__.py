@@ -1,5 +1,6 @@
-from .models import User, Organization
-from .services import OrgsService, UsersService
+from .models import App, User, Organization
+from .services import AppsService, OrgsService, UsersService
 
+apps = AppsService()
 orgs = OrgsService()
 users = UsersService()
