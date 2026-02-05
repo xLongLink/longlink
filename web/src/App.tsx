@@ -11,12 +11,24 @@ import ViaVai from '@/pages/ViaVai';
 import Overview from '@/pages/Overview';
 import Workflows from '@/pages/Workflows';
 import Solutions from '@/pages/Solutions';
-import Settings from '@/pages/Settings';
+import SettingsDeveloper from '@/pages/SettingsDeveloper';
+import SettingsLayout from '@/pages/SettingsLayout';
+import SettingsOrganizations from '@/pages/SettingsOrganizations';
+import SettingsProfile from '@/pages/SettingsProfile';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
     { path: '/login', element: <Login /> },
-    { path: '/settings', element: <Settings /> },
+    {
+        path: '/settings',
+        element: <SettingsLayout />,
+        children: [
+            { index: true, element: <SettingsProfile /> },
+            { path: 'profile', element: <SettingsProfile /> },
+            { path: 'organizations', element: <SettingsOrganizations /> },
+            { path: 'developer', element: <SettingsDeveloper /> },
+        ],
+    },
 
     {
         path: '/:org',

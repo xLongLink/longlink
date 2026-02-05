@@ -1,4 +1,5 @@
-import { Building2, LogOut, User, Users } from 'lucide-react';
+import { Building2, Code2, LogOut, User } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -27,6 +28,8 @@ export function UserProfile({
     fullName = defaultUser.fullName,
     avatarUrl = defaultUser.avatarUrl,
 }: UserProfileProps) {
+    const navigate = useNavigate();
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger className="group flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
@@ -41,7 +44,10 @@ export function UserProfile({
                 <DropdownMenuGroup>
                     <DropdownMenuLabel className="flex items-center gap-2">
                         <Avatar className="size-9">
-                            <AvatarImage src={avatarUrl} alt={`${username} profile`} />
+                            <AvatarImage
+                                src={avatarUrl}
+                                alt={`${username} profile`}
+                            />
                             <AvatarFallback>
                                 {username.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
@@ -55,18 +61,35 @@ export function UserProfile({
                     </DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
-                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                <DropdownMenuItem
+                    className="cursor-pointer transition-colors hover:bg-white/10 p-2"
+                    onSelect={(event) => {
+                        event.preventDefault();
+                        navigate('/settings/profile');
+                    }}
+                >
                     <User className="mr-2 h-4 w-4 text-white/70" />
                     Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                <DropdownMenuItem
+                    className="cursor-pointer transition-colors hover:bg-white/10 p-2"
+                    onSelect={(event) => {
+                        event.preventDefault();
+                        navigate('/settings/organizations');
+                    }}
+                >
                     <Building2 className="mr-2 h-4 w-4 text-white/70" />
                     Organizations
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-2" />
-                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    <Users className="mr-2 h-4 w-4 text-white/70" />
-                    Settings
+                <DropdownMenuItem
+                    className="cursor-pointer transition-colors hover:bg-white/10 p-2"
+                    onSelect={(event) => {
+                        event.preventDefault();
+                        navigate('/settings/developer');
+                    }}
+                >
+                    <Code2 className="mr-2 h-4 w-4 text-white/70" />
+                    Developer
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem className="text-red-300 focus:text-red-200 cursor-pointer transition-colors hover:bg-white/10 p-2">
