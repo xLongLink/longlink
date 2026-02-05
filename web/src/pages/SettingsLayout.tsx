@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const settingsTabs = [
-    { value: 'profile', label: 'Profile', icon: Settings, path: '' },
+    { value: 'settings', label: 'Settings', icon: Settings, path: '' },
     {
         value: 'organizations',
         label: 'Organizations',
@@ -22,11 +22,11 @@ export default function SettingsLayout() {
         const path = location.pathname;
         const matchedTab = settingsTabs.find((tab) => {
             if (tab.path === '') {
-                return path === basePath || path === `${basePath}/profile`;
+                return path === basePath || path === `${basePath}/settings`;
             }
             return path.startsWith(`${basePath}/${tab.path}`);
         });
-        return matchedTab?.value ?? 'profile';
+        return matchedTab?.value ?? 'settings';
     })();
 
     return (
@@ -36,7 +36,7 @@ export default function SettingsLayout() {
                     <div>
                         <h1 className="text-2xl font-semibold">Settings</h1>
                         <p className="text-sm text-white/50">
-                            Manage your personal settings, organizations, and
+                            Manage your account settings, organizations, and
                             developer tools.
                         </p>
                     </div>
