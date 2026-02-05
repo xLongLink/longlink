@@ -6,7 +6,9 @@ You are a SASS expert. Make a research and provide a list of SASS that belong to
 - `Entities`: Modules that represent real world entities. Those are long to medium living
 - `Projects`: Modules that represent projects or workflows: Medium to short living
 
-For each SASS, provide the name, a short description (1-2 sentences), and the cost / revenue / user count.
-For the sector:
+For each SASS, provide the name, a short description (1-2 sentences).
+Search for any information about the cost / revenue / user count of the SASS, as well the number of employees and the founding year, and the area of operation (country or global).
 
-Below is a **concise, production-oriented set of guidelines** for structuring a **FastAPI backend in Python**. This assumes a real API (auth, DB, validation), not a toy app.
+I'm looking for a complete market research that includes opportunity and the competitive landscape.
+
+Make the reseach for the sector:
