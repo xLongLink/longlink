@@ -36,7 +36,7 @@ const router = createBrowserRouter([
         children: [{ index: true, element: <Developer /> }],
     },
     {
-        path: '/:org',
+        path: '/:country/:org',
         element: <Layout />,
         children: [
             { index: true, element: <Overview /> },
