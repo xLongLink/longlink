@@ -21,149 +21,154 @@ export default function Home() {
     return (
         <div className="min-h-screen text-white">
             <div className="relative">
-                <header className="border-b border-white/10">
-                    <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/20 text-blue-300">
-                                <Layers className="h-5 w-5" />
-                            </div>
-                            <span className="text-lg font-semibold tracking-wide">
-                                ViaVai
-                            </span>
-                        </div>
-                        <Button
-                            className="flex items-center gap-2 bg-blue-600 px-4 py-2 font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500"
-                            onClick={() => navigate('/login')}
-                        >
-                            Login
-                            <ArrowRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </header>
-
-                <main className="mx-auto w-full max-w-6xl px-6 pb-20 pt-16">
-                    <section className="text-center" id="overview">
-                        <div className="mx-auto max-w-3xl">
-                            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs text-white/70">
-                                <Sparkles className="h-3.5 w-3.5 text-blue-400" />
-                                A unified operating system for organizations
-                            </p>
-                            <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
-                                The modular platform
-                                <span className="text-blue-400">
-                                    {' '}
-                                    built for modern teams
+                <div className="flex min-h-[1080px] flex-col">
+                    <header className="border-b border-white/10">
+                        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/20 text-blue-300">
+                                    <Layers className="h-5 w-5" />
+                                </div>
+                                <span className="text-lg font-semibold tracking-wide">
+                                    ViaVai
                                 </span>
-                            </h1>
-                            <p className="mt-5 text-base text-white/70 md:text-lg">
-                                Combine Git-centric versioning, portfolio
-                                management, compliance, and internal tools into
-                                one secure workspace. Ship faster with a
-                                platform that adapts to every operational
-                                workflow.
-                            </p>
-                            <div className="mt-8 flex flex-wrap justify-center gap-4">
-                                <button className="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold shadow-lg shadow-blue-600/40 transition hover:bg-blue-500">
-                                    Get Started
-                                    <ArrowRight className="h-4 w-4" />
-                                </button>
-                                <button className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:text-white">
-                                    Learn More
-                                </button>
                             </div>
+                            <Button
+                                className="flex items-center gap-2 bg-blue-600 px-4 py-2 font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500"
+                                onClick={() => navigate('/login')}
+                            >
+                                Login
+                                <ArrowRight className="h-4 w-4" />
+                            </Button>
                         </div>
-                    </section>
+                    </header>
 
-                    <section
-                        className="mt-14 grid gap-6 md:grid-cols-3"
-                        id="projects"
-                    >
-                        <Card>
-                            <CardContent>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
-                                    <FolderKanban className="h-6 w-6" />
-                                </div>
-                                <h3 className="mt-5 text-lg font-semibold">
-                                    Multi-Tenant Organizations
-                                </h3>
-                                <p className="mt-3 text-sm text-white/65">
-                                    Structure work across portfolios, business
-                                    units, and compliance boundaries.
+                    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-20 pt-16">
+                        <section className="text-center" id="overview">
+                            <div className="mx-auto max-w-3xl">
+                                <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs text-white/70">
+                                    <Sparkles className="h-3.5 w-3.5 text-blue-400" />
+                                    A unified operating system for organizations
                                 </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
-                                    <Box className="h-6 w-6" />
-                                </div>
-                                <h3 className="mt-5 text-lg font-semibold">
-                                    Modular App System
-                                </h3>
-                                <p className="mt-3 text-sm text-white/65">
-                                    Install only the capabilities you need—from
-                                    projects to audit workflows.
+                                <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
+                                    The modular platform
+                                    <span className="text-blue-400">
+                                        {' '}
+                                        built for modern teams
+                                    </span>
+                                </h1>
+                                <p className="mt-5 text-base text-white/70 md:text-lg">
+                                    Combine Git-centric versioning, portfolio
+                                    management, compliance, and internal tools
+                                    into one secure workspace. Ship faster with
+                                    a platform that adapts to every operational
+                                    workflow.
                                 </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
-                                    <Zap className="h-6 w-6" />
+                                <div className="mt-8 flex flex-wrap justify-center gap-4">
+                                    <button className="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold shadow-lg shadow-blue-600/40 transition hover:bg-blue-500">
+                                        Get Started
+                                        <ArrowRight className="h-4 w-4" />
+                                    </button>
+                                    <button className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:text-white">
+                                        Learn More
+                                    </button>
                                 </div>
-                                <h3 className="mt-5 text-lg font-semibold">
-                                    Developer-First
-                                </h3>
-                                <p className="mt-3 text-sm text-white/65">
-                                    Ship faster with Git-native workflows and
-                                    programmable automations.
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
-                                    <ShieldCheck className="h-6 w-6" />
-                                </div>
-                                <h3 className="mt-5 text-lg font-semibold">
-                                    Secure by Default
-                                </h3>
-                                <p className="mt-3 text-sm text-white/65">
-                                    Enterprise-grade controls for sensitive
-                                    data, identity, and policy.
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
-                                    <Users className="h-6 w-6" />
-                                </div>
-                                <h3 className="mt-5 text-lg font-semibold">
-                                    Team Collaboration
-                                </h3>
-                                <p className="mt-3 text-sm text-white/65">
-                                    Keep delivery teams aligned with shared
-                                    workspaces and live updates.
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
-                                    <Plug className="h-6 w-6" />
-                                </div>
-                                <h3 className="mt-5 text-lg font-semibold">
-                                    Extensible Platform
-                                </h3>
-                                <p className="mt-3 text-sm text-white/65">
-                                    Build custom modules or use pre-built apps
-                                    for every operational need.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </section>
+                            </div>
+                        </section>
 
+                        <section
+                            className="mt-14 grid gap-6 md:grid-cols-3"
+                            id="projects"
+                        >
+                            <Card>
+                                <CardContent>
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
+                                        <FolderKanban className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="mt-5 text-lg font-semibold">
+                                        Multi-Tenant Organizations
+                                    </h3>
+                                    <p className="mt-3 text-sm text-white/65">
+                                        Structure work across portfolios,
+                                        business units, and compliance
+                                        boundaries.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent>
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
+                                        <Box className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="mt-5 text-lg font-semibold">
+                                        Modular App System
+                                    </h3>
+                                    <p className="mt-3 text-sm text-white/65">
+                                        Install only the capabilities you
+                                        need—from projects to audit workflows.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent>
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
+                                        <Zap className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="mt-5 text-lg font-semibold">
+                                        Developer-First
+                                    </h3>
+                                    <p className="mt-3 text-sm text-white/65">
+                                        Ship faster with Git-native workflows
+                                        and programmable automations.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent>
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
+                                        <ShieldCheck className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="mt-5 text-lg font-semibold">
+                                        Secure by Default
+                                    </h3>
+                                    <p className="mt-3 text-sm text-white/65">
+                                        Enterprise-grade controls for sensitive
+                                        data, identity, and policy.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent>
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
+                                        <Users className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="mt-5 text-lg font-semibold">
+                                        Team Collaboration
+                                    </h3>
+                                    <p className="mt-3 text-sm text-white/65">
+                                        Keep delivery teams aligned with shared
+                                        workspaces and live updates.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent>
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
+                                        <Plug className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="mt-5 text-lg font-semibold">
+                                        Extensible Platform
+                                    </h3>
+                                    <p className="mt-3 text-sm text-white/65">
+                                        Build custom modules or use pre-built
+                                        apps for every operational need.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </section>
+                    </main>
+                </div>
+
+                <main className="mx-auto w-full max-w-6xl px-6 pb-20">
                     <section className="mt-20 text-center" id="offerings">
                         <h2 className="text-3xl font-semibold">
                             Install apps as you grow
