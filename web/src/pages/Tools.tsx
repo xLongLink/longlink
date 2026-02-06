@@ -1,6 +1,14 @@
 import { Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ModuleCard } from '@/components/module';
+import { Card } from '@/components/ui/card';
+import {
+    Empty,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
 
 export default function Tools() {
     return (
@@ -14,27 +22,33 @@ export default function Tools() {
                         <h1 className="text-lg font-semibold text-white">
                             Tools
                         </h1>
-                        <p className="text-sm text-white/60">2 tools</p>
+                        <p className="text-sm text-white/60">0 tools</p>
                     </div>
                 </div>
                 <Button variant="outline">
                     <Plus className="h-4 w-4" />
-                    New Tools
+                    New Tool
                 </Button>
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
-                <ModuleCard
-                    name="Accounting"
-                    description="Streamline financial operations, manage invoices, and track business expenses in real-time."
-                    href="/tools/accounting"
-                />
-                <ModuleCard
-                    name="Workforce"
-                    description="Optimize team management, monitor productivity, and coordinate resource allocation."
-                    href="/tools/workforce"
-                />
-            </div>
+            <Card className="p-10 text-center">
+                <Empty>
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <Sparkles />
+                        </EmptyMedia>
+                        <EmptyTitle>No Tools Yet</EmptyTitle>
+                        <EmptyDescription>
+                            You haven&apos;t added any tools yet. Get started by
+                            creating your first tool.
+                        </EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent className="flex-row justify-center gap-2">
+                        <Button>Create Tool</Button>
+                        <Button variant="outline">Import Tool</Button>
+                    </EmptyContent>
+                </Empty>
+            </Card>
         </div>
     );
 }
