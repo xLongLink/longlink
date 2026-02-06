@@ -8,6 +8,9 @@ import Login from '@/pages/Login';
 import Profile from '@/pages/Profile';
 import Developer from '@/pages/Developer';
 import Organizations from '@/pages/Organizations';
+import Privacy from '@/pages/Privacy';
+import Tos from '@/pages/Tos';
+import Impressum from '@/pages/Impressum';
 
 // Organization related pages
 import Tools from '@/pages/Tools';
@@ -20,6 +23,9 @@ import Solutions from '@/pages/Solutions';
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
     { path: '/login', element: <Login /> },
+    { path: '/privacy', element: <Privacy /> },
+    { path: '/terms', element: <Tos /> },
+    { path: '/impressum', element: <Impressum /> },
     {
         path: '/profile',
         element: <Layout />,

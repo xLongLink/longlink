@@ -10,7 +10,7 @@ import {
     Users,
     Zap,
 } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -284,12 +284,18 @@ export default function Home() {
                 <footer className="border-t border-white/10">
                     <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-6 text-xs text-white/60 md:flex-row">
                         <div className="flex items-center gap-2">
-                            © 2024 LongLink SAGL. All rights reserved.
+                            © 2026 LongLink SAGL. All rights reserved.
                         </div>
                         <div className="flex gap-6">
-                            <span>Privacy</span>
-                            <span>Terms</span>
-                            <span>Documentation</span>
+                            <Link to="/privacy" className="hover:text-white">
+                                Privacy
+                            </Link>
+                            <Link to="/terms" className="hover:text-white">
+                                Terms
+                            </Link>
+                            <Link to="/impressum" className="hover:text-white">
+                                Impressum
+                            </Link>
                         </div>
                     </div>
                 </footer>
