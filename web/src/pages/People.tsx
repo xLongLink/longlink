@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
     Empty,
-    EmptyContent,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
@@ -43,10 +42,6 @@ export default function People() {
                             together.
                         </EmptyDescription>
                     </EmptyHeader>
-                    <EmptyContent className="flex-row justify-center gap-2">
-                        <Button>Invite Person</Button>
-                        <Button variant="outline">Import Directory</Button>
-                    </EmptyContent>
                 </Empty>
             </Card>
         </div>
