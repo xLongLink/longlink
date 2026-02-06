@@ -38,6 +38,17 @@ class OrgsService:
             result = await session.execute(select(Org).where(Org.id == org_id))
             return result.scalars().first()
 
+    async def get_by_name(self, name: str, country: str | None = None) -> Org | None:
+        """Retrieve an organization by its name and optional country."""
+
+        Session = await get_session()
+        async with Session() as session:
+            statement = select(Org).where(Org.name == name)
+            if country is not None:
+                statement = statement.where(Org.country == country)
+            result = await session.execute(statement)
+            return result.scalars().first()
+
     async def app(self, org_id: int, app_id: int) -> App | None:
         """Retrieve an active app deployed in an organization."""
 
