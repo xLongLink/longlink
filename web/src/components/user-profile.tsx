@@ -1,5 +1,5 @@
 import { Building2, Code2, LogOut, User } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,8 +28,6 @@ export function UserProfile({
     fullName = defaultUser.fullName,
     avatarUrl = defaultUser.avatarUrl,
 }: UserProfileProps) {
-    const navigate = useNavigate();
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger className="group flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
@@ -61,40 +59,33 @@ export function UserProfile({
                     </DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
-                <DropdownMenuItem
-                    className="cursor-pointer transition-colors hover:bg-white/10 p-2"
-                    onSelect={(event) => {
-                        event.preventDefault();
-                        navigate('/organizations');
-                    }}
-                >
-                    <Building2 className="mr-2 h-4 w-4 text-white/70" />
-                    Organizations
+                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                    <Link
+                        to="/organizations"
+                        className="flex w-full items-center"
+                    >
+                        <Building2 className="mr-2 h-4 w-4 text-white/70" />
+                        Organizations
+                    </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                    className="cursor-pointer transition-colors hover:bg-white/10 p-2"
-                    onSelect={(event) => {
-                        event.preventDefault();
-                        navigate('/profile');
-                    }}
-                >
-                    <User className="mr-2 h-4 w-4 text-white/70" />
-                    Profile
+                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                    <Link to="/profile" className="flex w-full items-center">
+                        <User className="mr-2 h-4 w-4 text-white/70" />
+                        Profile
+                    </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                    className="cursor-pointer transition-colors hover:bg-white/10 p-2"
-                    onSelect={(event) => {
-                        event.preventDefault();
-                        navigate('/developer');
-                    }}
-                >
-                    <Code2 className="mr-2 h-4 w-4 text-white/70" />
-                    Developer
+                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                    <Link to="/developer" className="flex w-full items-center">
+                        <Code2 className="mr-2 h-4 w-4 text-white/70" />
+                        Developer
+                    </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem className="text-red-300 focus:text-red-200 cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
+                    <Link to="/login" className="flex w-full items-center">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign out
+                    </Link>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
