@@ -8,6 +8,7 @@ import {
     LayoutGrid,
     Settings,
     Sparkles,
+    User,
     Users,
     Wrench,
 } from 'lucide-react';
@@ -60,13 +61,13 @@ const defaultAppTabs: NavigationTab[] = [
 ];
 
 const accountTabs: NavigationTab[] = [
-    { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
     {
         value: 'organizations',
         label: 'Organizations',
         path: 'organizations',
         icon: Users,
     },
+    { value: 'profile', label: 'Profile', path: 'profile', icon: User },
     { value: 'developer', label: 'Developer', path: 'developer', icon: Wrench },
 ];
 
