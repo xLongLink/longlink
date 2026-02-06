@@ -17,6 +17,7 @@ class Org(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    country: Mapped[str | None] = mapped_column(String(2), nullable=True)
     
     # Date tracking
     date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
