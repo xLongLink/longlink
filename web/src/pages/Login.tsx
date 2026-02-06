@@ -1,13 +1,16 @@
 import { Chrome, Github, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useLocation } from 'react-router';
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router';
+import { getApiBaseUrl } from '@/lib/api';
+import { useUser } from '@/hooks/use-user';
 
 export default function Login() {
     const location = useLocation();
-    const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL?.toString() ??
-        'http://localhost:8000';
+    const navigate = useNavigate();
+    const { user, isLoading } = useUser();
+    const apiBaseUrl = getApiBaseUrl();
 
     const getDefaultReturnTo = () => {
         const referrer = document.referrer;
@@ -33,10 +36,14 @@ export default function Login() {
             ? queryReturnTo
             : getDefaultReturnTo();
 
+    useEffect(() => {
+        if (!isLoading && user) {
+            navigate(returnTo);
+        }
+    }, [isLoading, navigate, returnTo, user]);
+
     const handleGithubLogin = () => {
-        window.location.href = `${apiBaseUrl}/login/github?return_to=${encodeURIComponent(
-            returnTo
-        )}`;
+        window.location.href = `${apiBaseUrl}/login/github`;
     };
 
     return (
