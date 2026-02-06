@@ -31,6 +31,7 @@ const organizationTabs: NavigationTab[] = [
         icon: GitBranch,
     },
     { value: 'people', label: 'People', path: 'people', icon: Users },
+    { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ];
 
 const defaultAppTabs: NavigationTab[] = [

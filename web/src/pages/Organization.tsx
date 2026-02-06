@@ -5,6 +5,7 @@ import {
     GitBranch,
     LayoutGrid,
     Layers,
+    Settings,
     Users,
     Wrench,
 } from 'lucide-react';
@@ -27,6 +28,12 @@ export function Organization() {
             icon: GitBranch,
         },
         { value: 'people', label: 'People', path: 'people', icon: Users },
+        {
+            value: 'settings',
+            label: 'Settings',
+            path: 'settings',
+            icon: Settings,
+        },
     ];
 
     return (
