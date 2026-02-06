@@ -1,6 +1,14 @@
 import { Plus, Sparkles } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+    Empty,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
 
 export default function Solutions() {
     return (
@@ -24,13 +32,22 @@ export default function Solutions() {
             </div>
 
             <Card className="p-10 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-500/10 text-blue-300 ring-1 ring-blue-500/30">
-                    <Sparkles className="h-7 w-7" />
-                </div>
-                <h2 className="mt-6 text-lg font-semibold">No solutions yet</h2>
-                <p className="mt-2 text-sm text-white/60">
-                    Solutions are scope specific level applications.
-                </p>
+                <Empty>
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <Sparkles />
+                        </EmptyMedia>
+                        <EmptyTitle>No Solutions Yet</EmptyTitle>
+                        <EmptyDescription>
+                            You haven&apos;t created any solutions yet. Get
+                            started by building your first solution.
+                        </EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent className="flex-row justify-center gap-2">
+                        <Button>Create Solution</Button>
+                        <Button variant="outline">Import Solution</Button>
+                    </EmptyContent>
+                </Empty>
             </Card>
         </div>
     );
