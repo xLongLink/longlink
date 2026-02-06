@@ -22,6 +22,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useOrgs } from '@/hooks/use-orgs';
 
 const emptyFormState = { name: '', country: '' };
@@ -190,36 +198,47 @@ export default function Organizations() {
                     </Empty>
                 </Card>
             ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                    {orgs.map((org) => {
-                        const createdAt = org.date_creation
-                            ? new Date(org.date_creation).toLocaleDateString()
-                            : 'Unknown date';
-                        return (
-                            <Card
-                                key={org.id}
-                                className="flex flex-col gap-3 p-5"
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="space-y-1">
-                                        <p className="text-lg font-semibold text-white">
+                <Card className="p-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Organization</TableHead>
+                                <TableHead>Country</TableHead>
+                                <TableHead>Created</TableHead>
+                                <TableHead className="text-right">
+                                    Action
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {orgs.map((org) => {
+                                const createdAt = org.date_creation
+                                    ? new Date(
+                                          org.date_creation
+                                      ).toLocaleDateString()
+                                    : 'Unknown date';
+                                return (
+                                    <TableRow key={org.id}>
+                                        <TableCell className="font-semibold text-white">
                                             {org.name}
-                                        </p>
-                                        <p className="text-sm text-white/50">
+                                        </TableCell>
+                                        <TableCell className="text-white/60">
                                             {org.country || 'No country set'}
-                                        </p>
-                                    </div>
-                                    <Button variant="outline" size="sm">
-                                        Open
-                                    </Button>
-                                </div>
-                                <div className="text-xs text-white/50">
-                                    Created {createdAt}
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
+                                        </TableCell>
+                                        <TableCell className="text-white/60">
+                                            {createdAt}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="outline" size="sm">
+                                                Open
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </Card>
             )}
         </div>
     );
