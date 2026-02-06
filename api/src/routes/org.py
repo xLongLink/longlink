@@ -1,5 +1,5 @@
 import src.db as db
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 from src.auth import user as get_user
 from src.router import router
 from src.types import OrgCreate, OrgRead
@@ -13,20 +13,26 @@ async def create_org(payload: OrgCreate, current_user: db.User = Depends(get_use
     return OrgRead(
         id=org.id,
         name=org.name,
+        url=f'/{org.name}',
         country=org.country,
         date_creation=org.date_creation,
     )
 
 
-@router.get('/org/{org_id}', response_model=OrgRead)
-async def get_org(org_id: int, current_user: db.User = Depends(get_user)):
-    """Get an organization by its ID."""
-    org = await db.orgs.get(org_id)
+@router.get('/org/{org_name}', response_model=OrgRead)
+async def get_org(
+    org_name: str,
+    current_user: db.User = Depends(get_user),
+    country: str | None = Query(default=None),
+):
+    """Get an organization by its name, optionally scoped by country."""
+    org = await db.orgs.get_by_name(org_name, country=country)
     if org is None:
         raise HTTPException(404, 'Organization not found')
     return OrgRead(
         id=org.id,
         name=org.name,
+        url=f'/{org.name}',
         country=org.country,
         date_creation=org.date_creation,
     )
