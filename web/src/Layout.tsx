@@ -148,6 +148,7 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
             ? `/${country}/${org}/${normalizedSuffix}`
             : `/${country}/${org}`
         : '';
+    const isAccountView = !org;
 
     const activeTab = (() => {
         const path = location.pathname;
@@ -165,6 +166,15 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
         return matchedTab?.value ?? tabs[0]?.value ?? 'overview';
     })();
 
+    const activeTabConfig =
+        tabs.find((tab) => tab.value === activeTab) ?? tabs[0];
+    const accountRootPath = '/organizations';
+    const accountBreadcrumbLabel = activeTabConfig?.label ?? 'Organizations';
+    const accountBreadcrumbPath = `/${activeTabConfig?.path ?? ''}`.replace(
+        /\/$/,
+        ''
+    );
+
     return (
         <div className="min-h-screen text-white">
             <header className="border-b border-white/10">
@@ -179,41 +189,80 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                             </Link>
                             <Breadcrumb>
                                 <BreadcrumbList>
-                                    <BreadcrumbItem>
-                                        <BreadcrumbLink
-                                            render={(props) => (
-                                                <Link
-                                                    {...props}
-                                                    to={
-                                                        org
-                                                            ? `/${country}/${org}`
-                                                            : '/'
-                                                    }
-                                                    className="text-sm font-semibold text-white/70"
-                                                >
-                                                    {organizationName}
-                                                </Link>
-                                            )}
-                                        />
-                                    </BreadcrumbItem>
-                                    {appName ? (
+                                    {isAccountView ? (
                                         <>
+                                            <BreadcrumbItem>
+                                                <BreadcrumbLink
+                                                    render={(props) => (
+                                                        <Link
+                                                            {...props}
+                                                            to={accountRootPath}
+                                                            className="text-sm font-semibold text-white/70"
+                                                        >
+                                                            User
+                                                        </Link>
+                                                    )}
+                                                />
+                                            </BreadcrumbItem>
                                             <BreadcrumbSeparator />
                                             <BreadcrumbItem>
                                                 <BreadcrumbLink
                                                     render={(props) => (
                                                         <Link
                                                             {...props}
-                                                            to={`/${country}/${org}/apps/${app}`}
+                                                            to={
+                                                                accountBreadcrumbPath ||
+                                                                accountRootPath
+                                                            }
                                                             className="text-sm font-semibold text-white/70"
                                                         >
-                                                            {appName}
+                                                            {
+                                                                accountBreadcrumbLabel
+                                                            }
                                                         </Link>
                                                     )}
                                                 />
                                             </BreadcrumbItem>
                                         </>
-                                    ) : null}
+                                    ) : (
+                                        <>
+                                            <BreadcrumbItem>
+                                                <BreadcrumbLink
+                                                    render={(props) => (
+                                                        <Link
+                                                            {...props}
+                                                            to={
+                                                                org
+                                                                    ? `/${country}/${org}`
+                                                                    : '/'
+                                                            }
+                                                            className="text-sm font-semibold text-white/70"
+                                                        >
+                                                            {organizationName}
+                                                        </Link>
+                                                    )}
+                                                />
+                                            </BreadcrumbItem>
+                                            {appName ? (
+                                                <>
+                                                    <BreadcrumbSeparator />
+                                                    <BreadcrumbItem>
+                                                        <BreadcrumbLink
+                                                            render={(props) => (
+                                                                <Link
+                                                                    {...props}
+                                                                    to={`/${country}/${org}/apps/${app}`}
+                                                                    className="text-sm font-semibold text-white/70"
+                                                                >
+                                                                    {appName}
+                                                                </Link>
+                                                            )}
+                                                        />
+                                                    </BreadcrumbItem>
+                                                </>
+                                            ) : null}
+                                        </>
+                                    )}
                                 </BreadcrumbList>
                             </Breadcrumb>
                         </div>
