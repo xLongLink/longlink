@@ -12,6 +12,7 @@ import Privacy from '@/pages/Privacy';
 import Tos from '@/pages/Tos';
 import Impressum from '@/pages/Impressum';
 import NotFound from '@/pages/NotFound';
+import Example from '@/pages/Example';
 
 // Organization related pages
 import Tools from '@/pages/Tools';
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
             },
         ],
     },
+    { path: '/example', element: <Example /> },
     { path: '*', element: <NotFound /> },
 ]);
 

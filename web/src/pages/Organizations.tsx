@@ -205,9 +205,9 @@ export default function Organizations() {
                     </Empty>
                 </Card>
             ) : (
-                <Card className="p-4">
+                <div className="border overflow-hidden rounded">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="bg-muted/40 border-b">
                             <TableRow>
                                 <TableHead>Organization</TableHead>
                                 <TableHead>Country</TableHead>
@@ -221,8 +221,8 @@ export default function Organizations() {
                             {orgs.map((org) => {
                                 const createdAt = org.date_creation
                                     ? new Date(
-                                          org.date_creation
-                                      ).toLocaleDateString()
+                                        org.date_creation
+                                    ).toLocaleDateString()
                                     : 'Unknown date';
                                 const orgCountry =
                                     org.country?.toLowerCase() || 'us';
@@ -285,7 +285,7 @@ export default function Organizations() {
                             })}
                         </TableBody>
                     </Table>
-                </Card>
+                </div>
             )}
         </div>
     );
