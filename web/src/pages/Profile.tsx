@@ -11,14 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 
 const mainItems = [
@@ -58,11 +50,7 @@ export default function Profile() {
             <section className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-semibold">General settings</h2>
-                    <p className="mt-1 text-sm text-white/50">
-                        Manage your account preferences and profile details.
-                    </p>
                 </div>
-                <Separator className="bg-white/10" />
 
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
                     <div className="space-y-6">
@@ -80,33 +68,6 @@ export default function Profile() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="public-email">Public email</Label>
-                            <Select defaultValue="private">
-                                <SelectTrigger
-                                    id="public-email"
-                                    className="bg-white/5"
-                                >
-                                    <SelectValue placeholder="Select a verified email to display" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="private">
-                                        Keep my email private
-                                    </SelectItem>
-                                    <SelectItem value="hello">
-                                        hello@longlink.app
-                                    </SelectItem>
-                                    <SelectItem value="work">
-                                        leonardo@longlink.app
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <p className="text-sm text-white/50">
-                                You can update privacy in email settings at any
-                                time.
-                            </p>
-                        </div>
-
-                        <div className="space-y-2">
                             <Label htmlFor="bio">Bio</Label>
                             <Textarea
                                 id="bio"
@@ -117,37 +78,6 @@ export default function Profile() {
                                 Mention organizations and teammates with @ to
                                 link them.
                             </p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="pronouns">Pronouns</Label>
-                            <Select defaultValue="unspecified">
-                                <SelectTrigger
-                                    id="pronouns"
-                                    className="bg-white/5"
-                                >
-                                    <SelectValue placeholder="Select your pronouns" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="unspecified">
-                                        Don&apos;t specify
-                                    </SelectItem>
-                                    <SelectItem value="she">She/Her</SelectItem>
-                                    <SelectItem value="he">He/Him</SelectItem>
-                                    <SelectItem value="they">
-                                        They/Them
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="url">URL</Label>
-                            <Input
-                                id="url"
-                                placeholder="https://your-site.com"
-                                className="bg-white/5"
-                            />
                         </div>
                     </div>
 
