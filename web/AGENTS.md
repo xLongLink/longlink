@@ -15,9 +15,5 @@ You are working on a vite tailwind shadcn project.
 If there were any edits run:
 
 ```bash
-bun run lint
 bun run format
-bun run build
 ```
-
-And ensure there are no errors.
