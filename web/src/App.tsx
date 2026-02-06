@@ -20,6 +20,7 @@ import ViaVai from '@/pages/ViaVai';
 import Overview from '@/pages/Overview';
 import Workflows from '@/pages/Workflows';
 import Solutions from '@/pages/Solutions';
+import SettingsPage from '@/pages/Settings';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
@@ -51,6 +52,7 @@ const router = createBrowserRouter([
             { path: 'people', element: <People /> },
             { path: 'solutions', element: <Solutions /> },
             { path: 'workflows', element: <Workflows /> },
+            { path: 'settings', element: <SettingsPage /> },
 
             // dynamic modules
             {
