@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
     Empty,
-    EmptyContent,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
@@ -45,10 +44,6 @@ export default function SettingsPage() {
                             policies from here.
                         </EmptyDescription>
                     </EmptyHeader>
-                    <EmptyContent className="flex-row justify-center gap-2">
-                        <Button>Manage Settings</Button>
-                        <Button variant="outline">Review Permissions</Button>
-                    </EmptyContent>
                 </Empty>
             </Card>
         </div>

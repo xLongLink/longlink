@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dialog';
 import {
     Empty,
-    EmptyContent,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
@@ -196,12 +195,6 @@ export default function Organizations() {
                                 your workspaces and projects.
                             </EmptyDescription>
                         </EmptyHeader>
-                        <EmptyContent className="flex-row justify-center gap-2">
-                            <Button onClick={() => setIsDialogOpen(true)}>
-                                Create Organization
-                            </Button>
-                            <Button variant="outline">Join Organization</Button>
-                        </EmptyContent>
                     </Empty>
                 </Card>
             ) : (

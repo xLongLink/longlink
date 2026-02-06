@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
     Empty,
-    EmptyContent,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
@@ -43,10 +42,6 @@ export default function Workflows() {
                             started by creating your first workflow.
                         </EmptyDescription>
                     </EmptyHeader>
-                    <EmptyContent className="flex-row justify-center gap-2">
-                        <Button>Create Workflow</Button>
-                        <Button variant="outline">Import Workflow</Button>
-                    </EmptyContent>
                 </Empty>
             </Card>
         </div>
