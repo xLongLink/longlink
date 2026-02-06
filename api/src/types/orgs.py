@@ -10,5 +10,6 @@ class OrgCreate(BaseModel):
 class OrgRead(BaseModel):
     id: int
     name: str
+    url: str
     country: str | None
     date_creation: datetime
