@@ -15,26 +15,33 @@ export default function Login() {
     const getDefaultReturnTo = () => {
         const referrer = document.referrer;
         if (!referrer) {
-            return '/';
+            return '/organizations';
         }
 
         try {
             const referrerUrl = new URL(referrer);
             if (referrerUrl.origin !== window.location.origin) {
-                return '/';
+                return '/organizations';
             }
-            return `${referrerUrl.pathname}${referrerUrl.search}${referrerUrl.hash}`;
+            const referrerPath = `${referrerUrl.pathname}${referrerUrl.search}${referrerUrl.hash}`;
+            return referrerPath.startsWith('/login')
+                ? '/organizations'
+                : referrerPath;
         } catch {
-            return '/';
+            return '/organizations';
         }
     };
 
     const searchParams = new URLSearchParams(location.search);
     const queryReturnTo = searchParams.get('return_to');
-    const returnTo =
-        queryReturnTo && queryReturnTo.startsWith('/')
-            ? queryReturnTo
-            : getDefaultReturnTo();
+    const returnTo = (() => {
+        if (!queryReturnTo || !queryReturnTo.startsWith('/')) {
+            return getDefaultReturnTo();
+        }
+        return queryReturnTo.startsWith('/login')
+            ? getDefaultReturnTo()
+            : queryReturnTo;
+    })();
 
     useEffect(() => {
         if (!isLoading && user) {

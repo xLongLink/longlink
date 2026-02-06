@@ -11,6 +11,7 @@ import Organizations from '@/pages/Organizations';
 import Privacy from '@/pages/Privacy';
 import Tos from '@/pages/Tos';
 import Impressum from '@/pages/Impressum';
+import NotFound from '@/pages/NotFound';
 
 // Organization related pages
 import Tools from '@/pages/Tools';
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
             },
         ],
     },
+    { path: '*', element: <NotFound /> },
 ]);
 
 export default function App() {
