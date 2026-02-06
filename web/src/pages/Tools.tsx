@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
     Empty,
-    EmptyContent,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
@@ -43,10 +42,6 @@ export default function Tools() {
                             creating your first tool.
                         </EmptyDescription>
                     </EmptyHeader>
-                    <EmptyContent className="flex-row justify-center gap-2">
-                        <Button>Create Tool</Button>
-                        <Button variant="outline">Import Tool</Button>
-                    </EmptyContent>
                 </Empty>
             </Card>
         </div>

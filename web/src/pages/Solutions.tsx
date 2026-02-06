@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
     Empty,
-    EmptyContent,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
@@ -43,10 +42,6 @@ export default function Solutions() {
                             started by building your first solution.
                         </EmptyDescription>
                     </EmptyHeader>
-                    <EmptyContent className="flex-row justify-center gap-2">
-                        <Button>Create Solution</Button>
-                        <Button variant="outline">Import Solution</Button>
-                    </EmptyContent>
                 </Empty>
             </Card>
         </div>
