@@ -122,7 +122,7 @@ const appTabsByName: Record<string, NavigationTab[]> = {
 };
 
 export default function Layout() {
-    const { app, country, org } = useParams();
+    const { app, org } = useParams();
     const appTabs = app ? (appTabsByName[app] ?? defaultAppTabs) : null;
     const tabs = org ? (appTabs ?? organizationTabs) : accountTabs;
 
@@ -183,7 +183,11 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                                             render={(props) => (
                                                 <Link
                                                     {...props}
-                                                    to={org ? `/${country}/${org}` : '/'}
+                                                    to={
+                                                        org
+                                                            ? `/${country}/${org}`
+                                                            : '/'
+                                                    }
                                                     className="text-sm font-semibold text-white/70"
                                                 >
                                                     {organizationName}
