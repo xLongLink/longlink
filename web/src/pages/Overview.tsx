@@ -21,39 +21,40 @@ export default function Overview() {
                 </div>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-                <Card className="border-white/10 bg-white/5 p-6">
-                    <div className="flex flex-col items-center text-center">
-                        <div className="relative">
-                            <div className="flex h-36 w-36 items-center justify-center rounded-full bg-blue-600 text-5xl font-semibold text-white shadow-lg shadow-blue-600/30">
-                                LO
-                            </div>
-                            <Button
-                                size="icon"
-                                variant="secondary"
-                                className="absolute bottom-1 right-1 h-9 w-9 rounded-full"
-                            >
-                                <Settings className="h-4 w-4" />
-                            </Button>
+            <div className="grid gap-10 lg:grid-cols-[320px_1fr]">
+                <div className="flex flex-col items-start">
+                    <div className="relative">
+                        <div className="flex h-44 w-44 items-center justify-center rounded-full bg-blue-600 text-5xl font-semibold text-white shadow-lg shadow-blue-600/30">
+                            LO
                         </div>
-                        <h2 className="mt-6 text-2xl font-semibold text-white">
+                        <Button
+                            size="icon"
+                            variant="secondary"
+                            className="absolute bottom-2 right-2 h-10 w-10 rounded-full"
+                        >
+                            <Settings className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div className="mt-6 space-y-1">
+                        <h2 className="text-2xl font-semibold text-white">
                             LongLink
                         </h2>
                         <p className="text-sm text-white/60">org-longlink</p>
-                        <p className="mt-2 text-sm text-white/50">
-                            Your organization workspace
-                        </p>
-                        <Button className="mt-6 w-full">Edit profile</Button>
-                        <div className="mt-5 flex items-center gap-2 text-sm text-white/60">
-                            <Users className="h-4 w-4" />
-                            <span>5 followers · 0 following</span>
-                        </div>
-                        <div className="mt-3 flex items-center gap-2 text-sm text-white/60">
-                            <MapPin className="h-4 w-4" />
-                            <span>Switzerland</span>
-                        </div>
                     </div>
-                </Card>
+                    <p className="mt-3 text-sm text-white/50">
+                        Your organization workspace
+                    </p>
+                    <Button className="mt-6 w-full">Edit profile</Button>
+                    <div className="mt-6 flex items-center gap-2 text-sm text-white/60">
+                        <Users className="h-4 w-4" />
+                        <span>5 followers · 0 following</span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2 text-sm text-white/60">
+                        <MapPin className="h-4 w-4" />
+                        <span>Switzerland</span>
+                    </div>
+                    <div className="mt-6 h-px w-full bg-white/10" />
+                </div>
 
                 <Card className="border-white/10 bg-white/5 p-8">
                     <h2 className="text-xl font-semibold text-white">
