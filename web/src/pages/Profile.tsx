@@ -4,11 +4,11 @@ import {
     KeyRound,
     Mail,
     Palette,
+    Pencil,
     User,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -81,21 +81,28 @@ export default function Profile() {
                         </div>
                     </div>
 
-                    <Card className="flex flex-col items-center gap-4 bg-white/5 p-6 text-center">
+                    <div className="flex flex-col items-center gap-4 text-center">
                         <div className="text-sm font-semibold text-white">
                             Profile picture
                         </div>
-                        <Avatar className="size-36 border border-white/10">
-                            <AvatarImage
-                                src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=200&q=80"
-                                alt="Profile"
-                            />
-                            <AvatarFallback>LS</AvatarFallback>
-                        </Avatar>
-                        <Button variant="outline" size="sm">
-                            Edit
-                        </Button>
-                    </Card>
+                        <div className="relative">
+                            <Avatar className="size-44 border border-white/10">
+                                <AvatarImage
+                                    src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=200&q=80"
+                                    alt="Profile"
+                                />
+                                <AvatarFallback>LS</AvatarFallback>
+                            </Avatar>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="absolute -bottom-3 left-2 gap-2 bg-slate-950/70 text-white hover:bg-slate-900/80"
+                            >
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
