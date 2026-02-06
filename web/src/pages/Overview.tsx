@@ -1,26 +1,10 @@
-import { MapPin, Settings, Sparkles, Users } from 'lucide-react';
+import { MapPin, Settings } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export default function Overview() {
     return (
         <div className="space-y-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-300 ring-1 ring-blue-500/30">
-                        <Sparkles className="h-5 w-5" />
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-semibold text-white">
-                            Overview
-                        </h1>
-                        <p className="text-sm text-white/60">
-                            Your organization workspace
-                        </p>
-                    </div>
-                </div>
-            </div>
-
             <div className="grid gap-10 lg:grid-cols-[320px_1fr]">
                 <div className="flex flex-col items-start">
                     <div className="relative">
@@ -40,14 +24,6 @@ export default function Overview() {
                             LongLink
                         </h2>
                         <p className="text-sm text-white/60">org-longlink</p>
-                    </div>
-                    <p className="mt-3 text-sm text-white/50">
-                        Your organization workspace
-                    </p>
-                    <Button className="mt-6 w-full">Edit profile</Button>
-                    <div className="mt-6 flex items-center gap-2 text-sm text-white/60">
-                        <Users className="h-4 w-4" />
-                        <span>5 followers · 0 following</span>
                     </div>
                     <div className="mt-3 flex items-center gap-2 text-sm text-white/60">
                         <MapPin className="h-4 w-4" />
