@@ -1,14 +1,6 @@
 import type { ChangeEvent } from 'react';
 import { useRef, useState } from 'react';
-import {
-    Accessibility,
-    Bell,
-    KeyRound,
-    Mail,
-    Palette,
-    Pencil,
-    User,
-} from 'lucide-react';
+import { Bell, Palette, Pencil, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,19 +17,13 @@ import { Switch } from '@/components/ui/switch';
 const sectionTitle = {
     profile: 'General settings',
     appearance: 'Appearance preferences',
-    accessibility: 'Accessibility options',
     notifications: 'Notification preferences',
-    emails: 'Email subscriptions',
-    password: 'Password and authentication',
 } as const;
 
 const sectionSubtitle = {
     profile: 'Update your public profile details and avatar.',
     appearance: 'Control how LongLink looks and feels on your devices.',
-    accessibility: 'Adjust focus, contrast, and motion to match your needs.',
     notifications: 'Choose how you want to stay informed.',
-    emails: 'Manage the emails and digests you receive.',
-    password: 'Secure your account and review authentication.',
 } as const;
 
 type SectionId = keyof typeof sectionTitle;
@@ -45,14 +31,7 @@ type SectionId = keyof typeof sectionTitle;
 const menuItems: Array<{ id: SectionId; label: string; icon: typeof User }> = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'emails', label: 'Emails', icon: Mail },
-    {
-        id: 'password',
-        label: 'Password and authentication',
-        icon: KeyRound,
-    },
 ];
 
 export default function Profile() {
@@ -114,6 +93,15 @@ export default function Profile() {
                                 <Input
                                     id="profile-name"
                                     defaultValue="Leonardo Saurwein"
+                                    className="bg-white/5"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="profile-email">Email</Label>
+                                <Input
+                                    id="profile-email"
+                                    type="email"
+                                    defaultValue="leonardo@longlink.dev"
                                     className="bg-white/5"
                                 />
                             </div>
@@ -203,57 +191,6 @@ export default function Profile() {
                     </div>
                 )}
 
-                {activeSection === 'accessibility' && (
-                    <div className="grid gap-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Motion & focus</CardTitle>
-                                <CardDescription>
-                                    Reduce animations and enhance focus rings.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="grid gap-4">
-                                <div className="flex items-center justify-between gap-4">
-                                    <div>
-                                        <p className="font-medium">
-                                            Reduce motion
-                                        </p>
-                                        <p className="text-sm text-white/50">
-                                            Limit animations throughout the UI.
-                                        </p>
-                                    </div>
-                                    <Switch />
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                    <div>
-                                        <p className="font-medium">
-                                            Enhanced focus
-                                        </p>
-                                        <p className="text-sm text-white/50">
-                                            Use thicker outlines for focus.
-                                        </p>
-                                    </div>
-                                    <Switch defaultChecked />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Text size</CardTitle>
-                                <CardDescription>
-                                    Keep content readable in tight spaces.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Input
-                                    defaultValue="Default (100%)"
-                                    className="bg-white/5"
-                                />
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
-
                 {activeSection === 'notifications' && (
                     <div className="grid gap-4">
                         <Card>
@@ -300,113 +237,6 @@ export default function Profile() {
                                     defaultValue="22:00 - 07:00"
                                     className="bg-white/5"
                                 />
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
-
-                {activeSection === 'emails' && (
-                    <div className="grid gap-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Email digests</CardTitle>
-                                <CardDescription>
-                                    Control the cadence of summary emails.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="grid gap-4">
-                                <div className="flex items-center justify-between gap-4">
-                                    <div>
-                                        <p className="font-medium">
-                                            Weekly summary
-                                        </p>
-                                        <p className="text-sm text-white/50">
-                                            Overview of projects and tasks.
-                                        </p>
-                                    </div>
-                                    <Switch defaultChecked />
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                    <div>
-                                        <p className="font-medium">
-                                            Product updates
-                                        </p>
-                                        <p className="text-sm text-white/50">
-                                            Announcements about new features.
-                                        </p>
-                                    </div>
-                                    <Switch />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Primary email</CardTitle>
-                                <CardDescription>
-                                    Keep your account email up to date.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Input
-                                    defaultValue="leonardo@longlink.dev"
-                                    className="bg-white/5"
-                                />
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
-
-                {activeSection === 'password' && (
-                    <div className="grid gap-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Password</CardTitle>
-                                <CardDescription>
-                                    Update your password regularly to keep your
-                                    account secure.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="grid gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="current-password">
-                                        Current password
-                                    </Label>
-                                    <Input
-                                        id="current-password"
-                                        type="password"
-                                        defaultValue="password"
-                                        className="bg-white/5"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="new-password">
-                                        New password
-                                    </Label>
-                                    <Input
-                                        id="new-password"
-                                        type="password"
-                                        className="bg-white/5"
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Two-factor authentication</CardTitle>
-                                <CardDescription>
-                                    Add an extra layer of protection with 2FA.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="font-medium">
-                                        Require authentication app
-                                    </p>
-                                    <p className="text-sm text-white/50">
-                                        Use an authenticator when signing in.
-                                    </p>
-                                </div>
-                                <Switch />
                             </CardContent>
                         </Card>
                     </div>
