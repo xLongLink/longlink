@@ -21,7 +21,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 
 const sectionTitle = {
     profile: 'General settings',
@@ -117,23 +116,6 @@ export default function Profile() {
                                     defaultValue="Leonardo Saurwein"
                                     className="bg-white/5"
                                 />
-                                <p className="text-sm text-white/50">
-                                    Your name may appear around LongLink where
-                                    you contribute or are mentioned.
-                                </p>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="bio">Bio</Label>
-                                <Textarea
-                                    id="bio"
-                                    defaultValue="ETHZ - Mechanical engineering"
-                                    className="min-h-[120px] bg-white/5"
-                                />
-                                <p className="text-sm text-white/50">
-                                    Mention organizations and teammates with @
-                                    to link them.
-                                </p>
                             </div>
                         </div>
 
