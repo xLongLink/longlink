@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Building2, Plus } from 'lucide-react';
+import { Building2, MoreVertical, Plus } from 'lucide-react';
+import { Link } from 'react-router';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +31,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useOrgs } from '@/hooks/use-orgs';
 
 const emptyFormState = { name: '', country: '' };
@@ -217,10 +224,19 @@ export default function Organizations() {
                                           org.date_creation
                                       ).toLocaleDateString()
                                     : 'Unknown date';
+                                const orgCountry =
+                                    org.country?.toLowerCase() || 'us';
+                                const orgSlug = encodeURIComponent(org.name);
+                                const orgBasePath = `/${orgCountry}/${orgSlug}`;
                                 return (
                                     <TableRow key={org.id}>
                                         <TableCell className="font-semibold text-white">
-                                            {org.name}
+                                            <Link
+                                                to={orgBasePath}
+                                                className="transition-colors hover:underline underline-offset-4"
+                                            >
+                                                {org.name}
+                                            </Link>
                                         </TableCell>
                                         <TableCell className="text-white/60">
                                             {org.country || 'No country set'}
@@ -229,9 +245,40 @@ export default function Organizations() {
                                             {createdAt}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="outline" size="sm">
-                                                Open
-                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent
+                                                    align="end"
+                                                    className="w-64 p-2"
+                                                >
+                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                                                        <Link
+                                                            to={orgBasePath}
+                                                            className="flex w-full items-center"
+                                                        >
+                                                            Overview
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                                                        <Link
+                                                            to={`${orgBasePath}/people`}
+                                                            className="flex w-full items-center"
+                                                        >
+                                                            Members
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                                                        <Link
+                                                            to={`${orgBasePath}/settings`}
+                                                            className="flex w-full items-center"
+                                                        >
+                                                            Settings
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 );
