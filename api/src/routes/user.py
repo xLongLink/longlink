@@ -14,6 +14,6 @@ async def get_user_details(current_user: db.User = Depends(user)):
 async def get_user_orgs(current_user: db.User = Depends(user)):
     orgs = await db.users.orgs(current_user.id)
     return [ 
-        OrgRead(id=org.id, name=org.name, date_creation=org.date_creation)
+        OrgRead(id=org.id, name=org.name, country=org.country, date_creation=org.date_creation)
         for org in orgs
     ]
