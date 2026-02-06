@@ -14,9 +14,14 @@ import { Link, useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useUser } from '@/hooks/use-user';
 
 export default function Home() {
     const navigate = useNavigate();
+    const { user } = useUser();
+
+    const loginLabel = user ? 'Access' : 'Login';
+    const loginTarget = user ? '/organizations' : '/login';
 
     return (
         <div className="min-h-screen text-white">
@@ -34,9 +39,9 @@ export default function Home() {
                             </div>
                             <Button
                                 className="flex items-center gap-2 bg-blue-600 px-4 py-2 font-semibold text-white shadow-lg shadow-blue-600/40 transition hover:bg-blue-500"
-                                onClick={() => navigate('/login')}
+                                onClick={() => navigate(loginTarget)}
                             >
-                                Login
+                                {loginLabel}
                                 <ArrowRight className="h-4 w-4" />
                             </Button>
                         </div>
