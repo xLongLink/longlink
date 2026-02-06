@@ -1,17 +1,10 @@
 import {
     Accessibility,
     Bell,
-    Building2,
-    CreditCard,
-    Gavel,
-    Globe,
     KeyRound,
     Mail,
     Palette,
-    Settings as SettingsIcon,
-    ShieldCheck,
     User,
-    Users,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -29,23 +22,12 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 
 const mainItems = [
-    { label: 'General', icon: SettingsIcon, active: true },
-    { label: 'Profile', icon: User },
+    { label: 'Profile', icon: User, active: true },
     { label: 'Appearance', icon: Palette },
     { label: 'Accessibility', icon: Accessibility },
     { label: 'Notifications', icon: Bell },
-];
-
-const accessItems = [
-    { label: 'Billing and licensing', icon: CreditCard },
     { label: 'Emails', icon: Mail },
     { label: 'Password and authentication', icon: KeyRound },
-    { label: 'Sessions', icon: ShieldCheck },
-    { label: 'SSH and GPG keys', icon: KeyRound },
-    { label: 'Organizations', icon: Building2 },
-    { label: 'Enterprises', icon: Globe },
-    { label: 'Teams', icon: Users },
-    { label: 'Moderation', icon: Gavel },
 ];
 
 export default function Profile() {
@@ -70,27 +52,6 @@ export default function Profile() {
                             </button>
                         );
                     })}
-                </div>
-                <Separator className="bg-white/10" />
-                <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-white/40">
-                        Access
-                    </p>
-                    <div className="space-y-2">
-                        {accessItems.map((item) => {
-                            const Icon = item.icon;
-                            return (
-                                <button
-                                    key={item.label}
-                                    type="button"
-                                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-white/70 transition hover:bg-white/5 hover:text-white"
-                                >
-                                    <Icon className="h-4 w-4 text-white/50" />
-                                    {item.label}
-                                </button>
-                            );
-                        })}
-                    </div>
                 </div>
             </aside>
 
