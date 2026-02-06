@@ -183,7 +183,11 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                                             render={(props) => (
                                                 <Link
                                                     {...props}
-                                                    to={org ? `/${country}/${org}` : '/'}
+                                                    to={
+                                                        org
+                                                            ? `/${country}/${org}`
+                                                            : '/'
+                                                    }
                                                     className="text-sm font-semibold text-white/70"
                                                 >
                                                     {organizationName}
