@@ -1,9 +1,9 @@
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { toast } from "sonner"
-import * as z from "zod"
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import * as z from 'zod';
 
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -11,42 +11,17 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card"
-import {
-    Field,
-    FieldGroup,
-} from "@/components/ui/field"
+} from '@/components/ui/card';
+import { Field, FieldGroup } from '@/components/ui/field';
 
 /* ============================================================
    Types
 ============================================================ */
 
-type Component = {
-    type: "text" | "email" | "textarea"
-    name: string
-    label: string
-    description?: string
-    placeholder?: string
-    required?: boolean
-    default?: string
-    validate?: {
-        pattern?: string
-        minLength?: number
-        maxLength?: number
-    }
-    error?: string
-    depends?: any[]
-}
-
-type FieldComponentProps = {
-    config: Component
-    control: any
-}
-
-type FieldDefinition = {
-    render: (props: FieldComponentProps) => JSX.Element
-    buildValidation: (config: Component) => z.ZodTypeAny
-}
+import {
+    type Component,
+    type FieldDefinition,
+} from '@/components/viavai/form.types';
 
 /* ============================================================
    JSON Form Configuration
@@ -54,90 +29,88 @@ type FieldDefinition = {
 
 const sample: Component[] = [
     {
-        type: "text",
-        name: "title",
-        label: "Bug Title",
-        description: "Short summary of the issue.",
-        placeholder: "Login button not working",
+        type: 'text',
+        name: 'title',
+        label: 'Bug Title',
+        description: 'Short summary of the issue.',
+        placeholder: 'Login button not working',
         required: true,
-        default: "",
+        default: '',
         validate: {
             minLength: 5,
             maxLength: 32,
         },
-        error: "Title must be between 5 and 32 characters.",
+        error: 'Title must be between 5 and 32 characters.',
     },
     {
-        type: "textarea",
-        name: "description",
-        label: "Description",
-        description: "Steps to reproduce and expected result.",
-        placeholder: "Explain what happened...",
+        type: 'textarea',
+        name: 'description',
+        label: 'Description',
+        description: 'Steps to reproduce and expected result.',
+        placeholder: 'Explain what happened...',
         required: true,
-        default: "",
+        default: '',
         validate: {
             minLength: 20,
             maxLength: 100,
         },
-        error: "Description must be between 20 and 100 characters.",
+        error: 'Description must be between 20 and 100 characters.',
     },
-]
-
+];
 
 /* ============================================================
    Registry
 ============================================================ */
 
-import { textField } from "@/components/fields/Text"
-import { emailField } from "@/components/fields/Email"
-import { textareaField } from "@/components/fields/TextArea"
-
+import { textField } from '@/components/fields/Text';
+import { emailField } from '@/components/fields/Email';
+import { textareaField } from '@/components/fields/TextArea';
 
 const fieldRegistry: Record<string, FieldDefinition> = {
     text: textField,
     email: emailField,
     textarea: textareaField,
-}
+};
 
 /* ============================================================
    Schema Builder
 ============================================================ */
 
 function buildSchema(components: Component[]) {
-    const shape: Record<string, z.ZodTypeAny> = {}
+    const shape: Record<string, z.ZodTypeAny> = {};
 
     components.forEach((config) => {
-        const definition = fieldRegistry[config.type]
-        if (!definition) return
+        const definition = fieldRegistry[config.type];
+        if (!definition) return;
 
-        shape[config.name] = definition.buildValidation(config)
-    })
+        shape[config.name] = definition.buildValidation(config);
+    });
 
-    return z.object(shape)
+    return z.object(shape);
 }
 
 /* ============================================================
    Component
 ============================================================ */
 
-export default function Form() {
-    const schema = buildSchema(sample)
+export function Form() {
+    const schema = buildSchema(sample);
 
     const form = useForm({
         resolver: zodResolver(schema),
         defaultValues: Object.fromEntries(
-            sample.map((f) => [f.name, f.default ?? ""])
+            sample.map((f) => [f.name, f.default ?? ''])
         ),
-    })
+    });
 
     function onSubmit(data: any) {
-        toast("Submitted values:", {
+        toast('Submitted values:', {
             description: (
                 <pre className="bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4">
                     <code>{JSON.stringify(data, null, 2)}</code>
                 </pre>
             ),
-        })
+        });
     }
 
     return (
@@ -153,8 +126,8 @@ export default function Form() {
                 <form id="dynamic-form" onSubmit={form.handleSubmit(onSubmit)}>
                     <FieldGroup>
                         {sample.map((config) => {
-                            const definition = fieldRegistry[config.type]
-                            if (!definition) return null
+                            const definition = fieldRegistry[config.type];
+                            if (!definition) return null;
 
                             return (
                                 <div key={config.name}>
@@ -163,7 +136,7 @@ export default function Form() {
                                         control: form.control,
                                     })}
                                 </div>
-                            )
+                            );
                         })}
                     </FieldGroup>
                 </form>
@@ -184,5 +157,7 @@ export default function Form() {
                 </Field>
             </CardFooter>
         </Card>
-    )
+    );
 }
+
+export default Form;
