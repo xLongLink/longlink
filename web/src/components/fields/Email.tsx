@@ -1,9 +1,19 @@
+import { Controller } from 'react-hook-form';
 
-const emailField: FieldDefinition = {
+import { type FieldDefinition } from '@/components/viavai/form.types';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+
+import { buildStringValidation } from './validation';
+
+export const emailField: FieldDefinition = {
     buildValidation: (config) =>
-        baseStringValidation(config).email(
-            config.error || "Invalid email"
-        ),
+        buildStringValidation(config).email(config.error || 'Invalid email'),
 
     render: ({ config, control }) => (
         <Controller
@@ -36,4 +46,4 @@ const emailField: FieldDefinition = {
             )}
         />
     ),
-}
+};

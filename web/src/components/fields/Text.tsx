@@ -1,30 +1,18 @@
+import { Controller } from 'react-hook-form';
 
-const textField: FieldDefinition = {
-    buildValidation: (config) => {
-        let validator = z.string()
+import { type FieldDefinition } from '@/components/viavai/form.types';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 
-        if (config.required) {
-            validator = validator.min(1, config.error || "Required")
-        }
+import { buildStringValidation } from './validation';
 
-        if (config.validate?.minLength !== undefined) {
-            validator = validator.min(config.validate.minLength, config.error)
-        }
-
-        if (config.validate?.maxLength !== undefined) {
-            validator = validator.max(config.validate.maxLength, config.error)
-        }
-
-        if (config.validate?.pattern) {
-            validator = validator.regex(
-                new RegExp(config.validate.pattern),
-                config.error
-            )
-        }
-
-        return validator
-
-    },
+export const textField: FieldDefinition = {
+    buildValidation: buildStringValidation,
 
     render: ({ config, control }) => (
         <Controller
@@ -58,4 +46,4 @@ const textField: FieldDefinition = {
             )}
         />
     ),
-}
+};
