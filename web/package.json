@@ -13,6 +13,7 @@
     "dependencies": {
         "@base-ui/react": "^1.1.0",
         "@fontsource-variable/inter": "^5.2.8",
+        "@hookform/resolvers": "^5.2.2",
         "@tailwindcss/vite": "^4.1.17",
         "@tanstack/react-table": "^8.21.3",
         "class-variance-authority": "^0.7.1",
@@ -26,6 +27,7 @@
         "react": "^19.2.0",
         "react-day-picker": "^9.13.0",
         "react-dom": "^19.2.0",
+        "react-hook-form": "^7.71.1",
         "react-resizable-panels": "^4.5.4",
         "react-router": "^7.13.0",
         "recharts": "2.15.4",

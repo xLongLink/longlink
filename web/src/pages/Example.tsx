@@ -1,8 +1,5 @@
-import { CountryPicker } from '@/components/viavai/country-picker';
-
+import { Form } from "@/components/viavai/form"
 
 export default function Example() {
-    return (
-        <CountryPicker> </CountryPicker>
-    )
+    return <Form />
 }

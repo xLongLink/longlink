@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from '@/components/theme';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from '@/Layout';
@@ -70,6 +71,7 @@ export default function App() {
     return (
         <ThemeProvider>
             <RouterProvider router={router} />
+            <Toaster />
         </ThemeProvider>
     );
 }
