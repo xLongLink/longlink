@@ -1,6 +1,6 @@
 from src.router import router
-from src.types.countries import CountryCode
-from src.types.countries import CountryNames
+from api.src.types.lists.countries import CountryCode
+from api.src.types.lists.countries import CountryNames
 
 
 @router.get('/lists/countries', response_model=dict[str, str])

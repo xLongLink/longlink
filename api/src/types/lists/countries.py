@@ -1,8 +1,8 @@
-import enum
+from enum import Enum
 
 
 # https://www.iban.com/country-codes
-class CountryCode(str, enum.Enum):
+class CountryCode(str, Enum):
     """ISO 3166-1 alpha-2 country codes."""
 
     AD = "AD"  # Andorra
@@ -256,7 +256,7 @@ class CountryCode(str, enum.Enum):
     ZW = "ZW"  # Zimbabwe
 
 
-class CountryNames(str, enum.Enum):
+class CountryNames(str, Enum):
     """ISO 3166-1 alpha-2 country codes."""
     AD = "Andorra"
     AE = "United Arab Emirates"

@@ -23,6 +23,9 @@ class Org(Base):
     crn: Mapped[str | None] = mapped_column(String(25), unique=True, nullable=True) # Company Registration Number
     vat: Mapped[str | None] = mapped_column(String(25), unique=True, nullable=True) # Value Added Tax
 
+    # ISIC, NACE, NAICS, NOGA, etc. industry classification code (4th layer)
+    industry: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
     # Date tracking
     date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     
