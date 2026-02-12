@@ -1,5 +1,7 @@
 import { Form } from '@/components/viavai/Form';
+import { JsonTable } from '@/components/viavai/Table';
 import { type Component } from '@/types/viavai/form.types';
+import { type TableConfig } from '@/types/viavai/table.types';
 
 const sample: Component[] = [
     {
@@ -32,6 +34,89 @@ const sample: Component[] = [
     },
 ];
 
+type ExampleInvoice = {
+    id: string;
+    client: {
+        name: string;
+        email: string;
+    };
+    invoiceNumber: string;
+    issueDate: string;
+    dueDate: string;
+    status: string;
+    subtotal: number;
+    vat: number;
+};
+
+const sampleTable: TableConfig<ExampleInvoice> = {
+    title: 'Invoices',
+    description: 'Example viavai table rendered with schema and sample data.',
+    data: [
+        {
+            id: '1',
+            client: {
+                name: 'Adriano Saurwein',
+                email: 'adriano@email.com',
+            },
+            invoiceNumber: 'INV-001',
+            issueDate: '2024-01-10',
+            dueDate: '2024-01-20',
+            status: 'Paid',
+            subtotal: 1000,
+            vat: 200,
+        },
+        {
+            id: '2',
+            client: {
+                name: 'Leonardo Saurwein',
+                email: 'leo@email.com',
+            },
+            invoiceNumber: 'INV-002',
+            issueDate: '2024-01-15',
+            dueDate: '2024-01-30',
+            status: 'Pending',
+            subtotal: 450,
+            vat: 90,
+        },
+    ],
+    schema: {
+        columns: [
+            {
+                key: 'invoice',
+                label: 'Invoice',
+                align: 'left',
+                cell: [
+                    '{invoiceNumber}',
+                    'Issued {issueDate}',
+                    'Status: {status}',
+                ],
+            },
+            {
+                key: 'client',
+                label: 'Client',
+                cell: ['{client.name}', '{client.email}'],
+            },
+            {
+                key: 'dueDate',
+                label: 'Due Date',
+                align: 'left',
+                cell: ['{dueDate}'],
+            },
+            {
+                key: 'amount',
+                label: 'Amount',
+                align: 'right',
+                cell: ['€{subtotal}', 'VAT €{vat}'],
+            },
+        ],
+    },
+};
+
 export default function Example() {
-    return <Form schema={sample} />;
+    return (
+        <div className="space-y-6">
+            <Form schema={sample} />
+            <JsonTable config={sampleTable} />
+        </div>
+    );
 }
