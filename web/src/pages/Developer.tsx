@@ -1,14 +1,12 @@
 import { Code2 } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const sectionTitle = {
     general: 'General developer settings',
 } as const;
 
 const sectionSubtitle = {
-    general: 'Manage API access, webhooks, and tooling defaults.',
+    general: 'Manage API access, webhooks, and tooling defaults',
 } as const;
 
 type SectionId = keyof typeof sectionTitle;
@@ -32,9 +30,9 @@ export default function Developer() {
                                 key={item.label}
                                 type="button"
                                 onClick={() => setActiveSection(item.id)}
-                                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
+                                className={`flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
                                     isActive
-                                        ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(59,130,246,0.9)]'
+                                        ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(255,255,255,0.75)]'
                                         : 'text-white/70 hover:bg-white/5 hover:text-white'
                                 }`}
                             >
@@ -55,43 +53,6 @@ export default function Developer() {
                         {sectionSubtitle[activeSection]}
                     </p>
                 </div>
-
-                {activeSection === 'general' && (
-                    <div className="grid gap-4">
-                        <Card>
-                            <CardHeader className="flex-row items-start justify-between gap-4">
-                                <div>
-                                    <CardTitle>API access</CardTitle>
-                                    <p className="text-sm text-white/60">
-                                        Use personal tokens to authenticate your
-                                        tools and integrations.
-                                    </p>
-                                </div>
-                                <Badge className="bg-white/10 text-white">
-                                    Enabled
-                                </Badge>
-                            </CardHeader>
-                            <CardContent className="text-sm text-white/70">
-                                Tokens you create can be scoped to specific orgs
-                                and revoked at any time.
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Webhook defaults</CardTitle>
-                                <p className="text-sm text-white/60">
-                                    Set the baseline event delivery behavior for
-                                    new apps.
-                                </p>
-                            </CardHeader>
-                            <CardContent className="text-sm text-white/70">
-                                LongLink will retry failed deliveries for 24
-                                hours and sign each payload with your org
-                                secret.
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
             </section>
         </div>
     );
