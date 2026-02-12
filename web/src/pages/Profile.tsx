@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useUser } from '@/hooks/use-user';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -35,11 +36,12 @@ const menuItems: Array<{ id: SectionId; label: string; icon: typeof User }> = [
 ];
 
 export default function Profile() {
+    const { user } = useUser();
     const [activeSection, setActiveSection] = useState<SectionId>('profile');
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const defaultAvatar =
-        'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=200&q=80';
+    const avatarUrl = avatarPreview ?? user?.avatar ?? '';
+    const avatarFallback = (user?.name ?? 'User').slice(0, 2).toUpperCase();
 
     const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -63,11 +65,17 @@ export default function Profile() {
                                 onClick={() => setActiveSection(item.id)}
                                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
                                     isActive
-                                        ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(59,130,246,0.9)]'
+                                        ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(255,255,255,0.75)]'
                                         : 'text-white/70 hover:bg-white/5 hover:text-white'
                                 }`}
                             >
-                                <Icon className="h-4 w-4 text-white/70" />
+                                <Icon
+                                    className={`h-4 w-4 ${
+                                        isActive
+                                            ? 'text-white'
+                                            : 'text-white/70'
+                                    }`}
+                                />
                                 {item.label}
                             </button>
                         );
@@ -112,11 +120,10 @@ export default function Profile() {
                                 Profile picture
                             </div>
                             <Avatar className="size-44 border border-white/10">
-                                <AvatarImage
-                                    src={avatarPreview ?? defaultAvatar}
-                                    alt="Profile"
-                                />
-                                <AvatarFallback>LS</AvatarFallback>
+                                <AvatarImage src={avatarUrl} alt="Profile" />
+                                <AvatarFallback>
+                                    {avatarFallback}
+                                </AvatarFallback>
                             </Avatar>
                             <input
                                 ref={fileInputRef}
