@@ -4,8 +4,10 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Field, FieldGroup } from '@/components/ui/field';
-import { type Component, type FieldDefinition } from '@/types/viavai/form.types';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    type Component,
+    type FieldDefinition,
+} from '@/types/viavai/form.types';
 
 /* ============================================================
    JSON Form Configuration
@@ -53,7 +55,6 @@ const fieldRegistry: Record<string, FieldDefinition> = {
     textarea: textareaField,
 };
 
-
 // Schema Builder
 function buildSchema(components: Component[]) {
     const shape: Record<string, z.ZodTypeAny> = {};
@@ -90,35 +91,27 @@ export function Form() {
     }
 
     return (
-        <Card className="w-full sm:max-w-md">
-            <CardHeader>
-                <CardTitle>Dynamic Form</CardTitle>
-                <CardDescription>
-                    Registry-driven scalable architecture
-                </CardDescription>
-            </CardHeader>
+        <form
+            className="w-full space-y-4 sm:max-w-md"
+            onSubmit={form.handleSubmit(onSubmit)}
+        >
+            <FieldGroup>
+                {sample.map((config) => {
+                    const definition = fieldRegistry[config.type];
+                    if (!definition) return null;
 
-            <CardContent>
-                <form id="dynamic-form" onSubmit={form.handleSubmit(onSubmit)}>
-                    <FieldGroup>
-                        {sample.map((config) => {
-                            const definition = fieldRegistry[config.type];
-                            if (!definition) return null;
+                    return (
+                        <div key={config.name}>
+                            {definition.component({
+                                config,
+                                control: form.control,
+                            })}
+                        </div>
+                    );
+                })}
+            </FieldGroup>
 
-                            return (
-                                <div key={config.name}>
-                                    {definition.component({
-                                        config,
-                                        control: form.control,
-                                    })}
-                                </div>
-                            );
-                        })}
-                    </FieldGroup>
-                </form>
-            </CardContent>
-
-            <CardFooter>
+            <div>
                 <Field orientation="horizontal">
                     <Button
                         type="button"
@@ -127,12 +120,10 @@ export function Form() {
                     >
                         Reset
                     </Button>
-                    <Button type="submit" form="dynamic-form">
-                        Submit
-                    </Button>
+                    <Button type="submit">Submit</Button>
                 </Field>
-            </CardFooter>
-        </Card>
+            </div>
+        </form>
     );
 }
 
