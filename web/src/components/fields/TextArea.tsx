@@ -5,7 +5,7 @@ import {
     type Component,
     type FieldDefinition,
     type FieldComponentProps,
-} from '@/components/viavai/form.types';
+} from '@/types/viavai/form.types';
 import {
     Field,
     FieldDescription,

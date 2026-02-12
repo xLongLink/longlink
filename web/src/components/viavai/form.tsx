@@ -21,7 +21,7 @@ import { Field, FieldGroup } from '@/components/ui/field';
 import {
     type Component,
     type FieldDefinition,
-} from '@/components/viavai/form.types';
+} from '@/types/viavai/form.types';
 
 /* ============================================================
    JSON Form Configuration
