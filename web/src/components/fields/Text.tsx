@@ -4,6 +4,7 @@ import * as z from 'zod';
 import {
     type Component,
     type FieldDefinition,
+    type FieldComponentProps,
 } from '@/components/viavai/form.types';
 import {
     Field,
@@ -13,7 +14,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-function buildTextValidation(config: Component) {
+export function textValidation(config: Component) {
     let validator = z.string();
 
     if (config.required) {
@@ -38,10 +39,8 @@ function buildTextValidation(config: Component) {
     return validator;
 }
 
-export const textField: FieldDefinition = {
-    buildValidation: buildTextValidation,
-
-    render: ({ config, control }) => (
+export function Text({ config, control }: FieldComponentProps) {
+    return (
         <Controller
             name={config.name}
             control={control}
@@ -72,5 +71,10 @@ export const textField: FieldDefinition = {
                 </Field>
             )}
         />
-    ),
+    );
+}
+
+export const textField: FieldDefinition = {
+    component: Text,
+    validation: textValidation,
 };

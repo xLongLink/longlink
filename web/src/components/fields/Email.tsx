@@ -4,6 +4,7 @@ import * as z from 'zod';
 import {
     type Component,
     type FieldDefinition,
+    type FieldComponentProps,
 } from '@/components/viavai/form.types';
 import {
     Field,
@@ -13,7 +14,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-function buildEmailValidation(config: Component) {
+export function emailValidation(config: Component) {
     let validator = z.string();
 
     if (config.required) {
@@ -38,10 +39,8 @@ function buildEmailValidation(config: Component) {
     return validator.email(config.error || 'Invalid email');
 }
 
-export const emailField: FieldDefinition = {
-    buildValidation: buildEmailValidation,
-
-    render: ({ config, control }) => (
+export function Email({ config, control }: FieldComponentProps) {
+    return (
         <Controller
             name={config.name}
             control={control}
@@ -71,5 +70,10 @@ export const emailField: FieldDefinition = {
                 </Field>
             )}
         />
-    ),
+    );
+}
+
+export const emailField: FieldDefinition = {
+    component: Email,
+    validation: emailValidation,
 };

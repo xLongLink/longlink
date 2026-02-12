@@ -83,7 +83,7 @@ function buildSchema(components: Component[]) {
         const definition = fieldRegistry[config.type];
         if (!definition) return;
 
-        shape[config.name] = definition.buildValidation(config);
+        shape[config.name] = definition.validation(config);
     });
 
     return z.object(shape);
@@ -131,7 +131,7 @@ export function Form() {
 
                             return (
                                 <div key={config.name}>
-                                    {definition.render({
+                                    {definition.component({
                                         config,
                                         control: form.control,
                                     })}
