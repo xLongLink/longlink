@@ -1,32 +1,29 @@
 import src.db as db
 from fastapi import Depends
-from src.auth import user
+from src.auth import authuser
 from src.types import OrgRead
 from src.types import UserUpdate
 from src.router import router
 
 
 @router.get('/user')
-async def get_user_details(current_user: db.User = Depends(user)):
-    return current_user
+async def get_user_details(user: db.User = Depends(authuser)):
+    return user
 
 
 @router.patch('/user')
-async def patch_user_details(
-    payload: UserUpdate,
-    current_user: db.User = Depends(user),
-):
+async def patch_user_details( payload: UserUpdate, user: db.User = Depends(authuser)):
     params = payload.model_dump(exclude_unset=True)
     if not params:
-        return current_user
+        return user
 
-    updated_user = await db.users.update(current_user.id, **params)
+    updated_user = await db.users.update(user.id, **params)
     return updated_user
 
 
 @router.get('/user/orgs', response_model=list[OrgRead])
-async def get_user_orgs(current_user: db.User = Depends(user)):
-    orgs = await db.users.orgs(current_user.id)
+async def get_user_orgs(user: db.User = Depends(authuser)):
+    orgs = await db.users.orgs(user.id)
     return [
         OrgRead(
             id=org.id,
