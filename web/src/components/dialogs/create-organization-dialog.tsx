@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { CountryPicker } from '@/components/viavai/country-picker';
 import type { CreateOrganizationPayload } from '@/hooks/use-orgs';
 
 const emptyFormState = { name: '', country: '', crn: '', vat: '' };
@@ -103,19 +104,17 @@ export function CreateOrganizationDialog({
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="org-country">Country (ISO)</Label>
-                        <Input
-                            id="org-country"
+                        <Label>Country</Label>
+                        <CountryPicker
                             value={formState.country}
-                            onChange={(event) =>
+                            onValueChange={(country) =>
                                 setFormState((prev) => ({
                                     ...prev,
-                                    country: event.target.value,
+                                    country: country ?? '',
                                 }))
                             }
-                            placeholder="US"
-                            maxLength={2}
-                            className="bg-white/5 uppercase"
+                            placeholder="Select country"
+                            className="w-full bg-white/5"
                         />
                     </div>
                     <div className="space-y-2">
