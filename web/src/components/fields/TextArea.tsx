@@ -4,6 +4,7 @@ import * as z from 'zod';
 import {
     type Component,
     type FieldDefinition,
+    type FieldComponentProps,
 } from '@/components/viavai/form.types';
 import {
     Field,
@@ -18,7 +19,7 @@ import {
     InputGroupTextarea,
 } from '@/components/ui/input-group';
 
-function buildTextAreaValidation(config: Component) {
+export function textAreaValidation(config: Component) {
     let validator = z.string();
 
     if (config.required) {
@@ -43,10 +44,8 @@ function buildTextAreaValidation(config: Component) {
     return validator;
 }
 
-export const textareaField: FieldDefinition = {
-    buildValidation: buildTextAreaValidation,
-
-    render: ({ config, control }) => (
+export function TextArea({ config, control }: FieldComponentProps) {
+    return (
         <Controller
             name={config.name}
             control={control}
@@ -87,5 +86,10 @@ export const textareaField: FieldDefinition = {
                 </Field>
             )}
         />
-    ),
+    );
+}
+
+export const textareaField: FieldDefinition = {
+    component: TextArea,
+    validation: textAreaValidation,
 };
