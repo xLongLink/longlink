@@ -22,89 +22,13 @@ import {
 import {
     type TableAlign,
     type TableColumn,
-    type TableConfig,
+    type TableSchemaConfig,
 } from '@/types/viavai/table.types';
 
 const textAlignClasses: Record<TableAlign, string> = {
     left: 'text-left',
     center: 'text-center',
     right: 'text-right',
-};
-
-const sample: TableConfig<{
-    id: string;
-    client: {
-        name: string;
-        email: string;
-    };
-    invoiceNumber: string;
-    issueDate: string;
-    dueDate: string;
-    status: string;
-    subtotal: number;
-    vat: number;
-}> = {
-    title: 'Dynamic Table',
-    description: 'Schema-driven table rendered from JSON data + JSON schema.',
-    data: [
-        {
-            id: '1',
-            client: {
-                name: 'Adriano Saurwein',
-                email: 'adriano@email.com',
-            },
-            invoiceNumber: 'INV-001',
-            issueDate: '2024-01-10',
-            dueDate: '2024-01-20',
-            status: 'Paid',
-            subtotal: 1000,
-            vat: 200,
-        },
-        {
-            id: '2',
-            client: {
-                name: 'Leonardo Saurwein',
-                email: 'leo@email.com',
-            },
-            invoiceNumber: 'INV-002',
-            issueDate: '2024-01-15',
-            dueDate: '2024-01-30',
-            status: 'Pending',
-            subtotal: 450,
-            vat: 90,
-        },
-    ],
-    schema: {
-        columns: [
-            {
-                key: 'invoice',
-                label: 'Invoice',
-                align: 'left',
-                cell: [
-                    '{invoiceNumber}',
-                    'Issued {issueDate}',
-                    'Status: {status}',
-                ],
-            },
-            {
-                key: 'client',
-                label: 'Client',
-                cell: ['{client.name}', '{client.email}'],
-            },
-            {
-                key: 'dueDate',
-                label: 'Due Date',
-                align: 'left',
-                cell: ['{dueDate}'],
-            },
-            {
-                key: 'amount',
-                label: 'Amount',
-                align: 'right',
-                cell: ['€{subtotal}', 'VAT €{vat}'],
-            },
-        ],
-    },
 };
 
 function resolvePath(data: unknown, path: string): unknown {
@@ -153,23 +77,24 @@ function buildColumns<T extends object>(
     });
 }
 
-type JsonTableProps<T extends object> = {
-    config: TableConfig<T>;
+type TableProps<T extends object> = {
+    schema: TableSchemaConfig;
+    data: T[];
 };
 
-export function JsonTable<T extends object>({ config }: JsonTableProps<T>) {
+export function Table<T extends object>({ schema, data }: TableProps<T>) {
     const table = useReactTable({
-        data: config.data,
-        columns: buildColumns<T>(config.schema.columns),
+        data,
+        columns: buildColumns<T>(schema.schema.columns),
         getCoreRowModel: getCoreRowModel(),
     });
 
     return (
         <Card className="w-full">
             <CardHeader>
-                <CardTitle>{config.title}</CardTitle>
-                {config.description ? (
-                    <CardDescription>{config.description}</CardDescription>
+                <CardTitle>{schema.title}</CardTitle>
+                {schema.description ? (
+                    <CardDescription>{schema.description}</CardDescription>
                 ) : null}
             </CardHeader>
             <CardContent>
@@ -241,7 +166,7 @@ export function JsonTable<T extends object>({ config }: JsonTableProps<T>) {
                             ) : (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={config.schema.columns.length}
+                                        colSpan={schema.schema.columns.length}
                                         className="h-24 text-center text-muted-foreground"
                                     >
                                         No data available.
@@ -254,10 +179,6 @@ export function JsonTable<T extends object>({ config }: JsonTableProps<T>) {
             </CardContent>
         </Card>
     );
-}
-
-export function Table() {
-    return <JsonTable config={sample} />;
 }
 
 export default Table;

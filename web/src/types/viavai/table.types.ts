@@ -11,9 +11,8 @@ export type TableSchema = {
     columns: TableColumn[];
 };
 
-export type TableConfig<T extends object> = {
+export type TableSchemaConfig = {
     title: string;
     description?: string;
-    data: T[];
     schema: TableSchema;
 };
