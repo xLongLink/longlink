@@ -1,17 +1,7 @@
-import { useMemo, useState } from 'react';
-import { Building2, MoreVertical, Plus } from 'lucide-react';
+import { useMemo } from 'react';
+import { Building2, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import {
     Empty,
     EmptyDescription,
@@ -19,8 +9,6 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/components/ui/empty';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
@@ -36,15 +24,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { CreateOrganizationDialog } from '@/components/dialogs/create-organization-dialog';
 import { useOrgs } from '@/hooks/use-orgs';
-
-const emptyFormState = { name: '', country: '', crn: '', vat: '' };
 
 export default function Organizations() {
     const { orgs, isLoading, isCreating, error, createOrg } = useOrgs();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [formState, setFormState] = useState(emptyFormState);
-    const [formError, setFormError] = useState<string | null>(null);
 
     const orgCountLabel = useMemo(() => {
         if (isLoading) {
@@ -53,42 +37,6 @@ export default function Organizations() {
         const total = orgs.length;
         return `${total} organization${total === 1 ? '' : 's'}`;
     }, [isLoading, orgs.length]);
-
-    const handleOpenChange = (open: boolean) => {
-        setIsDialogOpen(open);
-        if (open) {
-            setFormState(emptyFormState);
-            setFormError(null);
-        }
-    };
-
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
-        const trimmedName = formState.name.trim();
-        const trimmedCountry = formState.country.trim();
-        const trimmedCrn = formState.crn.trim();
-        const trimmedVat = formState.vat.trim();
-        if (!trimmedName) {
-            setFormError('Organization name is required.');
-            return;
-        }
-        setFormError(null);
-        try {
-            await createOrg({
-                name: trimmedName,
-                country: trimmedCountry || 'US',
-                crn: trimmedCrn || undefined,
-                vat: trimmedVat || undefined,
-            });
-            setIsDialogOpen(false);
-        } catch (err) {
-            setFormError(
-                err instanceof Error
-                    ? err.message
-                    : 'Unable to create organization.'
-            );
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -104,111 +52,11 @@ export default function Organizations() {
                         <p className="text-sm text-white/60">{orgCountLabel}</p>
                     </div>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-                    <DialogTrigger
-                        render={
-                            <Button variant="outline">
-                                <Plus className="h-4 w-4" />
-                                New Organization
-                            </Button>
-                        }
-                    />
-                    <DialogContent className="bg-slate-950 text-white">
-                        <DialogHeader>
-                            <DialogTitle>Create organization</DialogTitle>
-                            <DialogDescription className="text-white/60">
-                                You&apos;ll be listed as the owner of this
-                                organization.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form className="space-y-4" onSubmit={handleSubmit}>
-                            <div className="space-y-2">
-                                <Label htmlFor="org-name">
-                                    Organization name
-                                </Label>
-                                <Input
-                                    id="org-name"
-                                    value={formState.name}
-                                    onChange={(event) =>
-                                        setFormState((prev) => ({
-                                            ...prev,
-                                            name: event.target.value,
-                                        }))
-                                    }
-                                    placeholder="Acme Studio"
-                                    className="bg-white/5"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="org-country">
-                                    Country (ISO)
-                                </Label>
-                                <Input
-                                    id="org-country"
-                                    value={formState.country}
-                                    onChange={(event) =>
-                                        setFormState((prev) => ({
-                                            ...prev,
-                                            country: event.target.value,
-                                        }))
-                                    }
-                                    placeholder="US"
-                                    className="bg-white/5 uppercase"
-                                    maxLength={2}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="org-crn">CRN</Label>
-                                <Input
-                                    id="org-crn"
-                                    value={formState.crn}
-                                    onChange={(event) =>
-                                        setFormState((prev) => ({
-                                            ...prev,
-                                            crn: event.target.value,
-                                        }))
-                                    }
-                                    placeholder="Company Registration Number"
-                                    className="bg-white/5"
-                                    maxLength={25}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="org-vat">VAT</Label>
-                                <Input
-                                    id="org-vat"
-                                    value={formState.vat}
-                                    onChange={(event) =>
-                                        setFormState((prev) => ({
-                                            ...prev,
-                                            vat: event.target.value,
-                                        }))
-                                    }
-                                    placeholder="Value Added Tax"
-                                    className="bg-white/5"
-                                    maxLength={25}
-                                />
-                            </div>
-                            {(formError || error) && (
-                                <p className="text-sm text-red-400">
-                                    {formError || error}
-                                </p>
-                            )}
-                            <DialogFooter>
-                                <Button type="submit" disabled={isCreating}>
-                                    {isCreating ? (
-                                        <>
-                                            <Spinner className="mr-2" />
-                                            Creating...
-                                        </>
-                                    ) : (
-                                        'Create organization'
-                                    )}
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                <CreateOrganizationDialog
+                    createOrg={createOrg}
+                    isCreating={isCreating}
+                    error={error}
+                />
             </div>
 
             {isLoading ? (
@@ -278,33 +126,12 @@ export default function Organizations() {
                                                 <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
                                                     <MoreVertical className="h-4 w-4" />
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent
-                                                    align="end"
-                                                    className="w-64 p-2"
-                                                >
-                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                                                        <Link
-                                                            to={orgBasePath}
-                                                            className="flex w-full items-center"
-                                                        >
-                                                            Overview
-                                                        </Link>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem>
+                                                        Manage modules
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                                                        <Link
-                                                            to={`${orgBasePath}/people`}
-                                                            className="flex w-full items-center"
-                                                        >
-                                                            Members
-                                                        </Link>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                                                        <Link
-                                                            to={`${orgBasePath}/settings`}
-                                                            className="flex w-full items-center"
-                                                        >
-                                                            Settings
-                                                        </Link>
+                                                    <DropdownMenuItem>
+                                                        Open settings
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
