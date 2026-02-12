@@ -258,7 +258,6 @@ class CountryCode(str, enum.Enum):
 
 class CountryNames(str, enum.Enum):
     """ISO 3166-1 alpha-2 country codes."""
-
     AD = "Andorra"
     AE = "United Arab Emirates"
     AF = "Afghanistan"
