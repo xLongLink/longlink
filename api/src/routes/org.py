@@ -8,13 +8,20 @@ from src.types import OrgCreate, OrgRead
 @router.post('/org', response_model=OrgRead)
 async def create_org(payload: OrgCreate, current_user: db.User = Depends(get_user)):
     """Create a new organization, the user creating it will be the owner of the organization."""
-    org = await db.orgs.create(payload.name, payload.country)
+    org = await db.orgs.create(
+        payload.name,
+        payload.country,
+        payload.crn,
+        payload.vat,
+    )
     await db.orgs.add(org.id, current_user.id, db.OrgRole.owner)
     return OrgRead(
         id=org.id,
         name=org.name,
         url=f'/{org.name}',
         country=org.country,
+        crn=org.crn,
+        vat=org.vat,
         date_creation=org.date_creation,
     )
 
@@ -34,5 +41,7 @@ async def get_org(
         name=org.name,
         url=f'/{org.name}',
         country=org.country,
+        crn=org.crn,
+        vat=org.vat,
         date_creation=org.date_creation,
     )

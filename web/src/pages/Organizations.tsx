@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useOrgs } from '@/hooks/use-orgs';
 
-const emptyFormState = { name: '', country: '' };
+const emptyFormState = { name: '', country: '', crn: '', vat: '' };
 
 export default function Organizations() {
     const { orgs, isLoading, isCreating, error, createOrg } = useOrgs();
@@ -66,6 +66,8 @@ export default function Organizations() {
         event.preventDefault();
         const trimmedName = formState.name.trim();
         const trimmedCountry = formState.country.trim();
+        const trimmedCrn = formState.crn.trim();
+        const trimmedVat = formState.vat.trim();
         if (!trimmedName) {
             setFormError('Organization name is required.');
             return;
@@ -75,6 +77,8 @@ export default function Organizations() {
             await createOrg({
                 name: trimmedName,
                 country: trimmedCountry || 'US',
+                crn: trimmedCrn || undefined,
+                vat: trimmedVat || undefined,
             });
             setIsDialogOpen(false);
         } catch (err) {
@@ -153,6 +157,38 @@ export default function Organizations() {
                                     maxLength={2}
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="org-crn">CRN</Label>
+                                <Input
+                                    id="org-crn"
+                                    value={formState.crn}
+                                    onChange={(event) =>
+                                        setFormState((prev) => ({
+                                            ...prev,
+                                            crn: event.target.value,
+                                        }))
+                                    }
+                                    placeholder="Company Registration Number"
+                                    className="bg-white/5"
+                                    maxLength={25}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="org-vat">VAT</Label>
+                                <Input
+                                    id="org-vat"
+                                    value={formState.vat}
+                                    onChange={(event) =>
+                                        setFormState((prev) => ({
+                                            ...prev,
+                                            vat: event.target.value,
+                                        }))
+                                    }
+                                    placeholder="Value Added Tax"
+                                    className="bg-white/5"
+                                    maxLength={25}
+                                />
+                            </div>
                             {(formError || error) && (
                                 <p className="text-sm text-red-400">
                                     {formError || error}
@@ -214,8 +250,8 @@ export default function Organizations() {
                             {orgs.map((org) => {
                                 const createdAt = org.date_creation
                                     ? new Date(
-                                        org.date_creation
-                                    ).toLocaleDateString()
+                                          org.date_creation
+                                      ).toLocaleDateString()
                                     : 'Unknown date';
                                 const orgCountry =
                                     org.country?.toLowerCase() || 'us';
