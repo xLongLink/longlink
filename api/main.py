@@ -33,6 +33,7 @@ import src.routes.auth
 import src.routes.org
 import src.routes.user
 import src.routes.lists
+import src.routes.sample
 app.include_router(router)
 
 
