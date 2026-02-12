@@ -1,7 +1,7 @@
 import { Form } from '@/components/viavai/Form';
-import { JsonTable } from '@/components/viavai/Table';
+import { Table } from '@/components/viavai/Table';
 import { type Component } from '@/types/viavai/form.types';
-import { type TableConfig } from '@/types/viavai/table.types';
+import { type TableSchemaConfig } from '@/types/viavai/table.types';
 
 const sample: Component[] = [
     {
@@ -48,37 +48,9 @@ type ExampleInvoice = {
     vat: number;
 };
 
-const sampleTable: TableConfig<ExampleInvoice> = {
+const sampleTableSchema: TableSchemaConfig = {
     title: 'Invoices',
     description: 'Example viavai table rendered with schema and sample data.',
-    data: [
-        {
-            id: '1',
-            client: {
-                name: 'Adriano Saurwein',
-                email: 'adriano@email.com',
-            },
-            invoiceNumber: 'INV-001',
-            issueDate: '2024-01-10',
-            dueDate: '2024-01-20',
-            status: 'Paid',
-            subtotal: 1000,
-            vat: 200,
-        },
-        {
-            id: '2',
-            client: {
-                name: 'Leonardo Saurwein',
-                email: 'leo@email.com',
-            },
-            invoiceNumber: 'INV-002',
-            issueDate: '2024-01-15',
-            dueDate: '2024-01-30',
-            status: 'Pending',
-            subtotal: 450,
-            vat: 90,
-        },
-    ],
     schema: {
         columns: [
             {
@@ -112,11 +84,40 @@ const sampleTable: TableConfig<ExampleInvoice> = {
     },
 };
 
+const sampleTableData: ExampleInvoice[] = [
+    {
+        id: '1',
+        client: {
+            name: 'Adriano Saurwein',
+            email: 'adriano@email.com',
+        },
+        invoiceNumber: 'INV-001',
+        issueDate: '2024-01-10',
+        dueDate: '2024-01-20',
+        status: 'Paid',
+        subtotal: 1000,
+        vat: 200,
+    },
+    {
+        id: '2',
+        client: {
+            name: 'Leonardo Saurwein',
+            email: 'leo@email.com',
+        },
+        invoiceNumber: 'INV-002',
+        issueDate: '2024-01-15',
+        dueDate: '2024-01-30',
+        status: 'Pending',
+        subtotal: 450,
+        vat: 90,
+    },
+];
+
 export default function Example() {
     return (
         <div className="space-y-6">
             <Form schema={sample} />
-            <JsonTable config={sampleTable} />
+            <Table schema={sampleTableSchema} data={sampleTableData} />
         </div>
     );
 }
