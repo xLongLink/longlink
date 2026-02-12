@@ -18,7 +18,7 @@ oauth.register(
 )
 
 
-async def user(request: Request) -> db.User:
+async def authuser(request: Request) -> db.User:
     userid = request.session.get('userid')
     if not userid:
         raise HTTPException(401, 'Not authenticated')

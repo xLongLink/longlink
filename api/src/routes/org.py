@@ -1,12 +1,12 @@
 import src.db as db
 from fastapi import Depends, HTTPException, Query
-from src.auth import user as get_user
-from src.router import router
+from src.auth import authuser
 from src.types import OrgCreate, OrgRead
+from src.router import router
 
 
 @router.post('/org', response_model=OrgRead)
-async def create_org(payload: OrgCreate, current_user: db.User = Depends(get_user)):
+async def create_org(payload: OrgCreate, user: db.User = Depends(authuser)):
     """Create a new organization, the user creating it will be the owner of the organization."""
     org = await db.orgs.create(
         payload.name,
@@ -14,7 +14,7 @@ async def create_org(payload: OrgCreate, current_user: db.User = Depends(get_use
         payload.crn,
         payload.vat,
     )
-    await db.orgs.add(org.id, current_user.id, db.OrgRole.owner)
+    await db.orgs.add(org.id, user.id, db.OrgRole.owner)
     return OrgRead(
         id=org.id,
         name=org.name,
@@ -27,11 +27,7 @@ async def create_org(payload: OrgCreate, current_user: db.User = Depends(get_use
 
 
 @router.get('/org/{org_name}', response_model=OrgRead)
-async def get_org(
-    org_name: str,
-    current_user: db.User = Depends(get_user),
-    country: str | None = Query(default=None),
-):
+async def get_org( org_name: str, user: db.User = Depends(authuser), country: str | None = Query(default=None)):
     """Get an organization by its name, optionally scoped by country."""
     org = await db.orgs.get_by_name(org_name, country=country)
     if org is None:
