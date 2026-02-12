@@ -63,7 +63,7 @@ export default function Profile() {
                                 key={item.label}
                                 type="button"
                                 onClick={() => setActiveSection(item.id)}
-                                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
+                                className={`flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
                                     isActive
                                         ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(255,255,255,0.75)]'
                                         : 'text-white/70 hover:bg-white/5 hover:text-white'
