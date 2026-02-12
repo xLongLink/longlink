@@ -4,12 +4,18 @@ from src.db.models import App, Org, OrgApp, OrgMember, OrgRole
 
 
 class OrgsService:
-    async def create(self, name: str, country: str | None = None) -> Org:
+    async def create(
+        self,
+        name: str,
+        country: str | None = None,
+        crn: str | None = None,
+        vat: str | None = None,
+    ) -> Org:
         """Add a new organization to the database."""
 
         Session = await get_session()
         async with Session() as session:
-            org = Org(name=name, country=country)
+            org = Org(name=name, country=country, crn=crn, vat=vat)
             session.add(org)
             await session.commit()
             await session.refresh(org)
