@@ -18,7 +18,11 @@ class Org(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
-    
+
+    # Metadata
+    crn: Mapped[str | None] = mapped_column(String(25), unique=True, nullable=True) # Company Registration Number
+    vat: Mapped[str | None] = mapped_column(String(25), unique=True, nullable=True) # Value Added Tax
+
     # Date tracking
     date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     
