@@ -5,12 +5,16 @@ export type Organization = {
     id: number;
     name: string;
     country: string;
+    crn?: string | null;
+    vat?: string | null;
     date_creation?: string;
 };
 
 export type CreateOrganizationPayload = {
     name: string;
     country: string;
+    crn?: string;
+    vat?: string;
 };
 
 type UseOrgsResult = {

@@ -19,6 +19,8 @@ async def get_user_orgs(current_user: db.User = Depends(user)):
             name=org.name,
             url=f'/{org.name}',
             country=org.country,
+            crn=org.crn,
+            vat=org.vat,
             date_creation=org.date_creation,
         )
         for org in orgs
