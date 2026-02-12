@@ -1,6 +1,10 @@
 import { Controller } from 'react-hook-form';
+import * as z from 'zod';
 
-import { type FieldDefinition } from '@/components/viavai/form.types';
+import {
+    type Component,
+    type FieldDefinition,
+} from '@/components/viavai/form.types';
 import {
     Field,
     FieldDescription,
@@ -14,10 +18,33 @@ import {
     InputGroupTextarea,
 } from '@/components/ui/input-group';
 
-import { buildStringValidation } from './validation';
+function buildTextAreaValidation(config: Component) {
+    let validator = z.string();
+
+    if (config.required) {
+        validator = validator.min(1, config.error || 'Required');
+    }
+
+    if (config.validate?.minLength !== undefined) {
+        validator = validator.min(config.validate.minLength, config.error);
+    }
+
+    if (config.validate?.maxLength !== undefined) {
+        validator = validator.max(config.validate.maxLength, config.error);
+    }
+
+    if (config.validate?.pattern) {
+        validator = validator.regex(
+            new RegExp(config.validate.pattern),
+            config.error
+        );
+    }
+
+    return validator;
+}
 
 export const textareaField: FieldDefinition = {
-    buildValidation: buildStringValidation,
+    buildValidation: buildTextAreaValidation,
 
     render: ({ config, control }) => (
         <Controller

@@ -1,6 +1,10 @@
 import { Controller } from 'react-hook-form';
+import * as z from 'zod';
 
-import { type FieldDefinition } from '@/components/viavai/form.types';
+import {
+    type Component,
+    type FieldDefinition,
+} from '@/components/viavai/form.types';
 import {
     Field,
     FieldDescription,
@@ -9,11 +13,33 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-import { buildStringValidation } from './validation';
+function buildEmailValidation(config: Component) {
+    let validator = z.string();
+
+    if (config.required) {
+        validator = validator.min(1, config.error || 'Required');
+    }
+
+    if (config.validate?.minLength !== undefined) {
+        validator = validator.min(config.validate.minLength, config.error);
+    }
+
+    if (config.validate?.maxLength !== undefined) {
+        validator = validator.max(config.validate.maxLength, config.error);
+    }
+
+    if (config.validate?.pattern) {
+        validator = validator.regex(
+            new RegExp(config.validate.pattern),
+            config.error
+        );
+    }
+
+    return validator.email(config.error || 'Invalid email');
+}
 
 export const emailField: FieldDefinition = {
-    buildValidation: (config) =>
-        buildStringValidation(config).email(config.error || 'Invalid email'),
+    buildValidation: buildEmailValidation,
 
     render: ({ config, control }) => (
         <Controller
