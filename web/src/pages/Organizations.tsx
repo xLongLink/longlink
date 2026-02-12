@@ -1,5 +1,12 @@
-import { useMemo } from 'react';
-import { Building2, MoreVertical } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import {
+    Building2,
+    LayoutGrid,
+    MoreVertical,
+    Settings,
+    Plus,
+    Users,
+} from 'lucide-react';
 import { Link } from 'react-router';
 import { Card } from '@/components/ui/card';
 import {
@@ -123,15 +130,39 @@ export default function Organizations() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
-                                                <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
+                                                <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
                                                     <MoreVertical className="h-4 w-4" />
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem>
-                                                        Manage modules
+                                                <DropdownMenuContent
+                                                    align="end"
+                                                    className="w-64 p-2"
+                                                >
+                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                                                        <Link
+                                                            to={orgBasePath}
+                                                            className="flex w-full items-center gap-2"
+                                                        >
+                                                            <LayoutGrid className="h-4 w-4 text-white/80" />
+                                                            Overview
+                                                        </Link>
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        Open settings
+                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                                                        <Link
+                                                            to={`${orgBasePath}/people`}
+                                                            className="flex w-full items-center gap-2"
+                                                        >
+                                                            <Users className="h-4 w-4 text-white/80" />
+                                                            People
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
+                                                        <Link
+                                                            to={`${orgBasePath}/settings`}
+                                                            className="flex w-full items-center gap-2"
+                                                        >
+                                                            <Settings className="h-4 w-4 text-white/80" />
+                                                            Settings
+                                                        </Link>
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
