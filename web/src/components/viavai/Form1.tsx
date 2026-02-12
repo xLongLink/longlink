@@ -1,27 +1,11 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import * as z from 'zod';
-
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Field, FieldGroup } from '@/components/ui/field';
-
-/* ============================================================
-   Types
-============================================================ */
-
-import {
-    type Component,
-    type FieldDefinition,
-} from '@/types/viavai/form.types';
+import { type Component, type FieldDefinition } from '@/types/viavai/form.types';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 /* ============================================================
    JSON Form Configuration
@@ -58,10 +42,7 @@ const sample: Component[] = [
     },
 ];
 
-/* ============================================================
-   Registry
-============================================================ */
-
+// Registry
 import { textField } from '@/components/fields/Text';
 import { emailField } from '@/components/fields/Email';
 import { textareaField } from '@/components/fields/TextArea';
@@ -72,10 +53,8 @@ const fieldRegistry: Record<string, FieldDefinition> = {
     textarea: textareaField,
 };
 
-/* ============================================================
-   Schema Builder
-============================================================ */
 
+// Schema Builder
 function buildSchema(components: Component[]) {
     const shape: Record<string, z.ZodTypeAny> = {};
 
@@ -89,10 +68,7 @@ function buildSchema(components: Component[]) {
     return z.object(shape);
 }
 
-/* ============================================================
-   Component
-============================================================ */
-
+// Component
 export function Form() {
     const schema = buildSchema(sample);
 
