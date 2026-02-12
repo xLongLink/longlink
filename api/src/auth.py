@@ -24,4 +24,6 @@ async def user(request: Request) -> db.User:
         raise HTTPException(401, 'Not authenticated')
 
     user = await db.users.get(userid)
+    if not user:
+        raise HTTPException(401, 'Not authenticated')
     return user
