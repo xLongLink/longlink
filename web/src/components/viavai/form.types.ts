@@ -25,6 +25,6 @@ export type FieldComponentProps = {
 };
 
 export type FieldDefinition = {
-    render: (props: FieldComponentProps) => ReactElement;
-    buildValidation: (config: Component) => z.ZodTypeAny;
+    component: (props: FieldComponentProps) => ReactElement;
+    validation: (config: Component) => z.ZodTypeAny;
 };
