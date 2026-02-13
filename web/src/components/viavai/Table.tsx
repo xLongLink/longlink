@@ -85,7 +85,7 @@ export function Table<T extends object>({ schema, data }: TableProps<T>) {
     return (
         <div className="overflow-hidden rounded-md border">
             <UITable>
-                <TableHeader>
+                <TableHeader className="bg-muted/50">
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id}>
                             {headerGroup.headers.map((header) => {
