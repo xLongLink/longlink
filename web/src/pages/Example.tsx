@@ -70,9 +70,9 @@ const sampleTableSchema: TableSchemaConfig = {
             },
             {
                 key: 'dueDate',
-                label: 'Due Date',
+                label: 'Dates',
                 align: 'left',
-                cell: ['{dueDate}'],
+                cell: ['{issueDate}', 'Due date: {dueDate}'],
             },
             {
                 key: 'amount',
