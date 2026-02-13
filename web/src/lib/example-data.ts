@@ -1,4 +1,5 @@
 import { type Component } from '@/types/viavai/form.types';
+import { type SidebarSchemaConfig } from '@/types/viavai/sidebar.types';
 import { type TableSchemaConfig } from '@/types/viavai/table.types';
 
 export const sampleFormSchema: Component[] = [
@@ -110,3 +111,24 @@ export const sampleTableData: ExampleInvoice[] = [
         vat: 90,
     },
 ];
+
+export const sampleSidebarSchema: SidebarSchemaConfig = {
+    title: 'Settings',
+    items: [
+        {
+            name: 'Profile',
+            icon: 'profile',
+            element: null,
+        },
+        {
+            name: 'Appearance',
+            icon: 'appearance',
+            element: null,
+        },
+        {
+            name: 'Notifications',
+            icon: 'notifications',
+            element: null,
+        },
+    ],
+};

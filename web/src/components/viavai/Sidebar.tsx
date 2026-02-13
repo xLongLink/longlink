@@ -1,0 +1,87 @@
+import { useMemo, useState } from 'react';
+import { type LucideIcon, Bell, Palette, UserRound } from 'lucide-react';
+import {
+    type SidebarSchemaConfig,
+    type SidebarItem,
+} from '@/types/viavai/sidebar.types';
+
+const iconRegistry: Record<string, LucideIcon> = {
+    profile: UserRound,
+    appearance: Palette,
+    notifications: Bell,
+};
+
+type SidebarProps = {
+    schema: SidebarSchemaConfig;
+    activeItem?: string;
+};
+
+function SidebarRow({
+    item,
+    active,
+    onClick,
+}: {
+    item: SidebarItem;
+    active: boolean;
+    onClick: () => void;
+}) {
+    const Icon = iconRegistry[item.icon.toLowerCase()] ?? Bell;
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
+                active
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+            }`}
+        >
+            <Icon className="h-4 w-4" />
+            <span>{item.name}</span>
+        </button>
+    );
+}
+
+export function Sidebar({ schema, activeItem }: SidebarProps) {
+    const fallbackActive = schema.items.at(0)?.name ?? '';
+    const [selectedName, setSelectedName] = useState(
+        activeItem ?? fallbackActive
+    );
+
+    const selectedItem = useMemo(() => {
+        return (
+            schema.items.find((item) => item.name === selectedName) ??
+            schema.items.at(0)
+        );
+    }, [schema.items, selectedName]);
+
+    return (
+        <div className="grid gap-6 md:grid-cols-[240px_1fr]">
+            <aside className="w-full space-y-5 rounded-lg border bg-card p-3">
+                {schema.title ? (
+                    <h2 className="px-2 text-sm font-semibold tracking-tight">
+                        {schema.title}
+                    </h2>
+                ) : null}
+
+                <div className="space-y-1">
+                    {schema.items.map((item) => (
+                        <SidebarRow
+                            key={item.name}
+                            item={item}
+                            active={item.name === selectedName}
+                            onClick={() => setSelectedName(item.name)}
+                        />
+                    ))}
+                </div>
+            </aside>
+
+            <section className="space-y-4 rounded-lg border bg-card p-4 sm:p-6">
+                {selectedItem?.element}
+            </section>
+        </div>
+    );
+}
+
+export default Sidebar;
