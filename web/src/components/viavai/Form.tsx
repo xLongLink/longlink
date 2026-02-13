@@ -60,10 +60,7 @@ export function Form({ schema: components }: FormProps) {
     }
 
     return (
-        <form
-            className="w-full space-y-4 sm:max-w-md"
-            onSubmit={form.handleSubmit(onSubmit)}
-        >
+        <form className="w-full space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup>
                 {components.map((config) => {
                     const definition = fieldRegistry[config.type];
@@ -82,13 +79,6 @@ export function Form({ schema: components }: FormProps) {
 
             <div>
                 <Field orientation="horizontal">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => form.reset()}
-                    >
-                        Reset
-                    </Button>
                     <Button type="submit">Submit</Button>
                 </Field>
             </div>
