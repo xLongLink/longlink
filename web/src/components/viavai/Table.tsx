@@ -91,26 +91,23 @@ export function Table<T extends object>({ schema, data }: TableProps<T>) {
                             {headerGroup.headers.map((header) => {
                                 const align =
                                     (
-                                        header.column.columnDef
-                                            .meta as {
-                                                align?: TableAlign;
-                                            }
+                                        header.column.columnDef.meta as {
+                                            align?: TableAlign;
+                                        }
                                     )?.align ?? 'left';
 
                                 return (
                                     <TableHead
                                         key={header.id}
-                                        className={
-                                            textAlignClasses[align]
-                                        }
+                                        className={textAlignClasses[align]}
                                     >
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                header.column
-                                                    .columnDef.header,
-                                                header.getContext()
-                                            )}
+                                                  header.column.columnDef
+                                                      .header,
+                                                  header.getContext()
+                                              )}
                                     </TableHead>
                                 );
                             })}
@@ -125,22 +122,18 @@ export function Table<T extends object>({ schema, data }: TableProps<T>) {
                                 {row.getVisibleCells().map((cell) => {
                                     const align =
                                         (
-                                            cell.column.columnDef
-                                                .meta as {
-                                                    align?: TableAlign;
-                                                }
+                                            cell.column.columnDef.meta as {
+                                                align?: TableAlign;
+                                            }
                                         )?.align ?? 'left';
 
                                     return (
                                         <TableCell
                                             key={cell.id}
-                                            className={
-                                                textAlignClasses[align]
-                                            }
+                                            className={textAlignClasses[align]}
                                         >
                                             {flexRender(
-                                                cell.column.columnDef
-                                                    .cell,
+                                                cell.column.columnDef.cell,
                                                 cell.getContext()
                                             )}
                                         </TableCell>

@@ -60,7 +60,10 @@ export function Form({ schema: components }: FormProps) {
     }
 
     return (
-        <form className="w-full space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+            className="w-full space-y-4"
+            onSubmit={form.handleSubmit(onSubmit)}
+        >
             <FieldGroup>
                 {components.map((config) => {
                     const definition = fieldRegistry[config.type];

@@ -79,8 +79,8 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                                 nextPath === ''
                                     ? basePath || '/'
                                     : basePath
-                                        ? `${basePath}/${nextPath}`
-                                        : `/${nextPath}`;
+                                      ? `${basePath}/${nextPath}`
+                                      : `/${nextPath}`;
                             navigate(targetPath);
                         }}
                     >
