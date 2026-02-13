@@ -10,6 +10,8 @@ import {
     Sparkles,
     User,
     Users,
+    TableProperties,
+    FilePenLine,
     Wrench,
 } from 'lucide-react';
 
@@ -49,6 +51,8 @@ const accountTabs: NavigationTab[] = [
     },
     { value: 'profile', label: 'Profile', path: 'profile', icon: User },
     { value: 'developer', label: 'Developer', path: 'developer', icon: Wrench },
+    { value: 'table', label: 'Table', path: 'table', icon: TableProperties },
+    { value: 'form', label: 'Form', path: 'form', icon: FilePenLine },
 ];
 
 const appTabsByName: Record<string, NavigationTab[]> = {

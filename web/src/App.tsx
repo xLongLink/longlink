@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from '@/Layout';
@@ -13,7 +13,6 @@ import Privacy from '@/pages/Privacy';
 import Tos from '@/pages/Tos';
 import Impressum from '@/pages/Impressum';
 import NotFound from '@/pages/NotFound';
-import Example from '@/pages/Example';
 
 // Organization related pages
 import Tools from '@/pages/Tools';
@@ -23,6 +22,8 @@ import Overview from '@/pages/Overview';
 import Workflows from '@/pages/Workflows';
 import Solutions from '@/pages/Solutions';
 import SettingsPage from '@/pages/Settings';
+import TablePage from '@/pages/Table';
+import FormPage from '@/pages/Form';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
@@ -46,6 +47,16 @@ const router = createBrowserRouter([
         children: [{ index: true, element: <Developer /> }],
     },
     {
+        path: '/table',
+        element: <Layout />,
+        children: [{ index: true, element: <TablePage /> }],
+    },
+    {
+        path: '/form',
+        element: <Layout />,
+        children: [{ index: true, element: <FormPage /> }],
+    },
+    {
         path: '/:country/:org',
         element: <Layout />,
         children: [
@@ -63,7 +74,6 @@ const router = createBrowserRouter([
             },
         ],
     },
-    { path: '/example', element: <Example /> },
     { path: '*', element: <NotFound /> },
 ]);
 
