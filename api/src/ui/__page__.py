@@ -1,4 +1,5 @@
 from .hero import Hero
+from .table import Table
 
 
 class Page:
@@ -15,7 +16,12 @@ class Page:
         hero = Hero(title=title, subtitle=subtitle)
         self._components.append(hero)
         return hero
-
+    
+    def table(self, data: list[dict] | None = None) -> Table:
+        table = Table(data=data)
+        self._components.append(table)
+        return table
+    
     def __iter__(self):
         for component in self._components:
             yield dict(component)
