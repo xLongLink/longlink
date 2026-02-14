@@ -5,23 +5,23 @@ import Layout from '@/Layout';
 
 // Import pages
 import Home from '@/pages/Home';
-import Login from '@/pages/Login';
-import Profile from '@/pages/Profile';
+import Login from '@/pages/user/Login';
+import Profile from '@/pages/user/Profile';
 import Developer from '@/pages/Developer';
-import Organizations from '@/pages/Organizations';
+import Organizations from '@/pages/user/Organizations';
 import Privacy from '@/pages/Privacy';
 import Tos from '@/pages/Tos';
 import Impressum from '@/pages/Impressum';
 import NotFound from '@/pages/NotFound';
 
 // Organization related pages
-import Tools from '@/pages/Tools';
-import People from '@/pages/People';
-import ViaVai from '@/pages/ViaVai';
-import Overview from '@/pages/Overview';
-import Workflows from '@/pages/Workflows';
-import Solutions from '@/pages/Solutions';
-import SettingsPage from '@/pages/Settings';
+import Tools from '@/pages/org/Tools';
+import People from '@/pages/org/People';
+import ViaVai from '@/pages/org/ViaVai';
+import Overview from '@/pages/org/Overview';
+import Workflows from '@/pages/org/Workflows';
+import Solutions from '@/pages/org/Solutions';
+import SettingsPage from '@/pages/org/Settings';
 import TablePage from '@/pages/Table';
 import FormPage from '@/pages/Form';
 
