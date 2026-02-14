@@ -33,11 +33,13 @@ function SidebarRow({
             onClick={onClick}
             className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
                 active
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(255,255,255,0.75)]'
+                    : 'text-white/70 hover:bg-white/5 hover:text-white'
             }`}
         >
-            <Icon className="h-4 w-4" />
+            <Icon
+                className={`h-4 w-4 ${active ? 'text-white' : 'text-white/70'}`}
+            />
             <span>{item.name}</span>
         </button>
     );
@@ -58,9 +60,9 @@ export function Sidebar({ schema, activeItem }: SidebarProps) {
 
     return (
         <div className="grid gap-6 md:grid-cols-[240px_1fr]">
-            <aside className="w-full space-y-5 rounded-lg border bg-card p-3">
+            <aside className="w-full space-y-5 rounded-lg border border-white/10 bg-zinc-950/60 p-4">
                 {schema.title ? (
-                    <h2 className="px-2 text-sm font-semibold tracking-tight">
+                    <h2 className="px-2 text-sm font-semibold tracking-tight text-white">
                         {schema.title}
                     </h2>
                 ) : null}
