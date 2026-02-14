@@ -14,10 +14,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { CountryPicker } from '@/components/viavai/country-picker';
 import type { CreateOrganizationPayload } from '@/hooks/use-orgs';
 
-const emptyFormState = { name: '', country: '', crn: '', vat: '' };
+const emptyFormState = { name: '', crn: '', vat: '' };
 
 type CreateOrganizationDialogProps = {
     createOrg: (payload: CreateOrganizationPayload) => Promise<unknown>;
@@ -45,7 +44,6 @@ export function CreateOrganizationDialog({
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         const trimmedName = formState.name.trim();
-        const trimmedCountry = formState.country.trim();
         const trimmedCrn = formState.crn.trim();
         const trimmedVat = formState.vat.trim();
         if (!trimmedName) {
@@ -56,7 +54,7 @@ export function CreateOrganizationDialog({
         try {
             await createOrg({
                 name: trimmedName,
-                country: trimmedCountry || 'US',
+                country: 'US',
                 crn: trimmedCrn || undefined,
                 vat: trimmedVat || undefined,
             });
@@ -101,20 +99,6 @@ export function CreateOrganizationDialog({
                             }
                             placeholder="Acme Studio"
                             className="bg-white/5"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Country</Label>
-                        <CountryPicker
-                            value={formState.country}
-                            onValueChange={(country) =>
-                                setFormState((prev) => ({
-                                    ...prev,
-                                    country: country ?? '',
-                                }))
-                            }
-                            placeholder="Select country"
-                            className="w-full bg-white/5"
                         />
                     </div>
                     <div className="space-y-2">
