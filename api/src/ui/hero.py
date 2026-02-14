@@ -8,6 +8,7 @@ class Hero:
         self.subtitle = subtitle
 
     def __iter__(self):
+        yield "type", "hero"
         yield "title", self.title
         yield "subtitle", self.subtitle
 
