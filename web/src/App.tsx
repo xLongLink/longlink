@@ -7,8 +7,8 @@ import Layout from '@/Layout';
 import Home from '@/pages/home/Home';
 import Login from '@/pages/user/Login';
 import Profile from '@/pages/user/Profile';
-import Developer from '@/pages/Developer';
 import Organizations from '@/pages/user/Organizations';
+import UserViaVai from '@/pages/user/ViaVai';
 import Privacy from '@/pages/home/Privacy';
 import Tos from '@/pages/home/Tos';
 import Impressum from '@/pages/home/Impressum';
@@ -17,13 +17,11 @@ import NotFound from '@/pages/NotFound';
 // Organization related pages
 import Tools from '@/pages/org/Tools';
 import People from '@/pages/org/People';
-import ViaVai from '@/pages/org/ViaVai';
+import OrgViaVai from '@/pages/org/ViaVai';
 import Overview from '@/pages/org/Overview';
 import Workflows from '@/pages/org/Workflows';
 import Solutions from '@/pages/org/Solutions';
 import SettingsPage from '@/pages/org/Settings';
-import TablePage from '@/pages/Table';
-import FormPage from '@/pages/Form';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
@@ -43,19 +41,9 @@ const router = createBrowserRouter([
         children: [{ index: true, element: <Organizations /> }],
     },
     {
-        path: '/developer',
+        path: '/viavai',
         element: <Layout />,
-        children: [{ index: true, element: <Developer /> }],
-    },
-    {
-        path: '/table',
-        element: <Layout />,
-        children: [{ index: true, element: <TablePage /> }],
-    },
-    {
-        path: '/form',
-        element: <Layout />,
-        children: [{ index: true, element: <FormPage /> }],
+        children: [{ index: true, element: <UserViaVai /> }],
     },
     {
         path: '/:country/:org',
@@ -71,7 +59,7 @@ const router = createBrowserRouter([
             // dynamic modules
             {
                 path: 'apps/:app/*',
-                element: <ViaVai />,
+                element: <OrgViaVai />,
             },
         ],
     },

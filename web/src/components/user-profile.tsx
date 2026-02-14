@@ -1,11 +1,4 @@
-import {
-    Building2,
-    Code2,
-    FilePenLine,
-    LogOut,
-    TableProperties,
-    User,
-} from 'lucide-react';
+import { Building2, LogOut, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import {
     DropdownMenu,
@@ -75,25 +68,6 @@ export function UserProfile() {
                     <Link to="/profile" className="flex w-full items-center">
                         <User className="mr-2 h-4 w-4 text-white/70" />
                         Profile
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    <Link to="/developer" className="flex w-full items-center">
-                        <Code2 className="mr-2 h-4 w-4 text-white/70" />
-                        Developer
-                    </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    <Link to="/table" className="flex w-full items-center">
-                        <TableProperties className="mr-2 h-4 w-4 text-white/70" />
-                        Table
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    <Link to="/form" className="flex w-full items-center">
-                        <FilePenLine className="mr-2 h-4 w-4 text-white/70" />
-                        Form
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-2" />
