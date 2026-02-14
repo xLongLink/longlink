@@ -26,7 +26,7 @@ export default function Home() {
     return (
         <div className="min-h-screen text-white">
             <div className="relative">
-                <div className="flex min-h-[1080px] flex-col">
+                <div className="flex min-h-screen flex-col">
                     <header className="border-b border-white/10">
                         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
                             <div className="flex items-center gap-3">
@@ -48,7 +48,10 @@ export default function Home() {
                     </header>
 
                     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-20 pt-16">
-                        <section className="text-center" id="overview">
+                        <section
+                            className="flex min-h-[calc(100vh-81px)] items-center justify-center text-center"
+                            id="overview"
+                        >
                             <div className="mx-auto max-w-3xl">
                                 <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs text-white/70">
                                     <Sparkles className="h-3.5 w-3.5 text-blue-400" />
