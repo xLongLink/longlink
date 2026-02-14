@@ -2,8 +2,15 @@ from src.router import router
 from src.types.sample import FormSampleResponse
 
 
+# A LongLink page takes a URL, with filders and stuff. If is not possible to show in a single page then the content is too complex
+# Each POST request from the page shall automatically re-render the page. Given that we assume new data has come
 @router.get('/sample/form', response_model=FormSampleResponse)
-async def sample_form():
+async def table():
+    pass
+
+
+@router.get('/sample/form', response_model=FormSampleResponse)
+async def form():
     """Return an example form schema payload compatible with the ViaVai form renderer."""
 
     return FormSampleResponse(

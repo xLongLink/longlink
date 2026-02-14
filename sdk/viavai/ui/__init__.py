@@ -31,3 +31,6 @@
 # https://ui.shadcn.com/docs/components/base/tabs
 # https://ui.shadcn.com/docs/components/base/textarea
 # https://ui.shadcn.com/docs/components/base/typography
+
+
+from .page import Page
