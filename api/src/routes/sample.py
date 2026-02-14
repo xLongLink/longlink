@@ -8,6 +8,6 @@ from src.router import router
 async def form():
     """Return an example page schema payload with a hero component."""
     page = Page()
-    page.hero(title="Data Table")
+    page.hero(title="Data Table", subtitle="This is an example of a data table component.")
 
     return list(page)
