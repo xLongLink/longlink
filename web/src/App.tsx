@@ -4,14 +4,14 @@ import { RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from '@/Layout';
 
 // Import pages
-import Home from '@/pages/Home';
+import Home from '@/pages/home/Home';
 import Login from '@/pages/user/Login';
 import Profile from '@/pages/user/Profile';
 import Developer from '@/pages/Developer';
 import Organizations from '@/pages/user/Organizations';
-import Privacy from '@/pages/Privacy';
-import Tos from '@/pages/Tos';
-import Impressum from '@/pages/Impressum';
+import Privacy from '@/pages/home/Privacy';
+import Tos from '@/pages/home/Tos';
+import Impressum from '@/pages/home/Impressum';
 import NotFound from '@/pages/NotFound';
 
 // Organization related pages
@@ -27,10 +27,11 @@ import FormPage from '@/pages/Form';
 
 const router = createBrowserRouter([
     { path: '/', element: <Home /> },
+    { path: '/home', element: <Home /> },
     { path: '/login', element: <Login /> },
-    { path: '/privacy', element: <Privacy /> },
-    { path: '/terms', element: <Tos /> },
-    { path: '/impressum', element: <Impressum /> },
+    { path: '/home/privacy', element: <Privacy /> },
+    { path: '/home/tos', element: <Tos /> },
+    { path: '/home/impressum', element: <Impressum /> },
     {
         path: '/profile',
         element: <Layout />,

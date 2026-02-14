@@ -297,13 +297,19 @@ export default function Home() {
                             © 2026 LongLink SAGL. All rights reserved.
                         </div>
                         <div className="flex gap-6">
-                            <Link to="/privacy" className="hover:text-white">
+                            <Link
+                                to="/home/privacy"
+                                className="hover:text-white"
+                            >
                                 Privacy
                             </Link>
-                            <Link to="/terms" className="hover:text-white">
+                            <Link to="/home/tos" className="hover:text-white">
                                 Terms
                             </Link>
-                            <Link to="/impressum" className="hover:text-white">
+                            <Link
+                                to="/home/impressum"
+                                className="hover:text-white"
+                            >
                                 Impressum
                             </Link>
                         </div>

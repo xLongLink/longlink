@@ -36,7 +36,7 @@ export default function Privacy() {
                         </p>
                     </div>
                     <Link
-                        to="/"
+                        to="/home"
                         className="text-sm text-blue-300 hover:underline"
                     >
                         Back to home
