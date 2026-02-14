@@ -1,14 +1,23 @@
-from pydantic import BaseModel
+from typing import Annotated, Literal
+
+from pydantic import BaseModel, Field
 
 
-class HeroComponent(BaseModel):
-    type: str = 'hero'
+class Component(BaseModel):
+    type: str
+
+
+class Hero(Component):
+    type: Literal['hero'] = 'hero'
     title: str
     description: str
     icon: str | None = None
 
 
-class PageSampleResponse(BaseModel):
+PageComponent = Annotated[Hero, Field(discriminator='type')]
+
+
+class Page(BaseModel):
     title: str
     description: str
-    components: list[HeroComponent]
+    components: list[PageComponent]
