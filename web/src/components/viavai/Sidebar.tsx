@@ -60,13 +60,7 @@ export function Sidebar({ schema, activeItem }: SidebarProps) {
 
     return (
         <div className="grid gap-6 md:grid-cols-[240px_1fr]">
-            <aside className="w-full space-y-5 rounded-lg border border-white/10 bg-zinc-950/60 p-4">
-                {schema.title ? (
-                    <h2 className="px-2 text-sm font-semibold tracking-tight text-white">
-                        {schema.title}
-                    </h2>
-                ) : null}
-
+            <aside className="w-full">
                 <div className="space-y-1">
                     {schema.items.map((item) => (
                         <SidebarRow
@@ -79,7 +73,7 @@ export function Sidebar({ schema, activeItem }: SidebarProps) {
                 </div>
             </aside>
 
-            <section className="space-y-4 rounded-lg border bg-card p-4 sm:p-6">
+            <section className="space-y-4 p-4 sm:p-6">
                 {selectedItem?.element}
             </section>
         </div>
