@@ -3,6 +3,4 @@ class Form:
         pass
 
     def __iter__(self):
-        yield "Sample", "This is a sample page"
-
-
+        yield 'type', 'form'

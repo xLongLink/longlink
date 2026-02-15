@@ -24,8 +24,10 @@ class Button:
 
     def __iter__(self):
         yield 'type', 'button'
-        yield 'text', self.text
-        yield 'variant', self.variant
+        yield 'props', {
+            'text': self.text,
+            'variant': self.variant,
+        }
 
         if self._dialog is not None:
-            yield 'dialog', dict(self._dialog)
+            yield 'children', [dict(self._dialog)]
