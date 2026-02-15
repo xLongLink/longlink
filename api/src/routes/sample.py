@@ -73,6 +73,41 @@ async def form():
     col2.separator()
     col2.hero(title="After separator", subtitle="This section starts after a horizontal separator")
 
+    tabs = page.tabs(default_tab='Overview')
+
+    overview_tab = tabs.tab('Overview')
+    overview_tab.hero(title='Overview tab', subtitle='This content is rendered inside a tab component.')
+
+    details_tab = tabs.tab('Details')
+    details_tab.table(
+        [
+            {
+                'id': 'a1',
+                'metric': 'Open invoices',
+                'value': '12',
+            },
+            {
+                'id': 'a2',
+                'metric': 'Overdue invoices',
+                'value': '3',
+            },
+        ]
+    ).column('metric', label='Metric', cell='{metric}')
+    details_tab.table(
+        [
+            {
+                'id': 'b1',
+                'metric': 'Open invoices',
+                'value': '12',
+            },
+            {
+                'id': 'b2',
+                'metric': 'Overdue invoices',
+                'value': '3',
+            },
+        ]
+    ).column('value', label='Value', cell='{value}', align='right')
+
 
     table = col1.table(
         [
