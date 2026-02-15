@@ -7,6 +7,7 @@ import Hero from '@/components/viavai/Hero';
 import Layout from '@/components/viavai/Layout';
 import Separator from '@/components/viavai/Separator';
 import Table from '@/components/viavai/Table';
+import Tabs, { Tab } from '@/components/viavai/Tabs';
 
 const registry = {
     hero: Hero,
@@ -17,6 +18,8 @@ const registry = {
     columns: Columns,
     column: Column,
     separator: Separator,
+    tabs: Tabs,
+    tab: Tab,
 };
 
 type Registry = typeof registry;
