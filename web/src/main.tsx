@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import './index.css';
 import App from './App.tsx';
-import { UserProvider } from '@/contexts/user-context';
+import { UserProvider } from '@/hooks/use-user';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
