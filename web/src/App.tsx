@@ -8,7 +8,6 @@ import Home from '@/pages/home/Home';
 import Login from '@/pages/user/Login';
 import Profile from '@/pages/user/Profile';
 import Organizations from '@/pages/user/Organizations';
-import UserViaVai from '@/pages/user/ViaVai';
 import Privacy from '@/pages/home/Privacy';
 import Tos from '@/pages/home/Tos';
 import Impressum from '@/pages/home/Impressum';
@@ -43,7 +42,7 @@ const router = createBrowserRouter([
     {
         path: '/viavai',
         element: <Layout />,
-        children: [{ index: true, element: <UserViaVai /> }],
+        children: [{ index: true, element: <OrgViaVai /> }],
     },
     {
         path: '/:country/:org',
