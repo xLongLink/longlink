@@ -1,8 +1,8 @@
+import type React from 'react';
 import Button from '@/components/viavai/Button';
 import Dialog from '@/components/viavai/Dialog';
 import Hero from '@/components/viavai/Hero';
 import Layout from '@/components/viavai/Layout';
-
 
 const registry = {
     hero: Hero,
@@ -14,16 +14,14 @@ const registry = {
 type Registry = typeof registry;
 type RegistryKey = keyof Registry;
 
-
-type RenderNodeSchema = {
+export type RenderNodeSchema = {
     type: RegistryKey;
     props?: Record<string, unknown>;
     children?: RenderNodeSchema[];
 };
 
-
 function Render({ type, props, children }: RenderNodeSchema) {
-    const Component = registry[type];
+    const Component = registry[type] as React.ComponentType<any>;
 
     return (
         <Component {...props}>
@@ -33,6 +31,5 @@ function Render({ type, props, children }: RenderNodeSchema) {
         </Component>
     );
 }
-
 
 export default Render;

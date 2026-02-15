@@ -1,10 +1,12 @@
-import { ViaVaiLayout } from '@/components/viavai/Layout';
+import Render, { type RenderNodeSchema } from '@/components/Render';
 import { useData } from '@/hooks/use-data';
 
 export default function ViaVai() {
     const { data, isLoading, error } = useData<unknown>('/sample/page');
 
-    const samplePageData = Array.isArray(data) ? data : [];
+    const samplePageData = Array.isArray(data)
+        ? (data as RenderNodeSchema[])
+        : [];
 
     if (error) {
         return <div>{error}</div>;
@@ -18,5 +20,11 @@ export default function ViaVai() {
         return <div>Unexpected response format for /sample/page</div>;
     }
 
-    return <ViaVaiLayout elements={samplePageData} />;
+    return (
+        <>
+            {samplePageData.map((node, index) => (
+                <Render key={index} {...node} />
+            ))}
+        </>
+    );
 }
