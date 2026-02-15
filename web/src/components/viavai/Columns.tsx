@@ -1,29 +1,13 @@
-import { type ReactNode } from 'react';
-
-import { isObject } from '@/lib/utils';
-
-export type ColumnsElement = {
-    type: 'columns';
-    widths: number[];
-    columns: unknown[];
-};
+import {
+    Children,
+    isValidElement,
+    type ReactElement,
+    type ReactNode,
+} from 'react';
 
 type ColumnsProps = {
-    widths: number[];
-    children: ReactNode[];
+    children?: ReactNode;
 };
-
-export function isColumns(element: unknown): element is ColumnsElement {
-    if (!isObject(element)) {
-        return false;
-    }
-
-    return (
-        element.type === 'columns' &&
-        Array.isArray(element.widths) &&
-        Array.isArray(element.columns)
-    );
-}
 
 function toGridTemplate(widths: number[]) {
     if (widths.length === 0) {
@@ -41,15 +25,31 @@ function toGridTemplate(widths: number[]) {
         .join(' ');
 }
 
-export function Columns({ widths, children }: ColumnsProps) {
+export function Columns({ children }: ColumnsProps) {
+    const columns = Children.toArray(children);
+    const widths = columns.map((column) => {
+        if (isValidElement(column)) {
+            const columnElement = column as ReactElement<{ width?: number }>;
+
+            if (typeof columnElement.props.width === 'number') {
+                return columnElement.props.width;
+            }
+        }
+
+        return 1;
+    });
+
     return (
         <div
             className="grid gap-4"
             style={{ gridTemplateColumns: toGridTemplate(widths) }}
         >
-            {children.map((child, index) => (
+            {columns.map((column, index) => (
                 <div key={`column-${index}`} className="space-y-4">
-                    {child}
+                    {isValidElement(column)
+                        ? (column as ReactElement<{ children?: ReactNode }>)
+                              .props.children
+                        : column}
                 </div>
             ))}
         </div>
