@@ -12,6 +12,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { type TableElement } from '@/types/viavai/layout.types';
 import {
     type TableAlign,
     type TableColumn,
@@ -23,6 +24,22 @@ const textAlignClasses: Record<TableAlign, string> = {
     center: 'text-center',
     right: 'text-right',
 };
+
+function isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
+export function isTable(element: unknown): element is TableElement {
+    if (!isObject(element)) {
+        return false;
+    }
+
+    return (
+        element.type === 'table' &&
+        Array.isArray(element.columns) &&
+        Array.isArray(element.data)
+    );
+}
 
 function resolvePath(data: unknown, path: string): unknown {
     return path
