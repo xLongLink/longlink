@@ -5,16 +5,11 @@ Often in companies this is the case, informations ended up fragmented in spreads
 
 The problems that need to be solved are often very simple: an Accounting, a CRM, a PMS, a DMS they can be simplified as an application with a IU, a logic layer and a database/storage layer. Often those applications have horrible UI/UX experience, they try to be flexible by creating a customization layer with a non coding interface, and they are designed to use the support plan as another monetization layer instead of providing a good documentation. Mose of the times to achive the last 5% of the requirements, strange workarounds are needed, that increase the maintenance cost and prevent scaling. SASS try to solve this by creating an ad hoc product for a specifiy nice of the market, however they have high cost because they have to create a new product from zero, that include authentication, billing, user management, backup, security, and so on.
 
-AI has drop the cost of creating software, it shined in creating example and solving task in well structured and documented codebases. LongLink aim to simplify even further the process by providing a platform to manage authentication, billing, user management, backup, security as an unified the UI experience. Leaving the space to apps that write the required login to follow a regulations and taxonomy of the specific industry.
+AI has drop the cost of creating software, it shined in creating example and solving task in well structured and documented codebases. LongLink aim to simplify even further the process by providing a platform to manage `authentication`, `billing`, `user roles / RBAC`, `backup`, `audit logs`, `security policies` as an unified the UI experience. Leaving the space to apps that write the required login to follow a regulations and taxonomy of the specific industry.
 
-Each organization will have
+In the development space this does not exist. Every new project starts by creating a new repository, and is easier to keep track of ownership and permissions related to a project. LongLink is strognly inspired by the workflow that `GitHub` has created for developers and it will try to bring a similar experience to the business world.
 
-## Platform
-
-- Each organization shall have a database and a storage space.
-- Each organization sits in a country
-- Each organization has
-- longlink.com/<country_code>/<organization_name>
+Each organization will have a database and a storage space, to store data and documents, as well a container orchestrator to run the apps. Each app is python based and is created using the `viavai` sdk module. Each organization will have a unique URL, that will be `longlink.com/<country_code>/<organization_name>`. And longlink will behave as a middleware between the user and the apps, providing a unified experience for authentication, billing, user management, backup, security, and so on.
 
 ## APPs
 
@@ -25,5 +20,4 @@ Each app provides specific functionalities to the organization, they are divided
 - `Entities`: Apps that represent real world entities, usually connected to a client or a supplier
 - `Projects`: Apps that represent projects, internal or external
 
-- Ownership
-- AI cost has dropped
+Unified Business Infrastructure Layer
