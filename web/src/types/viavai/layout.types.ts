@@ -30,8 +30,14 @@ export type LayoutElement = {
     components: unknown[];
 };
 
+export type SeparatorElement = {
+    type: 'separator';
+    orientation?: 'horizontal' | 'vertical';
+};
+
 export type ViaVaiElement =
     | HeroElement
     | TableElement
     | ColumnsElement
-    | LayoutElement;
+    | LayoutElement
+    | SeparatorElement;

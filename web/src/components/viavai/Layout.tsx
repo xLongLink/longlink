@@ -3,10 +3,12 @@ import { Fragment, type ReactNode } from 'react';
 import { Columns } from '@/components/viavai/Columns';
 import { Hero } from '@/components/viavai/Hero';
 import { Table } from '@/components/viavai/Table';
+import { Separator } from '@/components/ui/separator';
 import {
     type ColumnsElement,
     type HeroElement,
     type LayoutElement,
+    type SeparatorElement,
     type TableElement,
 } from '@/types/viavai/layout.types';
 import { type TableSchemaConfig } from '@/types/viavai/table.types';
@@ -57,6 +59,14 @@ function isLayoutElement(element: unknown): element is LayoutElement {
     }
 
     return element.type === 'layout' && Array.isArray(element.components);
+}
+
+function isSeparatorElement(element: unknown): element is SeparatorElement {
+    if (!isObject(element)) {
+        return false;
+    }
+
+    return element.type === 'separator';
 }
 
 function toTableSchema(element: TableElement): TableSchemaConfig {
@@ -112,6 +122,15 @@ function renderElement(element: unknown, index: string): ReactNode {
                     );
                 })}
             </Columns>
+        );
+    }
+
+    if (isSeparatorElement(element)) {
+        return (
+            <Separator
+                key={`separator-${index}`}
+                orientation={element.orientation ?? 'horizontal'}
+            />
         );
     }
 
