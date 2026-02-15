@@ -22,6 +22,8 @@ type ViaVaiDialogProps = {
     confirm?: string;
     cancel?: string;
     children?: ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 };
 
 export function isDialogElement(element: unknown): element is DialogElement {
@@ -37,9 +39,11 @@ export function ViaVaiDialog({
     confirm = 'Confirm',
     cancel = 'Cancel',
     children,
+    open,
+    onOpenChange,
 }: ViaVaiDialogProps) {
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogTrigger render={trigger} />
             <DialogContent className="min-w-[40rem] max-w-5xl">
                 <div className="max-h-[70vh] overflow-y-auto p-1">

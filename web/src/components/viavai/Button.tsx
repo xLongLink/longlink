@@ -1,4 +1,5 @@
 import { Button as UIButton } from '@/components/ui/button';
+import type { ComponentProps } from 'react';
 import {
     type DialogElement,
     isDialogElement,
@@ -23,7 +24,7 @@ export type ButtonElement = {
 type ButtonProps = {
     text: string;
     variant?: ButtonVariant;
-};
+} & Omit<ComponentProps<typeof UIButton>, 'children' | 'variant'>;
 
 const buttonVariants: ButtonVariant[] = [
     'default',
@@ -57,8 +58,12 @@ export function isButton(element: unknown): element is ButtonElement {
     return isDialogElement(element.dialog);
 }
 
-export function Button({ text, variant = 'default' }: ButtonProps) {
-    return <UIButton variant={variant}>{text}</UIButton>;
+export function Button({ text, variant = 'default', ...props }: ButtonProps) {
+    return (
+        <UIButton variant={variant} {...props}>
+            {text}
+        </UIButton>
+    );
 }
 
 export default Button;
