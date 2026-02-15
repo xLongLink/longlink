@@ -1,42 +1,47 @@
-from typing import Literal
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass
 class Column:
     key: str
     label: str
-    align: Literal["left", "center", "right"] = "left"
-    cell: str  | list[str] = ""
+    align: Literal['left', 'center', 'right'] = 'left'
+    cell: str | list[str] = ''
 
     def __iter__(self):
-        yield "key", self.key
-        yield "label", self.label
-        yield "align", self.align
-        yield "cell", self.cell
+        yield 'key', self.key
+        yield 'label', self.label
+        yield 'align', self.align
+        yield 'cell', self.cell
 
 
 class Table:
     def __init__(self, data: list[dict] | None = None):
         self._data = data or []
         self._columns = []
-        
-    def add_column(self,  key: str, label: str,  cell: str | list[str] = "",
-        align: Literal["left", "center", "right"] = "left") -> Column:
 
+    def add_column(
+        self,
+        key: str,
+        label: str,
+        cell: str | list[str] = '',
+        align: Literal['left', 'center', 'right'] = 'left',
+    ) -> Column:
         column = Column(key=key, label=label, align=align, cell=cell)
         self._columns.append(column)
 
         return column
 
-
     def __iter__(self):
-        yield "type", "table"
-        yield "columns", [dict(column) for column in self._columns]
-        yield "data", self._data
+        yield 'type', 'table'
+        yield 'props', {
+            'columns': [dict(column) for column in self._columns],
+            'data': self._data,
+        }
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     table = Table(
         [
             {
@@ -67,9 +72,9 @@ if __name__ == "__main__":
             },
         ]
     )
-    table.add_column("invoice", label="Invoice", cell=["{invoiceNumber}", "Issued {issueDate}", "Status: {status}"], align="left")
-    table.add_column("client", label="Client", cell=["{client.name}", "{client.email}"])
-    table.add_column("dueDate", label="Dates", cell=["{issueDate}", "Due date: {dueDate}"], align="left")
-    table.add_column("amount", label="Amount", cell=["€{subtotal}", "VAT €{vat}"], align="right")
+    table.add_column('invoice', label='Invoice', cell=['{invoiceNumber}', 'Issued {issueDate}', 'Status: {status}'], align='left')
+    table.add_column('client', label='Client', cell=['{client.name}', '{client.email}'])
+    table.add_column('dueDate', label='Dates', cell=['{issueDate}', 'Due date: {dueDate}'], align='left')
+    table.add_column('amount', label='Amount', cell=['€{subtotal}', 'VAT €{vat}'], align='right')
 
     print(dict(table))
