@@ -3,7 +3,7 @@ from typing import Literal, TypeAlias
 from .dialog import Dialog
 
 
-ButtonVariant: TypeAlias = Literal[
+ButtonVariants: TypeAlias = Literal[
     'default',
     'outline',
     'secondary',
@@ -20,7 +20,7 @@ class Button:
     """
 
     text: str
-    variant: ButtonVariant
+    variant: ButtonVariants
     _dialog: Dialog | None = field(default=None)
 
     def dialog(self, confirm: str = 'Confirm', cancel: str = 'Cancel') -> Dialog:
