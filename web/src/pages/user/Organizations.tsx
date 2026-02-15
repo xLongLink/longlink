@@ -1,14 +1,10 @@
-import { useMemo, useState } from 'react';
-import {
-    Building2,
-    LayoutGrid,
-    MoreVertical,
-    Settings,
-    Plus,
-    Users,
-} from 'lucide-react';
-import { Link } from 'react-router';
+import { useMemo } from 'react';
+import { Building2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import {
+    Table as ViaVaiTable,
+    type TableSchemaConfig,
+} from '@/components/viavai/Table';
 import {
     Empty,
     EmptyDescription,
@@ -17,25 +13,56 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { CreateOrganizationDialog } from '@/components/dialogs/create-organization-dialog';
 import { useOrgs } from '@/hooks/use-orgs';
 
 export default function Organizations() {
     const { orgs, isLoading, isCreating, error, createOrg } = useOrgs();
+
+    const organizationsTableSchema = useMemo<TableSchemaConfig>(
+        () => ({
+            title: 'Organizations',
+            schema: {
+                columns: [
+                    {
+                        key: 'organization',
+                        label: 'Organization',
+                        cell: ['{name}', '{path}'],
+                    },
+                    {
+                        key: 'country',
+                        label: 'Country',
+                        cell: ['{country}'],
+                    },
+                    {
+                        key: 'created',
+                        label: 'Created',
+                        cell: ['{createdAt}'],
+                    },
+                ],
+            },
+        }),
+        []
+    );
+
+    const organizationsTableData = useMemo(
+        () =>
+            orgs.map((org) => {
+                const orgCountry = org.country?.toLowerCase() || 'us';
+                const orgSlug = encodeURIComponent(org.name);
+                const path = `/${orgCountry}/${orgSlug}`;
+
+                return {
+                    ...org,
+                    country: org.country || 'No country set',
+                    createdAt: org.date_creation
+                        ? new Date(org.date_creation).toLocaleDateString()
+                        : 'Unknown date',
+                    path,
+                };
+            }),
+        [orgs]
+    );
 
     const orgCountLabel = useMemo(() => {
         if (isLoading) {
@@ -89,90 +116,10 @@ export default function Organizations() {
                     </Empty>
                 </Card>
             ) : (
-                <div className="border overflow-hidden rounded">
-                    <Table>
-                        <TableHeader className="bg-muted/40 border-b">
-                            <TableRow>
-                                <TableHead>Organization</TableHead>
-                                <TableHead>Country</TableHead>
-                                <TableHead>Created</TableHead>
-                                <TableHead className="text-right">
-                                    Action
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {orgs.map((org) => {
-                                const createdAt = org.date_creation
-                                    ? new Date(
-                                          org.date_creation
-                                      ).toLocaleDateString()
-                                    : 'Unknown date';
-                                const orgCountry =
-                                    org.country?.toLowerCase() || 'us';
-                                const orgSlug = encodeURIComponent(org.name);
-                                const orgBasePath = `/${orgCountry}/${orgSlug}`;
-                                return (
-                                    <TableRow key={org.id}>
-                                        <TableCell className="font-semibold text-white">
-                                            <Link
-                                                to={orgBasePath}
-                                                className="transition-colors hover:underline underline-offset-4"
-                                            >
-                                                {org.name}
-                                            </Link>
-                                        </TableCell>
-                                        <TableCell className="text-white/60">
-                                            {org.country || 'No country set'}
-                                        </TableCell>
-                                        <TableCell className="text-white/60">
-                                            {createdAt}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent
-                                                    align="end"
-                                                    className="w-64 p-2"
-                                                >
-                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                                                        <Link
-                                                            to={orgBasePath}
-                                                            className="flex w-full items-center gap-2"
-                                                        >
-                                                            <LayoutGrid className="h-4 w-4 text-white/80" />
-                                                            Overview
-                                                        </Link>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                                                        <Link
-                                                            to={`${orgBasePath}/people`}
-                                                            className="flex w-full items-center gap-2"
-                                                        >
-                                                            <Users className="h-4 w-4 text-white/80" />
-                                                            People
-                                                        </Link>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                                                        <Link
-                                                            to={`${orgBasePath}/settings`}
-                                                            className="flex w-full items-center gap-2"
-                                                        >
-                                                            <Settings className="h-4 w-4 text-white/80" />
-                                                            Settings
-                                                        </Link>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </div>
+                <ViaVaiTable
+                    schema={organizationsTableSchema}
+                    data={organizationsTableData}
+                />
             )}
         </div>
     );
