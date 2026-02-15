@@ -1,5 +1,10 @@
-import { type HeroElement } from '@/types/viavai/layout.types';
 import { isObject } from '@/lib/utils';
+
+export type HeroElement = {
+    type: 'hero';
+    title: string;
+    subtitle?: string | null;
+};
 
 type HeroProps = {
     title: string;

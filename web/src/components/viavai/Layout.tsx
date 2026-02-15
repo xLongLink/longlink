@@ -1,16 +1,36 @@
 import { Fragment, type ReactNode } from 'react';
 
-import { Columns, isColumns } from '@/components/viavai/Columns';
-import { Hero, isHero } from '@/components/viavai/Hero';
-import { Table, isTable } from '@/components/viavai/Table';
-import { Separator } from '@/components/ui/separator';
 import {
-    type LayoutElement,
-    type SeparatorElement,
+    Columns,
+    type ColumnsElement,
+    isColumns,
+} from '@/components/viavai/Columns';
+import { Hero, type HeroElement, isHero } from '@/components/viavai/Hero';
+import {
+    Table,
     type TableElement,
-} from '@/types/viavai/layout.types';
-import { type TableSchemaConfig } from '@/types/viavai/table.types';
+    type TableSchemaConfig,
+    isTable,
+} from '@/components/viavai/Table';
+import { Separator } from '@/components/ui/separator';
 import { isObject } from '@/lib/utils';
+
+export type LayoutElement = {
+    type: 'layout';
+    components: unknown[];
+};
+
+export type SeparatorElement = {
+    type: 'separator';
+    orientation?: 'horizontal' | 'vertical';
+};
+
+export type ViaVaiElement =
+    | HeroElement
+    | TableElement
+    | ColumnsElement
+    | LayoutElement
+    | SeparatorElement;
 
 type ViaVaiLayoutProps = {
     elements: unknown[];
