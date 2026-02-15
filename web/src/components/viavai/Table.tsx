@@ -4,6 +4,8 @@ import {
     getCoreRowModel,
     useReactTable,
 } from '@tanstack/react-table';
+
+import { isObject } from '@/components/viavai/utils';
 import {
     Table as UITable,
     TableBody,
@@ -24,10 +26,6 @@ const textAlignClasses: Record<TableAlign, string> = {
     center: 'text-center',
     right: 'text-right',
 };
-
-function isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
 
 export function isTable(element: unknown): element is TableElement {
     if (!isObject(element)) {
