@@ -1,19 +1,27 @@
-from typing import Literal
+from dataclasses import dataclass, field
+from typing import Literal, TypeAlias
 from .dialog import Dialog
 
 
-class Button:
-    text: str
-    variant: Literal['default', 'outline', 'secondary', 'ghost', 'destructive', 'link']
+ButtonVariant: TypeAlias = Literal[
+    'default',
+    'outline',
+    'secondary',
+    'ghost',
+    'destructive',
+    'link'
+]
 
-    def __init__(
-        self,
-        text: str,
-        variant: Literal['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] = 'default',
-    ):
-        self.text = text
-        self.variant = variant
-        self._dialog: Dialog | None = None
+
+@dataclass
+class Button:
+    """
+    This is very straightforward, it either open a dialog, or call en endpoint when clicked.
+    """
+
+    text: str
+    variant: ButtonVariant
+    _dialog: Dialog | None = field(default=None)
 
     def dialog(self, confirm: str = 'Confirm', cancel: str = 'Cancel') -> Dialog:
         self._dialog = Dialog(confirm=confirm, cancel=cancel)
