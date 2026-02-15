@@ -1,13 +1,14 @@
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .__layout__ import Layout
 
 
+@dataclass
 class Column:
-    def __init__(self, width: int, *, layout_factory: type['Layout']):
-        self.width = width
-        self.layout = layout_factory()
+    width: int
+    layout: 'Layout'
 
     def __getattr__(self, item: str):
         return getattr(self.layout, item)
@@ -20,7 +21,7 @@ class Column:
 
 class Columns:
     def __init__(self, widths: list[int], *, layout_factory: type['Layout']):
-        self.columns = [Column(width, layout_factory=layout_factory) for width in widths]
+        self.columns = [Column(width=width, layout=layout_factory()) for width in widths]
 
     def __iter__(self):
         yield 'type', 'columns'

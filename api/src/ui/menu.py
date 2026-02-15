@@ -1,17 +1,15 @@
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .__layout__ import Layout
 
 
+@dataclass
 class MenuSubSection:
     title: str
     href: str
-
-    def __init__(self, title: str, href: str):
-        self.title = title
-        self.href = href
 
     def __iter__(self):
         yield 'type', 'menuSubSection'
@@ -21,20 +19,12 @@ class MenuSubSection:
         }
 
 
+@dataclass
 class MenuSection:
     title: str
-    icon: str | None
-
-    def __init__(
-        self,
-        title: str,
-        icon: str | None = None,
-        layout_factory: Callable[[], 'Layout'] | None = None,
-    ):
-        self.title = title
-        self.icon = icon
-        self._layout = layout_factory() if layout_factory else None
-        self._sub_sections: list[MenuSubSection] = []
+    icon: str | None = None
+    _layout: 'Layout | None' = None
+    _sub_sections: list[MenuSubSection] = field(default_factory=list)
 
     @property
     def layout(self) -> 'Layout | None':
@@ -61,7 +51,11 @@ class Menu:
         self._sections: list[MenuSection] = []
 
     def section(self, title: str, icon: str | None = None) -> MenuSection:
-        section = MenuSection(title=title, icon=icon, layout_factory=self._layout_factory)
+        section = MenuSection(
+            title=title,
+            icon=icon,
+            _layout=self._layout_factory() if self._layout_factory else None,
+        )
         self._sections.append(section)
         return section
 
