@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
-
 import { Hero } from '@/components/viavai/Hero';
 import { Table } from '@/components/viavai/Table';
-import { apiFetch } from '@/lib/api';
+import { useData } from '@/hooks/use-data';
 import { type TableSchemaConfig } from '@/types/viavai/table.types';
 
 type HeroElement = {
@@ -66,39 +64,20 @@ function isHeroElement(element: unknown): element is HeroElement {
 }
 
 export default function ViaVai() {
-    const [samplePageData, setSamplePageData] = useState<unknown[]>([]);
-    const [error, setError] = useState<string | null>(null);
+    const { data, isLoading, error } = useData<unknown>('/sample/page');
 
-    useEffect(() => {
-        let isMounted = true;
-
-        const loadSamplePage = async () => {
-            try {
-                const data = await apiFetch<unknown>('/sample/page');
-                if (!isMounted) return;
-
-                if (Array.isArray(data)) {
-                    setSamplePageData(data);
-                } else {
-                    setSamplePageData([]);
-                    setError('Unexpected response format for /sample/page');
-                }
-            } catch (requestError) {
-                if (!isMounted) return;
-                setError('Failed to load /sample/page');
-                console.error(requestError);
-            }
-        };
-
-        loadSamplePage();
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
+    const samplePageData = Array.isArray(data) ? data : [];
 
     if (error) {
         return <div>{error}</div>;
+    }
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (data !== null && !Array.isArray(data)) {
+        return <div>Unexpected response format for /sample/page</div>;
     }
 
     return (
