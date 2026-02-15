@@ -5,7 +5,6 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 
-import { isObject } from '@/lib/utils';
 import {
     Table as UITable,
     TableBody,
@@ -24,21 +23,8 @@ export type ApiTableColumn = {
     cell: string | string[];
 };
 
-export type TableElement = {
-    type: 'table';
-    columns: ApiTableColumn[];
-    data: Record<string, unknown>[];
-};
-
-export type TableColumn = {
-    key: string;
-    label?: string;
-    align?: TableAlign;
-    cell: string[];
-};
-
 export type TableSchema = {
-    columns: TableColumn[];
+    columns: ApiTableColumn[];
 };
 
 export type TableSchemaConfig = {
@@ -47,23 +33,17 @@ export type TableSchemaConfig = {
     schema: TableSchema;
 };
 
+type TableProps<T extends object> = {
+    data: T[];
+    columns?: ApiTableColumn[];
+    schema?: TableSchemaConfig;
+};
+
 const textAlignClasses: Record<TableAlign, string> = {
     left: 'text-left',
     center: 'text-center',
     right: 'text-right',
 };
-
-export function isTable(element: unknown): element is TableElement {
-    if (!isObject(element)) {
-        return false;
-    }
-
-    return (
-        element.type === 'table' &&
-        Array.isArray(element.columns) &&
-        Array.isArray(element.data)
-    );
-}
 
 function resolvePath(data: unknown, path: string): unknown {
     return path
@@ -82,10 +62,11 @@ function renderTemplate(template: string, data: unknown): string {
 }
 
 function buildColumns<T extends object>(
-    columns: TableColumn[]
+    columns: ApiTableColumn[]
 ): ColumnDef<T>[] {
     return columns.map((column) => {
         const align = column.align ?? 'left';
+        const lines = Array.isArray(column.cell) ? column.cell : [column.cell];
 
         return {
             id: column.key,
@@ -93,7 +74,7 @@ function buildColumns<T extends object>(
             meta: { align },
             cell: ({ row }) => (
                 <div className={`leading-tight ${textAlignClasses[align]}`}>
-                    {column.cell.map((line, index) => (
+                    {lines.map((line, index) => (
                         <div
                             key={`${column.key}-${index}`}
                             className={
@@ -111,15 +92,16 @@ function buildColumns<T extends object>(
     });
 }
 
-type TableProps<T extends object> = {
-    schema: TableSchemaConfig;
-    data: T[];
-};
+export function Table<T extends object>({
+    columns,
+    schema,
+    data,
+}: TableProps<T>) {
+    const resolvedColumns = columns ?? schema?.schema.columns ?? [];
 
-export function Table<T extends object>({ schema, data }: TableProps<T>) {
     const table = useReactTable({
         data,
-        columns: buildColumns<T>(schema.schema.columns),
+        columns: buildColumns<T>(resolvedColumns),
         getCoreRowModel: getCoreRowModel(),
     });
 
@@ -185,7 +167,7 @@ export function Table<T extends object>({ schema, data }: TableProps<T>) {
                     ) : (
                         <TableRow>
                             <TableCell
-                                colSpan={schema.schema.columns.length}
+                                colSpan={resolvedColumns.length}
                                 className="h-24 text-center text-muted-foreground"
                             >
                                 No data available.

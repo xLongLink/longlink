@@ -1,23 +1,7 @@
-import { isObject } from '@/lib/utils';
-
-export type HeroElement = {
-    type: 'hero';
+type HeroProps = {
     title: string;
     subtitle?: string | null;
 };
-
-type HeroProps = {
-    title: string;
-    subtitle?: string;
-};
-
-export function isHero(element: unknown): element is HeroElement {
-    if (!isObject(element)) {
-        return false;
-    }
-
-    return element.type === 'hero' && typeof element.title === 'string';
-}
 
 export function Hero({ title, subtitle }: HeroProps) {
     return (
