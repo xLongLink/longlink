@@ -1,4 +1,4 @@
-from src.ui import Page
+from src.ui import Layout
 from src.router import router
 
 
@@ -7,7 +7,7 @@ from src.router import router
 @router.get('/sample/page')
 async def form():
     """Return an example page schema payload with a hero component."""
-    page = Page()
+    page = Layout()
     page.hero(title="Data Table", subtitle="This is an example of a data table component.")
 
     table = page.table(
@@ -44,5 +44,11 @@ async def form():
     table.add_column("client", label="Client", cell=["{client.name}", "{client.email}"])
     table.add_column("dueDate", label="Dates", cell=["{issueDate}", "Due date: {dueDate}"], align="left")
     table.add_column("amount", label="Amount", cell=["€{subtotal}", "VAT €{vat}"], align="right")
+
+    
+    col1, col2 = page.columns([70, 30])
+
+    col1.hero(title="Column 1", subtitle="This is the first column")
+    col2.hero(title="Column 2", subtitle="This is the second column")
 
     return list(page)
