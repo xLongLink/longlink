@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 
@@ -16,10 +16,10 @@ class Column:
         yield 'cell', self.cell
 
 
+@dataclass
 class Table:
-    def __init__(self, data: list[dict] | None = None):
-        self._data = data or []
-        self._columns = []
+    data: list[dict] = field(default_factory=list)
+    _columns: list[Column] = field(default_factory=list)
 
     def add_column(
         self,
@@ -37,13 +37,12 @@ class Table:
         yield 'type', 'table'
         yield 'props', {
             'columns': [dict(column) for column in self._columns],
-            'data': self._data,
+            'data': self.data,
         }
 
 
 if __name__ == '__main__':
-    table = Table(
-        [
+    table = Table(data=[
             {
                 'id': '1',
                 'client': {

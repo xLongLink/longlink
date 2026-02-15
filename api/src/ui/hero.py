@@ -1,11 +1,12 @@
+from dataclasses import dataclass
+
+
+@dataclass
 class Hero:
     """Hero component"""
-    title: str
-    subtitle: str | None
 
-    def __init__(self, title: str, subtitle: str | None = None):
-        self.title = title
-        self.subtitle = subtitle
+    title: str
+    subtitle: str | None = None
 
     def __iter__(self):
         yield 'type', 'hero'
