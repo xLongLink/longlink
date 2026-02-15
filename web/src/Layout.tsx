@@ -5,7 +5,7 @@ import {
     useNavigate,
     useParams,
 } from 'react-router';
-import { NavigationBreadcrumb } from '@/components/navigation-breadcrumb';
+import { Breadcrumb } from '@/components/breadcrumb';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserProfile } from '@/components/user-profile';
 import {
@@ -57,7 +57,7 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                             >
                                 <NavigationIcon className="h-5 w-5" />
                             </Link>
-                            <NavigationBreadcrumb />
+                            <Breadcrumb />
                         </div>
                         <UserProfile />
                     </div>

@@ -1,5 +1,5 @@
 import {
-    Breadcrumb,
+    Breadcrumb as UIBreadcrumb,
     BreadcrumbItem,
     BreadcrumbLink,
     BreadcrumbList,
@@ -13,7 +13,7 @@ import {
 } from '@/lib/navigation';
 import { Link, useLocation, useParams } from 'react-router';
 
-export function NavigationBreadcrumb() {
+export function Breadcrumb() {
     const { country = '', org = '', app } = useParams();
     const location = useLocation();
     const { tabs, basePathSuffix } = getTabsConfig({ org, app });
@@ -40,7 +40,7 @@ export function NavigationBreadcrumb() {
     );
 
     return (
-        <Breadcrumb>
+        <UIBreadcrumb>
             <BreadcrumbList>
                 {isAccountView ? (
                     <>
@@ -111,6 +111,6 @@ export function NavigationBreadcrumb() {
                     </>
                 )}
             </BreadcrumbList>
-        </Breadcrumb>
+        </UIBreadcrumb>
     );
 }
