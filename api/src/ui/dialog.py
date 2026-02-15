@@ -17,6 +17,8 @@ class Dialog:
 
     def __iter__(self):
         yield 'type', 'dialog'
-        yield 'confirm', self.confirm
-        yield 'cancel', self.cancel
-        yield 'components', [dict(component) for component in self._components]
+        yield 'props', {
+            'confirm': self.confirm,
+            'cancel': self.cancel,
+        }
+        yield 'children', [dict(component) for component in self._components]

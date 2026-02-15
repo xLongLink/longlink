@@ -8,9 +8,11 @@ class Hero:
         self.subtitle = subtitle
 
     def __iter__(self):
-        yield "type", "hero"
-        yield "title", self.title
-        yield "subtitle", self.subtitle
+        yield 'type', 'hero'
+        yield 'props', {
+            'title': self.title,
+            'subtitle': self.subtitle,
+        }
 
 
 if __name__ == "__main__":
