@@ -5,6 +5,7 @@ from .separator import Separator
 from .table import Table
 from .button import Button
 from .columns import Columns
+from .menu import Menu
 
 
 class Layout:
@@ -40,6 +41,12 @@ class Layout:
         columns = Columns(widths, layout_factory=Layout)
         self._components.append(columns)
         return columns.columns
+
+
+    def menu(self) -> Menu:
+        menu = Menu()
+        self._components.append(menu)
+        return menu
 
     def separator(self, orientation: str = 'horizontal') -> Separator:
         separator = Separator(orientation=orientation)
