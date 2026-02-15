@@ -15,7 +15,3 @@ class Hero:
             'subtitle': self.subtitle,
         }
 
-
-if __name__ == "__main__":
-    hero = Hero(title="Data Table", subtitle="This is a subtitle")
-    print(dict(hero))

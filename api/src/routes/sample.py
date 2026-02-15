@@ -26,8 +26,8 @@ async def form():
             },
         ]
     )
-    dialog_table.add_column('name', label='Name', cell='{name}')
-    dialog_table.add_column('owner', label='Owner', cell='{owner}')
+    dialog_table.column('name', label='Name', cell='{name}')
+    dialog_table.column('owner', label='Owner', cell='{owner}')
 
     table = page.table(
         [
@@ -59,10 +59,10 @@ async def form():
             },
         ]
     )
-    table.add_column("invoice", label="Invoice", cell=["{invoiceNumber}", "Issued {issueDate}", "Status: {status}"], align="left")
-    table.add_column("client", label="Client", cell=["{client.name}", "{client.email}"])
-    table.add_column("dueDate", label="Dates", cell=["{issueDate}", "Due date: {dueDate}"], align="left")
-    table.add_column("amount", label="Amount", cell=["€{subtotal}", "VAT €{vat}"], align="right")
+    table.column("invoice", label="Invoice", cell=["{invoiceNumber}", "Issued {issueDate}", "Status: {status}"], align="left")
+    table.column("client", label="Client", cell=["{client.name}", "{client.email}"])
+    table.column("dueDate", label="Dates", cell=["{issueDate}", "Due date: {dueDate}"], align="left")
+    table.column("amount", label="Amount", cell=["€{subtotal}", "VAT €{vat}"], align="right")
 
     
     col1, col2 = page.columns([70, 30])
