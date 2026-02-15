@@ -8,6 +8,9 @@ import {
     Shield,
 } from 'lucide-react';
 
+import Render, { type RenderNodeSchema } from '@/components/Render';
+import { useData } from '@/hooks/use-data';
+
 type ViaVaiSubMenuItem = {
     id: string;
     label: string;
@@ -70,6 +73,7 @@ const sectionSubtitle: Record<string, string> = {
 export function ViaVaiMenu() {
     const [openSection, setOpenSection] = useState<string>('billing');
     const [activeSection, setActiveSection] = useState<string>('overview');
+    const samplePage = useData<RenderNodeSchema>('/sample/page');
 
     const selectedTopLevel = useMemo(() => {
         return (
@@ -148,13 +152,23 @@ export function ViaVaiMenu() {
                 })}
             </aside>
 
-            <section className="space-y-2">
+            <section className="space-y-4">
                 <h2 className="text-2xl font-semibold">
                     {sectionTitle[activeSection]}
                 </h2>
                 <p className="max-w-xl text-sm text-white/60">
                     {sectionSubtitle[activeSection]}
                 </p>
+
+                {samplePage.isLoading && (
+                    <p className="text-sm text-white/60">
+                        Loading sample page...
+                    </p>
+                )}
+                {samplePage.error && (
+                    <p className="text-sm text-red-300">{samplePage.error}</p>
+                )}
+                {samplePage.data && <Render {...samplePage.data} />}
             </section>
         </div>
     );
