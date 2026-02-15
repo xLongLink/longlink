@@ -9,6 +9,7 @@ async def form():
     """Return an example page schema payload with a hero component."""
     page = Layout()
     page.hero(title="Data Table", subtitle="This is an example of a data table component.")
+    page.button(text='Primary action')
 
     table = page.table(
         [
@@ -50,6 +51,7 @@ async def form():
 
     col1.hero(title="Column 1", subtitle="This is the first column")
     col2.hero(title="Column 2", subtitle="This is the second column")
+    col2.button(text='Secondary action', variant='outline')
     col2.separator()
     col2.hero(title="After separator", subtitle="This section starts after a horizontal separator")
 

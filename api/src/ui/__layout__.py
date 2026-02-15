@@ -1,6 +1,9 @@
+from typing import Literal
+
 from .hero import Hero
 from .separator import Separator
 from .table import Table
+from .button import Button
 from .columns import Columns
 
 
@@ -23,6 +26,15 @@ class Layout:
         table = Table(data=data)
         self._components.append(table)
         return table
+
+    def button(
+        self,
+        text: str,
+        variant: Literal['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] = 'default',
+    ) -> Button:
+        button = Button(text=text, variant=variant)
+        self._components.append(button)
+        return button
     
     def columns(self, widths: list[int]) -> list["Layout"]:
         columns = Columns(widths, layout_factory=Layout)
