@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 
 import { type ColumnsElement } from '@/types/viavai/layout.types';
-import { isObject } from '@/components/viavai/utils';
+import { isObject } from '@/lib/utils';
 
 type ColumnsProps = {
     widths: number[];

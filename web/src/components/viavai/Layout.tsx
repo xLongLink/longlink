@@ -10,7 +10,7 @@ import {
     type TableElement,
 } from '@/types/viavai/layout.types';
 import { type TableSchemaConfig } from '@/types/viavai/table.types';
-import { isObject } from '@/components/viavai/utils';
+import { isObject } from '@/lib/utils';
 
 type ViaVaiLayoutProps = {
     elements: unknown[];

@@ -1,5 +1,5 @@
 import { type HeroElement } from '@/types/viavai/layout.types';
-import { isObject } from '@/components/viavai/utils';
+import { isObject } from '@/lib/utils';
 
 type HeroProps = {
     title: string;
