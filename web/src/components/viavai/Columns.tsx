@@ -1,15 +1,12 @@
 import { type ReactNode } from 'react';
 
 import { type ColumnsElement } from '@/types/viavai/layout.types';
+import { isObject } from '@/components/viavai/utils';
 
 type ColumnsProps = {
     widths: number[];
     children: ReactNode[];
 };
-
-function isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
 
 export function isColumns(element: unknown): element is ColumnsElement {
     if (!isObject(element)) {

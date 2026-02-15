@@ -10,14 +10,11 @@ import {
     type TableElement,
 } from '@/types/viavai/layout.types';
 import { type TableSchemaConfig } from '@/types/viavai/table.types';
+import { isObject } from '@/components/viavai/utils';
 
 type ViaVaiLayoutProps = {
     elements: unknown[];
 };
-
-function isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
 
 export function isLayout(element: unknown): element is LayoutElement {
     if (!isObject(element)) {
