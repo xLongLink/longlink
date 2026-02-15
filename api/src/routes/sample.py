@@ -139,10 +139,10 @@ async def form():
             },
         ]
     )
-    table.add_column("invoice", label="Invoice", cell=["{invoiceNumber}", "Issued {issueDate}", "Status: {status}"], align="left")
-    table.add_column("client", label="Client", cell=["{client.name}", "{client.email}"])
-    table.add_column("dueDate", label="Dates", cell=["{issueDate}", "Due date: {dueDate}"], align="left")
-    table.add_column("amount", label="Amount", cell=["€{subtotal}", "VAT €{vat}"], align="right")
+    table.column('invoice', label='Invoice', cell=['{invoiceNumber}', 'Issued {issueDate}', 'Status: {status}'], align='left')
+    table.column('client', label='Client', cell=['{client.name}', '{client.email}'])
+    table.column('dueDate', label='Dates', cell=['{issueDate}', 'Due date: {dueDate}'], align='left')
+    table.column('amount', label='Amount', cell=['€{subtotal}', 'VAT €{vat}'], align='right')
 
 
     return list(page)
