@@ -44,7 +44,7 @@ class Layout:
 
 
     def menu(self) -> Menu:
-        menu = Menu()
+        menu = Menu(layout_factory=Layout)
         self._components.append(menu)
         return menu
 
