@@ -1,14 +1,13 @@
+from dataclasses import dataclass, field
+
 from .table import Table
 
 
+@dataclass
 class Dialog:
-    confirm: str
-    cancel: str
-
-    def __init__(self, confirm: str = 'Confirm', cancel: str = 'Cancel'):
-        self.confirm = confirm
-        self.cancel = cancel
-        self._components = []
+    confirm: str = 'Confirm'
+    cancel: str = 'Cancel'
+    _components: list[Table] = field(default_factory=list)
 
     def table(self, data: list[dict] | None = None) -> Table:
         table = Table(data=data)
