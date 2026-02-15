@@ -5,7 +5,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 
-import { isObject } from '@/components/viavai/utils';
+import { isObject } from '@/lib/utils';
 import {
     Table as UITable,
     TableBody,
