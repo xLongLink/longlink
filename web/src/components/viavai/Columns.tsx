@@ -6,6 +6,7 @@ import {
 } from 'react';
 
 type ColumnsProps = {
+    width?: number;
     children?: ReactNode;
 };
 
@@ -25,7 +26,11 @@ function toGridTemplate(widths: number[]) {
         .join(' ');
 }
 
-export function Columns({ children }: ColumnsProps) {
+export function Columns({ width, children }: ColumnsProps) {
+    if (typeof width === 'number') {
+        return <>{children}</>;
+    }
+
     const columns = Children.toArray(children);
     const widths = columns.map((column) => {
         if (isValidElement(column)) {
