@@ -4,7 +4,7 @@ from .hero import Hero
 from .separator import Separator
 from .table import Table
 from .button import Button
-from .columns import Columns
+from .columns import Column, Columns
 from .menu import Menu
 
 
@@ -37,7 +37,7 @@ class Layout:
         self._components.append(button)
         return button
     
-    def columns(self, widths: list[int]) -> list["Layout"]:
+    def columns(self, widths: list[int]) -> list[Column]:
         columns = Columns(widths, layout_factory=Layout)
         self._components.append(columns)
         return columns.columns
