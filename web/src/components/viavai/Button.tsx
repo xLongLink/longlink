@@ -1,4 +1,8 @@
 import { Button as UIButton } from '@/components/ui/button';
+import {
+    type DialogElement,
+    isDialogElement,
+} from '@/components/viavai/Dialog';
 import { isObject } from '@/lib/utils';
 
 export type ButtonVariant =
@@ -13,6 +17,7 @@ export type ButtonElement = {
     type: 'button';
     text: string;
     variant?: ButtonVariant;
+    dialog?: DialogElement;
 };
 
 type ButtonProps = {
@@ -38,11 +43,18 @@ export function isButton(element: unknown): element is ButtonElement {
         return false;
     }
 
-    if (element.variant === undefined) {
+    if (
+        element.variant !== undefined &&
+        !buttonVariants.includes(element.variant as ButtonVariant)
+    ) {
+        return false;
+    }
+
+    if (element.dialog === undefined) {
         return true;
     }
 
-    return buttonVariants.includes(element.variant as ButtonVariant);
+    return isDialogElement(element.dialog);
 }
 
 export function Button({ text, variant = 'default' }: ButtonProps) {
