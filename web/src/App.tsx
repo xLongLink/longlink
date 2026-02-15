@@ -2,6 +2,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from '@/Layout';
+import { RequireAuth } from '@/components/require-auth';
 
 // Import pages
 import Home from '@/pages/home/Home';
@@ -31,12 +32,29 @@ const router = createBrowserRouter([
     { path: '/home/impressum', element: <Impressum /> },
     {
         path: '/profile',
-        element: <Layout />,
+        element: (
+            <RequireAuth>
+                <Layout />
+            </RequireAuth>
+        ),
         children: [{ index: true, element: <Profile /> }],
     },
     {
         path: '/organizations',
-        element: <Layout />,
+        element: (
+            <RequireAuth>
+                <Layout />
+            </RequireAuth>
+        ),
+        children: [{ index: true, element: <Organizations /> }],
+    },
+    {
+        path: '/organization',
+        element: (
+            <RequireAuth>
+                <Layout />
+            </RequireAuth>
+        ),
         children: [{ index: true, element: <Organizations /> }],
     },
     {
