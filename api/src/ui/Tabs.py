@@ -11,6 +11,9 @@ class Tab:
     title: str
     _layout: 'Layout'
 
+    def __getattr__(self, item: str):
+        return getattr(self._layout, item)
+
     def __iter__(self):
         yield 'type', 'tab'
         yield 'props', {
