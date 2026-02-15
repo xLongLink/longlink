@@ -1,5 +1,6 @@
 import type React from 'react';
 import Button from '@/components/viavai/Button';
+import Column from '@/components/viavai/Column';
 import Columns from '@/components/viavai/Columns';
 import Dialog from '@/components/viavai/Dialog';
 import Hero from '@/components/viavai/Hero';
@@ -14,6 +15,7 @@ const registry = {
     button: Button,
     table: Table,
     columns: Columns,
+    column: Column,
     separator: Separator,
 };
 
