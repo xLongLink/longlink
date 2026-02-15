@@ -16,7 +16,7 @@ import NotFound from '@/pages/NotFound';
 // Organization related pages
 import Tools from '@/pages/org/Tools';
 import People from '@/pages/org/People';
-import OrgViaVai from '@/pages/org/ViaVai';
+import UserViaVai from '@/pages/user/ViaVai';
 import Overview from '@/pages/org/Overview';
 import Workflows from '@/pages/org/Workflows';
 import Solutions from '@/pages/org/Solutions';
@@ -42,7 +42,7 @@ const router = createBrowserRouter([
     {
         path: '/viavai',
         element: <Layout />,
-        children: [{ index: true, element: <OrgViaVai /> }],
+        children: [{ index: true, element: <UserViaVai /> }],
     },
     {
         path: '/:country/:org',
@@ -58,7 +58,7 @@ const router = createBrowserRouter([
             // dynamic modules
             {
                 path: 'apps/:app/*',
-                element: <OrgViaVai />,
+                element: <UserViaVai />,
             },
         ],
     },

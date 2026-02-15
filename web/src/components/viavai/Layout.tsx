@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from 'react';
 
 import { Columns } from '@/components/viavai/Columns';
 import { Hero } from '@/components/viavai/Hero';
-import { Table } from '@/components/viavai/Table';
+import { DataTable } from '@/components/DataTable';
 import { Separator } from '@/components/ui/separator';
 import {
     type ColumnsElement,
@@ -11,7 +11,6 @@ import {
     type SeparatorElement,
     type TableElement,
 } from '@/types/viavai/layout.types';
-import { type TableSchemaConfig } from '@/types/viavai/table.types';
 
 type ViaVaiLayoutProps = {
     elements: unknown[];
@@ -69,20 +68,6 @@ function isSeparatorElement(element: unknown): element is SeparatorElement {
     return element.type === 'separator';
 }
 
-function toTableSchema(element: TableElement): TableSchemaConfig {
-    return {
-        title: 'Table',
-        schema: {
-            columns: element.columns.map((column) => ({
-                key: column.key,
-                label: column.label ?? column.key,
-                align: column.align ?? 'left',
-                cell: Array.isArray(column.cell) ? column.cell : [column.cell],
-            })),
-        },
-    };
-}
-
 function renderElement(element: unknown, index: string): ReactNode {
     if (isHeroElement(element)) {
         return (
@@ -96,9 +81,15 @@ function renderElement(element: unknown, index: string): ReactNode {
 
     if (isTableElement(element)) {
         return (
-            <Table
+            <DataTable
                 key={`table-${index}`}
-                schema={toTableSchema(element)}
+                schema={element.columns.map((column) => ({
+                    key: column.label ?? column.key,
+                    align: column.align ?? 'left',
+                    cell: Array.isArray(column.cell)
+                        ? column.cell
+                        : [column.cell],
+                }))}
                 data={element.data}
             />
         );
