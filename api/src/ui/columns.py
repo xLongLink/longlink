@@ -4,21 +4,27 @@ if TYPE_CHECKING:
     from .__layout__ import Layout
 
 
+class Column:
+    def __init__(self, width: int, *, layout_factory: type['Layout']):
+        self.width = width
+        self.layout = layout_factory()
+
+    def __getattr__(self, item: str):
+        return getattr(self.layout, item)
+
+    def __iter__(self):
+        yield 'type', 'column'
+        yield 'props', {'width': self.width}
+        yield 'children', list(self.layout)
+
+
 class Columns:
     def __init__(self, widths: list[int], *, layout_factory: type['Layout']):
-        self._widths = widths
-        self.columns = [layout_factory() for _ in widths]
+        self.columns = [Column(width, layout_factory=layout_factory) for width in widths]
 
     def __iter__(self):
         yield 'type', 'columns'
-        yield 'children', [
-            {
-                'type': 'column',
-                'props': {'width': width},
-                'children': list(column),
-            }
-            for width, column in zip(self._widths, self.columns)
-        ]
+        yield 'children', [dict(column) for column in self.columns]
 
 
 if __name__ == '__main__':
