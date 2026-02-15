@@ -2,7 +2,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from '@/Layout';
-import { RequireAuth } from '@/components/require-auth';
+import { RequireAuth } from '@/components/Auth';
 
 // Import pages
 import Home from '@/pages/home/Home';
