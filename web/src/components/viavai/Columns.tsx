@@ -1,9 +1,27 @@
 import { type ReactNode } from 'react';
 
+import { type ColumnsElement } from '@/types/viavai/layout.types';
+
 type ColumnsProps = {
     widths: number[];
     children: ReactNode[];
 };
+
+function isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
+export function isColumns(element: unknown): element is ColumnsElement {
+    if (!isObject(element)) {
+        return false;
+    }
+
+    return (
+        element.type === 'columns' &&
+        Array.isArray(element.widths) &&
+        Array.isArray(element.columns)
+    );
+}
 
 function toGridTemplate(widths: number[]) {
     if (widths.length === 0) {
