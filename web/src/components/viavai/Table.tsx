@@ -14,12 +14,38 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { type TableElement } from '@/types/viavai/layout.types';
-import {
-    type TableAlign,
-    type TableColumn,
-    type TableSchemaConfig,
-} from '@/types/viavai/table.types';
+
+export type TableAlign = 'left' | 'center' | 'right';
+
+export type ApiTableColumn = {
+    key: string;
+    label?: string;
+    align?: TableAlign;
+    cell: string | string[];
+};
+
+export type TableElement = {
+    type: 'table';
+    columns: ApiTableColumn[];
+    data: Record<string, unknown>[];
+};
+
+export type TableColumn = {
+    key: string;
+    label?: string;
+    align?: TableAlign;
+    cell: string[];
+};
+
+export type TableSchema = {
+    columns: TableColumn[];
+};
+
+export type TableSchemaConfig = {
+    title: string;
+    description?: string;
+    schema: TableSchema;
+};
 
 const textAlignClasses: Record<TableAlign, string> = {
     left: 'text-left',
