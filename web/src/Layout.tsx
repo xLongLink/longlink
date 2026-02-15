@@ -7,7 +7,7 @@ import {
 } from 'react-router';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserProfile } from '@/components/user-profile';
+import { UserProfile } from '@/components/Profile';
 import {
     getActiveTabConfig,
     getTabsConfig,
