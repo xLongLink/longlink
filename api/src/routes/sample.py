@@ -8,8 +8,26 @@ from src.router import router
 async def form():
     """Return an example page schema payload with a hero component."""
     page = Layout()
-    page.hero(title="Data Table", subtitle="This is an example of a data table component.")
-    page.button(text='Primary action')
+    page.hero(title='Data Table', subtitle='This is an example of a data table component.')
+    primary_action = page.button(text='Primary action')
+    dialog = primary_action.dialog(confirm='Submit', cancel='Cancel')
+
+    dialog_table = dialog.table(
+        [
+            {
+                'id': '1',
+                'name': 'Acme Corp',
+                'owner': 'Adriano Saurwein',
+            },
+            {
+                'id': '2',
+                'name': 'LongLink',
+                'owner': 'Leonardo Saurwein',
+            },
+        ]
+    )
+    dialog_table.add_column('name', label='Name', cell='{name}')
+    dialog_table.add_column('owner', label='Owner', cell='{owner}')
 
     table = page.table(
         [
