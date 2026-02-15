@@ -1,4 +1,5 @@
 from .hero import Hero
+from .separator import Separator
 from .table import Table
 from .columns import Columns
 
@@ -27,6 +28,11 @@ class Layout:
         columns = Columns(widths, layout_factory=Layout)
         self._components.append(columns)
         return columns.columns
+
+    def separator(self, orientation: str = 'horizontal') -> Separator:
+        separator = Separator(orientation=orientation)
+        self._components.append(separator)
+        return separator
     
     def __iter__(self):
         for component in self._components:

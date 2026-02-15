@@ -50,6 +50,8 @@ async def form():
 
     col1.hero(title="Column 1", subtitle="This is the first column")
     col2.hero(title="Column 2", subtitle="This is the second column")
+    col2.separator()
+    col2.hero(title="After separator", subtitle="This section starts after a horizontal separator")
 
 
     table = col1.table(
