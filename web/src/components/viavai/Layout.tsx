@@ -1,12 +1,10 @@
 import { Fragment, type ReactNode } from 'react';
 
-import { Columns } from '@/components/viavai/Columns';
-import { Hero } from '@/components/viavai/Hero';
-import { Table } from '@/components/viavai/Table';
+import { Columns, isColumns } from '@/components/viavai/Columns';
+import { Hero, isHero } from '@/components/viavai/Hero';
+import { Table, isTable } from '@/components/viavai/Table';
 import { Separator } from '@/components/ui/separator';
 import {
-    type ColumnsElement,
-    type HeroElement,
     type LayoutElement,
     type SeparatorElement,
     type TableElement,
@@ -21,39 +19,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
 }
 
-function isHeroElement(element: unknown): element is HeroElement {
-    if (!isObject(element)) {
-        return false;
-    }
-
-    return element.type === 'hero' && typeof element.title === 'string';
-}
-
-function isTableElement(element: unknown): element is TableElement {
-    if (!isObject(element)) {
-        return false;
-    }
-
-    return (
-        element.type === 'table' &&
-        Array.isArray(element.columns) &&
-        Array.isArray(element.data)
-    );
-}
-
-function isColumnsElement(element: unknown): element is ColumnsElement {
-    if (!isObject(element)) {
-        return false;
-    }
-
-    return (
-        element.type === 'columns' &&
-        Array.isArray(element.widths) &&
-        Array.isArray(element.columns)
-    );
-}
-
-function isLayoutElement(element: unknown): element is LayoutElement {
+export function isLayout(element: unknown): element is LayoutElement {
     if (!isObject(element)) {
         return false;
     }
@@ -61,7 +27,7 @@ function isLayoutElement(element: unknown): element is LayoutElement {
     return element.type === 'layout' && Array.isArray(element.components);
 }
 
-function isSeparatorElement(element: unknown): element is SeparatorElement {
+export function isSeparator(element: unknown): element is SeparatorElement {
     if (!isObject(element)) {
         return false;
     }
@@ -84,7 +50,7 @@ function toTableSchema(element: TableElement): TableSchemaConfig {
 }
 
 function renderElement(element: unknown, index: string): ReactNode {
-    if (isHeroElement(element)) {
+    if (isHero(element)) {
         return (
             <Hero
                 key={`hero-${index}`}
@@ -94,7 +60,7 @@ function renderElement(element: unknown, index: string): ReactNode {
         );
     }
 
-    if (isTableElement(element)) {
+    if (isTable(element)) {
         return (
             <Table
                 key={`table-${index}`}
@@ -104,7 +70,7 @@ function renderElement(element: unknown, index: string): ReactNode {
         );
     }
 
-    if (isColumnsElement(element)) {
+    if (isColumns(element)) {
         return (
             <Columns key={`columns-${index}`} widths={element.widths}>
                 {element.columns.map((column, columnIndex) => {
@@ -125,7 +91,7 @@ function renderElement(element: unknown, index: string): ReactNode {
         );
     }
 
-    if (isSeparatorElement(element)) {
+    if (isSeparator(element)) {
         return (
             <Separator
                 key={`separator-${index}`}
@@ -134,7 +100,7 @@ function renderElement(element: unknown, index: string): ReactNode {
         );
     }
 
-    if (isLayoutElement(element)) {
+    if (isLayout(element)) {
         return (
             <ViaVaiLayout
                 key={`layout-${index}`}
