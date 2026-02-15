@@ -1,6 +1,19 @@
+from typing import Literal
+
+
 class Button:
-    def __init__(self):
-        pass
+    text: str
+    variant: Literal['default', 'outline', 'secondary', 'ghost', 'destructive', 'link']
+
+    def __init__(
+        self,
+        text: str,
+        variant: Literal['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] = 'default',
+    ):
+        self.text = text
+        self.variant = variant
 
     def __iter__(self):
-        yield "Sample", "This is a sample page"
+        yield 'type', 'button'
+        yield 'text', self.text
+        yield 'variant', self.variant

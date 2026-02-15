@@ -1,6 +1,11 @@
 import { Fragment, type ReactNode } from 'react';
 
 import {
+    Button,
+    type ButtonElement,
+    isButton,
+} from '@/components/viavai/Button';
+import {
     Columns,
     type ColumnsElement,
     isColumns,
@@ -27,6 +32,7 @@ export type SeparatorElement = {
 
 export type ViaVaiElement =
     | HeroElement
+    | ButtonElement
     | TableElement
     | ColumnsElement
     | LayoutElement
@@ -73,6 +79,16 @@ function renderElement(element: unknown, index: string): ReactNode {
                 key={`hero-${index}`}
                 title={element.title}
                 subtitle={element.subtitle ?? undefined}
+            />
+        );
+    }
+
+    if (isButton(element)) {
+        return (
+            <Button
+                key={`button-${index}`}
+                text={element.text}
+                variant={element.variant ?? 'default'}
             />
         );
     }
