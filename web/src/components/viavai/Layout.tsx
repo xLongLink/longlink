@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, type ReactNode, useState } from 'react';
 
 import {
     Button,
@@ -85,27 +85,23 @@ function renderElement(element: unknown, index: string): ReactNode {
     }
 
     if (isButton(element)) {
-        const trigger = (
-            <Button
-                text={element.text}
-                variant={element.variant ?? 'default'}
-            />
-        );
-
         if (element.dialog) {
             return (
-                <ViaVaiDialog
+                <ViaVaiButtonWithDialog
                     key={`button-${index}`}
-                    trigger={trigger}
-                    confirm={element.dialog.confirm}
-                    cancel={element.dialog.cancel}
-                >
-                    <ViaVaiLayout elements={element.dialog.components} />
-                </ViaVaiDialog>
+                    element={element}
+                />
             );
         }
 
-        return <Fragment key={`button-${index}`}>{trigger}</Fragment>;
+        return (
+            <Fragment key={`button-${index}`}>
+                <Button
+                    text={element.text}
+                    variant={element.variant ?? 'default'}
+                />
+            </Fragment>
+        );
     }
 
     if (isTable(element)) {
@@ -158,6 +154,36 @@ function renderElement(element: unknown, index: string): ReactNode {
     }
 
     return null;
+}
+
+type ViaVaiButtonWithDialogProps = {
+    element: ButtonElement;
+};
+
+function ViaVaiButtonWithDialog({ element }: ViaVaiButtonWithDialogProps) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    if (!element.dialog) {
+        return null;
+    }
+
+    return (
+        <ViaVaiDialog
+            trigger={
+                <Button
+                    text={element.text}
+                    variant={element.variant ?? 'default'}
+                    onClick={() => setIsOpen(true)}
+                />
+            }
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            confirm={element.dialog.confirm}
+            cancel={element.dialog.cancel}
+        >
+            <ViaVaiLayout elements={element.dialog.components} />
+        </ViaVaiDialog>
+    );
 }
 
 export function ViaVaiLayout({ elements }: ViaVaiLayoutProps) {
