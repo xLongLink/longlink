@@ -10,6 +10,13 @@ type ColumnsProps = {
     children?: ReactNode;
 };
 
+type WidthProps = {
+    width?: number;
+    props?: {
+        width?: number;
+    };
+};
+
 function toGridTemplate(widths: number[]) {
     if (widths.length === 0) {
         return '1fr';
@@ -34,10 +41,14 @@ export function Columns({ width, children }: ColumnsProps) {
     const columns = Children.toArray(children);
     const widths = columns.map((column) => {
         if (isValidElement(column)) {
-            const columnElement = column as ReactElement<{ width?: number }>;
+            const columnElement = column as ReactElement<WidthProps>;
 
             if (typeof columnElement.props.width === 'number') {
                 return columnElement.props.width;
+            }
+
+            if (typeof columnElement.props.props?.width === 'number') {
+                return columnElement.props.props.width;
             }
         }
 
@@ -51,10 +62,7 @@ export function Columns({ width, children }: ColumnsProps) {
         >
             {columns.map((column, index) => (
                 <div key={`column-${index}`} className="space-y-4">
-                    {isValidElement(column)
-                        ? (column as ReactElement<{ children?: ReactNode }>)
-                              .props.children
-                        : column}
+                    {column}
                 </div>
             ))}
         </div>
