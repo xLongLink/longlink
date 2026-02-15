@@ -81,9 +81,7 @@ function renderTemplate(template: string, data: unknown): string {
     });
 }
 
-function buildColumns<T extends object>(
-    columns: TableColumn[]
-): ColumnDef<T>[] {
+function buildColumns<T extends object>(columns: TableColumn[]): ColumnDef<T>[] {
     return columns.map((column) => {
         const align = column.align ?? 'left';
 
@@ -145,10 +143,10 @@ export function Table<T extends object>({ schema, data }: TableProps<T>) {
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext()
-                                              )}
+                                                header.column.columnDef
+                                                    .header,
+                                                header.getContext()
+                                            )}
                                     </TableHead>
                                 );
                             })}
