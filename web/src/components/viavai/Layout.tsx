@@ -5,6 +5,7 @@ import {
     type ButtonElement,
     isButton,
 } from '@/components/viavai/Button';
+import { ViaVaiDialog } from '@/components/viavai/Dialog';
 import {
     Columns,
     type ColumnsElement,
@@ -84,13 +85,27 @@ function renderElement(element: unknown, index: string): ReactNode {
     }
 
     if (isButton(element)) {
-        return (
+        const trigger = (
             <Button
-                key={`button-${index}`}
                 text={element.text}
                 variant={element.variant ?? 'default'}
             />
         );
+
+        if (element.dialog) {
+            return (
+                <ViaVaiDialog
+                    key={`button-${index}`}
+                    trigger={trigger}
+                    confirm={element.dialog.confirm}
+                    cancel={element.dialog.cancel}
+                >
+                    <ViaVaiLayout elements={element.dialog.components} />
+                </ViaVaiDialog>
+            );
+        }
+
+        return <Fragment key={`button-${index}`}>{trigger}</Fragment>;
     }
 
     if (isTable(element)) {
