@@ -3,10 +3,8 @@ import {
     Box,
     Briefcase,
     FolderKanban,
-    Layers,
     Plug,
     ShieldCheck,
-    Sparkles,
     Users,
     Zap,
 } from 'lucide-react';
@@ -30,11 +28,8 @@ export default function Home() {
                     <header className="border-b border-white/10">
                         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/20 text-blue-300">
-                                    <Layers className="h-5 w-5" />
-                                </div>
                                 <span className="text-lg font-semibold tracking-wide">
-                                    ViaVai
+                                    LongLink
                                 </span>
                             </div>
                             <Button
@@ -49,14 +44,10 @@ export default function Home() {
 
                     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-20 pt-16">
                         <section
-                            className="flex min-h-[calc(100vh-81px)] items-center justify-center text-center"
+                            className="flex flex-1 items-center justify-center text-center"
                             id="overview"
                         >
                             <div className="mx-auto max-w-3xl">
-                                <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs text-white/70">
-                                    <Sparkles className="h-3.5 w-3.5 text-blue-400" />
-                                    A unified operating system for organizations
-                                </p>
                                 <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
                                     The modular platform
                                     <span className="text-blue-400">
