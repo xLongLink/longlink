@@ -7,6 +7,7 @@ from .button import Button, ButtonVariants
 from .columns import Column, Columns
 from .separator import Separator
 from .menu import Menu
+from .Tabs import Tabs
 
 
 class Layout:
@@ -43,6 +44,11 @@ class Layout:
         menu = Menu(layout_factory=Layout)
         self._components.append(menu)
         return menu
+
+    def tabs(self, default_tab: str | None = None) -> Tabs:
+        tabs = Tabs(layout_factory=Layout, default_tab=default_tab)
+        self._components.append(tabs)
+        return tabs
 
     def separator(self) -> Separator:
         separator = Separator()
