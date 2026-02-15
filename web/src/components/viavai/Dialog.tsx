@@ -8,14 +8,6 @@ import {
     DialogFooter,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { isObject } from '@/lib/utils';
-
-export type DialogElement = {
-    type: 'dialog';
-    confirm?: string;
-    cancel?: string;
-    components: unknown[];
-};
 
 type ViaVaiDialogProps = {
     trigger: ReactElement;
@@ -25,14 +17,6 @@ type ViaVaiDialogProps = {
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
 };
-
-export function isDialogElement(element: unknown): element is DialogElement {
-    if (!isObject(element)) {
-        return false;
-    }
-
-    return element.type === 'dialog' && Array.isArray(element.components);
-}
 
 export function ViaVaiDialog({
     trigger,
