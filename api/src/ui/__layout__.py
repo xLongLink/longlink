@@ -1,8 +1,9 @@
 from .hero import Hero
 from .table import Table
+from .columns import Columns
 
 
-class Page:
+class Layout:
     """
     Top-level component that represents a page in the UI.
     A /page/<name> endpoint will generare the page and a dict() is passed to the frontend.
@@ -22,25 +23,11 @@ class Page:
         self._components.append(table)
         return table
     
+    def columns(self, widths: list[int]) -> list["Layout"]:
+        columns = Columns(widths, layout_factory=Layout)
+        self._components.append(columns)
+        return columns.columns
+    
     def __iter__(self):
         for component in self._components:
             yield dict(component)
-            
-
-if __name__ == "__main__":
-    page = Page()
-    hero = page.hero(title="Data Table")
-
-    # menu1, menu2 = page.sidebar(["Example", "Code"])
-    # menu1.text("Menu item 1")
-    # menu1.text("Menu item 2")
-
-    # btn = page.button("Click me")
-    # btn.action(lambda: print("Button clicked!"))
-    # btn.modal("This is a modal dialog.")
-
-    # tab1, tab2 = menu1.tabs(["Example", "Code"])
-    # tab1.text("Example content here.")
-    # tab2.text("Code content here.")
-
-    print(list(page))

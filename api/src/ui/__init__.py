@@ -1,1 +1,1 @@
-from .__page__ import Page
+from .__layout__ import Layout
