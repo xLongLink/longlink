@@ -25,12 +25,38 @@ export type RegistryKey = keyof Registry;
 export type RenderNodeSchema = {
     type: RegistryKey;
     props?: Record<string, unknown>;
-    children?: RenderNodeSchema[];
+    children?: RenderNodeSchema[] | RenderNodeSchema;
 };
 
+function isRenderNodeSchema(value: unknown): value is RenderNodeSchema {
+    if (!value || typeof value !== 'object') {
+        return false;
+    }
+
+    return 'type' in value;
+}
+
+function normalizeChildren(
+    children?: RenderNodeSchema[] | RenderNodeSchema
+): RenderNodeSchema[] {
+    if (!children) {
+        return [];
+    }
+
+    if (Array.isArray(children)) {
+        return children.filter(isRenderNodeSchema);
+    }
+
+    return isRenderNodeSchema(children) ? [children] : [];
+}
+
 function Render({ type, props, children }: RenderNodeSchema) {
+    const resolvedChildren = normalizeChildren(children);
+
     if (type === 'button') {
-        const dialogChild = children?.find((child) => child.type === 'dialog');
+        const dialogChild = resolvedChildren.find(
+            (child) => child.type === 'dialog'
+        );
 
         if (dialogChild) {
             const dialogProps =
@@ -47,19 +73,23 @@ function Render({ type, props, children }: RenderNodeSchema) {
                     confirm={dialogProps.confirm}
                     cancel={dialogProps.cancel}
                 >
-                    {dialogChild.children?.map((child, index) => (
-                        <Render key={index} {...child} />
-                    ))}
+                    {normalizeChildren(dialogChild.children).map(
+                        (child, index) => (
+                            <Render key={index} {...child} />
+                        )
+                    )}
                 </Dialog>
             );
         }
     }
 
-    const Component = registry[type] as React.ComponentType<any>;
+    const Component = registry[type] as React.ComponentType<
+        Record<string, unknown>
+    >;
 
     return (
         <Component {...props}>
-            {children?.map((child, i) => (
+            {resolvedChildren.map((child, i) => (
                 <Render key={i} {...child} />
             ))}
         </Component>
