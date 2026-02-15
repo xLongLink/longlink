@@ -48,8 +48,8 @@ class Layout:
         self._components.append(menu)
         return menu
 
-    def separator(self, orientation: str = 'horizontal') -> Separator:
-        separator = Separator(orientation=orientation)
+    def separator(self) -> Separator:
+        separator = Separator()
         self._components.append(separator)
         return separator
     
