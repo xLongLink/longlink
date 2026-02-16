@@ -48,14 +48,18 @@ class Tab(Component):
 
 @dataclass
 class Tabs(Component):
+    _tabs: list[str] = field(default_factory=list)
     _children: list[Tab] = field(default_factory=list)
 
     def tab(self, name: str) -> Tab:
         tab = Tab(name=name)
         self._children.append(tab)
+        self._tabs.append(name)
         return tab
 
     def __iter__(self):
         yield 'type', 'tabs'
-        yield 'props', {}
+        yield 'props', {
+            'tabs': self._tabs,
+        }
         yield 'children', [dict(tab) for tab in self._children]
