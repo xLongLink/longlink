@@ -1,7 +1,6 @@
 import {
     Children,
     isValidElement,
-    useEffect,
     useMemo,
     useState,
     type ReactElement,
@@ -20,19 +19,14 @@ type TabsProps = {
     defaultTab?: string;
 };
 
-type ParsedTabProps = {
-    title?: string;
-    name?: string;
-    props?: {
-        title?: string;
-        name?: string;
-    };
+export type TabProps = {
+    name: string;
     children?: ReactNode;
 };
 
-type TabProps = ParsedTabProps & {
-    title?: string;
-    name?: string;
+type ParsedTab = {
+    name: string;
+    children?: ReactNode;
 };
 
 export function Tab({ children }: TabProps) {
@@ -40,84 +34,55 @@ export function Tab({ children }: TabProps) {
 }
 
 export function Tabs({ children, defaultTab }: TabsProps) {
-    const tabs = Children.toArray(children).filter(
-        (child) => isValidElement(child) && child.type === Tab
-    ) as ReactElement<ParsedTabProps>[];
+    const tabs = useMemo<ParsedTab[]>(() => {
+        return Children.toArray(children)
+            .filter((child): child is ReactElement<TabProps> => {
+                return isValidElement(child) && child.type === Tab;
+            })
+            .map((tab) => ({
+                name: tab.props.name,
+                children: tab.props.children,
+            }))
+            .filter((tab) => Boolean(tab.name));
+    }, [children]);
 
-    const firstTab = useMemo(() => {
-        if (tabs.length === 0) {
-            return undefined;
+    const firstTab = tabs[0]?.name;
+    const [selectedTab, setSelectedTab] = useState<string | undefined>();
+
+    const activeTab = useMemo(() => {
+        if (defaultTab && tabs.some((tab) => tab.name === defaultTab)) {
+            return defaultTab;
         }
 
-        const first = tabs[0].props;
-        return (
-            first.title ?? first.name ?? first.props?.title ?? first.props?.name
-        );
-    }, [tabs]);
-
-    const [activeTab, setActiveTab] = useState<string | undefined>(
-        defaultTab ?? firstTab
-    );
-
-    useEffect(() => {
-        if (
-            !activeTab ||
-            !tabs.some(
-                (tab) =>
-                    (tab.props.title ??
-                        tab.props.name ??
-                        tab.props.props?.title ??
-                        tab.props.props?.name) === activeTab
-            )
-        ) {
-            setActiveTab(defaultTab ?? firstTab);
+        if (selectedTab && tabs.some((tab) => tab.name === selectedTab)) {
+            return selectedTab;
         }
-    }, [activeTab, defaultTab, firstTab, tabs]);
 
-    if (!tabs.length) {
+        return firstTab;
+    }, [defaultTab, firstTab, selectedTab, tabs]);
+
+    if (!tabs.length || !activeTab) {
         return null;
     }
 
     return (
-        <UITabs value={activeTab} onValueChange={setActiveTab}>
+        <UITabs value={activeTab} onValueChange={setSelectedTab}>
             <TabsList>
-                {tabs.map((tab, index) => {
-                    const title = tab.props.title ?? tab.props.props?.title;
-                    const resolvedTitle =
-                        title ?? tab.props.name ?? tab.props.props?.name;
-
-                    if (!resolvedTitle) {
-                        return null;
-                    }
-
-                    return (
-                        <TabsTrigger
-                            key={`tab-trigger-${index}`}
-                            value={resolvedTitle}
-                        >
-                            {resolvedTitle}
-                        </TabsTrigger>
-                    );
-                })}
+                {tabs.map((tab) => (
+                    <TabsTrigger
+                        key={`tab-trigger-${tab.name}`}
+                        value={tab.name}
+                    >
+                        {tab.name}
+                    </TabsTrigger>
+                ))}
             </TabsList>
 
-            {tabs.map((tab, index) => {
-                const title =
-                    tab.props.title ??
-                    tab.props.name ??
-                    tab.props.props?.title ??
-                    tab.props.props?.name;
-
-                if (!title) {
-                    return null;
-                }
-
-                return (
-                    <TabsContent key={`tab-content-${index}`} value={title}>
-                        <div className="space-y-4">{tab.props.children}</div>
-                    </TabsContent>
-                );
-            })}
+            {tabs.map((tab) => (
+                <TabsContent key={`tab-content-${tab.name}`} value={tab.name}>
+                    <div className="space-y-4">{tab.children}</div>
+                </TabsContent>
+            ))}
         </UITabs>
     );
 }
