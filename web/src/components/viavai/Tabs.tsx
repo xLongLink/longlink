@@ -22,14 +22,17 @@ type TabsProps = {
 
 type ParsedTabProps = {
     title?: string;
+    name?: string;
     props?: {
         title?: string;
+        name?: string;
     };
     children?: ReactNode;
 };
 
 type TabProps = ParsedTabProps & {
-    title: string;
+    title?: string;
+    name?: string;
 };
 
 export function Tab({ children }: TabProps) {
@@ -47,7 +50,9 @@ export function Tabs({ children, defaultTab }: TabsProps) {
         }
 
         const first = tabs[0].props;
-        return first.title ?? first.props?.title;
+        return (
+            first.title ?? first.name ?? first.props?.title ?? first.props?.name
+        );
     }, [tabs]);
 
     const [activeTab, setActiveTab] = useState<string | undefined>(
@@ -59,7 +64,10 @@ export function Tabs({ children, defaultTab }: TabsProps) {
             !activeTab ||
             !tabs.some(
                 (tab) =>
-                    (tab.props.title ?? tab.props.props?.title) === activeTab
+                    (tab.props.title ??
+                        tab.props.name ??
+                        tab.props.props?.title ??
+                        tab.props.props?.name) === activeTab
             )
         ) {
             setActiveTab(defaultTab ?? firstTab);
@@ -75,21 +83,30 @@ export function Tabs({ children, defaultTab }: TabsProps) {
             <TabsList variant="line">
                 {tabs.map((tab, index) => {
                     const title = tab.props.title ?? tab.props.props?.title;
+                    const resolvedTitle =
+                        title ?? tab.props.name ?? tab.props.props?.name;
 
-                    if (!title) {
+                    if (!resolvedTitle) {
                         return null;
                     }
 
                     return (
-                        <TabsTrigger key={`tab-trigger-${index}`} value={title}>
-                            {title}
+                        <TabsTrigger
+                            key={`tab-trigger-${index}`}
+                            value={resolvedTitle}
+                        >
+                            {resolvedTitle}
                         </TabsTrigger>
                     );
                 })}
             </TabsList>
 
             {tabs.map((tab, index) => {
-                const title = tab.props.title ?? tab.props.props?.title;
+                const title =
+                    tab.props.title ??
+                    tab.props.name ??
+                    tab.props.props?.title ??
+                    tab.props.props?.name;
 
                 if (!title) {
                     return null;
