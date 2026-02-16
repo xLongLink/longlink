@@ -40,13 +40,19 @@ class Column(Component):
 
 @dataclass
 class Columns(Component):
+    _columns: list[int] = field(default_factory=list)
     _children: list[Column] = field(default_factory=list)
 
     def column(self, width: int) -> Column:
         column = Column(width=width)
+        self._columns.append(width)
         self._children.append(column)
         return column
 
     def __iter__(self):
+        tot = sum(self._columns)
         yield 'type', 'columns'
+        yield 'props', {
+            'columns': [col / tot for col in self._columns],
+        }
         yield 'children', [dict(column) for column in self._children]

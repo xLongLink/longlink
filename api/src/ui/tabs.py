@@ -53,8 +53,8 @@ class Tabs(Component):
 
     def tab(self, name: str) -> Tab:
         tab = Tab(name=name)
-        self._children.append(tab)
         self._tabs.append(name)
+        self._children.append(tab)
         return tab
 
     def __iter__(self):
