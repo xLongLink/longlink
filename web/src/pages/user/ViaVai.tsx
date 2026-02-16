@@ -1,6 +1,8 @@
 import Render, { type RenderNodeSchema } from '@/components/Render';
 import { useData } from '@/hooks/use-data';
 
+
+
 export default function ViaVai() {
     const { data, isLoading, error } = useData<unknown>('/sample/page');
 
