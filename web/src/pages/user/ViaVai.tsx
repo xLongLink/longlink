@@ -1,14 +1,7 @@
 import Render, { type RenderNodeSchema } from '@/components/Render';
 import { useData } from '@/hooks/use-data';
 import * as React from 'react';
-import {
-    LayoutDashboard,
-    Users,
-    UserPlus,
-    Settings,
-    Shield,
-    CreditCard,
-} from 'lucide-react';
+import { LayoutDashboard, Users, Settings, CreditCard } from 'lucide-react';
 
 import { Menu, type MenuSection } from '@/components/ui/menu';
 
@@ -29,12 +22,10 @@ function DashboardSidebar() {
                 {
                     id: 'all-users',
                     label: 'All Users',
-                    icon: Users,
                 },
                 {
                     id: 'invite-user',
                     label: 'Invite User',
-                    icon: UserPlus,
                 },
             ],
         },
@@ -51,12 +42,10 @@ function DashboardSidebar() {
                 {
                     id: 'general-settings',
                     label: 'General',
-                    icon: Settings,
                 },
                 {
                     id: 'security-settings',
                     label: 'Security',
-                    icon: Shield,
                 },
             ],
         },
@@ -76,9 +65,6 @@ function DashboardSidebar() {
         </aside>
     );
 }
-
-
-
 
 export default function ViaVai() {
     const { data, isLoading, error } = useData<unknown>('/sample/page');

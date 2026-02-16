@@ -36,14 +36,14 @@ const menuItemVariants = cva(
                 true: 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(255,255,255,0.75)]',
                 false: 'text-white/70 hover:bg-white/5 hover:text-white',
             },
-            inset: {
-                true: 'pl-8',
-                false: '',
+            level: {
+                root: '',
+                sub: 'gap-2 px-2.5 py-1.5 text-[0.9375rem] font-medium',
             },
         },
         defaultVariants: {
             active: false,
-            inset: false,
+            level: 'root',
         },
     }
 );
@@ -256,8 +256,6 @@ export function Menu({
                                     {section.subSections?.map((subSection) => {
                                         const subSectionIsActive =
                                             activeValue === subSection.id;
-                                        const SubSectionIcon = subSection.icon;
-
                                         return (
                                             <li
                                                 key={subSection.id}
@@ -282,7 +280,7 @@ export function Menu({
                                                     className={cn(
                                                         menuItemVariants({
                                                             active: subSectionIsActive,
-                                                            inset: true,
+                                                            level: 'sub',
                                                         })
                                                     )}
                                                     onClick={() =>
@@ -291,12 +289,6 @@ export function Menu({
                                                         )
                                                     }
                                                 >
-                                                    {SubSectionIcon ? (
-                                                        <SubSectionIcon
-                                                            className="size-4 text-white/70 group-data-[state=active]/menu-item:text-white"
-                                                            aria-hidden="true"
-                                                        />
-                                                    ) : null}
                                                     <span className="truncate">
                                                         {subSection.label}
                                                     </span>
