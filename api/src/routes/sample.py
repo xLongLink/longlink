@@ -57,7 +57,10 @@ async def form():
     action_dialog.hero(title='Dialog example', subtitle='This is a dialog opened from a button.')
 
     tabs_subsection = second_section.section('Tabs subsection')
+
+
     overview_tab, details_tab = tabs_subsection.tabs(['Overview', 'Details'])
+
 
     overview_tab.hero(
         title='Overview tab content',
