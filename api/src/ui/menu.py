@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from src.ui.__root__ import Component
-from src.ui.Tabs import Tab, Tabs
+from api.src.ui.tabs1 import Tab, Tabs
 from src.ui.button import Button, ButtonVariants
 from src.ui.columns import Column, Columns
 from src.ui.hero import Hero
