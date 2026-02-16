@@ -1,40 +1,53 @@
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
+from src.ui.__root__ import Component
 
-if TYPE_CHECKING:
-    from .__layout__ import Layout
+
+# Importing components that can be used in a Column
+from src.ui.hero import Hero
+from src.ui.table import Table
+from src.ui.button import Button, ButtonVariants
+from src.ui.separator import Separator
 
 
 @dataclass
-class Column:
+class Column(Component):
     width: int
-    layout: 'Layout'
-
-    def __getattr__(self, item: str):
-        return getattr(self.layout, item)
+    _components: list[Component] = field(default_factory=list)
 
     def __iter__(self):
         yield 'type', 'column'
         yield 'props', {'width': self.width}
-        yield 'children', list(self.layout)
+        yield 'children', [dict(component) for component in self._components]
 
+    def hero(self, title: str, subtitle: str | None = None) -> Hero:
+        hero = Hero(title=title, subtitle=subtitle)
+        self._components.append(hero)
+        return hero
+    
+    def table(self, data: list[dict]) -> Table:
+        table = Table(data=data)
+        self._components.append(table)
+        return table
+    
+    def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
+        button = Button(text=text, variant=variant)
+        self._components.append(button)
+        return button
+    
+    def separator(self) -> Separator:
+        separator = Separator()
+        self._components.append(separator)
+        return separator
+    
 
-class Columns:
-    def __init__(self, widths: list[int], *, layout_factory: type['Layout']):
-        self.columns = [Column(width=width, layout=layout_factory()) for width in widths]
+class Columns(Component):
+    _children: list[Column] = field(default_factory=list)
+
+    def column(self, width: int) -> Column:
+        column = Column(width=width)
+        self._children.append(column)
+        return column
 
     def __iter__(self):
         yield 'type', 'columns'
-        yield 'children', [dict(column) for column in self.columns]
-
-
-if __name__ == '__main__':
-    from .__layout__ import Layout
-
-    layout = Layout()
-    col1, col2 = layout.columns([70, 30])
-
-    col1.hero(title='Column 1', subtitle='This is the first column')
-    col2.hero(title='Column 2', subtitle='This is the second column')
-
-    print(list(layout))
+        yield 'children', [dict(column) for column in self._children]

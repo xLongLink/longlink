@@ -1,18 +1,22 @@
 from dataclasses import dataclass, field
-from .table import Table
+from src.ui.__root__ import Component
+
+
+# Importing components that can be used in a Page
+from src.ui.hero import Hero
 
 
 @dataclass
-class Dialog:
+class Dialog(Component):
     confirm: str = 'Confirm'
     cancel: str = 'Cancel'
-    _components: list[Table] = field(default_factory=list)
+    _components: list[Component] = field(default_factory=list)
 
-    def table(self, data: list[dict] | None = None) -> Table:
-        table = Table(data=data)
-        self._components.append(table)
-        return table
-
+    def hero(self, title: str, subtitle: str | None = None) -> Hero:
+        hero = Hero(title=title, subtitle=subtitle)
+        self._components.append(hero)
+        return hero
+  
     def __iter__(self):
         yield 'type', 'dialog'
         yield 'props', {

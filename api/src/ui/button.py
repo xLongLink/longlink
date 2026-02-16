@@ -1,6 +1,10 @@
-from dataclasses import dataclass, field
 from typing import Literal, TypeAlias
-from .dialog import Dialog
+from dataclasses import dataclass, field
+from src.ui.__root__ import Component
+
+
+# Importing components that can be used in a Button dialog
+from src.ui.dialog import Dialog
 
 
 ButtonVariants: TypeAlias = Literal[
@@ -14,7 +18,7 @@ ButtonVariants: TypeAlias = Literal[
 
 
 @dataclass
-class Button:
+class Button(Component):
     """
     This is very straightforward, it either open a dialog, or call en endpoint when clicked.
     """
