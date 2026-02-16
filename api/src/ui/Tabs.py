@@ -1,13 +1,11 @@
 from dataclasses import dataclass, field
+
 from src.ui.__root__ import Component
-
-
-# Importing components that can be used in a Page
-from src.ui.hero import Hero
-from src.ui.table import Table
 from src.ui.button import Button, ButtonVariants
 from src.ui.columns import Column, Columns
+from src.ui.hero import Hero
 from src.ui.separator import Separator
+from src.ui.table import Table
 
 
 @dataclass
@@ -31,24 +29,24 @@ class Tab(Component):
         table = Table(data=data)
         self._children.append(table)
         return table
-    
+
     def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
         button = Button(text=text, variant=variant)
         self._children.append(button)
         return button
-    
+
     def columns(self, widths: list[int]) -> list[Column]:
         columns = Columns()
         self._children.append(columns)
         return [columns.column(width=width) for width in widths]
-    
+
     def separator(self) -> Separator:
         separator = Separator()
         self._children.append(separator)
         return separator
 
 
-
+@dataclass
 class Tabs(Component):
     _children: list[Tab] = field(default_factory=list)
 

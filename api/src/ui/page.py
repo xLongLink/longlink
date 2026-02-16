@@ -1,29 +1,26 @@
 from dataclasses import dataclass, field
-from src.ui.__root__ import Component
 
-# Importing components that can be used in a Page
-from src.ui.tabs import Tab, Tabs
-from src.ui.menu import Menu
-from src.ui.hero import Hero
-from src.ui.table import Table
+from src.ui.__root__ import Component
+from src.ui.Tabs import Tab, Tabs
 from src.ui.button import Button, ButtonVariants
 from src.ui.columns import Column, Columns
+from src.ui.hero import Hero
+from src.ui.menu import Menu
 from src.ui.separator import Separator
+from src.ui.table import Table
 
 
 @dataclass
 class Page:
-    """Top-level component that represents a page in the UI
-    
-    A Page renders the components in the order they were added.
-    """
+    """Top-level component that represents a page in the UI."""
+
     _children: list[Component] = field(default_factory=list)
-    
+
     def hero(self, title: str, subtitle: str | None = None) -> Hero:
         hero = Hero(title=title, subtitle=subtitle)
         self._children.append(hero)
         return hero
-    
+
     def table(self, data: list[dict]) -> Table:
         table = Table(data=data)
         self._children.append(table)
@@ -33,7 +30,7 @@ class Page:
         button = Button(text=text, variant=variant)
         self._children.append(button)
         return button
-    
+
     def columns(self, widths: list[int]) -> list[Column]:
         columns = Columns()
         self._children.append(columns)
@@ -53,7 +50,7 @@ class Page:
         separator = Separator()
         self._children.append(separator)
         return separator
-    
+
     def __iter__(self):
         for component in self._children:
             yield dict(component)
