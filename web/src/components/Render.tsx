@@ -60,6 +60,58 @@ function normalizeChildren(
 function Render({ type, props, children }: RenderNodeSchema) {
     const resolvedChildren = normalizeChildren(children);
 
+    if (type === 'menu') {
+        return (
+            <Menu>
+                {resolvedChildren.map((section, sectionIndex) => {
+                    if (section.type !== 'menusection') {
+                        return <Render key={sectionIndex} {...section} />;
+                    }
+
+                    return (
+                        <MenuSection
+                            key={sectionIndex}
+                            {...(section.props as React.ComponentProps<
+                                typeof MenuSection
+                            >)}
+                        >
+                            {normalizeChildren(section.children).map(
+                                (subSection, subSectionIndex) => {
+                                    if (subSection.type !== 'menuSubSection') {
+                                        return (
+                                            <Render
+                                                key={subSectionIndex}
+                                                {...subSection}
+                                            />
+                                        );
+                                    }
+
+                                    return (
+                                        <MenuSubSection
+                                            key={subSectionIndex}
+                                            {...(subSection.props as React.ComponentProps<
+                                                typeof MenuSubSection
+                                            >)}
+                                        >
+                                            {normalizeChildren(
+                                                subSection.children
+                                            ).map((child, childIndex) => (
+                                                <Render
+                                                    key={childIndex}
+                                                    {...child}
+                                                />
+                                            ))}
+                                        </MenuSubSection>
+                                    );
+                                }
+                            )}
+                        </MenuSection>
+                    );
+                })}
+            </Menu>
+        );
+    }
+
     if (type === 'button') {
         const dialogChild = resolvedChildren.find(
             (child) => child.type === 'dialog'
