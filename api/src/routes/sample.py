@@ -1,148 +1,86 @@
-from src.ui import Layout
 from src.router import router
+from src.ui import Page
 
 
-# A LongLink page takes a URL, with filders and stuff. If is not possible to show in a single page then the content is too complex
-# Each POST request from the page shall automatically re-render the page. Given that we assume new data has come
+# A LongLink page takes a URL, with folders and stuff. If it's not possible to show in a single
+# page then the content is too complex.
 @router.get('/sample/page')
 async def form():
-    """Return an example page schema payload with a hero component."""
-    page = Layout()
-    page.hero(title='Data Table', subtitle='This is an example of a data table component.')
-    primary_action = page.button(text='Primary action')
-    dialog = primary_action.dialog(confirm='Submit', cancel='Cancel')
+    """Return a showcase page schema payload for UI component examples."""
+    page = Page()
 
-    dialog_table = dialog.table(
+    page.hero(
+        title='UI Components Showcase',
+        subtitle='A complete sample using sidebar, table, tabs, hero, columns, buttons and dialog.',
+    )
+
+    menu = page.menu()
+
+    first_section = menu.section('1) Table Showcase', icon='table')
+    first_section.hero(
+        title='Customers Table',
+        subtitle='The first sidebar section demonstrates table rendering.',
+    )
+    customers_table = first_section.table(
         [
             {
                 'id': '1',
                 'name': 'Acme Corp',
                 'owner': 'Adriano Saurwein',
+                'status': 'Active',
             },
             {
                 'id': '2',
                 'name': 'LongLink',
                 'owner': 'Leonardo Saurwein',
+                'status': 'Pilot',
             },
         ]
     )
-    dialog_table.column('name', label='Name', cell='{name}')
-    dialog_table.column('owner', label='Owner', cell='{owner}')
+    customers_table.column('name', label='Name', cell='{name}')
+    customers_table.column('owner', label='Owner', cell='{owner}')
+    customers_table.column('status', label='Status', cell='{status}', align='right')
 
-    table = page.table(
+    second_section = menu.section('2) Tabs Showcase', icon='tabs')
+    second_section.hero(
+        title='Tabbed navigation',
+        subtitle='The second sidebar section includes two subsections with tabs and extra UI.',
+    )
+
+    hero_subsection = second_section.section('Hero subsection')
+    hero_subsection.hero(
+        title='Hero in subsection',
+        subtitle='This subsection starts with a hero and a call to action button.',
+    )
+    action_button = hero_subsection.button(text='Open dialog', variant='outline')
+    action_dialog = action_button.dialog(confirm='Create', cancel='Close')
+    action_dialog.hero(title='Dialog example', subtitle='This is a dialog opened from a button.')
+
+    tabs_subsection = second_section.section('Tabs subsection')
+    overview_tab, details_tab = tabs_subsection.tabs(['Overview', 'Details'])
+
+    overview_tab.hero(
+        title='Overview tab content',
+        subtitle='Quick project metrics and contextual information.',
+    )
+    overview_tab.button(text='Primary action')
+    overview_tab.separator()
+
+    detail_table = details_tab.table(
         [
-            {
-                'id': '1',
-                'client': {
-                    'name': 'Adriano Saurwein',
-                    'email': 'adriano@email.com',
-                },
-                'invoiceNumber': 'INV-001',
-                'issueDate': '2024-01-10',
-                'dueDate': '2024-01-20',
-                'status': 'Paid',
-                'subtotal': 1000,
-                'vat': 200,
-            },
-            {
-                'id': '2',
-                'client': {
-                    'name': 'Leonardo Saurwein',
-                    'email': 'leo@email.com',
-                },
-                'invoiceNumber': 'INV-002',
-                'issueDate': '2024-01-15',
-                'dueDate': '2024-01-30',
-                'status': 'Pending',
-                'subtotal': 450,
-                'vat': 90,
-            },
+            {'id': 'a1', 'metric': 'Open invoices', 'value': '12'},
+            {'id': 'a2', 'metric': 'Overdue invoices', 'value': '3'},
+            {'id': 'a3', 'metric': 'Total clients', 'value': '27'},
         ]
     )
-    table.column("invoice", label="Invoice", cell=["{invoiceNumber}", "Issued {issueDate}", "Status: {status}"], align="left")
-    table.column("client", label="Client", cell=["{client.name}", "{client.email}"])
-    table.column("dueDate", label="Dates", cell=["{issueDate}", "Due date: {dueDate}"], align="left")
-    table.column("amount", label="Amount", cell=["€{subtotal}", "VAT €{vat}"], align="right")
+    detail_table.column('metric', label='Metric', cell='{metric}')
+    detail_table.column('value', label='Value', cell='{value}', align='right')
 
-    
-    col1, col2 = page.columns([70, 30])
+    page.separator()
 
-    col1.hero(title="Column 1", subtitle="This is the first column")
-    col2.hero(title="Column 2", subtitle="This is the second column")
-    col2.button(text='Secondary action', variant='outline')
-    col2.separator()
-    col2.hero(title="After separator", subtitle="This section starts after a horizontal separator")
-
-    tabs = page.tabs(default_tab='Overview')
-
-    overview_tab = tabs.tab('Overview')
-    overview_tab.hero(title='Overview tab', subtitle='This content is rendered inside a tab component.')
-
-    details_tab = tabs.tab('Details')
-    details_tab.table(
-        [
-            {
-                'id': 'a1',
-                'metric': 'Open invoices',
-                'value': '12',
-            },
-            {
-                'id': 'a2',
-                'metric': 'Overdue invoices',
-                'value': '3',
-            },
-        ]
-    ).column('metric', label='Metric', cell='{metric}')
-    details_tab.table(
-        [
-            {
-                'id': 'b1',
-                'metric': 'Open invoices',
-                'value': '12',
-            },
-            {
-                'id': 'b2',
-                'metric': 'Overdue invoices',
-                'value': '3',
-            },
-        ]
-    ).column('value', label='Value', cell='{value}', align='right')
-
-
-    table = col1.table(
-        [
-            {
-                'id': '1',
-                'client': {
-                    'name': 'Adriano Saurwein',
-                    'email': 'adriano@email.com',
-                },
-                'invoiceNumber': 'INV-001',
-                'issueDate': '2024-01-10',
-                'dueDate': '2024-01-20',
-                'status': 'Paid',
-                'subtotal': 1000,
-                'vat': 200,
-            },
-            {
-                'id': '2',
-                'client': {
-                    'name': 'Leonardo Saurwein',
-                    'email': 'leo@email.com',
-                },
-                'invoiceNumber': 'INV-002',
-                'issueDate': '2024-01-15',
-                'dueDate': '2024-01-30',
-                'status': 'Pending',
-                'subtotal': 450,
-                'vat': 90,
-            },
-        ]
-    )
-    table.column('invoice', label='Invoice', cell=['{invoiceNumber}', 'Issued {issueDate}', 'Status: {status}'], align='left')
-    table.column('client', label='Client', cell=['{client.name}', '{client.email}'])
-    table.column('dueDate', label='Dates', cell=['{issueDate}', 'Due date: {dueDate}'], align='left')
-    table.column('amount', label='Amount', cell=['€{subtotal}', 'VAT €{vat}'], align='right')
-
+    left_col, right_col = page.columns([70, 30])
+    left_col.hero(title='Columns: main area', subtitle='A wider column for primary information.')
+    right_col.hero(title='Columns: side area', subtitle='A narrow column for quick actions.')
+    right_col.button(text='Secondary action', variant='secondary')
 
     return list(page)
