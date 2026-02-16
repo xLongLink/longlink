@@ -1,15 +1,9 @@
 import { type ReactElement, type ReactNode } from 'react';
-
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogFooter,
-    DialogTrigger,
-} from '@/components/ui/dialog';
+import { DialogClose, DialogContent, DialogFooter } from '@/components/ui/dialog';
 
-type ViaVaiDialogProps = {
+
+type DialogProps = {
     trigger: ReactElement;
     confirm?: string;
     cancel?: string;
@@ -18,39 +12,28 @@ type ViaVaiDialogProps = {
     onOpenChange?: (open: boolean) => void;
 };
 
-export function ViaVaiDialog({
-    trigger,
-    confirm = 'Confirm',
-    cancel = 'Cancel',
-    children,
-    open,
-    onOpenChange,
-}: ViaVaiDialogProps) {
+
+export function Dialog({ confirm = 'Confirm', cancel = 'Cancel', children }: DialogProps) {
+    const cancelRender = <Button variant="outline" className="cursor-pointer" />
+    const confirmRender = <Button className="cursor-pointer" />
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogTrigger render={trigger} />
+        <>
             <DialogContent className="min-w-[40rem] max-w-5xl">
                 <div className="max-h-[70vh] overflow-y-auto p-1">
                     {children}
                 </div>
                 <DialogFooter>
-                    <DialogClose
-                        render={
-                            <Button
-                                variant="outline"
-                                className="cursor-pointer"
-                            />
-                        }
-                    >
+                    <DialogClose render={cancelRender}>
                         {cancel}
                     </DialogClose>
-                    <DialogClose render={<Button className="cursor-pointer" />}>
+                    <DialogClose render={confirmRender}>
                         {confirm}
                     </DialogClose>
                 </DialogFooter>
             </DialogContent>
-        </Dialog>
+        </>
     );
 }
 
-export default ViaVaiDialog;
+export default Dialog
