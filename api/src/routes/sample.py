@@ -67,6 +67,12 @@ async def form():
         subtitle='Quick project metrics and contextual information.',
     )
     overview_tab.button(text='Primary action')
+    overview_tab.input(
+        label='Organization name',
+        placeholder='Enter organization name',
+        description='This example input demonstrates label, placeholder and helper text.',
+        submit='Save',
+    )
     overview_tab.separator()
 
     detail_table = details_tab.table(
