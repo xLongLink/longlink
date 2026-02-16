@@ -5,6 +5,7 @@ import Columns from '@/components/viavai/Columns';
 import Dialog from '@/components/viavai/Dialog';
 import Hero from '@/components/viavai/Hero';
 import Layout from '@/components/viavai/Layout';
+import Menu, { MenuSection, MenuSubSection } from '@/components/viavai/Menu';
 import Separator from '@/components/viavai/Separator';
 import Table from '@/components/viavai/Table';
 import Tabs, { Tab } from '@/components/viavai/Tabs';
@@ -20,6 +21,9 @@ const registry = {
     separator: Separator,
     tabs: Tabs,
     tab: Tab,
+    menu: Menu,
+    menusection: MenuSection,
+    menuSubSection: MenuSubSection,
 };
 
 type Registry = typeof registry;
