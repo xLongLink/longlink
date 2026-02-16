@@ -29,15 +29,15 @@ type MenuProps = {
 };
 
 const menuItemVariants = cva(
-    'group/menu-item text-foreground/80 hover:text-foreground focus-visible:ring-ring/50 relative inline-flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+    'group/menu-item focus-visible:ring-ring/50 relative inline-flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
     {
         variants: {
             active: {
-                true: 'bg-accent text-accent-foreground',
-                false: 'hover:bg-accent/60',
+                true: 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(255,255,255,0.75)]',
+                false: 'text-white/70 hover:bg-white/5 hover:text-white',
             },
             inset: {
-                true: 'pl-6',
+                true: 'pl-8',
                 false: '',
             },
         },
@@ -202,10 +202,7 @@ export function Menu({
         <nav
             data-slot="menu"
             aria-label={ariaLabel}
-            className={cn(
-                'bg-card text-card-foreground w-full rounded-lg p-2',
-                className
-            )}
+            className={cn('w-full', className)}
             onKeyDown={onKeyDown}
         >
             <ul className="space-y-1" role="list">
@@ -222,12 +219,6 @@ export function Menu({
                     return (
                         <li key={section.id} className="space-y-1">
                             <div className="relative">
-                                {sectionIsActive ? (
-                                    <span
-                                        aria-hidden="true"
-                                        className="bg-primary absolute top-1/2 -left-2 h-5 w-1 -translate-y-1/2 rounded-full"
-                                    />
-                                ) : null}
                                 <button
                                     type="button"
                                     data-menu-item="true"
@@ -258,7 +249,7 @@ export function Menu({
                                 >
                                     {SectionIcon ? (
                                         <SectionIcon
-                                            className="text-muted-foreground group-data-[state=active]/menu-item:text-foreground size-4"
+                                            className="size-4 text-white/70 group-data-[state=active]/menu-item:text-white"
                                             aria-hidden="true"
                                         />
                                     ) : null}
@@ -277,7 +268,7 @@ export function Menu({
 
                             {hasSubSections && isExpanded ? (
                                 <ul
-                                    className="border-border/70 ml-3 space-y-1 border-l pl-2"
+                                    className="ml-3 space-y-1 border-l border-white/10 pl-2"
                                     role="list"
                                     aria-label={`${section.label} sub-sections`}
                                 >
@@ -291,12 +282,6 @@ export function Menu({
                                                 key={subSection.id}
                                                 className="relative"
                                             >
-                                                {subSectionIsActive ? (
-                                                    <span
-                                                        aria-hidden="true"
-                                                        className="bg-primary absolute top-1/2 -left-4 h-5 w-1 -translate-y-1/2 rounded-full"
-                                                    />
-                                                ) : null}
                                                 <button
                                                     type="button"
                                                     data-menu-item="true"
@@ -327,7 +312,7 @@ export function Menu({
                                                 >
                                                     {SubSectionIcon ? (
                                                         <SubSectionIcon
-                                                            className="text-muted-foreground group-data-[state=active]/menu-item:text-foreground size-4"
+                                                            className="size-4 text-white/70 group-data-[state=active]/menu-item:text-white"
                                                             aria-hidden="true"
                                                         />
                                                     ) : null}
