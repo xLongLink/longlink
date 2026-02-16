@@ -6,7 +6,7 @@ import {
 } from 'react';
 
 type ColumnsProps = {
-    width?: number;
+    widths?: number[];
     children?: ReactNode;
 };
 
@@ -17,20 +17,20 @@ type ColumnProps = {
 
 type WidthProps = {
     width?: number;
-    props?: {
-        width?: number;
-    };
 };
 
-function toGridTemplate(widths: number[]) {
-    if (widths.length === 0) {
-        return '1fr';
-    }
+function hasUsableWidths(
+    widths: number[] | undefined,
+    columnsCount: number
+): widths is number[] {
+    return Array.isArray(widths) && widths.length === columnsCount;
+}
 
+function toGridTemplate(widths: number[]) {
     const total = widths.reduce((sum, width) => sum + width, 0);
 
     if (total <= 0) {
-        return `repeat(${widths.length}, minmax(0, 1fr))`;
+        return `repeat(${widths.length || 1}, minmax(0, 1fr))`;
     }
 
     return widths
@@ -38,32 +38,30 @@ function toGridTemplate(widths: number[]) {
         .join(' ');
 }
 
-export function Columns({ width, children }: ColumnsProps) {
-    if (typeof width === 'number') {
-        return <>{children}</>;
-    }
-
-    const columns = Children.toArray(children);
-    const widths = columns.map((column) => {
-        if (isValidElement(column)) {
-            const columnElement = column as ReactElement<WidthProps>;
-
-            if (typeof columnElement.props.width === 'number') {
-                return columnElement.props.width;
-            }
-
-            if (typeof columnElement.props.props?.width === 'number') {
-                return columnElement.props.props.width;
-            }
+function getLegacyColumnWidths(columns: ReactNode[]) {
+    return columns.map((column) => {
+        if (!isValidElement(column)) {
+            return 1;
         }
 
-        return 1;
+        const columnElement = column as ReactElement<WidthProps>;
+
+        return typeof columnElement.props.width === 'number'
+            ? columnElement.props.width
+            : 1;
     });
+}
+
+export function Columns({ widths, children }: ColumnsProps) {
+    const columns = Children.toArray(children);
+    const resolvedWidths = hasUsableWidths(widths, columns.length)
+        ? widths
+        : getLegacyColumnWidths(columns);
 
     return (
         <div
             className="grid gap-4"
-            style={{ gridTemplateColumns: toGridTemplate(widths) }}
+            style={{ gridTemplateColumns: toGridTemplate(resolvedWidths) }}
         >
             {columns.map((column, index) => (
                 <div key={`column-${index}`} className="space-y-4">
