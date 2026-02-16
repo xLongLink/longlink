@@ -29,7 +29,7 @@ type MenuProps = {
 };
 
 const menuItemVariants = cva(
-    'group/menu-item focus-visible:ring-ring/50 relative inline-flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+    'group/menu-item focus-visible:ring-ring/50 relative inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
     {
         variants: {
             active: {
@@ -76,18 +76,17 @@ export function Menu({
 
     const activeValue = isControlled ? value : internalValue;
 
-    const [expandedSections, setExpandedSections] = React.useState<Set<string>>(
-        () => {
-            const activeSectionId = sections.find(
+    const [expandedSectionId, setExpandedSectionId] = React.useState<
+        string | undefined
+    >(
+        () =>
+            sections.find(
                 (section) =>
                     section.id === activeValue ||
                     section.subSections?.some(
                         (subSection) => subSection.id === activeValue
                     )
-            )?.id;
-
-            return new Set(activeSectionId ? [activeSectionId] : []);
-        }
+            )?.id
     );
 
     React.useEffect(() => {
@@ -126,15 +125,7 @@ export function Menu({
             return;
         }
 
-        setExpandedSections((previous) => {
-            if (previous.has(activeSectionId)) {
-                return previous;
-            }
-
-            const next = new Set(previous);
-            next.add(activeSectionId);
-            return next;
-        });
+        setExpandedSectionId(activeSectionId);
     }, [activeValue, sections]);
 
     const commitValue = React.useCallback(
@@ -148,15 +139,9 @@ export function Menu({
     );
 
     const toggleExpanded = React.useCallback((sectionId: string) => {
-        setExpandedSections((previous) => {
-            const next = new Set(previous);
-            if (next.has(sectionId)) {
-                next.delete(sectionId);
-            } else {
-                next.add(sectionId);
-            }
-            return next;
-        });
+        setExpandedSectionId((previous) =>
+            previous === sectionId ? undefined : sectionId
+        );
     }, []);
 
     const onKeyDown = React.useCallback(
@@ -208,12 +193,8 @@ export function Menu({
             <ul className="space-y-1" role="list">
                 {sections.map((section) => {
                     const hasSubSections = Boolean(section.subSections?.length);
-                    const isExpanded = expandedSections.has(section.id);
-                    const sectionIsActive =
-                        activeValue === section.id ||
-                        section.subSections?.some(
-                            (subSection) => subSection.id === activeValue
-                        );
+                    const isExpanded = expandedSectionId === section.id;
+                    const sectionIsActive = activeValue === section.id;
                     const SectionIcon = section.icon;
 
                     return (
