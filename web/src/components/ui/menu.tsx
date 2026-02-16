@@ -76,17 +76,16 @@ export function Menu({
 
     const activeValue = isControlled ? value : internalValue;
 
-    const [expandedSectionId, setExpandedSectionId] = React.useState<
-        string | undefined
-    >(
-        () =>
-            sections.find(
-                (section) =>
-                    section.id === activeValue ||
-                    section.subSections?.some(
-                        (subSection) => subSection.id === activeValue
-                    )
-            )?.id
+    const [expandedSectionIndex, setExpandedSectionIndex] = React.useState<
+        number | undefined
+    >(() =>
+        sections.findIndex(
+            (section) =>
+                section.id === activeValue ||
+                section.subSections?.some(
+                    (subSection) => subSection.id === activeValue
+                )
+        )
     );
 
     React.useEffect(() => {
@@ -113,19 +112,19 @@ export function Menu({
     }, [internalValue, isControlled, sections]);
 
     React.useEffect(() => {
-        const activeSectionId = sections.find(
+        const activeSectionIndex = sections.findIndex(
             (section) =>
                 section.id === activeValue ||
                 section.subSections?.some(
                     (subSection) => subSection.id === activeValue
                 )
-        )?.id;
+        );
 
-        if (!activeSectionId) {
+        if (activeSectionIndex < 0) {
             return;
         }
 
-        setExpandedSectionId(activeSectionId);
+        setExpandedSectionIndex(activeSectionIndex);
     }, [activeValue, sections]);
 
     const commitValue = React.useCallback(
@@ -138,9 +137,9 @@ export function Menu({
         [isControlled, onValueChange]
     );
 
-    const toggleExpanded = React.useCallback((sectionId: string) => {
-        setExpandedSectionId((previous) =>
-            previous === sectionId ? undefined : sectionId
+    const toggleExpanded = React.useCallback((sectionIndex: number) => {
+        setExpandedSectionIndex((previous) =>
+            previous === sectionIndex ? undefined : sectionIndex
         );
     }, []);
 
@@ -191,9 +190,9 @@ export function Menu({
             onKeyDown={onKeyDown}
         >
             <ul className="space-y-1" role="list">
-                {sections.map((section) => {
+                {sections.map((section, sectionIndex) => {
                     const hasSubSections = Boolean(section.subSections?.length);
-                    const isExpanded = expandedSectionId === section.id;
+                    const isExpanded = expandedSectionIndex === sectionIndex;
                     const sectionIsActive = activeValue === section.id;
                     const SectionIcon = section.icon;
 
@@ -224,7 +223,7 @@ export function Menu({
                                     onClick={() => {
                                         commitValue(section.id);
                                         if (hasSubSections) {
-                                            toggleExpanded(section.id);
+                                            toggleExpanded(sectionIndex);
                                         }
                                     }}
                                 >
