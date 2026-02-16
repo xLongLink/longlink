@@ -80,7 +80,7 @@ export function Tabs({ children, defaultTab }: TabsProps) {
 
     return (
         <UITabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList variant="line">
+            <TabsList>
                 {tabs.map((tab, index) => {
                     const title = tab.props.title ?? tab.props.props?.title;
                     const resolvedTitle =
