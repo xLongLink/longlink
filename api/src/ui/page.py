@@ -5,6 +5,7 @@ from src.ui.tabs import Tab, Tabs
 from src.ui.button import Button, ButtonVariants
 from src.ui.columns import Column, Columns
 from src.ui.hero import Hero
+from src.ui.input import Input
 from src.ui.menu import Menu
 from src.ui.separator import Separator
 from src.ui.table import Table
@@ -45,6 +46,23 @@ class Page:
         tabs = Tabs()
         self._children.append(tabs)
         return [tabs.tab(name=name) for name in names]
+
+
+    def input(
+        self,
+        label: str | None = None,
+        placeholder: str | None = None,
+        description: str | None = None,
+        submit: str | None = None,
+    ) -> Input:
+        input_component = Input(
+            label=label,
+            placeholder=placeholder,
+            description=description,
+            submit=submit,
+        )
+        self._children.append(input_component)
+        return input_component
 
     def separator(self) -> Separator:
         separator = Separator()

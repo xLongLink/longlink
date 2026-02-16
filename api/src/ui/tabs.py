@@ -4,6 +4,7 @@ from src.ui.__root__ import Component
 from src.ui.button import Button, ButtonVariants
 from src.ui.columns import Column, Columns
 from src.ui.hero import Hero
+from src.ui.input import Input
 from src.ui.separator import Separator
 from src.ui.table import Table
 
@@ -44,6 +45,22 @@ class Tab(Component):
         separator = Separator()
         self._children.append(separator)
         return separator
+
+    def input(
+        self,
+        label: str | None = None,
+        placeholder: str | None = None,
+        description: str | None = None,
+        submit: str | None = None,
+    ) -> Input:
+        input_component = Input(
+            label=label,
+            placeholder=placeholder,
+            description=description,
+            submit=submit,
+        )
+        self._children.append(input_component)
+        return input_component
 
 
 @dataclass
