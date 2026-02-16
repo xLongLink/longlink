@@ -10,6 +10,11 @@ type ColumnsProps = {
     children?: ReactNode;
 };
 
+type ColumnProps = {
+    width?: number;
+    children?: ReactNode;
+};
+
 type WidthProps = {
     width?: number;
     props?: {
@@ -67,6 +72,10 @@ export function Columns({ width, children }: ColumnsProps) {
             ))}
         </div>
     );
+}
+
+export function Column({ children }: ColumnProps) {
+    return <>{children}</>;
 }
 
 export default Columns;
