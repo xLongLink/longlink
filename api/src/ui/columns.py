@@ -1,12 +1,10 @@
 from dataclasses import dataclass, field
+
 from src.ui.__root__ import Component
-
-
-# Importing components that can be used in a Column
-from src.ui.hero import Hero
-from src.ui.table import Table
 from src.ui.button import Button, ButtonVariants
+from src.ui.hero import Hero
 from src.ui.separator import Separator
+from src.ui.table import Table
 
 
 @dataclass
@@ -23,23 +21,24 @@ class Column(Component):
         hero = Hero(title=title, subtitle=subtitle)
         self._components.append(hero)
         return hero
-    
+
     def table(self, data: list[dict]) -> Table:
         table = Table(data=data)
         self._components.append(table)
         return table
-    
+
     def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
         button = Button(text=text, variant=variant)
         self._components.append(button)
         return button
-    
+
     def separator(self) -> Separator:
         separator = Separator()
         self._components.append(separator)
         return separator
-    
 
+
+@dataclass
 class Columns(Component):
     _children: list[Column] = field(default_factory=list)
 
