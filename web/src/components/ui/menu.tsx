@@ -4,29 +4,61 @@ import { ChevronDownIcon, type LucideIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-type MenuSubSection = {
-    id: string;
-    label: string;
-    icon?: LucideIcon;
-    disabled?: boolean;
-};
-
-type MenuSection = {
-    id: string;
-    label: string;
-    icon?: LucideIcon;
-    disabled?: boolean;
-    subSections?: MenuSubSection[];
+type MenuContextValue = {
+    activeValue?: string;
+    onValueChange: (value: string) => void;
 };
 
 type MenuProps = {
-    sections: MenuSection[];
     value?: string;
     defaultValue?: string;
     onValueChange?: (value: string) => void;
     className?: string;
     ariaLabel?: string;
+    children?: React.ReactNode;
 };
+
+type MenuListProps = {
+    className?: string;
+    children?: React.ReactNode;
+};
+
+type MenuSectionProps = {
+    value: string;
+    label?: string;
+    icon?: LucideIcon;
+    disabled?: boolean;
+    children?: React.ReactNode;
+};
+
+type MenuSubSectionProps = {
+    value: string;
+    label?: string;
+    disabled?: boolean;
+    children?: React.ReactNode;
+};
+
+type MenuContentProps = {
+    value: string;
+    className?: string;
+    children?: React.ReactNode;
+};
+
+type ResolvedMenuSubSection = {
+    value: string;
+    label: string;
+    disabled?: boolean;
+};
+
+type ResolvedMenuSection = {
+    value: string;
+    label: string;
+    icon?: LucideIcon;
+    disabled?: boolean;
+    subSections: ResolvedMenuSubSection[];
+};
+
+const MenuContext = React.createContext<MenuContextValue | null>(null);
 
 const menuItemVariants = cva(
     'group/menu-item focus-visible:ring-ring/50 relative inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
@@ -48,122 +80,126 @@ const menuItemVariants = cva(
     }
 );
 
-function getInitialValue(sections: MenuSection[]): string | undefined {
+function prettifyValue(value: string): string {
+    return value
+        .replace(/[-_]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function readText(children?: React.ReactNode): string | undefined {
+    return typeof children === 'string' ? children : undefined;
+}
+
+function parseMenuSections(
+    listChildren?: React.ReactNode
+): ResolvedMenuSection[] {
+    const sectionNodes = React.Children.toArray(listChildren).filter(
+        (child): child is React.ReactElement<MenuSectionProps> =>
+            React.isValidElement(child) && child.type === MenuSection
+    );
+
+    return sectionNodes.map((sectionNode) => {
+        const subSectionNodes = React.Children.toArray(
+            sectionNode.props.children
+        ).filter(
+            (child): child is React.ReactElement<MenuSubSectionProps> =>
+                React.isValidElement(child) && child.type === MenuSubSection
+        );
+
+        return {
+            value: sectionNode.props.value,
+            label:
+                sectionNode.props.label ??
+                readText(sectionNode.props.children) ??
+                prettifyValue(sectionNode.props.value),
+            icon: sectionNode.props.icon,
+            disabled: sectionNode.props.disabled,
+            subSections: subSectionNodes.map((subSectionNode) => ({
+                value: subSectionNode.props.value,
+                label:
+                    subSectionNode.props.label ??
+                    readText(subSectionNode.props.children) ??
+                    prettifyValue(subSectionNode.props.value),
+                disabled: subSectionNode.props.disabled,
+            })),
+        };
+    });
+}
+
+function getInitialValue(sections: ResolvedMenuSection[]): string | undefined {
     const firstSection = sections.find((section) => !section.disabled);
+
     if (!firstSection) {
         return undefined;
     }
 
-    const firstSubSection = firstSection.subSections?.find(
+    const firstSubSection = firstSection.subSections.find(
         (subSection) => !subSection.disabled
     );
 
-    return firstSubSection?.id ?? firstSection.id;
+    return firstSubSection?.value ?? firstSection.value;
 }
 
-export function Menu({
-    sections,
-    value,
-    defaultValue,
-    onValueChange,
-    className,
-    ariaLabel = 'Section menu',
-}: MenuProps) {
-    const isControlled = value !== undefined;
-    const [internalValue, setInternalValue] = React.useState<
-        string | undefined
-    >(defaultValue ?? getInitialValue(sections));
+export function MenuSection(_props: MenuSectionProps) {
+    return null;
+}
 
-    const activeValue = isControlled ? value : internalValue;
+export function MenuSubSection(_props: MenuSubSectionProps) {
+    return null;
+}
+
+export function MenuList({ className, children }: MenuListProps) {
+    const menuContext = React.useContext(MenuContext);
+
+    if (!menuContext) {
+        throw new Error('MenuList must be used within a Menu component.');
+    }
+
+    const sections = React.useMemo(
+        () => parseMenuSections(children),
+        [children]
+    );
+    const { activeValue, onValueChange } = menuContext;
 
     const [expandedSectionIds, setExpandedSectionIds] = React.useState<
         Set<string>
     >(() => {
         const activeSection = sections.find(
             (section) =>
-                section.id === activeValue ||
-                section.subSections?.some(
-                    (subSection) => subSection.id === activeValue
+                section.value === activeValue ||
+                section.subSections.some(
+                    (subSection) => subSection.value === activeValue
                 )
         );
 
-        return activeSection ? new Set([activeSection.id]) : new Set();
+        return activeSection ? new Set([activeSection.value]) : new Set();
     });
-
-    React.useEffect(() => {
-        if (isControlled) {
-            return;
-        }
-
-        if (!internalValue) {
-            setInternalValue(getInitialValue(sections));
-            return;
-        }
-
-        const hasValue = sections.some(
-            (section) =>
-                section.id === internalValue ||
-                section.subSections?.some(
-                    (subSection) => subSection.id === internalValue
-                )
-        );
-
-        if (!hasValue) {
-            setInternalValue(getInitialValue(sections));
-        }
-    }, [internalValue, isControlled, sections]);
 
     React.useEffect(() => {
         const activeSection = sections.find(
             (section) =>
-                section.id === activeValue ||
-                section.subSections?.some(
-                    (subSection) => subSection.id === activeValue
+                section.value === activeValue ||
+                section.subSections.some(
+                    (subSection) => subSection.value === activeValue
                 )
         );
 
-        if (!activeSection) {
-            return;
-        }
-
-        if (!activeSection.subSections?.length) {
+        if (!activeSection || !activeSection.subSections.length) {
             return;
         }
 
         setExpandedSectionIds((previous) => {
-            if (previous.has(activeSection.id)) {
+            if (previous.has(activeSection.value)) {
                 return previous;
             }
 
             const next = new Set(previous);
-            next.add(activeSection.id);
+            next.add(activeSection.value);
             return next;
         });
     }, [activeValue, sections]);
-
-    const commitValue = React.useCallback(
-        (nextValue: string) => {
-            if (!isControlled) {
-                setInternalValue(nextValue);
-            }
-            onValueChange?.(nextValue);
-        },
-        [isControlled, onValueChange]
-    );
-
-    const toggleExpanded = React.useCallback((sectionId: string) => {
-        setExpandedSectionIds((previous) => {
-            const next = new Set(previous);
-
-            if (next.has(sectionId)) {
-                next.delete(sectionId);
-            } else {
-                next.add(sectionId);
-            }
-
-            return next;
-        });
-    }, []);
 
     const onKeyDown = React.useCallback(
         (event: React.KeyboardEvent<HTMLElement>) => {
@@ -204,69 +240,76 @@ export function Menu({
         []
     );
 
+    const toggleExpanded = (sectionValue: string) => {
+        setExpandedSectionIds((previous) => {
+            const next = new Set(previous);
+            if (next.has(sectionValue)) {
+                next.delete(sectionValue);
+            } else {
+                next.add(sectionValue);
+            }
+            return next;
+        });
+    };
+
     return (
         <nav
-            data-slot="menu"
-            aria-label={ariaLabel}
-            className={cn('w-full', className)}
+            className={cn('space-y-3', className)}
+            aria-label="Section menu"
             onKeyDown={onKeyDown}
         >
-            <ul className="space-y-1" role="list">
+            <ul className="space-y-2" role="list">
                 {sections.map((section) => {
-                    const hasSubSections = Boolean(section.subSections?.length);
-                    const isExpanded = expandedSectionIds.has(section.id);
-                    const sectionIsActive = activeValue === section.id;
+                    const hasSubSections = section.subSections.length > 0;
+                    const sectionIsActive = activeValue === section.value;
+                    const isExpanded = expandedSectionIds.has(section.value);
                     const SectionIcon = section.icon;
 
                     return (
-                        <li key={section.id} className="space-y-1">
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    data-menu-item="true"
-                                    data-state={
-                                        sectionIsActive ? 'active' : 'inactive'
+                        <li key={section.value} className="space-y-1">
+                            <button
+                                type="button"
+                                data-menu-item="true"
+                                data-state={
+                                    sectionIsActive ? 'active' : 'inactive'
+                                }
+                                data-expanded={isExpanded}
+                                aria-expanded={
+                                    hasSubSections ? isExpanded : undefined
+                                }
+                                aria-current={
+                                    sectionIsActive ? 'page' : undefined
+                                }
+                                disabled={section.disabled}
+                                className={cn(
+                                    menuItemVariants({
+                                        active: sectionIsActive,
+                                    })
+                                )}
+                                onClick={() => {
+                                    onValueChange(section.value);
+                                    if (hasSubSections) {
+                                        toggleExpanded(section.value);
                                     }
-                                    data-expanded={isExpanded}
-                                    aria-expanded={
-                                        hasSubSections ? isExpanded : undefined
-                                    }
-                                    aria-current={
-                                        activeValue === section.id
-                                            ? 'page'
-                                            : undefined
-                                    }
-                                    disabled={section.disabled}
-                                    className={cn(
-                                        menuItemVariants({
-                                            active: sectionIsActive,
-                                        })
-                                    )}
-                                    onClick={() => {
-                                        commitValue(section.id);
-                                        if (hasSubSections) {
-                                            toggleExpanded(section.id);
-                                        }
-                                    }}
-                                >
-                                    {SectionIcon ? (
-                                        <SectionIcon
-                                            className="size-4 text-white/70 group-data-[state=active]/menu-item:text-white"
-                                            aria-hidden="true"
-                                        />
-                                    ) : null}
-                                    <span className="truncate">
-                                        {section.label}
-                                    </span>
-                                    {hasSubSections ? (
-                                        <ChevronDownIcon
-                                            aria-hidden="true"
-                                            className="ml-auto size-4 transition-transform data-[expanded=true]:rotate-180"
-                                            data-expanded={isExpanded}
-                                        />
-                                    ) : null}
-                                </button>
-                            </div>
+                                }}
+                            >
+                                {SectionIcon ? (
+                                    <SectionIcon
+                                        className="size-4 text-white/70 group-data-[state=active]/menu-item:text-white"
+                                        aria-hidden="true"
+                                    />
+                                ) : null}
+                                <span className="truncate">
+                                    {section.label}
+                                </span>
+                                {hasSubSections ? (
+                                    <ChevronDownIcon
+                                        aria-hidden="true"
+                                        className="ml-auto size-4 transition-transform data-[expanded=true]:rotate-180"
+                                        data-expanded={isExpanded}
+                                    />
+                                ) : null}
+                            </button>
 
                             {hasSubSections && isExpanded ? (
                                 <ul
@@ -274,12 +317,13 @@ export function Menu({
                                     role="list"
                                     aria-label={`${section.label} sub-sections`}
                                 >
-                                    {section.subSections?.map((subSection) => {
+                                    {section.subSections.map((subSection) => {
                                         const subSectionIsActive =
-                                            activeValue === subSection.id;
+                                            activeValue === subSection.value;
+
                                         return (
                                             <li
-                                                key={subSection.id}
+                                                key={subSection.value}
                                                 className="relative"
                                             >
                                                 <button
@@ -305,8 +349,8 @@ export function Menu({
                                                         })
                                                     )}
                                                     onClick={() =>
-                                                        commitValue(
-                                                            subSection.id
+                                                        onValueChange(
+                                                            subSection.value
                                                         )
                                                     }
                                                 >
@@ -327,4 +371,102 @@ export function Menu({
     );
 }
 
-export type { MenuProps, MenuSection, MenuSubSection };
+export function MenuContent({ value, className, children }: MenuContentProps) {
+    const menuContext = React.useContext(MenuContext);
+
+    if (!menuContext) {
+        throw new Error('MenuContent must be used within a Menu component.');
+    }
+
+    if (menuContext.activeValue !== value) {
+        return null;
+    }
+
+    return <section className={className}>{children}</section>;
+}
+
+export function Menu({
+    value,
+    defaultValue,
+    onValueChange,
+    className,
+    ariaLabel = 'Section menu',
+    children,
+}: MenuProps) {
+    const menuList = React.Children.toArray(children).find(
+        (child): child is React.ReactElement<MenuListProps> =>
+            React.isValidElement(child) && child.type === MenuList
+    );
+
+    const sections = React.useMemo(
+        () => parseMenuSections(menuList?.props.children),
+        [menuList?.props.children]
+    );
+
+    const isControlled = value !== undefined;
+    const [internalValue, setInternalValue] = React.useState<
+        string | undefined
+    >(defaultValue ?? getInitialValue(sections));
+
+    const activeValue = isControlled ? value : internalValue;
+
+    React.useEffect(() => {
+        if (isControlled) {
+            return;
+        }
+
+        if (!internalValue) {
+            setInternalValue(getInitialValue(sections));
+            return;
+        }
+
+        const hasValue = sections.some(
+            (section) =>
+                section.value === internalValue ||
+                section.subSections.some(
+                    (subSection) => subSection.value === internalValue
+                )
+        );
+
+        if (!hasValue) {
+            setInternalValue(getInitialValue(sections));
+        }
+    }, [internalValue, isControlled, sections]);
+
+    const commitValue = React.useCallback(
+        (nextValue: string) => {
+            if (!isControlled) {
+                setInternalValue(nextValue);
+            }
+            onValueChange?.(nextValue);
+        },
+        [isControlled, onValueChange]
+    );
+
+    return (
+        <MenuContext.Provider
+            value={{
+                activeValue,
+                onValueChange: commitValue,
+            }}
+        >
+            <div
+                className={cn(
+                    'grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]',
+                    className
+                )}
+                aria-label={ariaLabel}
+            >
+                {children}
+            </div>
+        </MenuContext.Provider>
+    );
+}
+
+export type {
+    MenuContentProps,
+    MenuListProps,
+    MenuProps,
+    MenuSectionProps,
+    MenuSubSectionProps,
+};
