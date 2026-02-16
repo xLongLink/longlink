@@ -3,11 +3,11 @@ import Button from '@/components/viavai/Button';
 import Columns, { Column } from '@/components/viavai/Columns';
 import Dialog from '@/components/viavai/Dialog';
 import Hero from '@/components/viavai/Hero';
+import Input from '@/components/viavai/Input';
 import Menu, { MenuSection, MenuSubSection } from '@/components/viavai/Menu';
 import Separator from '@/components/viavai/Separator';
 import Table from '@/components/viavai/Table';
 import Tabs, { Tab } from '@/components/viavai/Tabs';
-
 
 const registry = {
     hero: Hero,
@@ -22,6 +22,7 @@ const registry = {
     menu: Menu,
     menusection: MenuSection,
     menuSubSection: MenuSubSection,
+    input: Input,
 };
 
 type Registry = typeof registry;
