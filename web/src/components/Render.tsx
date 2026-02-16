@@ -112,36 +112,6 @@ function Render({ type, props, children }: RenderNodeSchema) {
         );
     }
 
-    if (type === 'button') {
-        const dialogChild = resolvedChildren.find(
-            (child) => child.type === 'dialog'
-        );
-
-        if (dialogChild) {
-            const dialogProps =
-                (dialogChild.props as { confirm?: string; cancel?: string }) ??
-                {};
-
-            return (
-                <Dialog
-                    trigger={
-                        <Button
-                            {...(props as React.ComponentProps<typeof Button>)}
-                        />
-                    }
-                    confirm={dialogProps.confirm}
-                    cancel={dialogProps.cancel}
-                >
-                    {normalizeChildren(dialogChild.children).map(
-                        (child, index) => (
-                            <Render key={index} {...child} />
-                        )
-                    )}
-                </Dialog>
-            );
-        }
-    }
-
     const Component = registry[type] as React.ComponentType<
         Record<string, unknown>
     >;
