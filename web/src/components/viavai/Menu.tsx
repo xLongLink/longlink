@@ -1,14 +1,20 @@
 import {
     Children,
     isValidElement,
-    useEffect,
     useMemo,
-    useState,
     type ReactElement,
     type ReactNode,
 } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { AppWindow, Box, FolderKanban, Table2 } from 'lucide-react';
+
+import {
+    Menu as BaseMenu,
+    MenuContent,
+    MenuList,
+    MenuSection as BaseMenuSection,
+    MenuSubSection as BaseMenuSubSection,
+} from '@/components/ui/menu';
 
 type MenuProps = {
     children?: ReactNode;
@@ -45,7 +51,7 @@ type NormalizedSection = {
     id: string;
     title: string;
     icon: LucideIcon;
-    rootChildren?: ReactNode;
+    rootSubSection?: NormalizedSubSection;
     subSections: NormalizedSubSection[];
 };
 
@@ -111,7 +117,7 @@ function normalizeSections(children?: ReactNode): NormalizedSection[] {
             id: `section-${sectionIndex}`,
             title: resolveSectionTitle(section.props),
             icon: resolveSectionIcon(section.props),
-            rootChildren: rootSubSection?.children,
+            rootSubSection,
             subSections: normalizedSubSections.filter(
                 (subSection) => !subSection.isRoot
             ),
@@ -130,121 +136,54 @@ export function MenuSubSection({ children }: MenuSubSectionProps) {
 export function Menu({ children }: MenuProps) {
     const sections = useMemo(() => normalizeSections(children), [children]);
 
-    const [activeSectionId, setActiveSectionId] = useState<string | null>(
-        sections[0]?.id ?? null
-    );
-
-    const activeSection = useMemo(() => {
-        return sections.find((section) => section.id === activeSectionId);
-    }, [activeSectionId, sections]);
-
-    const [activeSubSectionId, setActiveSubSectionId] = useState<string | null>(
-        activeSection?.subSections[0]?.id ?? null
-    );
-
-    useEffect(() => {
-        if (!sections.length) {
-            setActiveSectionId(null);
-            setActiveSubSectionId(null);
-            return;
-        }
-
-        if (!sections.some((section) => section.id === activeSectionId)) {
-            setActiveSectionId(sections[0].id);
-        }
-    }, [activeSectionId, sections]);
-
-    useEffect(() => {
-        const nextActiveSection = sections.find(
-            (section) => section.id === activeSectionId
-        );
-
-        const hasSubSection = nextActiveSection?.subSections.some(
-            (subSection) => subSection.id === activeSubSectionId
-        );
-
-        if (!hasSubSection) {
-            setActiveSubSectionId(
-                nextActiveSection?.subSections[0]?.id ?? null
-            );
-        }
-    }, [activeSectionId, activeSubSectionId, sections]);
-
     if (!sections.length) {
         return null;
     }
 
-    const activeSubSection = activeSection?.subSections.find(
-        (subSection) => subSection.id === activeSubSectionId
-    );
-
     return (
-        <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
-            <aside className="space-y-3">
-                {sections.map((section) => {
-                    const Icon = section.icon;
-                    const isActive = activeSection?.id === section.id;
-
-                    return (
-                        <button
+        <BaseMenu ariaLabel="ViaVai menu">
+            <aside className="w-64">
+                <MenuList>
+                    {sections.map((section) => (
+                        <BaseMenuSection
                             key={section.id}
-                            type="button"
-                            onClick={() => setActiveSectionId(section.id)}
-                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
-                                isActive
-                                    ? 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(255,255,255,0.75)]'
-                                    : 'text-white/70 hover:bg-white/5 hover:text-white'
-                            }`}
+                            value={section.id}
+                            label={section.title}
+                            icon={section.icon}
                         >
-                            <Icon
-                                className={`h-4 w-4 ${
-                                    isActive ? 'text-white' : 'text-white/70'
-                                }`}
-                            />
-                            <span>{section.title}</span>
-                        </button>
-                    );
-                })}
+                            {section.subSections.map((subSection) => (
+                                <BaseMenuSubSection
+                                    key={subSection.id}
+                                    value={subSection.id}
+                                    label={subSection.title}
+                                />
+                            ))}
+                        </BaseMenuSection>
+                    ))}
+                </MenuList>
             </aside>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">
-                    {activeSection?.title}
-                </h2>
+            <div className="space-y-3">
+                {sections.map((section) => (
+                    <div key={`${section.id}-content`}>
+                        {section.rootSubSection ? (
+                            <MenuContent value={section.id}>
+                                {section.rootSubSection.children}
+                            </MenuContent>
+                        ) : null}
 
-                {activeSection?.subSections.length ? (
-                    <div className="space-y-4">
-                        <div className="flex flex-wrap gap-2">
-                            {activeSection.subSections.map((subSection) => {
-                                const isSubActive =
-                                    activeSubSection?.id === subSection.id;
-
-                                return (
-                                    <button
-                                        key={subSection.id}
-                                        type="button"
-                                        onClick={() =>
-                                            setActiveSubSectionId(subSection.id)
-                                        }
-                                        className={`rounded-md border px-3 py-1.5 text-sm transition ${
-                                            isSubActive
-                                                ? 'border-white/40 bg-white/10 text-white'
-                                                : 'border-white/15 text-white/70 hover:border-white/30 hover:text-white'
-                                        }`}
-                                    >
-                                        {subSection.title}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {activeSubSection?.children}
+                        {section.subSections.map((subSection) => (
+                            <MenuContent
+                                key={subSection.id}
+                                value={subSection.id}
+                            >
+                                {subSection.children}
+                            </MenuContent>
+                        ))}
                     </div>
-                ) : (
-                    activeSection?.rootChildren
-                )}
-            </section>
-        </div>
+                ))}
+            </div>
+        </BaseMenu>
     );
 }
 
