@@ -33,8 +33,8 @@ async def form():
     )
 
     clients_tab, suppliers_tab = crm_subsection.tabs(['Clients', 'Suppliers'])
-    clients_tab.text('Clients list and relationship notes.')
-    suppliers_tab.text('Suppliers list and contract status.')
+    # clients_tab.text('Clients list and relationship notes.')
+    # suppliers_tab.text('Suppliers list and contract status.')
 
     analytics_subsection = tools_section.section('Analytics')
     analytics_subsection.hero(

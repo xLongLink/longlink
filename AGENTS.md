@@ -2,7 +2,7 @@
 
 You are working on LongLink, a modular project hub platform inspired by GitHub. The platform allows organizations to manage tools, processes, projects, and workflows through automation and connections. Each organization has its own database and storage space, and apps can be installed with a single click to provide specific functionalities.
 
-The project is divided into three sections:
+The project is divided into three folders:
 
 - `api` - Backend API - FastAPI application
 - `sdk` - Python SDK for app development
@@ -12,10 +12,6 @@ The project is divided into three sections:
 
 The API is responsible for the login and management of organizations, users, modules, and data.
 
-- Each organization has a database (PostgreSQL)
-- Each organization has a storage space (NAS).
-- Each organization has a podman/docker service to run module-specific containers.
-
 # WEB
 
 The web application is a static frontend built with React and Shadcn UI for consistency. It contains:
@@ -24,26 +20,7 @@ The web application is a static frontend built with React and Shadcn UI for cons
 - Organization’s overview page /<iso_country_code>/<org_name>
 - App-specific pages /<iso_country_code>/<org_name>/<app>
 
-Is designed in a tab navigation style. The organizaton has predefined tabs: `Overview`, `Tools`, `Entities`, `Projects`, `Settings`.
-While each app have its own sub-tabs.
-
-## APPs
-
-Apps are a core part of the platform. Those can be installed with a single click.
-
-- Each app provides specific functionalities to the organization, they are divided in 3 categories:
-    - `Tools`: Long living apps that provide core functionalities to the organization
-    - `Entities`: Apps that represent real world entities, usually connected to a client or a supplier
-    - `Projects`: Apps that represent projects, internal or external
-- Each app has its own database space into the organization’s database.
-- Each app has a folder in the storage space of the organization.
-- Each app run in its own container, isolated from the others.
-
-Overall is a python uvicorn application that run the logic and validation required by the module.
-
-A LongLink app is called VaiVai.
-
-# SDK
+## APPs & SDK
 
 The SDK allows to create new apps for the platform with python. It
 
