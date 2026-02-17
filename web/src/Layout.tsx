@@ -20,23 +20,34 @@ type NavigationProps = {
 };
 
 export default function Layout() {
-    const { app, org } = useParams();
-    const { tabs, basePathSuffix } = getTabsConfig({ org, app });
+    const { app } = useParams();
+    const location = useLocation();
+    const section =
+        location.pathname.startsWith('/profile') ||
+        location.pathname.startsWith('/viavai')
+            ? 'account'
+            : 'organization';
+    const { tabs, basePathSuffix } = getTabsConfig({ section, app });
 
     return <Navigation tabs={tabs} basePathSuffix={basePathSuffix} />;
 }
 
 export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
-    const { country = '', org = '' } = useParams();
+    const { app } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
-    const basePath = org
+    const isAccountView =
+        location.pathname.startsWith('/profile') ||
+        location.pathname.startsWith('/viavai');
+    const basePath = app
         ? normalizedSuffix
-            ? `/${country}/${org}/${normalizedSuffix}`
-            : `/${country}/${org}`
-        : '';
+            ? `/${normalizedSuffix}`
+            : '/'
+        : isAccountView
+          ? ''
+          : '/';
 
     const activeTabConfig = getActiveTabConfig({
         tabs,
