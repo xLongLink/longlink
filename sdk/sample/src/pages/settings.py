@@ -1,10 +1,8 @@
-from longlink import Router, Page
+from src.app import app
+from longlink import Page
 
 
-router = Router()
-
-
-@router.page("/settings", name="Settings", icon="settings")
+@app.page("/settings", name="Settings", icon="settings")
 async def settings_page() -> Page:
     page = Page()
 

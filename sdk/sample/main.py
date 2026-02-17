@@ -3,11 +3,11 @@
 
 
 from src.app import app
-from src.routes.sample import router as sample_router
-from src.pages.settings import router as settings_router
 
-app.register(sample_router)
-app.register(settings_router)
+
+# Register routes
+import src.routes.sample
+import src.pages.settings
 
 
 if __name__ == '__main__':
