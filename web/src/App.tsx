@@ -7,14 +7,12 @@ import { RequireAuth } from '@/components/Auth';
 // Import pages
 import Login from '@/pages/user/Login';
 import Profile from '@/pages/user/Profile';
-import Organizations from '@/pages/user/Organizations';
 import ViaVai from '@/pages/user/ViaVai';
 import NotFound from '@/pages/NotFound';
 
 // Organization related pages
 import Tools from '@/pages/org/Tools';
 import People from '@/pages/org/People';
-import Overview from '@/pages/org/Overview';
 import Workflows from '@/pages/org/Workflows';
 import Solutions from '@/pages/org/Solutions';
 import SettingsPage from '@/pages/org/Settings';
@@ -27,7 +25,18 @@ const router = createBrowserRouter([
                 <Layout />
             </RequireAuth>
         ),
-        children: [{ index: true, element: <Organizations /> }],
+        children: [
+            { index: true, element: <Navigate to="/tools" replace /> },
+            { path: 'tools', element: <Tools /> },
+            { path: 'people', element: <People /> },
+            { path: 'solutions', element: <Solutions /> },
+            { path: 'workflows', element: <Workflows /> },
+            { path: 'settings', element: <SettingsPage /> },
+            {
+                path: 'apps/:app/*',
+                element: <ViaVai />,
+            },
+        ],
     },
     { path: '/login', element: <Login /> },
     {
@@ -71,24 +80,6 @@ const router = createBrowserRouter([
             </RequireAuth>
         ),
         children: [{ index: true, element: <ViaVai /> }],
-    },
-    {
-        path: '/:country/:org',
-        element: <Layout />,
-        children: [
-            { index: true, element: <Overview /> },
-            { path: 'tools', element: <Tools /> },
-            { path: 'people', element: <People /> },
-            { path: 'solutions', element: <Solutions /> },
-            { path: 'workflows', element: <Workflows /> },
-            { path: 'settings', element: <SettingsPage /> },
-
-            // dynamic modules
-            {
-                path: 'apps/:app/*',
-                element: <ViaVai />,
-            },
-        ],
     },
     { path: '*', element: <NotFound /> },
 ]);

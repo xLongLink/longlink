@@ -5,7 +5,6 @@ import {
     FileText,
     GitBranch,
     Layers,
-    LayoutGrid,
     Settings,
     Sparkles,
     User,
@@ -21,7 +20,6 @@ export type NavigationTab = {
 };
 
 const organizationTabs: NavigationTab[] = [
-    { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
     { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
     { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
     {
@@ -35,7 +33,7 @@ const organizationTabs: NavigationTab[] = [
 ];
 
 const defaultAppTabs: NavigationTab[] = [
-    { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+    { value: 'overview', label: 'Overview', path: '', icon: FileText },
     { value: 'data', label: 'Data', path: 'data', icon: FileText },
     { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ];
@@ -47,7 +45,7 @@ const accountTabs: NavigationTab[] = [
 
 const appTabsByName: Record<string, NavigationTab[]> = {
     viavai: [
-        { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+        { value: 'overview', label: 'Overview', path: '', icon: FileText },
         {
             value: 'automations',
             label: 'Automations',
@@ -68,7 +66,7 @@ const appTabsByName: Record<string, NavigationTab[]> = {
         },
     ],
     atlas: [
-        { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+        { value: 'overview', label: 'Overview', path: '', icon: FileText },
         { value: 'models', label: 'Models', path: 'models', icon: Layers },
         { value: 'reports', label: 'Reports', path: 'reports', icon: FileText },
         {
@@ -79,7 +77,7 @@ const appTabsByName: Record<string, NavigationTab[]> = {
         },
     ],
     pulse: [
-        { value: 'overview', label: 'Overview', path: '', icon: LayoutGrid },
+        { value: 'overview', label: 'Overview', path: '', icon: FileText },
         {
             value: 'streams',
             label: 'Streams',
@@ -102,14 +100,17 @@ export type TabsConfig = {
 };
 
 export function getTabsConfig({
-    org,
+    section,
     app,
 }: {
-    org?: string;
+    section: 'account' | 'organization';
     app?: string;
 }): TabsConfig {
     const appTabs = app ? (appTabsByName[app] ?? defaultAppTabs) : null;
-    const tabs = org ? (appTabs ?? organizationTabs) : accountTabs;
+    const tabs =
+        section === 'organization'
+            ? (appTabs ?? organizationTabs)
+            : accountTabs;
     const basePathSuffix = app ? `apps/${app}` : undefined;
 
     return { tabs, basePathSuffix };
