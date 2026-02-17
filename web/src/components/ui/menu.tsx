@@ -240,8 +240,17 @@ export function MenuList({ className, children }: MenuListProps) {
         []
     );
 
-    const toggleExpanded = (sectionValue: string) => {
+    const toggleExpanded = (
+        sectionValue: string,
+        options: {
+            preserveIfExpanded?: boolean;
+        } = {}
+    ) => {
         setExpandedSectionIds((previous) => {
+            if (options.preserveIfExpanded && previous.has(sectionValue)) {
+                return previous;
+            }
+
             const next = new Set(previous);
             if (next.has(sectionValue)) {
                 next.delete(sectionValue);
@@ -289,7 +298,10 @@ export function MenuList({ className, children }: MenuListProps) {
                                 onClick={() => {
                                     onValueChange(section.value);
                                     if (hasSubSections) {
-                                        toggleExpanded(section.value);
+                                        toggleExpanded(section.value, {
+                                            preserveIfExpanded:
+                                                !sectionIsActive,
+                                        });
                                     }
                                 }}
                             >
