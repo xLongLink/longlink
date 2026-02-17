@@ -1,15 +1,19 @@
-# TODO: Local settings vs global settings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# TODO: When the application starts, the settings are called to load
-# TODO: When the settings change, the application must be notified to reload them
-# TODO: Application specific settings can be set in the app
+# ORG_ Are organizations env
+# APP_ Are application env
+
+class Settings(BaseSettings):
+    app_name: str
+    debug: bool = False
+    database_url: str
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8"
+    )
 
 
-class Settings:
-    pass
-
-
-
-
+settings = Settings() # type: ignore
 
