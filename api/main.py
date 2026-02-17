@@ -40,15 +40,12 @@ app.include_router(router)
 if __name__ == '__main__':
     import asyncio
     import uvicorn
-    from dotenv import load_dotenv
 
     import src.db as db
 
     async def register_sample_app() -> None:
         await db.apps.create('sample', 'http://localhost:1707')
 
-    load_dotenv('.env.sample')
-    load_dotenv('.env', override=True)
     asyncio.run(register_sample_app())
 
     uvicorn.run(
