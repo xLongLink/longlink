@@ -3,6 +3,22 @@ import src.db as db
 from fastapi import HTTPException, Request
 from authlib.integrations.starlette_client import OAuth
 
+"""
+TODO: We do not create a new authentication system, instead we integrate with existing Identity Providers (IdP)
+- SAML 2.0
+- OpenID Connect (OIDC)
+- OAuth 2.0
+
+IdP
+- Microsoft Entra ID (formerly Azure AD)
+- Okta
+- Ping Identity
+- Auth0
+- Google Workspace
+
+TODO: MFA (Multi-Factor Authentication)
+TODO: Enterprise SCIM 2.0 Support
+"""
 
 oauth = OAuth()
 AVAILABLE_AUTH_METHODS: list[str] = []
