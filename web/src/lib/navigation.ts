@@ -20,6 +20,7 @@ export type NavigationTab = {
 
 const organizationTabs: NavigationTab[] = [
     { value: 'apps', label: 'Apps', path: 'apps', icon: FolderKanban },
+    { value: 'viavai', label: 'ViaVai', path: 'viavai', icon: Sparkles },
     { value: 'people', label: 'People', path: 'people', icon: Users },
     { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ];
