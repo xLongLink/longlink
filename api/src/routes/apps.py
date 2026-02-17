@@ -2,6 +2,8 @@ import httpx
 from fastapi import Request, Response, HTTPException
 from src.router import router
 
+import src.db as db
+
 APP_BACKEND_URL = "http://localhost:1707"
 
 ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
@@ -66,6 +68,12 @@ async def proxy_request(req: Request, app_id: str, full_path: str = "") -> Respo
             status_code=502,
             detail=f"Could not reach app backend: {exc}",
         )
+
+
+
+@router.get('/apps')
+async def list_apps() -> list[str]:
+    return await db.apps.list_names()
 
 
 # This shall return the root configs of the APP, suche as the name, the tabs, ecc
