@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from src.db.models import Org, OrgMember, User
+from src.db.models import User
 from src.db.session import get_session
 
 
@@ -69,15 +69,3 @@ class UsersService:
             await session.commit()
             await session.refresh(user)
             return user
-
-    async def orgs(self, user_id: int) -> list[Org]:
-        """Retrieve organizations assigned to a user."""
-
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(
-                select(Org)
-                .join(OrgMember, Org.id == OrgMember.id_org)
-                .where(OrgMember.id_user == user_id)
-            )
-            return list(result.scalars().all())
