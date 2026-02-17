@@ -1,1 +1,1 @@
-"""Test package for SDK unittest discovery."""
+# Placeholder, do not implement anything for now
