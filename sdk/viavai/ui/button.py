@@ -1,10 +1,10 @@
 from typing import Literal, TypeAlias
 from dataclasses import dataclass, field
-from src.ui.__root__ import Component
+from .__root__ import Component
 
 
 # Importing components that can be used in a Button dialog
-from src.ui.dialog import Dialog
+from .dialog import Dialog
 
 
 ButtonVariants: TypeAlias = Literal[
