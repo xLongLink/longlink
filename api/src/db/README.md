@@ -21,7 +21,7 @@ Import the database layer once and use the service instances:
 import src.db as db
 
 user = await db.users.get(1)
-app = await db.apps.create('Acme')
+app = await db.apps.create('Acme', 'https://acme.example.com')
 ```
 
 ## Adding new models
