@@ -6,8 +6,11 @@ from src.app import app
 from src.routes.sample import router as sample_router
 from src.pages.settings import router as settings_router
 
-app.register(sample_router)
-app.register(settings_router)
+
+if not getattr(app, "_sample_routes_registered", False):
+    app.register(sample_router)
+    app.register(settings_router)
+    app._sample_routes_registered = True
 
 
 if __name__ == '__main__':
@@ -22,4 +25,3 @@ if __name__ == '__main__':
         reload=True,
         access_log=False,
     )
-
