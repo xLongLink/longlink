@@ -41,12 +41,6 @@ const defaultAppTabs: NavigationTab[] = [
 ];
 
 const accountTabs: NavigationTab[] = [
-    {
-        value: 'organizations',
-        label: 'Organizations',
-        path: 'organizations',
-        icon: Users,
-    },
     { value: 'profile', label: 'Profile', path: 'profile', icon: User },
     { value: 'viavai', label: 'ViaVai', path: 'viavai', icon: Sparkles },
 ];
