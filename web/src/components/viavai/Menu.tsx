@@ -1,7 +1,9 @@
 import {
     Children,
     isValidElement,
+    useEffect,
     useMemo,
+    useState,
     type ReactElement,
     type ReactNode,
 } from 'react';
@@ -54,6 +56,22 @@ type NormalizedSection = {
     rootSubSection?: NormalizedSubSection;
     subSections: NormalizedSubSection[];
 };
+
+function getDefaultActiveValue(
+    sections: NormalizedSection[]
+): string | undefined {
+    const firstSection = sections[0];
+
+    if (!firstSection) {
+        return undefined;
+    }
+
+    if (firstSection.rootSubSection) {
+        return firstSection.id;
+    }
+
+    return firstSection.subSections[0]?.id ?? firstSection.id;
+}
 
 const iconByName: Record<string, LucideIcon> = {
     table: Table2,
@@ -135,13 +153,39 @@ export function MenuSubSection({ children }: MenuSubSectionProps) {
 
 export function Menu({ children }: MenuProps) {
     const sections = useMemo(() => normalizeSections(children), [children]);
+    const [activeValue, setActiveValue] = useState<string | undefined>(() =>
+        getDefaultActiveValue(sections)
+    );
+
+    useEffect(() => {
+        if (!sections.length) {
+            setActiveValue(undefined);
+            return;
+        }
+
+        const hasActiveValue = sections.some(
+            (section) =>
+                section.id === activeValue ||
+                section.subSections.some(
+                    (subSection) => subSection.id === activeValue
+                )
+        );
+
+        if (!hasActiveValue) {
+            setActiveValue(getDefaultActiveValue(sections));
+        }
+    }, [activeValue, sections]);
 
     if (!sections.length) {
         return null;
     }
 
     return (
-        <BaseMenu ariaLabel="ViaVai menu">
+        <BaseMenu
+            value={activeValue}
+            onValueChange={setActiveValue}
+            ariaLabel="ViaVai menu"
+        >
             <aside className="w-64">
                 <MenuList>
                     {sections.map((section) => (
