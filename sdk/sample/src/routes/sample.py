@@ -6,11 +6,6 @@ router = Router()
 
 @router.get("/sample")
 async def sample_get_endpoint():
-    app.setting("sample_setting", "sample_value")
-
-    with app.open("sample_file.txt", "w") as f:
-        pass
-
     return "Sample GET endpoint received data"
 
 

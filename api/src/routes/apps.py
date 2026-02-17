@@ -28,9 +28,11 @@ client = httpx.AsyncClient(
 
 
 async def proxy_request(req: Request, app_id: str, full_path: str = "") -> Response:
-    path = f"/apps/{app_id}"
+    path = f"{app_id}"
     if full_path:
         path += f"/{full_path}"
+
+    print(path)
 
     headers = {
         k: v
@@ -66,6 +68,7 @@ async def proxy_request(req: Request, app_id: str, full_path: str = "") -> Respo
         )
 
 
+# This shall return the root configs of the APP, suche as the name, the tabs, ecc
 @router.api_route("/apps/{app_id}", methods=ALLOWED_METHODS)
 async def proxy_root(req: Request, app_id: str):
     return await proxy_request(req, app_id)

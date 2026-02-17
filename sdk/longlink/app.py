@@ -2,6 +2,7 @@ from typing import get_type_hints
 from pydantic import BaseModel
 from longlink.cron import Cron
 from longlink.router import Router
+from longlink.settings import Settings
 
 
 class LongLink(Router, Cron):
@@ -9,6 +10,7 @@ class LongLink(Router, Cron):
         self.title = title
         self.description = description
         self.version = version
+        self.settings = Settings()
         super().__init__()
 
     async def __call__(self, scope, receive, send):
