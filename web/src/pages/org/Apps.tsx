@@ -1,4 +1,5 @@
 import { Plus, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -8,8 +9,33 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/components/ui/empty';
+import { Input } from '@/components/ui/input';
+import { useApps } from '@/hooks/use-apps';
 
 export default function Apps() {
+    const { apps, isLoading, error, createApp } = useApps();
+    const [name, setName] = useState('');
+    const [url, setUrl] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
+
+    const onCreateApp = async () => {
+        if (!name.trim() || !url.trim()) {
+            return;
+        }
+
+        try {
+            setIsCreating(true);
+            await createApp({
+                name: name.trim(),
+                url: url.trim(),
+            });
+            setName('');
+            setUrl('');
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -21,29 +47,70 @@ export default function Apps() {
                         <h1 className="text-lg font-semibold text-white">
                             Apps
                         </h1>
-                        <p className="text-sm text-white/60">0 apps</p>
+                        <p className="text-sm text-white/60">
+                            {apps.length} apps
+                        </p>
                     </div>
                 </div>
-                <Button variant="outline">
-                    <Plus className="h-4 w-4" />
-                    New App
-                </Button>
             </div>
 
-            <Card className="p-10 text-center">
-                <Empty>
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <Sparkles />
-                        </EmptyMedia>
-                        <EmptyTitle>No Apps Yet</EmptyTitle>
-                        <EmptyDescription>
-                            You haven&apos;t added any apps yet. Get started by
-                            creating your first app.
-                        </EmptyDescription>
-                    </EmptyHeader>
-                </Empty>
+            <Card className="space-y-3 p-4">
+                <p className="text-sm text-white/60">Create a new app</p>
+                <div className="grid gap-3 md:grid-cols-3">
+                    <Input
+                        placeholder="App name"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                    />
+                    <Input
+                        placeholder="http://localhost:1707/my-app"
+                        value={url}
+                        onChange={(event) => setUrl(event.target.value)}
+                    />
+                    <Button
+                        variant="outline"
+                        onClick={() => void onCreateApp()}
+                        disabled={isCreating}
+                    >
+                        <Plus className="h-4 w-4" />
+                        New App
+                    </Button>
+                </div>
             </Card>
+
+            {isLoading ? (
+                <Card className="p-10 text-center text-white/60">
+                    Loading apps...
+                </Card>
+            ) : error ? (
+                <Card className="p-10 text-center text-red-300">{error}</Card>
+            ) : apps.length === 0 ? (
+                <Card className="p-10 text-center">
+                    <Empty>
+                        <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                                <Sparkles />
+                            </EmptyMedia>
+                            <EmptyTitle>No Apps Yet</EmptyTitle>
+                            <EmptyDescription>
+                                You haven&apos;t added any apps yet. Get started
+                                by creating your first app.
+                            </EmptyDescription>
+                        </EmptyHeader>
+                    </Empty>
+                </Card>
+            ) : (
+                <div className="grid gap-3">
+                    {apps.map((app) => (
+                        <Card key={app.id} className="space-y-1 p-4">
+                            <h2 className="font-medium text-white">
+                                {app.name}
+                            </h2>
+                            <p className="text-sm text-white/60">{app.url}</p>
+                        </Card>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
