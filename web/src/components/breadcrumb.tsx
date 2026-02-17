@@ -27,7 +27,7 @@ export function Breadcrumb() {
             : `/${country}/${org}`
         : '';
     const isAccountView = !org;
-    const accountRootPath = '/organizations';
+    const accountRootPath = '/';
     const activeTabConfig = getActiveTabConfig({
         tabs,
         locationPath: location.pathname,

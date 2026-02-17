@@ -56,12 +56,9 @@ export function UserProfile() {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    <Link
-                        to="/organizations"
-                        className="flex w-full items-center"
-                    >
+                    <Link to="/" className="flex w-full items-center">
                         <Building2 className="mr-2 h-4 w-4 text-white/70" />
-                        Organizations
+                        Dashboard
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
