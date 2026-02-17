@@ -19,6 +19,7 @@ class LongLink(Router, Cron):
                 "name": self.title,
                 "description": self.description,
                 "version": self.version,
+                "pages": self.pages(),
             }
 
     async def __call__(self, scope, receive, send):
@@ -51,8 +52,28 @@ class LongLink(Router, Cron):
         else:
             body = await handler()
 
+        is_page_handler = any(route.handler is handler for route in self._pages)
+
         return_type = get_type_hints(handler).get("return")
-        if return_type and isinstance(return_type, type) and issubclass(return_type, BaseModel):
+        if is_page_handler:
+            from longlink.ui import Page
+            import json
+
+            if return_type is not Page or not isinstance(body, Page):
+                await send({
+                    "type": "http.response.start",
+                    "status": 500,
+                    "headers": [(b"content-type", b"text/plain")],
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": b"Invalid response type. Page routes must return longlink.ui.Page.",
+                })
+                return
+
+            headers = [(b"content-type", b"application/json")]
+            body_bytes = json.dumps(list(body)).encode()
+        elif return_type and isinstance(return_type, type) and issubclass(return_type, BaseModel):
             if not isinstance(body, return_type):
                 await send({
                     "type": "http.response.start",
