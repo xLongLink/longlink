@@ -5,17 +5,22 @@ from authlib.integrations.starlette_client import OAuth
 
 
 oauth = OAuth()
-oauth.register(
-    name='github',
-    client_id=os.getenv('GITHUB_CLIENT_ID'),
-    client_secret=os.getenv('GITHUB_CLIENT_SECRET'),
-    access_token_url='https://github.com/login/oauth/access_token',
-    authorize_url='https://github.com/login/oauth/authorize',
-    api_base_url='https://api.github.com/',
-    userinfo_endpoint='https://api.github.com/user',
-    client_kwargs={'scope': 'read:user user:email'},
-    redirect_uri='https://api.swissgpu.ch/auth/github',
-)
+AVAILABLE_AUTH_METHODS: list[str] = []
+
+
+if os.getenv('GITHUB_CLIENT_ID') and os.getenv('GITHUB_CLIENT_SECRET'):
+    oauth.register(
+        name='github',
+        client_id=os.getenv('GITHUB_CLIENT_ID'),
+        client_secret=os.getenv('GITHUB_CLIENT_SECRET'),
+        access_token_url='https://github.com/login/oauth/access_token',
+        authorize_url='https://github.com/login/oauth/authorize',
+        api_base_url='https://api.github.com/',
+        userinfo_endpoint='https://api.github.com/user',
+        client_kwargs={'scope': 'read:user user:email'},
+        redirect_uri='https://api.swissgpu.ch/auth/github',
+    )
+    AVAILABLE_AUTH_METHODS.append('github')
 
 
 async def authuser(request: Request) -> db.User:

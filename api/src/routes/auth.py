@@ -1,7 +1,7 @@
 import src.db as db
 from typing import cast
-from fastapi import Request
-from src.auth import oauth
+from fastapi import Request, HTTPException
+from src.auth import oauth, AVAILABLE_AUTH_METHODS
 from src.router import router
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
@@ -10,8 +10,16 @@ from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 URL = 'http://localhost:5173'
 
 
+@router.get('/login')
+async def login_methods():
+    return {'methods': AVAILABLE_AUTH_METHODS}
+
+
 @router.get('/login/github')
 async def login_github(request: Request):
+    if 'github' not in AVAILABLE_AUTH_METHODS:
+        raise HTTPException(404, 'Authentication method not available')
+
     github = cast(StarletteOAuth2App, oauth.create_client('github'))
 
     return await github.authorize_redirect(
@@ -22,6 +30,9 @@ async def login_github(request: Request):
 
 @router.get('/auth/github')
 async def auth_github(request: Request):
+    if 'github' not in AVAILABLE_AUTH_METHODS:
+        raise HTTPException(404, 'Authentication method not available')
+
     github = cast(StarletteOAuth2App, oauth.create_client('github'))
 
     token = await github.authorize_access_token(request)
