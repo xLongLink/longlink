@@ -25,7 +25,7 @@ for py_file in MODELS_PATH.glob("*.py"):
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
 
-from viavai.database.base import Base, engine
+from longlink.database.base import Base, engine
 
 
 def make_migrations():
