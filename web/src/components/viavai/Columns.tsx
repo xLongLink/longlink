@@ -1,17 +1,14 @@
 import { type ReactNode } from 'react';
 
-
 type ColumnsProps = {
     widths: number[];
     children?: ReactNode;
 };
 
-
 type ColumnProps = {
     width?: number;
     children?: ReactNode;
 };
-
 
 function toGridTemplate(widths: number[]) {
     const total = widths.reduce((sum, width) => sum + width, 0);
@@ -20,9 +17,10 @@ function toGridTemplate(widths: number[]) {
         return `repeat(${widths.length || 1}, minmax(0, 1fr))`;
     }
 
-    return widths.map((width) => `minmax(0, ${(width / total) * 100}%)`).join(' ');
+    return widths
+        .map((width) => `minmax(0, ${(width / total) * 100}%)`)
+        .join(' ');
 }
-
 
 export function Columns({ widths, children }: ColumnsProps) {
     return (
