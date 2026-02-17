@@ -22,3 +22,5 @@ The SDK allows to create new apps for the platform with python. It
 - `viavai publish`: Publishes the app to the platform.
 
 The SDK allows to create the tabs that will be visible in the web application for the app, on the app side, are python objects that return a json schema that the web app will interpret and render.
+
+For the time being, DO NOT WRITE ANY TEST CASE
