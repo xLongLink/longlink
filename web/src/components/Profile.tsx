@@ -1,4 +1,4 @@
-import { Building2, LogOut, User } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import {
     DropdownMenu,
@@ -55,12 +55,6 @@ export function UserProfile() {
                     </DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
-                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    <Link to="/" className="flex w-full items-center">
-                        <Building2 className="mr-2 h-4 w-4 text-white/70" />
-                        Dashboard
-                    </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
                     <Link to="/profile" className="flex w-full items-center">
                         <User className="mr-2 h-4 w-4 text-white/70" />
