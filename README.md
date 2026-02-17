@@ -21,3 +21,27 @@ Each app provides specific functionalities to the organization, they are divided
 - `Tools`: Long living apps that provide core functionalities to the organization
 - `Entities`: Apps that represent real world entities, usually connected to a client or a supplier
 - `Projects`: Apps that represent projects, internal or external
+
+## Development
+
+Run the frontend in development mode:
+
+```bash
+bun --cwd=web install
+bun --cwd=web dev
+```
+
+Run the backend in development mode:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate # On Windows use `.venv\Scripts\activate`
+pip install -r api/requirements.txt
+python api/main.py
+```
+
+Run the sample app in development mode:
+
+```bash
+pip install -e sdk
+```
