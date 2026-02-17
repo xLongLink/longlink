@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
@@ -15,14 +16,14 @@ import SettingsPage from '@/pages/org/Settings';
 import Apps from '@/pages/org/Apps';
 import ViaVai from '@/pages/org/ViaVai';
 
+const withAuth = (element: ReactElement) => (
+    <RequireAuth>{element}</RequireAuth>
+);
+
 const router = createBrowserRouter([
     {
         path: '/',
-        element: (
-            <RequireAuth>
-                <Layout />
-            </RequireAuth>
-        ),
+        element: withAuth(<Layout />),
         children: [
             { index: true, element: <Navigate to="/apps" replace /> },
             { path: 'apps', element: <Apps /> },
@@ -38,47 +39,23 @@ const router = createBrowserRouter([
     { path: '/login', element: <Login /> },
     {
         path: '/profile',
-        element: (
-            <RequireAuth>
-                <Layout />
-            </RequireAuth>
-        ),
+        element: withAuth(<Layout />),
         children: [{ index: true, element: <Profile /> }],
     },
     {
         path: '/organizations',
-        element: <Navigate to="/" replace />,
+        element: withAuth(<Navigate to="/" replace />),
     },
     {
         path: '/organization',
-        element: <Navigate to="/" replace />,
-    },
-    {
-        path: '/home',
-        element: <Navigate to="/" replace />,
-    },
-    {
-        path: '/home/privacy',
-        element: <Navigate to="/" replace />,
-    },
-    {
-        path: '/home/tos',
-        element: <Navigate to="/" replace />,
-    },
-    {
-        path: '/home/impressum',
-        element: <Navigate to="/" replace />,
+        element: withAuth(<Navigate to="/" replace />),
     },
     {
         path: '/viavai',
-        element: (
-            <RequireAuth>
-                <Layout />
-            </RequireAuth>
-        ),
+        element: withAuth(<Layout />),
         children: [{ index: true, element: <ViaVai /> }],
     },
-    { path: '*', element: <NotFound /> },
+    { path: '*', element: withAuth(<NotFound />) },
 ]);
 
 export default function App() {
