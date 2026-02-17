@@ -7,26 +7,29 @@ import {
 } from '@/components/ui/breadcrumb';
 import {
     formatAppName,
-    formatOrganizationName,
     getActiveTabConfig,
     getTabsConfig,
 } from '@/lib/navigation';
 import { Link, useLocation, useParams } from 'react-router';
 
 export function Breadcrumb() {
-    const { country = '', org = '', app } = useParams();
+    const { app } = useParams();
     const location = useLocation();
-    const { tabs, basePathSuffix } = getTabsConfig({ org, app });
+    const isAccountView =
+        location.pathname.startsWith('/profile') ||
+        location.pathname.startsWith('/viavai');
+    const section = isAccountView ? 'account' : 'organization';
+    const { tabs, basePathSuffix } = getTabsConfig({ section, app });
 
-    const organizationName = formatOrganizationName(org || 'org');
     const appName = app ? formatAppName(app) : undefined;
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
-    const basePath = org
+    const basePath = app
         ? normalizedSuffix
-            ? `/${country}/${org}/${normalizedSuffix}`
-            : `/${country}/${org}`
-        : '';
-    const isAccountView = !org;
+            ? `/${normalizedSuffix}`
+            : '/'
+        : isAccountView
+          ? ''
+          : '/';
     const accountRootPath = '/';
     const activeTabConfig = getActiveTabConfig({
         tabs,
@@ -82,10 +85,10 @@ export function Breadcrumb() {
                                 render={(props) => (
                                     <Link
                                         {...props}
-                                        to={org ? `/${country}/${org}` : '/'}
+                                        to="/"
                                         className="text-sm font-semibold text-white/70"
                                     >
-                                        {organizationName}
+                                        Organization
                                     </Link>
                                 )}
                             />
@@ -98,7 +101,7 @@ export function Breadcrumb() {
                                         render={(props) => (
                                             <Link
                                                 {...props}
-                                                to={`/${country}/${org}/apps/${app}`}
+                                                to={`/apps/${app}`}
                                                 className="text-sm font-semibold text-white/70"
                                             >
                                                 {appName}
