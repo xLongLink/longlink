@@ -1,2 +1,74 @@
+from dataclasses import dataclass, field
+
+from .__root__ import Component
+from .tabs import Tab, Tabs
+from .button import Button, ButtonVariants
+from .columns import Column, Columns
+from .hero import Hero
+from .input import Input
+from .menu import Menu
+from .separator import Separator
+from .table import Table
+
+
+@dataclass
 class Page:
-    pass 
+    """Top-level component that represents a page in the UI."""
+
+    _children: list[Component] = field(default_factory=list)
+
+    def hero(self, title: str, subtitle: str | None = None) -> Hero:
+        hero = Hero(title=title, subtitle=subtitle)
+        self._children.append(hero)
+        return hero
+
+    def table(self, data: list[dict]) -> Table:
+        table = Table(data=data)
+        self._children.append(table)
+        return table
+
+    def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
+        button = Button(text=text, variant=variant)
+        self._children.append(button)
+        return button
+
+    def columns(self, widths: list[int]) -> list[Column]:
+        columns = Columns()
+        self._children.append(columns)
+        return [columns.column(width=width) for width in widths]
+
+    def menu(self) -> Menu:
+        menu = Menu()
+        self._children.append(menu)
+        return menu
+
+    def tabs(self, names: list[str]) -> list[Tab]:
+        tabs = Tabs()
+        self._children.append(tabs)
+        return [tabs.tab(name=name) for name in names]
+
+
+    def input(
+        self,
+        label: str | None = None,
+        placeholder: str | None = None,
+        description: str | None = None,
+        submit: str | None = None,
+    ) -> Input:
+        input_component = Input(
+            label=label,
+            placeholder=placeholder,
+            description=description,
+            submit=submit,
+        )
+        self._children.append(input_component)
+        return input_component
+
+    def separator(self) -> Separator:
+        separator = Separator()
+        self._children.append(separator)
+        return separator
+
+    def __iter__(self):
+        for component in self._children:
+            yield dict(component)

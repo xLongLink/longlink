@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
 
-from src.ui.__root__ import Component
-from src.ui.button import Button, ButtonVariants
-from src.ui.hero import Hero
-from src.ui.separator import Separator
-from src.ui.table import Table
+from .__root__ import Component
+from .button import Button, ButtonVariants
+from .hero import Hero
+from .separator import Separator
+from .table import Table
 
 
 @dataclass

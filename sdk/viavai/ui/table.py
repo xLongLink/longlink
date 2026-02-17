@@ -1,6 +1,6 @@
 from typing import Literal, TypeAlias
 from dataclasses import dataclass, field
-from src.ui.__root__ import Component
+from .__root__ import Component
 
 
 Alignments: TypeAlias = Literal['left', 'center', 'right']

@@ -1,6 +1,6 @@
 from typing import Literal, TypeAlias
 from dataclasses import dataclass, field
-from src.ui.__root__ import Component
+from .__root__ import Component
 
 
 # Generic input. This can be extended to support specific types of input, like text, number, select, etc. For now, it's just a placeholder.

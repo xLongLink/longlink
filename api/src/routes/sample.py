@@ -1,5 +1,5 @@
 from src.router import router
-from src.ui import Page
+from viavai import Page
 
 
 @router.get('/sample/page')
