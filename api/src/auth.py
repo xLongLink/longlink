@@ -1,7 +1,7 @@
-import os
 import src.db as db
 from fastapi import HTTPException, Request
 from authlib.integrations.starlette_client import OAuth
+from src.settings import settings
 
 """
 TODO: We do not create a new authentication system, instead we integrate with existing Identity Providers (IdP)
@@ -24,11 +24,11 @@ oauth = OAuth()
 AVAILABLE_AUTH_METHODS: list[str] = []
 
 
-if os.getenv('GITHUB_CLIENT_ID') and os.getenv('GITHUB_CLIENT_SECRET'):
+if settings.GITHUB_CLIENT_ID and settings.GITHUB_CLIENT_SECRET:
     oauth.register(
         name='github',
-        client_id=os.getenv('GITHUB_CLIENT_ID'),
-        client_secret=os.getenv('GITHUB_CLIENT_SECRET'),
+        client_id=settings.GITHUB_CLIENT_ID,
+        client_secret=settings.GITHUB_CLIENT_SECRET,
         access_token_url='https://github.com/login/oauth/access_token',
         authorize_url='https://github.com/login/oauth/authorize',
         api_base_url='https://api.github.com/',
