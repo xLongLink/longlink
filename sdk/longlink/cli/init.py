@@ -2,11 +2,11 @@ import os
 import shutil
 import click
 from pathlib import Path
-from viavai.constants import PATH
+from longlink.constants import PATH
 
 
 def setup(folder: Path):
-    """Initialize a new viavai project"""
+    """Initialize a new longlink project"""
     sample_path = PATH / "sample"
     os.makedirs(folder, exist_ok=True)
     shutil.copytree(sample_path, folder, dirs_exist_ok=True)

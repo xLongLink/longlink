@@ -1,4 +1,4 @@
-from viavai import Page
+from longlink import Page
 
 page = Page()
 
