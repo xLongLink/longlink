@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 
-from src.ui.__root__ import Component
-from src.ui.tabs import Tab, Tabs
-from src.ui.button import Button, ButtonVariants
-from src.ui.columns import Column, Columns
-from src.ui.hero import Hero
-from src.ui.input import Input
-from src.ui.separator import Separator
-from src.ui.table import Table
+from .__root__ import Component
+from .tabs import Tab, Tabs
+from .button import Button, ButtonVariants
+from .columns import Column, Columns
+from .hero import Hero
+from .input import Input
+from .separator import Separator
+from .table import Table
 
 
 @dataclass

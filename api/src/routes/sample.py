@@ -1,5 +1,5 @@
 from src.router import router
-from src.ui import Page
+from viavai import Page
 
 
 # A LongLink page takes a URL, with folders and stuff. If it's not possible to show in a single

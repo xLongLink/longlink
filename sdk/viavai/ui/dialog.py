@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from src.ui.__root__ import Component
+from .__root__ import Component
 
 
 # Importing components that can be used in a Page
-from src.ui.hero import Hero
-from src.ui.input import Input
+from .hero import Hero
+from .input import Input
 
 
 @dataclass
