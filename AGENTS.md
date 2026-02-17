@@ -1,7 +1,5 @@
 # AGENTS.md
 
-You are working on LongLink, a modular project hub platform inspired by GitHub. The platform allows organizations to manage tools, processes, projects, and workflows through automation and connections. Each organization has its own database and storage space, and apps can be installed with a single click to provide specific functionalities.
-
 The project is divided into three folders:
 
 - `api` - Backend API - FastAPI application
@@ -13,12 +11,6 @@ The project is divided into three folders:
 The API is responsible for the login and management of organizations, users, modules, and data.
 
 # WEB
-
-The web application is a static frontend built with React and Shadcn UI for consistency. It contains:
-
-- Landing page
-- Organization’s overview page /<iso_country_code>/<org_name>
-- App-specific pages /<iso_country_code>/<org_name>/<app>
 
 ## APPs & SDK
 
