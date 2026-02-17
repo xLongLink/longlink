@@ -1,5 +1,7 @@
 # LongLink
 
+An Operational infrastructure for businesses
+
 Computers were created to store and safeguard information efficiently, making it easier to access while minimizing risk and reducing operational costs.
 Often in companies this is the case, informations ended up fragmented in spreadsheets, documents, emails. Originally, SASS startups have tried to solve this problem but overtime the goal has become to lock-in customers and charge them montly, resulting in an even more worse fragmentation. Small and medium companies that cannot afford to have a dedicated IT team, are often stuck with old and outdated setup, that place them in a competitive disadvantage.
 
@@ -20,4 +22,11 @@ Each app provides specific functionalities to the organization, they are divided
 - `Entities`: Apps that represent real world entities, usually connected to a client or a supplier
 - `Projects`: Apps that represent projects, internal or external
 
-Unified Business Infrastructure Layer
+## Development
+
+Site:
+
+```
+python .\api\main.py
+bun --cwd=web run dev
+```
