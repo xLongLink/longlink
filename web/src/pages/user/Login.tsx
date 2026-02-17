@@ -15,20 +15,18 @@ export default function Login() {
     const getDefaultReturnTo = () => {
         const referrer = document.referrer;
         if (!referrer) {
-            return '/organizations';
+            return '/';
         }
 
         try {
             const referrerUrl = new URL(referrer);
             if (referrerUrl.origin !== window.location.origin) {
-                return '/organizations';
+                return '/';
             }
             const referrerPath = `${referrerUrl.pathname}${referrerUrl.search}${referrerUrl.hash}`;
-            return referrerPath.startsWith('/login')
-                ? '/organizations'
-                : referrerPath;
+            return referrerPath.startsWith('/login') ? '/' : referrerPath;
         } catch {
-            return '/organizations';
+            return '/';
         }
     };
 
