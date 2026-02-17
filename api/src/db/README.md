@@ -20,9 +20,8 @@ Import the database layer once and use the service instances:
 ```python
 import src.db as db
 
-org = await db.orgs.create('Acme')
-await db.orgs.add(org.id, user.id, db.OrgRole.owner)
-app = await db.apps.create(org.id, 'Acme')
+user = await db.users.get(1)
+app = await db.apps.create('Acme')
 ```
 
 ## Adding new models
