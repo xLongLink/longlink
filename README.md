@@ -46,5 +46,5 @@ Finally run the api and a sample app:
 
 ```bash
 python api/main.py
-python sdk/longlink/sample/main.py
+python sdk/sample/main.py
 ```
