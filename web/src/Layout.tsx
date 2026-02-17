@@ -1,10 +1,4 @@
-import {
-    Link,
-    Outlet,
-    useLocation,
-    useNavigate,
-    useParams,
-} from 'react-router';
+import { Link, Outlet, useNavigate, useParams } from 'react-router';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserProfile } from '@/components/Profile';
@@ -21,13 +15,10 @@ type NavigationProps = {
 
 export default function Layout() {
     const { app } = useParams();
-    const location = useLocation();
-    const section =
-        location.pathname.startsWith('/profile') ||
-        location.pathname.startsWith('/viavai')
-            ? 'account'
-            : 'organization';
-    const { tabs, basePathSuffix } = getTabsConfig({ section, app });
+    const { tabs, basePathSuffix } = getTabsConfig({
+        section: 'organization',
+        app,
+    });
 
     return <Navigation tabs={tabs} basePathSuffix={basePathSuffix} />;
 }
@@ -35,19 +26,13 @@ export default function Layout() {
 export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
     const { app } = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
 
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
-    const isAccountView =
-        location.pathname.startsWith('/profile') ||
-        location.pathname.startsWith('/viavai');
     const basePath = app
         ? normalizedSuffix
             ? `/${normalizedSuffix}`
             : '/'
-        : isAccountView
-          ? ''
-          : '/';
+        : '/';
 
     const activeTabConfig = getActiveTabConfig({
         tabs,
