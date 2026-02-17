@@ -7,13 +7,13 @@ import { RequireAuth } from '@/components/Auth';
 // Import pages
 import Login from '@/pages/user/Login';
 import Profile from '@/pages/user/Profile';
-import ViaVai from '@/pages/user/ViaVai';
 import NotFound from '@/pages/NotFound';
 
 // Organization related pages
 import People from '@/pages/org/People';
 import SettingsPage from '@/pages/org/Settings';
 import Apps from '@/pages/org/Apps';
+import ViaVai from '@/pages/org/ViaVai';
 
 const router = createBrowserRouter([
     {
@@ -28,6 +28,7 @@ const router = createBrowserRouter([
             { path: 'apps', element: <Apps /> },
             { path: 'people', element: <People /> },
             { path: 'settings', element: <SettingsPage /> },
+            { path: 'viavai', element: <ViaVai /> },
             {
                 path: 'apps/:app/*',
                 element: <ViaVai />,
