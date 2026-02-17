@@ -7,34 +7,30 @@ import {
     TabsTrigger,
 } from '@/components/ui/tabs';
 
-
 type TabsProps = {
     tabs: string[];
     children?: ReactNode;
 };
-
 
 type TabProps = {
     name: string;
     children?: ReactNode;
 };
 
-
 export function Tab({ name, children }: TabProps) {
-    return (
-        <TabsContent value={name}>
-            {children}
-        </TabsContent>
-    );
+    return <TabsContent value={name}>{children}</TabsContent>;
 }
-
 
 export function Tabs({ tabs, children }: TabsProps) {
     return (
         <UITabs>
             <TabsList>
                 {tabs.map((tab) => (
-                    <TabsTrigger key={`tab-trigger-${tab}`} value={tab} className="cursor-pointer">
+                    <TabsTrigger
+                        key={`tab-trigger-${tab}`}
+                        value={tab}
+                        className="cursor-pointer"
+                    >
                         {tab}
                     </TabsTrigger>
                 ))}
