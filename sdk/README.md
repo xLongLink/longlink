@@ -1,4 +1,4 @@
-# ViaVai
+# LongLink
 
 Used to build and publish LongLink appliations.
 
@@ -11,20 +11,20 @@ Used to build and publish LongLink appliations.
 ## CLI
 
 ```
-viavai init <module>
-viavai login
-viavai logout
-viavai publish <module>
+longlink init <module>
+longlink login
+longlink logout
+longlink publish <module>
 ```
 
 ## Stanalone
 
 ```
-pip install viavai
+pip install longlink
 ```
 
 ```
-pip install viavai[standalone]
+pip install longlink[standalone]
 ```
 
 before update

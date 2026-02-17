@@ -1,6 +1,6 @@
 import unittest
 
-from viavai.router import Router
+from longlink.router import Router
 
 
 class TestRouter(unittest.TestCase):

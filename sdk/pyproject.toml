@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "viavai"
+name = "longlink"
 version = "0.0.0"
 dependencies = [
     "alembic",
@@ -41,4 +41,4 @@ Repository = "https://github.com/me/spam.git"
 Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
 [project.scripts]
-viavai = "viavai.__main__:main"
+longlink = "longlink.__main__:main"

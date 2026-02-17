@@ -1,5 +1,5 @@
 from alembic import context
-from viavai.database.base import Base, engine
+from longlink.database.base import Base, engine
 
 
 target_metadata = Base.metadata

@@ -1,15 +1,15 @@
 import click
 from pathlib import Path
-from viavai.cli import setup
+from longlink.cli import setup
 
 
 @click.group()
 def main():
-    """viavai command line interface"""
+    """longlink command line interface"""
     pass
 
 
-# viavai dev
+# longlink dev
 @main.command()
 def dev():
     import sys
@@ -27,11 +27,11 @@ def dev():
     )
 
 
-# viavai init --folder sample
+# longlink init --folder sample
 @main.command()
 @click.option('--folder', prompt='Enter folder name', help='Folder to initialize')
 def init(folder: str):
-    """Initialize a new viavai project"""
+    """Initialize a new longlink project"""
     folder_path = Path(folder)
     setup(folder_path)
 

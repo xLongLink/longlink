@@ -1,3 +1,3 @@
 from .ui import Page
-from .app import ViaVai
+from .app import LongLink
 from .router import Router

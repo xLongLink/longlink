@@ -1,9 +1,9 @@
-from viavai import ViaVai
+from longlink import LongLink
 
-app = ViaVai(
+app = LongLink(
     title="FastAPI Feature Demo",
     description="Single-file example of common FastAPI features",
     version="1.0.0"
 )
 
-# ViaVai -> app
+# LongLink -> app
