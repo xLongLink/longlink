@@ -40,7 +40,8 @@ app.include_router(router)
 if __name__ == '__main__':
     import uvicorn
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv('.env.sample')
+    load_dotenv('.env', override=True)
 
     uvicorn.run(
         'main:app',
