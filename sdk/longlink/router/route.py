@@ -63,3 +63,10 @@ class Route:
                 values[param_name] = query[query_key][0]
 
         return values
+
+
+class PageRoute(Route):
+    def __init__(self, template: str, handler: Handler, name: str, icon: str):
+        super().__init__("GET", template, handler)
+        self.name = name
+        self.icon = icon
