@@ -37,11 +37,14 @@ Run the backend in development mode:
 python -m venv .venv
 source .venv/bin/activate # On Windows use `.venv\Scripts\activate`
 pip install -r api/requirements.txt
-python api/main.py
+pip install -e sdk
+
+
 ```
 
-Run the sample app in development mode:
+Finally run the api and a sample app:
 
 ```bash
-pip install -e sdk
+python api/main.py
+python sdk/longlink/sample/main.py
 ```
