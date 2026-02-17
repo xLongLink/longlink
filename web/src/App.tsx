@@ -11,11 +11,9 @@ import ViaVai from '@/pages/user/ViaVai';
 import NotFound from '@/pages/NotFound';
 
 // Organization related pages
-import Tools from '@/pages/org/Tools';
 import People from '@/pages/org/People';
-import Workflows from '@/pages/org/Workflows';
-import Solutions from '@/pages/org/Solutions';
 import SettingsPage from '@/pages/org/Settings';
+import Apps from '@/pages/org/Apps';
 
 const router = createBrowserRouter([
     {
@@ -26,11 +24,9 @@ const router = createBrowserRouter([
             </RequireAuth>
         ),
         children: [
-            { index: true, element: <Navigate to="/tools" replace /> },
-            { path: 'tools', element: <Tools /> },
+            { index: true, element: <Navigate to="/apps" replace /> },
+            { path: 'apps', element: <Apps /> },
             { path: 'people', element: <People /> },
-            { path: 'solutions', element: <Solutions /> },
-            { path: 'workflows', element: <Workflows /> },
             { path: 'settings', element: <SettingsPage /> },
             {
                 path: 'apps/:app/*',

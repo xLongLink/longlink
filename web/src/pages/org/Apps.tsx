@@ -9,7 +9,7 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 
-export default function Tools() {
+export default function Apps() {
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -19,14 +19,14 @@ export default function Tools() {
                     </div>
                     <div>
                         <h1 className="text-lg font-semibold text-white">
-                            Tools
+                            Apps
                         </h1>
-                        <p className="text-sm text-white/60">0 tools</p>
+                        <p className="text-sm text-white/60">0 apps</p>
                     </div>
                 </div>
                 <Button variant="outline">
                     <Plus className="h-4 w-4" />
-                    New Tool
+                    New App
                 </Button>
             </div>
 
@@ -36,10 +36,10 @@ export default function Tools() {
                         <EmptyMedia variant="icon">
                             <Sparkles />
                         </EmptyMedia>
-                        <EmptyTitle>No Tools Yet</EmptyTitle>
+                        <EmptyTitle>No Apps Yet</EmptyTitle>
                         <EmptyDescription>
-                            You haven&apos;t added any tools yet. Get started by
-                            creating your first tool.
+                            You haven&apos;t added any apps yet. Get started by
+                            creating your first app.
                         </EmptyDescription>
                     </EmptyHeader>
                 </Empty>
