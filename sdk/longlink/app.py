@@ -13,6 +13,14 @@ class LongLink(Router, Cron):
         self.settings = Settings()
         super().__init__()
 
+        @self.get("/")
+        async def get_app_information():
+            return {
+                "name": self.title,
+                "description": self.description,
+                "version": self.version,
+            }
+
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return
@@ -64,11 +72,17 @@ class LongLink(Router, Cron):
             headers = [(b"content-type", b"application/json")]
             body_bytes = response_body.encode()
         else:
-            headers = [(b"content-type", b"text/plain")]
-            if isinstance(body, bytes):
-                body_bytes = body
+            if isinstance(body, dict):
+                import json
+
+                headers = [(b"content-type", b"application/json")]
+                body_bytes = json.dumps(body).encode()
             else:
-                body_bytes = str(body).encode()
+                headers = [(b"content-type", b"text/plain")]
+                if isinstance(body, bytes):
+                    body_bytes = body
+                else:
+                    body_bytes = str(body).encode()
 
         await send({
             "type": "http.response.start",
