@@ -7,7 +7,6 @@ import {
     Layers,
     Settings,
     Sparkles,
-    User,
     Users,
     Wrench,
 } from 'lucide-react';
@@ -29,11 +28,6 @@ const defaultAppTabs: NavigationTab[] = [
     { value: 'overview', label: 'Overview', path: '', icon: FileText },
     { value: 'data', label: 'Data', path: 'data', icon: FileText },
     { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
-];
-
-const accountTabs: NavigationTab[] = [
-    { value: 'profile', label: 'Profile', path: 'profile', icon: User },
-    { value: 'viavai', label: 'ViaVai', path: 'viavai', icon: Sparkles },
 ];
 
 const appTabsByName: Record<string, NavigationTab[]> = {
@@ -93,17 +87,14 @@ export type TabsConfig = {
 };
 
 export function getTabsConfig({
-    section,
+    section: _section,
     app,
 }: {
     section: 'account' | 'organization';
     app?: string;
 }): TabsConfig {
     const appTabs = app ? (appTabsByName[app] ?? defaultAppTabs) : null;
-    const tabs =
-        section === 'organization'
-            ? (appTabs ?? organizationTabs)
-            : accountTabs;
+    const tabs = appTabs ?? organizationTabs;
     const basePathSuffix = app ? `apps/${app}` : undefined;
 
     return { tabs, basePathSuffix };
