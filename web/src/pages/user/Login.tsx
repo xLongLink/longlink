@@ -1,16 +1,21 @@
 import { Chrome, Github, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { getApiBaseUrl } from '@/lib/api';
+import { apiFetch, getApiBaseUrl } from '@/lib/api';
 import { useUser } from '@/hooks/use-user';
+
+type LoginMethodsResponse = {
+    methods?: string[];
+};
 
 export default function Login() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, isLoading } = useUser();
     const apiBaseUrl = getApiBaseUrl();
+    const [availableMethods, setAvailableMethods] = useState<string[]>([]);
 
     const getDefaultReturnTo = () => {
         const referrer = document.referrer;
@@ -47,6 +52,32 @@ export default function Login() {
         }
     }, [isLoading, navigate, returnTo, user]);
 
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadLoginMethods = async () => {
+            try {
+                const data = await apiFetch<LoginMethodsResponse>('/login');
+                if (isMounted) {
+                    setAvailableMethods(data.methods ?? []);
+                }
+            } catch {
+                if (isMounted) {
+                    setAvailableMethods([]);
+                }
+            }
+        };
+
+        loadLoginMethods();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const hasGoogleMethod = availableMethods.includes('google');
+    const hasGithubMethod = availableMethods.includes('github');
+
     const handleGithubLogin = () => {
         window.location.href = `${apiBaseUrl}/login/github`;
     };
@@ -66,13 +97,17 @@ export default function Login() {
                     </div>
 
                     <div className="grid gap-3">
-                        <Button className="h-11 gap-2 bg-white text-slate-900 hover:bg-white/90">
+                        <Button
+                            className="h-11 gap-2 bg-white text-slate-900 hover:bg-white/90"
+                            disabled={!hasGoogleMethod}
+                        >
                             <Chrome className="h-4 w-4" />
                             Login with Google
                         </Button>
                         <Button
                             variant="outline"
                             className="h-11 gap-2"
+                            disabled={!hasGithubMethod}
                             onClick={handleGithubLogin}
                         >
                             <Github className="h-4 w-4" />
