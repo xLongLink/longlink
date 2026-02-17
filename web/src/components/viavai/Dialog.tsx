@@ -1,7 +1,10 @@
 import { type ReactElement, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { DialogClose, DialogContent, DialogFooter } from '@/components/ui/dialog';
-
+import {
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+} from '@/components/ui/dialog';
 
 type DialogProps = {
     trigger: ReactElement;
@@ -12,10 +15,15 @@ type DialogProps = {
     onOpenChange?: (open: boolean) => void;
 };
 
-
-export function Dialog({ confirm = 'Confirm', cancel = 'Cancel', children }: DialogProps) {
-    const cancelRender = <Button variant="outline" className="cursor-pointer" />
-    const confirmRender = <Button className="cursor-pointer" />
+export function Dialog({
+    confirm = 'Confirm',
+    cancel = 'Cancel',
+    children,
+}: DialogProps) {
+    const cancelRender = (
+        <Button variant="outline" className="cursor-pointer" />
+    );
+    const confirmRender = <Button className="cursor-pointer" />;
 
     return (
         <>
@@ -24,16 +32,12 @@ export function Dialog({ confirm = 'Confirm', cancel = 'Cancel', children }: Dia
                     {children}
                 </div>
                 <DialogFooter>
-                    <DialogClose render={cancelRender}>
-                        {cancel}
-                    </DialogClose>
-                    <DialogClose render={confirmRender}>
-                        {confirm}
-                    </DialogClose>
+                    <DialogClose render={cancelRender}>{cancel}</DialogClose>
+                    <DialogClose render={confirmRender}>{confirm}</DialogClose>
                 </DialogFooter>
             </DialogContent>
         </>
     );
 }
 
-export default Dialog
+export default Dialog;
