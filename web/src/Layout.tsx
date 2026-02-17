@@ -1,4 +1,10 @@
-import { Link, Outlet, useNavigate, useParams } from 'react-router';
+import {
+    Link,
+    Outlet,
+    useLocation,
+    useNavigate,
+    useParams,
+} from 'react-router';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserProfile } from '@/components/Profile';
@@ -25,6 +31,7 @@ export default function Layout() {
 
 export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
     const { app } = useParams();
+    const location = useLocation();
     const navigate = useNavigate();
 
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
@@ -39,7 +46,9 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
         locationPath: location.pathname,
         basePath,
     });
-    const activeTab = activeTabConfig?.value ?? tabs[0]?.value ?? 'overview';
+    const activeTab = location.pathname.startsWith('/profile')
+        ? 'apps'
+        : (activeTabConfig?.value ?? tabs[0]?.value ?? 'overview');
 
     return (
         <div className="min-h-screen text-white">
