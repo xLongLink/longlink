@@ -5,114 +5,68 @@ import {
     BreadcrumbList,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import {
-    formatAppName,
-    getActiveTabConfig,
-    getTabsConfig,
-} from '@/lib/navigation';
+import { formatAppName } from '@/lib/navigation';
 import { Link, useLocation, useParams } from 'react-router';
 
 export function Breadcrumb() {
     const { app } = useParams();
     const location = useLocation();
-    const isAccountView =
-        location.pathname.startsWith('/profile') ||
-        location.pathname.startsWith('/viavai');
-    const section = isAccountView ? 'account' : 'organization';
-    const { tabs, basePathSuffix } = getTabsConfig({ section, app });
 
     const appName = app ? formatAppName(app) : undefined;
-    const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
-    const basePath = app
-        ? normalizedSuffix
-            ? `/${normalizedSuffix}`
-            : '/'
-        : isAccountView
-          ? ''
-          : '/';
-    const accountRootPath = '/';
-    const activeTabConfig = getActiveTabConfig({
-        tabs,
-        locationPath: location.pathname,
-        basePath,
-    });
-    const accountBreadcrumbLabel = activeTabConfig?.label ?? 'Profile';
-    const accountBreadcrumbPath = `/${activeTabConfig?.path ?? ''}`.replace(
-        /\/$/,
-        ''
-    );
+    const isProfileView = location.pathname.startsWith('/profile');
 
     return (
         <UIBreadcrumb>
             <BreadcrumbList>
-                {isAccountView ? (
+                <BreadcrumbItem>
+                    <BreadcrumbLink
+                        render={(props) => (
+                            <Link
+                                {...props}
+                                to="/"
+                                className="text-sm font-semibold text-white/70"
+                            >
+                                Organization
+                            </Link>
+                        )}
+                    />
+                </BreadcrumbItem>
+                {appName ? (
                     <>
-                        <BreadcrumbItem>
-                            <BreadcrumbLink
-                                render={(props) => (
-                                    <Link
-                                        {...props}
-                                        to={accountRootPath}
-                                        className="text-sm font-semibold text-white/70"
-                                    >
-                                        User
-                                    </Link>
-                                )}
-                            />
-                        </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
                             <BreadcrumbLink
                                 render={(props) => (
                                     <Link
                                         {...props}
-                                        to={
-                                            accountBreadcrumbPath ||
-                                            accountRootPath
-                                        }
+                                        to={`/apps/${app}`}
                                         className="text-sm font-semibold text-white/70"
                                     >
-                                        {accountBreadcrumbLabel}
+                                        {appName}
                                     </Link>
                                 )}
                             />
                         </BreadcrumbItem>
                     </>
-                ) : (
+                ) : null}
+                {isProfileView ? (
                     <>
+                        <BreadcrumbSeparator />
                         <BreadcrumbItem>
                             <BreadcrumbLink
                                 render={(props) => (
                                     <Link
                                         {...props}
-                                        to="/"
+                                        to="/profile"
                                         className="text-sm font-semibold text-white/70"
                                     >
-                                        Organization
+                                        Profile
                                     </Link>
                                 )}
                             />
                         </BreadcrumbItem>
-                        {appName ? (
-                            <>
-                                <BreadcrumbSeparator />
-                                <BreadcrumbItem>
-                                    <BreadcrumbLink
-                                        render={(props) => (
-                                            <Link
-                                                {...props}
-                                                to={`/apps/${app}`}
-                                                className="text-sm font-semibold text-white/70"
-                                            >
-                                                {appName}
-                                            </Link>
-                                        )}
-                                    />
-                                </BreadcrumbItem>
-                            </>
-                        ) : null}
                     </>
-                )}
+                ) : null}
             </BreadcrumbList>
         </UIBreadcrumb>
     );
