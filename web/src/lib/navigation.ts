@@ -3,7 +3,7 @@ import {
     BarChart3,
     Boxes,
     FileText,
-    GitBranch,
+    FolderKanban,
     Layers,
     Settings,
     Sparkles,
@@ -20,14 +20,7 @@ export type NavigationTab = {
 };
 
 const organizationTabs: NavigationTab[] = [
-    { value: 'tools', label: 'Tools', path: 'tools', icon: Wrench },
-    { value: 'solutions', label: 'Solutions', path: 'solutions', icon: Layers },
-    {
-        value: 'workflows',
-        label: 'Workflows',
-        path: 'workflows',
-        icon: GitBranch,
-    },
+    { value: 'apps', label: 'Apps', path: 'apps', icon: FolderKanban },
     { value: 'people', label: 'People', path: 'people', icon: Users },
     { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ];
