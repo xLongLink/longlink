@@ -136,3 +136,4 @@ merge.py
 *.db
 
 .sample
+script.bat
