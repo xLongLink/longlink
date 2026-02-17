@@ -32,7 +32,7 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
         ? normalizedSuffix
             ? `/${normalizedSuffix}`
             : '/'
-        : '/';
+        : '';
 
     const activeTabConfig = getActiveTabConfig({
         tabs,
