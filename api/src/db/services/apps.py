@@ -1,5 +1,3 @@
-from typing import List
-
 from sqlalchemy import select
 
 from src.db.models import App
@@ -7,17 +5,17 @@ from src.db.session import get_session
 
 
 class AppsService:
-    async def list_names(self) -> List[str]:
-        """Return all registered app names."""
+    async def list(self) -> list[App]:
+        '''Return all registered apps.'''
 
         Session = await get_session()
         async with Session() as session:
-            statement = select(App.name)
+            statement = select(App)
             result = await session.execute(statement)
             return list(result.scalars().all())
 
     async def create(self, name: str, url: str) -> App:
-        """Add a new app to the database."""
+        '''Add a new app to the database.'''
 
         Session = await get_session()
         async with Session() as session:
