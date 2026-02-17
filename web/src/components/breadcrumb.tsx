@@ -33,7 +33,7 @@ export function Breadcrumb() {
         locationPath: location.pathname,
         basePath,
     });
-    const accountBreadcrumbLabel = activeTabConfig?.label ?? 'Organizations';
+    const accountBreadcrumbLabel = activeTabConfig?.label ?? 'Profile';
     const accountBreadcrumbPath = `/${activeTabConfig?.path ?? ''}`.replace(
         /\/$/,
         ''
