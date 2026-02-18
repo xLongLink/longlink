@@ -29,7 +29,6 @@ const router = createBrowserRouter([
             { path: 'apps', element: <Apps /> },
             { path: 'people', element: <People /> },
             { path: 'settings', element: <SettingsPage /> },
-            { path: 'viavai', element: <ViaVai /> },
             {
                 path: 'apps/:app/*',
                 element: <ViaVai />,
@@ -41,19 +40,6 @@ const router = createBrowserRouter([
         path: '/profile',
         element: withAuth(<Layout />),
         children: [{ index: true, element: <Profile /> }],
-    },
-    {
-        path: '/organizations',
-        element: withAuth(<Navigate to="/" replace />),
-    },
-    {
-        path: '/organization',
-        element: withAuth(<Navigate to="/" replace />),
-    },
-    {
-        path: '/viavai',
-        element: withAuth(<Layout />),
-        children: [{ index: true, element: <ViaVai /> }],
     },
     { path: '*', element: withAuth(<NotFound />) },
 ]);
