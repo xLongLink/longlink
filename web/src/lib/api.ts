@@ -63,7 +63,18 @@ export async function apiFetch<TResponse>(
     });
 
     if (!response.ok) {
-        const message = `API request failed (${response.status})`;
+        let message = `API request failed (${response.status})`;
+
+        try {
+            const errorBody = (await response.json()) as {
+                detail?: string;
+                message?: string;
+            };
+            message = errorBody.detail ?? errorBody.message ?? message;
+        } catch {
+            // Ignore JSON parse errors and keep the default message.
+        }
+
         throw new Error(message);
     }
 

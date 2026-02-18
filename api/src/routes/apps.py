@@ -83,10 +83,14 @@ async def list_apps() -> list[AppResponse]:
 
 @router.post('/apps')
 async def create_app(payload: AppCreate) -> AppResponse:
-    app = await db.apps.create(
-        name=payload.name,
-        url=payload.url,
-    )
+    try:
+        app = await db.apps.create(
+            name=payload.name,
+            url=payload.url,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
     return AppResponse(
         id=app.id,
         name=app.name,
