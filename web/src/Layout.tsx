@@ -6,13 +6,20 @@ import {
     useParams,
 } from 'react-router';
 import { Breadcrumb } from '@/components/breadcrumb';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserProfile } from '@/components/Profile';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useData } from '@/hooks/use-data';
 import {
     getActiveTabConfig,
+    getAppTabsFromPages,
     getTabsConfig,
     NavigationIcon,
+    type AppNavigationPage,
 } from '@/lib/navigation';
+
+type AppMetadata = {
+    pages?: AppNavigationPage[];
+};
 
 type NavigationProps = {
     tabs: ReturnType<typeof getTabsConfig>['tabs'];
@@ -21,9 +28,17 @@ type NavigationProps = {
 
 export default function Layout() {
     const { app } = useParams();
+    const appMetadataEndpoint = app ? `/apps/${app}` : null;
+
+    const { data: appMetadata } = useData<AppMetadata>(appMetadataEndpoint);
+    const appTabs = app
+        ? getAppTabsFromPages(appMetadata?.pages ?? [])
+        : undefined;
+
     const { tabs, basePathSuffix } = getTabsConfig({
         section: 'organization',
         app,
+        appTabs,
     });
 
     return <Navigation tabs={tabs} basePathSuffix={basePathSuffix} />;
