@@ -10,7 +10,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { AppWindow } from 'lucide-react';
 
-import { getIconByName } from '@/components/Icon';
+// import { getIconByName } from '@/components/Icon';
 
 import {
     Menu as BaseMenu,
@@ -86,7 +86,7 @@ function resolveSectionIcon(props: ParsedMenuSectionProps): LucideIcon {
         return AppWindow;
     }
 
-    return getIconByName(iconName, AppWindow);
+    return AppWindow // getIconByName(iconName, AppWindow);
 }
 
 function resolveSubSectionTitle(

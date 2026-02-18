@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import { useUser } from '@/hooks/use-user';
 
+
 export default function NotFound() {
     const location = useLocation();
     const { user } = useUser();
