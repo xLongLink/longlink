@@ -5,8 +5,6 @@ import src.db as db
 from src.router import router
 from src.types import AppCreate, AppResponse
 
-APP_BACKEND_URL = 'http://localhost:1707'
-
 ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
 
 EXCLUDED_REQUEST_HEADERS = {
@@ -23,16 +21,19 @@ EXCLUDED_RESPONSE_HEADERS = {
     'connection',
 }
 
-client = httpx.AsyncClient(
-    base_url=APP_BACKEND_URL,
-    timeout=30.0,
-)
 
+async def proxy_request(req: Request, app_name: str, full_path: str = '') -> Response:
+    app = await db.apps.get_by_name(app_name)
+    if app is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"App '{app_name}' not found",
+        )
 
-async def proxy_request(req: Request, app_id: str, full_path: str = '') -> Response:
-    path = f'{app_id}'
-    if full_path:
-        path += f'/{full_path}'
+    path = full_path.lstrip('/')
+    target_url = app.url.rstrip('/')
+    if path:
+        target_url = f'{target_url}/{path}'
 
     headers = {
         k: v
@@ -41,13 +42,14 @@ async def proxy_request(req: Request, app_id: str, full_path: str = '') -> Respo
     }
 
     try:
-        upstream = await client.request(
-            method=req.method,
-            url=path,
-            params=req.query_params,
-            content=await req.body(),
-            headers=headers,
-        )
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            upstream = await client.request(
+                method=req.method,
+                url=target_url,
+                params=req.query_params,
+                content=await req.body(),
+                headers=headers,
+            )
 
         response_headers = {
             k: v
@@ -98,11 +100,11 @@ async def create_app(payload: AppCreate) -> AppResponse:
     )
 
 
-@router.api_route('/apps/{app_id}', methods=ALLOWED_METHODS)
-async def proxy_root(req: Request, app_id: str):
-    return await proxy_request(req, app_id)
+@router.api_route('/apps/{app_name}', methods=ALLOWED_METHODS)
+async def proxy_root(req: Request, app_name: str):
+    return await proxy_request(req, app_name)
 
 
-@router.api_route('/apps/{app_id}/{full_path:path}', methods=ALLOWED_METHODS)
-async def proxy_path(req: Request, app_id: str, full_path: str):
-    return await proxy_request(req, app_id, full_path)
+@router.api_route('/apps/{app_name}/{full_path:path}', methods=ALLOWED_METHODS)
+async def proxy_path(req: Request, app_name: str, full_path: str):
+    return await proxy_request(req, app_name, full_path)
