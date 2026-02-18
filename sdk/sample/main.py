@@ -8,6 +8,7 @@ from src.app import app
 # Register routes
 import src.routes.sample
 import src.pages.settings
+import src.pages.table
 
 
 if __name__ == '__main__':

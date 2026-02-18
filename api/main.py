@@ -32,7 +32,6 @@ app.add_middleware(
 import src.routes.apps
 import src.routes.auth
 import src.routes.user
-import src.routes.sample
 
 app.include_router(router)
 
