@@ -8,7 +8,9 @@ import {
     type ReactNode,
 } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { AppWindow, Box, FolderKanban, Table2 } from 'lucide-react';
+import { AppWindow } from 'lucide-react';
+
+import { getIconByName } from '@/components/Icon';
 
 import {
     Menu as BaseMenu,
@@ -73,11 +75,6 @@ function getDefaultActiveValue(
     return firstSection.subSections[0]?.id ?? firstSection.id;
 }
 
-const iconByName: Record<string, LucideIcon> = {
-    table: Table2,
-    tabs: FolderKanban,
-};
-
 function resolveSectionTitle(props: ParsedMenuSectionProps): string {
     return props.title ?? props.props?.title ?? 'Section';
 }
@@ -89,7 +86,7 @@ function resolveSectionIcon(props: ParsedMenuSectionProps): LucideIcon {
         return AppWindow;
     }
 
-    return iconByName[iconName] ?? Box;
+    return getIconByName(iconName, AppWindow);
 }
 
 function resolveSubSectionTitle(
