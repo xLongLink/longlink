@@ -1,8 +1,11 @@
 import Render, { type RenderNodeSchema } from '@/components/Render';
 import { useData } from '@/hooks/use-data';
+import { useParams } from 'react-router';
 
 export default function ViaVai() {
-    const { data, isLoading, error } = useData<unknown>('/sample/page');
+    const { app } = useParams();
+    const pageEndpoint = app ? `/apps/${app}/page` : null;
+    const { data, isLoading, error } = useData<unknown>(pageEndpoint);
 
     const samplePageData = Array.isArray(data)
         ? (data as RenderNodeSchema[])
@@ -17,7 +20,7 @@ export default function ViaVai() {
     }
 
     if (data !== null && !Array.isArray(data)) {
-        return <div>Unexpected response format for /sample/page</div>;
+        return <div>Unexpected response format for {pageEndpoint}</div>;
     }
 
     return (
