@@ -17,6 +17,7 @@ export default function Apps() {
     const [name, setName] = useState('');
     const [url, setUrl] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [createError, setCreateError] = useState<string | null>(null);
 
     const onCreateApp = async () => {
         if (!name.trim() || !url.trim()) {
@@ -25,12 +26,17 @@ export default function Apps() {
 
         try {
             setIsCreating(true);
+            setCreateError(null);
             await createApp({
                 name: name.trim(),
                 url: url.trim(),
             });
             setName('');
             setUrl('');
+        } catch (err) {
+            setCreateError(
+                err instanceof Error ? err.message : 'Failed to create app'
+            );
         } finally {
             setIsCreating(false);
         }
@@ -76,6 +82,9 @@ export default function Apps() {
                         New App
                     </Button>
                 </div>
+                {createError ? (
+                    <p className="text-sm text-red-300">{createError}</p>
+                ) : null}
             </Card>
 
             {isLoading ? (
