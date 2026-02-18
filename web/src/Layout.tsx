@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react';
 import {
     Link,
     Outlet,
@@ -24,15 +25,26 @@ type AppMetadata = {
 type NavigationProps = {
     tabs: ReturnType<typeof getTabsConfig>['tabs'];
     basePathSuffix?: string;
+    isTabsLoading?: boolean;
 };
 
 export default function Layout() {
     const { app } = useParams();
     const appMetadataEndpoint = app ? `/apps/${app}` : null;
 
-    const { data: appMetadata } = useData<AppMetadata>(appMetadataEndpoint);
+    const { data: appMetadata, isLoading: isAppMetadataLoading } =
+        useData<AppMetadata>(appMetadataEndpoint);
     const appTabs = app
-        ? getAppTabsFromPages(appMetadata?.pages ?? [])
+        ? isAppMetadataLoading
+            ? [
+                  {
+                      value: 'loading',
+                      label: 'Loading',
+                      path: '',
+                      icon: Loader2,
+                  },
+              ]
+            : getAppTabsFromPages(appMetadata?.pages ?? [])
         : undefined;
 
     const { tabs, basePathSuffix } = getTabsConfig({
@@ -41,10 +53,20 @@ export default function Layout() {
         appTabs,
     });
 
-    return <Navigation tabs={tabs} basePathSuffix={basePathSuffix} />;
+    return (
+        <Navigation
+            tabs={tabs}
+            basePathSuffix={basePathSuffix}
+            isTabsLoading={Boolean(app && isAppMetadataLoading)}
+        />
+    );
 }
 
-export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
+export function Navigation({
+    tabs,
+    basePathSuffix,
+    isTabsLoading,
+}: NavigationProps) {
     const { app } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -61,9 +83,11 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
         locationPath: location.pathname,
         basePath,
     });
-    const activeTab = location.pathname.startsWith('/profile')
-        ? 'apps'
-        : (activeTabConfig?.value ?? tabs[0]?.value ?? 'overview');
+    const activeTab = isTabsLoading
+        ? 'loading'
+        : location.pathname.startsWith('/profile')
+          ? 'apps'
+          : (activeTabConfig?.value ?? tabs[0]?.value ?? 'overview');
 
     return (
         <div className="min-h-screen text-white">
@@ -88,6 +112,9 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                     <Tabs
                         value={activeTab}
                         onValueChange={(value) => {
+                            if (isTabsLoading) {
+                                return;
+                            }
                             const nextTab = tabs.find(
                                 (tab) => tab.value === value
                             );
@@ -111,9 +138,12 @@ export function Navigation({ tabs, basePathSuffix }: NavigationProps) {
                                     <TabsTrigger
                                         key={tab.value}
                                         value={tab.value}
+                                        disabled={isTabsLoading}
                                         className="cursor-pointer"
                                     >
-                                        <Icon className="h-4 w-4" />
+                                        <Icon
+                                            className={`h-4 w-4 ${tab.value === 'loading' ? 'animate-spin' : ''}`}
+                                        />
                                         {tab.label}
                                     </TabsTrigger>
                                 );
