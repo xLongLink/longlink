@@ -9,7 +9,7 @@ type UseDataResult<T> = {
     refresh: () => Promise<void>;
 };
 
-export function useData<T>(endpoint: string): UseDataResult<T> {
+export function useData<T>(endpoint: string | null): UseDataResult<T> {
     const [data, setData] = useState<T | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -19,13 +19,20 @@ export function useData<T>(endpoint: string): UseDataResult<T> {
         setError(null);
 
         try {
+            if (!endpoint) {
+                setData(null);
+                return;
+            }
+
             const response = await apiFetch<T>(endpoint);
             setData(response);
         } catch (err) {
             setError(
                 err instanceof Error
                     ? err.message
-                    : `Failed to load ${endpoint}`
+                    : endpoint
+                      ? `Failed to load ${endpoint}`
+                      : 'Failed to load data'
             );
             setData(null);
         } finally {
