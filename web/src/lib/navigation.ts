@@ -8,6 +8,8 @@ import {
     Users,
 } from 'lucide-react';
 
+import { getIconByName } from '@/components/Icon';
+
 export type NavigationTab = {
     value: string;
     label: string;
@@ -26,10 +28,6 @@ export type AppNavigationPage = {
     path: string;
     name: string;
     icon?: string;
-};
-
-const pageIconMap: Record<string, LucideIcon> = {
-    settings: Settings,
 };
 
 const normalizeTabPath = (path: string) => path.replace(/^\/+|\/+$/g, '');
@@ -51,9 +49,7 @@ export function getAppTabsFromPages(
 
     return pages.map((page) => {
         const path = normalizeTabPath(page.path);
-        const icon = page.icon
-            ? (pageIconMap[page.icon] ?? FileText)
-            : FileText;
+        const icon = getIconByName(page.icon, FileText);
 
         return {
             value: getTabValue({ path, name: page.name }),
