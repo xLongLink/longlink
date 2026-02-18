@@ -1,7 +1,7 @@
 import src.db as db
 from fastapi import Depends
 from src.auth import authuser
-from src.types import UserUpdate
+from src.models import UserUpdate
 from src.router import router
 
 
