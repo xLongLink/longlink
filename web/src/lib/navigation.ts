@@ -1,14 +1,11 @@
 import type { LucideIcon } from 'lucide-react';
 import {
     BarChart3,
-    Boxes,
     FileText,
     FolderKanban,
-    Layers,
     Settings,
     Sparkles,
     Users,
-    Wrench,
 } from 'lucide-react';
 
 export type NavigationTab = {
@@ -31,56 +28,47 @@ const defaultAppTabs: NavigationTab[] = [
     { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ];
 
-const appTabsByName: Record<string, NavigationTab[]> = {
-    viavai: [
-        { value: 'overview', label: 'Overview', path: '', icon: FileText },
-        {
-            value: 'automations',
-            label: 'Automations',
-            path: 'automations',
-            icon: Sparkles,
-        },
-        {
-            value: 'integrations',
-            label: 'Integrations',
-            path: 'integrations',
-            icon: Boxes,
-        },
-        {
-            value: 'settings',
-            label: 'Settings',
-            path: 'settings',
-            icon: Settings,
-        },
-    ],
-    atlas: [
-        { value: 'overview', label: 'Overview', path: '', icon: FileText },
-        { value: 'models', label: 'Models', path: 'models', icon: Layers },
-        { value: 'reports', label: 'Reports', path: 'reports', icon: FileText },
-        {
-            value: 'settings',
-            label: 'Settings',
-            path: 'settings',
-            icon: Settings,
-        },
-    ],
-    pulse: [
-        { value: 'overview', label: 'Overview', path: '', icon: FileText },
-        {
-            value: 'streams',
-            label: 'Streams',
-            path: 'streams',
-            icon: Sparkles,
-        },
-        { value: 'alerts', label: 'Alerts', path: 'alerts', icon: Wrench },
-        {
-            value: 'settings',
-            label: 'Settings',
-            path: 'settings',
-            icon: Settings,
-        },
-    ],
+export type AppNavigationPage = {
+    path: string;
+    name: string;
+    icon?: string;
 };
+
+const pageIconMap: Record<string, LucideIcon> = {
+    settings: Settings,
+};
+
+const normalizeTabPath = (path: string) => path.replace(/^\/+|\/+$/g, '');
+
+const getTabValue = ({ path, name }: { path: string; name: string }) => {
+    if (path.length > 0) {
+        return path;
+    }
+
+    return name.toLowerCase().replace(/\s+/g, '-');
+};
+
+export function getAppTabsFromPages(
+    pages: AppNavigationPage[]
+): NavigationTab[] {
+    if (pages.length === 0) {
+        return defaultAppTabs;
+    }
+
+    return pages.map((page) => {
+        const path = normalizeTabPath(page.path);
+        const icon = page.icon
+            ? (pageIconMap[page.icon] ?? FileText)
+            : FileText;
+
+        return {
+            value: getTabValue({ path, name: page.name }),
+            label: page.name,
+            path,
+            icon,
+        };
+    });
+}
 
 export type TabsConfig = {
     tabs: NavigationTab[];
@@ -90,12 +78,13 @@ export type TabsConfig = {
 export function getTabsConfig({
     section: _section,
     app,
+    appTabs,
 }: {
     section: 'account' | 'organization';
     app?: string;
+    appTabs?: NavigationTab[];
 }): TabsConfig {
-    const appTabs = app ? (appTabsByName[app] ?? defaultAppTabs) : null;
-    const tabs = appTabs ?? organizationTabs;
+    const tabs = app ? (appTabs ?? defaultAppTabs) : organizationTabs;
     const basePathSuffix = app ? `apps/${app}` : undefined;
 
     return { tabs, basePathSuffix };
