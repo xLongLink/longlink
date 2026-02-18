@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Loader2, PanelTop } from 'lucide-react';
 import {
     Link,
     Outlet,
@@ -8,6 +8,14 @@ import {
 } from 'react-router';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { UserProfile } from '@/components/Profile';
+import { Card } from '@/components/ui/card';
+import {
+    Empty,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useData } from '@/hooks/use-data';
 import {
@@ -26,6 +34,7 @@ type NavigationProps = {
     tabs: ReturnType<typeof getTabsConfig>['tabs'];
     basePathSuffix?: string;
     isTabsLoading?: boolean;
+    showEmptyAppSection?: boolean;
 };
 
 export default function Layout() {
@@ -53,11 +62,16 @@ export default function Layout() {
         appTabs,
     });
 
+    const showEmptyAppSection = Boolean(
+        app && !isAppMetadataLoading && tabs.length === 0
+    );
+
     return (
         <Navigation
             tabs={tabs}
             basePathSuffix={basePathSuffix}
             isTabsLoading={Boolean(app && isAppMetadataLoading)}
+            showEmptyAppSection={showEmptyAppSection}
         />
     );
 }
@@ -66,6 +80,7 @@ export function Navigation({
     tabs,
     basePathSuffix,
     isTabsLoading,
+    showEmptyAppSection,
 }: NavigationProps) {
     const { app } = useParams();
     const location = useLocation();
@@ -87,7 +102,7 @@ export function Navigation({
         ? 'loading'
         : location.pathname.startsWith('/profile')
           ? 'apps'
-          : (activeTabConfig?.value ?? tabs[0]?.value ?? 'overview');
+          : (activeTabConfig?.value ?? tabs[0]?.value ?? '');
 
     return (
         <div className="min-h-screen text-white">
@@ -108,55 +123,73 @@ export function Navigation({
                 </div>
 
                 {/* Tabs navigation */}
-                <div className="mx-auto w-full px-6 pb-2">
-                    <Tabs
-                        value={activeTab}
-                        onValueChange={(value) => {
-                            if (isTabsLoading) {
-                                return;
-                            }
-                            const nextTab = tabs.find(
-                                (tab) => tab.value === value
-                            );
-                            if (!nextTab) {
-                                return;
-                            }
-                            const nextPath = nextTab.path ?? '';
-                            const targetPath =
-                                nextPath === ''
-                                    ? basePath || '/'
-                                    : basePath
-                                      ? `${basePath}/${nextPath}`
-                                      : `/${nextPath}`;
-                            navigate(targetPath);
-                        }}
-                    >
-                        <TabsList variant="line" className="gap-4">
-                            {tabs.map((tab) => {
-                                const Icon = tab.icon;
-                                return (
-                                    <TabsTrigger
-                                        key={tab.value}
-                                        value={tab.value}
-                                        disabled={isTabsLoading}
-                                        className="cursor-pointer"
-                                    >
-                                        <Icon
-                                            className={`h-4 w-4 ${tab.value === 'loading' ? 'animate-spin' : ''}`}
-                                        />
-                                        {tab.label}
-                                    </TabsTrigger>
+                {tabs.length > 0 ? (
+                    <div className="mx-auto w-full px-6 pb-2">
+                        <Tabs
+                            value={activeTab}
+                            onValueChange={(value) => {
+                                if (isTabsLoading) {
+                                    return;
+                                }
+                                const nextTab = tabs.find(
+                                    (tab) => tab.value === value
                                 );
-                            })}
-                        </TabsList>
-                    </Tabs>
-                </div>
+                                if (!nextTab) {
+                                    return;
+                                }
+                                const nextPath = nextTab.path ?? '';
+                                const targetPath =
+                                    nextPath === ''
+                                        ? basePath || '/'
+                                        : basePath
+                                          ? `${basePath}/${nextPath}`
+                                          : `/${nextPath}`;
+                                navigate(targetPath);
+                            }}
+                        >
+                            <TabsList variant="line" className="gap-4">
+                                {tabs.map((tab) => {
+                                    const Icon = tab.icon;
+                                    return (
+                                        <TabsTrigger
+                                            key={tab.value}
+                                            value={tab.value}
+                                            disabled={isTabsLoading}
+                                            className="cursor-pointer"
+                                        >
+                                            <Icon
+                                                className={`h-4 w-4 ${tab.value === 'loading' ? 'animate-spin' : ''}`}
+                                            />
+                                            {tab.label}
+                                        </TabsTrigger>
+                                    );
+                                })}
+                            </TabsList>
+                        </Tabs>
+                    </div>
+                ) : null}
             </header>
 
             <main className="mx-auto w-full max-w-6xl gap-8 px-6 pb-16 pt-10">
-                <section className="space-y-6">
-                    <Outlet />
-                </section>
+                {showEmptyAppSection ? (
+                    <Card className="p-10 text-center">
+                        <Empty>
+                            <EmptyHeader>
+                                <EmptyMedia variant="icon">
+                                    <PanelTop />
+                                </EmptyMedia>
+                                <EmptyTitle>No Tabs Yet</EmptyTitle>
+                                <EmptyDescription>
+                                    This app has no configured tabs yet.
+                                </EmptyDescription>
+                            </EmptyHeader>
+                        </Empty>
+                    </Card>
+                ) : (
+                    <section className="space-y-6">
+                        <Outlet />
+                    </section>
+                )}
             </main>
         </div>
     );

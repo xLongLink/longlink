@@ -22,12 +22,6 @@ const organizationTabs: NavigationTab[] = [
     { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ];
 
-const defaultAppTabs: NavigationTab[] = [
-    { value: 'overview', label: 'Overview', path: '', icon: FileText },
-    { value: 'data', label: 'Data', path: 'data', icon: FileText },
-    { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
-];
-
 export type AppNavigationPage = {
     path: string;
     name: string;
@@ -52,7 +46,7 @@ export function getAppTabsFromPages(
     pages: AppNavigationPage[]
 ): NavigationTab[] {
     if (pages.length === 0) {
-        return defaultAppTabs;
+        return [];
     }
 
     return pages.map((page) => {
@@ -84,7 +78,7 @@ export function getTabsConfig({
     app?: string;
     appTabs?: NavigationTab[];
 }): TabsConfig {
-    const tabs = app ? (appTabs ?? defaultAppTabs) : organizationTabs;
+    const tabs = app ? (appTabs ?? []) : organizationTabs;
     const basePathSuffix = app ? `apps/${app}` : undefined;
 
     return { tabs, basePathSuffix };
