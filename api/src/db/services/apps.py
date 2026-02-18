@@ -19,6 +19,12 @@ class AppsService:
 
         Session = await get_session()
         async with Session() as session:
+            statement = select(App).where(App.url == url)
+            result = await session.execute(statement)
+            existing_app = result.scalar_one_or_none()
+            if existing_app is not None:
+                raise ValueError('App URL already exists')
+
             app = App(name=name, url=url)
             session.add(app)
             await session.commit()
