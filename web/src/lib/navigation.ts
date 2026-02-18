@@ -8,7 +8,7 @@ import {
     Users,
 } from 'lucide-react';
 
-import { getIconByName } from '@/components/Icon';
+// import { getIconByName } from '@/components/Icon';
 
 export type NavigationTab = {
     value: string;
@@ -49,7 +49,7 @@ export function getAppTabsFromPages(
 
     return pages.map((page) => {
         const path = normalizeTabPath(page.path);
-        const icon = getIconByName(page.icon, FileText);
+        const icon = FileText;
 
         return {
             value: getTabValue({ path, name: page.name }),

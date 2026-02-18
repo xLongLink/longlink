@@ -26,6 +26,7 @@ The SDK allows to create new apps for the platform with python.
 
 The SDK allows to create the tabs that will be visible in the web application for the app, on the app side, are python objects that return a json schema that the web app will interpret and render.
 
-## Testing
+## Avoid
 
-For the time being, DO NOT WRITE ANY TEST CASE
+- For the time being, DO NOT WRITE ANY TEST CASE
+- Don't take any preview or screenshot of the app
