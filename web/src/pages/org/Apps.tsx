@@ -1,5 +1,6 @@
 import { Plus, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -102,12 +103,16 @@ export default function Apps() {
             ) : (
                 <div className="grid gap-3">
                     {apps.map((app) => (
-                        <Card key={app.id} className="space-y-1 p-4">
-                            <h2 className="font-medium text-white">
-                                {app.name}
-                            </h2>
-                            <p className="text-sm text-white/60">{app.url}</p>
-                        </Card>
+                        <Link key={app.id} to={`/apps/${app.name}`}>
+                            <Card className="space-y-1 p-4 transition hover:bg-white/5">
+                                <h2 className="font-medium text-white">
+                                    {app.name}
+                                </h2>
+                                <p className="text-sm text-white/60">
+                                    {app.url}
+                                </p>
+                            </Card>
+                        </Link>
                     ))}
                 </div>
             )}
