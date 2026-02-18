@@ -1,6 +1,7 @@
 import { Plus, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
+import Hero from '@/components/viavai/Hero';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -45,21 +46,11 @@ export default function Apps() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-300 ring-1 ring-blue-500/30">
-                        <Sparkles className="h-5 w-5" />
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-semibold text-white">
-                            Apps
-                        </h1>
-                        <p className="text-sm text-white/60">
-                            {apps.length} apps
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <Hero
+                title="Apps"
+                subtitle={`${apps.length} apps`}
+                icon="sparkles"
+            />
 
             <Card className="space-y-3 p-4">
                 <p className="text-sm text-white/60">Create a new app</p>
@@ -99,7 +90,7 @@ export default function Apps() {
                     <Empty>
                         <EmptyHeader>
                             <EmptyMedia variant="icon">
-                                <Sparkles />
+                                <Sparkles className="h-5 w-5" />
                             </EmptyMedia>
                             <EmptyTitle>No Apps Yet</EmptyTitle>
                             <EmptyDescription>
