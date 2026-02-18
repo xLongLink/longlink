@@ -3,7 +3,8 @@ from fastapi import HTTPException, Request, Response
 
 import src.db as db
 from src.router import router
-from src.types import AppCreate, AppResponse
+from src.models.apps import AppCreate, AppResponse
+
 
 ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
 
