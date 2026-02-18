@@ -5,6 +5,12 @@ import Hero from '@/components/viavai/Hero';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
     Empty,
     EmptyDescription,
     EmptyHeader,
@@ -50,34 +56,42 @@ export default function Apps() {
                 title="Apps"
                 subtitle={`${apps.length} apps`}
                 icon="sparkles"
-            />
+                action="Create New App"
+            >
+                <DialogContent className="sm:max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Create a new app</DialogTitle>
+                        <DialogDescription>
+                            Add a name and URL to register your app.
+                        </DialogDescription>
+                    </DialogHeader>
 
-            <Card className="space-y-3 p-4">
-                <p className="text-sm text-white/60">Create a new app</p>
-                <div className="grid gap-3 md:grid-cols-3">
-                    <Input
-                        placeholder="App name"
-                        value={name}
-                        onChange={(event) => setName(event.target.value)}
-                    />
-                    <Input
-                        placeholder="http://localhost:1707/my-app"
-                        value={url}
-                        onChange={(event) => setUrl(event.target.value)}
-                    />
-                    <Button
-                        variant="outline"
-                        onClick={() => void onCreateApp()}
-                        disabled={isCreating}
-                    >
-                        <Plus className="h-4 w-4" />
-                        New App
-                    </Button>
-                </div>
-                {createError ? (
-                    <p className="text-sm text-red-300">{createError}</p>
-                ) : null}
-            </Card>
+                    <div className="grid gap-3 md:grid-cols-3">
+                        <Input
+                            placeholder="App name"
+                            value={name}
+                            onChange={(event) => setName(event.target.value)}
+                        />
+                        <Input
+                            placeholder="http://localhost:1707/my-app"
+                            value={url}
+                            onChange={(event) => setUrl(event.target.value)}
+                        />
+                        <Button
+                            variant="outline"
+                            onClick={() => void onCreateApp()}
+                            disabled={isCreating}
+                        >
+                            <Plus className="h-4 w-4" />
+                            New App
+                        </Button>
+                    </div>
+
+                    {createError ? (
+                        <p className="text-sm text-red-300">{createError}</p>
+                    ) : null}
+                </DialogContent>
+            </Hero>
 
             {isLoading ? (
                 <Card className="p-10 text-center text-white/60">
