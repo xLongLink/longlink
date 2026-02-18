@@ -14,6 +14,16 @@ class AppsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
+
+    async def get_by_name(self, name: str) -> App | None:
+        '''Return a registered app by name.'''
+
+        Session = await get_session()
+        async with Session() as session:
+            statement = select(App).where(App.name == name)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
     async def create(self, name: str, url: str) -> App:
         '''Add a new app to the database.'''
 
