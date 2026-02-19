@@ -1,3 +1,5 @@
+import { Children, isValidElement, type ReactNode } from 'react';
+
 import {
     type ColumnDef,
     flexRender,
@@ -37,6 +39,7 @@ type TableProps<T extends object> = {
     data: T[];
     columns?: ApiTableColumn[];
     schema?: TableSchemaConfig;
+    children?: ReactNode;
 };
 
 const textAlignClasses: Record<TableAlign, string> = {
@@ -92,12 +95,48 @@ function buildColumns<T extends object>(
     });
 }
 
+function normalizeChildColumns(children?: ReactNode): ApiTableColumn[] {
+    return Children.toArray(children)
+        .filter(isValidElement)
+        .reduce<ApiTableColumn[]>((acc, child) => {
+            const childProps = child.props as
+                | (Partial<ApiTableColumn> & {
+                      props?: Partial<ApiTableColumn>;
+                  })
+                | undefined;
+
+            if (!childProps) {
+                return acc;
+            }
+
+            const column = {
+                ...(childProps.props ?? {}),
+                ...childProps,
+            };
+
+            if (!column.key || !column.cell) {
+                return acc;
+            }
+
+            acc.push({
+                key: column.key,
+                label: column.label,
+                align: column.align,
+                cell: column.cell,
+            });
+
+            return acc;
+        }, []);
+}
+
 export function Table<T extends object>({
     columns,
     schema,
     data,
+    children,
 }: TableProps<T>) {
-    const resolvedColumns = columns ?? schema?.schema.columns ?? [];
+    const resolvedColumns =
+        columns ?? schema?.schema.columns ?? normalizeChildColumns(children);
 
     const table = useReactTable({
         data,
