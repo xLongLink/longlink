@@ -5,14 +5,9 @@ type IconModule = {
     default: LucideIcon;
 };
 
-const iconImporters = import.meta.glob<IconModule>(
-    '/node_modules/lucide-react/dist/esm/icons/*.js'
-);
+const iconImporters = import.meta.glob<IconModule>('/node_modules/lucide-react/dist/esm/icons/*.js');
+const lazyIcons: Record<string, React.LazyExoticComponent<LucideIcon>> = {};
 
-const lazyIcons: Record<
-    string,
-    React.LazyExoticComponent<LucideIcon>
-> = {};
 
 // Build once at module load
 for (const path in iconImporters) {
@@ -23,34 +18,23 @@ for (const path in iconImporters) {
     lazyIcons[iconName] = React.lazy(iconImporters[path]);
 }
 
-function toKebabCase(value: string): string {
-    return value
-        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-        .replace(/[_\s]+/g, '-')
-        .toLowerCase();
-}
 
 type IconProps = LucideProps & {
-    name?: string | null;
+    name: string;
     fallback?: string;
 };
 
-export function Icon({
-    name,
-    fallback = 'box',
-    ...props
-}: IconProps) {
-    const iconName = toKebabCase(name ?? fallback);
-
-    const Component =
-        lazyIcons[iconName] ??
-        lazyIcons[toKebabCase(fallback)];
+/* 
+    Simple icon component that dynamically imports icons from lucide-react based on the provided name prop.
+*/
+export function Icon({ name, fallback = 'box' }: IconProps) {
+    const Component = lazyIcons[name] ?? lazyIcons[fallback];
 
     if (!Component) return null;
 
     return (
         <Suspense fallback={null}>
-            <Component {...props} />
+            <Component />
         </Suspense>
     );
 }
