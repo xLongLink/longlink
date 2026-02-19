@@ -1,5 +1,6 @@
-from .models import App, User
-from .services import AppsService, UsersService
+from .models import App, Setting, User
+from .services import AppsService, SettingsService, UsersService
 
 apps = AppsService()
+settings = SettingsService()
 users = UsersService()
