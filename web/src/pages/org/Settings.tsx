@@ -1,4 +1,4 @@
-import { Plus, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import Hero from '@/components/viavai/Hero';
 import { Card } from '@/components/ui/card';
 import {
@@ -17,9 +17,7 @@ export default function SettingsPage() {
                 subtitle="Organization settings"
                 icon="settings"
                 action="New Setting"
-            >
-                <Plus className="h-4 w-4" />
-            </Hero>
+            />
 
             <Card className="p-10 text-center">
                 <Empty>
