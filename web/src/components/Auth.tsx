@@ -4,7 +4,7 @@ import { useUser } from '@/hooks/use-user';
 
 export function RequireAuth({ children }: { children: ReactElement }) {
     const location = useLocation();
-    const { user, isLoading } = useUser();
+    const { data: user, isLoading } = useUser();
 
     if (isLoading) {
         return null;

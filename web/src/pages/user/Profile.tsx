@@ -36,7 +36,7 @@ const menuItems: Array<{ id: SectionId; label: string; icon: typeof User }> = [
 ];
 
 export default function Profile() {
-    const { user } = useUser();
+    const { data: user } = useUser();
     const [activeSection, setActiveSection] = useState<SectionId>('profile');
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
