@@ -1,4 +1,4 @@
-import { Plus, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import Hero from '@/components/viavai/Hero';
 import Table, { type ApiTableColumn } from '@/components/viavai/Table';
 import { Card } from '@/components/ui/card';
@@ -15,12 +15,7 @@ const columns: ApiTableColumn[] = [
     {
         key: 'name',
         label: 'Name',
-        cell: '{name}',
-    },
-    {
-        key: 'email',
-        label: 'Email',
-        cell: '{email}',
+        cell: ['{name}', '{email}'],
     },
 ];
 
@@ -34,9 +29,7 @@ export default function People() {
                 subtitle={`${users.length} people`}
                 icon="users"
                 action="Add Person"
-            >
-                <Plus className="h-4 w-4" />
-            </Hero>
+            />
 
             {isLoading ? (
                 <Card className="p-10 text-center text-muted-foreground">
