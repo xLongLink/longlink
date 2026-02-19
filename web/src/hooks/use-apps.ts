@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api';
 
@@ -13,57 +13,24 @@ type CreateAppPayload = {
     url: string;
 };
 
-type UseAppsResult = {
-    apps: App[];
-    isLoading: boolean;
-    error: string | null;
-    refreshApps: () => Promise<void>;
-    createApp: (payload: CreateAppPayload) => Promise<App>;
-};
+export function useApps() {
+    return useQuery({
+        queryKey: ['apps'],
+        queryFn: () => apiFetch<App[]>('/apps'),
+    });
+}
 
-export function useApps(): UseAppsResult {
-    const [apps, setApps] = useState<App[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+export function useCreateApp() {
+    const queryClient = useQueryClient();
 
-    const refreshApps = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const response = await apiFetch<App[]>('/apps');
-            setApps(response);
-        } catch (err) {
-            setError(
-                err instanceof Error ? err.message : 'Failed to load apps'
-            );
-            setApps([]);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    const createApp = useCallback(async (payload: CreateAppPayload) => {
-        const app = await apiFetch<App>('/apps', {
-            method: 'POST',
-            body: payload,
-        });
-        setApps((previousApps) => [...previousApps, app]);
-        return app;
-    }, []);
-
-    useEffect(() => {
-        void refreshApps();
-    }, [refreshApps]);
-
-    return useMemo(
-        () => ({
-            apps,
-            isLoading,
-            error,
-            refreshApps,
-            createApp,
-        }),
-        [apps, isLoading, error, refreshApps, createApp]
-    );
+    return useMutation({
+        mutationFn: (payload: CreateAppPayload) =>
+            apiFetch<App>('/apps', {
+                method: 'POST',
+                body: payload,
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['apps'] });
+        },
+    });
 }

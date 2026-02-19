@@ -18,7 +18,7 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
-import { useApps } from '@/hooks/use-apps';
+import { useApps, useCreateApp } from '@/hooks/use-apps';
 
 const columns: ApiTableColumn[] = [
     {
@@ -34,10 +34,10 @@ const columns: ApiTableColumn[] = [
 ];
 
 export default function Apps() {
-    const { apps, isLoading, error, createApp } = useApps();
+    const { data: apps = [], isLoading, error } = useApps();
+    const { mutateAsync: createApp, isPending } = useCreateApp();
     const [name, setName] = useState('');
     const [url, setUrl] = useState('');
-    const [isCreating, setIsCreating] = useState(false);
     const [createError, setCreateError] = useState<string | null>(null);
 
     const onCreateApp = async () => {
@@ -46,7 +46,6 @@ export default function Apps() {
         }
 
         try {
-            setIsCreating(true);
             setCreateError(null);
             await createApp({
                 name: name.trim(),
@@ -58,8 +57,6 @@ export default function Apps() {
             setCreateError(
                 err instanceof Error ? err.message : 'Failed to create app'
             );
-        } finally {
-            setIsCreating(false);
         }
     };
 
@@ -93,7 +90,7 @@ export default function Apps() {
                         <Button
                             variant="outline"
                             onClick={() => void onCreateApp()}
-                            disabled={isCreating}
+                            disabled={isPending}
                         >
                             <Plus className="h-4 w-4" />
                             New App

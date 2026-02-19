@@ -13,7 +13,7 @@ type LoginMethodsResponse = {
 export default function Login() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, isLoading } = useUser();
+    const { data: user, isLoading } = useUser();
     const apiBaseUrl = getApiBaseUrl();
     const [availableMethods, setAvailableMethods] = useState<string[]>([]);
 
