@@ -19,8 +19,14 @@ ButtonVariants: TypeAlias = Literal[
 
 @dataclass
 class Button(Component):
-    """
-    This is very straightforward, it either open a dialog, or call en endpoint when clicked.
+    """LongLink Button component the button never contains client side logic.
+    It has two functionalities:
+    1) Opening a dialog: Some data visualization or form. But then the logic it managed by a different component.
+
+    2) Call an endpoint: 
+    - Export / Download: The endpoint returns a file that can be viewed in a dialog, or downloaded directly.
+    - Trigger an action in the backend, like sending an email, or creating a new resource, in that case a Toaster show the result of the action.
+    - If the endpoint is a page, then the page will be reloaded with the new data
     """
 
     text: str

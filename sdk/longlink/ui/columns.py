@@ -1,14 +1,22 @@
+from .__root__ import Component
 from dataclasses import dataclass, field
 
-from .__root__ import Component
-from .button import Button, ButtonVariants
+
+
 from .hero import Hero
-from .separator import Separator
 from .table import Table
+from .button import Button, ButtonVariants
+from .separator import Separator
 
 
 @dataclass
 class Column(Component):
+    """LongLink Column component, used in the Columns component
+    
+    The column behave similarly to the Page, where each component is added vertically.
+    However it cannot create a menu, as only one menu can exist per page.
+    """
+
     width: int
     _components: list[Component] = field(default_factory=list)
 
@@ -40,6 +48,12 @@ class Column(Component):
 
 @dataclass
 class Columns(Component):
+    """LongLink Columns component, used to create a layout with multiple columns
+
+    It can be used to have the main data on the left and some quick actions or insights on the right.
+    An exmaple can be how GitHub show the repository insights: https://github.com/XLongLink/longlink
+    """
+
     _widths: list[int] = field(default_factory=list)
     _children: list[Column] = field(default_factory=list)
 

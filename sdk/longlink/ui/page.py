@@ -1,14 +1,17 @@
+from .__root__ import Component
 from dataclasses import dataclass, field
 
-from .__root__ import Component
+
+# Importing components
 from .tabs import Tab, Tabs
+from .hero import Hero
+from .menu import Menu
+from .table import Table
+from .input import Input
 from .button import Button, ButtonVariants
 from .columns import Column, Columns
-from .hero import Hero
-from .input import Input
-from .menu import Menu
 from .separator import Separator
-from .table import Table
+
 
 
 @dataclass
