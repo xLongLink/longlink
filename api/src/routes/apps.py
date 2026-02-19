@@ -90,6 +90,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
         app = await db.apps.create(
             name=payload.name,
             url=payload.url,
+            token=payload.token,
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc

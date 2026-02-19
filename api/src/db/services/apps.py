@@ -1,3 +1,5 @@
+import hashlib
+
 from sqlalchemy import select
 
 from src.db.models import App
@@ -14,7 +16,6 @@ class AppsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-
     async def get_by_name(self, name: str) -> App | None:
         '''Return a registered app by name.'''
 
@@ -24,10 +25,23 @@ class AppsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def create(self, name: str, url: str) -> App:
+    async def get_by_token(self, token: str) -> App | None:
+        '''Return a registered app by token.'''
+
+        Session = await get_session()
+        token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+
+        async with Session() as session:
+            statement = select(App).where(App.token_hash == token_hash)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
+    async def create(self, name: str, url: str, token: str) -> App:
         '''Add a new app to the database.'''
 
         Session = await get_session()
+        token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+
         async with Session() as session:
             statement = select(App).where(App.url == url)
             result = await session.execute(statement)
@@ -35,7 +49,13 @@ class AppsService:
             if existing_app is not None:
                 raise ValueError('App URL already exists')
 
-            app = App(name=name, url=url)
+            token_statement = select(App).where(App.token_hash == token_hash)
+            token_result = await session.execute(token_statement)
+            existing_token = token_result.scalar_one_or_none()
+            if existing_token is not None:
+                raise ValueError('App token already exists')
+
+            app = App(name=name, url=url, token_hash=token_hash)
             session.add(app)
             await session.commit()
             await session.refresh(app)
