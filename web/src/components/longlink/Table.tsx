@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react';
 import {
     type ColumnDef,
     type SortingState,
     flexRender,
     getCoreRowModel,
     useReactTable,
-} from '@tanstack/react-table'
+} from '@tanstack/react-table';
 
 import {
     Table as UITable,
@@ -14,43 +14,47 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table';
+import { apiFetch } from '@/lib/api';
 
-export type TableAlign = 'left' | 'center' | 'right'
+export type TableAlign = 'left' | 'center' | 'right';
 
 export type ApiTableColumn = {
-    key: string
-    label?: string
-    align?: TableAlign
-    value: string
-    detail?: string
-}
+    key: string;
+    label?: string;
+    align?: TableAlign;
+    value: string;
+    detail?: string;
+};
 
 export type TableSchema = {
-    columns: ApiTableColumn[]
-}
+    columns: ApiTableColumn[];
+};
 
 export type TableSchemaConfig = {
-    title: string
-    description?: string
-    schema: TableSchema
-}
+    title: string;
+    description?: string;
+    schema: TableSchema;
+};
 
-type TableProps<T extends object> = {
-    endpoint: string
-    schema: TableSchemaConfig
-    pageSize?: number
-}
+type TableProps = {
+    endpoint: string;
+    schema: TableSchemaConfig;
+    pageSize?: number;
+};
+
+type TableResponse =
+    | Record<string, unknown>[]
+    | {
+          data?: Record<string, unknown>[];
+          total?: number;
+      };
 
 const textAlignClasses: Record<TableAlign, string> = {
     left: 'text-left',
     center: 'text-center',
     right: 'text-right',
-}
-
-/* -------------------- */
-/* Utility functions    */
-/* -------------------- */
+};
 
 function resolvePath(data: unknown, path: string): unknown {
     return path
@@ -58,127 +62,101 @@ function resolvePath(data: unknown, path: string): unknown {
         .reduce<unknown>(
             (acc, key) => (acc as Record<string, unknown>)?.[key],
             data
-        )
+        );
 }
 
 function renderTemplate(template: string, data: unknown): string {
     return template.replace(/\{([^}]+)\}/g, (_, path) => {
-        const value = resolvePath(data, path.trim())
-        return value == null ? '' : String(value)
-    })
+        const value = resolvePath(data, path.trim());
+        return value == null ? '' : String(value);
+    });
 }
 
 function buildColumns<T extends object>(
     columns: ApiTableColumn[]
 ): ColumnDef<T>[] {
     return columns.map((column) => {
-        const align = column.align ?? 'left'
+        const align = column.align ?? 'left';
 
         return {
             id: column.key,
             header: column.label ?? column.key,
             enableSorting: true,
             meta: { align },
-
             cell: ({ row }) => (
                 <div className={`leading-tight ${textAlignClasses[align]}`}>
                     <div className="text-sm font-medium">
                         {renderTemplate(column.value, row.original)}
                     </div>
 
-                    {column.detail && (
+                    {column.detail ? (
                         <div className="text-xs text-muted-foreground">
                             {renderTemplate(column.detail, row.original)}
                         </div>
-                    )}
+                    ) : null}
                 </div>
             ),
-        }
-    })
+        };
+    });
 }
-
-/* -------------------- */
-/* Table Component      */
-/* -------------------- */
 
 export function Table<T extends object>({
     endpoint,
     schema,
     pageSize = 10,
-}: TableProps<T>) {
-    const [data, setData] = useState<T[]>([])
-    const [total, setTotal] = useState(0)
-    const [loading, setLoading] = useState(false)
+}: TableProps) {
+    const [data, setData] = useState<T[]>([]);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     const [pagination, setPagination] = useState({
         pageIndex: 0,
         pageSize,
-    })
+    });
 
-    const [sorting, setSorting] = useState<SortingState>([])
-
-    /* -------------------- */
-    /* Fetch Data           */
-    /* -------------------- */
+    const [sorting, setSorting] = useState<SortingState>([]);
 
     useEffect(() => {
         const fetchData = async () => {
-            setLoading(true)
+            setLoading(true);
 
-            const params = new URLSearchParams({
-                page: String(pagination.pageIndex + 1),
-                value: String(pagination.pageSize),
-            })
+            try {
+                const response = await apiFetch<TableResponse>(endpoint);
 
-            if (sorting.length > 0) {
-                params.append('sort', sorting[0].id)
-                params.append('order', sorting[0].desc ? 'desc' : 'asc')
+                if (Array.isArray(response)) {
+                    setData(response as T[]);
+                    setTotal(response.length);
+                } else {
+                    setData((response.data ?? []) as T[]);
+                    setTotal(response.total ?? response.data?.length ?? 0);
+                }
+            } finally {
+                setLoading(false);
             }
+        };
 
-            const response = await fetch(`http://localhost:8000${endpoint}?${params}`)
-            console.log('Fetching data from:', `${endpoint}?${params}`)
-            const json = await response.json()
-
-            setData(json.data ?? [])
-            setTotal(json.total ?? 0)
-            setLoading(false)
-        }
-
-        fetchData()
-    }, [endpoint, pagination, sorting])
-
-    /* -------------------- */
-    /* Table Instance       */
-    /* -------------------- */
+        void fetchData();
+    }, [endpoint, pagination, sorting]);
 
     const columns = useMemo(
-        () => buildColumns<T>(schema.schema.columns),
+        () => buildColumns<T>(schema?.schema?.columns ?? []),
         [schema]
-    )
+    );
 
     const table = useReactTable({
         data,
         columns,
-
         state: {
             pagination,
             sorting,
         },
-
         onPaginationChange: setPagination,
         onSortingChange: setSorting,
-
         manualPagination: true,
         manualSorting: true,
-
-        pageCount: Math.ceil(total / pagination.pageSize),
-
+        pageCount: total > 0 ? Math.ceil(total / pagination.pageSize) : 1,
         getCoreRowModel: getCoreRowModel(),
-    })
-
-    /* -------------------- */
-    /* Render               */
-    /* -------------------- */
+    });
 
     return (
         <div className="overflow-hidden rounded-md border">
@@ -190,9 +168,9 @@ export function Table<T extends object>({
                                 const align =
                                     (
                                         header.column.columnDef.meta as {
-                                            align?: TableAlign
+                                            align?: TableAlign;
                                         }
-                                    )?.align ?? 'left'
+                                    )?.align ?? 'left';
 
                                 return (
                                     <TableHead
@@ -203,11 +181,12 @@ export function Table<T extends object>({
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
+                                                  header.column.columnDef
+                                                      .header,
+                                                  header.getContext()
+                                              )}
                                     </TableHead>
-                                )
+                                );
                             })}
                         </TableRow>
                     ))}
@@ -217,7 +196,7 @@ export function Table<T extends object>({
                     {loading ? (
                         <TableRow>
                             <TableCell
-                                colSpan={columns.length}
+                                colSpan={Math.max(columns.length, 1)}
                                 className="h-24 text-center text-muted-foreground"
                             >
                                 Loading...
@@ -230,9 +209,9 @@ export function Table<T extends object>({
                                     const align =
                                         (
                                             cell.column.columnDef.meta as {
-                                                align?: TableAlign
+                                                align?: TableAlign;
                                             }
-                                        )?.align ?? 'left'
+                                        )?.align ?? 'left';
 
                                     return (
                                         <TableCell
@@ -244,14 +223,14 @@ export function Table<T extends object>({
                                                 cell.getContext()
                                             )}
                                         </TableCell>
-                                    )
+                                    );
                                 })}
                             </TableRow>
                         ))
                     ) : (
                         <TableRow>
                             <TableCell
-                                colSpan={columns.length}
+                                colSpan={Math.max(columns.length, 1)}
                                 className="h-24 text-center text-muted-foreground"
                             >
                                 No data available.
@@ -261,8 +240,7 @@ export function Table<T extends object>({
                 </TableBody>
             </UITable>
 
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-between p-3 border-t text-sm">
+            <div className="flex items-center justify-between border-t p-3 text-sm">
                 <button
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
@@ -282,7 +260,7 @@ export function Table<T extends object>({
                 </button>
             </div>
         </div>
-    )
+    );
 }
 
-export default Table
+export default Table;
