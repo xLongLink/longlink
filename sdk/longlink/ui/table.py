@@ -10,6 +10,15 @@ Alignments: TypeAlias = Literal['left', 'center', 'right']
 from .link import Link 
 
 
+"""
+The Table component is tricky. 
+
+On the frontend, it uses Shadcn and @tanstack/react-table
+https://tanstack.com/table/latest
+However on the backend it shall behave on it's own, with the data linked to a endpoint that allows for paginations, sorting and filtering.
+This has to be managed by the table itself without the need to reload the page.
+"""
+
 class Column(Component):
     key: str
     label: str

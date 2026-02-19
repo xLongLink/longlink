@@ -1,11 +1,11 @@
-import { Children, isValidElement, type ReactNode } from 'react';
-
+import { useEffect, useMemo, useState } from 'react'
 import {
     type ColumnDef,
+    type SortingState,
     flexRender,
     getCoreRowModel,
     useReactTable,
-} from '@tanstack/react-table';
+} from '@tanstack/react-table'
 
 import {
     Table as UITable,
@@ -14,39 +14,43 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/components/ui/table'
 
-export type TableAlign = 'left' | 'center' | 'right';
+export type TableAlign = 'left' | 'center' | 'right'
 
 export type ApiTableColumn = {
-    key: string;
-    label?: string;
-    align?: TableAlign;
-    cell: string | string[];
-};
+    key: string
+    label?: string
+    align?: TableAlign
+    value: string
+    detail?: string
+}
 
 export type TableSchema = {
-    columns: ApiTableColumn[];
-};
+    columns: ApiTableColumn[]
+}
 
 export type TableSchemaConfig = {
-    title: string;
-    description?: string;
-    schema: TableSchema;
-};
+    title: string
+    description?: string
+    schema: TableSchema
+}
 
 type TableProps<T extends object> = {
-    data: T[];
-    columns?: ApiTableColumn[];
-    schema?: TableSchemaConfig;
-    children?: ReactNode;
-};
+    endpoint: string
+    schema: TableSchemaConfig
+    pageSize?: number
+}
 
 const textAlignClasses: Record<TableAlign, string> = {
     left: 'text-left',
     center: 'text-center',
     right: 'text-right',
-};
+}
+
+/* -------------------- */
+/* Utility functions    */
+/* -------------------- */
 
 function resolvePath(data: unknown, path: string): unknown {
     return path
@@ -54,95 +58,127 @@ function resolvePath(data: unknown, path: string): unknown {
         .reduce<unknown>(
             (acc, key) => (acc as Record<string, unknown>)?.[key],
             data
-        );
+        )
 }
 
 function renderTemplate(template: string, data: unknown): string {
     return template.replace(/\{([^}]+)\}/g, (_, path) => {
-        const value = resolvePath(data, path.trim());
-        return value == null ? '' : String(value);
-    });
+        const value = resolvePath(data, path.trim())
+        return value == null ? '' : String(value)
+    })
 }
 
 function buildColumns<T extends object>(
     columns: ApiTableColumn[]
 ): ColumnDef<T>[] {
     return columns.map((column) => {
-        const align = column.align ?? 'left';
-        const lines = Array.isArray(column.cell) ? column.cell : [column.cell];
+        const align = column.align ?? 'left'
 
         return {
             id: column.key,
             header: column.label ?? column.key,
+            enableSorting: true,
             meta: { align },
+
             cell: ({ row }) => (
                 <div className={`leading-tight ${textAlignClasses[align]}`}>
-                    {lines.map((line, index) => (
-                        <div
-                            key={`${column.key}-${index}`}
-                            className={
-                                index === 0
-                                    ? 'text-sm font-medium'
-                                    : 'text-xs text-muted-foreground'
-                            }
-                        >
-                            {renderTemplate(line, row.original)}
+                    <div className="text-sm font-medium">
+                        {renderTemplate(column.value, row.original)}
+                    </div>
+
+                    {column.detail && (
+                        <div className="text-xs text-muted-foreground">
+                            {renderTemplate(column.detail, row.original)}
                         </div>
-                    ))}
+                    )}
                 </div>
             ),
-        };
-    });
+        }
+    })
 }
 
-function normalizeChildColumns(children?: ReactNode): ApiTableColumn[] {
-    return Children.toArray(children)
-        .filter(isValidElement)
-        .reduce<ApiTableColumn[]>((acc, child) => {
-            const childProps = child.props as
-                | (Partial<ApiTableColumn> & {
-                      props?: Partial<ApiTableColumn>;
-                  })
-                | undefined;
-
-            if (!childProps) {
-                return acc;
-            }
-
-            const column = {
-                ...(childProps.props ?? {}),
-                ...childProps,
-            };
-
-            if (!column.key || !column.cell) {
-                return acc;
-            }
-
-            acc.push({
-                key: column.key,
-                label: column.label,
-                align: column.align,
-                cell: column.cell,
-            });
-
-            return acc;
-        }, []);
-}
+/* -------------------- */
+/* Table Component      */
+/* -------------------- */
 
 export function Table<T extends object>({
-    columns,
+    endpoint,
     schema,
-    data,
-    children,
+    pageSize = 10,
 }: TableProps<T>) {
-    const resolvedColumns =
-        columns ?? schema?.schema.columns ?? normalizeChildColumns(children);
+    const [data, setData] = useState<T[]>([])
+    const [total, setTotal] = useState(0)
+    const [loading, setLoading] = useState(false)
+
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize,
+    })
+
+    const [sorting, setSorting] = useState<SortingState>([])
+
+    /* -------------------- */
+    /* Fetch Data           */
+    /* -------------------- */
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true)
+
+            const params = new URLSearchParams({
+                page: String(pagination.pageIndex + 1),
+                value: String(pagination.pageSize),
+            })
+
+            if (sorting.length > 0) {
+                params.append('sort', sorting[0].id)
+                params.append('order', sorting[0].desc ? 'desc' : 'asc')
+            }
+
+            const response = await fetch(`http://localhost:8000${endpoint}?${params}`)
+            console.log('Fetching data from:', `${endpoint}?${params}`)
+            const json = await response.json()
+
+            setData(json.data ?? [])
+            setTotal(json.total ?? 0)
+            setLoading(false)
+        }
+
+        fetchData()
+    }, [endpoint, pagination, sorting])
+
+    /* -------------------- */
+    /* Table Instance       */
+    /* -------------------- */
+
+    const columns = useMemo(
+        () => buildColumns<T>(schema.schema.columns),
+        [schema]
+    )
 
     const table = useReactTable({
         data,
-        columns: buildColumns<T>(resolvedColumns),
+        columns,
+
+        state: {
+            pagination,
+            sorting,
+        },
+
+        onPaginationChange: setPagination,
+        onSortingChange: setSorting,
+
+        manualPagination: true,
+        manualSorting: true,
+
+        pageCount: Math.ceil(total / pagination.pageSize),
+
         getCoreRowModel: getCoreRowModel(),
-    });
+    })
+
+    /* -------------------- */
+    /* Render               */
+    /* -------------------- */
 
     return (
         <div className="overflow-hidden rounded-md border">
@@ -154,40 +190,49 @@ export function Table<T extends object>({
                                 const align =
                                     (
                                         header.column.columnDef.meta as {
-                                            align?: TableAlign;
+                                            align?: TableAlign
                                         }
-                                    )?.align ?? 'left';
+                                    )?.align ?? 'left'
 
                                 return (
                                     <TableHead
                                         key={header.id}
-                                        className={textAlignClasses[align]}
+                                        className={`cursor-pointer ${textAlignClasses[align]}`}
+                                        onClick={header.column.getToggleSortingHandler()}
                                     >
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext()
-                                              )}
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
                                     </TableHead>
-                                );
+                                )
                             })}
                         </TableRow>
                     ))}
                 </TableHeader>
 
                 <TableBody>
-                    {table.getRowModel().rows.length > 0 ? (
+                    {loading ? (
+                        <TableRow>
+                            <TableCell
+                                colSpan={columns.length}
+                                className="h-24 text-center text-muted-foreground"
+                            >
+                                Loading...
+                            </TableCell>
+                        </TableRow>
+                    ) : table.getRowModel().rows.length > 0 ? (
                         table.getRowModel().rows.map((row) => (
                             <TableRow key={row.id}>
                                 {row.getVisibleCells().map((cell) => {
                                     const align =
                                         (
                                             cell.column.columnDef.meta as {
-                                                align?: TableAlign;
+                                                align?: TableAlign
                                             }
-                                        )?.align ?? 'left';
+                                        )?.align ?? 'left'
 
                                     return (
                                         <TableCell
@@ -199,14 +244,14 @@ export function Table<T extends object>({
                                                 cell.getContext()
                                             )}
                                         </TableCell>
-                                    );
+                                    )
                                 })}
                             </TableRow>
                         ))
                     ) : (
                         <TableRow>
                             <TableCell
-                                colSpan={resolvedColumns.length}
+                                colSpan={columns.length}
                                 className="h-24 text-center text-muted-foreground"
                             >
                                 No data available.
@@ -215,8 +260,29 @@ export function Table<T extends object>({
                     )}
                 </TableBody>
             </UITable>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between p-3 border-t text-sm">
+                <button
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    Previous
+                </button>
+
+                <span>
+                    Page {pagination.pageIndex + 1} of {table.getPageCount()}
+                </span>
+
+                <button
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                >
+                    Next
+                </button>
+            </div>
         </div>
-    );
+    )
 }
 
-export default Table;
+export default Table
