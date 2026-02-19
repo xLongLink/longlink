@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-    type ColumnDef,
     type SortingState,
     flexRender,
     getCoreRowModel,
@@ -15,17 +14,15 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { apiFetch } from '@/lib/api';
+import {
+    buildColumns,
+    textAlignClasses,
+    type ApiTableColumn,
+    type TableAlign,
+} from '@/components/table/buildColumns';
+import { useApiTable } from '@/components/table/useApiTable';
 
-export type TableAlign = 'left' | 'center' | 'right';
-
-export type ApiTableColumn = {
-    key: string;
-    label?: string;
-    align?: TableAlign;
-    value: string;
-    detail?: string;
-};
+export type { ApiTableColumn, TableAlign };
 
 export type TableSchema = {
     columns: ApiTableColumn[];
@@ -43,72 +40,11 @@ type TableProps = {
     pageSize?: number;
 };
 
-type TableResponse =
-    | Record<string, unknown>[]
-    | {
-          data?: Record<string, unknown>[];
-          total?: number;
-      };
-
-const textAlignClasses: Record<TableAlign, string> = {
-    left: 'text-left',
-    center: 'text-center',
-    right: 'text-right',
-};
-
-function resolvePath(data: unknown, path: string): unknown {
-    return path
-        .split('.')
-        .reduce<unknown>(
-            (acc, key) => (acc as Record<string, unknown>)?.[key],
-            data
-        );
-}
-
-function renderTemplate(template: string, data: unknown): string {
-    return template.replace(/\{([^}]+)\}/g, (_, path) => {
-        const value = resolvePath(data, path.trim());
-        return value == null ? '' : String(value);
-    });
-}
-
-function buildColumns<T extends object>(
-    columns: ApiTableColumn[]
-): ColumnDef<T>[] {
-    return columns.map((column) => {
-        const align = column.align ?? 'left';
-
-        return {
-            id: column.key,
-            header: column.label ?? column.key,
-            enableSorting: true,
-            meta: { align },
-            cell: ({ row }) => (
-                <div className={`leading-tight ${textAlignClasses[align]}`}>
-                    <div className="text-sm font-medium">
-                        {renderTemplate(column.value, row.original)}
-                    </div>
-
-                    {column.detail ? (
-                        <div className="text-xs text-muted-foreground">
-                            {renderTemplate(column.detail, row.original)}
-                        </div>
-                    ) : null}
-                </div>
-            ),
-        };
-    });
-}
-
 export function Table<T extends object>({
     endpoint,
     schema,
     pageSize = 10,
 }: TableProps) {
-    const [data, setData] = useState<T[]>([]);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(false);
-
     const [pagination, setPagination] = useState({
         pageIndex: 0,
         pageSize,
@@ -116,27 +52,11 @@ export function Table<T extends object>({
 
     const [sorting, setSorting] = useState<SortingState>([]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-
-            try {
-                const response = await apiFetch<TableResponse>(endpoint);
-
-                if (Array.isArray(response)) {
-                    setData(response as T[]);
-                    setTotal(response.length);
-                } else {
-                    setData((response.data ?? []) as T[]);
-                    setTotal(response.total ?? response.data?.length ?? 0);
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        void fetchData();
-    }, [endpoint, pagination, sorting]);
+    const { data, total, loading } = useApiTable<T>({
+        endpoint,
+        pagination,
+        sorting,
+    });
 
     const columns = useMemo(
         () => buildColumns<T>(schema?.schema?.columns ?? []),
