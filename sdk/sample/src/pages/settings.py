@@ -43,4 +43,37 @@ async def settings_page() -> Page:
     )
     security_tab.button("Update security settings", variant="secondary")
 
+    settings_menu = page.menu()
+
+    account_section = settings_menu.section("Account")
+    account_profile = account_section.section("Profile")
+    account_profile.input(
+        label="Public handle",
+        placeholder="@janedoe",
+        description="Displayed in mentions and activity feeds.",
+    )
+
+    account_preferences = account_section.section("Preferences")
+    account_preferences.input(
+        label="Language",
+        placeholder="English",
+        description="Set the default language for your workspace.",
+    )
+
+    team_section = settings_menu.section("Team")
+    members_subsection = team_section.section("Members")
+    members_subsection.input(
+        label="Default role",
+        placeholder="Member",
+        description="Applied when inviting new team members.",
+    )
+
+    access_subsection = team_section.section("Access")
+    access_subsection.input(
+        label="Session timeout",
+        placeholder="8 hours",
+        description="Automatically sign out inactive users.",
+        submit="Save team settings",
+    )
+
     return page
