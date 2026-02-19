@@ -1,10 +1,12 @@
 import {
     Children,
     isValidElement,
+    lazy,
     useEffect,
     useMemo,
     useState,
     type ReactElement,
+    type LazyExoticComponent,
     type ReactNode,
 } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -25,13 +27,13 @@ type MenuProps = {
 };
 
 type MenuSectionProps = {
-    title?: string;
+    title: string;
     icon?: string | null;
     children?: ReactNode;
 };
 
 type MenuSubSectionProps = {
-    title?: string;
+    title: string;
     root?: boolean;
     children?: ReactNode;
 };
@@ -59,45 +61,50 @@ type NormalizedSection = {
     subSections: NormalizedSubSection[];
 };
 
-function getDefaultActiveValue(
-    sections: NormalizedSection[]
-): string | undefined {
-    const firstSection = sections[0];
+type IconModule = {
+    default: LucideIcon;
+};
 
-    if (!firstSection) {
-        return undefined;
+const iconImporters = import.meta.glob<IconModule>(
+    '/node_modules/lucide-react/dist/esm/icons/*.js'
+);
+const lazyIcons: Record<string, LazyExoticComponent<LucideIcon>> = {};
+
+for (const path in iconImporters) {
+    const match = path.match(/icons\/(.*)\.js$/);
+
+    if (!match) {
+        continue;
     }
 
-    if (firstSection.rootSubSection) {
-        return firstSection.id;
-    }
-
-    return firstSection.subSections[0]?.id ?? firstSection.id;
+    lazyIcons[match[1]] = lazy(iconImporters[path]);
 }
 
-function resolveSectionTitle(props: ParsedMenuSectionProps): string {
-    return props.title ?? props.props?.title ?? 'Section';
+function flattenParsedProps<T extends { props?: T }>(props: T): T {
+    if (!props.props) {
+        return props;
+    }
+
+    return {
+        ...props.props,
+        ...props,
+        props: undefined,
+    };
 }
 
 function resolveSectionIcon(props: ParsedMenuSectionProps): LucideIcon {
-    const iconName = props.icon ?? props.props?.icon;
+    const sectionProps = flattenParsedProps(props);
+    const iconName = sectionProps.icon;
 
     if (!iconName) {
         return AppWindow;
     }
 
-    return AppWindow; // getIconByName(iconName, AppWindow);
-}
-
-function resolveSubSectionTitle(
-    props: ParsedMenuSubSectionProps,
-    fallback: string
-): string {
-    return props.title ?? props.props?.title ?? fallback;
+    return (lazyIcons[iconName] ?? AppWindow) as LucideIcon;
 }
 
 function resolveSubSectionIsRoot(props: ParsedMenuSubSectionProps): boolean {
-    return props.root ?? props.props?.root ?? false;
+    return flattenParsedProps(props).root ?? false;
 }
 
 function normalizeSections(children?: ReactNode): NormalizedSection[] {
@@ -106,22 +113,22 @@ function normalizeSections(children?: ReactNode): NormalizedSection[] {
     ) as ReactElement<ParsedMenuSectionProps>[];
 
     return sections.map((section, sectionIndex) => {
-        const sectionChildren = Children.toArray(section.props.children).filter(
+        const sectionProps = flattenParsedProps(section.props);
+        const sectionChildren = Children.toArray(sectionProps.children).filter(
             (child) => isValidElement(child) && child.type === MenuSubSection
         ) as ReactElement<ParsedMenuSubSectionProps>[];
 
         const normalizedSubSections = sectionChildren.map(
-            (subSection, subIndex) => ({
-                id: `section-${sectionIndex}-sub-${subIndex}`,
-                title: resolveSubSectionTitle(
-                    subSection.props,
-                    subSection.props.root || subSection.props.props?.root
-                        ? 'Overview'
-                        : `Sub-section ${subIndex + 1}`
-                ),
-                isRoot: resolveSubSectionIsRoot(subSection.props),
-                children: subSection.props.children,
-            })
+            (subSection, subIndex) => {
+                const subSectionProps = flattenParsedProps(subSection.props);
+
+                return {
+                    id: `section-${sectionIndex}-sub-${subIndex}`,
+                    title: subSectionProps.title,
+                    isRoot: resolveSubSectionIsRoot(subSection.props),
+                    children: subSectionProps.children,
+                };
+            }
         );
 
         const rootSubSection = normalizedSubSections.find(
@@ -130,7 +137,7 @@ function normalizeSections(children?: ReactNode): NormalizedSection[] {
 
         return {
             id: `section-${sectionIndex}`,
-            title: resolveSectionTitle(section.props),
+            title: sectionProps.title,
             icon: resolveSectionIcon(section.props),
             rootSubSection,
             subSections: normalizedSubSections.filter(
@@ -150,9 +157,17 @@ export function MenuSubSection({ children }: MenuSubSectionProps) {
 
 export function Menu({ children }: MenuProps) {
     const sections = useMemo(() => normalizeSections(children), [children]);
-    const [activeValue, setActiveValue] = useState<string | undefined>(() =>
-        getDefaultActiveValue(sections)
-    );
+    const [activeValue, setActiveValue] = useState<string | undefined>(() => {
+        const firstSection = sections[0];
+
+        if (!firstSection) {
+            return undefined;
+        }
+
+        return firstSection.rootSubSection
+            ? firstSection.id
+            : (firstSection.subSections[0]?.id ?? firstSection.id);
+    });
 
     useEffect(() => {
         if (!sections.length) {
@@ -169,7 +184,18 @@ export function Menu({ children }: MenuProps) {
         );
 
         if (!hasActiveValue) {
-            setActiveValue(getDefaultActiveValue(sections));
+            const firstSection = sections[0];
+
+            if (!firstSection) {
+                setActiveValue(undefined);
+                return;
+            }
+
+            setActiveValue(
+                firstSection.rootSubSection
+                    ? firstSection.id
+                    : (firstSection.subSections[0]?.id ?? firstSection.id)
+            );
         }
     }, [activeValue, sections]);
 
