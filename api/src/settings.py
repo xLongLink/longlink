@@ -6,15 +6,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # like the admin database credentials, authentications credentials, etc. They are not shared with the tools, and they are not used in the tools.
 # -> ORG_*: those are the one loaded from the enviroment, they are
 
-class Settings(BaseSettings):
-    """App settings, those are all ENV"""
+# Organization specitic settings that can be re-used in the tools
+# ORG_NAME: str
+# ORG_COUNTRY: str
+# ORG_ID: str
+# ORG_NAME: str
+# ORG_SECTOR: str
 
-    # Organization specitic settings that can be re-used in the tools
-    ORG_NAME: str
-    # ORG_COUNTRY: str
-    # ORG_ID: str
-    # ORG_NAME: str
-    # ORG_SECTOR: str
+
+class Settings(BaseSettings):
+    """Api specific settings"""
     
     DATABASE_URL: str
 
