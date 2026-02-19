@@ -20,18 +20,23 @@ import {
 import { Input } from '@/components/ui/input';
 import { useApps, useCreateApp } from '@/hooks/use-apps';
 
-const columns: ApiTableColumn[] = [
-    {
-        key: 'name',
-        label: 'Name',
-        cell: '{name}',
+const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
+    title: 'Apps',
+    schema: {
+        columns: [
+            {
+                key: 'name',
+                label: 'Name',
+                value: '{name}',
+            },
+            {
+                key: 'url',
+                label: 'URL',
+                value: '{url}',
+            },
+        ],
     },
-    {
-        key: 'url',
-        label: 'URL',
-        cell: '{url}',
-    },
-];
+};
 
 export default function Apps() {
     const { data: apps = [], isLoading, error } = useApps();
@@ -125,7 +130,7 @@ export default function Apps() {
                     </Empty>
                 </Card>
             ) : (
-                <Table data={apps} columns={columns} />
+                <Table endpoint="/apps" schema={tableSchema} />
             )}
         </div>
     );
