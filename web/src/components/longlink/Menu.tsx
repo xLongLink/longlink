@@ -86,7 +86,7 @@ function resolveSectionIcon(props: ParsedMenuSectionProps): LucideIcon {
         return AppWindow;
     }
 
-    return AppWindow // getIconByName(iconName, AppWindow);
+    return AppWindow; // getIconByName(iconName, AppWindow);
 }
 
 function resolveSubSectionTitle(
@@ -181,7 +181,7 @@ export function Menu({ children }: MenuProps) {
         <BaseMenu
             value={activeValue}
             onValueChange={setActiveValue}
-            ariaLabel="ViaVai menu"
+            ariaLabel="Longlink menu"
         >
             <aside className="w-64">
                 <MenuList>

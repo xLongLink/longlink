@@ -92,7 +92,7 @@ export default function Login() {
                         </div>
                         <h1 className="text-2xl font-semibold">Welcome back</h1>
                         <p className="text-sm text-white/60">
-                            Choose a provider to continue to ViaVai.
+                            Choose a provider to continue to Longlink.
                         </p>
                     </div>
 

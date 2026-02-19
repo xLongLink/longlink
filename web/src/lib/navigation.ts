@@ -112,7 +112,7 @@ export function formatOrganizationName(value: string) {
 
 export function formatAppName(value: string) {
     const appNames: Record<string, string> = {
-        viavai: 'ViaVai',
+        longlink: 'Longlink',
         atlas: 'Atlas',
         pulse: 'Pulse',
     };

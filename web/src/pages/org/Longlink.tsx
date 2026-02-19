@@ -10,7 +10,7 @@ type AppMetadata = {
 
 const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '');
 
-export default function ViaVai() {
+export default function Longlink() {
     const { app, '*': wildcardPath } = useParams();
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
