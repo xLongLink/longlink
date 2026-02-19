@@ -1,7 +1,7 @@
 import { Plus, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import Hero from '@/components/viavai/Hero';
+import Hero from '@/components/longlink/Hero';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {

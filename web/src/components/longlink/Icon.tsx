@@ -5,9 +5,10 @@ type IconModule = {
     default: LucideIcon;
 };
 
-const iconImporters = import.meta.glob<IconModule>('/node_modules/lucide-react/dist/esm/icons/*.js');
+const iconImporters = import.meta.glob<IconModule>(
+    '/node_modules/lucide-react/dist/esm/icons/*.js'
+);
 const lazyIcons: Record<string, React.LazyExoticComponent<LucideIcon>> = {};
-
 
 // Build once at module load
 for (const path in iconImporters) {
@@ -17,7 +18,6 @@ for (const path in iconImporters) {
     const iconName = match[1]; // already kebab-case
     lazyIcons[iconName] = React.lazy(iconImporters[path]);
 }
-
 
 type IconProps = LucideProps & {
     name: string;
