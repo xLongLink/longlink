@@ -1,13 +1,13 @@
 import type React from 'react';
-import Button from '@/components/viavai/Button';
-import Columns, { Column } from '@/components/viavai/Columns';
-import Dialog from '@/components/viavai/Dialog';
-import Hero from '@/components/viavai/Hero';
-import Input from '@/components/viavai/Input';
-import Menu, { MenuSection, MenuSubSection } from '@/components/viavai/Menu';
-import Separator from '@/components/viavai/Separator';
-import Table from '@/components/viavai/Table';
-import Tabs, { Tab } from '@/components/viavai/Tabs';
+import Button from '@/components/longlink/Button';
+import Columns, { Column } from '@/components/longlink/Columns';
+import Dialog from '@/components/longlink/Dialog';
+import Hero from '@/components/longlink/Hero';
+import Input from '@/components/longlink/Input';
+import Menu, { MenuSection, MenuSubSection } from '@/components/longlink/Menu';
+import Separator from '@/components/longlink/Separator';
+import Table from '@/components/longlink/Table';
+import Tabs, { Tab } from '@/components/longlink/Tabs';
 
 const registry = {
     hero: Hero,

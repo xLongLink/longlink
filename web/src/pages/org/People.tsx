@@ -1,6 +1,6 @@
 import { Users } from 'lucide-react';
-import Hero from '@/components/viavai/Hero';
-import Table, { type ApiTableColumn } from '@/components/viavai/Table';
+import Hero from '@/components/longlink/Hero';
+import Table, { type ApiTableColumn } from '@/components/longlink/Table';
 import { Card } from '@/components/ui/card';
 import {
     Empty,
