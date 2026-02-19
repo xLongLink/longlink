@@ -1,5 +1,5 @@
 import src.db as db
-from typing import cast
+from typing import Any, cast
 from fastapi import Request, HTTPException
 from src.auth import oauth, AVAILABLE_AUTH_METHODS
 from src.router import router
@@ -38,12 +38,31 @@ async def auth_github(request: Request):
     token = await github.authorize_access_token(request)
     userinfo = await github.get('user', token=token)
 
+    github_user = userinfo.json()
+    email = github_user.get('email')
+
+    if not email:
+        emails_response = await github.get('user/emails', token=token)
+        emails = cast(list[dict[str, Any]], emails_response.json())
+        primary_verified_email = next(
+            (
+                entry.get('email')
+                for entry in emails
+                if entry.get('primary') and entry.get('verified') and entry.get('email')
+            ),
+            None,
+        )
+        email = primary_verified_email
+
+    if not email:
+        email = '{}@users.noreply.github.com'.format(github_user.get('login') or github_user.get('id'))
+
     # Ensure that the user exists in our database
     user = await db.users.create(
-        name=userinfo.json().get('name') or userinfo.json().get('login'),
-        email=userinfo.json().get('email') or 'sample@localhost',
-        avatar=userinfo.json().get('avatar_url'),
-        oauth_github_id=userinfo.json().get('id'),
+        name=github_user.get('name') or github_user.get('login'),
+        email=email,
+        avatar=github_user.get('avatar_url'),
+        oauth_github_id=github_user.get('id'),
     )
 
     request.session['userid'] = user.id
