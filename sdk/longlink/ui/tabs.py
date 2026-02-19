@@ -1,16 +1,21 @@
+from .__root__ import Component
 from dataclasses import dataclass, field
 
-from .__root__ import Component
-from .button import Button, ButtonVariants
-from .columns import Column, Columns
+
+# Importing components
 from .hero import Hero
 from .input import Input
-from .separator import Separator
 from .table import Table
+from .columns import Column, Columns
+from .button import Button, ButtonVariants
+from .separator import Separator
+
 
 
 @dataclass
 class Tab(Component):
+    """LongLink Tab component, used in the Tabs component"""
+
     name: str
     _children: list[Component] = field(default_factory=list)
 
@@ -65,6 +70,8 @@ class Tab(Component):
 
 @dataclass
 class Tabs(Component):
+    """LongLink Tabs component, used to create a tabbed interface"""
+    
     _tabs: list[str] = field(default_factory=list)
     _children: list[Tab] = field(default_factory=list)
 

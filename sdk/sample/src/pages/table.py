@@ -40,6 +40,18 @@ async def table_page() -> Page:
     projects_table.column('name', label='Project', cell='{name}')
     projects_table.column('owner', label='Owner', cell='{owner}')
     projects_table.column('status', label='Status', cell='{status}')
-    projects_table.column('budget', label='Budget', cell='{budget}', align='right')
+    col = projects_table.column('budget', label='Budget', cell='{budget}', align='right')
 
     return page
+
+
+# cell='link({name}, /projects/{id})'
+# cell='badge({status})'
+# cell='badge({status}, color={status_color})'
+# cell='bold({name})'
+# cell='italic({name})'
+# cell='code({name})'
+# cell='tag({status})'
+# cell='tag({status}, color={status_color})'
+# cell='avatar({owner})'
+# cell='avatar({owner}, size=32)'

@@ -1,17 +1,26 @@
+from .__root__ import Component
 from dataclasses import dataclass, field
 
-from .__root__ import Component
+
+# Importing components
 from .tabs import Tab, Tabs
-from .button import Button, ButtonVariants
-from .columns import Column, Columns
 from .hero import Hero
 from .input import Input
-from .separator import Separator
 from .table import Table
+from .separator import Separator
+from .columns import Column, Columns
+from .button import Button, ButtonVariants
+
 
 
 @dataclass
 class MenuSubSection(Component):
+    """LongLink SubSection component, used in the MenuSection component
+    
+    When a Section has a Subsection, a dropdown icon is added to the sections that groups the subsections.
+    Root: True indicate that the content of the section is directly in the section, without the need of a subsection.
+    """
+
     title: str
     root: bool = False
     _children: list[Component] = field(default_factory=list)
@@ -73,6 +82,7 @@ class MenuSubSection(Component):
 
 @dataclass
 class MenuSection(Component):
+    """LongLink MenuSection component, used in the Menu component"""
     title: str
     icon: str | None = None
     _root: MenuSubSection = field(default_factory=lambda: MenuSubSection(title='', root=True))
@@ -140,6 +150,10 @@ class MenuSection(Component):
 
 @dataclass
 class Menu(Component):
+    """LongLink Menu component
+    
+    This is inspired by the GitHub settings menu: https://github.com/XLongLink/longlink/settings
+    """
     _children: list[MenuSection] = field(default_factory=list)
 
     def section(self, title: str, icon: str | None = None) -> MenuSection:

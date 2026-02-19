@@ -8,6 +8,13 @@ from .__root__ import Component
 
 @dataclass
 class Input(Component):
+    """LongLink Input component, used to collect user input
+
+    If used standalone, the submit button will call an endpoint.
+    This can be used for a settings value, or a search input.
+    If a page is returned, the page will be reloaded with the new data.
+    """
+
     label: str | None = None
     placeholder: str | None = None
     description: str | None = None
