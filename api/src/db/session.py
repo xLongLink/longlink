@@ -1,5 +1,5 @@
 from src.db.models import Base
-from src.settings import settings
+from src.envs import settings
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 
