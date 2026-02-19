@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import Button from '@/components/viavai/Button';
-import { Icon } from '@/components/viavai/Icon';
+import Button from '@/components/longlink/Button';
+import { Icon } from '@/components/longlink/Icon';
 
 type HeroProps = {
     icon?: string | null;
@@ -9,7 +9,6 @@ type HeroProps = {
     subtitle?: string | null;
     children?: ReactNode;
 };
-
 
 /* 
     A Hero component, it allows to to display a basic information about a page.
@@ -22,10 +21,7 @@ export function Hero({ title, subtitle, action, icon, children }: HeroProps) {
             <div className="flex items-center gap-3">
                 {icon ? (
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl border">
-                        <Icon
-                            name={icon}
-                            className="h-5 w-5"
-                        />
+                        <Icon name={icon} className="h-5 w-5" />
                     </div>
                 ) : null}
 

@@ -14,7 +14,7 @@ import NotFound from '@/pages/NotFound';
 import People from '@/pages/org/People';
 import SettingsPage from '@/pages/org/Settings';
 import Apps from '@/pages/org/Apps';
-import ViaVai from '@/pages/org/ViaVai';
+import Longlink from '@/pages/org/Longlink';
 
 const withAuth = (element: ReactElement) => (
     <RequireAuth>{element}</RequireAuth>
@@ -31,7 +31,7 @@ const router = createBrowserRouter([
             { path: 'settings', element: <SettingsPage /> },
             {
                 path: 'apps/:app/*',
-                element: <ViaVai />,
+                element: <Longlink />,
             },
         ],
     },
