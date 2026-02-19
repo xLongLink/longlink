@@ -10,11 +10,12 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUser } from '@/hooks/use-user';
+import { useSignOut, useUser } from '@/hooks/use-user';
 
 export function UserProfile() {
     const navigate = useNavigate();
-    const { user, signOut } = useUser();
+    const { data: user } = useUser();
+    const { mutateAsync: signOut } = useSignOut();
     const username = user?.name ?? 'Guest';
     const fullName = user?.email ?? 'Not signed in';
     const avatarUrl = user?.avatar ?? '';

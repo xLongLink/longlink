@@ -1,5 +1,5 @@
 import Render, { type RenderNodeSchema } from '@/components/Render';
-import { useData } from '@/hooks/use-data';
+import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
@@ -15,7 +15,7 @@ export default function Longlink() {
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
     const { data: appMetadata, isLoading: isAppMetadataLoading } =
-        useData<AppMetadata>(
+        useApiData<AppMetadata>(
             app && normalizedRoutePath.length === 0 ? `/apps/${app}` : null
         );
 
@@ -34,7 +34,7 @@ export default function Longlink() {
             : null
         : null;
 
-    const { data, isLoading, error } = useData<unknown>(pageEndpoint);
+    const { data, isLoading, error } = useApiData<unknown>(pageEndpoint);
 
     const samplePageData = Array.isArray(data)
         ? (data as RenderNodeSchema[])

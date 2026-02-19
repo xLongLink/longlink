@@ -17,7 +17,7 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useData } from '@/hooks/use-data';
+import { useApiData } from '@/hooks/use-data';
 import {
     getActiveTabConfig,
     getAppTabsFromPages,
@@ -42,7 +42,7 @@ export default function Layout() {
     const appMetadataEndpoint = app ? `/apps/${app}` : null;
 
     const { data: appMetadata, isLoading: isAppMetadataLoading } =
-        useData<AppMetadata>(appMetadataEndpoint);
+        useApiData<AppMetadata>(appMetadataEndpoint);
     const appTabs = app
         ? isAppMetadataLoading
             ? [

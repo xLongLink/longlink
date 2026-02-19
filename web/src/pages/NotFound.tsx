@@ -4,10 +4,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import { useUser } from '@/hooks/use-user';
 
-
 export default function NotFound() {
     const location = useLocation();
-    const { user } = useUser();
+    const { data: user } = useUser();
     const primaryLink = user ? '/' : '/';
     const primaryLabel = user ? 'Back to dashboard' : 'Back to home';
 
