@@ -1,6 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# There are 3 types of settings:
+# -> ENV_*: those are the one loaded from the enviroment, they are secrets that are used in the API only. 
+# like the admin database credentials, authentications credentials, etc. They are not shared with the tools, and they are not used in the tools.
+# -> ORG_*: those are the one loaded from the enviroment, they are
+
 class Settings(BaseSettings):
     """App settings, those are all ENV"""
 
