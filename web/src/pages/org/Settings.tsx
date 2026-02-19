@@ -1,4 +1,3 @@
-import Hero from '@/components/viavai/Hero';
 import { Menu, MenuContent, MenuList, MenuSection } from '@/components/ui/menu';
 
 const settingSections = [
@@ -25,12 +24,6 @@ const toMenuValue = (section: string) =>
 export default function SettingsPage() {
     return (
         <div className="space-y-6">
-            <Hero
-                title="Settings"
-                subtitle="Organization settings"
-                icon="settings"
-            />
-
             <Menu defaultValue={toMenuValue(settingSections[0])}>
                 <MenuList>
                     {settingSections.map((section) => (
