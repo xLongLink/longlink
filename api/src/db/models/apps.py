@@ -12,5 +12,6 @@ class App(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     url: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
 
     date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())

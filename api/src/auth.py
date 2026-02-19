@@ -1,6 +1,6 @@
 import src.db as db
-from fastapi import HTTPException, Request
 from authlib.integrations.starlette_client import OAuth
+from fastapi import HTTPException, Request
 from src.envs import settings
 
 """
@@ -48,3 +48,20 @@ async def authuser(request: Request) -> db.User:
     if not user:
         raise HTTPException(401, 'Not authenticated')
     return user
+
+
+async def authapp(request: Request) -> db.App:
+    auth_header = request.headers.get('authorization')
+    token = request.headers.get('x-app-token')
+
+    if auth_header and auth_header.lower().startswith('bearer '):
+        token = auth_header[7:].strip()
+
+    if not token:
+        raise HTTPException(401, 'Missing app token')
+
+    app = await db.apps.get_by_token(token)
+    if app is None:
+        raise HTTPException(401, 'Invalid app token')
+
+    return app
