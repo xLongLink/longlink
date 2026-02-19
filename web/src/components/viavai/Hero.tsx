@@ -3,22 +3,28 @@ import Button from '@/components/viavai/Button';
 import { Icon } from '@/components/viavai/Icon';
 
 type HeroProps = {
-    title: string;
-    subtitle?: string | null;
-    action?: string | null;
     icon?: string | null;
+    title: string;
+    action?: string | null;
+    subtitle?: string | null;
     children?: ReactNode;
 };
 
+
+/* 
+    A Hero component, it allows to to display a basic information about a page.
+    It can be used with a single title, with a subtitle, with an action button that opens a dialog (with a form)
+    It supports an icon
+*/
 export function Hero({ title, subtitle, action, icon, children }: HeroProps) {
     return (
         <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
                 {icon ? (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border">
                         <Icon
                             name={icon}
-                            className="h-5 w-5 text-emerald-300"
+                            className="h-5 w-5"
                         />
                     </div>
                 ) : null}
