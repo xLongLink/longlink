@@ -4,6 +4,15 @@ from src.db.session import get_session
 
 
 class UsersService:
+    async def list(self) -> list[User]:
+        '''Return all users in the database.'''
+
+        Session = await get_session()
+        async with Session() as session:
+            statement = select(User)
+            result = await session.execute(statement)
+            return list(result.scalars().all())
+
     async def create(
         self,
         name: str,
