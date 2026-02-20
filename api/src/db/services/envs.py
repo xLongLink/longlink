@@ -9,7 +9,7 @@ class EnvsService:
         '''Return all env secrets for an app.'''
         Session = await get_session()
         async with Session() as session:
-            statement = select(Env).where(Env.app_id == app_id)
+            statement = select(Env).where(Env.appid == app_id)
             result = await session.execute(statement)
             return list(result.scalars().all())
 
@@ -17,7 +17,7 @@ class EnvsService:
         '''Return an env secret by key and app scope.'''
         Session = await get_session()
         async with Session() as session:
-            statement = select(Env).where(Env.key == key, Env.app_id == app_id)
+            statement = select(Env).where(Env.key == key, Env.appid == app_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -25,12 +25,12 @@ class EnvsService:
         '''Create or update an env secret by key and app scope.'''
         Session = await get_session()
         async with Session() as session:
-            statement = select(Env).where(Env.key == key, Env.app_id == app_id)
+            statement = select(Env).where(Env.key == key, Env.appid == app_id)
             result = await session.execute(statement)
             env = result.scalar_one_or_none()
 
             if env is None:
-                env = Env(key=key, value=value, app_id=app_id)
+                env = Env(key=key, value=value, appid=app_id)
                 session.add(env)
             else:
                 env.value = value

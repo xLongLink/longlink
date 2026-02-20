@@ -11,9 +11,9 @@ class SettingsService:
         async with Session() as session:
             statement = select(Setting)
             if app_id is None:
-                statement = statement.where(Setting.app_id.is_(None))
+                statement = statement.where(Setting.appid.is_(None))
             else:
-                statement = statement.where(Setting.app_id == app_id)
+                statement = statement.where(Setting.appid == app_id)
 
             result = await session.execute(statement)
             return list(result.scalars().all())
@@ -24,9 +24,9 @@ class SettingsService:
         async with Session() as session:
             statement = select(Setting).where(Setting.key == key)
             if app_id is None:
-                statement = statement.where(Setting.app_id.is_(None))
+                statement = statement.where(Setting.appid.is_(None))
             else:
-                statement = statement.where(Setting.app_id == app_id)
+                statement = statement.where(Setting.appid == app_id)
 
             result = await session.execute(statement)
             return result.scalar_one_or_none()
@@ -37,15 +37,15 @@ class SettingsService:
         async with Session() as session:
             statement = select(Setting).where(Setting.key == key)
             if app_id is None:
-                statement = statement.where(Setting.app_id.is_(None))
+                statement = statement.where(Setting.appid.is_(None))
             else:
-                statement = statement.where(Setting.app_id == app_id)
+                statement = statement.where(Setting.appid == app_id)
 
             result = await session.execute(statement)
             setting = result.scalar_one_or_none()
 
             if setting is None:
-                setting = Setting(key=key, value=value, app_id=app_id)
+                setting = Setting(key=key, value=value, appid=app_id)
                 session.add(setting)
             else:
                 setting.value = value
