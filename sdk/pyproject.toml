@@ -10,7 +10,8 @@ dependencies = [
     "click",
     "uvicorn",
     "pydantic",
-    "httpx"
+    "httpx",
+    "fsspec",
 ]
 requires-python = ">=3.12"
 authors = [

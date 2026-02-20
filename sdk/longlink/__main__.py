@@ -18,6 +18,7 @@ def dev():
 
     # add CWD to import path
     sys.path.insert(0, os.getcwd())
+    os.environ["DEV"] = "True"
 
     uvicorn.run(
         "src.app:app",
