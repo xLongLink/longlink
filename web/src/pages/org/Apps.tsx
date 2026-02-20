@@ -27,7 +27,10 @@ const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
             {
                 key: 'name',
                 label: 'Name',
-                value: '{name}',
+                content: {
+                    value: '{name}',
+                    link: '/apps/{name}',
+                },
             },
             {
                 key: 'url',
