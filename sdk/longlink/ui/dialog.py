@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 
 
 # Importing components that can be used in a Page
-from .hero import Hero
 from .input import Input
 
 
@@ -13,7 +12,9 @@ class Dialog(Component):
     cancel: str = 'Cancel'
     _components: list[Component] = field(default_factory=list)
 
-    def hero(self, title: str, subtitle: str | None = None) -> Hero:
+    def hero(self, title: str, subtitle: str | None = None) -> 'Hero':
+        from .hero import Hero
+
         hero = Hero(title=title, subtitle=subtitle)
         self._components.append(hero)
         return hero
