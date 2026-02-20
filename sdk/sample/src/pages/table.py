@@ -37,21 +37,21 @@ async def table_page() -> Page:
         ]
     )
 
-    projects_table.column('name', label='Project', cell='{name}')
-    projects_table.column('owner', label='Owner', cell='{owner}')
-    projects_table.column('status', label='Status', cell='{status}')
-    col = projects_table.column('budget', label='Budget', cell='{budget}', align='right')
+    projects_table.column('name', label='Project', content='{name}')
+    projects_table.column('owner', label='Owner', content='{owner}')
+    projects_table.column('status', label='Status', content='{status}')
+    projects_table.column('budget', label='Budget', content='{budget}', align='right')
 
     return page
 
 
-# cell='link({name}, /projects/{id})'
-# cell='badge({status})'
-# cell='badge({status}, color={status_color})'
-# cell='bold({name})'
-# cell='italic({name})'
-# cell='code({name})'
-# cell='tag({status})'
-# cell='tag({status}, color={status_color})'
-# cell='avatar({owner})'
-# cell='avatar({owner}, size=32)'
+# content='link({name}, /projects/{id})'
+# content='badge({status})'
+# content='badge({status}, color={status_color})'
+# content='bold({name})'
+# content='italic({name})'
+# content='code({name})'
+# content='tag({status})'
+# content='tag({status}, color={status_color})'
+# content='avatar({owner})'
+# content='avatar({owner}, size=32)'
