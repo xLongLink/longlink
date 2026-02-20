@@ -10,7 +10,7 @@ class LongLink(Router, Cron):
         self.title = title
         self.description = description
         self.version = version
-        self.settings = Settings()
+        # self.settings = Settings()
         super().__init__()
 
         @self.get("/")

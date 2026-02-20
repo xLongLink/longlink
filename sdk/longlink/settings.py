@@ -21,10 +21,4 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings() # type: ignore
-
-
-# Permissions
-# Read
-# Write
-# Admin
+# settings = Settings()
