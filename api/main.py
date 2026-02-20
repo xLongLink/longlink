@@ -49,7 +49,7 @@ if __name__ == '__main__':
         apps = await db.apps.list()
         sample_exists = any(app.name == 'sample' for app in apps)
         if not sample_exists:
-            await db.apps.create('sample', 'http://localhost:1707')
+            await db.apps.create('sample', 'http://localhost:1707', token="1234")
 
     asyncio.run(register_sample_app())
 

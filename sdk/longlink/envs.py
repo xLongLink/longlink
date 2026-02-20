@@ -1,30 +1,25 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class Envs(BaseSettings):
     """App specific settings, extend this class to add more settings."""
+    dev: bool = False
 
     # The application key, used to identify the application in the API
-    ENV_APP_KEY: str
+    key: str
 
     # The application specific database
-    ENV_DATABASE_URL: str
+    database_url: str
     
     # The application specific storage
-    ENV_STORAGE_ENDPOINT: str
-    ENV_STORAGE_TOKEN: str
-
-
+    storage_key: str
+    storage_secret: str
+    storage_endpoint: str
+    
     model_config = SettingsConfigDict(
         env_file=('.env.sample', '.env'),
         env_file_encoding='utf-8'
     )
 
 
-settings = Settings() # type: ignore
-
-
-# Permissions
-# Read
-# Write
-# Admin
+envs = Envs() # type: ignore
