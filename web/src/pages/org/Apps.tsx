@@ -44,6 +44,8 @@ export default function Apps() {
     const [name, setName] = useState('');
     const [url, setUrl] = useState('');
     const [createError, setCreateError] = useState<string | null>(null);
+    const loadErrorMessage =
+        error instanceof Error ? error.message : 'Failed to load apps';
 
     const onCreateApp = async () => {
         if (!name.trim() || !url.trim()) {
@@ -113,7 +115,9 @@ export default function Apps() {
                     Loading apps...
                 </Card>
             ) : error ? (
-                <Card className="p-10 text-center text-red-300">{error}</Card>
+                <Card className="p-10 text-center text-red-300">
+                    {loadErrorMessage}
+                </Card>
             ) : apps.length === 0 ? (
                 <Card className="p-10 text-center">
                     <Empty>
