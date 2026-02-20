@@ -1,5 +1,3 @@
-import hashlib
-
 from sqlalchemy import select
 
 from src.db.models import App
@@ -29,10 +27,8 @@ class AppsService:
         '''Return a registered app by token.'''
 
         Session = await get_session()
-        token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
-
         async with Session() as session:
-            statement = select(App).where(App.token_hash == token_hash)
+            statement = select(App).where(App.token == token)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -40,7 +36,6 @@ class AppsService:
         '''Add a new app to the database.'''
 
         Session = await get_session()
-        token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
 
         async with Session() as session:
             statement = select(App).where(App.url == url)
@@ -49,13 +44,13 @@ class AppsService:
             if existing_app is not None:
                 raise ValueError('App URL already exists')
 
-            token_statement = select(App).where(App.token_hash == token_hash)
+            token_statement = select(App).where(App.token == token)
             token_result = await session.execute(token_statement)
             existing_token = token_result.scalar_one_or_none()
             if existing_token is not None:
                 raise ValueError('App token already exists')
 
-            app = App(name=name, url=url, token_hash=token_hash)
+            app = App(name=name, url=url, token=token)
             session.add(app)
             await session.commit()
             await session.refresh(app)

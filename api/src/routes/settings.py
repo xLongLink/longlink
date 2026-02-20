@@ -14,7 +14,7 @@ async def get_setting(key: str) -> SettingResponse:
     return SettingResponse(
         key=setting.key,
         value=setting.value,
-        app_id=setting.app_id,
+        app_id=setting.appid,
     )
 
 
@@ -24,5 +24,5 @@ async def set_setting(key: str, payload: SettingSet) -> SettingResponse:
     return SettingResponse(
         key=setting.key,
         value=setting.value,
-        app_id=setting.app_id,
+        app_id=setting.appid,
     )
