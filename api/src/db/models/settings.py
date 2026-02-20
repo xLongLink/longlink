@@ -13,6 +13,8 @@ class Setting(Base):
     # Propriety
     key: Mapped[str] = mapped_column(String(128), nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False)
-    app_id: Mapped[int | None] = mapped_column(ForeignKey('apps.id', ondelete='CASCADE'), nullable=True)
+    appid: Mapped[int | None] = mapped_column(ForeignKey('apps.id', ondelete='CASCADE'), nullable=True)
 
+    # Timestamp informations
+    date_update: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
