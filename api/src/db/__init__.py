@@ -1,6 +1,7 @@
-from .models import App, Setting, User
-from .services import AppsService, SettingsService, UsersService
+from .models import App, Env, Setting, User
+from .services import AppsService, EnvsService, SettingsService, UsersService
 
 apps = AppsService()
+envs = EnvsService()
 settings = SettingsService()
 users = UsersService()
