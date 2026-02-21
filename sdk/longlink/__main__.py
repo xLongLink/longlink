@@ -21,7 +21,7 @@ def dev():
     os.environ["DEV"] = "True"
 
     uvicorn.run(
-        "src.app:app",
+        "main:app",
         host="0.0.0.0",
         port=1707,
         reload=True,
