@@ -2,7 +2,8 @@ from longlink.ui.tabs import Tab, Tabs
 from longlink.ui.hero import Hero
 from longlink.ui.menu import Menu
 from longlink.ui.table import Table
-from longlink.ui.input import Input
+from typing import Any
+from longlink.ui.input import Input, InputKinds
 from longlink.ui.button import Button, ButtonVariants
 from longlink.ui.columns import Column, Columns
 from longlink.ui.__root__ import Component
@@ -95,16 +96,28 @@ class Page:
 
     def input(
         self,
+        name: str | None = None,
+        kind: InputKinds = 'text',
         label: str | None = None,
+        value: Any = None,
         placeholder: str | None = None,
         description: str | None = None,
+        options: list[dict[str, str]] | None = None,
+        required: bool = False,
+        disabled: bool = False,
         submit: str | None = None,
     ) -> Input:
         """Append an Input component to the page."""
         input_component = Input(
+            name=name,
+            kind=kind,
             label=label,
+            value=value,
             placeholder=placeholder,
             description=description,
+            options=options,
+            required=required,
+            disabled=disabled,
             submit=submit,
         )
         self._children.append(input_component)
