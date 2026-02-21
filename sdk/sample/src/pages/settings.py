@@ -143,9 +143,9 @@ async def settings_page() -> Page:
     general = settings_menu.section("General", icon="settings")
 
     general.input(
-        label="Organization name",
-        placeholder="Acme Operations",
-        description="Displayed in workspace headers, invites, and audit exports.",
+        label="Normal Input",
+        placeholder="Lorem ipsum dolor sit amet",
+        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         submit="Save",
     )
 
