@@ -1,5 +1,5 @@
 from sqlalchemy import select
-
+from src.config import config
 from src.db.models import Setting
 from src.db.session import get_session
 
@@ -50,6 +50,9 @@ class SettingsService:
             else:
                 setting.value = value
 
+            # Update the config in memory, this allows to change the envs without restarting the application
+            config.set(key, value)
+            
             await session.commit()
             await session.refresh(setting)
             return setting
