@@ -1,3 +1,4 @@
+import re
 from typing import Literal, TypeAlias, Any
 from dataclasses import dataclass, field
 from .__root__ import Component
@@ -51,7 +52,7 @@ class Input(Component):
     """
 
     # Core identity
-    name: str
+    name: str | None = None
     kind: InputKinds = "text"
 
     # UI metadata
@@ -74,6 +75,13 @@ class Input(Component):
         """
         Validate configuration constraints.
         """
+        if self.name is None:
+            if self.label:
+                normalized = re.sub(r"[^a-z0-9]+", "_", self.label.lower()).strip("_")
+                self.name = normalized or "input"
+            else:
+                self.name = "input"
+
         if self.kind == "select" and not self.options:
             raise ValueError("Select input requires 'options'.")
 
