@@ -1,9 +1,10 @@
 from .__root__ import Component
 from dataclasses import dataclass, field
+from typing import Any
 
 
 # Import Components
-from .input import Input
+from .input import Input, InputKinds
 
 
 @dataclass
@@ -21,15 +22,27 @@ class Dialog(Component):
   
     def input(
         self,
+        name: str | None = None,
+        kind: InputKinds = "text",
         label: str | None = None,
+        value: Any = None,
         placeholder: str | None = None,
         description: str | None = None,
+        options: list[dict[str, str]] | None = None,
+        required: bool = False,
+        disabled: bool = False,
         submit: str | None = None,
     ) -> Input:
         input_component = Input(
+            name=name,
+            kind=kind,
             label=label,
+            value=value,
             placeholder=placeholder,
             description=description,
+            options=options,
+            required=required,
+            disabled=disabled,
             submit=submit,
         )
         self._components.append(input_component)

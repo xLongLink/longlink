@@ -39,6 +39,7 @@ type InputProps = {
 };
 
 export function Input({
+    name,
     kind = 'text',
     label,
     value,
@@ -53,6 +54,7 @@ export function Input({
         if (kind === 'textarea') {
             return (
                 <Textarea
+                    name={name}
                     placeholder={placeholder}
                     defaultValue={typeof value === 'string' ? value : undefined}
                     required={required}
@@ -63,7 +65,11 @@ export function Input({
 
         if (kind === 'switch') {
             return (
-                <Switch defaultChecked={Boolean(value)} disabled={disabled} />
+                <Switch
+                    name={name}
+                    defaultChecked={Boolean(value)}
+                    disabled={disabled}
+                />
             );
         }
 
@@ -90,6 +96,7 @@ export function Input({
 
         return (
             <UIInput
+                name={name}
                 type={type}
                 placeholder={placeholder}
                 defaultValue={

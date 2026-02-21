@@ -1,9 +1,10 @@
 from .__root__ import Component
 from dataclasses import dataclass, field
+from typing import Any
 
 # Importing components
 from .hero import Hero
-from .input import Input
+from .input import Input, InputKinds
 from .table import Table
 from .columns import Column, Columns
 from .button import Button, ButtonVariants
@@ -81,9 +82,15 @@ class Tab(Component):
 
     def input(
         self,
+        name: str | None = None,
+        kind: InputKinds = "text",
         label: str | None = None,
+        value: Any = None,
         placeholder: str | None = None,
         description: str | None = None,
+        options: list[dict[str, str]] | None = None,
+        required: bool = False,
+        disabled: bool = False,
         submit: str | None = None,
     ) -> Input:
         """
@@ -92,9 +99,15 @@ class Tab(Component):
         Intended for lightweight forms or tab-scoped actions.
         """
         input_component = Input(
+            name=name,
+            kind=kind,
             label=label,
+            value=value,
             placeholder=placeholder,
             description=description,
+            options=options,
+            required=required,
+            disabled=disabled,
             submit=submit,
         )
         self._children.append(input_component)
