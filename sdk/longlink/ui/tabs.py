@@ -1,7 +1,6 @@
 from .__root__ import Component
 from dataclasses import dataclass, field
 
-
 # Importing components
 from .hero import Hero
 from .input import Input
@@ -11,10 +10,29 @@ from .button import Button, ButtonVariants
 from .separator import Separator
 
 
-
 @dataclass
 class Tab(Component):
-    """LongLink Tab component, used in the Tabs component"""
+    """
+    Container representing a single tab inside a `Tabs` component.
+
+    Characteristics:
+    - Owns an isolated vertical component subtree.
+    - Children are rendered only when the tab is active (frontend responsibility).
+    - Behaves similarly to a constrained Page/Column in terms of composition.
+
+    Serialization shape:
+        {
+            "type": "tab",
+            "props": {
+                "name": <str>
+            },
+            "children": [ ...nested components... ]
+        }
+
+    The `name` is both:
+    - The display label in the tab header.
+    - The identifier used by the frontend to switch content.
+    """
 
     name: str
     _children: list[Component] = field(default_factory=list)
@@ -27,26 +45,36 @@ class Tab(Component):
         yield 'children', [dict(child) for child in self._children]
 
     def hero(self, title: str, subtitle: str | None = None) -> Hero:
+        """Append a Hero component to this tab."""
         hero = Hero(title=title, subtitle=subtitle)
         self._children.append(hero)
         return hero
 
     def table(self, data: list[dict]) -> Table:
+        """Append a Table component to this tab."""
         table = Table(data=data)
         self._children.append(table)
         return table
 
     def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
+        """Append a Button component to this tab."""
         button = Button(text=text, variant=variant)
         self._children.append(button)
         return button
 
     def columns(self, widths: list[int]) -> list[Column]:
+        """
+        Append a Columns layout to this tab.
+
+        `widths` defines relative column weights.
+        Returns the created Column instances for immediate population.
+        """
         columns = Columns()
         self._children.append(columns)
         return [columns.column(width=width) for width in widths]
 
     def separator(self) -> Separator:
+        """Insert a visual separator between components."""
         separator = Separator()
         self._children.append(separator)
         return separator
@@ -58,6 +86,11 @@ class Tab(Component):
         description: str | None = None,
         submit: str | None = None,
     ) -> Input:
+        """
+        Append an Input component to this tab.
+
+        Intended for lightweight forms or tab-scoped actions.
+        """
         input_component = Input(
             label=label,
             placeholder=placeholder,
@@ -70,12 +103,37 @@ class Tab(Component):
 
 @dataclass
 class Tabs(Component):
-    """LongLink Tabs component, used to create a tabbed interface"""
-    
+    """
+    Tabbed container that groups multiple `Tab` subtrees.
+
+    Responsibilities:
+    - Maintains ordered tab labels.
+    - Owns corresponding `Tab` child components.
+    - Serializes both tab metadata and tab content subtrees.
+
+    Serialization shape:
+        {
+            "type": "tabs",
+            "props": {
+                "tabs": [<tab_name_1>, <tab_name_2>, ...]
+            },
+            "children": [ ...tab subtrees... ]
+        }
+
+    The frontend is responsible for:
+    - Rendering the tab navigation header using `tabs`.
+    - Switching visible content based on active tab.
+    """
+
     _tabs: list[str] = field(default_factory=list)
     _children: list[Tab] = field(default_factory=list)
 
     def tab(self, name: str) -> Tab:
+        """
+        Create and register a new Tab.
+
+        The order of creation defines visual order.
+        """
         tab = Tab(name=name)
         self._tabs.append(name)
         self._children.append(tab)

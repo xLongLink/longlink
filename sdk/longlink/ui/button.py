@@ -1,9 +1,9 @@
+from .__root__ import Component
 from typing import Literal, TypeAlias
 from dataclasses import dataclass, field
-from .__root__ import Component
 
 
-# Importing components that can be used in a Button dialog
+# Import Components
 from .dialog import Dialog
 
 

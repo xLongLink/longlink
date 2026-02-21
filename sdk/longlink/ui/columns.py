@@ -1,20 +1,31 @@
-from .__root__ import Component
 from dataclasses import dataclass, field
-
-
-
-from .hero import Hero
-from .table import Table
-from .button import Button, ButtonVariants
-from .separator import Separator
+from longlink.ui.hero import Hero
+from longlink.ui.table import Table
+from longlink.ui.button import Button, ButtonVariants
+from longlink.ui.__root__ import Component
+from longlink.ui.separator import Separator
 
 
 @dataclass
 class Column(Component):
-    """LongLink Column component, used in the Columns component
-    
-    The column behave similarly to the Page, where each component is added vertically.
-    However it cannot create a menu, as only one menu can exist per page.
+    """
+    Vertical layout container used inside `Columns`.
+
+    A Column behaves like a constrained Page section:
+    - Components are stacked vertically in insertion order.
+    - It owns and serializes its own subtree.
+    - It cannot create global page-level constructs (e.g., menu),
+      because those are restricted to the Page root.
+
+    Serialization shape:
+        {
+            "type": "column",
+            "props": {"width": <int>},
+            "children": [ ...nested components... ]
+        }
+
+    The `width` is interpreted by the parent `Columns` container,
+    which normalizes widths into layout ratios.
     """
 
     width: int
@@ -48,10 +59,31 @@ class Column(Component):
 
 @dataclass
 class Columns(Component):
-    """LongLink Columns component, used to create a layout with multiple columns
+    """
+    Horizontal layout container that distributes content across multiple columns.
 
-    It can be used to have the main data on the left and some quick actions or insights on the right.
-    An exmaple can be how GitHub show the repository insights: https://github.com/XLongLink/longlink
+    Responsibilities:
+    - Owns multiple `Column` children.
+    - Converts absolute column widths into normalized ratios.
+    - Serializes the complete horizontal layout subtree.
+
+    Usage pattern:
+        columns = page.columns()
+        left = columns.column(width=3)
+        right = columns.column(width=1)
+
+    Serialization shape:
+        {
+            "type": "columns",
+            "props": {
+                "widths": [normalized ratios]
+            },
+            "children": [ ...column subtrees... ]
+        }
+
+    Width normalization:
+        Each column width is divided by the total width sum,
+        producing proportional layout weights interpreted by the frontend.
     """
 
     _widths: list[int] = field(default_factory=list)

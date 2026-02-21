@@ -6,39 +6,59 @@ from .__root__ import Component
 Alignments: TypeAlias = Literal['left', 'center', 'right']
 
 
-# Import Components
-from .link import Link
+class Cell(TypedDict, total=False):
+    """
+    Structured cell payload used for advanced rendering.
 
+    Fields:
+    - value: visible text content
+    - bold: whether the text should be emphasized
+    - link: optional URL rendered as anchor
 
-class TableCell(TypedDict, total=False):
+    This structure keeps cell definitions fully serializable
+    without relying on other component types.
+    """
     value: str
     bold: bool
     link: str
 
 
-"""
-The Table component is tricky.
-
-On the frontend, it uses Shadcn and @tanstack/react-table
-https://tanstack.com/table/latest
-However on the backend it shall behave on it's own, with the data linked to a endpoint that allows for paginations, sorting and filtering.
-This has to be managed by the table itself without the need to reload the page.
-"""
-
-
 class Column(Component):
+    """
+    Table column definition.
+
+    A Column describes:
+    - The key used to extract row values from `Table.data`
+    - The display label
+    - Alignment rules
+    - Optional static content and detail overrides
+
+    Serialization shape:
+        {
+            "type": "column",
+            "props": {
+                "key": <str>,
+                "label": <str>,
+                "align": <'left'|'center'|'right'>,
+                "content": <str|Cell>,
+                "detail": <str|Cell>?
+            },
+            "children": []
+        }
+    """
+
     key: str
     label: str
     align: Alignments = 'left'
-    content: str | TableCell = ''
-    detail: str | TableCell = ''
+    content: str | Cell = ''
+    detail: str | Cell = ''
 
     def __init__(
         self,
         key: str,
         label: str,
-        content: str | Link | TableCell = '',
-        detail: str | Link | TableCell = '',
+        content: str | Cell = '',
+        detail: str | Cell = '',
         align: Alignments = 'left',
     ) -> None:
         self.key = key
@@ -47,22 +67,30 @@ class Column(Component):
         self.content = self._normalize_cell(content)
         self.detail = self._normalize_cell(detail)
 
-    def _normalize_cell(self, cell: str | Link | TableCell) -> str | TableCell:
+    def _normalize_cell(self, cell: str | Cell) -> str | Cell:
+        """
+        Normalize cell input into a consistent serializable structure.
+
+        Accepts:
+        - Plain string
+        - TableCell dict
+
+        Ensures:
+        - `value` is always present if dict is provided
+        - Optional fields are properly typed
+        """
         if isinstance(cell, dict):
-            payload: TableCell = {'value': str(cell.get('value', ''))}
+            payload: Cell = {'value': str(cell.get('value', ''))}
             if 'bold' in cell:
                 payload['bold'] = bool(cell['bold'])
             if 'link' in cell:
                 payload['link'] = str(cell['link'])
             return payload
 
-        if isinstance(cell, Link):
-            return {'value': cell.text, 'link': cell.url}
-
         return str(cell)
 
     def __iter__(self):
-        props: dict[str, str | TableCell] = {
+        props: dict[str, str | Cell] = {
             'key': self.key,
             'label': self.label,
             'align': self.align,
@@ -79,11 +107,23 @@ class Column(Component):
 
 @dataclass
 class Table(Component):
-    """LongLink Table component
+    """
+    Data-driven tabular component.
 
-    The table is a bit special, because it is designed to work with an endpoint
-    that returns the table data as a list of dicts.
-    The table therefore shall support automatic filtering based on the endpoint query parameters,
+    Responsibilities:
+    - Receives row data as a list of dictionaries.
+    - Defines column configuration via `Column` children.
+    - Delegates rendering behavior (sorting, filtering, etc.)
+      to the frontend runtime.
+
+    Serialization shape:
+        {
+            "type": "table",
+            "props": {
+                "data": [ { ...row... }, ... ]
+            },
+            "children": [ ...column schemas... ]
+        }
     """
 
     data: list[dict] = field(default_factory=list)
@@ -97,8 +137,8 @@ class Table(Component):
         self,
         key: str,
         label: str | None = None,
-        content: str | Link | TableCell = '',
-        detail: str | Link | TableCell = '',
+        content: str | Cell = '',
+        detail: str | Cell = '',
         align: Alignments = 'left',
     ) -> Column: ...
 
@@ -106,10 +146,17 @@ class Table(Component):
         self,
         key: str | Column,
         label: str | None = None,
-        content: str | Link | TableCell = '',
-        detail: str | Link | TableCell = '',
+        content: str | Cell = '',
+        detail: str | Cell = '',
         align: Alignments = 'left',
     ) -> Column:
+        """
+        Register a column definition.
+
+        Supports:
+        - Passing an existing Column instance
+        - Creating a new Column inline via parameters
+        """
         if isinstance(key, Column):
             column = key
         else:
@@ -130,5 +177,4 @@ class Table(Component):
         yield 'props', {
             'data': self.data,
         }
-
         yield 'children', [dict(column) for column in self._children]

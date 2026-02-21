@@ -2,7 +2,7 @@ from .__root__ import Component
 from dataclasses import dataclass, field
 
 
-# Importing components that can be used in a Page
+# Import Components
 from .input import Input
 
 

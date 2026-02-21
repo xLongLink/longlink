@@ -1,24 +1,39 @@
-from .__root__ import Component
+from longlink.ui.__root__ import Component
 from dataclasses import dataclass, field
 
-
 # Importing components
-from .tabs import Tab, Tabs
-from .hero import Hero
-from .input import Input
-from .table import Table
-from .separator import Separator
-from .columns import Column, Columns
-from .button import Button, ButtonVariants
-
+from longlink.ui.tabs import Tab, Tabs
+from longlink.ui.hero import Hero
+from longlink.ui.input import Input
+from longlink.ui.table import Table
+from longlink.ui.separator import Separator
+from longlink.ui.columns import Column, Columns
+from longlink.ui.button import Button, ButtonVariants
 
 
 @dataclass
 class MenuSubSection(Component):
-    """LongLink SubSection component, used in the MenuSection component
-    
-    When a Section has a Subsection, a dropdown icon is added to the sections that groups the subsections.
-    Root: True indicate that the content of the section is directly in the section, without the need of a subsection.
+    """
+    Lowest-level content container inside a MenuSection.
+
+    A MenuSubSection groups related UI elements within a section.
+    It behaves like a vertical layout container and owns its subtree.
+
+    Behavior:
+    - If `root=True`, the subsection represents the implicit root content
+      of the section (i.e., no explicit subsection header in the UI).
+    - If `root=False`, the frontend may render it as a collapsible
+      or nested group under the parent section.
+
+    Serialization shape:
+        {
+            "type": "menuSubSection",
+            "props": {
+                "title": <str>,
+                "root": <bool>
+            },
+            "children": [ ...nested components... ]
+        }
     """
 
     title: str
@@ -26,26 +41,31 @@ class MenuSubSection(Component):
     _children: list[Component] = field(default_factory=list)
 
     def hero(self, title: str, subtitle: str | None = None) -> Hero:
+        """Append a Hero component to this subsection."""
         hero = Hero(title=title, subtitle=subtitle)
         self._children.append(hero)
         return hero
 
     def table(self, data: list[dict]) -> Table:
+        """Append a Table component to this subsection."""
         table = Table(data=data)
         self._children.append(table)
         return table
 
     def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
+        """Append a Button component to this subsection."""
         button = Button(text=text, variant=variant)
         self._children.append(button)
         return button
 
     def columns(self, widths: list[int]) -> list[Column]:
+        """Append a Columns layout to this subsection."""
         columns = Columns()
         self._children.append(columns)
         return [columns.column(width=width) for width in widths]
 
     def separator(self) -> Separator:
+        """Insert a visual separator."""
         separator = Separator()
         self._children.append(separator)
         return separator
@@ -57,6 +77,7 @@ class MenuSubSection(Component):
         description: str | None = None,
         submit: str | None = None,
     ) -> Input:
+        """Append an Input component."""
         input_component = Input(
             label=label,
             placeholder=placeholder,
@@ -67,6 +88,7 @@ class MenuSubSection(Component):
         return input_component
 
     def tabs(self, names: list[str]) -> list[Tab]:
+        """Append a Tabs container."""
         tabs = Tabs()
         self._children.append(tabs)
         return [tabs.tab(name=name) for name in names]
@@ -82,16 +104,47 @@ class MenuSubSection(Component):
 
 @dataclass
 class MenuSection(Component):
-    """LongLink MenuSection component, used in the Menu component"""
+    """
+    Top-level grouping unit inside a Menu.
+
+    A MenuSection:
+    - Represents a major navigation category.
+    - May contain direct content (via implicit root subsection).
+    - May contain explicit subsections for further grouping.
+
+    Structural model:
+    - `_root` holds content attached directly to the section.
+    - `_children` holds explicit MenuSubSection instances.
+
+    Serialization shape:
+        {
+            "type": "menusection",
+            "props": {
+                "title": <str>,
+                "icon": <str | null>
+            },
+            "children": [
+                <root_subsection_schema>,
+                <subsection_schema>,
+                ...
+            ]
+        }
+    """
+
     title: str
     icon: str | None = None
-    _root: MenuSubSection = field(default_factory=lambda: MenuSubSection(title='', root=True))
+    _root: MenuSubSection = field(
+        default_factory=lambda: MenuSubSection(title='', root=True)
+    )
     _children: list[MenuSubSection] = field(default_factory=list)
 
     def section(self, title: str) -> MenuSubSection:
+        """Create and append an explicit subsection."""
         sub_section = MenuSubSection(title=title)
         self._children.append(sub_section)
         return sub_section
+
+    # Root-level content helpers
 
     def hero(self, title: str, subtitle: str | None = None) -> Hero:
         hero = Hero(title=title, subtitle=subtitle)
@@ -145,18 +198,34 @@ class MenuSection(Component):
             'title': self.title,
             'icon': self.icon,
         }
-        yield 'children', [dict(self._root)] + [dict(child) for child in self._children]
+        yield 'children', [dict(self._root)] + [
+            dict(child) for child in self._children
+        ]
 
 
 @dataclass
 class Menu(Component):
-    """LongLink Menu component
-    
-    This is inspired by the GitHub settings menu: https://github.com/XLongLink/longlink/settings
     """
+    Navigation-oriented container composed of multiple MenuSections.
+
+    Intended for configuration or settings-style interfaces where
+    content is grouped hierarchically.
+
+    Serialization shape:
+        {
+            "type": "menu",
+            "children": [ ...section schemas... ]
+        }
+
+    The frontend is responsible for:
+    - Rendering section navigation (e.g., sidebar or grouped list).
+    - Managing active section/subsection visibility.
+    """
+
     _children: list[MenuSection] = field(default_factory=list)
 
     def section(self, title: str, icon: str | None = None) -> MenuSection:
+        """Create and append a new MenuSection."""
         section = MenuSection(title=title, icon=icon)
         self._children.append(section)
         return section
