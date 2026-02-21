@@ -24,43 +24,59 @@ import { useApiTable } from '@/components/table/useApiTable';
 
 export type { ApiTableColumn, TableAlign };
 
-export type TableSchema = {
-    columns: ApiTableColumn[];
-};
-
-export type TableSchemaConfig = {
-    title: string;
-    description?: string;
-    schema: TableSchema;
-};
-
-type TableProps = {
+type SchemaTableProps = {
     endpoint: string;
-    schema: TableSchemaConfig;
+    schema: {
+        title: string;
+        description?: string;
+        schema: {
+            columns: ApiTableColumn[];
+        };
+    };
     pageSize?: number;
+    data?: never;
+    columns?: never;
 };
 
-export function Table<T extends object>({
-    endpoint,
-    schema,
-    pageSize = 10,
-}: TableProps) {
+type DataTableProps = {
+    data: object[];
+    columns: ApiTableColumn[];
+    pageSize?: number;
+    endpoint?: never;
+    schema?: never;
+};
+
+type TableProps = SchemaTableProps | DataTableProps;
+
+export function Table<T extends object>(props: TableProps) {
     const [pagination, setPagination] = useState({
         pageIndex: 0,
-        pageSize,
+        pageSize: props.pageSize ?? 10,
     });
 
     const [sorting, setSorting] = useState<SortingState>([]);
 
-    const { data, total, loading } = useApiTable<T>({
-        endpoint,
+    const isSchemaMode = 'endpoint' in props;
+
+    const apiEndpoint = isSchemaMode
+        ? (props as SchemaTableProps).endpoint
+        : '/__noop__';
+
+    const apiData = useApiTable<T>({
+        endpoint: apiEndpoint,
         pagination,
         sorting,
     });
+    const data = (isSchemaMode ? apiData.data : props.data) as T[];
+    const total = isSchemaMode ? apiData.total : props.data.length;
+    const loading = isSchemaMode ? apiData.loading : false;
+    const columnsConfig = isSchemaMode
+        ? (props.schema?.schema?.columns ?? [])
+        : props.columns;
 
     const columns = useMemo(
-        () => buildColumns<T>(schema?.schema?.columns ?? []),
-        [schema]
+        () => buildColumns<T>(columnsConfig ?? []),
+        [columnsConfig]
     );
 
     const table = useReactTable({
@@ -72,9 +88,9 @@ export function Table<T extends object>({
         },
         onPaginationChange: setPagination,
         onSortingChange: setSorting,
-        manualPagination: true,
-        manualSorting: true,
-        pageCount: total > 0 ? Math.ceil(total / pagination.pageSize) : 1,
+        manualPagination: isSchemaMode,
+        manualSorting: isSchemaMode,
+        pageCount: Math.max(Math.ceil(total / pagination.pageSize), 1),
         getCoreRowModel: getCoreRowModel(),
     });
 

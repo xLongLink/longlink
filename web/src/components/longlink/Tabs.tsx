@@ -23,7 +23,7 @@ export function Tab({ name, children }: TabProps) {
 
 export function Tabs({ tabs, children }: TabsProps) {
     return (
-        <UITabs>
+        <UITabs defaultValue={tabs[0]}>
             <TabsList>
                 {tabs.map((tab) => (
                     <TabsTrigger
