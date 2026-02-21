@@ -6,7 +6,7 @@ import Hero from '@/components/longlink/Hero';
 import Input from '@/components/longlink/Input';
 import Menu, { MenuSection, MenuSubSection } from '@/components/longlink/Menu';
 import Separator from '@/components/longlink/Separator';
-import Table from '@/components/longlink/Table';
+import Table, { type ApiTableColumn } from '@/components/longlink/Table';
 import Tabs, { Tab } from '@/components/longlink/Tabs';
 
 const registry = {
@@ -108,6 +108,37 @@ function Render({ type, props, children }: RenderNodeSchema) {
                     );
                 })}
             </Menu>
+        );
+    }
+
+    if (type === 'table') {
+        const columns: ApiTableColumn[] = resolvedChildren
+            .filter((child) => child.type === 'column')
+            .map((child) => ({
+                key: String(child.props?.key ?? ''),
+                label:
+                    child.props?.label == null
+                        ? undefined
+                        : String(child.props.label),
+                align:
+                    child.props?.align == null
+                        ? undefined
+                        : (String(child.props.align) as
+                              | 'left'
+                              | 'center'
+                              | 'right'),
+                content: child.props?.content as ApiTableColumn['content'],
+                detail: child.props?.detail as ApiTableColumn['detail'],
+            }))
+            .filter((column) => column.key);
+
+        return (
+            <Table
+                data={
+                    Array.isArray(props?.data) ? (props.data as object[]) : []
+                }
+                columns={columns}
+            />
         );
     }
 
