@@ -1,21 +1,44 @@
-from .__root__ import Component
 from dataclasses import dataclass, field
-
-
-# Import Components
-from .button import Button, ButtonVariants
+from longlink.ui.button import Button, ButtonVariants
+from longlink.ui.__root__ import Component
+from longlink.types.icons import IconTypes
 
 
 @dataclass
 class Hero(Component):
-    """LongLink Hero component, used to display a title and a subtitle, usually at the top of the page.
-    
-    It supports an icon that is displayed on the left of the title, and can be used to give a quick insight of the page content.
-    It supports an action button that can be used to trigger an action related to the page content, like creating a new resource, or opening a dialog with more details.
+    """
+    Header block component intended for top-level page sections.
+
+    Purpose:
+    - Communicates the primary context of the page (title + optional subtitle).
+    - Optionally displays a leading icon for quick visual identification.
+    - Optionally exposes a single primary action (Button), typically used
+      for page-scoped operations (e.g., create, configure, open dialog).
+
+    Structural characteristics:
+    - Not a layout container; it does not stack arbitrary children.
+    - Accepts at most one action Button.
+    - Action is serialized as a child node for consistent schema shape.
+
+    Serialization shape:
+        {
+            "type": "hero",
+            "props": {
+                "title": <str>,
+                "subtitle": <str | null>,
+                "icon": <IconTypes | null>
+            },
+            "children": [ <action_button_schema>? ]
+        }
+
+    The frontend is responsible for rendering:
+    - Icon (if provided) to the left of the title
+    - Subtitle beneath the title
+    - Action button aligned according to layout rules
     """
     title: str
     subtitle: str | None = None
-    icon: str | None = None
+    icon: IconTypes | None = None
     action: Button | None = field(default=None)
 
     def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
@@ -28,6 +51,7 @@ class Hero(Component):
         yield 'props', {
             'title': self.title,
             'subtitle': self.subtitle,
+            'icon': self.icon,
         }
         yield 'children', [dict(self.action)] if self.action is not None else []
 
