@@ -42,6 +42,14 @@ async def input_page() -> Page:
         submit="Save",
     )
 
+
+    # Standalone textarea element
+    page.textarea(
+        label="Standalone Textarea",
+        placeholder="Write your notes here",
+        description="This is a standalone textarea without save actions.",
+    )
+
     # Date input
     page.input(
         kind="date",
