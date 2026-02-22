@@ -78,4 +78,16 @@ async def input_page() -> Page:
         submit="Save",
     )
 
+    page.switch(
+        label="Switch Input",
+        description="Toggle this setting on or off.",
+        active=True,
+    )
+
+    page.checkbox(
+        label="Checkbox Input",
+        description="Select this option if you agree.",
+        checked=True,
+    )
+
     return page
