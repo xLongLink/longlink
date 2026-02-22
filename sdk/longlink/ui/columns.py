@@ -4,6 +4,7 @@ from longlink.ui.table import Table
 from longlink.ui.button import Button, ButtonVariants
 from longlink.ui.__root__ import Component
 from longlink.ui.separator import Separator
+from longlink.ui.range import Range
 
 
 @dataclass
@@ -55,6 +56,27 @@ class Column(Component):
         separator = Separator()
         self._components.append(separator)
         return separator
+
+
+    def range(
+        self,
+        label: str | None = None,
+        description: str | None = None,
+        min: float = 0,
+        max: float = 100,
+        step: float = 1,
+        value: list[float] | None = None,
+    ) -> Range:
+        range_component = Range(
+            label=label,
+            description=description,
+            min=min,
+            max=max,
+            step=step,
+            value=value if value is not None else [min, max],
+        )
+        self._components.append(range_component)
+        return range_component
 
 
 @dataclass
