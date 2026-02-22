@@ -1,5 +1,6 @@
 import type React from 'react';
 import Button from '@/components/longlink/Button';
+import Checkbox from '@/components/longlink/Checkbox';
 import Columns, { Column } from '@/components/longlink/Columns';
 import Dialog from '@/components/longlink/Dialog';
 import Hero from '@/components/longlink/Hero';
@@ -25,6 +26,7 @@ const registry = {
     menuSubSection: MenuSubSection,
     input: Input,
     switch: Switch,
+    checkbox: Checkbox,
 };
 
 type Registry = typeof registry;
