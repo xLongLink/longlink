@@ -10,6 +10,8 @@ from longlink.ui.__root__ import Component
 from longlink.ui.separator import Separator
 from longlink.ui.switch import Switch
 from longlink.ui.checkbox import Checkbox
+from longlink.ui.range import Range
+from longlink.ui.textarea import Textarea
 
 
 class Page:
@@ -157,11 +159,48 @@ class Page:
         self._children.append(checkbox_component)
         return checkbox_component
 
+
+    def range(
+        self,
+        label: str | None = None,
+        description: str | None = None,
+        min: float = 0,
+        max: float = 100,
+        step: float = 1,
+        value: list[float] | None = None,
+    ) -> Range:
+        """Append a Range component to the page."""
+        range_component = Range(
+            label=label,
+            description=description,
+            min=min,
+            max=max,
+            step=step,
+            value=value if value is not None else [min, max],
+        )
+        self._children.append(range_component)
+        return range_component
+
     def separator(self) -> Separator:
         """Insert a visual separator between top-level components."""
         separator = Separator()
         self._children.append(separator)
         return separator
+
+    def textarea(
+        self,
+        label: str | None = None,
+        placeholder: str | None = None,
+        description: str | None = None,
+    ) -> Textarea:
+        """Append a standalone Textarea component to the page."""
+        textarea_component = Textarea(
+            label=label,
+            placeholder=placeholder,
+            description=description,
+        )
+        self._children.append(textarea_component)
+        return textarea_component
 
     def __iter__(self):
         """
