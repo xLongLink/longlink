@@ -6,6 +6,7 @@ import Dialog from '@/components/longlink/Dialog';
 import Hero from '@/components/longlink/Hero';
 import Input from '@/components/longlink/Input';
 import Menu, { MenuSection, MenuSubSection } from '@/components/longlink/Menu';
+import Range from '@/components/longlink/Range';
 import Separator from '@/components/longlink/Separator';
 import Switch from '@/components/longlink/Switch';
 import Table, { type ApiTableColumn } from '@/components/longlink/Table';
@@ -28,6 +29,7 @@ const registry = {
     input: Input,
     switch: Switch,
     checkbox: Checkbox,
+    range: Range,
     textarea: Textarea,
 };
 
