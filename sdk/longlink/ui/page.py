@@ -8,6 +8,7 @@ from longlink.ui.button import Button, ButtonVariants
 from longlink.ui.columns import Column, Columns
 from longlink.ui.__root__ import Component
 from longlink.ui.separator import Separator
+from longlink.ui.switch import Switch
 
 
 class Page:
@@ -122,6 +123,22 @@ class Page:
         )
         self._children.append(input_component)
         return input_component
+
+
+    def switch(
+        self,
+        label: str | None = None,
+        description: str | None = None,
+        active: bool = False,
+    ) -> Switch:
+        """Append a Switch component to the page."""
+        switch_component = Switch(
+            label=label,
+            description=description,
+            active=active,
+        )
+        self._children.append(switch_component)
+        return switch_component
 
     def separator(self) -> Separator:
         """Insert a visual separator between top-level components."""
