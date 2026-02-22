@@ -9,6 +9,7 @@ from .table import Table
 from .columns import Column, Columns
 from .button import Button, ButtonVariants
 from .separator import Separator
+from .range import Range
 
 
 @dataclass
@@ -112,6 +113,28 @@ class Tab(Component):
         )
         self._children.append(input_component)
         return input_component
+
+
+    def range(
+        self,
+        label: str | None = None,
+        description: str | None = None,
+        min: float = 0,
+        max: float = 100,
+        step: float = 1,
+        value: list[float] | None = None,
+    ) -> Range:
+        """Append a Range component to this tab."""
+        range_component = Range(
+            label=label,
+            description=description,
+            min=min,
+            max=max,
+            step=step,
+            value=value if value is not None else [min, max],
+        )
+        self._children.append(range_component)
+        return range_component
 
 
 @dataclass

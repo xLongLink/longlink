@@ -9,6 +9,7 @@ from .button import Button, ButtonVariants
 from .columns import Column, Columns
 from .separator import Separator
 from .tabs import Tab, Tabs
+from .range import Range
 
 
 @dataclass
@@ -82,6 +83,27 @@ class Card(Component):
         tabs = Tabs()
         self._children.append(tabs)
         return [tabs.tab(name=n) for n in names]
+
+
+    def range(
+        self,
+        label: str | None = None,
+        description: str | None = None,
+        min: float = 0,
+        max: float = 100,
+        step: float = 1,
+        value: list[float] | None = None,
+    ) -> Range:
+        range_component = Range(
+            label=label,
+            description=description,
+            min=min,
+            max=max,
+            step=step,
+            value=value if value is not None else [min, max],
+        )
+        self._children.append(range_component)
+        return range_component
 
     def add(self, component: Component) -> Component:
         """
