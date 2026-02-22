@@ -9,6 +9,7 @@ import Menu, { MenuSection, MenuSubSection } from '@/components/longlink/Menu';
 import Separator from '@/components/longlink/Separator';
 import Switch from '@/components/longlink/Switch';
 import Table, { type ApiTableColumn } from '@/components/longlink/Table';
+import Textarea from '@/components/longlink/Textarea';
 import Tabs, { Tab } from '@/components/longlink/Tabs';
 
 const registry = {
@@ -27,6 +28,7 @@ const registry = {
     input: Input,
     switch: Switch,
     checkbox: Checkbox,
+    textarea: Textarea,
 };
 
 type Registry = typeof registry;
