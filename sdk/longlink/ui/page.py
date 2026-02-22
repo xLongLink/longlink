@@ -9,6 +9,7 @@ from longlink.ui.columns import Column, Columns
 from longlink.ui.__root__ import Component
 from longlink.ui.separator import Separator
 from longlink.ui.switch import Switch
+from longlink.ui.checkbox import Checkbox
 
 
 class Page:
@@ -139,6 +140,22 @@ class Page:
         )
         self._children.append(switch_component)
         return switch_component
+
+
+    def checkbox(
+        self,
+        label: str | None = None,
+        description: str | None = None,
+        checked: bool = False,
+    ) -> Checkbox:
+        """Append a Checkbox component to the page."""
+        checkbox_component = Checkbox(
+            label=label,
+            description=description,
+            checked=checked,
+        )
+        self._children.append(checkbox_component)
+        return checkbox_component
 
     def separator(self) -> Separator:
         """Insert a visual separator between top-level components."""
