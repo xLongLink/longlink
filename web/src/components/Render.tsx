@@ -6,6 +6,7 @@ import Hero from '@/components/longlink/Hero';
 import Input from '@/components/longlink/Input';
 import Menu, { MenuSection, MenuSubSection } from '@/components/longlink/Menu';
 import Separator from '@/components/longlink/Separator';
+import Switch from '@/components/longlink/Switch';
 import Table, { type ApiTableColumn } from '@/components/longlink/Table';
 import Tabs, { Tab } from '@/components/longlink/Tabs';
 
@@ -23,6 +24,7 @@ const registry = {
     menusection: MenuSection,
     menuSubSection: MenuSubSection,
     input: Input,
+    switch: Switch,
 };
 
 type Registry = typeof registry;
