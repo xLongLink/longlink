@@ -10,6 +10,7 @@ import Range from '@/components/longlink/Range';
 import Separator from '@/components/longlink/Separator';
 import Switch from '@/components/longlink/Switch';
 import Table, { type ApiTableColumn } from '@/components/longlink/Table';
+import Textarea from '@/components/longlink/Textarea';
 import Tabs, { Tab } from '@/components/longlink/Tabs';
 
 const registry = {
@@ -29,6 +30,7 @@ const registry = {
     switch: Switch,
     checkbox: Checkbox,
     range: Range,
+    textarea: Textarea,
 };
 
 type Registry = typeof registry;

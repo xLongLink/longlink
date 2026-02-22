@@ -11,6 +11,7 @@ from longlink.ui.separator import Separator
 from longlink.ui.switch import Switch
 from longlink.ui.checkbox import Checkbox
 from longlink.ui.range import Range
+from longlink.ui.textarea import Textarea
 
 
 class Page:
@@ -185,6 +186,21 @@ class Page:
         separator = Separator()
         self._children.append(separator)
         return separator
+
+    def textarea(
+        self,
+        label: str | None = None,
+        placeholder: str | None = None,
+        description: str | None = None,
+    ) -> Textarea:
+        """Append a standalone Textarea component to the page."""
+        textarea_component = Textarea(
+            label=label,
+            placeholder=placeholder,
+            description=description,
+        )
+        self._children.append(textarea_component)
+        return textarea_component
 
     def __iter__(self):
         """
