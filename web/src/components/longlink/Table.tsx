@@ -15,6 +15,15 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
     buildColumns,
     textAlignClasses,
     type ApiTableColumn,
@@ -93,6 +102,27 @@ export function Table<T extends object>(props: TableProps) {
         pageCount: Math.max(Math.ceil(total / pagination.pageSize), 1),
         getCoreRowModel: getCoreRowModel(),
     });
+
+    const currentPage = pagination.pageIndex + 1;
+    const totalPages = table.getPageCount();
+
+    const pageItems = useMemo(() => {
+        if (totalPages <= 5) {
+            return Array.from({ length: totalPages }, (_, index) => index + 1);
+        }
+
+        const pages = new Set<number>([1, totalPages, currentPage]);
+
+        if (currentPage > 1) {
+            pages.add(currentPage - 1);
+        }
+
+        if (currentPage < totalPages) {
+            pages.add(currentPage + 1);
+        }
+
+        return Array.from(pages).sort((a, b) => a - b);
+    }, [currentPage, totalPages]);
 
     return (
         <div className="overflow-hidden rounded-md border">
@@ -176,24 +206,79 @@ export function Table<T extends object>(props: TableProps) {
                 </TableBody>
             </UITable>
 
-            <div className="flex items-center justify-between border-t p-3 text-sm">
-                <button
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Previous
-                </button>
-
-                <span>
-                    Page {pagination.pageIndex + 1} of {table.getPageCount()}
+            <div className="flex flex-col gap-2 border-t p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-muted-foreground">
+                    Page {currentPage} of {totalPages}
                 </span>
 
-                <button
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Next
-                </button>
+                <Pagination className="mx-0 w-auto justify-end">
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                href="#"
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    table.previousPage();
+                                }}
+                                aria-disabled={!table.getCanPreviousPage()}
+                                className={
+                                    !table.getCanPreviousPage()
+                                        ? 'pointer-events-none opacity-50'
+                                        : ''
+                                }
+                            />
+                        </PaginationItem>
+
+                        {pageItems.flatMap((page, index) => {
+                            const previousPage = pageItems[index - 1];
+                            const showEllipsis =
+                                previousPage !== undefined &&
+                                page - previousPage > 1;
+
+                            const pageItem = (
+                                <PaginationItem key={`page-${page}`}>
+                                    <PaginationLink
+                                        href="#"
+                                        isActive={page === currentPage}
+                                        onClick={(event) => {
+                                            event.preventDefault();
+                                            table.setPageIndex(page - 1);
+                                        }}
+                                    >
+                                        {page}
+                                    </PaginationLink>
+                                </PaginationItem>
+                            );
+
+                            if (!showEllipsis) {
+                                return [pageItem];
+                            }
+
+                            return [
+                                <PaginationItem key={`ellipsis-${page}`}>
+                                    <PaginationEllipsis />
+                                </PaginationItem>,
+                                pageItem,
+                            ];
+                        })}
+
+                        <PaginationItem>
+                            <PaginationNext
+                                href="#"
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    table.nextPage();
+                                }}
+                                aria-disabled={!table.getCanNextPage()}
+                                className={
+                                    !table.getCanNextPage()
+                                        ? 'pointer-events-none opacity-50'
+                                        : ''
+                                }
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
             </div>
         </div>
     );
