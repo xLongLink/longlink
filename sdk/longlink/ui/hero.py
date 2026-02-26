@@ -41,8 +41,13 @@ class Hero(Component):
     icon: IconTypes | None = None
     action: Button | None = field(default=None)
 
-    def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
-        button = Button(text=text, variant=variant)
+    def button(
+        self,
+        text: str,
+        variant: ButtonVariants = 'default',
+        url: str | None = None,
+    ) -> Button:
+        button = Button(text=text, variant=variant, url=url)
         self.action = button
         return button
 

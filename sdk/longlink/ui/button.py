@@ -31,7 +31,13 @@ class Button(Component):
 
     text: str
     variant: ButtonVariants
+    url: str | None = None
     _dialog: Dialog | None = field(default=None)
+
+    def click(self, url: str) -> 'Button':
+        """Configure an app-relative endpoint to call on click."""
+        self.url = url
+        return self
 
     def dialog(self, confirm: str = 'Confirm', cancel: str = 'Cancel') -> Dialog:
         self._dialog = Dialog(confirm=confirm, cancel=cancel)
@@ -42,6 +48,7 @@ class Button(Component):
         yield 'props', {
             'text': self.text,
             'variant': self.variant,
+            'url': self.url,
         }
 
         if self._dialog is not None:
