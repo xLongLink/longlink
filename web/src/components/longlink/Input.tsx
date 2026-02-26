@@ -167,7 +167,7 @@ export function Input({
             };
 
             return (
-                <div className="space-y-2">
+                <div className="flex items-center gap-2">
                     <Popover>
                         <PopoverTrigger
                             disabled={disabled}
@@ -215,6 +215,7 @@ export function Input({
                         value={datetimeValue.time}
                         required={required}
                         disabled={disabled}
+                        className="w-36 shrink-0"
                         onChange={(event) => {
                             const nextTime = event.currentTarget.value;
                             setSelectedDateTime({
