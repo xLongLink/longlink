@@ -77,13 +77,6 @@ async def input_page() -> Page:
         submit="Save",
     )
 
-    # Switch input
-    page.input(
-        kind="switch",
-        label="Switch Input",
-        description="Toggle this setting on or off.",
-        submit="Save",
-    )
 
     page.switch(
         label="Switch Input",
