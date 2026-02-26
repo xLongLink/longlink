@@ -2,19 +2,11 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Input as UIInput } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
 type InputProps = {
     name?: string;
-    kind?:
-        | 'text'
-        | 'number'
-        | 'password'
-        | 'textarea'
-        | 'date'
-        | 'datetime'
-        | 'switch';
+    kind?: 'text' | 'number' | 'password' | 'textarea' | 'date' | 'datetime';
     label?: string;
     value?: string | number | boolean;
     placeholder?: string;
@@ -43,16 +35,6 @@ export function Input({
                     placeholder={placeholder}
                     defaultValue={typeof value === 'string' ? value : undefined}
                     required={required}
-                    disabled={disabled}
-                />
-            );
-        }
-
-        if (kind === 'switch') {
-            return (
-                <Switch
-                    name={name}
-                    defaultChecked={Boolean(value)}
                     disabled={disabled}
                 />
             );
