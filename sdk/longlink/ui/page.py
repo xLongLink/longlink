@@ -58,9 +58,14 @@ class Page:
         self._children.append(table)
         return table
 
-    def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
+    def button(
+        self,
+        text: str,
+        variant: ButtonVariants = 'default',
+        url: str | None = None,
+    ) -> Button:
         """Append a Button component to the page."""
-        button = Button(text=text, variant=variant)
+        button = Button(text=text, variant=variant, url=url)
         self._children.append(button)
         return button
 
