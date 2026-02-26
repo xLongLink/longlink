@@ -1,8 +1,9 @@
-import { Button } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
+import { useMemo, useRef } from 'react';
+import { useParams } from 'react-router';
 import { Input as UIInput } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { apiFetch } from '@/lib/api';
 
 type InputProps = {
     name?: string;
@@ -27,15 +28,50 @@ export function Input({
     disabled,
     submit,
 }: InputProps) {
+    const { app } = useParams();
+    const defaultFieldValue = useMemo(() => {
+        if (typeof value === 'string' || typeof value === 'number') {
+            return String(value);
+        }
+
+        return '';
+    }, [value]);
+    const previousValueRef = useRef(defaultFieldValue);
+
+    const normalizedSubmitPath = (submit ?? '').replace(/^\/+|\/+$/g, '');
+
+    const handleBlur = async (nextValue: string) => {
+        if (
+            !app ||
+            !normalizedSubmitPath ||
+            nextValue === previousValueRef.current
+        ) {
+            return;
+        }
+
+        previousValueRef.current = nextValue;
+
+        await apiFetch(`/apps/${app}/${normalizedSubmitPath}`, {
+            method: 'POST',
+            body: {
+                ...(name ? { name } : {}),
+                value: nextValue,
+            },
+        });
+    };
+
     const renderControl = () => {
         if (kind === 'textarea') {
             return (
                 <Textarea
                     name={name}
                     placeholder={placeholder}
-                    defaultValue={typeof value === 'string' ? value : undefined}
+                    defaultValue={defaultFieldValue}
                     required={required}
                     disabled={disabled}
+                    onBlur={(event) => {
+                        void handleBlur(event.currentTarget.value);
+                    }}
                 />
             );
         }
@@ -47,13 +83,12 @@ export function Input({
                 name={name}
                 type={type}
                 placeholder={placeholder}
-                defaultValue={
-                    typeof value === 'string' || typeof value === 'number'
-                        ? value
-                        : undefined
-                }
+                defaultValue={defaultFieldValue}
                 required={required}
                 disabled={disabled}
+                onBlur={(event) => {
+                    void handleBlur(event.currentTarget.value);
+                }}
             />
         );
     };
@@ -62,20 +97,7 @@ export function Input({
         <div className="space-y-2">
             {label && <Label>{label}</Label>}
 
-            {submit ? (
-                <ButtonGroup className="w-full">
-                    {renderControl()}
-                    <Button
-                        type="button"
-                        className="cursor-pointer"
-                        disabled={disabled}
-                    >
-                        {submit}
-                    </Button>
-                </ButtonGroup>
-            ) : (
-                renderControl()
-            )}
+            {renderControl()}
 
             {description ? (
                 <p className="text-muted-foreground text-sm">{description}</p>
