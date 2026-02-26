@@ -1,0 +1,84 @@
+import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { Label } from '@/components/ui/label';
+import {
+    Select as UISelect,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
+type SelectOption = {
+    label: string;
+    value: string;
+};
+
+type SelectProps = {
+    name?: string;
+    label?: string;
+    value?: string;
+    placeholder?: string;
+    description?: string;
+    options?: SelectOption[];
+    required?: boolean;
+    disabled?: boolean;
+    submit?: string;
+};
+
+export function Select({
+    name,
+    label,
+    value,
+    placeholder,
+    description,
+    options,
+    disabled,
+    submit,
+}: SelectProps) {
+    const renderControl = () => (
+        <UISelect
+            name={name}
+            disabled={disabled}
+            defaultValue={String(value ?? '')}
+        >
+            <SelectTrigger className="w-full">
+                <SelectValue placeholder={placeholder ?? 'Select an option'} />
+            </SelectTrigger>
+            <SelectContent>
+                {(options ?? []).map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </UISelect>
+    );
+
+    return (
+        <div className="space-y-2">
+            {label && <Label>{label}</Label>}
+
+            {submit ? (
+                <ButtonGroup className="w-full">
+                    {renderControl()}
+                    <Button
+                        type="button"
+                        className="cursor-pointer"
+                        disabled={disabled}
+                    >
+                        {submit}
+                    </Button>
+                </ButtonGroup>
+            ) : (
+                renderControl()
+            )}
+
+            {description ? (
+                <p className="text-muted-foreground text-sm">{description}</p>
+            ) : null}
+        </div>
+    );
+}
+
+export default Select;
