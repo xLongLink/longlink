@@ -1,46 +1,24 @@
+from dataclasses import dataclass
 import re
-from typing import Literal, TypeAlias, Any
-from dataclasses import dataclass, field
+
 from .__root__ import Component
 
 
-InputKinds: TypeAlias = Literal[
-    "text",
-    "number",
-    "password",
-    "textarea",
-    "date",
-    "datetime",
-    "switch",
-]
-
-
 @dataclass
-class Input(Component):
+class Select(Component):
     """
-    Generic standalone input component.
-
-    Design goals:
-    - Usable independently (not bound to a form container)
-    - Declarative and transport-safe
-    - Backend-driven event handling
-    - Polymorphic via `kind`
-
-    Behavior:
-    - If `submit` is provided, frontend emits a "submit" event.
-    - Otherwise, frontend emits "change" events immediately.
-    - `name` identifies the field in backend handlers.
+    Standalone select component.
 
     Serialization shape:
         {
-            "type": "input",
+            "type": "select",
             "props": {
-                "kind": <InputKinds>,
                 "name": <str>,
                 "label": <str | null>,
-                "value": <Any>,
+                "value": <str | null>,
                 "placeholder": <str | null>,
                 "description": <str | null>,
+                "options": <list[dict[str, str]]>,
                 "required": <bool>,
                 "disabled": <bool>,
                 "submit": <str | null>
@@ -49,53 +27,39 @@ class Input(Component):
         }
     """
 
-    # Core identity
+    options: list[dict[str, str]]
     name: str | None = None
-    kind: InputKinds = "text"
-
-    # UI metadata
     label: str | None = None
-    value: Any = None
+    value: str | None = None
     placeholder: str | None = None
     description: str | None = None
-
-    # State flags
     required: bool = False
     disabled: bool = False
-
-    # Optional inline submit button
     submit: str | None = None
 
     def __post_init__(self) -> None:
-        """
-        Validate configuration constraints.
-        """
         if self.name is None:
             if self.label:
                 normalized = re.sub(r"[^a-z0-9]+", "_", self.label.lower()).strip("_")
-                self.name = normalized or "input"
+                self.name = normalized or "select"
             else:
-                self.name = "input"
-
-        if self.kind == "switch" and self.value is None:
-            self.value = False
+                self.name = "select"
 
     def __iter__(self):
         props = {
-            "kind": self.kind,
             "name": self.name,
             "label": self.label,
             "value": self.value,
             "placeholder": self.placeholder,
             "description": self.description,
+            "options": self.options,
             "required": self.required,
             "disabled": self.disabled,
             "submit": self.submit,
         }
 
-        # Remove None values to keep schema clean
         cleaned = {k: v for k, v in props.items() if v is not None}
 
-        yield "type", "input"
+        yield "type", "select"
         yield "props", cleaned
         yield "children", []

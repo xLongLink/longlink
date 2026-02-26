@@ -6,6 +6,7 @@ from typing import Any
 from longlink.ui.tabs import Tab, Tabs
 from longlink.ui.hero import Hero
 from longlink.ui.input import Input, InputKinds
+from longlink.ui.select import Select
 from longlink.ui.table import Table
 from longlink.ui.separator import Separator
 from longlink.ui.columns import Column, Columns
@@ -79,7 +80,6 @@ class MenuSubSection(Component):
         value: Any = None,
         placeholder: str | None = None,
         description: str | None = None,
-        options: list[dict[str, str]] | None = None,
         required: bool = False,
         disabled: bool = False,
         submit: str | None = None,
@@ -92,13 +92,39 @@ class MenuSubSection(Component):
             value=value,
             placeholder=placeholder,
             description=description,
-            options=options,
             required=required,
             disabled=disabled,
             submit=submit,
         )
         self._children.append(input_component)
         return input_component
+
+    def select(
+        self,
+        options: list[dict[str, str]],
+        name: str | None = None,
+        label: str | None = None,
+        value: str | None = None,
+        placeholder: str | None = None,
+        description: str | None = None,
+        required: bool = False,
+        disabled: bool = False,
+        submit: str | None = None,
+    ) -> Select:
+        """Append a Select component."""
+        select_component = Select(
+            options=options,
+            name=name,
+            label=label,
+            value=value,
+            placeholder=placeholder,
+            description=description,
+            required=required,
+            disabled=disabled,
+            submit=submit,
+        )
+        self._children.append(select_component)
+        return select_component
 
     def tabs(self, names: list[str]) -> list[Tab]:
         """Append a Tabs container."""
@@ -192,7 +218,6 @@ class MenuSection(Component):
         value: Any = None,
         placeholder: str | None = None,
         description: str | None = None,
-        options: list[dict[str, str]] | None = None,
         required: bool = False,
         disabled: bool = False,
         submit: str | None = None,
@@ -204,13 +229,38 @@ class MenuSection(Component):
             value=value,
             placeholder=placeholder,
             description=description,
-            options=options,
             required=required,
             disabled=disabled,
             submit=submit,
         )
         self._root._children.append(input_component)
         return input_component
+
+    def select(
+        self,
+        options: list[dict[str, str]],
+        name: str | None = None,
+        label: str | None = None,
+        value: str | None = None,
+        placeholder: str | None = None,
+        description: str | None = None,
+        required: bool = False,
+        disabled: bool = False,
+        submit: str | None = None,
+    ) -> Select:
+        select_component = Select(
+            options=options,
+            name=name,
+            label=label,
+            value=value,
+            placeholder=placeholder,
+            description=description,
+            required=required,
+            disabled=disabled,
+            submit=submit,
+        )
+        self._root._children.append(select_component)
+        return select_component
 
     def tabs(self, names: list[str]) -> list[Tab]:
         tabs = Tabs()
