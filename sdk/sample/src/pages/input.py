@@ -67,8 +67,7 @@ async def input_page() -> Page:
     )
 
     # Select input
-    page.input(
-        kind="select",
+    page.select(
         label="Select Input",
         options=[
             {"label": "Option 1", "value": "option_1"},
