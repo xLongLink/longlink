@@ -11,7 +11,6 @@ InputKinds: TypeAlias = Literal[
     "textarea",
     "date",
     "datetime",
-    "switch",
 ]
 
 
@@ -76,9 +75,6 @@ class Input(Component):
                 self.name = normalized or "input"
             else:
                 self.name = "input"
-
-        if self.kind == "switch" and self.value is None:
-            self.value = False
 
     def __iter__(self):
         props = {
