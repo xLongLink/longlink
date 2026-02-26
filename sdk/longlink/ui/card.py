@@ -64,8 +64,13 @@ class Card(Component):
         self._children.append(input_component)
         return input_component
 
-    def button(self, text: str, variant: ButtonVariants = "default") -> Button:
-        button = Button(text=text, variant=variant)
+    def button(
+        self,
+        text: str,
+        variant: ButtonVariants = "default",
+        url: str | None = None,
+    ) -> Button:
+        button = Button(text=text, variant=variant, url=url)
         self._children.append(button)
         return button
 

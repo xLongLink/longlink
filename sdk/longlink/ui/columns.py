@@ -47,8 +47,13 @@ class Column(Component):
         self._components.append(table)
         return table
 
-    def button(self, text: str, variant: ButtonVariants = 'default') -> Button:
-        button = Button(text=text, variant=variant)
+    def button(
+        self,
+        text: str,
+        variant: ButtonVariants = 'default',
+        url: str | None = None,
+    ) -> Button:
+        button = Button(text=text, variant=variant, url=url)
         self._components.append(button)
         return button
 
