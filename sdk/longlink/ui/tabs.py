@@ -5,6 +5,7 @@ from typing import Any
 # Importing components
 from .hero import Hero
 from .input import Input, InputKinds
+from .select import Select
 from .table import Table
 from .columns import Column, Columns
 from .button import Button, ButtonVariants
@@ -89,7 +90,6 @@ class Tab(Component):
         value: Any = None,
         placeholder: str | None = None,
         description: str | None = None,
-        options: list[dict[str, str]] | None = None,
         required: bool = False,
         disabled: bool = False,
         submit: str | None = None,
@@ -106,13 +106,39 @@ class Tab(Component):
             value=value,
             placeholder=placeholder,
             description=description,
-            options=options,
             required=required,
             disabled=disabled,
             submit=submit,
         )
         self._children.append(input_component)
         return input_component
+
+    def select(
+        self,
+        options: list[dict[str, str]],
+        name: str | None = None,
+        label: str | None = None,
+        value: str | None = None,
+        placeholder: str | None = None,
+        description: str | None = None,
+        required: bool = False,
+        disabled: bool = False,
+        submit: str | None = None,
+    ) -> Select:
+        """Append a standalone Select component to this tab."""
+        select_component = Select(
+            options=options,
+            name=name,
+            label=label,
+            value=value,
+            placeholder=placeholder,
+            description=description,
+            required=required,
+            disabled=disabled,
+            submit=submit,
+        )
+        self._children.append(select_component)
+        return select_component
 
 
     def range(
