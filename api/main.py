@@ -34,7 +34,6 @@ import src.routes.auth
 import src.routes.databases
 import src.routes.user
 import src.routes.users
-import src.routes.sample
 import src.routes.settings
 import src.routes.storages
 
@@ -42,18 +41,7 @@ app.include_router(router)
 
 
 if __name__ == '__main__':
-    import asyncio
     import uvicorn
-
-    import src.db as db
-
-    async def register_sample_app() -> None:
-        apps = await db.apps.list()
-        sample_exists = any(app.name == 'sample' for app in apps)
-        if not sample_exists:
-            await db.apps.create('sample', 'http://localhost:1707', token="1234")
-
-    asyncio.run(register_sample_app())
 
     uvicorn.run(
         'main:app',
