@@ -6,6 +6,8 @@ The project is divided into three folders:
 - `sdk` - Python SDK for app development
 - `web` - Static Frontend web application
 
+Every time you navigate to each folder, read the AGENTS.md file to understand folder specific structure and how to work with it.
+
 # API
 
 The API is responsible for the login and management of organizations, users, modules, and data.
