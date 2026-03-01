@@ -1,8 +1,5 @@
-import AccessControl from '@/components/settings/AccessControl';
 import Applications from '@/components/settings/Applications';
-import AuditCompliance from '@/components/settings/AuditCompliance';
 import Authentication from '@/components/settings/Authentication';
-import Billing from '@/components/settings/Billing';
 import Database from '@/components/settings/Database';
 import General from '@/components/settings/General';
 import Infrastructure from '@/components/settings/Infrastructure';
@@ -10,44 +7,68 @@ import Integrations from '@/components/settings/Integrations';
 import Security from '@/components/settings/Security';
 import Storage from '@/components/settings/Storage';
 import { Menu, MenuContent, MenuList, MenuSection } from '@/components/ui/menu';
+import {
+    AppWindowIcon,
+    DatabaseIcon,
+    GlobeIcon,
+    HardDriveIcon,
+    KeyRoundIcon,
+    ShieldIcon,
+    UnplugIcon,
+    WrenchIcon,
+} from 'lucide-react';
 
 export default function SettingsPage() {
     return (
         <div className="space-y-6">
             <Menu defaultValue="general">
                 <MenuList>
-                    <MenuSection value="general" label="General" />
+                    <MenuSection
+                        value="general"
+                        label="General"
+                        icon={GlobeIcon}
+                    />
                     <MenuSection
                         value="authentication"
                         label="Authentication"
+                        icon={KeyRoundIcon}
                     />
                     <MenuSection
-                        value="access-control"
-                        label="Access Control (RBAC)"
+                        value="applications"
+                        label="Applications"
+                        icon={AppWindowIcon}
                     />
-                    <MenuSection value="applications" label="Applications" />
-                    <MenuSection value="database" label="Database" />
-                    <MenuSection value="storage" label="Storage" />
+                    <MenuSection
+                        value="database"
+                        label="Database"
+                        icon={DatabaseIcon}
+                    />
+                    <MenuSection
+                        value="storage"
+                        label="Storage"
+                        icon={HardDriveIcon}
+                    />
                     <MenuSection
                         value="infrastructure"
                         label="Infrastructure"
+                        icon={WrenchIcon}
                     />
                     <MenuSection
-                        value="audit-compliance"
-                        label="Audit & Compliance"
+                        value="security"
+                        label="Security"
+                        icon={ShieldIcon}
                     />
-                    <MenuSection value="security" label="Security" />
-                    <MenuSection value="billing" label="Billing & Plan" />
-                    <MenuSection value="integrations" label="Integrations" />
+                    <MenuSection
+                        value="integrations"
+                        label="Integrations"
+                        icon={UnplugIcon}
+                    />
                 </MenuList>
                 <MenuContent value="general">
                     <General />
                 </MenuContent>
                 <MenuContent value="authentication">
                     <Authentication />
-                </MenuContent>
-                <MenuContent value="access-control">
-                    <AccessControl />
                 </MenuContent>
                 <MenuContent value="applications">
                     <Applications />
@@ -61,14 +82,8 @@ export default function SettingsPage() {
                 <MenuContent value="infrastructure">
                     <Infrastructure />
                 </MenuContent>
-                <MenuContent value="audit-compliance">
-                    <AuditCompliance />
-                </MenuContent>
                 <MenuContent value="security">
                     <Security />
-                </MenuContent>
-                <MenuContent value="billing">
-                    <Billing />
                 </MenuContent>
                 <MenuContent value="integrations">
                     <Integrations />
