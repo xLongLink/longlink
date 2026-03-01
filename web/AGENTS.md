@@ -4,6 +4,7 @@ You are working on a vite tailwind shadcn project.
 
 - Use shadcn components for reusable UI elements.
 - Ensure consistency across the application.
+- For static content, do not use .map(); write each JSX element explicitly inline.
 
 ## API utilities
 
