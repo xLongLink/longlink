@@ -3,6 +3,11 @@ import { useRef, useState } from 'react';
 import { ImagePlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Button as LonglinkButton } from '@/components/longlink/Button';
+import {
+    Table as LonglinkTable,
+    type ApiTableColumn,
+} from '@/components/longlink/Table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +18,7 @@ const settingSections = [
     'Identity & Authentication',
     'Access Control (RBAC)',
     'Applications',
+    'Database',
     'Infrastructure',
     'Storage',
     'Audit & Compliance',
@@ -22,6 +28,58 @@ const settingSections = [
     'API & Integrations',
     'Advanced / System',
 ] as const;
+
+const mockDatabases = [
+    {
+        name: 'org_core',
+        engine: 'PostgreSQL 16',
+        region: 'us-east-1',
+        status: 'Active',
+        updatedAt: '2h ago',
+    },
+    {
+        name: 'analytics_warehouse',
+        engine: 'ClickHouse',
+        region: 'eu-west-1',
+        status: 'Active',
+        updatedAt: '20m ago',
+    },
+    {
+        name: 'event_stream_archive',
+        engine: 'MongoDB 7',
+        region: 'ap-southeast-1',
+        status: 'Maintenance',
+        updatedAt: '1d ago',
+    },
+] as const;
+
+const mockDatabaseColumns: ApiTableColumn[] = [
+    {
+        key: 'name',
+        label: 'Name',
+        value: '{name}',
+    },
+    {
+        key: 'engine',
+        label: 'Engine',
+        value: '{engine}',
+    },
+    {
+        key: 'region',
+        label: 'Region',
+        value: '{region}',
+    },
+    {
+        key: 'status',
+        label: 'Status',
+        value: '{status}',
+    },
+    {
+        key: 'updatedAt',
+        label: 'Last updated',
+        value: '{updatedAt}',
+    },
+];
 
 const toMenuValue = (section: string) =>
     section
@@ -58,6 +116,7 @@ export default function SettingsPage() {
                 <div className="space-y-3">
                     {settingSections.map((section) => {
                         const isGeneralSection = section === 'General';
+                        const isDatabaseSection = section === 'Database';
 
                         return (
                             <MenuContent
@@ -182,6 +241,22 @@ export default function SettingsPage() {
                                                 Upload logo
                                             </Button>
                                         </div>
+                                    </div>
+                                ) : isDatabaseSection ? (
+                                    <div className="mt-4 space-y-4">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <p className="text-muted-foreground text-sm">
+                                                Current organization databases
+                                                (mock data).
+                                            </p>
+                                            <LonglinkButton text="Add database" />
+                                        </div>
+
+                                        <LonglinkTable
+                                            data={[...mockDatabases]}
+                                            columns={mockDatabaseColumns}
+                                            pageSize={5}
+                                        />
                                     </div>
                                 ) : (
                                     <p className="text-muted-foreground mt-1 text-sm">
