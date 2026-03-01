@@ -1,3 +1,9 @@
+---
+component: Input
+sdk: longlink/ui/input.py
+web: src/components/longlink/Input.tsx
+---
+
 # Input
 
 `Input` is a polymorphic field component used for text and other primitive input kinds.

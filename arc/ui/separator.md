@@ -1,3 +1,9 @@
+---
+component: Separator
+sdk: longlink/ui/separator.py
+web: src/components/longlink/Separator.tsx
+---
+
 # Separator
 
 `Separator` is a visual divider between components.

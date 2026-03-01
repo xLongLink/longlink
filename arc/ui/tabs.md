@@ -1,3 +1,9 @@
+---
+component: Tabs
+sdk: longlink/ui/tabs.py
+web: src/components/longlink/Tabs.tsx
+---
+
 # Tabs and Tab
 
 `Tabs` organizes content into switchable views. `Tab` is one named tab panel.

@@ -1,5 +1,7 @@
 ---
 component: Button
+sdk: longlink/ui/button.py
+web: src/components/longlink/Button.tsx
 ---
 
 # Button

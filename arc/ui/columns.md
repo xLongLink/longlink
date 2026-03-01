@@ -1,3 +1,9 @@
+---
+component: Columns
+sdk: longlink/ui/columns.py
+web: src/components/longlink/Columns.tsx
+---
+
 # Columns and Column
 
 `Columns` defines a horizontal layout, and `Column` is each vertical lane inside it.
