@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { format, isValid, parse } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
@@ -78,6 +78,7 @@ export function Input({
         return '';
     }, [value]);
     const previousValueRef = useRef(defaultFieldValue);
+    const [textValue, setTextValue] = useState(defaultFieldValue);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(() =>
         kind === 'date' ? parseDateValue(defaultFieldValue) : undefined
     );
@@ -88,19 +89,37 @@ export function Input({
     );
 
     const normalizedSubmitPath = (submit ?? '').replace(/^\/+|\/+$/g, '');
+    const submitPath = submit?.startsWith('/')
+        ? submit
+        : normalizedSubmitPath
+          ? app
+              ? `/apps/${app}/${normalizedSubmitPath}`
+              : `/${normalizedSubmitPath}`
+          : '';
+
+    useEffect(() => {
+        previousValueRef.current = defaultFieldValue;
+        if (kind === 'date') {
+            setSelectedDate(parseDateValue(defaultFieldValue));
+            return;
+        }
+
+        if (kind === 'datetime') {
+            setSelectedDateTime(parseDatetimeValue(defaultFieldValue));
+            return;
+        }
+
+        setTextValue(defaultFieldValue);
+    }, [defaultFieldValue, kind]);
 
     const handleBlur = async (nextValue: string) => {
-        if (
-            !app ||
-            !normalizedSubmitPath ||
-            nextValue === previousValueRef.current
-        ) {
+        if (!submitPath || nextValue === previousValueRef.current) {
             return;
         }
 
         previousValueRef.current = nextValue;
 
-        await apiFetch(`/apps/${app}/${normalizedSubmitPath}`, {
+        await apiFetch(submitPath, {
             method: 'POST',
             body: {
                 ...(name ? { name } : {}),
@@ -115,9 +134,12 @@ export function Input({
                 <Textarea
                     name={name}
                     placeholder={placeholder}
-                    defaultValue={defaultFieldValue}
+                    value={textValue}
                     required={required}
                     disabled={disabled}
+                    onChange={(event) => {
+                        setTextValue(event.currentTarget.value);
+                    }}
                     onBlur={(event) => {
                         void handleBlur(event.currentTarget.value);
                     }}
@@ -247,9 +269,12 @@ export function Input({
                 name={name}
                 type={kind}
                 placeholder={placeholder}
-                defaultValue={defaultFieldValue}
+                value={textValue}
                 required={required}
                 disabled={disabled}
+                onChange={(event) => {
+                    setTextValue(event.currentTarget.value);
+                }}
                 onBlur={(event) => {
                     void handleBlur(event.currentTarget.value);
                 }}

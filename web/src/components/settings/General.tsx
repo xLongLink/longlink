@@ -1,24 +1,81 @@
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import Hero from '@/components/longlink/Hero';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import Input from '@/components/longlink/Input';
+import { apiFetch } from '@/lib/api';
+
+type OrganizationSettingsState = {
+    organizationName: string;
+    legalName: string;
+    registrationTaxId: string;
+    phoneNumber: string;
+    primaryContactEmail: string;
+    supportEmail: string;
+    website: string;
+    physicalAddress: string;
+};
+
+const INITIAL_SETTINGS: OrganizationSettingsState = {
+    organizationName: '',
+    legalName: '',
+    registrationTaxId: '',
+    phoneNumber: '',
+    primaryContactEmail: '',
+    supportEmail: '',
+    website: '',
+    physicalAddress: '',
+};
+
+const ORGANIZATION_SETTING_KEYS = {
+    organizationName: 'organization_name',
+    legalName: 'organization_legal_name',
+    registrationTaxId: 'organization_registration_tax_id',
+    phoneNumber: 'organization_phone_number',
+    primaryContactEmail: 'organization_primary_contact_email',
+    supportEmail: 'organization_support_email',
+    website: 'organization_website',
+    physicalAddress: 'organization_physical_address',
+} as const;
+
+type SettingResponse = {
+    key: string;
+    value: string;
+    app_id: number | null;
+};
 
 export default function General() {
-    const [logoPreview, setLogoPreview] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [settings, setSettings] =
+        useState<OrganizationSettingsState>(INITIAL_SETTINGS);
 
-    const handleLogoChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    useEffect(() => {
+        const loadSettings = async () => {
+            const nextSettings: OrganizationSettingsState = {
+                ...INITIAL_SETTINGS,
+            };
 
-        if (!file) {
-            return;
-        }
+            const settingEntries = Object.entries(ORGANIZATION_SETTING_KEYS);
 
-        setLogoPreview(URL.createObjectURL(file));
-    };
+            await Promise.all(
+                settingEntries.map(async ([stateKey, settingKey]) => {
+                    try {
+                        const response = await apiFetch<SettingResponse>(
+                            `/settings/${settingKey}`
+                        );
+                        nextSettings[
+                            stateKey as keyof OrganizationSettingsState
+                        ] = response.value;
+                    } catch {
+                        nextSettings[
+                            stateKey as keyof OrganizationSettingsState
+                        ] = '';
+                    }
+                })
+            );
+
+            setSettings(nextSettings);
+        };
+
+        void loadSettings();
+    }, []);
 
     return (
         <div className="space-y-6">
@@ -29,117 +86,66 @@ export default function General() {
             />
 
             <section className="space-y-6">
-                <h2 className="text-2xl font-semibold tracking-tight">
-                    Organization details
-                </h2>
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2 sm:col-span-2">
-                            <Label htmlFor="organization-name">
-                                Organization name
-                            </Label>
-                            <Input
-                                id="organization-name"
-                                defaultValue="Longlink"
-                                placeholder="Organization display name"
-                            />
-                        </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <Input
+                        label="Organization name"
+                        value={settings.organizationName}
+                        placeholder="Organization display name"
+                        submit={`/settings/${ORGANIZATION_SETTING_KEYS.organizationName}`}
+                    />
 
-                        <div className="space-y-2 sm:col-span-2">
-                            <Label htmlFor="legal-name">Legal name</Label>
-                            <Input
-                                id="legal-name"
-                                placeholder="Registered legal entity name"
-                            />
-                        </div>
+                    <Input
+                        label="Legal name"
+                        value={settings.legalName}
+                        placeholder="Registered legal entity name"
+                        submit={`/settings/${ORGANIZATION_SETTING_KEYS.legalName}`}
+                    />
 
-                        <div className="space-y-2">
-                            <Label htmlFor="registration-tax-id">
-                                Registration / tax ID
-                            </Label>
-                            <Input
-                                id="registration-tax-id"
-                                placeholder="Company registration or tax ID"
-                            />
-                        </div>
+                    <Input
+                        label="Registration / tax ID"
+                        value={settings.registrationTaxId}
+                        placeholder="Company registration or tax ID"
+                        submit={`/settings/${ORGANIZATION_SETTING_KEYS.registrationTaxId}`}
+                    />
 
-                        <div className="space-y-2">
-                            <Label htmlFor="phone-number">Phone number</Label>
-                            <Input
-                                id="phone-number"
-                                type="tel"
-                                placeholder="+1 (000) 000-0000"
-                            />
-                        </div>
+                    <Input
+                        label="Phone number"
+                        value={settings.phoneNumber}
+                        placeholder="+1 (000) 000-0000"
+                        submit={`/settings/${ORGANIZATION_SETTING_KEYS.phoneNumber}`}
+                    />
 
-                        <div className="space-y-2">
-                            <Label htmlFor="primary-contact-email">
-                                Primary contact email
-                            </Label>
-                            <Input
-                                id="primary-contact-email"
-                                type="email"
-                                placeholder="contact@company.com"
-                            />
-                        </div>
+                    <Input
+                        label="Primary contact email"
+                        value={settings.primaryContactEmail}
+                        placeholder="contact@company.com"
+                        submit={`/settings/${ORGANIZATION_SETTING_KEYS.primaryContactEmail}`}
+                    />
 
-                        <div className="space-y-2">
-                            <Label htmlFor="support-email">Support email</Label>
-                            <Input
-                                id="support-email"
-                                type="email"
-                                placeholder="support@company.com"
-                            />
-                        </div>
+                    <Input
+                        label="Support email"
+                        value={settings.supportEmail}
+                        placeholder="support@company.com"
+                        submit={`/settings/${ORGANIZATION_SETTING_KEYS.supportEmail}`}
+                    />
 
-                        <div className="space-y-2 sm:col-span-2">
-                            <Label htmlFor="website">Website</Label>
-                            <Input
-                                id="website"
-                                type="url"
-                                placeholder="https://company.com"
-                            />
-                        </div>
-
-                        <div className="space-y-2 sm:col-span-2">
-                            <Label htmlFor="physical-address">
-                                Physical address
-                            </Label>
-                            <Textarea
-                                id="physical-address"
-                                placeholder="Street, city, state, ZIP/postal code, country"
-                            />
-                        </div>
+                    <div className="sm:col-span-2">
+                        <Input
+                            label="Website"
+                            value={settings.website}
+                            placeholder="https://company.com"
+                            submit={`/settings/${ORGANIZATION_SETTING_KEYS.website}`}
+                        />
                     </div>
 
-                    <div className="space-y-4">
-                        <Label>Logo</Label>
-                        <div className="flex flex-col items-center gap-4 rounded-xl border border-white/10 p-6 text-center">
-                            <Avatar className="size-28 rounded-xl border border-white/10">
-                                <AvatarImage
-                                    src={logoPreview ?? ''}
-                                    alt="Logo"
-                                />
-                                <AvatarFallback className="rounded-xl text-lg">
-                                    LL
-                                </AvatarFallback>
-                            </Avatar>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handleLogoChange}
-                                className="hidden"
-                            />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-full"
-                            >
-                                Upload logo
-                            </Button>
-                        </div>
+                    <div className="sm:col-span-2">
+                        <Input
+                            label="Physical address"
+                            value={settings.physicalAddress}
+                            kind="textarea"
+                            placeholder="Street, city, state, ZIP/postal code, country"
+                            submit={`/settings/${ORGANIZATION_SETTING_KEYS.physicalAddress}`}
+                        />
                     </div>
                 </div>
             </section>
