@@ -90,4 +90,9 @@ async def input_page() -> Page:
         checked=True,
     )
 
+    page.button(
+        text="Call /sample endpoint",
+        variant="secondary",
+    ).click("/sample")
+
     return page
