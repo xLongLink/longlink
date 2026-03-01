@@ -2,7 +2,7 @@ import Applications from '@/components/settings/Applications';
 import Authentication from '@/components/settings/Authentication';
 import Database from '@/components/settings/Database';
 import General from '@/components/settings/General';
-import Infrastructure from '@/components/settings/Infrastructure';
+import Container from '@/components/settings/Container';
 import Integrations from '@/components/settings/Integrations';
 import Security from '@/components/settings/Security';
 import Storage from '@/components/settings/Storage';
@@ -49,8 +49,8 @@ export default function SettingsPage() {
                         icon={HardDriveIcon}
                     />
                     <MenuSection
-                        value="infrastructure"
-                        label="Infrastructure"
+                        value="container"
+                        label="Container"
                         icon={WrenchIcon}
                     />
                     <MenuSection
@@ -79,8 +79,8 @@ export default function SettingsPage() {
                 <MenuContent value="storage">
                     <Storage />
                 </MenuContent>
-                <MenuContent value="infrastructure">
-                    <Infrastructure />
+                <MenuContent value="container">
+                    <Container />
                 </MenuContent>
                 <MenuContent value="security">
                     <Security />
