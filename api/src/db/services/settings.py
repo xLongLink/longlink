@@ -20,9 +20,10 @@ class SettingsService:
 
     async def get(self, key: str, *, app_id: int | None = None) -> Setting | None:
         '''Return a setting by key and scope.'''
+        normalized_key = config.normalize_key(key)
         Session = await get_session()
         async with Session() as session:
-            statement = select(Setting).where(Setting.key == key)
+            statement = select(Setting).where(Setting.key == normalized_key)
             if app_id is None:
                 statement = statement.where(Setting.appid.is_(None))
             else:
@@ -33,9 +34,10 @@ class SettingsService:
 
     async def set(self, key: str, value: str, *, app_id: int | None = None) -> Setting:
         '''Create or update a setting by key and scope.'''
+        normalized_key = config.normalize_key(key)
         Session = await get_session()
         async with Session() as session:
-            statement = select(Setting).where(Setting.key == key)
+            statement = select(Setting).where(Setting.key == normalized_key)
             if app_id is None:
                 statement = statement.where(Setting.appid.is_(None))
             else:
@@ -45,13 +47,13 @@ class SettingsService:
             setting = result.scalar_one_or_none()
 
             if setting is None:
-                setting = Setting(key=key, value=value, appid=app_id)
+                setting = Setting(key=normalized_key, value=value, appid=app_id)
                 session.add(setting)
             else:
                 setting.value = value
 
             # Update the config in memory, this allows to change the envs without restarting the application
-            config.set(key, value)
+            config.set(normalized_key, value)
             
             await session.commit()
             await session.refresh(setting)
