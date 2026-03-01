@@ -58,6 +58,16 @@ async def get_setting(key: str) -> SettingResponse:
     )
 
 
+@router.post('/settings/{key}')
+async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
+    setting = await db.settings.set(key, payload.value, app_id=None)
+    return SettingResponse(
+        key=setting.key,
+        value=setting.value,
+        app_id=setting.appid,
+    )
+
+
 @router.put('/settings/{key}')
 async def set_setting(key: str, payload: SettingSet) -> SettingResponse:
     setting = await db.settings.set(key, payload.value, app_id=None)
