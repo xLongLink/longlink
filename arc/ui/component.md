@@ -1,3 +1,9 @@
+---
+component: Component
+sdk: longlink/ui/__root__.py
+web: src/components/Render.tsx
+---
+
 # Component (Base Class)
 
 `Component` is the abstract base for SDK UI elements.

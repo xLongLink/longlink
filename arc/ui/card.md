@@ -1,3 +1,9 @@
+---
+component: Card
+sdk: longlink/ui/card.py
+web: src/components/longlink/Card.tsx
+---
+
 # Card
 
 `Card` is a visual container used to group related content.

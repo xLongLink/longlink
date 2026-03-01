@@ -1,3 +1,9 @@
+---
+component: Switch
+sdk: longlink/ui/switch.py
+web: src/components/longlink/Switch.tsx
+---
+
 # Switch
 
 `Switch` is a toggle control for on/off state.
