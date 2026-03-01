@@ -5,3 +5,4 @@ from .databases import Database
 from .envs import Env
 from .settings import Setting
 from .users import User
+from .storages import Storage

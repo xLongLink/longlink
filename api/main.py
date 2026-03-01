@@ -36,6 +36,7 @@ import src.routes.user
 import src.routes.users
 import src.routes.sample
 import src.routes.settings
+import src.routes.storages
 
 app.include_router(router)
 
