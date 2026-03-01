@@ -26,14 +26,14 @@ const INITIAL_SETTINGS: OrganizationSettingsState = {
 };
 
 const ORGANIZATION_SETTING_KEYS = {
-    organizationName: 'organization_name',
-    legalName: 'organization_legal_name',
-    registrationTaxId: 'organization_registration_tax_id',
-    phoneNumber: 'organization_phone_number',
-    primaryContactEmail: 'organization_primary_contact_email',
-    supportEmail: 'organization_support_email',
-    website: 'organization_website',
-    physicalAddress: 'organization_physical_address',
+    organizationName: 'ORG_NAME',
+    legalName: 'ORG_NAME_LEGAL',
+    registrationTaxId: 'ORG_TAX_ID',
+    phoneNumber: 'ORG_PHONE',
+    primaryContactEmail: 'ORG_MAIL_CONTACT',
+    supportEmail: 'ORG_MAIL_SUPPORT',
+    website: 'ORG_WEBSITE',
+    physicalAddress: 'ORG_ADDRESS',
 } as const;
 
 type SettingResponse = {
