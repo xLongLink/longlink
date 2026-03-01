@@ -1,3 +1,9 @@
+---
+component: Dialog
+sdk: longlink/ui/dialog.py
+web: src/components/longlink/Dialog.tsx
+---
+
 # Dialog
 
 `Dialog` is a modal container used for confirm/cancel interactions.

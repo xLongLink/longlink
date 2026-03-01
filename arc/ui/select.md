@@ -1,3 +1,9 @@
+---
+component: Select
+sdk: longlink/ui/select.py
+web: src/components/longlink/Select.tsx
+---
+
 # Select
 
 `Select` is a standalone option picker.

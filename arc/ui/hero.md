@@ -1,3 +1,9 @@
+---
+component: Hero
+sdk: longlink/ui/hero.py
+web: src/components/longlink/Hero.tsx
+---
+
 # Hero
 
 `Hero` is a heading/introduction component for sections and pages.

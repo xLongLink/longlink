@@ -1,3 +1,9 @@
+---
+component: Textarea
+sdk: longlink/ui/textarea.py
+web: src/components/longlink/Textarea.tsx
+---
+
 # Textarea
 
 `Textarea` is a multiline text input component.

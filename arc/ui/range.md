@@ -1,3 +1,9 @@
+---
+component: Range
+sdk: longlink/ui/range.py
+web: src/components/longlink/Range.tsx
+---
+
 # Range
 
 `Range` is a numeric interval selector.
