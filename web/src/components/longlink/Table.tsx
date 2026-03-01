@@ -111,18 +111,8 @@ export function Table<T extends object>(props: TableProps) {
             return Array.from({ length: totalPages }, (_, index) => index + 1);
         }
 
-        const pages = new Set<number>([1, totalPages, currentPage]);
-
-        if (currentPage > 1) {
-            pages.add(currentPage - 1);
-        }
-
-        if (currentPage < totalPages) {
-            pages.add(currentPage + 1);
-        }
-
-        return Array.from(pages).sort((a, b) => a - b);
-    }, [currentPage, totalPages]);
+        return [1, 2, totalPages - 1, totalPages];
+    }, [totalPages]);
 
     return (
         <div className="overflow-hidden rounded-md border">
@@ -229,38 +219,26 @@ export function Table<T extends object>(props: TableProps) {
                             />
                         </PaginationItem>
 
-                        {pageItems.flatMap((page, index) => {
-                            const previousPage = pageItems[index - 1];
-                            const showEllipsis =
-                                previousPage !== undefined &&
-                                page - previousPage > 1;
+                        {pageItems.map((page) => (
+                            <PaginationItem key={`page-${page}`}>
+                                <PaginationLink
+                                    href="#"
+                                    isActive={page === currentPage}
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        table.setPageIndex(page - 1);
+                                    }}
+                                >
+                                    {page}
+                                </PaginationLink>
+                            </PaginationItem>
+                        ))}
 
-                            const pageItem = (
-                                <PaginationItem key={`page-${page}`}>
-                                    <PaginationLink
-                                        href="#"
-                                        isActive={page === currentPage}
-                                        onClick={(event) => {
-                                            event.preventDefault();
-                                            table.setPageIndex(page - 1);
-                                        }}
-                                    >
-                                        {page}
-                                    </PaginationLink>
-                                </PaginationItem>
-                            );
-
-                            if (!showEllipsis) {
-                                return [pageItem];
-                            }
-
-                            return [
-                                <PaginationItem key={`ellipsis-${page}`}>
-                                    <PaginationEllipsis />
-                                </PaginationItem>,
-                                pageItem,
-                            ];
-                        })}
+                        {totalPages > 5 && (
+                            <PaginationItem key="ellipsis">
+                                <PaginationEllipsis />
+                            </PaginationItem>
+                        )}
 
                         <PaginationItem>
                             <PaginationNext
