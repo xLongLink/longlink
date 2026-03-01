@@ -1,3 +1,9 @@
+---
+component: Menu
+sdk: longlink/ui/menu.py
+web: src/components/longlink/Menu.tsx
+---
+
 # Menu, MenuSection, and MenuSubSection
 
 The menu elements define hierarchical navigation.

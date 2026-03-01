@@ -1,3 +1,9 @@
+---
+component: Form
+sdk: longlink/ui/form.py
+web: src/components/longlink/Form.tsx
+---
+
 # Form and FormRow
 
 `Form` is a submission boundary for backend-driven input handling. `FormRow` enables horizontal grouping inside a form.

@@ -1,3 +1,9 @@
+---
+component: Checkbox
+sdk: longlink/ui/checkbox.py
+web: src/components/longlink/Checkbox.tsx
+---
+
 # Checkbox
 
 `Checkbox` is a standalone boolean input component.

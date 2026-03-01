@@ -1,3 +1,9 @@
+---
+component: Table
+sdk: longlink/ui/table.py
+web: src/components/longlink/Table.tsx
+---
+
 # Table and Table Column
 
 `Table` renders structured row data, and its table-specific `Column` describes per-column presentation.

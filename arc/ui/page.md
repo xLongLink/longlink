@@ -1,3 +1,9 @@
+---
+component: Page
+sdk: longlink/ui/page.py
+web: src/components/longlink/Page.tsx
+---
+
 # Page
 
 `Page` is the root UI container returned by SDK handlers.
