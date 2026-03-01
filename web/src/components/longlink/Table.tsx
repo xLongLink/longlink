@@ -196,12 +196,8 @@ export function Table<T extends object>(props: TableProps) {
                 </TableBody>
             </UITable>
 
-            <div className="flex flex-col gap-2 border-t p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-muted-foreground">
-                    Page {currentPage} of {totalPages}
-                </span>
-
-                <Pagination className="mx-0 w-auto justify-end">
+            <div className="border-t p-3 text-sm">
+                <Pagination className="mx-0 w-full justify-center">
                     <PaginationContent>
                         <PaginationItem>
                             <PaginationPrevious
