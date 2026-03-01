@@ -2,7 +2,6 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import Hero from '@/components/longlink/Hero';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,16 +23,16 @@ export default function General() {
     return (
         <div className="space-y-6">
             <Hero
-                title="General Settings"
+                title="Organization Settings"
                 subtitle="Configure your organization public and legal details"
                 icon="settings"
             />
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Organization details</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <section className="space-y-6">
+                <h2 className="text-2xl font-semibold tracking-tight">
+                    Organization details
+                </h2>
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2 sm:col-span-2">
                             <Label htmlFor="organization-name">
@@ -142,8 +141,8 @@ export default function General() {
                             </Button>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
         </div>
     );
 }
