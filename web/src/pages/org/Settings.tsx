@@ -25,7 +25,7 @@ export default function SettingsPage() {
                 <MenuList>
                     <MenuSection
                         value="general"
-                        label="General"
+                        label="Organization"
                         icon={GlobeIcon}
                     />
                     <MenuSection
