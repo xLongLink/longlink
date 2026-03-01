@@ -2,7 +2,7 @@ from typing import get_type_hints
 from pydantic import BaseModel
 from longlink.cron import Cron
 from longlink.router import Router
-from longlink.settings import Settings
+from longlink.envs import Envs
 
 
 class LongLink(Router, Cron):
@@ -21,6 +21,25 @@ class LongLink(Router, Cron):
                 "version": self.version,
                 "pages": self.pages(),
             }
+
+        @self.get("/register")
+        async def get_registration_information():
+            return self.registration()
+
+    def registration(self) -> dict[str, object]:
+        return {
+            "name": self.title,
+            "version": self.version,
+            "required_envs": self.required_envs(),
+        }
+
+    def required_envs(self) -> list[str]:
+        required_fields = [
+            name
+            for name, field in Envs.model_fields.items()
+            if field.is_required()
+        ]
+        return [field_name.upper() for field_name in required_fields]
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
