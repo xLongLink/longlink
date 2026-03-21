@@ -1,0 +1,66 @@
+name: Generate PDF
+
+on:
+  workflow_dispatch:
+    inputs:
+      pdf_text:
+        description: Text to include in the generated PDF
+        required: true
+        type: string
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install rendering and PDF dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jinja2
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex
+
+      - name: Render markdown from Jinja template
+        env:
+          PDF_TEXT: ${{ inputs.pdf_text }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from jinja2 import Environment, FileSystemLoader, select_autoescape
+          import os
+
+          template_dir = Path('.github/pdf')
+          env = Environment(
+              loader=FileSystemLoader(str(template_dir)),
+              autoescape=select_autoescape(disabled_extensions=('md',), default=False),
+              trim_blocks=True,
+              lstrip_blocks=True,
+          )
+
+          template = env.get_template('document.md.j2')
+          rendered_markdown = template.render(pdf_text=os.environ['PDF_TEXT'])
+          Path('workflow-output.md').write_text(rendered_markdown, encoding='utf-8')
+          PY
+
+      - name: Generate PDF with pandoc and LaTeX template
+        run: |
+          pandoc workflow-output.md \
+            --from markdown \
+            --pdf-engine=xelatex \
+            --template .github/pdf/template.tex \
+            --output workflow-output.pdf
+
+      - name: Upload generated artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-output-pdf
+          path: |
+            workflow-output.pdf
+            workflow-output.md
