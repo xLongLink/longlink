@@ -62,7 +62,7 @@ Run the backend in development mode:
 ```bash
 python -m venv .venv
 source .venv/bin/activate # On Windows use `.venv\Scripts\activate`
-pip install -r api/requirements.txt
+pip install -e './api[dev]'
 pip install -e sdk
 
 
