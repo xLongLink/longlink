@@ -52,9 +52,8 @@ class SettingsService:
             else:
                 setting.value = value
 
-            # Update the config in memory, this allows to change the envs without restarting the application
             config.set(normalized_key, value)
-            
+
             await session.commit()
             await session.refresh(setting)
             return setting

@@ -7,12 +7,20 @@ from src.models.settings import SettingResponse, SettingSet, SettingSetItem
 from src.router import router
 
 
+def _invalid_key_error(error: ValueError) -> HTTPException:
+    return HTTPException(status_code=400, detail=str(error))
+
+
 @router.get('/settings')
 async def get_settings(keys: List[str] = Query(...)) -> List[SettingResponse]:
     results: List[SettingResponse] = []
 
     for key in keys:
-        setting = await db.settings.get(key, app_id=None)
+        try:
+            setting = await db.settings.get(key, app_id=None)
+        except ValueError as error:
+            raise _invalid_key_error(error) from error
+
         if setting is None:
             raise HTTPException(status_code=404, detail=f"Setting '{key}' not found")
 
@@ -32,7 +40,10 @@ async def set_settings(payload: List[SettingSetItem]) -> List[SettingResponse]:
     results: List[SettingResponse] = []
 
     for item in payload:
-        setting = await db.settings.set(item.key, item.value, app_id=None)
+        try:
+            setting = await db.settings.set(item.key, item.value, app_id=None)
+        except ValueError as error:
+            raise _invalid_key_error(error) from error
 
         results.append(
             SettingResponse(
@@ -47,7 +58,11 @@ async def set_settings(payload: List[SettingSetItem]) -> List[SettingResponse]:
 
 @router.get('/settings/{key}')
 async def get_setting(key: str) -> SettingResponse:
-    setting = await db.settings.get(key, app_id=None)
+    try:
+        setting = await db.settings.get(key, app_id=None)
+    except ValueError as error:
+        raise _invalid_key_error(error) from error
+
     if setting is None:
         raise HTTPException(status_code=404, detail=f"Setting '{key}' not found")
 
@@ -60,7 +75,11 @@ async def get_setting(key: str) -> SettingResponse:
 
 @router.post('/settings/{key}')
 async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
-    setting = await db.settings.set(key, payload.value, app_id=None)
+    try:
+        setting = await db.settings.set(key, payload.value, app_id=None)
+    except ValueError as error:
+        raise _invalid_key_error(error) from error
+
     return SettingResponse(
         key=setting.key,
         value=setting.value,
@@ -70,7 +89,11 @@ async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
 
 @router.put('/settings/{key}')
 async def set_setting(key: str, payload: SettingSet) -> SettingResponse:
-    setting = await db.settings.set(key, payload.value, app_id=None)
+    try:
+        setting = await db.settings.set(key, payload.value, app_id=None)
+    except ValueError as error:
+        raise _invalid_key_error(error) from error
+
     return SettingResponse(
         key=setting.key,
         value=setting.value,

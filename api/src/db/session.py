@@ -1,5 +1,5 @@
 from src.db.models import Base
-from src.config import config
+from src.env import env
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 
@@ -14,7 +14,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if Session is not None:
         return Session
 
-    dburl = config.ENV_DATABASE_URL
+    dburl = env.ENV_DATABASE_URL
 
     engine_kwargs = {
         'pool_pre_ping': True,
