@@ -69,6 +69,6 @@ pip install -e sdk
 Finally run the api and a sample app:
 
 ```bash
-python api/main.py
+cd api && python main.py
 python sdk/sample/main.py
 ```
