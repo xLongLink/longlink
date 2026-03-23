@@ -15,7 +15,7 @@ dependencies = [
 ]
 requires-python = ">=3.12"
 authors = [
-    {name = "Leonardo Saurwein"}
+    {name = "LongLink SAGL", email = "info@longlink.ch"}
 ]
 maintainers = []
 description = "Lovely Spam! Wonderful Spam!"
