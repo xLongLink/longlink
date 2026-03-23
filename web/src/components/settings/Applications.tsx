@@ -1,8 +1,9 @@
-import { AppWindow, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import Hero from '@/components/longlink/Hero';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     DialogContent,
     DialogDescription,
@@ -10,6 +11,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -27,11 +29,20 @@ type Application = {
     status: 'Active';
 };
 
+const developmentApplication: Application = {
+    name: 'Sample localhost application',
+    slug: 'sample-localhost-application',
+    owner: 'Development',
+    runtime: 'Localhost',
+    status: 'Active',
+};
+
 export default function Applications() {
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
     const [owner, setOwner] = useState('');
     const [runtime, setRuntime] = useState('Python SDK');
+    const [enableDevelopment, setEnableDevelopment] = useState(false);
     const [applications, setApplications] = useState<Application[]>([]);
 
     const canCreate = useMemo(() => {
@@ -42,6 +53,14 @@ export default function Applications() {
             runtime.trim().length > 0
         );
     }, [name, owner, runtime, slug]);
+
+    const visibleApplications = useMemo(() => {
+        if (!enableDevelopment) {
+            return applications;
+        }
+
+        return [developmentApplication, ...applications];
+    }, [applications, enableDevelopment]);
 
     const onCreate = () => {
         if (!canCreate) {
@@ -118,6 +137,24 @@ export default function Applications() {
                 </DialogContent>
             </Hero>
 
+            <Card className="p-4">
+                <div className="flex items-center gap-3">
+                    <Checkbox
+                        id="enable-development"
+                        checked={enableDevelopment}
+                        onCheckedChange={(checked) =>
+                            setEnableDevelopment(checked === true)
+                        }
+                    />
+                    <Label
+                        htmlFor="enable-development"
+                        className="text-sm font-medium"
+                    >
+                        Enable development
+                    </Label>
+                </div>
+            </Card>
+
             <Card className="overflow-hidden">
                 <Table>
                     <TableHeader>
@@ -130,7 +167,7 @@ export default function Applications() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {applications.length === 0 ? (
+                        {visibleApplications.length === 0 ? (
                             <TableRow>
                                 <TableCell
                                     colSpan={5}
@@ -140,7 +177,7 @@ export default function Applications() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            applications.map((application) => (
+                            visibleApplications.map((application) => (
                                 <TableRow
                                     key={`${application.slug}-${application.owner}`}
                                 >
@@ -156,16 +193,6 @@ export default function Applications() {
                         )}
                     </TableBody>
                 </Table>
-            </Card>
-
-            <Card className="border-dashed p-4 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                    <AppWindow className="mt-0.5 h-4 w-4" />
-                    <p>
-                        Applications listed here can be attached to database and
-                        storage providers configured in this settings section.
-                    </p>
-                </div>
             </Card>
         </div>
     );
