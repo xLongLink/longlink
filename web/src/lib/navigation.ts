@@ -1,10 +1,12 @@
 import type { LucideIcon } from 'lucide-react';
 import {
     BarChart3,
+    Blocks,
     FileText,
     FolderKanban,
     Settings,
     Users,
+    Workflow,
 } from 'lucide-react';
 
 // import { getIconByName } from '@/components/Icon';
@@ -17,7 +19,15 @@ export type NavigationTab = {
 };
 
 const organizationTabs: NavigationTab[] = [
-    { value: 'apps', label: 'Apps', path: 'apps', icon: FolderKanban },
+    { value: 'overview', label: 'Overview', path: 'overview', icon: BarChart3 },
+    { value: 'tools', label: 'Tools', path: 'tools', icon: Blocks },
+    { value: 'spaces', label: 'Spaces', path: 'spaces', icon: FolderKanban },
+    {
+        value: 'processes',
+        label: 'Processes',
+        path: 'processes',
+        icon: Workflow,
+    },
     { value: 'people', label: 'People', path: 'people', icon: Users },
     { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ];
