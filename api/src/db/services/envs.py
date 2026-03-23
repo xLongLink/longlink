@@ -1,5 +1,4 @@
 from sqlalchemy import select
-from src.config import config
 from src.db.models import Env
 from src.db.session import get_session
 
@@ -38,7 +37,5 @@ class EnvsService:
             await session.commit()
             await session.refresh(env)
 
-            # Update the config in memory, this allows to change the envs without restarting the application
-            config.set(key, value)
 
             return env
