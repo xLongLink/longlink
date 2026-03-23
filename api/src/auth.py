@@ -37,6 +37,8 @@ if config.ENV_GITHUB_CLIENT_ID and config.ENV_GITHUB_CLIENT_SECRET:
         redirect_uri='https://api.swissgpu.ch/auth/github',
     )
     AVAILABLE_AUTH_METHODS.append('github')
+else:
+    print('GitHub authentication not configured')
 
 
 async def authuser(request: Request) -> db.User:
