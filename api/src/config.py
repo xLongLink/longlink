@@ -1,34 +1,43 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from src.env import env
 
 
-class Config(BaseSettings):
-    """API Configuration
-    
-    1) When the application starts, it will load the configurations from the enviroment variables or from the .env file.
-    2) The settings are stored in the database, as well the envs and they can be overwrite the enviroment variables, this allows to change the settings without restarting the application.
+class Config:
+    '''Runtime mutable configuration stored in memory and persisted in the database.'''
 
-    """
-    # Secret key for signing the env in the database, 
-    # this is the only env that is required to set and should be set to a random string in production
-    KEY: str = '1234' 
+    _default_values: dict[str, str | None] = {
+        'ORG_NAME': None,
+        'ORG_NAME_LEGAL': None,
+        'ORG_MAIL_CONTACT': None,
+        'ORG_MAIL_SUPPORT': None,
+        'ORG_TAX_ID': None,
+        'ORG_PHONE': None,
+        'ORG_WEBSITE': None,
+        'ORG_ADDRESS': None,
+        'ORG_LOGO': None,
+    }
 
-    # Organization specific settings, those will be accessible to the sdk
-    ORG_NAME: str | None = None
-    ORG_NAME_LEGAL: str | None = None
-    ORG_MAIL_CONTACT: str | None = None
-    ORG_MAIL_SUPPORT: str | None = None
-    ORG_TAX_ID: str | None = None
-    ORG_PHONE: str | None = None
-    ORG_WEBSITE: str | None = None
-    ORG_ADDRESS: str | None = None
-    ORG_LOGO: str | None = None
+    def __init__(self) -> None:
+        self._values: dict[str, str | None] = dict(self._default_values)
+        self._reserved_keys = set(type(env).model_fields.keys())
 
-    # Environment variables, those can be in a .env file or 
-    ENV_DATABASE_URL: str  = 'sqlite+aiosqlite:///./db.sqlite3'
-    ENV_GITHUB_CLIENT_ID: str | None = None
-    ENV_GITHUB_CLIENT_SECRET: str | None = None 
-    
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8' )
+    def normalize_key(self, key: str) -> str:
+        normalized_key = key.strip().upper().replace('-', '_')
+        if not normalized_key:
+            raise ValueError('Configuration key cannot be empty')
+
+        if normalized_key in self._reserved_keys or normalized_key.startswith('ENV_'):
+            raise ValueError(f"'{normalized_key}' is environment-backed and cannot be updated at runtime")
+
+        return normalized_key
+
+    def get(self, key: str) -> str | None:
+        normalized_key = self.normalize_key(key)
+        return self._values.get(normalized_key)
+
+    def set(self, key: str, value: str | None) -> str | None:
+        normalized_key = self.normalize_key(key)
+        self._values[normalized_key] = value
+        return value
 
 
-config = Config() # type: ignore
+config = Config()

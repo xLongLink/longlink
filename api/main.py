@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from src.env import env
 from src.router import router
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -22,7 +23,7 @@ app.add_middleware(
 )
 app.add_middleware(
     SessionMiddleware,
-    secret_key='1234',
+    secret_key=env.KEY,
     same_site='lax',
     https_only=False,
 )
