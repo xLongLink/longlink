@@ -14,7 +14,10 @@ import NotFound from '@/pages/NotFound';
 // Organization related pages
 import People from '@/pages/org/People';
 import SettingsPage from '@/pages/org/Settings';
-import Apps from '@/pages/org/Apps';
+import Overview from '@/pages/org/Overview';
+import Tools from '@/pages/org/Tools';
+import Spaces from '@/pages/org/Spaces';
+import Processes from '@/pages/org/Processes';
 import Longlink from '@/pages/org/Longlink';
 
 const withAuth = (element: ReactElement) => (
@@ -26,8 +29,11 @@ const router = createBrowserRouter([
         path: '/',
         element: withAuth(<Layout />),
         children: [
-            { index: true, element: <Navigate to="/apps" replace /> },
-            { path: 'apps', element: <Apps /> },
+            { index: true, element: <Navigate to="/overview" replace /> },
+            { path: 'overview', element: <Overview /> },
+            { path: 'tools', element: <Tools /> },
+            { path: 'spaces', element: <Spaces /> },
+            { path: 'processes', element: <Processes /> },
             { path: 'people', element: <People /> },
             { path: 'settings', element: <SettingsPage /> },
             {

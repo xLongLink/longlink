@@ -101,7 +101,7 @@ export function Navigation({
     const activeTab = isTabsLoading
         ? 'loading'
         : location.pathname.startsWith('/profile')
-          ? 'apps'
+          ? (tabs[0]?.value ?? '')
           : (activeTabConfig?.value ?? tabs[0]?.value ?? '');
 
     return (

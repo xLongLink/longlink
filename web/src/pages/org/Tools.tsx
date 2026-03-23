@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { useApps, useCreateApp } from '@/hooks/use-apps';
 
 const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
-    title: 'Apps',
+    title: 'Tools',
     schema: {
         columns: [
             {
@@ -41,14 +41,14 @@ const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
     },
 };
 
-export default function Apps() {
+export default function Tools() {
     const { data: apps = [], isLoading, error } = useApps();
     const { mutateAsync: createApp, isPending } = useCreateApp();
     const [name, setName] = useState('');
     const [url, setUrl] = useState('');
     const [createError, setCreateError] = useState<string | null>(null);
     const loadErrorMessage =
-        error instanceof Error ? error.message : 'Failed to load apps';
+        error instanceof Error ? error.message : 'Failed to load tools';
 
     const onCreateApp = async () => {
         if (!name.trim() || !url.trim()) {
@@ -65,7 +65,7 @@ export default function Apps() {
             setUrl('');
         } catch (err) {
             setCreateError(
-                err instanceof Error ? err.message : 'Failed to create app'
+                err instanceof Error ? err.message : 'Failed to create tool'
             );
         }
     };
@@ -73,27 +73,27 @@ export default function Apps() {
     return (
         <div className="space-y-6">
             <Hero
-                title="Apps"
-                subtitle={`${apps.length} apps`}
+                title="Tools"
+                subtitle={`${apps.length} tools`}
                 icon="sparkles"
-                action="Create New App"
+                action="Create Tool"
             >
                 <DialogContent className="sm:max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>Create a new app</DialogTitle>
+                        <DialogTitle>Create a new tool</DialogTitle>
                         <DialogDescription>
-                            Add a name and URL to register your app.
+                            Add a name and URL to register your tool.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="grid gap-3 md:grid-cols-3">
                         <Input
-                            placeholder="App name"
+                            placeholder="Tool name"
                             value={name}
                             onChange={(event) => setName(event.target.value)}
                         />
                         <Input
-                            placeholder="http://localhost:1707/my-app"
+                            placeholder="http://localhost:1707/my-tool"
                             value={url}
                             onChange={(event) => setUrl(event.target.value)}
                         />
@@ -103,7 +103,7 @@ export default function Apps() {
                             disabled={isPending}
                         >
                             <Plus className="h-4 w-4" />
-                            New App
+                            New Tool
                         </Button>
                     </div>
 
@@ -115,7 +115,7 @@ export default function Apps() {
 
             {isLoading ? (
                 <Card className="p-10 text-center text-white/60">
-                    Loading apps...
+                    Loading tools...
                 </Card>
             ) : error ? (
                 <Card className="p-10 text-center text-red-300">
@@ -128,10 +128,10 @@ export default function Apps() {
                             <EmptyMedia variant="icon">
                                 <Sparkles className="h-5 w-5" />
                             </EmptyMedia>
-                            <EmptyTitle>No Apps Yet</EmptyTitle>
+                            <EmptyTitle>No Tools Yet</EmptyTitle>
                             <EmptyDescription>
-                                You haven&apos;t added any apps yet. Get started
-                                by creating your first app.
+                                You haven&apos;t added any tools yet. Get
+                                started by creating your first tool.
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>
