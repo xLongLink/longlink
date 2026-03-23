@@ -15,7 +15,8 @@ const columns: ApiTableColumn[] = [
     {
         key: 'name',
         label: 'Name',
-        cell: ['{name}', '{email}'],
+        content: { value: '{name}', bold: true },
+        detail: '{email}',
     },
 ];
 
