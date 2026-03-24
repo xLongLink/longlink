@@ -76,7 +76,7 @@ async def login_localhost(request: Request):
         raise HTTPException(404, 'Authentication method not available')
 
     localhost_oauth_id = 0
-    localhost_email = 'localhost@longlink.local'
+    localhost_email = 'localhost@longlick.ch'
     localhost_name = 'Localhost User'
 
     user = await db.users.get(localhost_oauth_id, by='github')
@@ -90,6 +90,10 @@ async def login_localhost(request: Request):
             avatar=None,
             oauth_github_id=localhost_oauth_id,
         )
+    elif user.email != localhost_email:
+        updated_user = await db.users.update(user.id, email=localhost_email)
+        if updated_user is not None:
+            user = updated_user
 
     request.session['userid'] = user.id
     return RedirectResponse(URL)
