@@ -72,3 +72,9 @@ Finally run the api and a sample app:
 cd api && python main.py
 python sdk/sample/main.py
 ```
+
+```
+docker compose up
+docker compose ps
+docker compose down
+```

@@ -1,3 +1,7 @@
+import os
+if __name__ == "__main__":
+    os.environ.setdefault("DEV", "True")
+
 from fastapi import FastAPI
 from src.env import env
 from src.router import router
