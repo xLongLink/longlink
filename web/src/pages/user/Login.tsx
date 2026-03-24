@@ -6,9 +6,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { apiFetch, getApiBaseUrl } from '@/lib/api';
 import { useUser } from '@/hooks/use-user';
 
-type LoginMethodsResponse = {
-    methods?: string[];
-};
+type LoginMethodsResponse = string[] | { methods?: string[] };
 
 export default function Login() {
     const location = useLocation();
@@ -60,7 +58,9 @@ export default function Login() {
             try {
                 const data = await apiFetch<LoginMethodsResponse>('/login');
                 if (isMounted) {
-                    setAvailableMethods(data.methods ?? []);
+                    setAvailableMethods(
+                        Array.isArray(data) ? data : (data.methods ?? [])
+                    );
                 }
             } catch {
                 if (isMounted) {
