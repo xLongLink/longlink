@@ -1,9 +1,9 @@
 import Applications from '@/components/settings/Applications';
-import Authentication from '@/components/settings/Authentication';
 import Database from '@/components/settings/Database';
 import General from '@/components/settings/General';
 import Container from '@/components/settings/Container';
 import Integrations from '@/components/settings/Integrations';
+import Permissions from '@/components/settings/Permissions';
 import Security from '@/components/settings/Security';
 import Storage from '@/components/settings/Storage';
 import { Menu, MenuContent, MenuList, MenuSection } from '@/components/ui/menu';
@@ -12,9 +12,9 @@ import {
     DatabaseIcon,
     GlobeIcon,
     HardDriveIcon,
-    KeyRoundIcon,
     ShieldIcon,
     UnplugIcon,
+    UsersRoundIcon,
     WrenchIcon,
 } from 'lucide-react';
 
@@ -29,9 +29,9 @@ export default function SettingsPage() {
                         icon={GlobeIcon}
                     />
                     <MenuSection
-                        value="authentication"
-                        label="Authentication"
-                        icon={KeyRoundIcon}
+                        value="permissions"
+                        label="Permissions"
+                        icon={UsersRoundIcon}
                     />
                     <MenuSection
                         value="applications"
@@ -67,8 +67,8 @@ export default function SettingsPage() {
                 <MenuContent value="general">
                     <General />
                 </MenuContent>
-                <MenuContent value="authentication">
-                    <Authentication />
+                <MenuContent value="permissions">
+                    <Permissions />
                 </MenuContent>
                 <MenuContent value="applications">
                     <Applications />
