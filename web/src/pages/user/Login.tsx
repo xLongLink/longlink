@@ -14,7 +14,6 @@ export default function Login() {
     const { data: user, isLoading } = useUser();
     const apiBaseUrl = getApiBaseUrl();
     const [availableMethods, setAvailableMethods] = useState<string[]>([]);
-    const isDevEnvironment = import.meta.env.VITE_DEV === 'true';
 
     const getDefaultReturnTo = () => {
         const referrer = document.referrer;
@@ -78,8 +77,7 @@ export default function Login() {
 
     const hasGoogleMethod = availableMethods.includes('google');
     const hasGithubMethod = availableMethods.includes('github');
-    const hasLocalhostMethod =
-        isDevEnvironment && availableMethods.includes('localhost');
+    const hasLocalhostMethod = availableMethods.includes('localhost');
 
     const handleGithubLogin = () => {
         window.location.href = `${apiBaseUrl}/login/github`;
