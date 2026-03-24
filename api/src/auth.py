@@ -40,6 +40,9 @@ if env.ENV_GITHUB_CLIENT_ID and env.ENV_GITHUB_CLIENT_SECRET:
 else:
     print('GitHub authentication not configured')
 
+if env.DEV:
+    AVAILABLE_AUTH_METHODS.append('localhost')
+
 
 async def authuser(request: Request) -> db.User:
     userid = request.session.get('userid')
