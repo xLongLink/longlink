@@ -6,6 +6,7 @@ class Env(BaseSettings):
 
     KEY: str = '1234'
     ENV_DATABASE_URL: str = 'sqlite+aiosqlite:///./db.sqlite3'
+    DEV: bool = False
     ENV_GITHUB_CLIENT_ID: str | None = None
     ENV_GITHUB_CLIENT_SECRET: str | None = None
 

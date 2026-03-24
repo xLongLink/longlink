@@ -1,19 +1,19 @@
 import src.db as db
 from typing import Any, cast
-from fastapi import Request, HTTPException
-from src.auth import oauth, AVAILABLE_AUTH_METHODS
-from src.router import router
-from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
+from fastapi import HTTPException, Request
+from fastapi.responses import RedirectResponse
+from src.auth import AVAILABLE_AUTH_METHODS, oauth
+from src.env import env
+from src.router import router
 
 
 URL = 'http://localhost:5173'
 
 
 @router.get('/login')
-async def login_methods() -> list[str]:
-    print(AVAILABLE_AUTH_METHODS)
-    return AVAILABLE_AUTH_METHODS
+async def login_methods() -> dict[str, list[str]]:
+    return {'methods': AVAILABLE_AUTH_METHODS}
 
 
 @router.get('/login/github')
@@ -70,9 +70,32 @@ async def auth_github(request: Request):
     return RedirectResponse(URL)
 
 
+@router.get('/login/localhost')
+async def login_localhost(request: Request):
+    if not env.DEV or 'localhost' not in AVAILABLE_AUTH_METHODS:
+        raise HTTPException(404, 'Authentication method not available')
+
+    localhost_oauth_id = 0
+    localhost_email = 'localhost@longlink.local'
+    localhost_name = 'Localhost User'
+
+    user = await db.users.get(localhost_oauth_id, by='github')
+    if user is None:
+        user = await db.users.get(localhost_email, by='email')
+
+    if user is None:
+        user = await db.users.create(
+            name=localhost_name,
+            email=localhost_email,
+            avatar=None,
+            oauth_github_id=localhost_oauth_id,
+        )
+
+    request.session['userid'] = user.id
+    return RedirectResponse(URL)
+
 
 @router.get('/logout')
 async def logout(request: Request):
     request.session.clear()
     return {'ok': True}
-    
