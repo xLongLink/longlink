@@ -1,4 +1,4 @@
-import { Chrome, Github, Layers } from 'lucide-react';
+import { Chrome, Github, Laptop, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
@@ -16,6 +16,7 @@ export default function Login() {
     const { data: user, isLoading } = useUser();
     const apiBaseUrl = getApiBaseUrl();
     const [availableMethods, setAvailableMethods] = useState<string[]>([]);
+    const isDevEnvironment = import.meta.env.VITE_DEV === 'true';
 
     const getDefaultReturnTo = () => {
         const referrer = document.referrer;
@@ -77,9 +78,15 @@ export default function Login() {
 
     const hasGoogleMethod = availableMethods.includes('google');
     const hasGithubMethod = availableMethods.includes('github');
+    const hasLocalhostMethod =
+        isDevEnvironment && availableMethods.includes('localhost');
 
     const handleGithubLogin = () => {
         window.location.href = `${apiBaseUrl}/login/github`;
+    };
+
+    const handleLocalhostLogin = () => {
+        window.location.href = `${apiBaseUrl}/login/localhost`;
     };
 
     return (
@@ -113,6 +120,16 @@ export default function Login() {
                             <Github className="h-4 w-4" />
                             Login with GitHub
                         </Button>
+                        {hasLocalhostMethod ? (
+                            <Button
+                                variant="secondary"
+                                className="h-11 gap-2"
+                                onClick={handleLocalhostLogin}
+                            >
+                                <Laptop className="h-4 w-4" />
+                                Localhost Login
+                            </Button>
+                        ) : null}
                     </div>
                 </CardContent>
             </Card>
