@@ -12,8 +12,8 @@ URL = 'http://localhost:5173'
 
 
 @router.get('/login')
-async def login_methods() -> dict[str, list[str]]:
-    return {'methods': AVAILABLE_AUTH_METHODS}
+async def login_methods() -> list[str]:
+    return AVAILABLE_AUTH_METHODS
 
 
 @router.get('/login/github')
