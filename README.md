@@ -21,23 +21,22 @@ Install [uv](https://astral.sh/uv/) and [vp](https://viteplus.dev/):
 ### Backend
 
 ```bash
-python -m venv .venv
+uv venv
 source .venv/bin/activate
-pip install -e './api[dev]'
-pip install -e sdk
+uv pip install -e './api[dev]'
+uv pip install -e './sdk'
 ```
 
 Run control plane:
 
 ```bash
-cd api
-python main.py
+uv run --project api python main.py
 ```
 
 Run sample app:
 
 ```bash
-python sdk/sample/main.py
+uv run --project sdk python sample/main.py
 ```
 
 ---
