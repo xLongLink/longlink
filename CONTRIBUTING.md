@@ -1,91 +1,142 @@
-# LongLink
+# Contributing to LongLink
 
-LongLink is a unified operational control plane for business systems. It establishes a standardized layer for identity, permissions, data, and governance, ensuring consistency and compliance across an organization’s digital environment. On top of this foundation, it provides an application runtime where operational tools execute using shared infrastructure rather than isolated stacks. By separating control from execution, LongLink eliminates fragmentation, enforces policy centrally, and enables businesses to build and run internal applications within a coherent, governed system.
+This document defines how to contribute to the LongLink project. The goal is to maintain architectural consistency, enforce platform principles, and ensure long-term scalability.
 
-# Control Plane - API Folder
+## Guiding Principles
 
-The LongLink control plane is the centralized governance layer that defines and enforces how all systems within an organization operate. It standardizes identity, access control, data policies, storage rules, audit logging, and execution constraints into a single, consistent framework. Rather than each application implementing its own security and infrastructure logic, the control plane provides these capabilities as shared primitives, applied uniformly across all workloads. This ensures that every operation—whether data access, workflow execution, or deployment—is governed by the same policies, making consistency, compliance, and observability inherent to the system rather than dependent on individual applications.
+All contributions must respect the core design constraints:
 
-## Authentication
+1. **Control plane owns infrastructure concerns**
+    - Authentication, permissions, storage, logging, execution policies
 
-- Using `fastapi` and `authlib`.
+2. **Applications contain only business logic**
+    - No custom auth, no custom storage policies
 
-## Permissions
+3. **Deterministic execution**
+    - All state transitions occur server-side
 
-[TODO: How to manage permissions]
+4. **Single source of truth**
+    - Actions define logic, UI, and API simultaneously
 
-- Role-based access control (RBAC) system with hierarchical roles and fine-grained permissions.
+## Repository Structure
 
-## Application Lifecycle Management
+- `api/` → Control plane (FastAPI)
+- `sdk/` → Python SDK
+- `web/` → Frontend renderer
 
-[TODO: How to manage the applications]
+## Development Workflow
 
-## SDK Runtime services
+### 1. Setup Environment
 
-## Workflow Engine
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e './api[dev]'
+pip install -e sdk
+```
 
-<br />
+Frontend:
 
-# LongLink Python Package - SDK Folder
+```bash
+bun --cwd=web install
+bun --cwd=web dev
+```
 
-- App = deployable, isolated, governed execution unit
-- Created with python
+### 2. Branching
 
-[TODO: SDK Overview]
+- `main` → stable
+- `dev` → integration
+- feature branches → `feature/<name>`
 
-## Application Definition
+### 3. Code Standards
 
-- Type: tool, space, process
-- Metadata: name, description, icon, etc.
+#### Python
 
-## Database Access and Migrations
+- Use type hints everywhere
+- Follow PEP8
+- Prefer explicit over implicit
+- No hidden side effects
 
-- A dedicated database (PostgreSQL, MySQL, Oracle, Microsoft SQL Server, ..) for each app
-- ORM schema using `sqlalchemy`, with a `longlink` wrapper
-- Migrations are done with `pydantic` using the cli command `longlink db migrate`
+#### API (Control Plane)
 
-## Storage Access
+- Must enforce permissions centrally
+- No business logic leakage from apps
 
-- A dedicated filesystem space (S3, GCS, Azure Blob, local FS)
-- Normalized access using `fsspec` with a `longlink` wrapper
+#### SDK
 
-## UI Components
+- Must remain opinionated and constrained
+- Avoid introducing flexibility that breaks consistency
 
-- Server-driven UI model with python classes.
+#### Web
 
-## API Endpoints
+- Pure renderer
+- No business logic in frontend
 
-- Defined as python functions with decorators to specify the endpoint path, method, and required permissions.
-- Functions can be called directly from the UI components.
-- This allows programmatic access from day zero.
-- Automatic conversion of endpoint to SDK (using openapi spec or similar).
-- Automatic conversion of endpoint to MCP server.
+## Actions Design Rules
 
-<br />
+When adding new functionality:
 
-# User Interface - WEB Folder
+- Must be defined as an **action**
 
-[TODO: UI Overview]
+- Must be:
+    - Typed
+    - Stateless (unless explicitly part of workflow)
+    - Deterministic
 
-## Organization View
+- Must automatically support:
+    - UI rendering
+    - API access
+    - SDK invocation
 
-### Overview
+## Database Changes
 
-### Tools
+- Use migration system via CLI:
 
-- Organization control surface, everything that helps the organization operate and run its business.
-- Examples: CRM Tool (Customer Management), Invoicing & Accounting Tool, HR & Employee Management Tool, Compliance & Audit Tool, Inventory Management Tool
+```bash
+longlink db migrate
+```
 
-### Spaces
+- No manual schema drift
+- All models must be defined in SDK
 
-- Domain container that aggregates and manages context
+## Testing
 
-### Processes
+- Unit tests for:
+    - SDK logic
+    - Control plane services
 
-- Independent, stateful unit of work
+- Integration tests for:
+    - Action execution
+    - Permission enforcement
 
-### People
+## Pull Requests
 
-### Settings
+Each PR must:
 
-## Applications View
+- Clearly state purpose
+- Explain architectural impact
+- Avoid breaking platform invariants
+- Include tests (if applicable)
+
+## What NOT to Do
+
+- ❌ Add authentication inside apps
+- ❌ Introduce client-side logic
+- ❌ Duplicate infrastructure concerns
+- ❌ Bypass control plane
+- ❌ Add unstructured APIs outside actions
+
+## Open Areas
+
+- Permissions system design
+- Workflow engine implementation
+- Application lifecycle management
+- UI schema standardization
+
+## Communication
+
+Be precise. Avoid ambiguity. All design discussions should be grounded in system constraints.
+
+## License
+
+[TODO]
