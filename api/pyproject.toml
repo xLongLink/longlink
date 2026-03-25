@@ -29,6 +29,7 @@ dependencies = [
 dev = [
     'mypy==1.18.2',
     'ruff==0.14.0',
+    'pytest==8.4.2',
 ]
 
 [tool.setuptools]
