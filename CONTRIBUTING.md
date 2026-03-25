@@ -29,10 +29,10 @@ All contributions must respect the core design constraints:
 ### 1. Setup Environment
 
 ```bash
-python -m venv .venv
+uv venv
 source .venv/bin/activate
-pip install -e './api[dev]'
-pip install -e sdk
+uv pip install -e './api[dev]'
+uv pip install -e './sdk'
 ```
 
 Frontend:
