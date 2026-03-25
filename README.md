@@ -12,19 +12,17 @@ longlink/
 ├── api/        # Control plane (FastAPI)
 ├── sdk/        # Python SDK for app development
 ├── web/        # Frontend (server-driven UI renderer)
+├── docs/       # Documentation
 ```
 
-## Getting Started
+## Development
 
-Install [uv](https://astral.sh/uv/) and [vp](https://viteplus.dev/):
-
-### Backend
+Install [uv](https://astral.sh/uv/):
 
 ```bash
 uv venv
 source .venv/bin/activate
-uv pip install -e './api[dev]'
-uv pip install -e './sdk'
+uv pip install -e './api[dev]' -e './sdk'
 ```
 
 Run control plane:
@@ -60,7 +58,3 @@ curl -fsSL https://vite.plus | bash
 ## Status
 
 Early-stage architecture. Core components under active development.
-
-## License
-
-[TODO]
