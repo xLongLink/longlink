@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-  issues: write
-  pull-requests: write
 
 jobs:
   release:
@@ -20,15 +18,46 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Find previous release tag
+        id: previous_release
+        uses: actions/github-script@v7
         with:
-          node-version: 22
+          script: |
+            const { owner, repo } = context.repo;
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner,
+              repo,
+              per_page: 100
+            });
 
-      - name: Install dependencies
-        run: npm install
+            const previous = releases.find((release) => !release.draft && !release.prerelease);
+            core.setOutput('tag', previous ? previous.tag_name : '');
 
-      - name: Run semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+      - name: Build release notes from commits
+        id: notes
+        run: |
+          PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            COMMIT_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'- %s (%h)')
+          else
+            COMMIT_LIST=$(git log --pretty=format:'- %s (%h)')
+          fi
+
+          if [ -z "$COMMIT_LIST" ]; then
+            COMMIT_LIST='- No new commits since the previous release.'
+          fi
+
+          {
+            echo "notes<<EOF"
+            echo "## Commits"
+            echo "$COMMIT_LIST"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: release-${{ github.run_number }}
+          name: Release ${{ github.run_number }}
+          body: ${{ steps.notes.outputs.notes }}
