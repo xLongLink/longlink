@@ -4,17 +4,6 @@ LongLink is a multi-tenant operational runtime that enables organizations to bui
 
 Instead of fragmented SaaS tools or custom-built systems, LongLink offers a structured platform where applications run in isolation but share consistent infrastructure and governance.
 
-## Project Structure
-
-```
-longlink/
-│
-├── api/        # Control plane (FastAPI)
-├── sdk/        # Python SDK for app development
-├── web/        # Frontend (server-driven UI renderer)
-├── docs/       # Documentation
-```
-
 ## Development
 
 Install [uv](https://astral.sh/uv/):
@@ -36,8 +25,6 @@ Run sample app:
 ```bash
 uv run --project sdk python sample/main.py
 ```
-
----
 
 ### Frontend
 
