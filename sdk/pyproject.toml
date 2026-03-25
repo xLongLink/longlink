@@ -33,6 +33,9 @@ cli = [
   "rich",
   "click",
 ]
+dev = [
+  "pytest==8.4.2",
+]
 
 [project.urls]
 Homepage = "https://example.com"
