@@ -1,94 +1,95 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
+    workflow_dispatch:
+    # push:
+    #   branches:
+    #     - main
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
+    release:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v5
+              with:
+                  fetch-depth: 0
 
-      - name: Find previous release tag
-        id: previous_release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const releases = await github.paginate(github.rest.repos.listReleases, {
-              owner,
-              repo,
-              per_page: 100
-            });
+            - name: Find previous release tag
+              id: previous_release
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const { owner, repo } = context.repo;
+                      const releases = await github.paginate(github.rest.repos.listReleases, {
+                        owner,
+                        repo,
+                        per_page: 100
+                      });
 
-            const versionPattern = /^0\.0\.(\d+)$/;
-            const stableReleases = releases
-              .filter((release) => !release.draft && !release.prerelease)
-              .filter((release) => versionPattern.test(release.tag_name));
+                      const versionPattern = /^0\.0\.(\d+)$/;
+                      const stableReleases = releases
+                        .filter((release) => !release.draft && !release.prerelease)
+                        .filter((release) => versionPattern.test(release.tag_name));
 
-            const previous = stableReleases
-              .sort((a, b) => Number(b.tag_name.match(versionPattern)[1]) - Number(a.tag_name.match(versionPattern)[1]))[0];
+                      const previous = stableReleases
+                        .sort((a, b) => Number(b.tag_name.match(versionPattern)[1]) - Number(a.tag_name.match(versionPattern)[1]))[0];
 
-            core.setOutput('tag', previous ? previous.tag_name : '');
+                      core.setOutput('tag', previous ? previous.tag_name : '');
 
-      - name: Compute next release version
-        id: next_version
-        run: |
-          PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
+            - name: Compute next release version
+              id: next_version
+              run: |
+                  PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
 
-          if [[ "$PREVIOUS_TAG" =~ ^0\.0\.([0-9]+)$ ]]; then
-            NEXT_PATCH=$((BASH_REMATCH[1] + 1))
-          else
-            NEXT_PATCH=1
-          fi
+                  if [[ "$PREVIOUS_TAG" =~ ^0\.0\.([0-9]+)$ ]]; then
+                    NEXT_PATCH=$((BASH_REMATCH[1] + 1))
+                  else
+                    NEXT_PATCH=1
+                  fi
 
-          NEXT_TAG="0.0.${NEXT_PATCH}"
+                  NEXT_TAG="0.0.${NEXT_PATCH}"
 
-          echo "tag=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
+                  echo "tag=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
 
-      - name: Build release notes from commits
-        id: notes
-        run: |
-          PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
+            - name: Build release notes from commits
+              id: notes
+              run: |
+                  PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
 
-          if [ -n "$PREVIOUS_TAG" ]; then
-            COMMIT_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'- %s (%h)')
-            CONTRIBUTOR_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'%an' | sort -u | sed 's/^/- /')
-          else
-            COMMIT_LIST=$(git log --pretty=format:'- %s (%h)')
-            CONTRIBUTOR_LIST=$(git log --pretty=format:'%an' | sort -u | sed 's/^/- /')
-          fi
+                  if [ -n "$PREVIOUS_TAG" ]; then
+                    COMMIT_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'- %s (%h)')
+                    CONTRIBUTOR_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'%an' | sort -u | sed 's/^/- /')
+                  else
+                    COMMIT_LIST=$(git log --pretty=format:'- %s (%h)')
+                    CONTRIBUTOR_LIST=$(git log --pretty=format:'%an' | sort -u | sed 's/^/- /')
+                  fi
 
-          if [ -z "$COMMIT_LIST" ]; then
-            COMMIT_LIST='- No new commits since the previous release.'
-          fi
+                  if [ -z "$COMMIT_LIST" ]; then
+                    COMMIT_LIST='- No new commits since the previous release.'
+                  fi
 
-          if [ -z "$CONTRIBUTOR_LIST" ]; then
-            CONTRIBUTOR_LIST='- No contributors found for this release.'
-          fi
+                  if [ -z "$CONTRIBUTOR_LIST" ]; then
+                    CONTRIBUTOR_LIST='- No contributors found for this release.'
+                  fi
 
-          {
-            echo "notes<<EOF"
-            echo "## What's Changed"
-            echo "$COMMIT_LIST"
-            echo
-            echo "## Contributors"
-            echo "$CONTRIBUTOR_LIST"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+                  {
+                    echo "notes<<EOF"
+                    echo "## What's Changed"
+                    echo "$COMMIT_LIST"
+                    echo
+                    echo "## Contributors"
+                    echo "$CONTRIBUTOR_LIST"
+                    echo "EOF"
+                  } >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.next_version.outputs.tag }}
-          name: Release ${{ steps.next_version.outputs.tag }}
-          body: ${{ steps.notes.outputs.notes }}
+            - name: Create GitHub release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ steps.next_version.outputs.tag }}
+                  name: Release ${{ steps.next_version.outputs.tag }}
+                  body: ${{ steps.notes.outputs.notes }}
