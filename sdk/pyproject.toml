@@ -10,6 +10,7 @@ dependencies = [
     "click",
     "uvicorn",
     "pydantic",
+    "pydantic-settings",
     "httpx",
     "fsspec",
 ]
