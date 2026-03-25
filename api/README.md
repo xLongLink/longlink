@@ -6,5 +6,5 @@
 ## Development setup
 
 ```bash
-pip install -e '.[dev]'
+uv pip install -e '.[dev]'
 ```

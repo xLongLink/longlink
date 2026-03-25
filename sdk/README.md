@@ -20,11 +20,11 @@ longlink publish <module>
 ## Stanalone
 
 ```
-pip install longlink
+uv pip install longlink
 ```
 
 ```
-pip install longlink[standalone]
+uv pip install 'longlink[standalone]'
 ```
 
 before update
