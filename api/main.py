@@ -2,7 +2,10 @@ import os
 if __name__ == "__main__":
     os.environ.setdefault("DEV", "True")
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from src.env import env
 from src.router import router
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,6 +46,10 @@ import src.routes.settings
 import src.routes.storages
 
 app.include_router(router)
+
+static_dir = Path(__file__).resolve().parent / 'static'
+if static_dir.exists():
+    app.mount('/', StaticFiles(directory=static_dir, html=True), name='static')
 
 
 if __name__ == '__main__':
