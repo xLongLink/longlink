@@ -1,1 +1,0 @@
-https://ofbiz.apache.org/
