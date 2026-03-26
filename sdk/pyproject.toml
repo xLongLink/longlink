@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "longlink"
-version = "0.0.0"
+dynamic = ["version"]
 dependencies = [
     "alembic",
     "click",
@@ -47,3 +47,7 @@ Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
 [project.scripts]
 longlink = "longlink.__main__:main"
+
+[tool.hatch.version]
+source = "env"
+variable = "LONG_LINK_VERSION"
