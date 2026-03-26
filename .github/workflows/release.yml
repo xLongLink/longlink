@@ -210,7 +210,7 @@ jobs:
               id: meta
               uses: docker/metadata-action@v5
               with:
-                  images: ghcr.io/${{ github.repository_owner }}/longlink-api
+                  images: ghcr.io/${{ github.repository_owner }}/longlink
                   tags: |
                       type=raw,value=latest
                       type=raw,value=${{ github.event_name == 'release' && github.event.release.tag_name || needs.release.outputs.tag }}
