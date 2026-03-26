@@ -5,9 +5,6 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY sdk /sdk
-RUN pip install --no-cache-dir /sdk
-
 COPY api /app
 RUN pip install --no-cache-dir .
 
