@@ -1,203 +1,210 @@
 name: Release
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      bump:
-        description: Version bump type
-        required: true
-        default: patch
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-  release:
-    types: [published]
+    pull_request:
+        types: [closed]
+        branches:
+            - main
+    workflow_dispatch:
+        inputs:
+            bump:
+                description: Version bump type
+                required: true
+                default: patch
+                type: choice
+                options:
+                    - patch
+                    - minor
+                    - major
+    release:
+        types: [published]
 
 permissions:
-  contents: write
-  packages: write
+    contents: write
+    packages: write
+    id-token: write
 
 jobs:
-  release:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev')
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.next_version.outputs.tag }}
+    release:
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev')
+        runs-on: ubuntu-latest
+        outputs:
+            tag: ${{ steps.next_version.outputs.tag }}
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v5
+              with:
+                  fetch-depth: 0
 
-      - name: Find previous release tag
-        id: previous_release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const releases = await github.paginate(github.rest.repos.listReleases, {
-              owner,
-              repo,
-              per_page: 100
-            });
+            - name: Find previous release tag
+              id: previous_release
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const { owner, repo } = context.repo;
+                      const releases = await github.paginate(github.rest.repos.listReleases, {
+                        owner,
+                        repo,
+                        per_page: 100
+                      });
 
-            const versionPattern = /^(\d+)\.(\d+)\.(\d+)$/;
-            const stableReleases = releases
-              .filter((release) => !release.draft && !release.prerelease)
-              .filter((release) => versionPattern.test(release.tag_name));
+                      const versionPattern = /^(\d+)\.(\d+)\.(\d+)$/;
+                      const stableReleases = releases
+                        .filter((release) => !release.draft && !release.prerelease)
+                        .filter((release) => versionPattern.test(release.tag_name));
 
-            stableReleases.sort((a, b) => {
-              const av = a.tag_name.match(versionPattern).slice(1).map(Number);
-              const bv = b.tag_name.match(versionPattern).slice(1).map(Number);
+                      stableReleases.sort((a, b) => {
+                        const av = a.tag_name.match(versionPattern).slice(1).map(Number);
+                        const bv = b.tag_name.match(versionPattern).slice(1).map(Number);
 
-              if (av[0] !== bv[0]) return bv[0] - av[0];
-              if (av[1] !== bv[1]) return bv[1] - av[1];
-              return bv[2] - av[2];
-            });
+                        if (av[0] !== bv[0]) return bv[0] - av[0];
+                        if (av[1] !== bv[1]) return bv[1] - av[1];
+                        return bv[2] - av[2];
+                      });
 
-            const previous = stableReleases[0];
-            core.setOutput('tag', previous ? previous.tag_name : '0.0.0');
+                      const previous = stableReleases[0];
+                      core.setOutput('tag', previous ? previous.tag_name : '0.0.0');
 
-      - name: Compute next release version
-        id: next_version
-        run: |
-          PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
-          BUMP_INPUT="${{ github.event.inputs.bump || 'patch' }}"
+            - name: Compute next release version
+              id: next_version
+              run: |
+                  PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
+                  BUMP_INPUT="${{ github.event.inputs.bump || 'patch' }}"
 
-          if [[ "$PREVIOUS_TAG" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            MAJOR="${BASH_REMATCH[1]}"
-            MINOR="${BASH_REMATCH[2]}"
-            PATCH="${BASH_REMATCH[3]}"
-          else
-            MAJOR=0
-            MINOR=0
-            PATCH=0
-          fi
+                  if [[ "$PREVIOUS_TAG" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+                    MAJOR="${BASH_REMATCH[1]}"
+                    MINOR="${BASH_REMATCH[2]}"
+                    PATCH="${BASH_REMATCH[3]}"
+                  else
+                    MAJOR=0
+                    MINOR=0
+                    PATCH=0
+                  fi
 
-          case "$BUMP_INPUT" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            patch)
-              PATCH=$((PATCH + 1))
-              ;;
-            *)
-              echo "Invalid bump type: $BUMP_INPUT"
-              exit 1
-              ;;
-          esac
+                  case "$BUMP_INPUT" in
+                    major)
+                      MAJOR=$((MAJOR + 1))
+                      MINOR=0
+                      PATCH=0
+                      ;;
+                    minor)
+                      MINOR=$((MINOR + 1))
+                      PATCH=0
+                      ;;
+                    patch)
+                      PATCH=$((PATCH + 1))
+                      ;;
+                    *)
+                      echo "Invalid bump type: $BUMP_INPUT"
+                      exit 1
+                      ;;
+                  esac
 
-          NEXT_TAG="${MAJOR}.${MINOR}.${PATCH}"
-          echo "tag=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
+                  NEXT_TAG="${MAJOR}.${MINOR}.${PATCH}"
+                  echo "tag=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
 
-      - name: Build release notes from commits
-        id: notes
-        run: |
-          PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
+            - name: Build release notes from commits
+              id: notes
+              run: |
+                  PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
 
-          COMMIT_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'- %s (%h)')
-          CONTRIBUTOR_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'%an' | sort -u | sed 's/^/- /')
+                  COMMIT_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'- %s (%h)')
+                  CONTRIBUTOR_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'%an' | sort -u | sed 's/^/- /')
 
-          if [ -z "$COMMIT_LIST" ]; then
-            COMMIT_LIST='- No new commits since the previous release.'
-          fi
+                  if [ -z "$COMMIT_LIST" ]; then
+                    COMMIT_LIST='- No new commits since the previous release.'
+                  fi
 
-          if [ -z "$CONTRIBUTOR_LIST" ]; then
-            CONTRIBUTOR_LIST='- No contributors found for this release.'
-          fi
+                  if [ -z "$CONTRIBUTOR_LIST" ]; then
+                    CONTRIBUTOR_LIST='- No contributors found for this release.'
+                  fi
 
-          {
-            echo "notes<<EOF"
-            echo "## What's Changed"
-            echo "$COMMIT_LIST"
-            echo
-            echo "## Contributors"
-            echo "$CONTRIBUTOR_LIST"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+                  {
+                    echo "notes<<EOF"
+                    echo "## What's Changed"
+                    echo "$COMMIT_LIST"
+                    echo
+                    echo "## Contributors"
+                    echo "$CONTRIBUTOR_LIST"
+                    echo "EOF"
+                  } >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.next_version.outputs.tag }}
-          name: Release ${{ steps.next_version.outputs.tag }}
-          body: ${{ steps.notes.outputs.notes }}
+            - name: Create GitHub release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ steps.next_version.outputs.tag }}
+                  name: Release ${{ steps.next_version.outputs.tag }}
+                  body: ${{ steps.notes.outputs.notes }}
 
-  publish-sdk:
-    if: always() && (github.event_name == 'release' || needs.release.result == 'success')
-    needs: [release]
-    runs-on: ubuntu-latest
+    # The SDK is published to PyPI
+    publish-sdk:
+        if: always() && (github.event_name == 'release' || needs.release.result == 'success')
+        needs: [release]
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+        environment:
+            name: release
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        permissions:
+            id-token: write
+            contents: read
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
 
-      - name: Build the distribution
-        working-directory: sdk
-        run: uv build
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: '3.12'
 
-      - name: Upload to PyPI
-        working-directory: sdk
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.TWINE_PASSWORD }}
-        run: uv publish dist/*
+            - name: Install build tools
+              run: python -m pip install --upgrade build
 
-  publish-api-image:
-    if: always() && (github.event_name == 'release' || needs.release.result == 'success')
-    needs: [release]
-    runs-on: ubuntu-latest
+            - name: Build the distribution
+              working-directory: sdk
+              run: python -m build
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+            - name: Publish to PyPI (OIDC)
+              uses: pypa/gh-action-pypi-publish@release/v1
+              with:
+                  packages-dir: sdk/dist
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    # The API is packaged into a container, so we will publish the image to GHCR on each release.
+    publish-api-image:
+        if: always() && (github.event_name == 'release' || needs.release.result == 'success')
+        needs: [release]
+        runs-on: ubuntu-latest
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/longlink-api
-          tags: |
-            type=raw,value=latest
-            type=raw,value=${{ github.event_name == 'release' && github.event.release.tag_name || needs.release.outputs.tag }}
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
 
-      - name: Build and push API image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: api/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Extract Docker metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ghcr.io/${{ github.repository_owner }}/longlink-api
+                  tags: |
+                      type=raw,value=latest
+                      type=raw,value=${{ github.event_name == 'release' && github.event.release.tag_name || needs.release.outputs.tag }}
+
+            - name: Build and push API image
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: api/Dockerfile
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
