@@ -1,20 +1,15 @@
 # AGENTS.md
 
-This folder contains the ViaVai Python SDK, the folder contains:
+This folder contains the LongLink Python SDK, the folder contains:
 
 - `tests` - Unit tests for the SDK
-- `viavai` - Core SDK code
+- `longlink` - Core SDK code
+- `sample` - Sample projects using the SDK
 
-The module is installed locally in editable mode:
-
-```bash
-pip install -e .
-```
-
-You can check this by running:
+You can install the SDK locally in development mode with the following command:
 
 ```bash
-pip show viavai
+uv pip install -e './sdk'
 ```
 
 ## Tests
@@ -22,22 +17,9 @@ pip show viavai
 To run the unit tests, use the following command:
 
 ```bash
-python -m unittest discover -s tests
+pytest tests
 ```
 
-## Sample project Structure
+## SDK
 
-Created with the `viavai create <module_name>` command, the structure of the module is as follows:
-
-```txt
-main.py     # App entrypoint
-migrations  # DB migrations
-src/
-├── cron    # Cron jobs
-├── models  # Pydantic models
-├── pages   # Web app pages
-├── routes  # HTTP layer only
-├── types   # Pydantic models
-└── app.py  # App logic and validation
-tests/      # Unit tests
-```
+The sdk folder contains the code to create a LongLink application. Each repository shall create a single application, therefore there is no need for
