@@ -8,15 +8,15 @@ import {
 } from 'react-router';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { UserProfile } from '@/components/Profile';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/ui/card';
 import {
     Empty,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
     EmptyTitle,
-} from '@/components/ui/empty';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from '@/ui/empty';
+import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { useApiData } from '@/hooks/use-data';
 import {
     getActiveTabConfig,

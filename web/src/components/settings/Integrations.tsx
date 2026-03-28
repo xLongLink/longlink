@@ -1,4 +1,4 @@
-import Hero from '@/components/longlink/Hero';
+import Hero from '@/longlink/Hero';
 
 export default function Integrations() {
     return (

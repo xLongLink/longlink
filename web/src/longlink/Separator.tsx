@@ -1,4 +1,4 @@
-import { Separator as UISeparator } from '@/components/ui/separator';
+import { Separator as UISeparator } from '@/ui/separator';
 
 /* 
     A simple seprarator that add a horizontal line between two sections.

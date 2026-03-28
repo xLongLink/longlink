@@ -4,7 +4,7 @@ import {
     BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+} from '@/ui/breadcrumb';
 import { formatAppName } from '@/lib/navigation';
 import { Link, useLocation, useParams } from 'react-router';
 

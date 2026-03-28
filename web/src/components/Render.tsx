@@ -1,18 +1,18 @@
 import type React from 'react';
-import Button from '@/components/longlink/Button';
-import Checkbox from '@/components/longlink/Checkbox';
-import Columns, { Column } from '@/components/longlink/Columns';
-import Dialog from '@/components/longlink/Dialog';
-import Hero from '@/components/longlink/Hero';
-import Input from '@/components/longlink/Input';
-import Menu, { MenuSection, MenuSubSection } from '@/components/longlink/Menu';
-import Range from '@/components/longlink/Range';
-import Separator from '@/components/longlink/Separator';
-import Select from '@/components/longlink/Select';
-import Switch from '@/components/longlink/Switch';
-import Table, { type ApiTableColumn } from '@/components/longlink/Table';
-import Textarea from '@/components/longlink/Textarea';
-import Tabs, { Tab } from '@/components/longlink/Tabs';
+import Button from '@/longlink/Button';
+import Checkbox from '@/longlink/Checkbox';
+import Columns, { Column } from '@/longlink/Columns';
+import Dialog from '@/longlink/Dialog';
+import Hero from '@/longlink/Hero';
+import Input from '@/longlink/Input';
+import Menu, { MenuSection, MenuSubSection } from '@/longlink/Menu';
+import Range from '@/longlink/Range';
+import Separator from '@/longlink/Separator';
+import Select from '@/longlink/Select';
+import Switch from '@/longlink/Switch';
+import Table, { type ApiTableColumn } from '@/longlink/Table';
+import Textarea from '@/longlink/Textarea';
+import Tabs, { Tab } from '@/longlink/Tabs';
 
 const registry = {
     hero: Hero,

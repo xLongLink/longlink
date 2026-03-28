@@ -1,23 +1,23 @@
 import { Plus, Sparkles } from 'lucide-react';
 import { useState } from 'react';
-import Hero from '@/components/longlink/Hero';
-import Table, { type ApiTableColumn } from '@/components/longlink/Table';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import Hero from '@/longlink/Hero';
+import Table, { type ApiTableColumn } from '@/longlink/Table';
+import { Button } from '@/ui/button';
+import { Card } from '@/ui/card';
 import {
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/ui/dialog';
 import {
     Empty,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
     EmptyTitle,
-} from '@/components/ui/empty';
-import { Input } from '@/components/ui/input';
+} from '@/ui/empty';
+import { Input } from '@/ui/input';
 import { useApps, useCreateApp } from '@/hooks/use-apps';
 
 const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {

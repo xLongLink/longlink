@@ -1,19 +1,19 @@
 import type { ChangeEvent } from 'react';
 import { useRef, useState } from 'react';
 import { Bell, Palette, Pencil, User } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
+import { Button } from '@/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card';
+} from '@/ui/card';
 import { useUser } from '@/hooks/use-user';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Input } from '@/ui/input';
+import { Label } from '@/ui/label';
+import { Switch } from '@/ui/switch';
 
 const sectionTitle = {
     profile: 'General settings',

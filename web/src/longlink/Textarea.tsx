@@ -1,5 +1,5 @@
-import { Label } from '@/components/ui/label';
-import { Textarea as UITextarea } from '@/components/ui/textarea';
+import { Label } from '@/ui/label';
+import { Textarea as UITextarea } from '@/ui/textarea';
 
 type TextareaProps = {
     label?: string;

@@ -6,7 +6,7 @@ import Integrations from '@/components/settings/Integrations';
 import Permissions from '@/components/settings/Permissions';
 import Security from '@/components/settings/Security';
 import Storage from '@/components/settings/Storage';
-import { Menu, MenuContent, MenuList, MenuSection } from '@/components/ui/menu';
+import { Menu, MenuContent, MenuList, MenuSection } from '@/ui/menu';
 import {
     AppWindowIcon,
     DatabaseIcon,
