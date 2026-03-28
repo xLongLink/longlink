@@ -1,5 +1,11 @@
-import click
+import importlib
+import os
+import sys
 from pathlib import Path
+
+import click
+import uvicorn
+
 from longlink.cli import setup
 
 
@@ -9,22 +15,26 @@ def main():
     pass
 
 
+def load_app():
+    importlib.import_module("main")
+    from longlink import app
+
+    return app
+
+
 # longlink dev
 @main.command()
 def dev():
-    import sys
-    import os
-    import uvicorn
-
     # add CWD to import path
     sys.path.insert(0, os.getcwd())
     os.environ["DEV"] = "True"
 
     uvicorn.run(
-        "main:app",
+        "longlink.__main__:load_app",
         host="0.0.0.0",
         port=1707,
         reload=True,
+        factory=True,
     )
 
 

@@ -1,8 +1,7 @@
-from src.app import app
-from longlink import Page
+from longlink import Page, page
 
 
-@app.page("/settings", name="Settings", icon="settings")
+@page("/settings", name="Settings", icon="settings")
 async def settings_page() -> Page:
     page = Page()
     settings_menu = page.menu()

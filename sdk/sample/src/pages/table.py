@@ -1,8 +1,7 @@
-from src.app import app
-from longlink import Page
+from longlink import Page, page
 
 
-@app.page('/table', name='Table', icon='table')
+@page('/table', name='Table', icon='table')
 async def table_page() -> Page:
     page = Page()
 
