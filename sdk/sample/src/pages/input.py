@@ -1,8 +1,7 @@
-from src.app import app
-from longlink import Page
+from longlink import Page, page
 
 
-@app.page("/input", name="Input", icon="input")
+@page("/input", name="Input", icon="input")
 async def input_page() -> Page:
     page = Page()
 
