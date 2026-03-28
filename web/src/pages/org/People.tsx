@@ -1,14 +1,14 @@
 import { Users } from 'lucide-react';
-import Hero from '@/components/longlink/Hero';
-import Table, { type ApiTableColumn } from '@/components/longlink/Table';
-import { Card } from '@/components/ui/card';
+import Hero from '@/longlink/Hero';
+import Table, { type ApiTableColumn } from '@/longlink/Table';
+import { Card } from '@/ui/card';
 import {
     Empty,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
     EmptyTitle,
-} from '@/components/ui/empty';
+} from '@/ui/empty';
 import { useUsers } from '@/hooks/use-users';
 
 const columns: ApiTableColumn[] = [

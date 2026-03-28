@@ -1,6 +1,6 @@
 import { Chrome, Github, Laptop, Layers } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/ui/button';
+import { Card, CardContent } from '@/ui/card';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { apiFetch, getApiBaseUrl } from '@/lib/api';

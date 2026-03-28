@@ -2,15 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { format, isValid, parse } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Input as UIInput } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/ui/calendar';
+import { Input as UIInput } from '@/ui/input';
+import { Label } from '@/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/popover';
+import { Textarea } from '@/ui/textarea';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api';
 

@@ -1,4 +1,4 @@
-import Hero from '@/components/longlink/Hero';
+import Hero from '@/longlink/Hero';
 
 type SettingsPlaceholderProps = {
     title: string;

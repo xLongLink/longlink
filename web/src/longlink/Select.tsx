@@ -1,13 +1,13 @@
-import { Button } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/ui/button';
+import { ButtonGroup } from '@/ui/button-group';
+import { Label } from '@/ui/label';
 import {
     Select as UISelect,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/ui/select';
 
 type SelectOption = {
     label: string;

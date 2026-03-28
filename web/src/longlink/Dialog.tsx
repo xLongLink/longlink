@@ -1,10 +1,6 @@
 import { type ReactElement, type ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-    DialogClose,
-    DialogContent,
-    DialogFooter,
-} from '@/components/ui/dialog';
+import { Button } from '@/ui/button';
+import { DialogClose, DialogContent, DialogFooter } from '@/ui/dialog';
 
 type DialogProps = {
     trigger: ReactElement;

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/ui/sonner';
 import { ThemeProvider } from '@/components/theme';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
 import { useIsFetching, useIsMutating } from '@tanstack/react-query';

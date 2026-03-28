@@ -1,6 +1,6 @@
 import { useId } from 'react';
-import { Label } from '@/components/ui/label';
-import { Switch as UISwitch } from '@/components/ui/switch';
+import { Label } from '@/ui/label';
+import { Switch as UISwitch } from '@/ui/switch';
 
 type SwitchProps = {
     label?: string;
