@@ -49,5 +49,8 @@ Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 longlink = "longlink.__main__:main"
 
 [tool.hatch.version]
-source = "env"
-variable = "LONG_LINK_VERSION"
+source = "vcs"
+
+# [tool.hatch.version]
+# source = "env"
+# variable = "LONG_LINK_VERSION"
