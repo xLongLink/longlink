@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import Button from '@/components/longlink/Button';
-import { Icon } from '@/components/longlink/Icon';
+import Button from '@/longlink/Button';
+import { Icon } from '@/longlink/Icon';
 
 type HeroProps = {
     icon?: string | null;

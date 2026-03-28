@@ -1,11 +1,6 @@
 import { type ReactNode } from 'react';
 
-import {
-    Tabs as UITabs,
-    TabsList,
-    TabsContent,
-    TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs as UITabs, TabsList, TabsContent, TabsTrigger } from '@/ui/tabs';
 
 type TabsProps = {
     tabs: string[];

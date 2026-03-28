@@ -1,15 +1,15 @@
 import { PlusCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import Hero from '@/components/longlink/Hero';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import Hero from '@/longlink/Hero';
+import { Button } from '@/ui/button';
+import { Card } from '@/ui/card';
 import {
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+} from '@/ui/dialog';
+import { Input } from '@/ui/input';
 import {
     Table,
     TableBody,
@@ -17,7 +17,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/ui/table';
 
 type Team = {
     name: string;

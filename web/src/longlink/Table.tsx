@@ -13,7 +13,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/ui/table';
 import {
     Pagination,
     PaginationContent,
@@ -22,7 +22,7 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
-} from '@/components/ui/pagination';
+} from '@/ui/pagination';
 import {
     buildColumns,
     textAlignClasses,

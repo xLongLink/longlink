@@ -1,12 +1,12 @@
 import { Blocks, FolderGit2, Users } from 'lucide-react';
-import Hero from '@/components/longlink/Hero';
+import Hero from '@/longlink/Hero';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card';
+} from '@/ui/card';
 import { useApps } from '@/hooks/use-apps';
 import { useUsers } from '@/hooks/use-users';
 

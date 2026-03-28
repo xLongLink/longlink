@@ -1,10 +1,10 @@
 import { Link, useLocation } from 'react-router';
 import { Compass } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/ui/card';
+import { buttonVariants } from '@/ui/button';
 import { useUser } from '@/hooks/use-user';
 
-import { Table } from '@/components/longlink/Table';
+import { Table } from '@/longlink/Table';
 
 export default function NotFound() {
     const location = useLocation();
