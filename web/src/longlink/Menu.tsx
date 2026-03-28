@@ -20,7 +20,7 @@ import {
     MenuList,
     MenuSection as BaseMenuSection,
     MenuSubSection as BaseMenuSubSection,
-} from '@/components/ui/menu';
+} from '@/ui/menu';
 
 type MenuProps = {
     children?: ReactNode;

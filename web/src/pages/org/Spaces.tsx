@@ -1,13 +1,13 @@
 import { PanelsTopLeft } from 'lucide-react';
-import Hero from '@/components/longlink/Hero';
-import { Card } from '@/components/ui/card';
+import Hero from '@/longlink/Hero';
+import { Card } from '@/ui/card';
 import {
     Empty,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
     EmptyTitle,
-} from '@/components/ui/empty';
+} from '@/ui/empty';
 
 export default function Spaces() {
     return (

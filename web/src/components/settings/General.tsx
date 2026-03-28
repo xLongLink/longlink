@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import Hero from '@/components/longlink/Hero';
-import Input from '@/components/longlink/Input';
+import Hero from '@/longlink/Hero';
+import Input from '@/longlink/Input';
 import { apiFetch } from '@/lib/api';
 
 type OrganizationSettingsState = {

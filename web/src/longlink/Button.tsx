@@ -1,7 +1,7 @@
 import { useState, type ComponentProps, type ReactNode } from 'react';
 import { useParams } from 'react-router';
-import { Button as UIButton } from '@/components/ui/button';
-import { Dialog } from '@/components/ui/dialog';
+import { Button as UIButton } from '@/ui/button';
+import { Dialog } from '@/ui/dialog';
 import { apiFetch } from '@/lib/api';
 
 type ButtonProps = {
