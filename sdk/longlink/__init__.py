@@ -39,3 +39,7 @@ def page(path: str, name: str, icon: str):
 
 def cron(schedule: str):
     return app.cron(schedule)
+
+
+# Import internal routes for side-effect registration on the global app.
+import longlink.routes  # noqa: E402,F401
