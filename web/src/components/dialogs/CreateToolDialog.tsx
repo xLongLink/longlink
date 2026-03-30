@@ -9,22 +9,22 @@ import {
 import { Input } from '@/ui/input';
 
 type CreateToolDialogProps = {
-    name: string;
     url: string;
+    token: string;
     isPending: boolean;
     createError: string | null;
-    onNameChange: (value: string) => void;
     onUrlChange: (value: string) => void;
+    onTokenChange: (value: string) => void;
     onCreate: () => void;
 };
 
 export default function CreateToolDialog({
-    name,
     url,
+    token,
     isPending,
     createError,
-    onNameChange,
     onUrlChange,
+    onTokenChange,
     onCreate,
 }: CreateToolDialogProps) {
     return (
@@ -38,14 +38,15 @@ export default function CreateToolDialog({
 
             <div className="grid gap-3 md:grid-cols-3">
                 <Input
-                    placeholder="Tool name"
-                    value={name}
-                    onChange={(event) => onNameChange(event.target.value)}
-                />
-                <Input
                     placeholder="http://localhost:1707/my-tool"
                     value={url}
                     onChange={(event) => onUrlChange(event.target.value)}
+                />
+                <Input
+                    type="password"
+                    placeholder="App key"
+                    value={token}
+                    onChange={(event) => onTokenChange(event.target.value)}
                 />
                 <Button
                     variant="outline"

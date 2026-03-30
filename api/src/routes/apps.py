@@ -22,10 +22,28 @@ async def create_app(payload: AppCreate) -> AppResponse:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    metadata = await apps.get(payload.appid, "metadata.json", params={'token': payload.token})
+    metadata_response = await apps.raw(
+        f'{app_url.rstrip("/")}/metadata.json',
+        method='GET',
+        params={'key': payload.token},
+    )
+    if not metadata_response.is_success:
+        raise HTTPException(
+            status_code=400,
+            detail=f'Unable to fetch metadata.json ({metadata_response.status_code})',
+        )
 
     try:
-        app = await db.apps.create(metadata.name, url=app_url, token=payload.token)
+        metadata = metadata_response.json()
+        app_name = metadata['name']
+    except (ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(
+            status_code=400,
+            detail='App metadata response is invalid',
+        ) from exc
+
+    try:
+        app = await db.apps.create(app_name, url=app_url, token=payload.token)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
