@@ -35,6 +35,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
 
     try:
         metadata = metadata_response.json()
+        print(metadata)
         app_name = metadata['name']
     except (ValueError, KeyError, TypeError) as exc:
         raise HTTPException(
