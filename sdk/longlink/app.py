@@ -2,7 +2,7 @@ from typing import get_type_hints
 from pydantic import BaseModel
 from longlink.cron import Cron
 from longlink.router import Router
-from longlink.envs import Envs
+from longlink.envs import Envs, envs
 
 
 class LongLink(Router, Cron):
@@ -22,9 +22,28 @@ class LongLink(Router, Cron):
                 "pages": self.pages(),
             }
 
-        @self.get("/register")
+        @self.get('/register')
         async def get_registration_information():
             return self.registration()
+
+        @self.get('/metadata.json')
+        async def get_metadata_information(key: str = ''):
+            if key != envs.KEY:
+                return {
+                    'detail': 'Invalid app key',
+                    'status': 401,
+                }
+
+            return self.metadata()
+
+    def metadata(self) -> dict[str, object]:
+        return {
+            'name': self.title,
+            'description': self.description,
+            'version': self.version,
+            'runtime': 'python-sdk',
+            'required_envs': self.required_envs(),
+        }
 
     def registration(self) -> dict[str, object]:
         return {
