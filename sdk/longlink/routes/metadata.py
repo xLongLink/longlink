@@ -1,15 +1,29 @@
-"""Metadata route registration."""
+"""Metadata route."""
 
-from longlink.envs import envs
+from longlink import get
+
+from longlink.envs import Envs, envs
+from longlink.metadata import metadata
 
 
-def register_metadata_route(app) -> None:
-    @app.get('/metadata.json')
-    async def get_metadata_information(key: str = ''):
-        if key != envs.KEY:
-            return {
-                'detail': 'Invalid app key',
-                'status': 401,
-            }
+def _required_envs() -> list[str]:
+    return [
+        field_name.upper()
+        for field_name, field in Envs.model_fields.items()
+        if field.is_required()
+    ]
 
-        return app.metadata()
+
+@get('/metadata.json')
+async def get_metadata_information(key: str = ''):
+    if key != envs.KEY:
+        return {
+            'detail': 'Invalid app key',
+            'status': 401,
+        }
+
+    return {
+        **metadata.model_dump(),
+        'runtime': 'python-sdk',
+        'required_envs': _required_envs(),
+    }
