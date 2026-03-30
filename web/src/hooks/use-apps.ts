@@ -3,14 +3,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
 
 export type App = {
-    id: number;
+    id: string;
     name: string;
     url: string;
+    type: 'tool' | 'space' | 'process';
 };
 
 type CreateAppPayload = {
     url: string;
-    token: string;
+    key: string;
 };
 
 export function useApps() {
@@ -32,5 +33,26 @@ export function useCreateApp() {
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: ['apps'] });
         },
+    });
+}
+
+export function useTools() {
+    return useQuery({
+        queryKey: ['tools'],
+        queryFn: () => apiFetch<App[]>('/tools'),
+    });
+}
+
+export function useSpaces() {
+    return useQuery({
+        queryKey: ['spaces'],
+        queryFn: () => apiFetch<App[]>('/spaces'),
+    });
+}
+
+export function useProcesses() {
+    return useQuery({
+        queryKey: ['processes'],
+        queryFn: () => apiFetch<App[]>('/processes'),
     });
 }

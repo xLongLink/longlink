@@ -10,7 +10,7 @@ import { Input } from '@/ui/input';
 
 type CreateToolDialogProps = {
     url: string;
-    token: string;
+    keyValue: string;
     isPending: boolean;
     createError: string | null;
     onUrlChange: (value: string) => void;
@@ -20,7 +20,7 @@ type CreateToolDialogProps = {
 
 export default function CreateToolDialog({
     url,
-    token,
+    keyValue,
     isPending,
     createError,
     onUrlChange,
@@ -45,7 +45,7 @@ export default function CreateToolDialog({
                 <Input
                     type="password"
                     placeholder="App key"
-                    value={token}
+                    value={keyValue}
                     onChange={(event) => onTokenChange(event.target.value)}
                 />
                 <Button

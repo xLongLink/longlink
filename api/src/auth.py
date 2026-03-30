@@ -65,7 +65,7 @@ async def authapp(request: Request) -> db.App:
     if not token:
         raise HTTPException(401, 'Missing app token')
 
-    app = await db.apps.get_by_token(token)
+    app = await db.apps.get_by_key(token)
     if app is None:
         raise HTTPException(401, 'Invalid app token')
 

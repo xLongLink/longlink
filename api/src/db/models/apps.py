@@ -12,7 +12,8 @@ class App(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     url: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    type: Mapped[str] = mapped_column(String(16), nullable=False, default='tool')
 
     # Timestamp informations
     date_update: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())

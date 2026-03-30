@@ -13,6 +13,15 @@ class AppsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
+    async def list_by_type(self, app_type: str) -> list[App]:
+        '''Return all registered apps matching a type.'''
+
+        Session = await get_session()
+        async with Session() as session:
+            statement = select(App).where(App.type == app_type)
+            result = await session.execute(statement)
+            return list(result.scalars().all())
+
     async def get_by_uuid(self, app_uuid: str) -> App | None:
         '''Return a registered app by UUID.'''
 
@@ -31,16 +40,16 @@ class AppsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def get_by_token(self, token: str) -> App | None:
-        '''Return a registered app by token.'''
+    async def get_by_key(self, key: str) -> App | None:
+        '''Return a registered app by key.'''
 
         Session = await get_session()
         async with Session() as session:
-            statement = select(App).where(App.token == token)
+            statement = select(App).where(App.key == key)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def create(self, name: str, url: str, token: str) -> App:
+    async def create(self, name: str, url: str, key: str, app_type: str) -> App:
         '''Add a new app to the database.'''
 
         Session = await get_session()
@@ -52,13 +61,13 @@ class AppsService:
             if existing_app is not None:
                 raise ValueError('App URL already exists')
 
-            token_statement = select(App).where(App.token == token)
-            token_result = await session.execute(token_statement)
-            existing_token = token_result.scalar_one_or_none()
-            if existing_token is not None:
-                raise ValueError('App token already exists')
+            key_statement = select(App).where(App.key == key)
+            key_result = await session.execute(key_statement)
+            existing_key = key_result.scalar_one_or_none()
+            if existing_key is not None:
+                raise ValueError('App key already exists')
 
-            app = App(name=name, url=url, token=token)
+            app = App(name=name, url=url, key=key, type=app_type)
             session.add(app)
             await session.commit()
             await session.refresh(app)
