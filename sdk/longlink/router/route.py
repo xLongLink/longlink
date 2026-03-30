@@ -1,7 +1,6 @@
 import re
-from typing import Callable, Awaitable, Any
+from typing import Any, Callable, Awaitable
 from urllib.parse import parse_qs
-
 
 Handler = Callable[..., Awaitable[Any]]
 

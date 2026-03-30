@@ -1,7 +1,6 @@
-from dataclasses import dataclass
 import re
-
 from .__root__ import Component
+from dataclasses import dataclass
 
 
 @dataclass

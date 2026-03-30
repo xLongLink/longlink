@@ -1,11 +1,8 @@
-from .__root__ import Component
 from typing import Literal, TypeAlias
-from dataclasses import dataclass, field
-
-
 # Import Components
 from .dialog import Dialog
-
+from .__root__ import Component
+from dataclasses import field, dataclass
 
 ButtonVariants: TypeAlias = Literal[
     'default',

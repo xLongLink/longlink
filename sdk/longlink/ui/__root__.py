@@ -1,7 +1,6 @@
 from abc import ABC
 
 
-
 class Component(ABC):
     __name__: str
     _children: list

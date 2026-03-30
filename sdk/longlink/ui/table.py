@@ -1,7 +1,6 @@
-from typing import Literal, TypeAlias, overload, TypedDict
-from dataclasses import dataclass, field
+from typing import Literal, TypeAlias, TypedDict, overload
 from .__root__ import Component
-
+from dataclasses import field, dataclass
 
 Alignments: TypeAlias = Literal['left', 'center', 'right']
 

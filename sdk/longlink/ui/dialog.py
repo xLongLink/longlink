@@ -1,12 +1,10 @@
-from .__root__ import Component
-from dataclasses import dataclass, field
 from typing import Any
-
-
 # Import Components
 from .input import Input, InputKinds
-from .select import Select
 from .range import Range
+from .select import Select
+from .__root__ import Component
+from dataclasses import field, dataclass
 
 
 @dataclass

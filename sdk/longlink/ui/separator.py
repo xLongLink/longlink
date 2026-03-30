@@ -1,7 +1,5 @@
-from dataclasses import dataclass
 from .__root__ import Component
-
-
+from dataclasses import dataclass
 
 # TODO: Add a text in the separator like in the https://ui.shadcn.com/ example
 

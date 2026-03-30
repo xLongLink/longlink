@@ -1,8 +1,7 @@
 import inspect
-from typing import Callable, Awaitable, Any
+from typing import Any, Callable, Awaitable
 from .route import Route, PageRoute
 from longlink.ui import Page
-
 
 Handler = Callable[..., Awaitable[Any]]
 

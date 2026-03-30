@@ -1,9 +1,7 @@
-import inspect
 import json
+import inspect
 from typing import Any, get_type_hints
-
 from pydantic import BaseModel
-
 from longlink.cron import Cron
 from longlink.router import Router
 

@@ -1,6 +1,6 @@
 """Organization synchronization routes."""
 
-from longlink import post, put
+from longlink import put, post
 from longlink.organization import OrganizationSettings, organization
 
 

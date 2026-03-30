@@ -1,15 +1,14 @@
-from dataclasses import dataclass, field
-from .__root__ import Component
-
 # Import commonly nested components
 from .hero import Hero
-from .table import Table
+from .tabs import Tab, Tabs
 from .input import Input
+from .range import Range
+from .table import Table
 from .button import Button, ButtonVariants
 from .columns import Column, Columns
+from .__root__ import Component
 from .separator import Separator
-from .tabs import Tab, Tabs
-from .range import Range
+from dataclasses import field, dataclass
 
 
 @dataclass

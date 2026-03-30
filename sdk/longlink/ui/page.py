@@ -1,18 +1,18 @@
-from longlink.ui.tabs import Tab, Tabs
+from typing import Any
 from longlink.ui.hero import Hero
 from longlink.ui.menu import Menu
-from longlink.ui.table import Table
-from typing import Any
+from longlink.ui.tabs import Tab, Tabs
 from longlink.ui.input import Input, InputKinds
-from longlink.ui.select import Select
+from longlink.ui.range import Range
+from longlink.ui.table import Table
 from longlink.ui.button import Button, ButtonVariants
+from longlink.ui.select import Select
+from longlink.ui.switch import Switch
 from longlink.ui.columns import Column, Columns
 from longlink.ui.__root__ import Component
-from longlink.ui.separator import Separator
-from longlink.ui.switch import Switch
 from longlink.ui.checkbox import Checkbox
-from longlink.ui.range import Range
 from longlink.ui.textarea import Textarea
+from longlink.ui.separator import Separator
 
 
 class Page:
