@@ -1,6 +1,4 @@
 import { Sparkles } from 'lucide-react';
-import { useState } from 'react';
-import { CreateToolDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
 import Table, { type ApiTableColumn } from '@/longlink/Table';
 import { Card } from '@/ui/card';
@@ -11,7 +9,7 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/ui/empty';
-import { useCreateApp, useTools } from '@/hooks/use-apps';
+import { useTools } from '@/hooks/use-apps';
 
 const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
     title: 'Tools',
@@ -41,32 +39,8 @@ const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
 
 export default function Tools() {
     const { data: tools = [], isLoading, error } = useTools();
-    const { mutateAsync: createApp, isPending } = useCreateApp();
-    const [url, setUrl] = useState('');
-    const [key, setKey] = useState('');
-    const [createError, setCreateError] = useState<string | null>(null);
     const loadErrorMessage =
         error instanceof Error ? error.message : 'Failed to load tools';
-
-    const onCreateApp = async () => {
-        if (!url.trim() || !key.trim()) {
-            return;
-        }
-
-        try {
-            setCreateError(null);
-            await createApp({
-                url: url.trim(),
-                key: key.trim(),
-            });
-            setUrl('');
-            setKey('');
-        } catch (err) {
-            setCreateError(
-                err instanceof Error ? err.message : 'Failed to create tool'
-            );
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -74,18 +48,7 @@ export default function Tools() {
                 title="Tools"
                 subtitle={`${tools.length} tools`}
                 icon="blocks"
-                action="Create Tool"
-            >
-                <CreateToolDialog
-                    url={url}
-                    keyValue={key}
-                    isPending={isPending}
-                    createError={createError}
-                    onUrlChange={setUrl}
-                    onTokenChange={setKey}
-                    onCreate={() => void onCreateApp()}
-                />
-            </Hero>
+            />
 
             {isLoading ? (
                 <Card className="p-10 text-center text-white/60">
@@ -104,8 +67,8 @@ export default function Tools() {
                             </EmptyMedia>
                             <EmptyTitle>No Tools Yet</EmptyTitle>
                             <EmptyDescription>
-                                You haven&apos;t added any tools yet. Get
-                                started by creating your first tool.
+                                There are no tools available for this
+                                organization.
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>
