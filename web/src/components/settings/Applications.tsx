@@ -72,6 +72,9 @@ export default function Applications() {
             return;
         }
 
+        const normalizedUrl = connectUrl.trim();
+        const normalizedToken = connectToken.trim();
+
         setConnectError(null);
         setIsConnectPending(true);
 
@@ -79,8 +82,8 @@ export default function Applications() {
             await apiFetch<Application>('/apps', {
                 method: 'POST',
                 body: {
-                    url: connectUrl,
-                    token: connectToken,
+                    url: normalizedUrl,
+                    token: normalizedToken,
                 },
             });
 
