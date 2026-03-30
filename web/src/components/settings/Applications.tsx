@@ -33,6 +33,7 @@ export default function Applications() {
     const [connectToken, setConnectToken] = useState('');
     const [connectError, setConnectError] = useState<string | null>(null);
     const [isConnectPending, setIsConnectPending] = useState(false);
+    const [connectCloseSignal, setConnectCloseSignal] = useState(0);
 
     const canCreate = useMemo(() => {
         return createUrl.trim().length > 0 && createToken.trim().length > 0;
@@ -102,6 +103,7 @@ export default function Applications() {
 
             setConnectUrl('');
             setConnectToken('');
+            setConnectCloseSignal((currentSignal) => currentSignal + 1);
             await loadApps();
         } catch (error) {
             setConnectError(
@@ -120,7 +122,11 @@ export default function Applications() {
                 icon="settings"
             >
                 <div className="flex items-center gap-2">
-                    <AppButton variant="outline" text="Connect app">
+                    <AppButton
+                        variant="outline"
+                        text="Connect app"
+                        closeSignal={connectCloseSignal}
+                    >
                         <ConnectApplicationDialog
                             url={connectUrl}
                             token={connectToken}
