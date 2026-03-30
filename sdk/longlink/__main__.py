@@ -1,55 +1,5 @@
-import os
-import sys
-import click
-import uvicorn
-import importlib
-from pathlib import Path
-from longlink.cli import setup
-from longlink.cli.build import build_command
+from longlink.cli.main import main
 
 
-@click.group()
-def main():
-    """longlink command line interface"""
-    pass
-
-
-def load_app():
-    importlib.import_module("main")
-    from longlink import app
-
-    return app
-
-
-# longlink dev
-@main.command()
-def dev():
-    # add CWD to import path
-    sys.path.insert(0, os.getcwd())
-    os.environ["DEV"] = "True"
-
-    uvicorn.run(
-        "longlink.__main__:load_app",
-        host="0.0.0.0",
-        port=1707,
-        reload=True,
-        factory=True,
-    )
-
-
-# longlink init --folder sample
-@main.command()
-@click.option('--folder', prompt='Enter folder name', help='Folder to initialize')
-def init(folder: str):
-    """Initialize a new longlink project"""
-    folder_path = Path(folder)
-    setup(folder_path)
-
-
-main.add_command(build_command)
-
-
-
-# TODO: Add commands for database migration using Alembic
-# alembic revision --autogenerate
-# alembic upgrade head
+if __name__ == "__main__":
+    main()
