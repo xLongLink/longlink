@@ -12,6 +12,7 @@ Used to build and publish LongLink appliations.
 
 ```
 longlink init <module>
+longlink build
 longlink login
 longlink logout
 longlink publish <module>
