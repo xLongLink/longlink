@@ -1,7 +1,7 @@
 import src.db as db
-from authlib.integrations.starlette_client import OAuth
-from fastapi import HTTPException, Request
+from fastapi import Request, HTTPException
 from src.env import env
+from authlib.integrations.starlette_client import OAuth
 
 """
 TODO: We do not create a new authentication system, instead we integrate with existing Identity Providers (IdP)

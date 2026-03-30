@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import Final
-
 import httpx
-
 import src.db as db
+from typing import Final
 from src.utils.apps import post
-
 
 ORGANIZATION_SETTINGS_KEYS: Final[tuple[str, ...]] = (
     'ORG_NAME',

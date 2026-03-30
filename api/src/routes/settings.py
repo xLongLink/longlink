@@ -1,11 +1,9 @@
-from typing import List
-
-from fastapi import HTTPException, Query
-
 import src.db as db
-from src.apps.organization import notify_all_apps_organization_settings
-from src.models.settings import SettingResponse, SettingSet, SettingSetItem
+from typing import List
+from fastapi import Query, HTTPException
 from src.router import router
+from src.models.settings import SettingSet, SettingSetItem, SettingResponse
+from src.apps.organization import notify_all_apps_organization_settings
 
 
 def _invalid_key_error(error: ValueError) -> HTTPException:

@@ -1,8 +1,8 @@
-from fastapi import HTTPException
-
 import src.db as db
-from src.models.databases import DatabaseCreate, DatabaseResponse, DatabaseUpdate
+from fastapi import HTTPException
 from src.router import router
+from src.models.databases import (DatabaseCreate, DatabaseUpdate,
+                                  DatabaseResponse)
 
 
 def to_response(database: db.Database) -> DatabaseResponse:

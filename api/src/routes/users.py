@@ -1,8 +1,8 @@
 import src.db as db
 from fastapi import Depends
 from src.auth import authuser
-from src.models.users import UserResponse
 from src.router import router
+from src.models.users import UserResponse
 
 
 @router.get('/users')

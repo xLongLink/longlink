@@ -1,8 +1,7 @@
 import httpx
 import src.db as db
-from fastapi import HTTPException, Request, Response
+from fastapi import Request, Response, HTTPException
 from src.router import router
-
 
 ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
 

@@ -1,12 +1,11 @@
 import src.db as db
 from typing import Any, cast
-from authlib.integrations.starlette_client.apps import StarletteOAuth2App
-from fastapi import HTTPException, Request
-from fastapi.responses import RedirectResponse
-from src.auth import AVAILABLE_AUTH_METHODS, oauth
+from fastapi import Request, HTTPException
 from src.env import env
+from src.auth import AVAILABLE_AUTH_METHODS, oauth
 from src.router import router
-
+from fastapi.responses import RedirectResponse
+from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
 URL = 'http://localhost:5173'
 
