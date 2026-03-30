@@ -9,6 +9,6 @@ async def get_app_information():
     return {
         'name': metadata.name,
         'description': metadata.description,
-        'version': metadata.version,
+        'type': metadata.type,
         'pages': app.pages(),
     }
