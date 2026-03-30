@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  podman:
+    image: quay.io/podman/stable:latest
+    container_name: podman
+    privileged: true
+    restart: unless-stopped
+    command: >
+      sh -c "podman system service --time=0 tcp:0.0.0.0:8080"
+    volumes:
+      - podman_data:/var/lib/containers
+    ports:
+      - "8080:8080"   # Podman API
+
+volumes:
+  podman_data:
