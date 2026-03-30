@@ -65,7 +65,7 @@ export function Input({
     disabled,
     submit,
 }: InputProps) {
-    const { app } = useParams();
+    const { appId } = useParams();
     const defaultFieldValue = useMemo(() => {
         if (typeof value === 'string' || typeof value === 'number') {
             return String(value);
@@ -88,8 +88,8 @@ export function Input({
     const submitPath = submit?.startsWith('/')
         ? submit
         : normalizedSubmitPath
-          ? app
-              ? `/apps/${app}/${normalizedSubmitPath}`
+          ? appId
+              ? `/${appId}/${normalizedSubmitPath}`
               : `/${normalizedSubmitPath}`
           : '';
 

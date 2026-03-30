@@ -11,12 +11,12 @@ type AppMetadata = {
 const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '');
 
 export default function Longlink() {
-    const { app, '*': wildcardPath } = useParams();
+    const { appId, '*': wildcardPath } = useParams();
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
     const { data: appMetadata, isLoading: isAppMetadataLoading } =
         useApiData<AppMetadata>(
-            app && normalizedRoutePath.length === 0 ? `/apps/${app}` : null
+            appId && normalizedRoutePath.length === 0 ? `/apps/${appId}` : null
         );
 
     const fallbackPagePath = useMemo(() => {
@@ -28,9 +28,9 @@ export default function Longlink() {
     }, [appMetadata?.pages]);
 
     const activePagePath = normalizedRoutePath || fallbackPagePath;
-    const pageEndpoint = app
+    const pageEndpoint = appId
         ? activePagePath.length > 0
-            ? `/apps/${app}/${activePagePath}`
+            ? `/apps/${appId}/${activePagePath}`
             : null
         : null;
 
@@ -41,7 +41,7 @@ export default function Longlink() {
         : [];
 
     if (error) {
-        return <div>{error}</div>;
+        return <div>{error.message}</div>;
     }
 
     if (isAppMetadataLoading || isLoading) {

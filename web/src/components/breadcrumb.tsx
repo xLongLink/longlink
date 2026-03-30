@@ -16,12 +16,17 @@ type SettingResponse = {
 };
 
 export function Breadcrumb() {
-    const { app } = useParams();
+    const { appId } = useParams();
     const location = useLocation();
     const { data: organizationNameData } =
         useApiData<SettingResponse>('/settings/ORG_NAME');
+    const { data: appMetadata } = useApiData<{ name?: string }>(
+        appId ? `/apps/${appId}` : null
+    );
 
-    const appName = app ? formatAppName(app) : undefined;
+    const appName = appId
+        ? appMetadata?.name?.trim() || formatAppName(appId)
+        : undefined;
     const isProfileView = location.pathname.startsWith('/profile');
     const organizationName =
         organizationNameData?.value.trim() || 'Organization';
@@ -42,7 +47,7 @@ export function Breadcrumb() {
                         )}
                     />
                 </BreadcrumbItem>
-                {appName ? (
+                {appName && appId ? (
                     <>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
@@ -50,7 +55,7 @@ export function Breadcrumb() {
                                 render={(props) => (
                                     <Link
                                         {...props}
-                                        to={`/apps/${app}`}
+                                        to={`/${appId}`}
                                         className="text-sm font-semibold text-white/70"
                                     >
                                         {appName}
