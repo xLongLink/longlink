@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -7,7 +8,7 @@ from pydantic import BaseModel
 class Metadata(BaseModel):
     name: str = 'Sample LongLink app'
     description: str = ''
-    version: str = '0.0.0'
+    type: Literal['tool', 'space', 'process'] = 'tool'
 
 
 def load_metadata() -> Metadata:
