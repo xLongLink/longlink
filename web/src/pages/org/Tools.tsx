@@ -1,15 +1,9 @@
-import { Plus, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { CreateToolDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
 import Table, { type ApiTableColumn } from '@/longlink/Table';
-import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
 import {
     Empty,
     EmptyDescription,
@@ -17,7 +11,6 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/ui/empty';
-import { Input } from '@/ui/input';
 import { useApps, useCreateApp } from '@/hooks/use-apps';
 
 const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
@@ -78,39 +71,15 @@ export default function Tools() {
                 icon="sparkles"
                 action="Create Tool"
             >
-                <DialogContent className="sm:max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Create a new tool</DialogTitle>
-                        <DialogDescription>
-                            Add a name and URL to register your tool.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="grid gap-3 md:grid-cols-3">
-                        <Input
-                            placeholder="Tool name"
-                            value={name}
-                            onChange={(event) => setName(event.target.value)}
-                        />
-                        <Input
-                            placeholder="http://localhost:1707/my-tool"
-                            value={url}
-                            onChange={(event) => setUrl(event.target.value)}
-                        />
-                        <Button
-                            variant="outline"
-                            onClick={() => void onCreateApp()}
-                            disabled={isPending}
-                        >
-                            <Plus className="h-4 w-4" />
-                            New Tool
-                        </Button>
-                    </div>
-
-                    {createError ? (
-                        <p className="text-sm text-red-300">{createError}</p>
-                    ) : null}
-                </DialogContent>
+                <CreateToolDialog
+                    name={name}
+                    url={url}
+                    isPending={isPending}
+                    createError={createError}
+                    onNameChange={setName}
+                    onUrlChange={setUrl}
+                    onCreate={() => void onCreateApp()}
+                />
             </Hero>
 
             {isLoading ? (
