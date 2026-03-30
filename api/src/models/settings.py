@@ -13,4 +13,4 @@ class SettingSetItem(BaseModel):
 class SettingResponse(BaseModel):
     key: str
     value: str
-    app_id: int | None = None
+    app_id: str | None = None

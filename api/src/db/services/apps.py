@@ -14,6 +14,15 @@ class AppsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
+    async def get_by_uuid(self, app_uuid: str) -> App | None:
+        '''Return a registered app by UUID.'''
+
+        Session = await get_session()
+        async with Session() as session:
+            statement = select(App).where(App.id == app_uuid)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
     async def get_by_name(self, name: str) -> App | None:
         '''Return a registered app by name.'''
 

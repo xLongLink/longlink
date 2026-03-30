@@ -1,14 +1,17 @@
 from datetime import datetime
-from sqlalchemy import DateTime, Integer, String, func
+import uuid
+
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
+
 from src.db.models.__base__ import Base
 
 
 class App(Base):
-    """Represent an application installed in the platform."""
+    '''Represent an application installed in the platform.'''
     __tablename__ = 'apps'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     url: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
