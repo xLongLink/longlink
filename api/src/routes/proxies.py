@@ -1,9 +1,11 @@
 import httpx
 import src.db as db
 from fastapi import Request, Response, HTTPException
+from src.utils import apps
 from src.router import router
+from fastapi.responses import JSONResponse
 
-ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+ALLOWED_METHODS = ['GET', 'POST']
 
 
 async def proxy_request(req: Request, app_name: str, full_path: str = '') -> Response:
@@ -11,22 +13,43 @@ async def proxy_request(req: Request, app_name: str, full_path: str = '') -> Res
     if not app:
         raise HTTPException(status_code=404, detail=f"App '{app_name}' not found")
 
-    # Build target URL
     path = full_path.lstrip('/')
-    target_url = app.url.rstrip('/')
-    if path:
-        target_url = f"{target_url}/{path}"
+    is_metadata_request = req.method == 'GET' and path == ''
+
+    if is_metadata_request:
+        path = 'pages'
+
+    query_params = dict(req.query_params)
+    query_params.setdefault('key', app.key)
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            upstream = await client.request(
-                method=req.method,
-                url=target_url,
-                params=req.query_params,
-                content=await req.body() if req.method in ['POST', 'PUT', 'PATCH'] else None,
-            )
+        method = req.method.upper()
+        if method == 'GET':
+            upstream = await apps.get(app.id, path, params=query_params)
+        elif method == 'POST':
+            json_payload = await req.json() if req.headers.get('content-type', '').startswith('application/json') else None
+            upstream = await apps.post(app.id, path, params=query_params, json=json_payload)
+        else:
+            raise HTTPException(status_code=405, detail=f"Method '{method}' is not allowed")
 
-        return Response(content=upstream.content, status_code=upstream.status_code )
+        if is_metadata_request:
+            if not upstream.is_success:
+                raise HTTPException(
+                    status_code=upstream.status_code,
+                    detail='Unable to fetch pages from the app',
+                )
+
+            try:
+                pages = upstream.json()
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=502,
+                    detail='Invalid pages response from app',
+                ) from exc
+
+            return JSONResponse(content={'pages': pages}, status_code=200)
+
+        return Response(content=upstream.content, status_code=upstream.status_code)
 
     except httpx.RequestError:
         raise HTTPException(status_code=502, detail="Upstream request failed")
