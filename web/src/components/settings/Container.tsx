@@ -1,15 +1,8 @@
-import { Box, PlusCircle } from 'lucide-react';
+import { Box } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { ConnectContainerRuntimeDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
-import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
-import { Input } from '@/ui/input';
 import {
     Table,
     TableBody,
@@ -78,67 +71,20 @@ export default function Container() {
                 icon="settings"
                 action="Connect"
             >
-                <DialogContent className="sm:max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Connect container runtime</DialogTitle>
-                        <DialogDescription>
-                            Register a top-level container runtime. Applications
-                            can deploy their modules using one of these runtime
-                            connections.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                        <Input
-                            placeholder="Runtime name"
-                            value={runtimeName}
-                            onChange={(event) =>
-                                setRuntimeName(event.target.value)
-                            }
-                        />
-                        <Input
-                            placeholder="Registry URL"
-                            value={registry}
-                            onChange={(event) =>
-                                setRegistry(event.target.value)
-                            }
-                        />
-                        <Input
-                            placeholder="Namespace"
-                            value={namespace}
-                            onChange={(event) =>
-                                setNamespace(event.target.value)
-                            }
-                        />
-                        <Input
-                            placeholder="CPU limit"
-                            value={cpuLimit}
-                            onChange={(event) =>
-                                setCpuLimit(event.target.value)
-                            }
-                        />
-                        <Input
-                            type="password"
-                            placeholder="Runtime API token"
-                            value={apiToken}
-                            onChange={(event) =>
-                                setApiToken(event.target.value)
-                            }
-                            className="md:col-span-2"
-                        />
-                    </div>
-
-                    <div className="flex justify-end">
-                        <Button
-                            variant="outline"
-                            onClick={onConnect}
-                            disabled={!canConnect}
-                        >
-                            <PlusCircle className="h-4 w-4" />
-                            Connect
-                        </Button>
-                    </div>
-                </DialogContent>
+                <ConnectContainerRuntimeDialog
+                    runtimeName={runtimeName}
+                    registry={registry}
+                    namespace={namespace}
+                    cpuLimit={cpuLimit}
+                    apiToken={apiToken}
+                    canConnect={canConnect}
+                    onRuntimeNameChange={setRuntimeName}
+                    onRegistryChange={setRegistry}
+                    onNamespaceChange={setNamespace}
+                    onCpuLimitChange={setCpuLimit}
+                    onApiTokenChange={setApiToken}
+                    onConnect={onConnect}
+                />
             </Hero>
 
             <Card className="overflow-hidden">

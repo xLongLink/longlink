@@ -1,16 +1,9 @@
-import { PlusCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { CreateApplicationDialog } from '@/components/dialogs';
 import AppButton from '@/longlink/Button';
 import Hero from '@/longlink/Hero';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
-import { Input } from '@/ui/input';
 import {
     Table,
     TableBody,
@@ -77,58 +70,18 @@ export default function Applications() {
                     <Button variant="outline">Connect app</Button>
 
                     <AppButton variant="outline" text="Create app">
-                        <DialogContent className="sm:max-w-3xl">
-                            <DialogHeader>
-                                <DialogTitle>Create application</DialogTitle>
-                                <DialogDescription>
-                                    Register a new application to make it
-                                    available for modules, storage bindings, and
-                                    runtime deployment.
-                                </DialogDescription>
-                            </DialogHeader>
-
-                            <div className="grid gap-3 md:grid-cols-2">
-                                <Input
-                                    placeholder="Application name"
-                                    value={name}
-                                    onChange={(event) =>
-                                        setName(event.target.value)
-                                    }
-                                />
-                                <Input
-                                    placeholder="Slug"
-                                    value={slug}
-                                    onChange={(event) =>
-                                        setSlug(event.target.value)
-                                    }
-                                />
-                                <Input
-                                    placeholder="Owner"
-                                    value={owner}
-                                    onChange={(event) =>
-                                        setOwner(event.target.value)
-                                    }
-                                />
-                                <Input
-                                    placeholder="Runtime"
-                                    value={runtime}
-                                    onChange={(event) =>
-                                        setRuntime(event.target.value)
-                                    }
-                                />
-                            </div>
-
-                            <div className="flex justify-end">
-                                <Button
-                                    variant="outline"
-                                    onClick={onCreate}
-                                    disabled={!canCreate}
-                                >
-                                    <PlusCircle className="h-4 w-4" />
-                                    Create
-                                </Button>
-                            </div>
-                        </DialogContent>
+                        <CreateApplicationDialog
+                            name={name}
+                            slug={slug}
+                            owner={owner}
+                            runtime={runtime}
+                            canCreate={canCreate}
+                            onNameChange={setName}
+                            onSlugChange={setSlug}
+                            onOwnerChange={setOwner}
+                            onRuntimeChange={setRuntime}
+                            onCreate={onCreate}
+                        />
                     </AppButton>
                 </div>
             </Hero>
