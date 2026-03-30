@@ -31,12 +31,12 @@ type NavigationProps = {
 };
 
 export default function Layout() {
-    const { app } = useParams();
-    const appMetadataEndpoint = app ? `/apps/${app}` : null;
+    const { appId } = useParams();
+    const appMetadataEndpoint = appId ? `/apps/${appId}` : null;
 
     const { data: appMetadata, isLoading: isAppMetadataLoading } =
         useApiData<AppMetadata>(appMetadataEndpoint);
-    const appTabs = app
+    const appTabs = appId
         ? isAppMetadataLoading
             ? [
                   {
@@ -51,19 +51,19 @@ export default function Layout() {
 
     const { tabs, basePathSuffix } = getTabsConfig({
         section: 'organization',
-        app,
+        appId,
         appTabs,
     });
 
     const showEmptyAppSection = Boolean(
-        app && !isAppMetadataLoading && tabs.length === 0
+        appId && !isAppMetadataLoading && tabs.length === 0
     );
 
     return (
         <Navigation
             tabs={tabs}
             basePathSuffix={basePathSuffix}
-            isTabsLoading={Boolean(app && isAppMetadataLoading)}
+            isTabsLoading={Boolean(appId && isAppMetadataLoading)}
             showEmptyAppSection={showEmptyAppSection}
         />
     );
@@ -75,12 +75,12 @@ export function Navigation({
     isTabsLoading,
     showEmptyAppSection,
 }: NavigationProps) {
-    const { app } = useParams();
+    const { appId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
 
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
-    const basePath = app
+    const basePath = appId
         ? normalizedSuffix
             ? `/${normalizedSuffix}`
             : '/'

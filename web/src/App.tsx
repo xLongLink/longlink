@@ -37,7 +37,7 @@ const router = createBrowserRouter([
             { path: 'people', element: <People /> },
             { path: 'settings', element: <SettingsPage /> },
             {
-                path: 'apps/:app/*',
+                path: ':appId/*',
                 element: <Longlink />,
             },
         ],
