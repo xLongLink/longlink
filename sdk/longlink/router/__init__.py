@@ -1,7 +1,6 @@
 import inspect
-from typing import Any, Awaitable, Callable
-
-from .route import PageRoute, Route
+from typing import Any, Callable, Awaitable
+from .route import Route, PageRoute
 
 Handler = Callable[..., Awaitable[Any]]
 

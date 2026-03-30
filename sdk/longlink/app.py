@@ -1,14 +1,12 @@
-import inspect
 import json
-from typing import Any, get_type_hints
-
-from pydantic import BaseModel
-from starlette.applications import Starlette
-from starlette.requests import Request
-from starlette.responses import JSONResponse, PlainTextResponse, Response
-from starlette.routing import Route
-
+import inspect
 import longlink.router as router
+from typing import Any, get_type_hints
+from pydantic import BaseModel
+from starlette.routing import Route
+from starlette.requests import Request
+from starlette.responses import Response, JSONResponse, PlainTextResponse
+from starlette.applications import Starlette
 
 
 def create_app() -> Starlette:

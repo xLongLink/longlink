@@ -1,5 +1,5 @@
 """Register SDK internal routes."""
 
-from . import metadata, organization, pages
+from . import pages, metadata, organization
 
 __all__ = ['metadata', 'organization', 'pages']
