@@ -87,7 +87,7 @@ export default function Storage() {
                 />
             </Hero>
 
-            <Card className="overflow-hidden">
+            <Card className="gap-0 overflow-hidden py-0">
                 <Table>
                     <TableHeader>
                         <TableRow>
