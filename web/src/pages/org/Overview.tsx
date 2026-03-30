@@ -19,7 +19,7 @@ export default function Overview() {
             <Hero
                 title="Overview"
                 subtitle="A high-level snapshot of your organization workspace."
-                icon="layout-dashboard"
+                icon="bar-chart-3"
             />
 
             <div className="grid gap-4 md:grid-cols-3">
