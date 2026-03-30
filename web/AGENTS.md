@@ -6,6 +6,16 @@ You are working on a vite tailwind shadcn project.
 - Ensure consistency across the application.
 - For static content, do not use .map(); write each JSX element explicitly inline.
 
+## Code structure
+
+- `assets`
+- `components`
+- `hooks`
+- `libs`
+- `longlink`
+- `pages`
+- `ui`
+
 ## API utilities
 
 - Use `src/lib/api.ts` for API calls; it centralizes the base URL, query params, JSON handling, and error handling.
