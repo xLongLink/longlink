@@ -27,7 +27,7 @@ export function Button({
     closeSignal,
 }: ButtonProps) {
     const [open, setOpen] = useState(false);
-    const { app } = useParams();
+    const { appId } = useParams();
     const hasDialog = Boolean(children);
     const normalizedUrl = normalizePath(url ?? '');
 
@@ -42,11 +42,11 @@ export function Button({
             setOpen(true);
         }
 
-        if (!app || !normalizedUrl) {
+        if (!appId || !normalizedUrl) {
             return;
         }
 
-        await apiFetch(`/apps/${app}/${normalizedUrl}`, {
+        await apiFetch(`/apps/${appId}/${normalizedUrl}`, {
             method: 'POST',
         });
     };

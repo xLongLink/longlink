@@ -75,15 +75,15 @@ export type TabsConfig = {
 
 export function getTabsConfig({
     section: _section,
-    app,
+    appId,
     appTabs,
 }: {
     section: 'account' | 'organization';
-    app?: string;
+    appId?: string;
     appTabs?: NavigationTab[];
 }): TabsConfig {
-    const tabs = app ? (appTabs ?? []) : organizationTabs;
-    const basePathSuffix = app ? `apps/${app}` : undefined;
+    const tabs = appId ? (appTabs ?? []) : organizationTabs;
+    const basePathSuffix = appId;
 
     return { tabs, basePathSuffix };
 }
