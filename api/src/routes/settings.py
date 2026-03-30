@@ -3,6 +3,7 @@ from typing import List
 from fastapi import HTTPException, Query
 
 import src.db as db
+from src.apps.organization import notify_all_apps_organization_settings
 from src.models.settings import SettingResponse, SettingSet, SettingSetItem
 from src.router import router
 
@@ -53,6 +54,8 @@ async def set_settings(payload: List[SettingSetItem]) -> List[SettingResponse]:
             )
         )
 
+    await notify_all_apps_organization_settings()
+
     return results
 
 
@@ -80,6 +83,8 @@ async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
     except ValueError as error:
         raise _invalid_key_error(error) from error
 
+    await notify_all_apps_organization_settings()
+
     return SettingResponse(
         key=setting.key,
         value=setting.value,
@@ -93,6 +98,8 @@ async def set_setting(key: str, payload: SettingSet) -> SettingResponse:
         setting = await db.settings.set(key, payload.value, app_id=None)
     except ValueError as error:
         raise _invalid_key_error(error) from error
+
+    await notify_all_apps_organization_settings()
 
     return SettingResponse(
         key=setting.key,

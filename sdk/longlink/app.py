@@ -1,4 +1,6 @@
-from typing import get_type_hints
+import inspect
+import json
+from typing import Any, get_type_hints
 
 from pydantic import BaseModel
 
@@ -32,8 +34,11 @@ class LongLink(Router, Cron):
             })
             return
 
-        if params:
-            body = await handler(**params)
+        body_payload = await self._read_json_body(scope, receive)
+        call_params = self._merge_body_params(handler, params, body_payload)
+
+        if call_params:
+            body = await handler(**call_params)
         else:
             body = await handler()
 
@@ -42,7 +47,6 @@ class LongLink(Router, Cron):
         return_type = get_type_hints(handler).get('return')
         if is_page_handler:
             from longlink.ui import Page
-            import json
 
             if return_type is not Page or not isinstance(body, Page):
                 await send({
@@ -79,8 +83,6 @@ class LongLink(Router, Cron):
             body_bytes = response_body.encode()
         else:
             if isinstance(body, dict):
-                import json
-
                 headers = [(b'content-type', b'application/json')]
                 body_bytes = json.dumps(body).encode()
             else:
@@ -99,3 +101,57 @@ class LongLink(Router, Cron):
             'type': 'http.response.body',
             'body': body_bytes,
         })
+
+    async def _read_json_body(self, scope, receive) -> dict[str, Any] | None:
+        method = scope.get('method', '').upper()
+        if method in {'GET', 'HEAD', 'OPTIONS'}:
+            return None
+
+        body = b''
+        more_body = True
+        while more_body:
+            message = await receive()
+            if message.get('type') != 'http.request':
+                continue
+
+            body += message.get('body', b'')
+            more_body = message.get('more_body', False)
+
+        if body == b'':
+            return None
+
+        try:
+            payload = json.loads(body)
+        except json.JSONDecodeError:
+            return None
+
+        if not isinstance(payload, dict):
+            return None
+
+        return payload
+
+    def _merge_body_params(self, handler, params: dict[str, Any], payload: dict[str, Any] | None) -> dict[str, Any]:
+        if payload is None:
+            return params
+
+        merged_params = dict(params)
+        signature = inspect.signature(handler)
+        annotations = get_type_hints(handler)
+
+        missing_parameters = [
+            name for name in signature.parameters
+            if name not in merged_params
+        ]
+
+        if len(missing_parameters) == 1:
+            candidate = missing_parameters[0]
+            annotation = annotations.get(candidate)
+            if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+                merged_params[candidate] = annotation.model_validate(payload)
+                return merged_params
+
+        for key, value in payload.items():
+            if key in signature.parameters and key not in merged_params:
+                merged_params[key] = value
+
+        return merged_params
