@@ -60,20 +60,41 @@ async def fetch_app_metadata(url: str, token: str) -> AppMetadata:
             detail=f'Could not fetch app metadata: {exc}',
         ) from exc
 
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail='Invalid metadata.json response') from exc
+
     if response.status_code >= 400:
+        if isinstance(payload, dict):
+            detail = payload.get('detail')
+            status = payload.get('status')
+
+            if isinstance(status, int) and status == 401:
+                raise HTTPException(status_code=401, detail='Invalid app key')
+
+            if isinstance(detail, str) and 'invalid app key' in detail.lower():
+                raise HTTPException(status_code=401, detail='Invalid app key')
+
         raise HTTPException(
             status_code=400,
             detail='App metadata endpoint returned an error',
         )
 
-    try:
-        payload = response.json()
-        if isinstance(payload, dict) and payload.get('detail') == 'Invalid app key':
+    if isinstance(payload, dict):
+        detail = payload.get('detail')
+        status = payload.get('status')
+
+        if isinstance(status, int) and status == 401:
             raise HTTPException(status_code=401, detail='Invalid app key')
 
+        if isinstance(detail, str) and 'invalid app key' in detail.lower():
+            raise HTTPException(status_code=401, detail='Invalid app key')
+
+    try:
         return AppMetadata.model_validate(payload)
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=400, detail='Invalid metadata.json response')
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail='Invalid metadata.json response') from exc
 
 
 async def proxy_request(req: Request, app_name: str, full_path: str = '') -> Response:
