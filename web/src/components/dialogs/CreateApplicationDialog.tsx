@@ -9,28 +9,24 @@ import {
 import { Input } from '@/ui/input';
 
 type CreateApplicationDialogProps = {
-    name: string;
-    slug: string;
-    owner: string;
-    runtime: string;
+    url: string;
+    token: string;
     canCreate: boolean;
-    onNameChange: (value: string) => void;
-    onSlugChange: (value: string) => void;
-    onOwnerChange: (value: string) => void;
-    onRuntimeChange: (value: string) => void;
+    isPending: boolean;
+    error: string | null;
+    onUrlChange: (value: string) => void;
+    onTokenChange: (value: string) => void;
     onCreate: () => void;
 };
 
 export default function CreateApplicationDialog({
-    name,
-    slug,
-    owner,
-    runtime,
+    url,
+    token,
     canCreate,
-    onNameChange,
-    onSlugChange,
-    onOwnerChange,
-    onRuntimeChange,
+    isPending,
+    error,
+    onUrlChange,
+    onTokenChange,
     onCreate,
 }: CreateApplicationDialogProps) {
     return (
@@ -38,31 +34,22 @@ export default function CreateApplicationDialog({
             <DialogHeader>
                 <DialogTitle>Create application</DialogTitle>
                 <DialogDescription>
-                    Register a new application to make it available for modules,
-                    storage bindings, and runtime deployment.
+                    Add the app URL and app key so LongLink can fetch
+                    /metadata.json and register the app.
                 </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-3 md:grid-cols-2">
                 <Input
-                    placeholder="Application name"
-                    value={name}
-                    onChange={(event) => onNameChange(event.target.value)}
+                    placeholder="localhost:1707"
+                    value={url}
+                    onChange={(event) => onUrlChange(event.target.value)}
                 />
                 <Input
-                    placeholder="Slug"
-                    value={slug}
-                    onChange={(event) => onSlugChange(event.target.value)}
-                />
-                <Input
-                    placeholder="Owner"
-                    value={owner}
-                    onChange={(event) => onOwnerChange(event.target.value)}
-                />
-                <Input
-                    placeholder="Runtime"
-                    value={runtime}
-                    onChange={(event) => onRuntimeChange(event.target.value)}
+                    type="password"
+                    placeholder="App key"
+                    value={token}
+                    onChange={(event) => onTokenChange(event.target.value)}
                 />
             </div>
 
@@ -70,12 +57,14 @@ export default function CreateApplicationDialog({
                 <Button
                     variant="outline"
                     onClick={onCreate}
-                    disabled={!canCreate}
+                    disabled={!canCreate || isPending}
                 >
                     <PlusCircle className="h-4 w-4" />
-                    Create
+                    {isPending ? 'Creating...' : 'Create'}
                 </Button>
             </div>
+
+            {error ? <p className="text-sm text-red-300">{error}</p> : null}
         </DialogContent>
     );
 }

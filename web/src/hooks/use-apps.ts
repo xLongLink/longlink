@@ -9,8 +9,8 @@ export type App = {
 };
 
 type CreateAppPayload = {
-    name: string;
     url: string;
+    token: string;
 };
 
 export function useApps() {

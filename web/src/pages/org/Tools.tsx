@@ -37,25 +37,25 @@ const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
 export default function Tools() {
     const { data: apps = [], isLoading, error } = useApps();
     const { mutateAsync: createApp, isPending } = useCreateApp();
-    const [name, setName] = useState('');
     const [url, setUrl] = useState('');
+    const [token, setToken] = useState('');
     const [createError, setCreateError] = useState<string | null>(null);
     const loadErrorMessage =
         error instanceof Error ? error.message : 'Failed to load tools';
 
     const onCreateApp = async () => {
-        if (!name.trim() || !url.trim()) {
+        if (!url.trim() || !token.trim()) {
             return;
         }
 
         try {
             setCreateError(null);
             await createApp({
-                name: name.trim(),
                 url: url.trim(),
+                token: token.trim(),
             });
-            setName('');
             setUrl('');
+            setToken('');
         } catch (err) {
             setCreateError(
                 err instanceof Error ? err.message : 'Failed to create tool'
@@ -72,12 +72,12 @@ export default function Tools() {
                 action="Create Tool"
             >
                 <CreateToolDialog
-                    name={name}
                     url={url}
+                    token={token}
                     isPending={isPending}
                     createError={createError}
-                    onNameChange={setName}
                     onUrlChange={setUrl}
+                    onTokenChange={setToken}
                     onCreate={() => void onCreateApp()}
                 />
             </Hero>

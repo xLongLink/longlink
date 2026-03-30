@@ -2,7 +2,6 @@ from pydantic import BaseModel
 
 
 class AppCreate(BaseModel):
-    appid: str
     url: str
     token: str
 
