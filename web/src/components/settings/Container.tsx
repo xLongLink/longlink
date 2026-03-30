@@ -1,4 +1,3 @@
-import { Box } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ConnectContainerRuntimeDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
@@ -66,9 +65,9 @@ export default function Container() {
     return (
         <div className="space-y-6">
             <Hero
-                title="Container Settings"
-                subtitle="Configure container runtimes, registries, and compute quotas"
-                icon="settings"
+                title="Compute Settings"
+                subtitle="Configure compute runtimes, registries, and quotas"
+                icon="cpu"
                 action="Connect"
             >
                 <ConnectContainerRuntimeDialog
@@ -125,18 +124,6 @@ export default function Container() {
                         )}
                     </TableBody>
                 </Table>
-            </Card>
-
-            <Card className="border-dashed p-4 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                    <Box className="mt-0.5 h-4 w-4" />
-                    <p>
-                        Connected runtimes represent shared container
-                        infrastructure. Applications can set image tags,
-                        environment variables, and scaling policies on top of
-                        these runtime connections.
-                    </p>
-                </div>
             </Card>
         </div>
     );
