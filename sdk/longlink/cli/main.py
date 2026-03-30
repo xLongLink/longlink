@@ -1,7 +1,8 @@
 import click
+from longlink.cli.build import build_command
 from longlink.cli.dev import dev_command
 from longlink.cli.init import init_command
-from longlink.cli.build import build_command
+from longlink.cli.migrate import migrate_command
 
 
 @click.group()
@@ -12,3 +13,4 @@ def main():
 main.add_command(dev_command)
 main.add_command(init_command)
 main.add_command(build_command)
+main.add_command(migrate_command)
