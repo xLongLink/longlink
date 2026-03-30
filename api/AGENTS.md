@@ -1,6 +1,7 @@
 ## AGENTS.md
 
-You are working on the backend. Is a FastAPI application that handles authentication, permissions, and routing to various modules.
+You are working on the backend (`api`).
+Is a FastAPI application that handles authentication, permissions, and routing to various modules.
 
 ## Project Structure
 
@@ -23,24 +24,6 @@ src/
 tests/
 ```
 
-## Python Guidelines
-
-- Strict typing
-- API-first design
-- Explicit dependencies
-- Clear separation of concerns
-- Sort imports alphabetically by length, for example:
-
-```python
-import os
-import sys
-from src.db import *
-from fastapi import *
-from src.auth import *
-```
-
-- Use single quotes for strings
-
 ## Database Layer
 
 Define pydantic models in `src/db/models/` and database utility functions in `src/db/services/`.
@@ -49,4 +32,12 @@ In the rest of the application, import the database layer as follows:
 
 ```python
 import src.db as db
+```
+
+## Pre-Commit
+
+Fix imports with `isort`:
+
+```
+isort .
 ```
