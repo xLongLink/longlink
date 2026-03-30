@@ -1,7 +1,6 @@
 """Metadata route."""
 
 from longlink import get
-
 from longlink.envs import Envs, envs
 from longlink.metadata import metadata
 

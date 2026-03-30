@@ -1,7 +1,6 @@
 """Registration route."""
 
 from longlink import get
-
 from longlink.envs import Envs
 
 

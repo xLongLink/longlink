@@ -1,7 +1,6 @@
 from alembic import context
 from longlink.database.base import Base, engine
 
-
 target_metadata = Base.metadata
 
 

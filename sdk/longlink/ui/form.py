@@ -1,8 +1,7 @@
-from dataclasses import dataclass, field
 from typing import Literal
-from .__root__ import Component
 from .input import Input
-
+from .__root__ import Component
+from dataclasses import field, dataclass
 
 FormMethods = Literal["post", "put", "patch", "delete"]
 

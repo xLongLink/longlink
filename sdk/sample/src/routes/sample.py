@@ -1,5 +1,6 @@
-from longlink import delete, get, patch, post, put
+from longlink import get, put, post, patch, delete
 from src.types import UserModel
+
 
 @get("/sample")
 async def sample_get_endpoint():

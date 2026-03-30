@@ -1,6 +1,6 @@
 import os
-import shutil
 import click
+import shutil
 from pathlib import Path
 from longlink.constants import PATH
 

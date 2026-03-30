@@ -1,6 +1,5 @@
 from typing import Literal
 
-
 # https://lucide.dev/icons
 IconTypes = Literal[
     "a-arrow-down",

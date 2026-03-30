@@ -36,6 +36,7 @@ cli = [
 ]
 dev = [
   "pytest==8.4.2",
+  "isort==8.0.1"
 ]
 
 [project.urls]
@@ -47,3 +48,10 @@ Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
 [project.scripts]
 longlink = "longlink.__main__:main"
+
+
+[tool.isort]
+from_first = false
+no_sections = true
+lines_between_types = 0
+length_sort = true

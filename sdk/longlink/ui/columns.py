@@ -1,10 +1,10 @@
-from dataclasses import dataclass, field
+from dataclasses import field, dataclass
 from longlink.ui.hero import Hero
+from longlink.ui.range import Range
 from longlink.ui.table import Table
 from longlink.ui.button import Button, ButtonVariants
 from longlink.ui.__root__ import Component
 from longlink.ui.separator import Separator
-from longlink.ui.range import Range
 
 
 @dataclass

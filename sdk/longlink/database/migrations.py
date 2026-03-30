@@ -1,7 +1,6 @@
-from pathlib import Path
 from alembic import command
+from pathlib import Path
 from alembic.config import Config
-
 
 CURRENT_FILE = Path(__file__).resolve()
 

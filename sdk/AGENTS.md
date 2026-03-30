@@ -23,3 +23,11 @@ pytest tests
 ## SDK
 
 The sdk folder contains the code to create a LongLink application. Each repository shall create a single application, therefore there is no need for
+
+## Pre-Commit
+
+Fix imports with `isort`:
+
+```
+isort .
+```

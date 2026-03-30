@@ -1,6 +1,5 @@
-from pydantic import BaseModel, EmailStr
 from enum import Enum
-
+from pydantic import EmailStr, BaseModel
 
 """
 Features

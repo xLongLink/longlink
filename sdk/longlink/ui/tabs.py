@@ -1,16 +1,15 @@
-from .__root__ import Component
-from dataclasses import dataclass, field
-from typing import Any
-
 # Importing components
 from .hero import Hero
+from typing import Any
 from .input import Input, InputKinds
-from .select import Select
-from .table import Table
-from .columns import Column, Columns
-from .button import Button, ButtonVariants
-from .separator import Separator
 from .range import Range
+from .table import Table
+from .button import Button, ButtonVariants
+from .select import Select
+from .columns import Column, Columns
+from .__root__ import Component
+from .separator import Separator
+from dataclasses import field, dataclass
 
 
 @dataclass

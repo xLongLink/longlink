@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
+from dataclasses import field, dataclass
 from longlink.ui.button import Button, ButtonVariants
-from longlink.ui.__root__ import Component
 from longlink.types.icons import IconTypes
+from longlink.ui.__root__ import Component
 
 
 @dataclass

@@ -1,8 +1,7 @@
 import re
-from typing import Literal, TypeAlias, Any
-from dataclasses import dataclass, field
+from typing import Any, Literal, TypeAlias
 from .__root__ import Component
-
+from dataclasses import field, dataclass
 
 InputKinds: TypeAlias = Literal[
     "text",

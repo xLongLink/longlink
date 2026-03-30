@@ -1,16 +1,15 @@
-from longlink.ui.__root__ import Component
-from dataclasses import dataclass, field
 from typing import Any
-
+from dataclasses import field, dataclass
+from longlink.ui.hero import Hero
 # Importing components
 from longlink.ui.tabs import Tab, Tabs
-from longlink.ui.hero import Hero
 from longlink.ui.input import Input, InputKinds
-from longlink.ui.select import Select
 from longlink.ui.table import Table
-from longlink.ui.separator import Separator
-from longlink.ui.columns import Column, Columns
 from longlink.ui.button import Button, ButtonVariants
+from longlink.ui.select import Select
+from longlink.ui.columns import Column, Columns
+from longlink.ui.__root__ import Component
+from longlink.ui.separator import Separator
 
 
 @dataclass
