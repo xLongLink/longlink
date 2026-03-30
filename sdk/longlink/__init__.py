@@ -1,42 +1,51 @@
-from .ui import Page
-from .app import LongLink
-from .router import Router
+from .app import create_app
+from .cron import Cron
 from .organization import OrganizationSettings, organization
+from .router import Router
+from .ui import Page
 from longlink.ui.select import Select
 from longlink.ui.textarea import Textarea
 
-# Global SDK-managed application instance.
-app = LongLink()
+# Global SDK-managed routing and scheduling registries.
+router = Router()
+cron_manager = Cron()
+
+# Official Starlette application instance.
+app = create_app(router)
 
 
-# Route helpers managed by the SDK global app.
+# Route helpers managed by the SDK global router.
 def get(path: str):
-    return app.get(path)
+    return router.get(path)
 
 
 def post(path: str):
-    return app.post(path)
+    return router.post(path)
 
 
 def put(path: str):
-    return app.put(path)
+    return router.put(path)
 
 
 def patch(path: str):
-    return app.patch(path)
+    return router.patch(path)
 
 
 def delete(path: str):
-    return app.delete(path)
+    return router.delete(path)
 
 
 def page(path: str, name: str, icon: str):
-    return app.page(path, name=name, icon=icon)
+    return router.page(path, name=name, icon=icon)
+
+
+def pages() -> list[dict[str, str]]:
+    return router.pages()
 
 
 def cron(schedule: str):
-    return app.cron(schedule)
+    return cron_manager.cron(schedule)
 
 
-# Import internal routes for side-effect registration on the global app.
+# Import internal routes for side-effect registration on the global router.
 import longlink.routes  # noqa: E402,F401
