@@ -1,35 +1,30 @@
 from typing import get_type_hints
+
 from pydantic import BaseModel
+
 from longlink.cron import Cron
+from longlink.envs import Envs
+from longlink.metadata import metadata
 from longlink.router import Router
 from longlink.routes import register_internal_routes
-from longlink.envs import Envs
 
 
 class LongLink(Router, Cron):
-    def __init__(self, title: str = "Sample", description: str = "Sample description", version: str = "0.0.0"):
-        self.title = title
-        self.description = description
-        self.version = version
-        # self.settings = Settings()
+    def __init__(self):
         super().__init__()
 
         register_internal_routes(self)
 
     def metadata(self) -> dict[str, object]:
         return {
-            'name': self.title,
-            'description': self.description,
-            'version': self.version,
+            **metadata.model_dump(),
             'runtime': 'python-sdk',
             'required_envs': self.required_envs(),
         }
 
     def registration(self) -> dict[str, object]:
         return {
-            "name": self.title,
-            "version": self.version,
-            "required_envs": self.required_envs(),
+            'required_envs': self.required_envs(),
         }
 
     def required_envs(self) -> list[str]:
@@ -132,5 +127,3 @@ class LongLink(Router, Cron):
             "type": "http.response.body",
             "body": body_bytes,
         })
-
-    
