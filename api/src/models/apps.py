@@ -2,11 +2,12 @@ from pydantic import BaseModel
 
 
 class AppCreate(BaseModel):
+    appid: str
     url: str
     token: str
 
 
 class AppResponse(BaseModel):
-    id: int
+    id: str
     name: str
     url: str

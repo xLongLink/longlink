@@ -1,10 +1,11 @@
 from sqlalchemy import select
+
 from src.db.models import Env
 from src.db.session import get_session
 
 
 class EnvsService:
-    async def list(self, app_id: int) -> list[Env]:
+    async def list(self, app_id: str) -> list[Env]:
         '''Return all env secrets for an app.'''
         Session = await get_session()
         async with Session() as session:
@@ -12,7 +13,7 @@ class EnvsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def get(self, key: str, app_id: int) -> Env | None:
+    async def get(self, key: str, app_id: str) -> Env | None:
         '''Return an env secret by key and app scope.'''
         Session = await get_session()
         async with Session() as session:
@@ -20,7 +21,7 @@ class EnvsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def set(self, key: str, value: str, app_id: int) -> Env:
+    async def set(self, key: str, value: str, app_id: str) -> Env:
         '''Create or update an env secret by key and app scope.'''
         Session = await get_session()
         async with Session() as session:
@@ -36,6 +37,5 @@ class EnvsService:
 
             await session.commit()
             await session.refresh(env)
-
 
             return env
