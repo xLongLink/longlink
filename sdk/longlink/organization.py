@@ -12,4 +12,4 @@ class OrganizationSettings(BaseModel):
     ORG_ADDRESS: str = ''
 
 
-organization = OrganizationSettings()
+org = OrganizationSettings()
