@@ -1,3 +1,4 @@
+export { default as ConnectApplicationDialog } from './ConnectApplicationDialog';
 export { default as ConnectContainerRuntimeDialog } from './ConnectContainerRuntimeDialog';
 export { default as ConnectDatabaseServerDialog } from './ConnectDatabaseServerDialog';
 export { default as ConnectStorageProviderDialog } from './ConnectStorageProviderDialog';
