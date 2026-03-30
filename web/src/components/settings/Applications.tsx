@@ -23,10 +23,10 @@ type Application = {
 };
 
 export default function Applications() {
-    const [name, setName] = useState('');
-    const [slug, setSlug] = useState('');
-    const [owner, setOwner] = useState('');
-    const [runtime, setRuntime] = useState('Python SDK');
+    const [createUrl, setCreateUrl] = useState('');
+    const [createToken, setCreateToken] = useState('');
+    const [createError, setCreateError] = useState<string | null>(null);
+    const [isCreatePending, setIsCreatePending] = useState(false);
     const [applications, setApplications] = useState<Application[]>([]);
 
     const [connectUrl, setConnectUrl] = useState('');
@@ -35,13 +35,8 @@ export default function Applications() {
     const [isConnectPending, setIsConnectPending] = useState(false);
 
     const canCreate = useMemo(() => {
-        return (
-            name.trim().length > 0 &&
-            slug.trim().length > 0 &&
-            owner.trim().length > 0 &&
-            runtime.trim().length > 0
-        );
-    }, [name, owner, runtime, slug]);
+        return createUrl.trim().length > 0 && createToken.trim().length > 0;
+    }, [createToken, createUrl]);
 
     const canConnect = useMemo(() => {
         return connectUrl.trim().length > 0 && connectToken.trim().length > 0;
@@ -56,15 +51,33 @@ export default function Applications() {
         void loadApps();
     }, []);
 
-    const onCreate = () => {
-        if (!canCreate) {
+    const onCreate = async () => {
+        if (!canCreate || isCreatePending) {
             return;
         }
 
-        setName('');
-        setSlug('');
-        setOwner('');
-        setRuntime('Python SDK');
+        setCreateError(null);
+        setIsCreatePending(true);
+
+        try {
+            await apiFetch<Application>('/apps', {
+                method: 'POST',
+                body: {
+                    url: createUrl.trim(),
+                    token: createToken.trim(),
+                },
+            });
+
+            setCreateUrl('');
+            setCreateToken('');
+            await loadApps();
+        } catch (error) {
+            setCreateError(
+                error instanceof Error ? error.message : 'Could not create app'
+            );
+        } finally {
+            setIsCreatePending(false);
+        }
     };
 
     const onConnect = async () => {
@@ -124,16 +137,16 @@ export default function Applications() {
 
                     <AppButton variant="outline" text="Create app">
                         <CreateApplicationDialog
-                            name={name}
-                            slug={slug}
-                            owner={owner}
-                            runtime={runtime}
+                            url={createUrl}
+                            token={createToken}
                             canCreate={canCreate}
-                            onNameChange={setName}
-                            onSlugChange={setSlug}
-                            onOwnerChange={setOwner}
-                            onRuntimeChange={setRuntime}
-                            onCreate={onCreate}
+                            isPending={isCreatePending}
+                            error={createError}
+                            onUrlChange={setCreateUrl}
+                            onTokenChange={setCreateToken}
+                            onCreate={() => {
+                                void onCreate();
+                            }}
                         />
                     </AppButton>
                 </div>

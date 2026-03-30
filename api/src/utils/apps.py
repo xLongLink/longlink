@@ -17,11 +17,17 @@ async def get(app_uuid: str, url: str, params: dict[str, str] | None = None) -> 
     app = await db.apps.get_by_uuid(app_uuid)
     if app is None:
         raise ValueError('App not found')
-    return await raw(url, method='GET', params=params)
+    return await raw(f"{app.url.rstrip('/')}/{url.lstrip('/')}", method='GET', params=params)
 
 
 async def post(app_uuid: str, url: str, params: dict[str, str], json: dict[str, Any] | None = None, timeout: float = 30.0) -> httpx.Response:
     app = await db.apps.get_by_uuid(app_uuid)
     if app is None:
         raise ValueError('App not found')
-    return await raw(url, method='POST', params=params, json=json, timeout=timeout)
+    return await raw(
+        f"{app.url.rstrip('/')}/{url.lstrip('/')}",
+        method='POST',
+        params=params,
+        json=json,
+        timeout=timeout,
+    )
