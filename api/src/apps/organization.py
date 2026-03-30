@@ -5,6 +5,7 @@ from typing import Final
 import httpx
 
 import src.db as db
+from src.utils.apps import post
 
 
 ORGANIZATION_SETTINGS_KEYS: Final[tuple[str, ...]] = (
@@ -36,7 +37,7 @@ async def notify_app_organization_settings(url: str, payload: dict[str, str]) ->
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.put(endpoint, json=payload)
             if response.status_code >= 400:
-                await client.post(endpoint, json=payload)
+                await post(url, '/organization', json=payload, timeout=10.0)
     except httpx.RequestError:
         return
 
