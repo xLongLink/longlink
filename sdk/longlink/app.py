@@ -8,12 +8,12 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse, Response
 from starlette.routing import Route
 
-from longlink.router import Router
+import longlink.router as router
 
 
-def create_app(router: Router) -> Starlette:
+def create_app() -> Starlette:
     async def endpoint(request: Request) -> Response:
-        return await dispatch_request(request, router)
+        return await dispatch_request(request)
 
     return Starlette(
         routes=[
@@ -26,7 +26,7 @@ def create_app(router: Router) -> Starlette:
     )
 
 
-async def dispatch_request(request: Request, router: Router) -> Response:
+async def dispatch_request(request: Request) -> Response:
     method = request.method
     path = request.url.path
     query_string = request.url.query
@@ -44,7 +44,7 @@ async def dispatch_request(request: Request, router: Router) -> Response:
     else:
         body = await handler()
 
-    is_page_handler = any(route.handler is handler for route in router._pages)
+    is_page_handler = router.is_page_handler(handler)
 
     return_type = get_type_hints(handler).get("return")
     if is_page_handler:
