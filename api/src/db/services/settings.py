@@ -1,5 +1,4 @@
 from sqlalchemy import select
-
 from src.config import config
 from src.db.models import Setting
 from src.db.session import get_session

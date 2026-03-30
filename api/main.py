@@ -1,16 +1,15 @@
 import os
+
 if __name__ == "__main__":
     os.environ.setdefault("DEV", "True")
 
-from pathlib import Path
-
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from src.env import env
 from src.router import router
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-
 
 app = FastAPI(
     docs_url=None,
@@ -39,11 +38,11 @@ app.add_middleware(
 # Register routers
 import src.routes.apps
 import src.routes.auth
-import src.routes.databases
 import src.routes.user
 import src.routes.users
 import src.routes.settings
 import src.routes.storages
+import src.routes.databases
 
 app.include_router(router)
 

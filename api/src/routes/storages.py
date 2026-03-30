@@ -1,9 +1,8 @@
 import fsspec
-from fastapi import HTTPException
-
 import src.db as db
-from src.models.storages import StorageCreate, StorageResponse, StorageUpdate
+from fastapi import HTTPException
 from src.router import router
+from src.models.storages import StorageCreate, StorageUpdate, StorageResponse
 
 
 def to_response(storage: db.Storage) -> StorageResponse:

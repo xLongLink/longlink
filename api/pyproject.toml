@@ -29,7 +29,8 @@ dependencies = [
 dev = [
     'mypy==1.18.2',
     'ruff==0.14.0',
-    'pytest==8.4.2',
+    'pytest=8.4.2',
+    'isort==8.0.1',
 ]
 
 [tool.setuptools]
@@ -37,3 +38,10 @@ py-modules = ['main']
 
 [tool.setuptools.packages.find]
 include = ['src*']
+
+
+[tool.isort]
+from_first = false
+no_sections = true
+lines_between_types = 0
+length_sort = true

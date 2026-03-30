@@ -1,10 +1,10 @@
 import src.db as db
 from fastapi import HTTPException
+from src.utils import url, apps
 from src.router import router
-from src.utils import apps, url
 from src.models.apps import AppCreate, AppResponse
-from src.apps.organization import notify_app_organization_settings, organization_settings_payload
-
+from src.apps.organization import (organization_settings_payload,
+                                   notify_app_organization_settings)
 
 
 @router.get('/apps')

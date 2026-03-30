@@ -1,5 +1,6 @@
-from .models import App, Database, Env, Setting, Storage, User
-from .services import AppsService, DatabasesService, EnvsService, SettingsService, StoragesService, UsersService
+from .models import App, Env, User, Setting, Storage, Database
+from .services import (AppsService, EnvsService, UsersService, SettingsService,
+                       StoragesService, DatabasesService)
 
 apps = AppsService()
 databases = DatabasesService()

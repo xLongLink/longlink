@@ -1,7 +1,6 @@
 import httpx
-from typing import Any
-
 import src.db as db
+from typing import Any
 
 
 async def raw(url: str, method: str = 'GET', params: dict[str, str] | None = None, json: dict[str, Any] | None = None, timeout: float = 30.0) -> httpx.Response:

@@ -1,6 +1,5 @@
 from typing import Any
-
-from pydantic import BaseModel, Field
+from pydantic import Field, BaseModel
 
 
 class StorageCreate(BaseModel):
