@@ -11,7 +11,7 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/ui/empty';
-import { useApps, useCreateApp } from '@/hooks/use-apps';
+import { useCreateApp, useTools } from '@/hooks/use-apps';
 
 const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
     title: 'Tools',
@@ -30,21 +30,26 @@ const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
                 label: 'URL',
                 value: '{url}',
             },
+            {
+                key: 'type',
+                label: 'Type',
+                value: '{type}',
+            },
         ],
     },
 };
 
 export default function Tools() {
-    const { data: apps = [], isLoading, error } = useApps();
+    const { data: tools = [], isLoading, error } = useTools();
     const { mutateAsync: createApp, isPending } = useCreateApp();
     const [url, setUrl] = useState('');
-    const [token, setToken] = useState('');
+    const [key, setKey] = useState('');
     const [createError, setCreateError] = useState<string | null>(null);
     const loadErrorMessage =
         error instanceof Error ? error.message : 'Failed to load tools';
 
     const onCreateApp = async () => {
-        if (!url.trim() || !token.trim()) {
+        if (!url.trim() || !key.trim()) {
             return;
         }
 
@@ -52,10 +57,10 @@ export default function Tools() {
             setCreateError(null);
             await createApp({
                 url: url.trim(),
-                token: token.trim(),
+                key: key.trim(),
             });
             setUrl('');
-            setToken('');
+            setKey('');
         } catch (err) {
             setCreateError(
                 err instanceof Error ? err.message : 'Failed to create tool'
@@ -67,17 +72,17 @@ export default function Tools() {
         <div className="space-y-6">
             <Hero
                 title="Tools"
-                subtitle={`${apps.length} tools`}
+                subtitle={`${tools.length} tools`}
                 icon="blocks"
                 action="Create Tool"
             >
                 <CreateToolDialog
                     url={url}
-                    token={token}
+                    keyValue={key}
                     isPending={isPending}
                     createError={createError}
                     onUrlChange={setUrl}
-                    onTokenChange={setToken}
+                    onTokenChange={setKey}
                     onCreate={() => void onCreateApp()}
                 />
             </Hero>
@@ -90,7 +95,7 @@ export default function Tools() {
                 <Card className="p-10 text-center text-red-300">
                     {loadErrorMessage}
                 </Card>
-            ) : apps.length === 0 ? (
+            ) : tools.length === 0 ? (
                 <Card className="p-10 text-center">
                     <Empty>
                         <EmptyHeader>
@@ -106,7 +111,7 @@ export default function Tools() {
                     </Empty>
                 </Card>
             ) : (
-                <Table endpoint="/apps" schema={tableSchema} />
+                <Table endpoint="/tools" schema={tableSchema} />
             )}
         </div>
     );
