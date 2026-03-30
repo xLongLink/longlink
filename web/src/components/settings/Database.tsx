@@ -1,15 +1,7 @@
-import { PlusCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { ConnectDatabaseServerDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
-import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
-import { Input } from '@/ui/input';
 import {
     Table,
     TableBody,
@@ -78,63 +70,20 @@ export default function Database() {
                 icon="settings"
                 action="Connect"
             >
-                <DialogContent className="sm:max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Connect database server</DialogTitle>
-                        <DialogDescription>
-                            Register a top-level database server. New
-                            applications will create a dedicated database/name
-                            on this server.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                        <Input
-                            placeholder="Server name"
-                            value={serverName}
-                            onChange={(event) =>
-                                setServerName(event.target.value)
-                            }
-                        />
-                        <Input
-                            placeholder="Host"
-                            value={host}
-                            onChange={(event) => setHost(event.target.value)}
-                        />
-                        <Input
-                            placeholder="Port"
-                            value={port}
-                            onChange={(event) => setPort(event.target.value)}
-                        />
-                        <Input
-                            placeholder="Username"
-                            value={username}
-                            onChange={(event) =>
-                                setUsername(event.target.value)
-                            }
-                        />
-                        <Input
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(event) =>
-                                setPassword(event.target.value)
-                            }
-                            className="md:col-span-2"
-                        />
-                    </div>
-
-                    <div className="flex justify-end">
-                        <Button
-                            variant="outline"
-                            onClick={onConnect}
-                            disabled={!canConnect}
-                        >
-                            <PlusCircle className="h-4 w-4" />
-                            Connect
-                        </Button>
-                    </div>
-                </DialogContent>
+                <ConnectDatabaseServerDialog
+                    serverName={serverName}
+                    host={host}
+                    port={port}
+                    username={username}
+                    password={password}
+                    canConnect={canConnect}
+                    onServerNameChange={setServerName}
+                    onHostChange={setHost}
+                    onPortChange={setPort}
+                    onUsernameChange={setUsername}
+                    onPasswordChange={setPassword}
+                    onConnect={onConnect}
+                />
             </Hero>
 
             <Card className="overflow-hidden">
