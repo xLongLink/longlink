@@ -3,8 +3,8 @@ import Database from '@/components/settings/Database';
 import General from '@/components/settings/General';
 import Container from '@/components/settings/Container';
 import Integrations from '@/components/settings/Integrations';
+import Logging from '@/components/settings/Logging';
 import Permissions from '@/components/settings/Permissions';
-import Security from '@/components/settings/Security';
 import Storage from '@/components/settings/Storage';
 import { Menu, MenuContent, MenuList, MenuSection } from '@/ui/menu';
 import {
@@ -12,7 +12,7 @@ import {
     DatabaseIcon,
     GlobeIcon,
     HardDriveIcon,
-    ShieldIcon,
+    FileTextIcon,
     UnplugIcon,
     UsersRoundIcon,
     CpuIcon,
@@ -54,9 +54,9 @@ export default function SettingsPage() {
                         icon={CpuIcon}
                     />
                     <MenuSection
-                        value="security"
-                        label="Security"
-                        icon={ShieldIcon}
+                        value="logging"
+                        label="Logging"
+                        icon={FileTextIcon}
                     />
                     <MenuSection
                         value="integrations"
@@ -82,8 +82,8 @@ export default function SettingsPage() {
                 <MenuContent value="container">
                     <Container />
                 </MenuContent>
-                <MenuContent value="security">
-                    <Security />
+                <MenuContent value="logging">
+                    <Logging />
                 </MenuContent>
                 <MenuContent value="integrations">
                     <Integrations />
