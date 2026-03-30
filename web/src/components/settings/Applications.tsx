@@ -64,7 +64,7 @@ export default function Applications() {
                 method: 'POST',
                 body: {
                     url: createUrl.trim(),
-                    token: createToken.trim(),
+                    key: createToken.trim(),
                 },
             });
 
@@ -96,7 +96,7 @@ export default function Applications() {
                 method: 'POST',
                 body: {
                     url: normalizedUrl,
-                    token: normalizedToken,
+                    key: normalizedToken,
                 },
             });
 
