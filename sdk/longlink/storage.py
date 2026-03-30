@@ -6,7 +6,7 @@ It shall provide a space where the SDK can store data
 """
 
 
-if envs.dev:
+if envs.DEV:
     # local
     fs = fsspec.filesystem("file")
 
