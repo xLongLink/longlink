@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -35,7 +36,17 @@ class EnvsDev(Envs):
     storage_endpoint: str = 'http://localhost:9000'
 
 
-if os.getenv('DEV', '').lower() in {'1', 'true', 'yes', 'on'}:
-    envs = EnvsDev()  # type: ignore
-else:
-    envs = Envs()  # type: ignore
+@lru_cache(maxsize=1)
+def get_envs() -> Envs:
+    if os.getenv('DEV', '').lower() in {'1', 'true', 'yes', 'on'}:
+        return EnvsDev()  # type: ignore
+
+    return Envs()  # type: ignore
+
+
+class _LazyEnvs:
+    def __getattr__(self, item):
+        return getattr(get_envs(), item)
+
+
+envs = _LazyEnvs()
