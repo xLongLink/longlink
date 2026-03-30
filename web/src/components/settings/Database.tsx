@@ -1,4 +1,4 @@
-import { DatabaseIcon, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import Hero from '@/longlink/Hero';
 import { Button } from '@/ui/button';
@@ -74,7 +74,7 @@ export default function Database() {
         <div className="space-y-6">
             <Hero
                 title="Database Settings"
-                subtitle="Configure top level database servers. Each application gets its own database name on a connected server."
+                subtitle="Connect a database instance."
                 icon="settings"
                 action="Connect"
             >
@@ -175,17 +175,6 @@ export default function Database() {
                         )}
                     </TableBody>
                 </Table>
-            </Card>
-
-            <Card className="border-dashed p-4 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                    <DatabaseIcon className="mt-0.5 h-4 w-4" />
-                    <p>
-                        Connected entries represent top-level database servers.
-                        Each application will create and use its own database
-                        name inside one of these servers.
-                    </p>
-                </div>
             </Card>
         </div>
     );
