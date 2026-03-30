@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sqlalchemy import select
 from src.db.models import App
 from src.db.session import get_session
