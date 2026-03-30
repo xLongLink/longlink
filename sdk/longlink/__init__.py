@@ -1,46 +1,16 @@
 from .app import create_app
 from .cron import Cron
 from .organization import OrganizationSettings, organization
-from .router import Router
+from .router import delete, get, page, pages, patch, post, put, route
 from .ui import Page
 from longlink.ui.select import Select
 from longlink.ui.textarea import Textarea
 
-# Global SDK-managed routing and scheduling registries.
-router = Router()
+# Global SDK-managed scheduling registry.
 cron_manager = Cron()
 
 # Official Starlette application instance.
-app = create_app(router)
-
-
-# Route helpers managed by the SDK global router.
-def get(path: str):
-    return router.get(path)
-
-
-def post(path: str):
-    return router.post(path)
-
-
-def put(path: str):
-    return router.put(path)
-
-
-def patch(path: str):
-    return router.patch(path)
-
-
-def delete(path: str):
-    return router.delete(path)
-
-
-def page(path: str, name: str, icon: str):
-    return router.page(path, name=name, icon=icon)
-
-
-def pages() -> list[dict[str, str]]:
-    return router.pages()
+app = create_app()
 
 
 def cron(schedule: str):
