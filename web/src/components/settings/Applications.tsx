@@ -1,9 +1,9 @@
 import { PlusCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import AppButton from '@/longlink/Button';
 import Hero from '@/longlink/Hero';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
-import { Checkbox } from '@/ui/checkbox';
 import {
     DialogContent,
     DialogDescription,
@@ -11,7 +11,6 @@ import {
     DialogTitle,
 } from '@/ui/dialog';
 import { Input } from '@/ui/input';
-import { Label } from '@/ui/label';
 import {
     Table,
     TableBody,
@@ -29,20 +28,11 @@ type Application = {
     status: 'Active';
 };
 
-const developmentApplication: Application = {
-    name: 'Sample localhost application',
-    slug: 'sample-localhost-application',
-    owner: 'Development',
-    runtime: 'Localhost',
-    status: 'Active',
-};
-
 export default function Applications() {
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
     const [owner, setOwner] = useState('');
     const [runtime, setRuntime] = useState('Python SDK');
-    const [enableDevelopment, setEnableDevelopment] = useState(false);
     const [applications, setApplications] = useState<Application[]>([]);
 
     const canCreate = useMemo(() => {
@@ -53,14 +43,6 @@ export default function Applications() {
             runtime.trim().length > 0
         );
     }, [name, owner, runtime, slug]);
-
-    const visibleApplications = useMemo(() => {
-        if (!enableDevelopment) {
-            return applications;
-        }
-
-        return [developmentApplication, ...applications];
-    }, [applications, enableDevelopment]);
 
     const onCreate = () => {
         if (!canCreate) {
@@ -90,70 +72,66 @@ export default function Applications() {
                 title="Application Settings"
                 subtitle="Control app defaults, permissions, and lifecycle settings"
                 icon="settings"
-                action="Create app"
             >
-                <DialogContent className="sm:max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Create application</DialogTitle>
-                        <DialogDescription>
-                            Register a new application to make it available for
-                            modules, storage bindings, and runtime deployment.
-                        </DialogDescription>
-                    </DialogHeader>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline">Connect app</Button>
 
-                    <div className="grid gap-3 md:grid-cols-2">
-                        <Input
-                            placeholder="Application name"
-                            value={name}
-                            onChange={(event) => setName(event.target.value)}
-                        />
-                        <Input
-                            placeholder="Slug"
-                            value={slug}
-                            onChange={(event) => setSlug(event.target.value)}
-                        />
-                        <Input
-                            placeholder="Owner"
-                            value={owner}
-                            onChange={(event) => setOwner(event.target.value)}
-                        />
-                        <Input
-                            placeholder="Runtime"
-                            value={runtime}
-                            onChange={(event) => setRuntime(event.target.value)}
-                        />
-                    </div>
+                    <AppButton variant="outline" text="Create app">
+                        <DialogContent className="sm:max-w-3xl">
+                            <DialogHeader>
+                                <DialogTitle>Create application</DialogTitle>
+                                <DialogDescription>
+                                    Register a new application to make it
+                                    available for modules, storage bindings, and
+                                    runtime deployment.
+                                </DialogDescription>
+                            </DialogHeader>
 
-                    <div className="flex justify-end">
-                        <Button
-                            variant="outline"
-                            onClick={onCreate}
-                            disabled={!canCreate}
-                        >
-                            <PlusCircle className="h-4 w-4" />
-                            Create
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Hero>
+                            <div className="grid gap-3 md:grid-cols-2">
+                                <Input
+                                    placeholder="Application name"
+                                    value={name}
+                                    onChange={(event) =>
+                                        setName(event.target.value)
+                                    }
+                                />
+                                <Input
+                                    placeholder="Slug"
+                                    value={slug}
+                                    onChange={(event) =>
+                                        setSlug(event.target.value)
+                                    }
+                                />
+                                <Input
+                                    placeholder="Owner"
+                                    value={owner}
+                                    onChange={(event) =>
+                                        setOwner(event.target.value)
+                                    }
+                                />
+                                <Input
+                                    placeholder="Runtime"
+                                    value={runtime}
+                                    onChange={(event) =>
+                                        setRuntime(event.target.value)
+                                    }
+                                />
+                            </div>
 
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <Checkbox
-                        id="enable-development"
-                        checked={enableDevelopment}
-                        onCheckedChange={(checked) =>
-                            setEnableDevelopment(checked === true)
-                        }
-                    />
-                    <Label
-                        htmlFor="enable-development"
-                        className="text-sm font-medium"
-                    >
-                        Enable development
-                    </Label>
+                            <div className="flex justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={onCreate}
+                                    disabled={!canCreate}
+                                >
+                                    <PlusCircle className="h-4 w-4" />
+                                    Create
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </AppButton>
                 </div>
-            </Card>
+            </Hero>
 
             <Card className="overflow-hidden">
                 <Table>
@@ -167,7 +145,7 @@ export default function Applications() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {visibleApplications.length === 0 ? (
+                        {applications.length === 0 ? (
                             <TableRow>
                                 <TableCell
                                     colSpan={5}
@@ -177,7 +155,7 @@ export default function Applications() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            visibleApplications.map((application) => (
+                            applications.map((application) => (
                                 <TableRow
                                     key={`${application.slug}-${application.owner}`}
                                 >
