@@ -1,15 +1,14 @@
-"""Organization synchronization routes."""
-
 from longlink import put, post
-from longlink.organization import OrganizationSettings, organization
+from longlink.organization import OrganizationSettings, org
 
 
 @post('/organization')
 @put('/organization')
 async def update_organization_settings(payload: OrganizationSettings) -> OrganizationSettings:
+    """Organization synchronization routes."""
     updated_settings = payload.model_dump()
 
     for key, value in updated_settings.items():
-        setattr(organization, key, value)
+        setattr(org, key, value)
 
-    return organization
+    return org
