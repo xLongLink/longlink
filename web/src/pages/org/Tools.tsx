@@ -68,7 +68,7 @@ export default function Tools() {
             <Hero
                 title="Tools"
                 subtitle={`${apps.length} tools`}
-                icon="sparkles"
+                icon="blocks"
                 action="Create Tool"
             >
                 <CreateToolDialog

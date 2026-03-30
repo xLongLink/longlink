@@ -15,7 +15,7 @@ export default function Spaces() {
             <Hero
                 title="Spaces"
                 subtitle="Create dedicated work areas for teams, projects, and context."
-                icon="panels-top-left"
+                icon="folder-kanban"
             />
 
             <Card className="p-10 text-center">
