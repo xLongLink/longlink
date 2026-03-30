@@ -1,6 +1,6 @@
 from .ui import Page
 from .app import LongLink
-from .organization import OrganizationSettings
+from .organization import OrganizationSettings, organization
 from .router import Router
 
 from longlink.ui.textarea import Textarea
