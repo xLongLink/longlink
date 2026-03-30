@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react';
-import { CreateApplicationDialog } from '@/components/dialogs';
+import { useEffect, useMemo, useState } from 'react';
+import {
+    ConnectApplicationDialog,
+    CreateApplicationDialog,
+} from '@/components/dialogs';
+import { apiFetch } from '@/lib/api';
 import AppButton from '@/longlink/Button';
 import Hero from '@/longlink/Hero';
-import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import {
     Table,
@@ -14,11 +17,9 @@ import {
 } from '@/ui/table';
 
 type Application = {
+    id: number;
     name: string;
-    slug: string;
-    owner: string;
-    runtime: string;
-    status: 'Active';
+    url: string;
 };
 
 export default function Applications() {
@@ -27,6 +28,11 @@ export default function Applications() {
     const [owner, setOwner] = useState('');
     const [runtime, setRuntime] = useState('Python SDK');
     const [applications, setApplications] = useState<Application[]>([]);
+
+    const [connectUrl, setConnectUrl] = useState('');
+    const [connectToken, setConnectToken] = useState('');
+    const [connectError, setConnectError] = useState<string | null>(null);
+    const [isConnectPending, setIsConnectPending] = useState(false);
 
     const canCreate = useMemo(() => {
         return (
@@ -37,26 +43,57 @@ export default function Applications() {
         );
     }, [name, owner, runtime, slug]);
 
+    const canConnect = useMemo(() => {
+        return connectUrl.trim().length > 0 && connectToken.trim().length > 0;
+    }, [connectToken, connectUrl]);
+
+    const loadApps = async () => {
+        const response = await apiFetch<Application[]>('/apps');
+        setApplications(response);
+    };
+
+    useEffect(() => {
+        void loadApps();
+    }, []);
+
     const onCreate = () => {
         if (!canCreate) {
             return;
         }
 
-        setApplications((current) => [
-            {
-                name: name.trim(),
-                slug: slug.trim(),
-                owner: owner.trim(),
-                runtime: runtime.trim(),
-                status: 'Active',
-            },
-            ...current,
-        ]);
-
         setName('');
         setSlug('');
         setOwner('');
         setRuntime('Python SDK');
+    };
+
+    const onConnect = async () => {
+        if (!canConnect || isConnectPending) {
+            return;
+        }
+
+        setConnectError(null);
+        setIsConnectPending(true);
+
+        try {
+            await apiFetch<Application>('/apps', {
+                method: 'POST',
+                body: {
+                    url: connectUrl,
+                    token: connectToken,
+                },
+            });
+
+            setConnectUrl('');
+            setConnectToken('');
+            await loadApps();
+        } catch (error) {
+            setConnectError(
+                error instanceof Error ? error.message : 'Could not connect app'
+            );
+        } finally {
+            setIsConnectPending(false);
+        }
     };
 
     return (
@@ -67,7 +104,20 @@ export default function Applications() {
                 icon="settings"
             >
                 <div className="flex items-center gap-2">
-                    <Button variant="outline">Connect app</Button>
+                    <AppButton variant="outline" text="Connect app">
+                        <ConnectApplicationDialog
+                            url={connectUrl}
+                            token={connectToken}
+                            canConnect={canConnect}
+                            isPending={isConnectPending}
+                            error={connectError}
+                            onUrlChange={setConnectUrl}
+                            onTokenChange={setConnectToken}
+                            onConnect={() => {
+                                void onConnect();
+                            }}
+                        />
+                    </AppButton>
 
                     <AppButton variant="outline" text="Create app">
                         <CreateApplicationDialog
@@ -91,9 +141,7 @@ export default function Applications() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
-                            <TableHead>Slug</TableHead>
-                            <TableHead>Owner</TableHead>
-                            <TableHead>Runtime</TableHead>
+                            <TableHead>URL</TableHead>
                             <TableHead>Status</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -101,7 +149,7 @@ export default function Applications() {
                         {applications.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={5}
+                                    colSpan={3}
                                     className="py-8 text-center text-muted-foreground"
                                 >
                                     No applications registered yet.
@@ -109,16 +157,12 @@ export default function Applications() {
                             </TableRow>
                         ) : (
                             applications.map((application) => (
-                                <TableRow
-                                    key={`${application.slug}-${application.owner}`}
-                                >
+                                <TableRow key={application.id}>
                                     <TableCell className="font-medium">
                                         {application.name}
                                     </TableCell>
-                                    <TableCell>{application.slug}</TableCell>
-                                    <TableCell>{application.owner}</TableCell>
-                                    <TableCell>{application.runtime}</TableCell>
-                                    <TableCell>{application.status}</TableCell>
+                                    <TableCell>{application.url}</TableCell>
+                                    <TableCell>Active</TableCell>
                                 </TableRow>
                             ))
                         )}
