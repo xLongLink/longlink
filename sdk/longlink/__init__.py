@@ -3,7 +3,6 @@ from .api import get, post
 from .app import LongLink
 from .organization import OrganizationSettings
 from .router import Router
-from .envs import envs
 
 from longlink.ui.textarea import Textarea
 from longlink.ui.select import Select
