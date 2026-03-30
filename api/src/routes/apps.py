@@ -5,6 +5,7 @@ from fastapi import HTTPException, Request, Response
 from pydantic import BaseModel
 
 import src.db as db
+from src.apps.organization import notify_app_organization_settings, organization_settings_payload
 from src.models.apps import AppCreate, AppResponse
 from src.router import router
 
@@ -153,6 +154,9 @@ async def create_app(payload: AppCreate) -> AppResponse:
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    organization_payload = await organization_settings_payload()
+    await notify_app_organization_settings(app.url, organization_payload)
 
     return AppResponse(
         id=app.id,
