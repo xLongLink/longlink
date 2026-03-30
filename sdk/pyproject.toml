@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings",
     "httpx",
     "fsspec",
+    "starlette",
 ]
 requires-python = ">=3.12"
 authors = [
