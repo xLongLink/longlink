@@ -5,6 +5,7 @@ import uvicorn
 import importlib
 from pathlib import Path
 from longlink.cli import setup
+from longlink.cli.build import build_command
 
 
 @click.group()
@@ -43,6 +44,9 @@ def init(folder: str):
     """Initialize a new longlink project"""
     folder_path = Path(folder)
     setup(folder_path)
+
+
+main.add_command(build_command)
 
 
 
