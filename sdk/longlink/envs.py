@@ -6,13 +6,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Envs(BaseSettings):
     """App specific secrets"""
-
     DEV: bool = False
-
-    # LongLink internal
-    # The application key, used to identify the application in the API
-    LLURL: str    # Example: 'sample.longlink.ch'
-    LLKEY: str    # Example: 'samplekey'
+    KEY: str  # Example: 'samplekey'
 
     # The application specific database
     DBURL: str
@@ -28,9 +23,9 @@ class Envs(BaseSettings):
 
 class EnvsDev(Envs):
     DEV: bool = True
-    LLURL: str = 'http://localhost:8000'
-    LLKEY: str = 'longlink-dev'
-    DBURL: str = 'sqlite:///./longlink-dev.db'
+    KEY: str = 'longlink'
+
+    DBURL: str = 'sqlite:///./dev.db'
     storage_key: str = 'dev'
     storage_secret: str = 'dev'
     storage_endpoint: str = 'http://localhost:9000'
