@@ -1,11 +1,12 @@
 from sqlalchemy import select
+
 from src.config import config
 from src.db.models import Setting
 from src.db.session import get_session
 
 
 class SettingsService:
-    async def list(self, *, app_id: int | None = None) -> list[Setting]:
+    async def list(self, *, app_id: str | None = None) -> list[Setting]:
         '''Return all settings for the selected scope.'''
         Session = await get_session()
         async with Session() as session:
@@ -18,7 +19,7 @@ class SettingsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def get(self, key: str, *, app_id: int | None = None) -> Setting | None:
+    async def get(self, key: str, *, app_id: str | None = None) -> Setting | None:
         '''Return a setting by key and scope.'''
         normalized_key = config.normalize_key(key)
         Session = await get_session()
@@ -32,7 +33,7 @@ class SettingsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def set(self, key: str, value: str, *, app_id: int | None = None) -> Setting:
+    async def set(self, key: str, value: str, *, app_id: str | None = None) -> Setting:
         '''Create or update a setting by key and scope.'''
         normalized_key = config.normalize_key(key)
         Session = await get_session()
