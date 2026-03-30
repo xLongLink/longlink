@@ -4,35 +4,33 @@ from typing import Any, get_type_hints
 from pydantic import BaseModel
 from longlink.cron import Cron
 from longlink.router import Router
+from starlette.routing import Route
+from starlette.requests import Request
+from starlette.responses import Response, JSONResponse, PlainTextResponse
+from starlette.applications import Starlette
 
 
 class LongLink(Router, Cron):
+    def __init__(self) -> None:
+        super().__init__()
+        self._starlette = Starlette(
+            routes=[Route("/{full_path:path}", self._dispatch, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])]
+        )
+
     async def __call__(self, scope, receive, send):
-        if scope['type'] != 'http':
-            return
+        await self._starlette(scope, receive, send)
 
-        method = scope['method']
-        path = scope['path']
-
-        query_string = scope.get('query_string', b'')
-        if isinstance(query_string, bytes):
-            query_string = query_string.decode()
+    async def _dispatch(self, request: Request) -> Response:
+        method = request.method
+        path = request.url.path
+        query_string = request.url.query
 
         handler, params = self.match(method, path, query_string=query_string)
 
         if not handler:
-            await send({
-                'type': 'http.response.start',
-                'status': 404,
-                'headers': [],
-            })
-            await send({
-                'type': 'http.response.body',
-                'body': b'Not Found',
-            })
-            return
+            return PlainTextResponse("Not Found", status_code=404)
 
-        body_payload = await self._read_json_body(scope, receive)
+        body_payload = await self._read_json_body(request)
         call_params = self._merge_body_params(handler, params, body_payload)
 
         if call_params:
@@ -47,74 +45,39 @@ class LongLink(Router, Cron):
             from longlink.ui import Page
 
             if return_type is not Page or not isinstance(body, Page):
-                await send({
-                    'type': 'http.response.start',
-                    'status': 500,
-                    'headers': [(b'content-type', b'text/plain')],
-                })
-                await send({
-                    'type': 'http.response.body',
-                    'body': b'Invalid response type. Page routes must return longlink.ui.Page.',
-                })
-                return
+                return PlainTextResponse(
+                    "Invalid response type. Page routes must return longlink.ui.Page.",
+                    status_code=500,
+                )
 
-            headers = [(b'content-type', b'application/json')]
-            body_bytes = json.dumps(list(body)).encode()
+            return JSONResponse(list(body))
         elif return_type and isinstance(return_type, type) and issubclass(return_type, BaseModel):
             if not isinstance(body, return_type):
-                await send({
-                    'type': 'http.response.start',
-                    'status': 500,
-                    'headers': [(b'content-type', b'text/plain')],
-                })
-                await send({
-                    'type': 'http.response.body',
-                    'body': f'Invalid response type. Expected {return_type.__name__}.'.encode(),
-                })
-                return
+                return PlainTextResponse(
+                    f"Invalid response type. Expected {return_type.__name__}.",
+                    status_code=500,
+                )
 
             if hasattr(body, 'model_dump_json'):
                 response_body = body.model_dump_json()
             else:
                 response_body = body.json()
-            headers = [(b'content-type', b'application/json')]
-            body_bytes = response_body.encode()
+            return Response(content=response_body, media_type="application/json")
         else:
             if isinstance(body, dict):
-                headers = [(b'content-type', b'application/json')]
-                body_bytes = json.dumps(body).encode()
-            else:
-                headers = [(b'content-type', b'text/plain')]
-                if isinstance(body, bytes):
-                    body_bytes = body
-                else:
-                    body_bytes = str(body).encode()
+                return JSONResponse(body)
 
-        await send({
-            'type': 'http.response.start',
-            'status': 200,
-            'headers': headers,
-        })
-        await send({
-            'type': 'http.response.body',
-            'body': body_bytes,
-        })
+            if isinstance(body, bytes):
+                return Response(content=body, media_type="text/plain")
 
-    async def _read_json_body(self, scope, receive) -> dict[str, Any] | None:
-        method = scope.get('method', '').upper()
+            return PlainTextResponse(str(body))
+
+    async def _read_json_body(self, request: Request) -> dict[str, Any] | None:
+        method = request.method.upper()
         if method in {'GET', 'HEAD', 'OPTIONS'}:
             return None
 
-        body = b''
-        more_body = True
-        while more_body:
-            message = await receive()
-            if message.get('type') != 'http.request':
-                continue
-
-            body += message.get('body', b'')
-            more_body = message.get('more_body', False)
-
+        body = await request.body()
         if body == b'':
             return None
 
