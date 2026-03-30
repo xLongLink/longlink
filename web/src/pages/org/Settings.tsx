@@ -15,7 +15,7 @@ import {
     ShieldIcon,
     UnplugIcon,
     UsersRoundIcon,
-    WrenchIcon,
+    CpuIcon,
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -50,8 +50,8 @@ export default function SettingsPage() {
                     />
                     <MenuSection
                         value="container"
-                        label="Container"
-                        icon={WrenchIcon}
+                        label="Compute"
+                        icon={CpuIcon}
                     />
                     <MenuSection
                         value="security"
