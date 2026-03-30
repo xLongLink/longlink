@@ -31,6 +31,8 @@ dev = [
     'ruff==0.14.0',
     'pytest==8.4.2',
     'isort==8.0.1',
+    'testcontainers[postgres]==4.13.2',
+    'psycopg2-binary==2.9.11',
 ]
 
 [tool.setuptools]
