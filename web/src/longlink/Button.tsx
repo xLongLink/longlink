@@ -1,4 +1,9 @@
-import { useState, type ComponentProps, type ReactNode } from 'react';
+import {
+    useEffect,
+    useState,
+    type ComponentProps,
+    type ReactNode,
+} from 'react';
 import { useParams } from 'react-router';
 import { Button as UIButton } from '@/ui/button';
 import { Dialog } from '@/ui/dialog';
@@ -9,6 +14,7 @@ type ButtonProps = {
     variant?: ComponentProps<typeof UIButton>['variant'];
     url?: string;
     children?: ReactNode;
+    closeSignal?: number;
 };
 
 const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '');
@@ -18,11 +24,18 @@ export function Button({
     variant = 'default',
     url,
     children,
+    closeSignal,
 }: ButtonProps) {
     const [open, setOpen] = useState(false);
     const { app } = useParams();
     const hasDialog = Boolean(children);
     const normalizedUrl = normalizePath(url ?? '');
+
+    useEffect(() => {
+        if (hasDialog) {
+            setOpen(false);
+        }
+    }, [closeSignal, hasDialog]);
 
     const handleClick = async () => {
         if (hasDialog) {
