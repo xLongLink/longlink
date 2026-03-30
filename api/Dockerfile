@@ -1,3 +1,11 @@
+FROM oven/bun:1 AS web-builder
+
+WORKDIR /web
+COPY web/package.json web/bun.lock ./
+RUN bun install --frozen-lockfile
+COPY web/ ./
+RUN bun run build
+
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -7,6 +15,7 @@ WORKDIR /app
 
 COPY api /app
 RUN pip install --no-cache-dir .
+COPY --from=web-builder /web/dist /app/static
 
 EXPOSE 8000
 
