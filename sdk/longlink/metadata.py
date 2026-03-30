@@ -1,5 +1,4 @@
 import json
-from functools import lru_cache
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -11,10 +10,11 @@ class Metadata(BaseModel):
     version: str = '0.0.0'
 
 
-@lru_cache(maxsize=1)
-def get_metadata() -> Metadata:
+def load_metadata() -> Metadata:
     metadata_file = Path.cwd() / 'metadata.json'
+
     if not metadata_file.exists():
+        print('Warning: metadata.json is missing. Using default metadata values.')
         return Metadata()
 
     try:
@@ -28,12 +28,4 @@ def get_metadata() -> Metadata:
     return Metadata.model_validate(payload)
 
 
-class _LazyMetadata:
-    def __getattr__(self, item):
-        return getattr(get_metadata(), item)
-
-    def model_dump(self) -> dict[str, object]:
-        return get_metadata().model_dump()
-
-
-metadata = _LazyMetadata()
+metadata = load_metadata()
