@@ -14,6 +14,9 @@ class Env(BaseSettings):
     ENV_GITHUB_CLIENT_ID: str | None = None
     ENV_GITHUB_CLIENT_SECRET: str | None = None
 
+    # Web URL used for auth redirects
+    URL: str = 'http://localhost:5173'
+
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
 
@@ -27,6 +30,9 @@ class DevEnv(Env):
     # OAuth credentials
     ENV_GITHUB_CLIENT_ID: str | None = None
     ENV_GITHUB_CLIENT_SECRET: str | None = None
+
+    # Web URL used for auth redirects
+    URL: str = 'http://localhost:5173'
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
