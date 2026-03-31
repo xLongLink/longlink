@@ -7,30 +7,24 @@ from src.apps.organization import (
 from src.models.apps import AppCreate, AppResponse
 from src.router import router
 from src.utils import apps, url
+from enum import Enum
 
-VALID_APP_TYPES = {'tool', 'space', 'process'}
+
+class AppType(str, Enum):
+    tool = 'tool'
+    space = 'space'
+    process = 'process'
 
 
 @router.get('/apps')
-async def list_apps(type: str | None = None) -> list[AppResponse]:
-    """List all registered apps, optionally filtered by app type."""
+async def list_apps(type: AppType | None = None) -> list[AppResponse]:
     if type is not None:
-        if type not in VALID_APP_TYPES:
-            raise HTTPException(
-                status_code=400,
-                detail='App type must be one of: tool, space, process',
-            )
         registered_apps = await db.apps.list_by_type(type)
     else:
         registered_apps = await db.apps.list()
 
     return [
-        AppResponse(
-            id=app.id,
-            name=app.name,
-            url=app.url,
-            type=app.type,
-        )
+        AppResponse(id=app.id, name=app.name, url=app.url, type=app.type)
         for app in registered_apps
     ]
 
