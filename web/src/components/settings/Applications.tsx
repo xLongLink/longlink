@@ -17,7 +17,7 @@ import {
 } from '@/ui/table';
 
 type Application = {
-    id: number;
+    id: string;
     name: string;
     url: string;
 };
@@ -31,6 +31,7 @@ export default function Applications() {
 
     const [connectUrl, setConnectUrl] = useState('');
     const [connectToken, setConnectToken] = useState('');
+    const [connectId, setConnectId] = useState('');
     const [connectError, setConnectError] = useState<string | null>(null);
     const [isConnectPending, setIsConnectPending] = useState(false);
     const [connectCloseSignal, setConnectCloseSignal] = useState(0);
@@ -88,6 +89,7 @@ export default function Applications() {
 
         const normalizedUrl = connectUrl.trim();
         const normalizedToken = connectToken.trim();
+        const normalizedId = connectId.trim();
 
         setConnectError(null);
         setIsConnectPending(true);
@@ -96,11 +98,13 @@ export default function Applications() {
             await apiFetch<Application>('/apps', {
                 method: 'POST',
                 body: {
+                    id: normalizedId.length > 0 ? normalizedId : undefined,
                     url: normalizedUrl,
                     key: normalizedToken,
                 },
             });
 
+            setConnectId('');
             setConnectUrl('');
             setConnectToken('');
             setConnectCloseSignal((currentSignal) => currentSignal + 1);
@@ -130,9 +134,11 @@ export default function Applications() {
                         <ConnectApplicationDialog
                             url={connectUrl}
                             token={connectToken}
+                            id={connectId}
                             canConnect={canConnect}
                             isPending={isConnectPending}
                             error={connectError}
+                            onIdChange={setConnectId}
                             onUrlChange={setConnectUrl}
                             onTokenChange={setConnectToken}
                             onConnect={() => {

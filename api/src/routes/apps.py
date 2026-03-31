@@ -77,11 +77,16 @@ async def create_app(payload: AppCreate) -> AppResponse:
         )
 
     try:
+        app_id = payload.id.strip() if payload.id is not None else None
+        if app_id == '':
+            app_id = None
+
         app = await db.apps.create(
             app_name,
             url=app_url,
             key=payload.key,
             app_type=app_type,
+            app_id=app_id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
