@@ -1,44 +1,38 @@
 import src.db as db
 from fastapi import HTTPException
-from src.utils import url, apps
-from src.router import router
+from src.apps.organization import (
+    notify_app_organization_settings,
+    organization_settings_payload,
+)
 from src.models.apps import AppCreate, AppResponse
-from src.apps.organization import (organization_settings_payload,
-                                   notify_app_organization_settings)
+from src.router import router
+from src.utils import apps, url
 
-
-def serialize_app(app: db.App) -> AppResponse:
-    return AppResponse(id=app.id, name=app.name, url=app.url, type=app.type)
-
-
-async def list_apps_by_type(app_type: str) -> list[AppResponse]:
-    registered_apps = await db.apps.list_by_type(app_type)
-    return [serialize_app(app) for app in registered_apps]
+VALID_APP_TYPES = {'tool', 'space', 'process'}
 
 
 @router.get('/apps')
-async def list_apps() -> list[AppResponse]:
-    """List all registered apps."""
-    registered_apps = await db.apps.list()
-    return [serialize_app(app) for app in registered_apps]
+async def list_apps(type: str | None = None) -> list[AppResponse]:
+    """List all registered apps, optionally filtered by app type."""
+    if type is not None:
+        if type not in VALID_APP_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail='App type must be one of: tool, space, process',
+            )
+        registered_apps = await db.apps.list_by_type(type)
+    else:
+        registered_apps = await db.apps.list()
 
-
-@router.get('/tools')
-async def list_tools() -> list[AppResponse]:
-    """List all tools apps."""
-    return await list_apps_by_type('tool')
-
-
-@router.get('/spaces')
-async def list_spaces() -> list[AppResponse]:
-    """List all spaces apps."""
-    return await list_apps_by_type('space')
-
-
-@router.get('/processes')
-async def list_processes() -> list[AppResponse]:
-    """List all processes apps."""
-    return await list_apps_by_type('process')
+    return [
+        AppResponse(
+            id=app.id,
+            name=app.name,
+            url=app.url,
+            type=app.type,
+        )
+        for app in registered_apps
+    ]
 
 
 @router.post('/apps')
@@ -70,7 +64,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
             detail='App metadata response is invalid',
         ) from exc
 
-    if app_type not in {'tool', 'space', 'process'}:
+    if app_type not in VALID_APP_TYPES:
         raise HTTPException(
             status_code=400,
             detail='App metadata type must be one of: tool, space, process',
@@ -94,4 +88,4 @@ async def create_app(payload: AppCreate) -> AppResponse:
     organization_payload = await organization_settings_payload()
     await notify_app_organization_settings(app.url, organization_payload)
 
-    return serialize_app(app)
+    return AppResponse(id=app.id, name=app.name, url=app.url, type=app.type)
