@@ -13,15 +13,17 @@ def create_app() -> Starlette:
     async def endpoint(request: Request) -> Response:
         return await dispatch_request(request)
 
-    return Starlette(
-        routes=[
-            Route(
-                "/{full_path:path}",
-                endpoint,
-                methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-            )
-        ]
-    )
+    methods_by_path: dict[str, set[str]] = {}
+    for registered_route in router._routes:
+        path = registered_route.template.split("?", 1)[0]
+        methods_by_path.setdefault(path, set()).add(registered_route.method)
+
+    routes = [
+        Route(path, endpoint, methods=sorted(methods))
+        for path, methods in methods_by_path.items()
+    ]
+
+    return Starlette(routes=routes)
 
 
 async def dispatch_request(request: Request) -> Response:
