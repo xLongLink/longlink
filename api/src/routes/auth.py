@@ -7,8 +7,6 @@ from src.router import router
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
-URL = 'http://localhost:5173'
-
 
 @router.get('/login')
 async def login_methods() -> list[str]:
@@ -66,7 +64,7 @@ async def auth_github(request: Request):
     )
 
     request.session['userid'] = user.id
-    return RedirectResponse(URL)
+    return RedirectResponse(env.URL)
 
 
 @router.get('/login/localhost')
@@ -95,7 +93,7 @@ async def login_localhost(request: Request):
             user = updated_user
 
     request.session['userid'] = user.id
-    return RedirectResponse(URL)
+    return RedirectResponse(env.URL)
 
 
 @router.get('/logout')
