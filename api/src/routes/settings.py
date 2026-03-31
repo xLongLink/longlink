@@ -1,9 +1,9 @@
 import src.db as db
 from typing import List
 from fastapi import Query, HTTPException
+from src.utils import apps
 from src.router import router
 from src.models.settings import SettingSet, SettingSetItem, SettingResponse
-from src.apps.organization import notify_all_apps_organization_settings
 
 
 def _invalid_key_error(error: ValueError) -> HTTPException:
@@ -52,7 +52,7 @@ async def set_settings(payload: List[SettingSetItem]) -> List[SettingResponse]:
             )
         )
 
-    await notify_all_apps_organization_settings()
+    await apps.org()
 
     return results
 
@@ -81,7 +81,7 @@ async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
     except ValueError as error:
         raise _invalid_key_error(error) from error
 
-    await notify_all_apps_organization_settings()
+    await apps.org()
 
     return SettingResponse(
         key=setting.key,
@@ -97,7 +97,7 @@ async def set_setting(key: str, payload: SettingSet) -> SettingResponse:
     except ValueError as error:
         raise _invalid_key_error(error) from error
 
-    await notify_all_apps_organization_settings()
+    await apps.org()
 
     return SettingResponse(
         key=setting.key,
