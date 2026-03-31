@@ -3,8 +3,6 @@ from fastapi import HTTPException
 from src.utils import apps
 from src.router import router
 from src.models.apps import AppType, AppCreate, AppMetadata, AppResponse
-from src.apps.organization import (organization_settings_payload,
-                                   notify_app_organization_settings)
 
 
 @router.get('/apps')
@@ -41,7 +39,6 @@ async def create_app(payload: AppCreate) -> AppResponse:
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    organization_payload = await organization_settings_payload()
-    await notify_app_organization_settings(app.url, organization_payload)
+    await apps.org(app.id)
 
     return AppResponse(id=app.id, name=app.name, url=app.url, type=app.type)
