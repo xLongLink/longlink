@@ -1,8 +1,8 @@
 import httpx
-import asyncio
 import src.db as db
+import asyncio
 from typing import Any, Literal
-
+from src.organization import organization_settings_payload
 
 HttpMethod = Literal['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
 _lock = asyncio.Lock()
@@ -83,4 +83,16 @@ async def delete(uuid: str, url: str, params: dict[str, str] | None = None ):
 
 async def org(uuid: str | None = None):
     """Update the organization settings for the app with the given uuid, or all apps if uuid is None."""
-    pass
+    payload = await organization_settings_payload()
+
+    if uuid is not None:
+        app = await db.apps.get_by_uuid(uuid)
+        if app is None:
+            raise ValueError('App not found')
+
+        await raw(f'{app.url.rstrip("/")}/organization', method='PUT', json=payload)
+        return
+
+    registered_apps = await db.apps.list()
+    for app in registered_apps:
+        await raw(f'{app.url.rstrip("/")}/organization', method='PUT', json=payload)
