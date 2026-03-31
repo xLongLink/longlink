@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 
 class AppCreate(BaseModel):
+    id: str | None = None
     url: str
     key: str
 

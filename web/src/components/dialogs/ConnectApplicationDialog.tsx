@@ -9,22 +9,26 @@ import {
 import { Input } from '@/ui/input';
 
 type ConnectApplicationDialogProps = {
+    id: string;
     url: string;
     token: string;
     canConnect: boolean;
     isPending: boolean;
     error: string | null;
+    onIdChange: (value: string) => void;
     onUrlChange: (value: string) => void;
     onTokenChange: (value: string) => void;
     onConnect: () => void;
 };
 
 export default function ConnectApplicationDialog({
+    id,
     url,
     token,
     canConnect,
     isPending,
     error,
+    onIdChange,
     onUrlChange,
     onTokenChange,
     onConnect,
@@ -39,18 +43,32 @@ export default function ConnectApplicationDialog({
                 </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-3 md:grid-cols-2">
-                <Input
-                    placeholder="localhost:1707"
-                    value={url}
-                    onChange={(event) => onUrlChange(event.target.value)}
-                />
-                <Input
-                    type="password"
-                    placeholder="App key"
-                    value={token}
-                    onChange={(event) => onTokenChange(event.target.value)}
-                />
+            <div className="grid gap-3">
+                <div className="grid gap-2">
+                    <p className="text-sm text-muted-foreground">Id</p>
+                    <Input
+                        placeholder="Optional app id"
+                        value={id}
+                        onChange={(event) => onIdChange(event.target.value)}
+                    />
+                </div>
+                <div className="grid gap-2">
+                    <p className="text-sm text-muted-foreground">Host</p>
+                    <Input
+                        placeholder="localhost:1707"
+                        value={url}
+                        onChange={(event) => onUrlChange(event.target.value)}
+                    />
+                </div>
+                <div className="grid gap-2">
+                    <p className="text-sm text-muted-foreground">Key</p>
+                    <Input
+                        type="password"
+                        placeholder="App key"
+                        value={token}
+                        onChange={(event) => onTokenChange(event.target.value)}
+                    />
+                </div>
             </div>
 
             <div className="flex justify-end">
