@@ -1,19 +1,10 @@
 import src.db as db
 from fastapi import HTTPException
-from src.apps.organization import (
-    notify_app_organization_settings,
-    organization_settings_payload,
-)
-from src.models.apps import AppCreate, AppResponse
+from src.utils import url, apps
 from src.router import router
-from src.utils import apps, url
-from enum import Enum
-
-
-class AppType(str, Enum):
-    tool = 'tool'
-    space = 'space'
-    process = 'process'
+from src.models.apps import AppType, AppCreate, AppMetadata, AppResponse
+from src.apps.organization import (organization_settings_payload,
+                                   notify_app_organization_settings)
 
 
 @router.get('/apps')
@@ -49,32 +40,20 @@ async def create_app(payload: AppCreate) -> AppResponse:
         )
 
     try:
-        metadata = metadata_response.json()
-        app_name = metadata['name']
-        app_type = metadata.get('type', 'tool')
-    except (ValueError, KeyError, TypeError) as exc:
+        metadata = AppMetadata.model_validate(metadata_response.json())
+    except ValueError as exc:
         raise HTTPException(
             status_code=400,
             detail='App metadata response is invalid',
         ) from exc
 
-    if app_type not in VALID_APP_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail='App metadata type must be one of: tool, space, process',
-        )
-
     try:
-        app_id = payload.id.strip() if payload.id is not None else None
-        if app_id == '':
-            app_id = None
-
         app = await db.apps.create(
-            app_name,
+            metadata.name,
             url=app_url,
             key=payload.key,
-            app_type=app_type,
-            app_id=app_id,
+            app_type=metadata.type,
+            app_id=payload.id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc

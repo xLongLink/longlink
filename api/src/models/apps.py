@@ -1,4 +1,11 @@
-from pydantic import BaseModel
+from enum import Enum
+from pydantic import BaseModel, field_validator
+
+
+class AppType(str, Enum):
+    tool = 'tool'
+    space = 'space'
+    process = 'process'
 
 
 class AppCreate(BaseModel):
@@ -6,9 +13,22 @@ class AppCreate(BaseModel):
     url: str
     key: str
 
+    @field_validator('id', mode='before')
+    @classmethod
+    def normalize_id(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class AppMetadata(BaseModel):
+    name: str
+    type: AppType = AppType.tool
+
 
 class AppResponse(BaseModel):
     id: str
     name: str
     url: str
-    type: str
+    type: AppType
