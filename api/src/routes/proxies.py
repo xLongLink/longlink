@@ -9,7 +9,9 @@ ALLOWED_METHODS = ['GET', 'POST']
 
 
 async def proxy_request(req: Request, app_name: str, full_path: str = '') -> Response:
-    app = await db.apps.get_by_name(app_name)
+    app = await db.apps.get_by_uuid(app_name)
+    if not app:
+        app = await db.apps.get_by_name(app_name)
     if not app:
         raise HTTPException(status_code=404, detail=f"App '{app_name}' not found")
 
