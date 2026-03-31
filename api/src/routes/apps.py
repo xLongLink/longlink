@@ -1,6 +1,6 @@
 import src.db as db
 from fastapi import HTTPException
-from src.utils import url, apps
+from src.utils import apps
 from src.router import router
 from src.models.apps import AppType, AppCreate, AppMetadata, AppResponse
 from src.apps.organization import (organization_settings_payload,
@@ -21,12 +21,7 @@ async def list_apps(type: AppType | None = None) -> list[AppResponse]:
 @router.post('/apps')
 async def create_app(payload: AppCreate) -> AppResponse:
     """Create a new app."""
-    try:
-        app_url = url.normalize(payload.url)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    metadata_response = await apps.raw(f'{app_url.rstrip("/")}/metadata.json', "GET")
+    metadata_response = await apps.raw(f'{payload.url.rstrip("/")}/metadata.json', "GET")
     if not metadata_response.is_success:
         raise HTTPException( status_code=400, detail=f'Unable to fetch metadata.json ({metadata_response.status_code})')
 
@@ -38,7 +33,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
     try:
         app = await db.apps.create(
             metadata.name,
-            url=app_url,
+            url=payload.url,
             key=payload.key,
             app_type=metadata.type,
             app_id=payload.id,
