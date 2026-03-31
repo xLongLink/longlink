@@ -1,10 +1,12 @@
 """
-This folder contains the compute provider adapters
+Compute provider adapters for control-plane integrations.
 
-Podman
-Docker
-
-Google Cloud Run
-AWS Fargate
-Azure Container Apps
+- Docker
+- Podman
 """
+
+from src.compute.docker import Docker
+from src.compute.podman import Podman
+from src.compute.__root__ import Compute
+
+__all__ = ['Compute', 'Docker', 'Podman']
