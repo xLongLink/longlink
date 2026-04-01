@@ -19,7 +19,11 @@ export default defineConfig(({ mode }) => {
         },
 
         build: {
-            outDir: isSDK ? 'dist/sdk' : 'dist/api',
+            outDir: path.resolve(
+                __dirname,
+                isSDK ? '../sdk/longlink/static' : '../api/static'
+            ),
+            emptyOutDir: true,
         },
     };
 });
