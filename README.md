@@ -9,22 +9,24 @@ Instead of fragmented SaaS tools or custom-built systems, LongLink offers a stru
 
 ## Development
 
-Install [uv](https://astral.sh/uv/) and create a virtual environment `uv venv`:
+Create and activate a virtual environment with standard Python tooling:
 
 ```bash
-uv pip install -e './api[dev]' -e './sdk'
+python -m venv .venv
+source .venv/bin/activate
+pip install -e './api[dev]' -e './sdk'
 ```
 
 Run control plane:
 
 ```bash
-uv run --project api python main.py
+python api/main.py
 ```
 
 Run sample app:
 
 ```bash
-uv run --project sdk python sample/main.py
+python sdk/sample/main.py
 ```
 
 ### Frontend
