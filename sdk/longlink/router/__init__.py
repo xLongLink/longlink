@@ -57,7 +57,7 @@ def _format_response(handler: Handler, body: Any) -> Response | JSONResponse | P
 
         return Response(content=response_body, media_type="application/json")
 
-    if isinstance(body, dict):
+    if isinstance(body, (dict, list)):
         return JSONResponse(body)
 
     if isinstance(body, bytes):
