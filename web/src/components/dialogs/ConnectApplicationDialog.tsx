@@ -1,11 +1,6 @@
 import { Link2 } from 'lucide-react';
 import { Button } from '@/ui/button';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Input } from '@/ui/input';
 
 type ConnectApplicationDialogProps = {
@@ -38,8 +33,7 @@ export default function ConnectApplicationDialog({
             <DialogHeader>
                 <DialogTitle>Connect app</DialogTitle>
                 <DialogDescription>
-                    Add the app URL and app key so LongLink can fetch
-                    /metadata.json and register the app.
+                    Add the app URL and app key so LongLink can fetch /metadata.json and register the app.
                 </DialogDescription>
             </DialogHeader>
 
@@ -72,11 +66,7 @@ export default function ConnectApplicationDialog({
             </div>
 
             <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    disabled={!canConnect || isPending}
-                    onClick={onConnect}
-                >
+                <Button variant="outline" disabled={!canConnect || isPending} onClick={onConnect}>
                     <Link2 className="h-4 w-4" />
                     {isPending ? 'Connecting...' : 'Connect'}
                 </Button>

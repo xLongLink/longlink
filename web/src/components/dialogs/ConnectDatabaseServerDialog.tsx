@@ -1,11 +1,6 @@
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/ui/button';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Input } from '@/ui/input';
 
 type ConnectDatabaseServerDialogProps = {
@@ -42,8 +37,8 @@ export default function ConnectDatabaseServerDialog({
             <DialogHeader>
                 <DialogTitle>Connect database server</DialogTitle>
                 <DialogDescription>
-                    Register a top-level database server. New applications will
-                    create a dedicated database/name on this server.
+                    Register a top-level database server. New applications will create a dedicated database/name on this
+                    server.
                 </DialogDescription>
             </DialogHeader>
 
@@ -53,16 +48,8 @@ export default function ConnectDatabaseServerDialog({
                     value={serverName}
                     onChange={(event) => onServerNameChange(event.target.value)}
                 />
-                <Input
-                    placeholder="Host"
-                    value={host}
-                    onChange={(event) => onHostChange(event.target.value)}
-                />
-                <Input
-                    placeholder="Port"
-                    value={port}
-                    onChange={(event) => onPortChange(event.target.value)}
-                />
+                <Input placeholder="Host" value={host} onChange={(event) => onHostChange(event.target.value)} />
+                <Input placeholder="Port" value={port} onChange={(event) => onPortChange(event.target.value)} />
                 <Input
                     placeholder="Username"
                     value={username}
@@ -78,11 +65,7 @@ export default function ConnectDatabaseServerDialog({
             </div>
 
             <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    onClick={onConnect}
-                    disabled={!canConnect}
-                >
+                <Button variant="outline" onClick={onConnect} disabled={!canConnect}>
                     <PlusCircle className="h-4 w-4" />
                     Connect
                 </Button>

@@ -16,11 +16,7 @@ type UseApiTableParams = {
     sorting: SortingState;
 };
 
-export function useApiTable<T extends object>({
-    endpoint,
-    pagination,
-    sorting,
-}: UseApiTableParams) {
+export function useApiTable<T extends object>({ endpoint, pagination, sorting }: UseApiTableParams) {
     const [data, setData] = useState<T[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);

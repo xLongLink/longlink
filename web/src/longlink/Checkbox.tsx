@@ -8,11 +8,7 @@ type CheckboxProps = {
     checked?: boolean;
 };
 
-export function Checkbox({
-    label,
-    description,
-    checked = false,
-}: CheckboxProps) {
+export function Checkbox({ label, description, checked = false }: CheckboxProps) {
     const id = useId();
 
     return (
@@ -20,11 +16,7 @@ export function Checkbox({
             <UICheckbox id={id} defaultChecked={checked} />
             <div className="space-y-1 leading-none">
                 {label ? <Label htmlFor={id}>{label}</Label> : null}
-                {description ? (
-                    <p className="text-muted-foreground text-sm">
-                        {description}
-                    </p>
-                ) : null}
+                {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
             </div>
         </div>
     );

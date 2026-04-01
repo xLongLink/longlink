@@ -20,9 +20,7 @@ import Spaces from '@/pages/org/Spaces';
 import Processes from '@/pages/org/Processes';
 import Longlink from '@/pages/org/Longlink';
 
-const withAuth = (element: ReactElement) => (
-    <RequireAuth>{element}</RequireAuth>
-);
+const withAuth = (element: ReactElement) => <RequireAuth>{element}</RequireAuth>;
 
 const router = createBrowserRouter([
     {

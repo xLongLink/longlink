@@ -1,20 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-    ConnectApplicationDialog,
-    CreateApplicationDialog,
-} from '@/components/dialogs';
+import { ConnectApplicationDialog, CreateApplicationDialog } from '@/components/dialogs';
 import { apiFetch } from '@/lib/api';
 import AppButton from '@/longlink/Button';
 import Hero from '@/longlink/Hero';
 import { Card } from '@/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
 type Application = {
     id: string;
@@ -74,9 +64,7 @@ export default function Applications() {
             setCreateToken('');
             await loadApps();
         } catch (error) {
-            setCreateError(
-                error instanceof Error ? error.message : 'Could not create app'
-            );
+            setCreateError(error instanceof Error ? error.message : 'Could not create app');
         } finally {
             setIsCreatePending(false);
         }
@@ -110,9 +98,7 @@ export default function Applications() {
             setConnectCloseSignal((currentSignal) => currentSignal + 1);
             await loadApps();
         } catch (error) {
-            setConnectError(
-                error instanceof Error ? error.message : 'Could not connect app'
-            );
+            setConnectError(error instanceof Error ? error.message : 'Could not connect app');
         } finally {
             setIsConnectPending(false);
         }
@@ -126,11 +112,7 @@ export default function Applications() {
                 icon="settings"
             >
                 <div className="flex items-center gap-2">
-                    <AppButton
-                        variant="outline"
-                        text="Connect app"
-                        closeSignal={connectCloseSignal}
-                    >
+                    <AppButton variant="outline" text="Connect app" closeSignal={connectCloseSignal}>
                         <ConnectApplicationDialog
                             url={connectUrl}
                             token={connectToken}
@@ -176,19 +158,14 @@ export default function Applications() {
                     <TableBody>
                         {applications.length === 0 ? (
                             <TableRow>
-                                <TableCell
-                                    colSpan={3}
-                                    className="py-8 text-center text-muted-foreground"
-                                >
+                                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
                                     No applications registered yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             applications.map((application) => (
                                 <TableRow key={application.id}>
-                                    <TableCell className="font-medium">
-                                        {application.name}
-                                    </TableCell>
+                                    <TableCell className="font-medium">{application.name}</TableCell>
                                     <TableCell>{application.url}</TableCell>
                                     <TableCell>Active</TableCell>
                                 </TableRow>

@@ -35,9 +35,7 @@ const parseDateValue = (rawValue: string): Date | undefined => {
     return isValid(parsed) ? parsed : undefined;
 };
 
-const parseDatetimeValue = (
-    rawValue: string
-): { date?: Date; time: string } => {
+const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => {
     if (!rawValue) {
         return { date: undefined, time: '00:00' };
     }
@@ -78,9 +76,7 @@ export function Input({
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(() =>
         kind === 'date' ? parseDateValue(defaultFieldValue) : undefined
     );
-    const [selectedDateTime, setSelectedDateTime] = useState<
-        { date?: Date; time: string } | undefined
-    >(() =>
+    const [selectedDateTime, setSelectedDateTime] = useState<{ date?: Date; time: string } | undefined>(() =>
         kind === 'datetime' ? parseDatetimeValue(defaultFieldValue) : undefined
     );
 
@@ -154,11 +150,7 @@ export function Input({
                         )}
                     >
                         <CalendarIcon className="mr-2 size-4" />
-                        {selectedDate ? (
-                            format(selectedDate, 'PPP')
-                        ) : (
-                            <span>{placeholder ?? 'Pick a date'}</span>
-                        )}
+                        {selectedDate ? format(selectedDate, 'PPP') : <span>{placeholder ?? 'Pick a date'}</span>}
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
@@ -166,11 +158,7 @@ export function Input({
                             selected={selectedDate}
                             onSelect={(nextDate) => {
                                 setSelectedDate(nextDate);
-                                void handleBlur(
-                                    nextDate
-                                        ? format(nextDate, DATE_FORMAT)
-                                        : ''
-                                );
+                                void handleBlur(nextDate ? format(nextDate, DATE_FORMAT) : '');
                             }}
                         />
                     </PopoverContent>
@@ -215,9 +203,7 @@ export function Input({
                                     void handleBlur(
                                         nextDate
                                             ? format(
-                                                  new Date(
-                                                      `${format(nextDate, DATE_FORMAT)}T${nextValue.time}`
-                                                  ),
+                                                  new Date(`${format(nextDate, DATE_FORMAT)}T${nextValue.time}`),
                                                   DATETIME_FORMAT
                                               )
                                             : ''
@@ -248,9 +234,7 @@ export function Input({
 
                             void handleBlur(
                                 format(
-                                    new Date(
-                                        `${format(datetimeValue.date, DATE_FORMAT)}T${event.currentTarget.value}`
-                                    ),
+                                    new Date(`${format(datetimeValue.date, DATE_FORMAT)}T${event.currentTarget.value}`),
                                     DATETIME_FORMAT
                                 )
                             );
@@ -284,9 +268,7 @@ export function Input({
 
             {renderControl()}
 
-            {description ? (
-                <p className="text-muted-foreground text-sm">{description}</p>
-            ) : null}
+            {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
     );
 }

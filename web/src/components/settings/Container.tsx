@@ -2,14 +2,7 @@ import { useMemo, useState } from 'react';
 import { ConnectContainerRuntimeDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
 import { Card } from '@/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
 type ContainerRuntime = {
     name: string;
@@ -25,9 +18,7 @@ export default function Container() {
     const [namespace, setNamespace] = useState('');
     const [cpuLimit, setCpuLimit] = useState('1000m');
     const [apiToken, setApiToken] = useState('');
-    const [connectedRuntimes, setConnectedRuntimes] = useState<
-        ContainerRuntime[]
-    >([]);
+    const [connectedRuntimes, setConnectedRuntimes] = useState<ContainerRuntime[]>([]);
 
     const canConnect = useMemo(() => {
         return (
@@ -100,21 +91,14 @@ export default function Container() {
                     <TableBody>
                         {connectedRuntimes.length === 0 ? (
                             <TableRow>
-                                <TableCell
-                                    colSpan={5}
-                                    className="py-8 text-center text-muted-foreground"
-                                >
+                                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                                     No connected container runtimes yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             connectedRuntimes.map((runtime) => (
-                                <TableRow
-                                    key={`${runtime.name}-${runtime.namespace}-${runtime.registry}`}
-                                >
-                                    <TableCell className="font-medium">
-                                        {runtime.name}
-                                    </TableCell>
+                                <TableRow key={`${runtime.name}-${runtime.namespace}-${runtime.registry}`}>
+                                    <TableCell className="font-medium">{runtime.name}</TableCell>
                                     <TableCell>{runtime.registry}</TableCell>
                                     <TableCell>{runtime.namespace}</TableCell>
                                     <TableCell>{runtime.cpuLimit}</TableCell>

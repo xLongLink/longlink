@@ -5,9 +5,6 @@ type SettingsPlaceholderProps = {
     subtitle: string;
 };
 
-export default function SettingsPlaceholder({
-    title,
-    subtitle,
-}: SettingsPlaceholderProps) {
+export default function SettingsPlaceholder({ title, subtitle }: SettingsPlaceholderProps) {
     return <Hero title={title} subtitle={subtitle} icon="settings" />;
 }

@@ -43,8 +43,7 @@ type SettingResponse = {
 };
 
 export default function General() {
-    const [settings, setSettings] =
-        useState<OrganizationSettingsState>(INITIAL_SETTINGS);
+    const [settings, setSettings] = useState<OrganizationSettingsState>(INITIAL_SETTINGS);
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -57,16 +56,10 @@ export default function General() {
             await Promise.all(
                 settingEntries.map(async ([stateKey, settingKey]) => {
                     try {
-                        const response = await apiFetch<SettingResponse>(
-                            `/settings/${settingKey}`
-                        );
-                        nextSettings[
-                            stateKey as keyof OrganizationSettingsState
-                        ] = response.value;
+                        const response = await apiFetch<SettingResponse>(`/settings/${settingKey}`);
+                        nextSettings[stateKey as keyof OrganizationSettingsState] = response.value;
                     } catch {
-                        nextSettings[
-                            stateKey as keyof OrganizationSettingsState
-                        ] = '';
+                        nextSettings[stateKey as keyof OrganizationSettingsState] = '';
                     }
                 })
             );

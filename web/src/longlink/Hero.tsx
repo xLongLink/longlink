@@ -21,12 +21,8 @@ export function Hero({ title, subtitle, icon, action, children }: HeroProps) {
                 ) : null}
 
                 <div>
-                    <h2 className="text-lg font-semibold text-white">
-                        {title}
-                    </h2>
-                    {subtitle ? (
-                        <p className="text-sm text-white/60">{subtitle}</p>
-                    ) : null}
+                    <h2 className="text-lg font-semibold text-white">{title}</h2>
+                    {subtitle ? <p className="text-sm text-white/60">{subtitle}</p> : null}
                 </div>
             </div>
 

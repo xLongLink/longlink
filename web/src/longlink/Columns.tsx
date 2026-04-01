@@ -17,17 +17,12 @@ function toGridTemplate(widths: number[]) {
         return `repeat(${widths.length || 1}, minmax(0, 1fr))`;
     }
 
-    return widths
-        .map((width) => `minmax(0, ${(width / total) * 100}%)`)
-        .join(' ');
+    return widths.map((width) => `minmax(0, ${(width / total) * 100}%)`).join(' ');
 }
 
 export function Columns({ widths, children }: ColumnsProps) {
     return (
-        <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns: toGridTemplate(widths) }}
-        >
+        <div className="grid gap-4" style={{ gridTemplateColumns: toGridTemplate(widths) }}>
             {children}
         </div>
     );

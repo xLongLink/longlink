@@ -2,11 +2,7 @@ import { Loader2 } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { useApiData } from '@/hooks/use-data';
-import {
-    getActiveTabConfig,
-    getAppTabsFromPages,
-    type AppNavigationPage,
-} from '@/lib/navigation';
+import { getActiveTabConfig, getAppTabsFromPages, type AppNavigationPage } from '@/lib/navigation';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
@@ -29,13 +25,7 @@ export default function Layout() {
     return <Navigation tabs={tabs} isTabsLoading={isLoading} />;
 }
 
-function Navigation({
-    tabs,
-    isTabsLoading,
-}: {
-    tabs: ReturnType<typeof getAppTabsFromPages>;
-    isTabsLoading: boolean;
-}) {
+function Navigation({ tabs, isTabsLoading }: { tabs: ReturnType<typeof getAppTabsFromPages>; isTabsLoading: boolean }) {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -45,9 +35,7 @@ function Navigation({
         basePath: '',
     });
 
-    const activeTab = isTabsLoading
-        ? 'loading'
-        : (activeTabConfig?.value ?? tabs[0]?.value ?? '');
+    const activeTab = isTabsLoading ? 'loading' : (activeTabConfig?.value ?? tabs[0]?.value ?? '');
 
     return (
         <div className="min-h-screen text-white">
@@ -60,16 +48,12 @@ function Navigation({
                                 if (isTabsLoading) {
                                     return;
                                 }
-                                const nextTab = tabs.find(
-                                    (tab) => tab.value === value
-                                );
+                                const nextTab = tabs.find((tab) => tab.value === value);
                                 if (!nextTab) {
                                     return;
                                 }
                                 const nextPath = nextTab.path ?? '';
-                                navigate(
-                                    nextPath === '' ? '/' : `/${nextPath}`
-                                );
+                                navigate(nextPath === '' ? '/' : `/${nextPath}`);
                             }}
                         >
                             <TabsList variant="line" className="gap-4">

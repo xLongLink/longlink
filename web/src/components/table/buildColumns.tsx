@@ -24,12 +24,7 @@ export const textAlignClasses: Record<TableAlign, string> = {
 };
 
 function resolvePath(data: unknown, path: string): unknown {
-    return path
-        .split('.')
-        .reduce<unknown>(
-            (acc, key) => (acc as Record<string, unknown>)?.[key],
-            data
-        );
+    return path.split('.').reduce<unknown>((acc, key) => (acc as Record<string, unknown>)?.[key], data);
 }
 
 function renderTemplate(template: string, data: unknown): string {
@@ -57,9 +52,7 @@ function resolveCell(
     return {
         ...resolvedCell,
         value: renderTemplate(resolvedCell.value, row),
-        link: resolvedCell.link
-            ? renderTemplate(resolvedCell.link, row)
-            : undefined,
+        link: resolvedCell.link ? renderTemplate(resolvedCell.link, row) : undefined,
     };
 }
 
@@ -78,9 +71,7 @@ function renderCellRow(cell: ApiTableCell, fallbackBold = false) {
     );
 }
 
-export function buildColumns<T extends object>(
-    columns: ApiTableColumn[]
-): ColumnDef<T>[] {
+export function buildColumns<T extends object>(columns: ApiTableColumn[]): ColumnDef<T>[] {
     return columns.map((column) => {
         const align = column.align ?? 'left';
 
@@ -90,30 +81,14 @@ export function buildColumns<T extends object>(
             enableSorting: true,
             meta: { align },
             cell: ({ row }) => {
-                const content = resolveCell(
-                    column.value,
-                    column.content,
-                    row.original
-                );
-                const detail = resolveCell(
-                    undefined,
-                    column.detail,
-                    row.original
-                );
+                const content = resolveCell(column.value, column.content, row.original);
+                const detail = resolveCell(undefined, column.detail, row.original);
 
                 return (
                     <div className={`leading-tight ${textAlignClasses[align]}`}>
-                        {content ? (
-                            <div className="text-sm">
-                                {renderCellRow(content, true)}
-                            </div>
-                        ) : null}
+                        {content ? <div className="text-sm">{renderCellRow(content, true)}</div> : null}
 
-                        {detail ? (
-                            <div className="text-xs text-muted-foreground">
-                                {renderCellRow(detail)}
-                            </div>
-                        ) : null}
+                        {detail ? <div className="text-xs text-muted-foreground">{renderCellRow(detail)}</div> : null}
                     </div>
                 );
             },

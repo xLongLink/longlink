@@ -40,28 +40,18 @@ export default function NotFound() {
                         <Compass className="h-6 w-6" />
                     </div>
                     <div className="space-y-2">
-                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">
-                            404 error
-                        </p>
-                        <h1 className="text-2xl font-semibold">
-                            We can&apos;t find that page
-                        </h1>
+                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">404 error</p>
+                        <h1 className="text-2xl font-semibold">We can&apos;t find that page</h1>
                         <p className="text-sm text-white/60">
-                            The page{' '}
-                            <span className="font-semibold text-white">
-                                {location.pathname}
-                            </span>{' '}
-                            doesn&apos;t exist or has moved.
+                            The page <span className="font-semibold text-white">{location.pathname}</span> doesn&apos;t
+                            exist or has moved.
                         </p>
                     </div>
                     <div className="flex flex-wrap justify-center gap-3">
                         <Link to={primaryLink} className={buttonVariants()}>
                             {primaryLabel}
                         </Link>
-                        <Link
-                            to="/login"
-                            className={buttonVariants({ variant: 'outline' })}
-                        >
+                        <Link to="/login" className={buttonVariants({ variant: 'outline' })}>
                             Go to login
                         </Link>
                     </div>

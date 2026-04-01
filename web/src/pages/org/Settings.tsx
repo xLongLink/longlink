@@ -23,46 +23,14 @@ export default function SettingsPage() {
         <div className="space-y-6">
             <Menu defaultValue="general">
                 <MenuList>
-                    <MenuSection
-                        value="general"
-                        label="Organization"
-                        icon={GlobeIcon}
-                    />
-                    <MenuSection
-                        value="permissions"
-                        label="Permissions"
-                        icon={UsersRoundIcon}
-                    />
-                    <MenuSection
-                        value="applications"
-                        label="Applications"
-                        icon={AppWindowIcon}
-                    />
-                    <MenuSection
-                        value="database"
-                        label="Database"
-                        icon={DatabaseIcon}
-                    />
-                    <MenuSection
-                        value="storage"
-                        label="Storage"
-                        icon={HardDriveIcon}
-                    />
-                    <MenuSection
-                        value="container"
-                        label="Compute"
-                        icon={CpuIcon}
-                    />
-                    <MenuSection
-                        value="logging"
-                        label="Logging"
-                        icon={FileTextIcon}
-                    />
-                    <MenuSection
-                        value="integrations"
-                        label="Integrations"
-                        icon={UnplugIcon}
-                    />
+                    <MenuSection value="general" label="Organization" icon={GlobeIcon} />
+                    <MenuSection value="permissions" label="Permissions" icon={UsersRoundIcon} />
+                    <MenuSection value="applications" label="Applications" icon={AppWindowIcon} />
+                    <MenuSection value="database" label="Database" icon={DatabaseIcon} />
+                    <MenuSection value="storage" label="Storage" icon={HardDriveIcon} />
+                    <MenuSection value="container" label="Compute" icon={CpuIcon} />
+                    <MenuSection value="logging" label="Logging" icon={FileTextIcon} />
+                    <MenuSection value="integrations" label="Integrations" icon={UnplugIcon} />
                 </MenuList>
                 <MenuContent value="general">
                     <General />

@@ -15,11 +15,7 @@ export function Switch({ label, description, active = false }: SwitchProps) {
         <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
             <div className="space-y-1">
                 {label ? <Label htmlFor={id}>{label}</Label> : null}
-                {description ? (
-                    <p className="text-muted-foreground text-sm">
-                        {description}
-                    </p>
-                ) : null}
+                {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
             </div>
 
             <UISwitch id={id} defaultChecked={active} />

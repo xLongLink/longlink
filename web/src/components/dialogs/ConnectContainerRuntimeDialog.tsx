@@ -1,11 +1,6 @@
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/ui/button';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Input } from '@/ui/input';
 
 type ConnectContainerRuntimeDialogProps = {
@@ -42,8 +37,8 @@ export default function ConnectContainerRuntimeDialog({
             <DialogHeader>
                 <DialogTitle>Connect container runtime</DialogTitle>
                 <DialogDescription>
-                    Register a top-level container runtime. Applications can
-                    deploy their modules using one of these runtime connections.
+                    Register a top-level container runtime. Applications can deploy their modules using one of these
+                    runtime connections.
                 </DialogDescription>
             </DialogHeader>
 
@@ -51,9 +46,7 @@ export default function ConnectContainerRuntimeDialog({
                 <Input
                     placeholder="Runtime name"
                     value={runtimeName}
-                    onChange={(event) =>
-                        onRuntimeNameChange(event.target.value)
-                    }
+                    onChange={(event) => onRuntimeNameChange(event.target.value)}
                 />
                 <Input
                     placeholder="Registry URL"
@@ -80,11 +73,7 @@ export default function ConnectContainerRuntimeDialog({
             </div>
 
             <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    onClick={onConnect}
-                    disabled={!canConnect}
-                >
+                <Button variant="outline" onClick={onConnect} disabled={!canConnect}>
                     <PlusCircle className="h-4 w-4" />
                     Connect
                 </Button>

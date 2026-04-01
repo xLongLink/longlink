@@ -15,25 +15,13 @@ type DialogProps = {
     A Layout 
 
 */
-export function Dialog({
-    confirm = 'Confirm',
-    cancel = 'Cancel',
-    children,
-}: DialogProps) {
+export function Dialog({ confirm = 'Confirm', cancel = 'Cancel', children }: DialogProps) {
     return (
         <DialogContent className="min-w-[40rem] max-w-5xl">
             <div className="max-h-[70vh] overflow-y-auto p-1">{children}</div>
             <DialogFooter>
-                <DialogClose
-                    render={
-                        <Button variant="outline" className="cursor-pointer" />
-                    }
-                >
-                    {cancel}
-                </DialogClose>
-                <DialogClose render={<Button className="cursor-pointer" />}>
-                    {confirm}
-                </DialogClose>
+                <DialogClose render={<Button variant="outline" className="cursor-pointer" />}>{cancel}</DialogClose>
+                <DialogClose render={<Button className="cursor-pointer" />}>{confirm}</DialogClose>
             </DialogFooter>
         </DialogContent>
     );

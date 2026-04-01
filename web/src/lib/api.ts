@@ -2,12 +2,9 @@ import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
 
 const isSdkMode = import.meta.env.MODE === 'sdk';
 
-const defaultApiBaseUrl = isSdkMode
-    ? 'http://localhost:1707'
-    : 'http://localhost:8000';
+const defaultApiBaseUrl = isSdkMode ? 'http://localhost:1707' : 'http://localhost:8000';
 
-const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL?.toString() ?? defaultApiBaseUrl;
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.toString() ?? defaultApiBaseUrl;
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
 
@@ -61,8 +58,7 @@ const normalizePath = (path: string, appName?: string) => {
     return `/apps/${normalizedAppName}/${normalizedPath}`;
 };
 
-const buildApiUrl = (path: string, appName?: string) =>
-    `${getApiBaseUrl()}${normalizePath(path, appName)}`;
+const buildApiUrl = (path: string, appName?: string) => `${getApiBaseUrl()}${normalizePath(path, appName)}`;
 
 const toApiErrorMessage = (error: AxiosError) => {
     const status = error.response?.status;
@@ -81,10 +77,7 @@ const toApiErrorMessage = (error: AxiosError) => {
     return defaultMessage;
 };
 
-export async function apiFetch<TResponse>(
-    path: string,
-    options: ApiRequestOptions = {}
-): Promise<TResponse> {
+export async function apiFetch<TResponse>(path: string, options: ApiRequestOptions = {}): Promise<TResponse> {
     const { query, body, appName, ...config } = options;
 
     try {
@@ -120,5 +113,4 @@ export async function apiFetch<TResponse>(
     }
 }
 
-export const buildAppApiPath = (path: string, appName?: string) =>
-    buildApiUrl(path, appName);
+export const buildAppApiPath = (path: string, appName?: string) => buildApiUrl(path, appName);

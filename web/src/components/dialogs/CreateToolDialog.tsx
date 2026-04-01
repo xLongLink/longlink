@@ -1,11 +1,6 @@
 import { Plus } from 'lucide-react';
 import { Button } from '@/ui/button';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Input } from '@/ui/input';
 
 type CreateToolDialogProps = {
@@ -31,9 +26,7 @@ export default function CreateToolDialog({
         <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Create a new tool</DialogTitle>
-                <DialogDescription>
-                    Add a name and URL to register your tool.
-                </DialogDescription>
+                <DialogDescription>Add a name and URL to register your tool.</DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-3 md:grid-cols-3">
@@ -48,19 +41,13 @@ export default function CreateToolDialog({
                     value={keyValue}
                     onChange={(event) => onTokenChange(event.target.value)}
                 />
-                <Button
-                    variant="outline"
-                    onClick={onCreate}
-                    disabled={isPending}
-                >
+                <Button variant="outline" onClick={onCreate} disabled={isPending}>
                     <Plus className="h-4 w-4" />
                     New Tool
                 </Button>
             </div>
 
-            {createError ? (
-                <p className="text-sm text-red-300">{createError}</p>
-            ) : null}
+            {createError ? <p className="text-sm text-red-300">{createError}</p> : null}
         </DialogContent>
     );
 }

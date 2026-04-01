@@ -1,11 +1,6 @@
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/ui/button';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Input } from '@/ui/input';
 
 type CreateApplicationDialogProps = {
@@ -34,17 +29,12 @@ export default function CreateApplicationDialog({
             <DialogHeader>
                 <DialogTitle>Create application</DialogTitle>
                 <DialogDescription>
-                    Add the app URL and app key so LongLink can fetch
-                    /metadata.json and register the app.
+                    Add the app URL and app key so LongLink can fetch /metadata.json and register the app.
                 </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-3 md:grid-cols-2">
-                <Input
-                    placeholder="localhost:1707"
-                    value={url}
-                    onChange={(event) => onUrlChange(event.target.value)}
-                />
+                <Input placeholder="localhost:1707" value={url} onChange={(event) => onUrlChange(event.target.value)} />
                 <Input
                     type="password"
                     placeholder="App key"
@@ -54,11 +44,7 @@ export default function CreateApplicationDialog({
             </div>
 
             <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    onClick={onCreate}
-                    disabled={!canCreate || isPending}
-                >
+                <Button variant="outline" onClick={onCreate} disabled={!canCreate || isPending}>
                     <PlusCircle className="h-4 w-4" />
                     {isPending ? 'Creating...' : 'Create'}
                 </Button>

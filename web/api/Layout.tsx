@@ -3,21 +3,10 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { Card } from '@/ui/card';
-import {
-    Empty,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-} from '@/ui/empty';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/ui/empty';
 import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { useApiData } from '@/hooks/use-data';
-import {
-    getActiveTabConfig,
-    getAppTabsFromPages,
-    getTabsConfig,
-    type AppNavigationPage,
-} from '@/lib/navigation';
+import { getActiveTabConfig, getAppTabsFromPages, getTabsConfig, type AppNavigationPage } from '@/lib/navigation';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
@@ -34,8 +23,7 @@ export default function Layout() {
     const { appId } = useParams();
     const appMetadataEndpoint = appId ? `/apps/${appId}` : null;
 
-    const { data: appMetadata, isLoading: isAppMetadataLoading } =
-        useApiData<AppMetadata>(appMetadataEndpoint);
+    const { data: appMetadata, isLoading: isAppMetadataLoading } = useApiData<AppMetadata>(appMetadataEndpoint);
     const appTabs = appId
         ? isAppMetadataLoading
             ? [
@@ -55,9 +43,7 @@ export default function Layout() {
         appTabs,
     });
 
-    const showEmptyAppSection = Boolean(
-        appId && !isAppMetadataLoading && tabs.length === 0
-    );
+    const showEmptyAppSection = Boolean(appId && !isAppMetadataLoading && tabs.length === 0);
 
     return (
         <Navigation
@@ -69,22 +55,13 @@ export default function Layout() {
     );
 }
 
-export function Navigation({
-    tabs,
-    basePathSuffix,
-    isTabsLoading,
-    showEmptyAppSection,
-}: NavigationProps) {
+export function Navigation({ tabs, basePathSuffix, isTabsLoading, showEmptyAppSection }: NavigationProps) {
     const { appId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
 
     const normalizedSuffix = basePathSuffix?.replace(/^\/+|\/+$/g, '') ?? '';
-    const basePath = appId
-        ? normalizedSuffix
-            ? `/${normalizedSuffix}`
-            : '/'
-        : '';
+    const basePath = appId ? (normalizedSuffix ? `/${normalizedSuffix}` : '/') : '';
 
     const activeTabConfig = getActiveTabConfig({
         tabs,
@@ -118,9 +95,7 @@ export function Navigation({
                                 if (isTabsLoading) {
                                     return;
                                 }
-                                const nextTab = tabs.find(
-                                    (tab) => tab.value === value
-                                );
+                                const nextTab = tabs.find((tab) => tab.value === value);
                                 if (!nextTab) {
                                     return;
                                 }
@@ -166,9 +141,7 @@ export function Navigation({
                                     <PanelTop />
                                 </EmptyMedia>
                                 <EmptyTitle>No Tabs Yet</EmptyTitle>
-                                <EmptyDescription>
-                                    This app has no configured tabs yet.
-                                </EmptyDescription>
+                                <EmptyDescription>This app has no configured tabs yet.</EmptyDescription>
                             </EmptyHeader>
                         </Empty>
                     </Card>

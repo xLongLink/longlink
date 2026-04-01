@@ -3,13 +3,7 @@ import { useRef, useState } from 'react';
 import { Bell, Palette, Pencil, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import { Button } from '@/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/card';
 import { useUser } from '@/hooks/use-user';
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
@@ -69,13 +63,7 @@ export default function Profile() {
                                         : 'text-white/70 hover:bg-white/5 hover:text-white'
                                 }`}
                             >
-                                <Icon
-                                    className={`h-4 w-4 ${
-                                        isActive
-                                            ? 'text-white'
-                                            : 'text-white/70'
-                                    }`}
-                                />
+                                <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-white/70'}`} />
                                 {item.label}
                             </button>
                         );
@@ -85,12 +73,8 @@ export default function Profile() {
 
             <section className="space-y-6">
                 <div className="space-y-1">
-                    <h2 className="text-2xl font-semibold">
-                        {sectionTitle[activeSection]}
-                    </h2>
-                    <p className="text-sm text-white/60">
-                        {sectionSubtitle[activeSection]}
-                    </p>
+                    <h2 className="text-2xl font-semibold">{sectionTitle[activeSection]}</h2>
+                    <p className="text-sm text-white/60">{sectionSubtitle[activeSection]}</p>
                 </div>
 
                 {activeSection === 'profile' && (
@@ -98,11 +82,7 @@ export default function Profile() {
                         <div className="space-y-6">
                             <div className="space-y-2">
                                 <Label htmlFor="profile-name">Name</Label>
-                                <Input
-                                    id="profile-name"
-                                    defaultValue="Leonardo Saurwein"
-                                    className="bg-white/5"
-                                />
+                                <Input id="profile-name" defaultValue="Leonardo Saurwein" className="bg-white/5" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="profile-email">Email</Label>
@@ -116,14 +96,10 @@ export default function Profile() {
                         </div>
 
                         <div className="flex flex-col items-center gap-4 text-center">
-                            <div className="text-sm font-semibold text-white">
-                                Profile picture
-                            </div>
+                            <div className="text-sm font-semibold text-white">Profile picture</div>
                             <Avatar className="size-44 border border-white/10">
                                 <AvatarImage src={avatarUrl} alt="Profile" />
-                                <AvatarFallback>
-                                    {avatarFallback}
-                                </AvatarFallback>
+                                <AvatarFallback>{avatarFallback}</AvatarFallback>
                             </Avatar>
                             <input
                                 ref={fileInputRef}
@@ -151,31 +127,22 @@ export default function Profile() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Theme</CardTitle>
-                                <CardDescription>
-                                    Choose the theme that fits your workspace.
-                                </CardDescription>
+                                <CardDescription>Choose the theme that fits your workspace.</CardDescription>
                             </CardHeader>
                             <CardContent className="grid gap-4">
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="font-medium">
-                                            Sync with system
-                                        </p>
+                                        <p className="font-medium">Sync with system</p>
                                         <p className="text-sm text-white/50">
-                                            Automatically switch between light
-                                            and dark themes.
+                                            Automatically switch between light and dark themes.
                                         </p>
                                     </div>
                                     <Switch defaultChecked />
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="font-medium">
-                                            Compact mode
-                                        </p>
-                                        <p className="text-sm text-white/50">
-                                            Reduce paddings for dense layouts.
-                                        </p>
+                                        <p className="font-medium">Compact mode</p>
+                                        <p className="text-sm text-white/50">Reduce paddings for dense layouts.</p>
                                     </div>
                                     <Switch />
                                 </div>
@@ -184,15 +151,10 @@ export default function Profile() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Display language</CardTitle>
-                                <CardDescription>
-                                    Select your preferred UI language.
-                                </CardDescription>
+                                <CardDescription>Select your preferred UI language.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Input
-                                    defaultValue="English (United States)"
-                                    className="bg-white/5"
-                                />
+                                <Input defaultValue="English (United States)" className="bg-white/5" />
                             </CardContent>
                         </Card>
                     </div>
@@ -203,30 +165,20 @@ export default function Profile() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>In-app alerts</CardTitle>
-                                <CardDescription>
-                                    Decide which events trigger in-app alerts.
-                                </CardDescription>
+                                <CardDescription>Decide which events trigger in-app alerts.</CardDescription>
                             </CardHeader>
                             <CardContent className="grid gap-4">
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="font-medium">
-                                            Mentions & assignments
-                                        </p>
-                                        <p className="text-sm text-white/50">
-                                            Get notified when you are tagged.
-                                        </p>
+                                        <p className="font-medium">Mentions & assignments</p>
+                                        <p className="text-sm text-white/50">Get notified when you are tagged.</p>
                                     </div>
                                     <Switch defaultChecked />
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="font-medium">
-                                            Workflow updates
-                                        </p>
-                                        <p className="text-sm text-white/50">
-                                            Alerts for automation status.
-                                        </p>
+                                        <p className="font-medium">Workflow updates</p>
+                                        <p className="text-sm text-white/50">Alerts for automation status.</p>
                                     </div>
                                     <Switch />
                                 </div>
@@ -235,15 +187,10 @@ export default function Profile() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Notification schedule</CardTitle>
-                                <CardDescription>
-                                    Set quiet hours for alerts.
-                                </CardDescription>
+                                <CardDescription>Set quiet hours for alerts.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Input
-                                    defaultValue="22:00 - 07:00"
-                                    className="bg-white/5"
-                                />
+                                <Input defaultValue="22:00 - 07:00" className="bg-white/5" />
                             </CardContent>
                         </Card>
                     </div>

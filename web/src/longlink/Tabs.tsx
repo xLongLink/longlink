@@ -21,11 +21,7 @@ export function Tabs({ tabs, children }: TabsProps) {
         <UITabs defaultValue={tabs[0]}>
             <TabsList>
                 {tabs.map((tab) => (
-                    <TabsTrigger
-                        key={`tab-trigger-${tab}`}
-                        value={tab}
-                        className="cursor-pointer"
-                    >
+                    <TabsTrigger key={`tab-trigger-${tab}`} value={tab} className="cursor-pointer">
                         {tab}
                     </TabsTrigger>
                 ))}

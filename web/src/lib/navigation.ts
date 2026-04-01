@@ -1,13 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import {
-    BarChart3,
-    Blocks,
-    FileText,
-    FolderKanban,
-    Settings,
-    Users,
-    Workflow,
-} from 'lucide-react';
+import { BarChart3, Blocks, FileText, FolderKanban, Settings, Users, Workflow } from 'lucide-react';
 
 // import { getIconByName } from '@/components/Icon';
 
@@ -48,9 +40,7 @@ const getTabValue = ({ path, name }: { path: string; name: string }) => {
     return name.toLowerCase().replace(/\s+/g, '-');
 };
 
-export function getAppTabsFromPages(
-    pages: AppNavigationPage[]
-): NavigationTab[] {
+export function getAppTabsFromPages(pages: AppNavigationPage[]): NavigationTab[] {
     if (pages.length === 0) {
         return [];
     }
@@ -112,11 +102,7 @@ export function getActiveTabConfig({
 export function formatOrganizationName(value: string) {
     return value
         .split('-')
-        .map((segment) =>
-            segment.length > 0
-                ? segment[0].toUpperCase() + segment.slice(1)
-                : segment
-        )
+        .map((segment) => (segment.length > 0 ? segment[0].toUpperCase() + segment.slice(1) : segment))
         .join(' ');
 }
 

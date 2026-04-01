@@ -52,9 +52,7 @@ function isRenderNodeSchema(value: unknown): value is RenderNodeSchema {
     return 'type' in value;
 }
 
-function normalizeChildren(
-    children?: RenderNodeSchema[] | RenderNodeSchema
-): RenderNodeSchema[] {
+function normalizeChildren(children?: RenderNodeSchema[] | RenderNodeSchema): RenderNodeSchema[] {
     if (!children) {
         return [];
     }
@@ -80,40 +78,24 @@ function Render({ type, props, children }: RenderNodeSchema) {
                     return (
                         <MenuSection
                             key={sectionIndex}
-                            {...(section.props as React.ComponentProps<
-                                typeof MenuSection
-                            >)}
+                            {...(section.props as React.ComponentProps<typeof MenuSection>)}
                         >
-                            {normalizeChildren(section.children).map(
-                                (subSection, subSectionIndex) => {
-                                    if (subSection.type !== 'menuSubSection') {
-                                        return (
-                                            <Render
-                                                key={subSectionIndex}
-                                                {...subSection}
-                                            />
-                                        );
-                                    }
-
-                                    return (
-                                        <MenuSubSection
-                                            key={subSectionIndex}
-                                            {...(subSection.props as React.ComponentProps<
-                                                typeof MenuSubSection
-                                            >)}
-                                        >
-                                            {normalizeChildren(
-                                                subSection.children
-                                            ).map((child, childIndex) => (
-                                                <Render
-                                                    key={childIndex}
-                                                    {...child}
-                                                />
-                                            ))}
-                                        </MenuSubSection>
-                                    );
+                            {normalizeChildren(section.children).map((subSection, subSectionIndex) => {
+                                if (subSection.type !== 'menuSubSection') {
+                                    return <Render key={subSectionIndex} {...subSection} />;
                                 }
-                            )}
+
+                                return (
+                                    <MenuSubSection
+                                        key={subSectionIndex}
+                                        {...(subSection.props as React.ComponentProps<typeof MenuSubSection>)}
+                                    >
+                                        {normalizeChildren(subSection.children).map((child, childIndex) => (
+                                            <Render key={childIndex} {...child} />
+                                        ))}
+                                    </MenuSubSection>
+                                );
+                            })}
                         </MenuSection>
                     );
                 })}
@@ -126,35 +108,18 @@ function Render({ type, props, children }: RenderNodeSchema) {
             .filter((child) => child.type === 'column')
             .map((child) => ({
                 key: String(child.props?.key ?? ''),
-                label:
-                    child.props?.label == null
-                        ? undefined
-                        : String(child.props.label),
+                label: child.props?.label == null ? undefined : String(child.props.label),
                 align:
-                    child.props?.align == null
-                        ? undefined
-                        : (String(child.props.align) as
-                              | 'left'
-                              | 'center'
-                              | 'right'),
+                    child.props?.align == null ? undefined : (String(child.props.align) as 'left' | 'center' | 'right'),
                 content: child.props?.content as ApiTableColumn['content'],
                 detail: child.props?.detail as ApiTableColumn['detail'],
             }))
             .filter((column) => column.key);
 
-        return (
-            <Table
-                data={
-                    Array.isArray(props?.data) ? (props.data as object[]) : []
-                }
-                columns={columns}
-            />
-        );
+        return <Table data={Array.isArray(props?.data) ? (props.data as object[]) : []} columns={columns} />;
     }
 
-    const Component = registry[type] as React.ComponentType<
-        Record<string, unknown>
-    >;
+    const Component = registry[type] as React.ComponentType<Record<string, unknown>>;
 
     return (
         <Component {...props}>
