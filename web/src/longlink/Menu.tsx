@@ -65,9 +65,7 @@ type IconModule = {
     default: LucideIcon;
 };
 
-const iconImporters = import.meta.glob<IconModule>(
-    '/node_modules/lucide-react/dist/esm/icons/*.js'
-);
+const iconImporters = import.meta.glob<IconModule>('/node_modules/lucide-react/dist/esm/icons/*.js');
 const lazyIcons: Record<string, LazyExoticComponent<LucideIcon>> = {};
 
 for (const path in iconImporters) {
@@ -118,31 +116,25 @@ function normalizeSections(children?: ReactNode): NormalizedSection[] {
             (child) => isValidElement(child) && child.type === MenuSubSection
         ) as ReactElement<ParsedMenuSubSectionProps>[];
 
-        const normalizedSubSections = sectionChildren.map(
-            (subSection, subIndex) => {
-                const subSectionProps = flattenParsedProps(subSection.props);
+        const normalizedSubSections = sectionChildren.map((subSection, subIndex) => {
+            const subSectionProps = flattenParsedProps(subSection.props);
 
-                return {
-                    id: `section-${sectionIndex}-sub-${subIndex}`,
-                    title: subSectionProps.title,
-                    isRoot: resolveSubSectionIsRoot(subSection.props),
-                    children: subSectionProps.children,
-                };
-            }
-        );
+            return {
+                id: `section-${sectionIndex}-sub-${subIndex}`,
+                title: subSectionProps.title,
+                isRoot: resolveSubSectionIsRoot(subSection.props),
+                children: subSectionProps.children,
+            };
+        });
 
-        const rootSubSection = normalizedSubSections.find(
-            (subSection) => subSection.isRoot
-        );
+        const rootSubSection = normalizedSubSections.find((subSection) => subSection.isRoot);
 
         return {
             id: `section-${sectionIndex}`,
             title: sectionProps.title,
             icon: resolveSectionIcon(section.props),
             rootSubSection,
-            subSections: normalizedSubSections.filter(
-                (subSection) => !subSection.isRoot
-            ),
+            subSections: normalizedSubSections.filter((subSection) => !subSection.isRoot),
         };
     });
 }
@@ -164,9 +156,7 @@ export function Menu({ children }: MenuProps) {
             return undefined;
         }
 
-        return firstSection.rootSubSection
-            ? firstSection.id
-            : (firstSection.subSections[0]?.id ?? firstSection.id);
+        return firstSection.rootSubSection ? firstSection.id : (firstSection.subSections[0]?.id ?? firstSection.id);
     });
 
     useEffect(() => {
@@ -177,10 +167,7 @@ export function Menu({ children }: MenuProps) {
 
         const hasActiveValue = sections.some(
             (section) =>
-                section.id === activeValue ||
-                section.subSections.some(
-                    (subSection) => subSection.id === activeValue
-                )
+                section.id === activeValue || section.subSections.some((subSection) => subSection.id === activeValue)
         );
 
         if (!hasActiveValue) {
@@ -192,9 +179,7 @@ export function Menu({ children }: MenuProps) {
             }
 
             setActiveValue(
-                firstSection.rootSubSection
-                    ? firstSection.id
-                    : (firstSection.subSections[0]?.id ?? firstSection.id)
+                firstSection.rootSubSection ? firstSection.id : (firstSection.subSections[0]?.id ?? firstSection.id)
             );
         }
     }, [activeValue, sections]);
@@ -204,20 +189,11 @@ export function Menu({ children }: MenuProps) {
     }
 
     return (
-        <BaseMenu
-            value={activeValue}
-            onValueChange={setActiveValue}
-            ariaLabel="Longlink menu"
-        >
+        <BaseMenu value={activeValue} onValueChange={setActiveValue} ariaLabel="Longlink menu">
             <aside className="w-64">
                 <MenuList>
                     {sections.map((section) => (
-                        <BaseMenuSection
-                            key={section.id}
-                            value={section.id}
-                            label={section.title}
-                            icon={section.icon}
-                        >
+                        <BaseMenuSection key={section.id} value={section.id} label={section.title} icon={section.icon}>
                             {section.subSections.map((subSection) => (
                                 <BaseMenuSubSection
                                     key={subSection.id}
@@ -234,16 +210,11 @@ export function Menu({ children }: MenuProps) {
                 {sections.map((section) => (
                     <div key={`${section.id}-content`}>
                         {section.rootSubSection ? (
-                            <MenuContent value={section.id}>
-                                {section.rootSubSection.children}
-                            </MenuContent>
+                            <MenuContent value={section.id}>{section.rootSubSection.children}</MenuContent>
                         ) : null}
 
                         {section.subSections.map((subSection) => (
-                            <MenuContent
-                                key={subSection.id}
-                                value={subSection.id}
-                            >
+                            <MenuContent key={subSection.id} value={subSection.id}>
                                 {subSection.children}
                             </MenuContent>
                         ))}

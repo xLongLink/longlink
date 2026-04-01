@@ -2,13 +2,7 @@ import { Users } from 'lucide-react';
 import Hero from '@/longlink/Hero';
 import Table, { type ApiTableColumn } from '@/longlink/Table';
 import { Card } from '@/ui/card';
-import {
-    Empty,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-} from '@/ui/empty';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/ui/empty';
 import { useUsers } from '@/hooks/use-users';
 
 const columns: ApiTableColumn[] = [
@@ -25,21 +19,12 @@ export default function People() {
 
     return (
         <div className="space-y-6">
-            <Hero
-                title="People"
-                subtitle={`${users.length} people`}
-                icon="users"
-                action="Add Person"
-            />
+            <Hero title="People" subtitle={`${users.length} people`} icon="users" action="Add Person" />
 
             {isLoading ? (
-                <Card className="p-10 text-center text-muted-foreground">
-                    Loading people...
-                </Card>
+                <Card className="p-10 text-center text-muted-foreground">Loading people...</Card>
             ) : error ? (
-                <Card className="p-10 text-center text-destructive">
-                    {error}
-                </Card>
+                <Card className="p-10 text-center text-destructive">{error}</Card>
             ) : users.length === 0 ? (
                 <Card className="p-10 text-center">
                     <Empty>
@@ -49,8 +34,7 @@ export default function People() {
                             </EmptyMedia>
                             <EmptyTitle>No People Yet</EmptyTitle>
                             <EmptyDescription>
-                                Invite teammates and collaborators to start
-                                working together.
+                                Invite teammates and collaborators to start working together.
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>

@@ -1,19 +1,7 @@
 import { useMemo, useState } from 'react';
-import {
-    type SortingState,
-    flexRender,
-    getCoreRowModel,
-    useReactTable,
-} from '@tanstack/react-table';
+import { type SortingState, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
-import {
-    Table as UITable,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/ui/table';
+import { Table as UITable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 import {
     Pagination,
     PaginationContent,
@@ -23,12 +11,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/ui/pagination';
-import {
-    buildColumns,
-    textAlignClasses,
-    type ApiTableColumn,
-    type TableAlign,
-} from '@/components/table/buildColumns';
+import { buildColumns, textAlignClasses, type ApiTableColumn, type TableAlign } from '@/components/table/buildColumns';
 import { useApiTable } from '@/components/table/useApiTable';
 
 export type { ApiTableColumn, TableAlign };
@@ -67,9 +50,7 @@ export function Table<T extends object>(props: TableProps) {
 
     const isSchemaMode = 'endpoint' in props;
 
-    const apiEndpoint = isSchemaMode
-        ? (props as SchemaTableProps).endpoint
-        : '/__noop__';
+    const apiEndpoint = isSchemaMode ? (props as SchemaTableProps).endpoint : '/__noop__';
 
     const apiData = useApiTable<T>({
         endpoint: apiEndpoint,
@@ -79,14 +60,9 @@ export function Table<T extends object>(props: TableProps) {
     const data = (isSchemaMode ? apiData.data : props.data) as T[];
     const total = isSchemaMode ? apiData.total : props.data.length;
     const loading = isSchemaMode ? apiData.loading : false;
-    const columnsConfig = isSchemaMode
-        ? (props.schema?.schema?.columns ?? [])
-        : props.columns;
+    const columnsConfig = isSchemaMode ? (props.schema?.schema?.columns ?? []) : props.columns;
 
-    const columns = useMemo(
-        () => buildColumns<T>(columnsConfig ?? []),
-        [columnsConfig]
-    );
+    const columns = useMemo(() => buildColumns<T>(columnsConfig ?? []), [columnsConfig]);
 
     const table = useReactTable({
         data,
@@ -136,11 +112,7 @@ export function Table<T extends object>(props: TableProps) {
                                     >
                                         {header.isPlaceholder
                                             ? null
-                                            : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext()
-                                              )}
+                                            : flexRender(header.column.columnDef.header, header.getContext())}
                                     </TableHead>
                                 );
                             })}
@@ -170,14 +142,8 @@ export function Table<T extends object>(props: TableProps) {
                                         )?.align ?? 'left';
 
                                     return (
-                                        <TableCell
-                                            key={cell.id}
-                                            className={textAlignClasses[align]}
-                                        >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
+                                        <TableCell key={cell.id} className={textAlignClasses[align]}>
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     );
                                 })}
@@ -207,11 +173,7 @@ export function Table<T extends object>(props: TableProps) {
                                     table.previousPage();
                                 }}
                                 aria-disabled={!table.getCanPreviousPage()}
-                                className={
-                                    !table.getCanPreviousPage()
-                                        ? 'pointer-events-none opacity-50'
-                                        : ''
-                                }
+                                className={!table.getCanPreviousPage() ? 'pointer-events-none opacity-50' : ''}
                             />
                         </PaginationItem>
 
@@ -244,11 +206,7 @@ export function Table<T extends object>(props: TableProps) {
                                     table.nextPage();
                                 }}
                                 aria-disabled={!table.getCanNextPage()}
-                                className={
-                                    !table.getCanNextPage()
-                                        ? 'pointer-events-none opacity-50'
-                                        : ''
-                                }
+                                className={!table.getCanNextPage() ? 'pointer-events-none opacity-50' : ''}
                             />
                         </PaginationItem>
                     </PaginationContent>

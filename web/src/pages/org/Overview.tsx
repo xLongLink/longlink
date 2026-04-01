@@ -1,12 +1,6 @@
 import { Blocks, FolderGit2, Users } from 'lucide-react';
 import Hero from '@/longlink/Hero';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/card';
 import { useApps } from '@/hooks/use-apps';
 import { useUsers } from '@/hooks/use-users';
 
@@ -29,13 +23,10 @@ export default function Overview() {
                             <Blocks className="h-4 w-4" />
                             Tools
                         </CardDescription>
-                        <CardTitle>
-                            {isAppsLoading ? 'Loading…' : `${apps.length}`}
-                        </CardTitle>
+                        <CardTitle>{isAppsLoading ? 'Loading…' : `${apps.length}`}</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-white/60">
-                        Manage the apps and services available to your
-                        organization.
+                        Manage the apps and services available to your organization.
                     </CardContent>
                 </Card>
 
@@ -45,13 +36,10 @@ export default function Overview() {
                             <Users className="h-4 w-4" />
                             People
                         </CardDescription>
-                        <CardTitle>
-                            {isUsersLoading ? 'Loading…' : `${users.length}`}
-                        </CardTitle>
+                        <CardTitle>{isUsersLoading ? 'Loading…' : `${users.length}`}</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-white/60">
-                        Keep track of teammates, collaborators, and workspace
-                        access.
+                        Keep track of teammates, collaborators, and workspace access.
                     </CardContent>
                 </Card>
 
@@ -64,8 +52,7 @@ export default function Overview() {
                         <CardTitle>Coming next</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-white/60">
-                        Organize repeatable workflows and shared operational
-                        steps.
+                        Organize repeatable workflows and shared operational steps.
                     </CardContent>
                 </Card>
             </div>

@@ -3,13 +3,7 @@ import Hero from '@/longlink/Hero';
 import Table, { type ApiTableColumn } from '@/longlink/Table';
 import { useSpaces } from '@/hooks/use-apps';
 import { Card } from '@/ui/card';
-import {
-    Empty,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-} from '@/ui/empty';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/ui/empty';
 
 const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
     title: 'Spaces',
@@ -39,25 +33,16 @@ const tableSchema: { title: string; schema: { columns: ApiTableColumn[] } } = {
 
 export default function Spaces() {
     const { data: spaces = [], isLoading, error } = useSpaces();
-    const loadErrorMessage =
-        error instanceof Error ? error.message : 'Failed to load spaces';
+    const loadErrorMessage = error instanceof Error ? error.message : 'Failed to load spaces';
 
     return (
         <div className="space-y-6">
-            <Hero
-                title="Spaces"
-                subtitle={`${spaces.length} spaces`}
-                icon="folder-kanban"
-            />
+            <Hero title="Spaces" subtitle={`${spaces.length} spaces`} icon="folder-kanban" />
 
             {isLoading ? (
-                <Card className="p-10 text-center text-white/60">
-                    Loading spaces...
-                </Card>
+                <Card className="p-10 text-center text-white/60">Loading spaces...</Card>
             ) : error ? (
-                <Card className="p-10 text-center text-red-300">
-                    {loadErrorMessage}
-                </Card>
+                <Card className="p-10 text-center text-red-300">{loadErrorMessage}</Card>
             ) : spaces.length === 0 ? (
                 <Card className="p-10 text-center">
                     <Empty>
@@ -67,8 +52,7 @@ export default function Spaces() {
                             </EmptyMedia>
                             <EmptyTitle>No Spaces Yet</EmptyTitle>
                             <EmptyDescription>
-                                Spaces will help organize work into focused
-                                environments for your organization.
+                                Spaces will help organize work into focused environments for your organization.
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>

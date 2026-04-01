@@ -3,14 +3,7 @@ import { useMemo, useState } from 'react';
 import { ConnectStorageProviderDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
 import { Card } from '@/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
 type StorageProvider = {
     name: string;
@@ -26,9 +19,7 @@ export default function Storage() {
     const [bucket, setBucket] = useState('');
     const [accessKey, setAccessKey] = useState('');
     const [secretKey, setSecretKey] = useState('');
-    const [connectedProviders, setConnectedProviders] = useState<
-        StorageProvider[]
-    >([]);
+    const [connectedProviders, setConnectedProviders] = useState<StorageProvider[]>([]);
 
     const canConnect = useMemo(() => {
         return (
@@ -101,21 +92,14 @@ export default function Storage() {
                     <TableBody>
                         {connectedProviders.length === 0 ? (
                             <TableRow>
-                                <TableCell
-                                    colSpan={5}
-                                    className="py-8 text-center text-muted-foreground"
-                                >
+                                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                                     No connected storage providers yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             connectedProviders.map((provider) => (
-                                <TableRow
-                                    key={`${provider.name}-${provider.bucket}-${provider.endpoint}`}
-                                >
-                                    <TableCell className="font-medium">
-                                        {provider.name}
-                                    </TableCell>
+                                <TableRow key={`${provider.name}-${provider.bucket}-${provider.endpoint}`}>
+                                    <TableCell className="font-medium">{provider.name}</TableCell>
                                     <TableCell>{provider.endpoint}</TableCell>
                                     <TableCell>{provider.bucket}</TableCell>
                                     <TableCell>{provider.accessKey}</TableCell>
@@ -131,9 +115,8 @@ export default function Storage() {
                 <div className="flex items-start gap-2">
                     <HardDrive className="mt-0.5 h-4 w-4" />
                     <p>
-                        Connected entries represent shared object storage
-                        providers. Applications can link dedicated buckets and
-                        file policies to one of these providers.
+                        Connected entries represent shared object storage providers. Applications can link dedicated
+                        buckets and file policies to one of these providers.
                     </p>
                 </div>
             </Card>

@@ -2,14 +2,7 @@ import { useMemo, useState } from 'react';
 import { ConnectDatabaseServerDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
 import { Card } from '@/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
 type DatabaseServer = {
     name: string;
@@ -25,9 +18,7 @@ export default function Database() {
     const [port, setPort] = useState('5432');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [connectedDatabases, setConnectedDatabases] = useState<
-        DatabaseServer[]
-    >([]);
+    const [connectedDatabases, setConnectedDatabases] = useState<DatabaseServer[]>([]);
 
     const canConnect = useMemo(() => {
         return (
@@ -64,12 +55,7 @@ export default function Database() {
 
     return (
         <div className="space-y-6">
-            <Hero
-                title="Database Settings"
-                subtitle="Connect a database instance."
-                icon="settings"
-                action="Connect"
-            >
+            <Hero title="Database Settings" subtitle="Connect a database instance." icon="settings" action="Connect">
                 <ConnectDatabaseServerDialog
                     serverName={serverName}
                     host={host}
@@ -100,21 +86,14 @@ export default function Database() {
                     <TableBody>
                         {connectedDatabases.length === 0 ? (
                             <TableRow>
-                                <TableCell
-                                    colSpan={5}
-                                    className="py-8 text-center text-muted-foreground"
-                                >
+                                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                                     No connected database servers yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             connectedDatabases.map((database) => (
-                                <TableRow
-                                    key={`${database.name}-${database.host}-${database.port}`}
-                                >
-                                    <TableCell className="font-medium">
-                                        {database.name}
-                                    </TableCell>
+                                <TableRow key={`${database.name}-${database.host}-${database.port}`}>
+                                    <TableCell className="font-medium">{database.name}</TableCell>
                                     <TableCell>{database.host}</TableCell>
                                     <TableCell>{database.port}</TableCell>
                                     <TableCell>{database.username}</TableCell>

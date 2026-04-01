@@ -39,9 +39,7 @@ export default function Login() {
         if (!queryReturnTo || !queryReturnTo.startsWith('/')) {
             return getDefaultReturnTo();
         }
-        return queryReturnTo.startsWith('/login')
-            ? getDefaultReturnTo()
-            : queryReturnTo;
+        return queryReturnTo.startsWith('/login') ? getDefaultReturnTo() : queryReturnTo;
     })();
 
     useEffect(() => {
@@ -57,9 +55,7 @@ export default function Login() {
             try {
                 const data = await apiFetch<LoginMethodsResponse>('/login');
                 if (isMounted) {
-                    setAvailableMethods(
-                        Array.isArray(data) ? data : (data.methods ?? [])
-                    );
+                    setAvailableMethods(Array.isArray(data) ? data : (data.methods ?? []));
                 }
             } catch {
                 if (isMounted) {
@@ -91,9 +87,7 @@ export default function Login() {
                             <Layers className="h-6 w-6" />
                         </div>
                         <h1 className="text-2xl font-semibold">Welcome back</h1>
-                        <p className="text-sm text-white/60">
-                            Choose a provider to continue to Longlink.
-                        </p>
+                        <p className="text-sm text-white/60">Choose a provider to continue to Longlink.</p>
                     </div>
 
                     <div className="grid gap-3">

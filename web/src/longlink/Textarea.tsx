@@ -14,9 +14,7 @@ export function Textarea({ label, placeholder, description }: TextareaProps) {
 
             <UITextarea placeholder={placeholder} />
 
-            {description ? (
-                <p className="text-muted-foreground text-sm">{description}</p>
-            ) : null}
+            {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
     );
 }

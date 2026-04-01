@@ -12,12 +12,7 @@ export function RequireAuth({ children }: { children: ReactElement }) {
 
     if (!user) {
         const returnTo = `${location.pathname}${location.search}${location.hash}`;
-        return (
-            <Navigate
-                to={`/login?return_to=${encodeURIComponent(returnTo)}`}
-                replace
-            />
-        );
+        return <Navigate to={`/login?return_to=${encodeURIComponent(returnTo)}`} replace />;
     }
 
     return children;

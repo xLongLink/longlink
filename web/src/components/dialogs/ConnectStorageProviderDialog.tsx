@@ -1,11 +1,6 @@
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/ui/button';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Input } from '@/ui/input';
 
 type ConnectStorageProviderDialogProps = {
@@ -42,8 +37,8 @@ export default function ConnectStorageProviderDialog({
             <DialogHeader>
                 <DialogTitle>Connect storage provider</DialogTitle>
                 <DialogDescription>
-                    Register a top-level object storage provider. Applications
-                    can create or bind buckets from these connections.
+                    Register a top-level object storage provider. Applications can create or bind buckets from these
+                    connections.
                 </DialogDescription>
             </DialogHeader>
 
@@ -51,20 +46,14 @@ export default function ConnectStorageProviderDialog({
                 <Input
                     placeholder="Provider name"
                     value={providerName}
-                    onChange={(event) =>
-                        onProviderNameChange(event.target.value)
-                    }
+                    onChange={(event) => onProviderNameChange(event.target.value)}
                 />
                 <Input
                     placeholder="Endpoint"
                     value={endpoint}
                     onChange={(event) => onEndpointChange(event.target.value)}
                 />
-                <Input
-                    placeholder="Bucket"
-                    value={bucket}
-                    onChange={(event) => onBucketChange(event.target.value)}
-                />
+                <Input placeholder="Bucket" value={bucket} onChange={(event) => onBucketChange(event.target.value)} />
                 <Input
                     placeholder="Access key"
                     value={accessKey}
@@ -80,11 +69,7 @@ export default function ConnectStorageProviderDialog({
             </div>
 
             <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    onClick={onConnect}
-                    disabled={!canConnect}
-                >
+                <Button variant="outline" onClick={onConnect} disabled={!canConnect}>
                     <PlusCircle className="h-4 w-4" />
                     Connect
                 </Button>

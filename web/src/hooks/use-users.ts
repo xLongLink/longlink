@@ -32,9 +32,7 @@ export function useUsers(): UseUsersResult {
             });
             setUsers(response);
         } catch (err) {
-            setError(
-                err instanceof Error ? err.message : 'Failed to load users'
-            );
+            setError(err instanceof Error ? err.message : 'Failed to load users');
             setUsers([]);
         } finally {
             setIsLoading(false);

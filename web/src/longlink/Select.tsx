@@ -1,13 +1,7 @@
 import { Button } from '@/ui/button';
 import { ButtonGroup } from '@/ui/button-group';
 import { Label } from '@/ui/label';
-import {
-    Select as UISelect,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/ui/select';
+import { Select as UISelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select';
 
 type SelectOption = {
     label: string;
@@ -26,22 +20,9 @@ type SelectProps = {
     submit?: string;
 };
 
-export function Select({
-    name,
-    label,
-    value,
-    placeholder,
-    description,
-    options,
-    disabled,
-    submit,
-}: SelectProps) {
+export function Select({ name, label, value, placeholder, description, options, disabled, submit }: SelectProps) {
     const renderControl = () => (
-        <UISelect
-            name={name}
-            disabled={disabled}
-            defaultValue={String(value ?? '')}
-        >
+        <UISelect name={name} disabled={disabled} defaultValue={String(value ?? '')}>
             <SelectTrigger className="w-full">
                 <SelectValue placeholder={placeholder ?? 'Select an option'} />
             </SelectTrigger>
@@ -62,11 +43,7 @@ export function Select({
             {submit ? (
                 <ButtonGroup className="w-full">
                     {renderControl()}
-                    <Button
-                        type="button"
-                        className="cursor-pointer"
-                        disabled={disabled}
-                    >
+                    <Button type="button" className="cursor-pointer" disabled={disabled}>
                         {submit}
                     </Button>
                 </ButtonGroup>
@@ -74,9 +51,7 @@ export function Select({
                 renderControl()
             )}
 
-            {description ? (
-                <p className="text-muted-foreground text-sm">{description}</p>
-            ) : null}
+            {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
     );
 }

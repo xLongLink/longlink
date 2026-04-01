@@ -2,14 +2,7 @@ import { useMemo, useState } from 'react';
 import { CreateTeamDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
 import { Card } from '@/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
 type Team = {
     name: string;
@@ -90,21 +83,14 @@ export default function Permissions() {
                     <TableBody>
                         {teams.length === 0 ? (
                             <TableRow>
-                                <TableCell
-                                    colSpan={4}
-                                    className="py-8 text-center text-muted-foreground"
-                                >
+                                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                                     No teams created yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             teams.map((team) => (
-                                <TableRow
-                                    key={`${team.name}-${team.description}`}
-                                >
-                                    <TableCell className="font-medium">
-                                        {team.name}
-                                    </TableCell>
+                                <TableRow key={`${team.name}-${team.description}`}>
+                                    <TableCell className="font-medium">{team.name}</TableCell>
                                     <TableCell>{team.description}</TableCell>
                                     <TableCell>{team.members}</TableCell>
                                     <TableCell>{team.scope}</TableCell>

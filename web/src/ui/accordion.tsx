@@ -5,29 +5,17 @@ import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 
 function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
     return (
-        <AccordionPrimitive.Root
-            data-slot="accordion"
-            className={cn('flex w-full flex-col', className)}
-            {...props}
-        />
+        <AccordionPrimitive.Root data-slot="accordion" className={cn('flex w-full flex-col', className)} {...props} />
     );
 }
 
 function AccordionItem({ className, ...props }: AccordionPrimitive.Item.Props) {
     return (
-        <AccordionPrimitive.Item
-            data-slot="accordion-item"
-            className={cn('not-last:border-b', className)}
-            {...props}
-        />
+        <AccordionPrimitive.Item data-slot="accordion-item" className={cn('not-last:border-b', className)} {...props} />
     );
 }
 
-function AccordionTrigger({
-    className,
-    children,
-    ...props
-}: AccordionPrimitive.Trigger.Props) {
+function AccordionTrigger({ className, children, ...props }: AccordionPrimitive.Trigger.Props) {
     return (
         <AccordionPrimitive.Header className="flex">
             <AccordionPrimitive.Trigger
@@ -52,11 +40,7 @@ function AccordionTrigger({
     );
 }
 
-function AccordionContent({
-    className,
-    children,
-    ...props
-}: AccordionPrimitive.Panel.Props) {
+function AccordionContent({ className, children, ...props }: AccordionPrimitive.Panel.Props) {
     return (
         <AccordionPrimitive.Panel
             data-slot="accordion-content"

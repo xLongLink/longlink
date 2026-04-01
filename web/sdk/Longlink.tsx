@@ -14,9 +14,9 @@ export default function Longlink() {
     const { '*': wildcardPath } = useParams();
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
-    const { data: pagesResponse, isLoading: isAppMetadataLoading } = useApiData<
-        AppMetadata | AppNavigationPage[]
-    >(normalizedRoutePath.length === 0 ? '/pages' : null);
+    const { data: pagesResponse, isLoading: isAppMetadataLoading } = useApiData<AppMetadata | AppNavigationPage[]>(
+        normalizedRoutePath.length === 0 ? '/pages' : null
+    );
 
     const availablePages = useMemo(() => {
         if (Array.isArray(pagesResponse)) {
@@ -35,13 +35,10 @@ export default function Longlink() {
     }, [availablePages]);
 
     const activePagePath = normalizedRoutePath || fallbackPagePath;
-    const pageEndpoint =
-        activePagePath.length > 0 ? `/${activePagePath}` : null;
+    const pageEndpoint = activePagePath.length > 0 ? `/${activePagePath}` : null;
 
     const { data, isLoading, error } = useApiData<unknown>(pageEndpoint);
-    const samplePageData = Array.isArray(data)
-        ? (data as RenderNodeSchema[])
-        : [];
+    const samplePageData = Array.isArray(data) ? (data as RenderNodeSchema[]) : [];
 
     if (error) {
         return <div>{error.message}</div>;

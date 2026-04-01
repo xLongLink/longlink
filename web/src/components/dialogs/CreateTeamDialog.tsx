@@ -1,11 +1,6 @@
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/ui/button';
-import {
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/ui/dialog';
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Input } from '@/ui/input';
 
 type CreateTeamDialogProps = {
@@ -38,42 +33,27 @@ export default function CreateTeamDialog({
             <DialogHeader>
                 <DialogTitle>Create team</DialogTitle>
                 <DialogDescription>
-                    Create a team that can be assigned to modules, resources,
-                    and administration scopes.
+                    Create a team that can be assigned to modules, resources, and administration scopes.
                 </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-3 md:grid-cols-2">
-                <Input
-                    placeholder="Team name"
-                    value={name}
-                    onChange={(event) => onNameChange(event.target.value)}
-                />
+                <Input placeholder="Team name" value={name} onChange={(event) => onNameChange(event.target.value)} />
                 <Input
                     placeholder="Description"
                     value={description}
-                    onChange={(event) =>
-                        onDescriptionChange(event.target.value)
-                    }
+                    onChange={(event) => onDescriptionChange(event.target.value)}
                 />
                 <Input
                     placeholder="Members"
                     value={members}
                     onChange={(event) => onMembersChange(event.target.value)}
                 />
-                <Input
-                    placeholder="Scope"
-                    value={scope}
-                    onChange={(event) => onScopeChange(event.target.value)}
-                />
+                <Input placeholder="Scope" value={scope} onChange={(event) => onScopeChange(event.target.value)} />
             </div>
 
             <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    onClick={onCreate}
-                    disabled={!canCreate}
-                >
+                <Button variant="outline" onClick={onCreate} disabled={!canCreate}>
                     <PlusCircle className="h-4 w-4" />
                     Create
                 </Button>
