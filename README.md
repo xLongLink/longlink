@@ -13,27 +13,27 @@ Create and activate a virtual environment with standard Python tooling:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate # or .venv\Scripts\activate on Windows
 pip install -e './api[dev]' -e './sdk'
 ```
 
 Run control plane:
 
 ```bash
-python api/main.py
+cd api
+python main.py
 ```
 
 Run sample app:
 
 ```bash
-python sdk/sample/main.py
+cd sdk/sample
+longlink dev
 ```
-
-### Frontend
 
 ```bash
-bun --cwd=web install
-bun --cwd=web dev
+cd web
+bun install
+bun run sdk
+bun run api
 ```
-
-## Status
