@@ -1,19 +1,81 @@
 import inspect
-from typing import Any, Callable, Awaitable
-from .route import Route, PageRoute
+from functools import wraps
+from typing import Any, Awaitable, Callable
+
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
+from pydantic import BaseModel
 
 Handler = Callable[..., Awaitable[Any]]
 
-_routes: list[Route] = []
-_pages: list[PageRoute] = []
+api_router = APIRouter()
+_pages: list[dict[str, str]] = []
+
+
+def _normalize_path(path: str) -> str:
+    return path.split("?", 1)[0]
+
+
+def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
+    @wraps(handler)
+    async def endpoint(*args, **kwargs):
+        body = await handler(*args, **kwargs)
+
+        if is_page:
+            from longlink.ui import Page
+
+            if not isinstance(body, Page):
+                return PlainTextResponse(
+                    "Invalid response type. Page routes must return longlink.ui.Page.",
+                    status_code=500,
+                )
+            return JSONResponse(list(body))
+
+        return _format_response(handler, body)
+
+    endpoint.__signature__ = inspect.signature(handler)
+    return endpoint
+
+
+def _format_response(handler: Handler, body: Any) -> Response | JSONResponse | PlainTextResponse:
+    return_type = inspect.signature(handler).return_annotation
+
+    if (
+        return_type is not inspect.Signature.empty
+        and isinstance(return_type, type)
+        and issubclass(return_type, BaseModel)
+    ):
+        if not isinstance(body, return_type):
+            return PlainTextResponse(
+                f"Invalid response type. Expected {return_type.__name__}.",
+                status_code=500,
+            )
+
+        if hasattr(body, "model_dump_json"):
+            response_body = body.model_dump_json()
+        else:
+            response_body = body.json()
+
+        return Response(content=response_body, media_type="application/json")
+
+    if isinstance(body, dict):
+        return JSONResponse(body)
+
+    if isinstance(body, bytes):
+        return Response(content=body, media_type="text/plain")
+
+    return PlainTextResponse(str(body))
 
 
 def route(path: str, methods: list[str] | None = None):
-    normalized_methods = methods or ["GET"]
+    normalized_methods = [method.upper() for method in (methods or ["GET"])]
 
     def decorator(func: Handler) -> Handler:
-        for method in normalized_methods:
-            _routes.append(Route(method.upper(), path, func))
+        api_router.add_api_route(
+            _normalize_path(path),
+            _build_endpoint(func),
+            methods=normalized_methods,
+        )
         return func
 
     return decorator
@@ -21,46 +83,36 @@ def route(path: str, methods: list[str] | None = None):
 
 def page(path: str, name: str, icon: str):
     def decorator(func: Handler) -> Handler:
-        _pages.append(PageRoute(path, func, name=name, icon=icon))
-        _routes.append(_pages[-1])
+        _pages.append({"path": _normalize_path(path), "name": name, "icon": icon})
+        api_router.add_api_route(
+            _normalize_path(path),
+            _build_endpoint(func, is_page=True),
+            methods=["GET"],
+        )
         return func
 
     return decorator
 
 
 def pages() -> list[dict[str, str]]:
-    return [{"path": page.template, "name": page.name, "icon": page.icon} for page in _pages]
+    return list(_pages)
 
 
-def match(method: str, path: str, query_string: str = "") -> tuple[Handler | None, dict[str, Any]]:
-    full_path = path
-    if query_string:
-        separator = "&" if "?" in path else "?"
-        full_path = f"{path}{separator}{query_string}"
-
-    for registered_route in _routes:
-        if registered_route.method != method.upper():
-            continue
-
-        params = registered_route.match(full_path)
-        if params is None:
-            continue
-
-        sig = inspect.signature(registered_route.handler)
-        filtered = {name: value for name, value in params.items() if name in sig.parameters}
-        bound = sig.bind_partial(**filtered)
-        bound.apply_defaults()
-        return registered_route.handler, bound.arguments
-
-    return None, {}
+def get(path: str):
+    return route(path, ["GET"])
 
 
-def is_page_handler(handler: Handler) -> bool:
-    return any(route.handler is handler for route in _pages)
+def post(path: str):
+    return route(path, ["POST"])
 
 
-def get(path: str): return route(path, ["GET"])
-def post(path: str): return route(path, ["POST"])
-def put(path: str): return route(path, ["PUT"])
-def patch(path: str): return route(path, ["PATCH"])
-def delete(path: str): return route(path, ["DELETE"])
+def put(path: str):
+    return route(path, ["PUT"])
+
+
+def patch(path: str):
+    return route(path, ["PATCH"])
+
+
+def delete(path: str):
+    return route(path, ["DELETE"])
