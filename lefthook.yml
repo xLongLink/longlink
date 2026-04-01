@@ -1,12 +1,12 @@
 pre-commit:
-  parallel: true
-  commands:
-    python-format-api:
-      root: "api"
-      run: "python -m isort ."
-    python-format-sdk:
-      root: "sdk"
-      run: "python -m isort ."
-    bun-format-web:
-      root: "web"
-      run: "bun run format"
+    parallel: true
+    commands:
+        python-format-api:
+            root: 'api'
+            run: 'python -m isort .'
+        python-format-sdk:
+            root: 'sdk'
+            run: 'python -m isort .'
+        bun-format-web:
+            root: 'web'
+            run: 'bun run format'
