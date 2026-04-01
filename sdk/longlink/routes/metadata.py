@@ -1,6 +1,6 @@
 """Metadata route."""
 
-from longlink import get
+from longlink.router import get
 from longlink.metadata import metadata
 
 
