@@ -8,7 +8,9 @@
         "build": "tsc -b && vite build",
         "lint": "eslint . --fix",
         "preview": "vite preview",
-        "format": "bunx prettier . --write"
+        "format": "bunx prettier . --write",
+        "build:api": "tsc -b && vite build --mode api",
+        "build:sdk": "tsc -b && vite build --mode sdk"
     },
     "dependencies": {
         "@base-ui/react": "^1.1.0",
