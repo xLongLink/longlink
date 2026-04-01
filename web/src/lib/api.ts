@@ -1,7 +1,10 @@
-const defaultApiBaseUrl =
-    import.meta.env.MODE === 'sdk'
-        ? 'http://localhost:1707'
-        : 'http://localhost:8000';
+import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
+
+const isSdkMode = import.meta.env.MODE === 'sdk';
+
+const defaultApiBaseUrl = isSdkMode
+    ? 'http://localhost:1707'
+    : 'http://localhost:8000';
 
 const apiBaseUrl =
     import.meta.env.VITE_API_BASE_URL?.toString() ?? defaultApiBaseUrl;
@@ -13,82 +16,109 @@ export const getApiBaseUrl = () => normalizeBaseUrl(apiBaseUrl);
 type QueryValue = string | number | boolean | null | undefined;
 export type ApiQueryParams = Record<string, QueryValue>;
 
-export type ApiRequestOptions<TBody = unknown> = Omit<RequestInit, 'body'> & {
+export type ApiRequestOptions<TBody = unknown> = Omit<
+    AxiosRequestConfig<TBody>,
+    'baseURL' | 'params' | 'url' | 'data'
+> & {
     body?: TBody;
     query?: ApiQueryParams;
+    appName?: string;
 };
 
-const buildApiUrl = (path: string, query?: ApiQueryParams) => {
-    const url = new URL(path, getApiBaseUrl());
+const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '');
 
-    if (query) {
-        Object.entries(query).forEach(([key, value]) => {
-            if (value === null || value === undefined) return;
-            url.searchParams.set(key, String(value));
-        });
+const normalizeAppPathForSdk = (path: string) => {
+    const sdkPathMatch = path.match(/^\/apps\/[^/]+\/?(.*)$/);
+
+    if (!sdkPathMatch) {
+        return path;
     }
 
-    return url.toString();
+    const sdkRelativePath = trimSlashes(sdkPathMatch[1] ?? '');
+    return sdkRelativePath.length > 0 ? `/${sdkRelativePath}` : '/';
 };
 
-const isJsonBody = (body: unknown): body is Record<string, unknown> => {
-    if (body === null || body === undefined) return false;
-    if (typeof body === 'string') return false;
-    if (body instanceof FormData) return false;
-    if (body instanceof URLSearchParams) return false;
-    if (body instanceof Blob) return false;
-    if (body instanceof ArrayBuffer) return false;
-    return typeof body === 'object';
+const normalizePath = (path: string, appName?: string) => {
+    if (isSdkMode) {
+        return normalizeAppPathForSdk(path);
+    }
+
+    if (path.startsWith('/apps/')) {
+        return path;
+    }
+
+    if (!appName) {
+        return path;
+    }
+
+    const normalizedAppName = trimSlashes(appName);
+    const normalizedPath = trimSlashes(path);
+
+    if (normalizedPath.length === 0) {
+        return `/apps/${normalizedAppName}`;
+    }
+
+    return `/apps/${normalizedAppName}/${normalizedPath}`;
+};
+
+const buildApiUrl = (path: string, appName?: string) =>
+    `${getApiBaseUrl()}${normalizePath(path, appName)}`;
+
+const toApiErrorMessage = (error: AxiosError) => {
+    const status = error.response?.status;
+    const defaultMessage = `API request failed (${status ?? 'unknown'})`;
+    const responseData = error.response?.data;
+
+    if (typeof responseData === 'string' && responseData.trim().length > 0) {
+        return responseData;
+    }
+
+    if (responseData && typeof responseData === 'object') {
+        const typedData = responseData as { detail?: string; message?: string };
+        return typedData.detail ?? typedData.message ?? defaultMessage;
+    }
+
+    return defaultMessage;
 };
 
 export async function apiFetch<TResponse>(
     path: string,
     options: ApiRequestOptions = {}
 ): Promise<TResponse> {
-    const { query, headers, body, ...init } = options;
-    const requestHeaders = new Headers(headers);
+    const { query, body, appName, ...config } = options;
 
-    if (!requestHeaders.has('Accept')) {
-        requestHeaders.set('Accept', 'application/json');
-    }
+    try {
+        const response = await axios.request<string>({
+            baseURL: getApiBaseUrl(),
+            url: normalizePath(path, appName),
+            params: query,
+            data: body,
+            responseType: 'text',
+            headers: {
+                Accept: 'application/json',
+                ...config.headers,
+            },
+            ...config,
+        });
 
-    let requestBody: BodyInit | undefined = body as BodyInit | undefined;
-
-    if (isJsonBody(body)) {
-        requestHeaders.set('Content-Type', 'application/json');
-        requestBody = JSON.stringify(body);
-    }
-
-    const response = await fetch(buildApiUrl(path, query), {
-        ...init,
-        headers: requestHeaders,
-        body: requestBody,
-    });
-
-    if (!response.ok) {
-        let message = `API request failed (${response.status})`;
-
-        try {
-            const errorBody = (await response.json()) as {
-                detail?: string;
-                message?: string;
-            };
-            message = errorBody.detail ?? errorBody.message ?? message;
-        } catch {
-            // Ignore JSON parse errors and keep the default message.
+        if (response.status === 204 || response.data.length === 0) {
+            return undefined as TResponse;
         }
 
-        throw new Error(message);
-    }
+        const contentType = response.headers['content-type'];
+        if (contentType?.includes('application/json')) {
+            return JSON.parse(response.data) as TResponse;
+        }
 
-    if (response.status === 204) {
-        return undefined as TResponse;
-    }
+        return response.data as TResponse;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(toApiErrorMessage(error));
+        }
 
-    const contentType = response.headers.get('content-type');
-    if (contentType?.includes('application/json')) {
-        return (await response.json()) as TResponse;
+        throw error;
     }
-
-    return (await response.text()) as TResponse;
 }
+
+export const buildAppApiPath = (path: string, appName?: string) =>
+    buildApiUrl(path, appName);
