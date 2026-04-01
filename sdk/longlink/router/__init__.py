@@ -1,10 +1,9 @@
 import inspect
-from functools import wraps
-from typing import Any, Awaitable, Callable
-
+from typing import Any, Callable, Awaitable
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel
+from functools import wraps
+from fastapi.responses import Response, JSONResponse, PlainTextResponse
 
 Handler = Callable[..., Awaitable[Any]]
 
@@ -75,6 +74,7 @@ def route(path: str, methods: list[str] | None = None):
             _normalize_path(path),
             _build_endpoint(func),
             methods=normalized_methods,
+            response_model=None,
         )
         return func
 
@@ -88,6 +88,7 @@ def page(path: str, name: str, icon: str):
             _normalize_path(path),
             _build_endpoint(func, is_page=True),
             methods=["GET"],
+            response_model=None,
         )
         return func
 
