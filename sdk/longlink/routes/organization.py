@@ -1,4 +1,4 @@
-from longlink import put, post
+from longlink.router import put, post
 from longlink.organization import OrganizationSettings, org
 
 
