@@ -4,19 +4,22 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 // https://vite.dev/config/
-export default defineConfig({
-    plugins: [react(), tailwindcss()],
-    resolve: {
-        alias: {
-            '@': path.resolve(__dirname, './src'),
-        },
-    },
-    build: {
-        rollupOptions: {
-            input: {
-                api: path.resolve(__dirname, 'api/index.html'),
-                sdk: path.resolve(__dirname, 'sdk/index.html'),
+export default defineConfig(({ mode }) => {
+    const isSDK = mode === 'sdk';
+
+    return {
+        root: path.resolve(__dirname, isSDK ? 'sdk' : 'api'),
+
+        plugins: [react(), tailwindcss()],
+
+        resolve: {
+            alias: {
+                '@': path.resolve(__dirname, './src'),
             },
         },
-    },
+
+        build: {
+            outDir: isSDK ? 'dist/sdk' : 'dist/api',
+        },
+    };
 });
