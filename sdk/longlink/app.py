@@ -1,52 +1,44 @@
-import json
 import inspect
-import longlink.router as router
-from typing import Any, get_type_hints
+from functools import wraps
+from typing import Any, Callable, Awaitable, get_type_hints
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel
-from starlette.routing import Route
-from starlette.requests import Request
-from starlette.responses import Response, JSONResponse, PlainTextResponse
-from starlette.applications import Starlette
+
+import longlink.router as router
+
+Handler = Callable[..., Awaitable[Any]]
 
 
-def create_app() -> Starlette:
-    async def endpoint(request: Request) -> Response:
-        return await dispatch_request(request)
+def create_app() -> FastAPI:
+    app = FastAPI()
 
-    methods_by_path: dict[str, set[str]] = {}
     for registered_route in router._routes:
         path = registered_route.template.split("?", 1)[0]
-        methods_by_path.setdefault(path, set()).add(registered_route.method)
+        app.add_api_route(
+            path,
+            create_route_endpoint(registered_route.handler),
+            methods=[registered_route.method],
+        )
 
-    routes = [
-        Route(path, endpoint, methods=sorted(methods))
-        for path, methods in methods_by_path.items()
-    ]
-
-    return Starlette(routes=routes)
+    return app
 
 
-async def dispatch_request(request: Request) -> Response:
-    method = request.method
-    path = request.url.path
-    query_string = request.url.query
+def create_route_endpoint(handler: Handler) -> Handler:
+    @wraps(handler)
+    async def endpoint(*args, **kwargs):
+        body = await handler(*args, **kwargs)
+        return format_handler_response(handler, body)
 
-    handler, params = router.match(method, path, query_string=query_string)
+    endpoint.__signature__ = inspect.signature(handler)
+    return endpoint
 
-    if not handler:
-        return PlainTextResponse("Not Found", status_code=404)
 
-    body_payload = await read_json_body(request)
-    call_params = merge_body_params(handler, params, body_payload)
-
-    if call_params:
-        body = await handler(**call_params)
-    else:
-        body = await handler()
-
+def format_handler_response(handler: Handler, body: Any) -> Response | JSONResponse | PlainTextResponse:
     is_page_handler = router.is_page_handler(handler)
-
     return_type = get_type_hints(handler).get("return")
+
     if is_page_handler:
         from longlink.ui import Page
 
@@ -79,47 +71,3 @@ async def dispatch_request(request: Request) -> Response:
         return Response(content=body, media_type="text/plain")
 
     return PlainTextResponse(str(body))
-
-
-async def read_json_body(request: Request) -> dict[str, Any] | None:
-    method = request.method.upper()
-    if method in {"GET", "HEAD", "OPTIONS"}:
-        return None
-
-    body = await request.body()
-    if body == b"":
-        return None
-
-    try:
-        payload = json.loads(body)
-    except json.JSONDecodeError:
-        return None
-
-    if not isinstance(payload, dict):
-        return None
-
-    return payload
-
-
-def merge_body_params(handler, params: dict[str, Any], payload: dict[str, Any] | None) -> dict[str, Any]:
-    if payload is None:
-        return params
-
-    merged_params = dict(params)
-    signature = inspect.signature(handler)
-    annotations = get_type_hints(handler)
-
-    missing_parameters = [name for name in signature.parameters if name not in merged_params]
-
-    if len(missing_parameters) == 1:
-        candidate = missing_parameters[0]
-        annotation = annotations.get(candidate)
-        if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-            merged_params[candidate] = annotation.model_validate(payload)
-            return merged_params
-
-    for key, value in payload.items():
-        if key in signature.parameters and key not in merged_params:
-            merged_params[key] = value
-
-    return merged_params
