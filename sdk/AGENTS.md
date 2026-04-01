@@ -9,7 +9,7 @@ This folder contains the LongLink Python SDK, the folder contains:
 You can install the SDK locally in development mode with the following command:
 
 ```bash
-uv pip install -e './sdk'
+pip install -e './sdk'
 ```
 
 ## Tests
@@ -29,5 +29,5 @@ The sdk folder contains the code to create a LongLink application. Each reposito
 Fix imports with `isort`:
 
 ```
-isort .
+python -m isort .
 ```

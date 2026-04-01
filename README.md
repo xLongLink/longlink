@@ -37,3 +37,17 @@ bun install
 bun run sdk
 bun run api
 ```
+
+## Git Hooks (Lefthook)
+
+Install Lefthook and enable repository hooks:
+
+```bash
+pip install lefthook
+lefthook install
+```
+
+Once installed, every commit runs:
+
+- Python import formatting in `api/` and `sdk/` with `python -m isort .`
+- Frontend formatting in `web/` with `bun run format`

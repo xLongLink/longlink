@@ -19,5 +19,5 @@ Is a FastAPI application that handles authentication, permissions, and routing t
 Fix imports with `isort`:
 
 ```
-isort .
+python -m isort .
 ```
