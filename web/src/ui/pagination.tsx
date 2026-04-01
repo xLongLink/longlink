@@ -27,7 +27,7 @@ function PaginationContent({
     return (
         <ul
             data-slot="pagination-content"
-            className={cn('gap-0.5 flex items-center', className)}
+            className={cn('flex items-center gap-0.5', className)}
             {...props}
         />
     );
@@ -68,8 +68,9 @@ function PaginationLink({
 
 function PaginationPrevious({
     className,
+    text = 'Previous',
     ...props
-}: React.ComponentProps<typeof PaginationLink>) {
+}: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
     return (
         <PaginationLink
             aria-label="Go to previous page"
@@ -78,15 +79,16 @@ function PaginationPrevious({
             {...props}
         >
             <ChevronLeftIcon data-icon="inline-start" />
-            <span className="hidden sm:block">Previous</span>
+            <span className="hidden sm:block">{text}</span>
         </PaginationLink>
     );
 }
 
 function PaginationNext({
     className,
+    text = 'Next',
     ...props
-}: React.ComponentProps<typeof PaginationLink>) {
+}: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
     return (
         <PaginationLink
             aria-label="Go to next page"
@@ -94,7 +96,7 @@ function PaginationNext({
             className={cn('pr-1.5!', className)}
             {...props}
         >
-            <span className="hidden sm:block">Next</span>
+            <span className="hidden sm:block">{text}</span>
             <ChevronRightIcon data-icon="inline-end" />
         </PaginationLink>
     );
@@ -109,7 +111,7 @@ function PaginationEllipsis({
             aria-hidden
             data-slot="pagination-ellipsis"
             className={cn(
-                "size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4 flex items-center justify-center",
+                "flex size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
                 className
             )}
             {...props}
