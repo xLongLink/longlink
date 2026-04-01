@@ -14,9 +14,8 @@ export default defineConfig({
     build: {
         rollupOptions: {
             input: {
-                index: path.resolve(__dirname, 'index.html'),
-                api: path.resolve(__dirname, 'api.html'),
-                sdk: path.resolve(__dirname, 'sdk.html'),
+                api: path.resolve(__dirname, 'api/index.html'),
+                sdk: path.resolve(__dirname, 'sdk/index.html'),
             },
         },
     },
