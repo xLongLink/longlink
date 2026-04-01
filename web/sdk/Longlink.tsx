@@ -8,7 +8,6 @@ type AppMetadata = {
     pages?: AppNavigationPage[];
 };
 
-const sdkAppId = import.meta.env.VITE_SDK_APP_ID;
 const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '');
 
 export default function Longlink() {
@@ -17,9 +16,7 @@ export default function Longlink() {
 
     const { data: appMetadata, isLoading: isAppMetadataLoading } =
         useApiData<AppMetadata>(
-            sdkAppId && normalizedRoutePath.length === 0
-                ? `/apps/${sdkAppId}`
-                : null
+            normalizedRoutePath.length === 0 ? '/pages' : null
         );
 
     const fallbackPagePath = useMemo(() => {
@@ -31,20 +28,13 @@ export default function Longlink() {
     }, [appMetadata?.pages]);
 
     const activePagePath = normalizedRoutePath || fallbackPagePath;
-    const pageEndpoint = sdkAppId
-        ? activePagePath.length > 0
-            ? `/apps/${sdkAppId}/${activePagePath}`
-            : null
-        : null;
+    const pageEndpoint =
+        activePagePath.length > 0 ? `/${activePagePath}` : null;
 
     const { data, isLoading, error } = useApiData<unknown>(pageEndpoint);
     const samplePageData = Array.isArray(data)
         ? (data as RenderNodeSchema[])
         : [];
-
-    if (!sdkAppId) {
-        return <div>Missing VITE_SDK_APP_ID configuration.</div>;
-    }
 
     if (error) {
         return <div>{error.message}</div>;

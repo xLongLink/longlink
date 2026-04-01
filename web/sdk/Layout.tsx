@@ -12,12 +12,8 @@ type AppMetadata = {
     pages?: AppNavigationPage[];
 };
 
-const sdkAppId = import.meta.env.VITE_SDK_APP_ID;
-
 export default function Layout() {
-    const { data: appMetadata, isLoading } = useApiData<AppMetadata>(
-        sdkAppId ? `/apps/${sdkAppId}` : null
-    );
+    const { data: appMetadata, isLoading } = useApiData<AppMetadata>('/pages');
 
     const tabs = isLoading
         ? [
