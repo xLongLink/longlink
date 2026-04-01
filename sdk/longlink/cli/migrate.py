@@ -1,6 +1,5 @@
 import click
-
-from longlink.database.migrations import make_migrations, migrate
+from longlink.database.migrations import migrate, make_migrations
 
 
 @click.command(name="migrate")
