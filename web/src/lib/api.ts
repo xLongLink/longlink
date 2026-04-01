@@ -1,4 +1,7 @@
-const defaultApiBaseUrl = 'http://localhost:8000';
+const defaultApiBaseUrl =
+    import.meta.env.MODE === 'sdk'
+        ? 'http://localhost:1707'
+        : 'http://localhost:8000';
 
 const apiBaseUrl =
     import.meta.env.VITE_API_BASE_URL?.toString() ?? defaultApiBaseUrl;
