@@ -4,14 +4,14 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite --open /api/",
         "build": "tsc -b && vite build",
         "lint": "eslint . --fix",
         "preview": "vite preview",
         "format": "bunx prettier . --write",
         "build:api": "tsc -b && vite build --mode api",
         "build:sdk": "tsc -b && vite build --mode sdk",
-        "dev:sdk": "vite --open /sdk/"
+        "api": "vite --open /api/",
+        "sdk": "vite --open /sdk/"
     },
     "dependencies": {
         "@base-ui/react": "^1.1.0",

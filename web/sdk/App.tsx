@@ -1,35 +1,22 @@
 import { Toaster } from '@/ui/sonner';
 import { ThemeProvider } from '@/components/theme';
-import { RouterProvider, createBrowserRouter } from 'react-router';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
 import { useIsFetching, useIsMutating } from '@tanstack/react-query';
 import Layout from './Layout';
-import { RequireAuth } from '@/components/Auth';
-import Login from '@/pages/user/Login';
 import NotFound from '@/pages/NotFound';
 import Longlink from './Longlink';
 
 const router = createBrowserRouter([
     {
         path: '/',
-        element: (
-            <RequireAuth>
-                <Layout />
-            </RequireAuth>
-        ),
+        element: <Layout />,
         children: [
             { index: true, element: <Longlink /> },
             { path: '*', element: <Longlink /> },
         ],
     },
-    { path: '/login', element: <Login /> },
-    {
-        path: '*',
-        element: (
-            <RequireAuth>
-                <NotFound />
-            </RequireAuth>
-        ),
-    },
+    { path: '/login', element: <Navigate to="/" replace /> },
+    { path: '*', element: <NotFound /> },
 ]);
 
 function GlobalLoader() {
