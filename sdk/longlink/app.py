@@ -1,12 +1,12 @@
 import inspect
-from functools import wraps
-from typing import Any, Callable, Awaitable, get_type_hints
-
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse, PlainTextResponse, Response
-from pydantic import BaseModel
-
 import longlink.router as router
+from typing import Any, Callable, Awaitable, get_type_hints
+from fastapi import FastAPI
+from pathlib import Path
+from pydantic import BaseModel
+from functools import wraps
+from fastapi.responses import Response, JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 
 Handler = Callable[..., Awaitable[Any]]
 
@@ -21,6 +21,11 @@ def create_app() -> FastAPI:
             create_route_endpoint(registered_route.handler),
             methods=[registered_route.method],
         )
+
+
+    static_dir = Path(__file__).resolve().parent / "static"
+    if static_dir.exists():
+        app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
     return app
 
