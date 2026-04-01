@@ -1,7 +1,7 @@
 import click
-from longlink.cli.build import build_command
 from longlink.cli.dev import dev_command
 from longlink.cli.init import init_command
+from longlink.cli.build import build_command
 from longlink.cli.migrate import migrate_command
 
 

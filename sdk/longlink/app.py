@@ -1,9 +1,7 @@
-from pathlib import Path
-
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-
+from pathlib import Path
 from longlink.router import api_router
+from fastapi.staticfiles import StaticFiles
 
 
 def create_app() -> FastAPI:
