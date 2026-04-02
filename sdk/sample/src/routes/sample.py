@@ -36,7 +36,7 @@ async def sample_post_endpoint_with_object(object: int):
 
 # Example with params
 # Params must have a default value
-@post("/params/{object}?{start}&{end}")
+@post("/params/{object}")
 async def sample_post_endpoint_with_params(object: int, start: int = 0, end: int = 10):
     return "Sample POST endpoint response"
 
@@ -55,6 +55,6 @@ async def sample_post_user_endpoint() -> UserModel:
 
 # Example with params
 # Params must have a default value
-@get("/params/{object}?{start}&{end}")
+@get("/params/{object}")
 async def sample_get_endpoint_with_params(object: int, start: int = 0, end: int = 10):
     return "Sample GET endpoint response"
