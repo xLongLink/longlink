@@ -25,7 +25,7 @@ export type ApiRequestOptions<TBody = unknown> = Omit<
 const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '');
 
 const normalizeAppPathForSdk = (path: string) => {
-    const sdkPathMatch = path.match(/^\/apps\/[^/]+\/?(.*)$/);
+    const sdkPathMatch = path.match(/^\/apps\/[^/]+\/(.+)$/);
 
     if (!sdkPathMatch) {
         return path;
