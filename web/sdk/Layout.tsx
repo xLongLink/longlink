@@ -3,13 +3,15 @@ import { Outlet, useLocation, useNavigate } from 'react-router';
 import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { useApiData } from '@/hooks/use-data';
 import { getActiveTabConfig, getAppTabsFromPages, type AppNavigationPage } from '@/lib/navigation';
+import { getPagesFromResponse } from './pages';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
 };
 
 export default function Layout() {
-    const { data: appMetadata, isLoading } = useApiData<AppMetadata>('/pages');
+    const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/pages');
+    const pages = getPagesFromResponse(pagesResponse);
 
     const tabs = isLoading
         ? [
@@ -20,7 +22,7 @@ export default function Layout() {
                   icon: Loader2,
               },
           ]
-        : getAppTabsFromPages(appMetadata?.pages ?? []);
+        : getAppTabsFromPages(pages);
 
     return <Navigation tabs={tabs} isTabsLoading={isLoading} />;
 }
