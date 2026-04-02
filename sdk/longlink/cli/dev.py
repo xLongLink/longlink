@@ -7,9 +7,9 @@ import importlib
 
 def load_app():
     importlib.import_module("main")
-    from longlink import app
+    from longlink.app import create_app
 
-    return app
+    return create_app()
 
 
 @click.command(name="dev")
