@@ -11,9 +11,6 @@ api_router = APIRouter()
 _pages: list[dict[str, str]] = []
 
 
-def _normalize_path(path: str) -> str:
-    return path.split("?", 1)[0]
-
 
 def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
     @wraps(handler)
@@ -71,7 +68,7 @@ def route(path: str, methods: list[str] | None = None):
 
     def decorator(func: Handler) -> Handler:
         api_router.add_api_route(
-            _normalize_path(path),
+            path,
             _build_endpoint(func),
             methods=normalized_methods,
             response_model=None,
@@ -83,9 +80,9 @@ def route(path: str, methods: list[str] | None = None):
 
 def page(path: str, name: str, icon: str):
     def decorator(func: Handler) -> Handler:
-        _pages.append({"path": _normalize_path(path), "name": name, "icon": icon})
+        _pages.append({"path": path, "name": name, "icon": icon})
         api_router.add_api_route(
-            _normalize_path(path),
+            path,
             _build_endpoint(func, is_page=True),
             methods=["GET"],
             response_model=None,
