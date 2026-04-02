@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 import Render, { type RenderNodeSchema } from '@/components/Render';
 import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
+import { getPagesFromResponse } from './pages';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
@@ -18,13 +19,7 @@ export default function Longlink() {
         normalizedRoutePath.length === 0 ? '/pages' : null
     );
 
-    const availablePages = useMemo(() => {
-        if (Array.isArray(pagesResponse)) {
-            return pagesResponse;
-        }
-
-        return pagesResponse?.pages ?? [];
-    }, [pagesResponse]);
+    const availablePages = useMemo(() => getPagesFromResponse(pagesResponse), [pagesResponse]);
 
     const fallbackPagePath = useMemo(() => {
         if (availablePages.length === 0) {
