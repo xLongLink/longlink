@@ -14,7 +14,7 @@ async def list_users(_: db.User = Depends(authuser)) -> list[UserResponse]:
             name=user.name,
             email=user.email,
             avatar=user.avatar,
-            oauth_github_id=user.oauth_github_id,
+            oidc_subject=user.oidc_subject,
         )
         for user in users
     ]
