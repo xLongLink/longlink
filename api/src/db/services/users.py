@@ -13,22 +13,34 @@ class UsersService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def create(
+    async def create_or_update_oidc_user(
         self,
-        name: str,
-        email: str,
-        avatar: str | None,
         *,
-        oauth_github_id: int | None,
+        oidc_subject: str,
+        email: str,
+        name: str,
+        avatar: str | None,
     ) -> User:
-        """Add a new user to the database and return the user."""
+        '''Create a new OIDC user or update an existing one.'''
 
-        if oauth_github_id is not None:
-            existing_user = await self.get(oauth_github_id, by='github')
-            if existing_user is not None:
-                return existing_user
-        else:
-            raise ValueError('An OAuth ID must be provided to create a user.')
+        existing_user = await self.get(oidc_subject, by='oidc_subject')
+        if existing_user is not None:
+            return await self.update(
+                existing_user.id,
+                email=email,
+                name=name,
+                avatar=avatar,
+                oidc_subject=oidc_subject,
+            ) or existing_user
+
+        user_by_email = await self.get(email, by='email')
+        if user_by_email is not None:
+            return await self.update(
+                user_by_email.id,
+                name=name,
+                avatar=avatar,
+                oidc_subject=oidc_subject,
+            ) or user_by_email
 
         Session = await get_session()
         async with Session() as session:
@@ -36,7 +48,7 @@ class UsersService:
                 name=name,
                 email=email,
                 avatar=avatar,
-                oauth_github_id=oauth_github_id,
+                oidc_subject=oidc_subject,
             )
 
             session.add(user)
@@ -45,14 +57,14 @@ class UsersService:
             return user
 
     async def get(self, param: int | str, *, by: str = 'id') -> User | None:
-        """Retrieve a user by id, email, or GitHub OAuth ID."""
+        '''Retrieve a user by id, email, or OIDC subject.'''
 
         Session = await get_session()
         async with Session() as session:
             if by == 'email':
                 result = await session.execute(select(User).where(User.email == param))
-            elif by == 'github':
-                result = await session.execute(select(User).where(User.oauth_github_id == param))
+            elif by == 'oidc_subject':
+                result = await session.execute(select(User).where(User.oidc_subject == param))
             elif by == 'id':
                 result = await session.execute(select(User).where(User.id == param))
             else:
@@ -61,7 +73,7 @@ class UsersService:
             return result.scalars().first()
 
     async def update(self, user_id: int, **params: str | int | None) -> User | None:
-        """Update a user and return the updated record."""
+        '''Update a user and return the updated record.'''
 
         Session = await get_session()
         async with Session() as session:

@@ -12,4 +12,4 @@ class UserResponse(BaseModel):
     name: str
     email: EmailStr
     avatar: str | None = None
-    oauth_github_id: int | None = None
+    oidc_subject: str | None = None
