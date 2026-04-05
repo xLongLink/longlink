@@ -10,9 +10,12 @@ class Env(BaseSettings):
     # Control plane database URL
     ENV_DATABASE_URL: str = 'sqlite+aiosqlite:///./dev.db'
 
-    # OAuth credentials
-    ENV_GITHUB_CLIENT_ID: str | None = None
-    ENV_GITHUB_CLIENT_SECRET: str | None = None
+    # OIDC bridge credentials
+    ENV_OIDC_CLIENT_ID: str | None = None
+    ENV_OIDC_CLIENT_SECRET: str | None = None
+    ENV_OIDC_ISSUER: str | None = None
+    ENV_OIDC_REDIRECT_URI: str = 'http://localhost:8000/auth/oidc'
+    ENV_OIDC_SCOPES: str = 'openid profile email'
 
     # Web URL used for auth redirects
     URL: str = 'http://localhost:5173'
@@ -27,9 +30,12 @@ class DevEnv(Env):
     # Control plane database URL
     ENV_DATABASE_URL: str = 'sqlite+aiosqlite:///./dev.db'
 
-    # OAuth credentials
-    ENV_GITHUB_CLIENT_ID: str | None = None
-    ENV_GITHUB_CLIENT_SECRET: str | None = None
+    # OIDC bridge credentials
+    ENV_OIDC_CLIENT_ID: str | None = None
+    ENV_OIDC_CLIENT_SECRET: str | None = None
+    ENV_OIDC_ISSUER: str | None = None
+    ENV_OIDC_REDIRECT_URI: str = 'http://localhost:8000/auth/oidc'
+    ENV_OIDC_SCOPES: str = 'openid profile email'
 
     # Web URL used for auth redirects
     URL: str = 'http://localhost:5173'
