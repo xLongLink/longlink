@@ -1,5 +1,5 @@
 import src.db as db
-from typing import Any, cast
+from typing import cast
 from fastapi import Request, HTTPException
 from src.env import env
 from src.auth import AVAILABLE_AUTH_METHODS, oauth
@@ -13,84 +13,41 @@ async def login_methods() -> list[str]:
     return AVAILABLE_AUTH_METHODS
 
 
-@router.get('/login/github')
-async def login_github(request: Request):
-    if 'github' not in AVAILABLE_AUTH_METHODS:
+@router.get('/login/oidc')
+async def login_oidc(request: Request):
+    if 'oidc' not in AVAILABLE_AUTH_METHODS:
         raise HTTPException(404, 'Authentication method not available')
 
-    github = cast(StarletteOAuth2App, oauth.create_client('github'))
+    oidc = cast(StarletteOAuth2App, oauth.create_client('oidc'))
 
-    return await github.authorize_redirect(
+    return await oidc.authorize_redirect(
         request,
-        redirect_uri='http://localhost:8000/auth/github',
+        redirect_uri=env.ENV_OIDC_REDIRECT_URI,
     )
 
 
-@router.get('/auth/github')
-async def auth_github(request: Request):
-    if 'github' not in AVAILABLE_AUTH_METHODS:
+@router.get('/auth/oidc')
+async def auth_oidc(request: Request):
+    if 'oidc' not in AVAILABLE_AUTH_METHODS:
         raise HTTPException(404, 'Authentication method not available')
 
-    github = cast(StarletteOAuth2App, oauth.create_client('github'))
+    oidc = cast(StarletteOAuth2App, oauth.create_client('oidc'))
 
-    token = await github.authorize_access_token(request)
-    userinfo = await github.get('user', token=token)
+    token = await oidc.authorize_access_token(request)
+    userinfo = token.get('userinfo')
+    if userinfo is None:
+        userinfo = await oidc.userinfo(token=token)
 
-    github_user = userinfo.json()
-    email = github_user.get('email')
+    subject = str(userinfo['sub'])
+    email = userinfo.get('email') or f'{subject}@users.noreply.oidc'
+    name = userinfo.get('name') or userinfo.get('preferred_username') or email
 
-    if not email:
-        emails_response = await github.get('user/emails', token=token)
-        emails = cast(list[dict[str, Any]], emails_response.json())
-        primary_verified_email = next(
-            (
-                entry.get('email')
-                for entry in emails
-                if entry.get('primary') and entry.get('verified') and entry.get('email')
-            ),
-            None,
-        )
-        email = primary_verified_email
-
-    if not email:
-        email = '{}@users.noreply.github.com'.format(github_user.get('login') or github_user.get('id'))
-
-    # Ensure that the user exists in our database
-    user = await db.users.create(
-        name=github_user.get('name') or github_user.get('login'),
+    user = await db.users.create_or_update_oidc_user(
+        oidc_subject=subject,
         email=email,
-        avatar=github_user.get('avatar_url'),
-        oauth_github_id=github_user.get('id'),
+        name=name,
+        avatar=userinfo.get('picture'),
     )
-
-    request.session['userid'] = user.id
-    return RedirectResponse(env.URL)
-
-
-@router.get('/login/localhost')
-async def login_localhost(request: Request):
-    if not env.DEV or 'localhost' not in AVAILABLE_AUTH_METHODS:
-        raise HTTPException(404, 'Authentication method not available')
-
-    localhost_oauth_id = 0
-    localhost_email = 'localhost@longlick.ch'
-    localhost_name = 'Localhost User'
-
-    user = await db.users.get(localhost_oauth_id, by='github')
-    if user is None:
-        user = await db.users.get(localhost_email, by='email')
-
-    if user is None:
-        user = await db.users.create(
-            name=localhost_name,
-            email=localhost_email,
-            avatar=None,
-            oauth_github_id=localhost_oauth_id,
-        )
-    elif user.email != localhost_email:
-        updated_user = await db.users.update(user.id, email=localhost_email)
-        if updated_user is not None:
-            user = updated_user
 
     request.session['userid'] = user.id
     return RedirectResponse(env.URL)
