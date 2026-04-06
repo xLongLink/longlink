@@ -2,14 +2,13 @@ import { Chrome, Github, Layers } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Card, CardContent } from '@/ui/card';
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { apiFetch, getApiBaseUrl } from '@/lib/api';
 import { useUser } from '@/hooks/use-user';
 
 type LoginMethodsResponse = string[] | { methods?: string[] };
 
 export default function Login() {
-    const location = useLocation();
     const navigate = useNavigate();
     const { data: user, isLoading } = useUser();
     const apiBaseUrl = getApiBaseUrl();
@@ -33,14 +32,7 @@ export default function Login() {
         }
     };
 
-    const searchParams = new URLSearchParams(location.search);
-    const queryReturnTo = searchParams.get('return_to');
-    const returnTo = (() => {
-        if (!queryReturnTo || !queryReturnTo.startsWith('/')) {
-            return getDefaultReturnTo();
-        }
-        return queryReturnTo.startsWith('/login') ? getDefaultReturnTo() : queryReturnTo;
-    })();
+    const returnTo = getDefaultReturnTo();
 
     useEffect(() => {
         if (!isLoading && user) {
