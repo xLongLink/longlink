@@ -1,0 +1,23 @@
+{
+  "realm": "longlink-control-plane",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "longlink-api",
+      "name": "longlink-api",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "longlink-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8000/auth/oidc"
+      ],
+      "webOrigins": [
+        "http://localhost:8000"
+      ]
+    }
+  ]
+}
