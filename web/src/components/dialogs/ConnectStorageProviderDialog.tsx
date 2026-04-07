@@ -6,13 +6,13 @@ import { Input } from '@/ui/input';
 type ConnectStorageProviderDialogProps = {
     providerName: string;
     endpoint: string;
-    bucket: string;
+    region: string;
     accessKey: string;
     secretKey: string;
     canConnect: boolean;
     onProviderNameChange: (value: string) => void;
     onEndpointChange: (value: string) => void;
-    onBucketChange: (value: string) => void;
+    onRegionChange: (value: string) => void;
     onAccessKeyChange: (value: string) => void;
     onSecretKeyChange: (value: string) => void;
     onConnect: () => void;
@@ -21,13 +21,13 @@ type ConnectStorageProviderDialogProps = {
 export default function ConnectStorageProviderDialog({
     providerName,
     endpoint,
-    bucket,
+    region,
     accessKey,
     secretKey,
     canConnect,
     onProviderNameChange,
     onEndpointChange,
-    onBucketChange,
+    onRegionChange,
     onAccessKeyChange,
     onSecretKeyChange,
     onConnect,
@@ -49,11 +49,15 @@ export default function ConnectStorageProviderDialog({
                     onChange={(event) => onProviderNameChange(event.target.value)}
                 />
                 <Input
-                    placeholder="Endpoint"
+                    placeholder="Endpoint URL"
                     value={endpoint}
                     onChange={(event) => onEndpointChange(event.target.value)}
                 />
-                <Input placeholder="Bucket" value={bucket} onChange={(event) => onBucketChange(event.target.value)} />
+                <Input
+                    placeholder="Region (optional)"
+                    value={region}
+                    onChange={(event) => onRegionChange(event.target.value)}
+                />
                 <Input
                     placeholder="Access key"
                     value={accessKey}
