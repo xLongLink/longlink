@@ -4,9 +4,9 @@ services:
     container_name: longlink-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: longlink
-      POSTGRES_PASSWORD: longlink
-      POSTGRES_DB: longlink
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: admin
     ports:
       - "15432:5432"
 
@@ -16,8 +16,8 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin
     ports:
       - "19000:9000"
       - "19001:9001"

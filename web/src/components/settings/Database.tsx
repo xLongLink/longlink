@@ -1,15 +1,25 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ConnectDatabaseServerDialog } from '@/components/dialogs';
 import Hero from '@/longlink/Hero';
+import { apiFetch } from '@/lib/api';
 import { Card } from '@/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
 type DatabaseServer = {
     name: string;
     host: string;
-    port: string;
+    port: number;
     username: string;
-    status: 'Connected';
+    maintenance_database: string;
+};
+
+type DatabaseConnectionCreate = {
+    name: string;
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    maintenance_database: string;
 };
 
 export default function Database() {
@@ -30,27 +40,58 @@ export default function Database() {
         );
     }, [host, password, port, serverName, username]);
 
-    const onConnect = () => {
-        if (!canConnect) {
-            return;
-        }
-
-        setConnectedDatabases((current) => [
-            {
-                name: serverName.trim(),
-                host: host.trim(),
-                port: port.trim(),
-                username: username.trim(),
-                status: 'Connected',
-            },
-            ...current,
-        ]);
-
+    const resetForm = () => {
         setServerName('');
         setHost('');
         setPort('5432');
         setUsername('');
         setPassword('');
+    };
+
+    useEffect(() => {
+        const loadDatabaseConnections = async () => {
+            try {
+                const connections = await apiFetch<DatabaseServer[]>('/databases');
+                setConnectedDatabases(connections);
+            } catch {
+                setConnectedDatabases([]);
+            }
+        };
+
+        void loadDatabaseConnections();
+    }, []);
+
+    const onConnect = async () => {
+        if (!canConnect) {
+            return;
+        }
+
+        const parsedPort = Number.parseInt(port.trim(), 10);
+
+        if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+            return;
+        }
+
+        const payload: DatabaseConnectionCreate = {
+            name: serverName.trim(),
+            host: host.trim(),
+            port: parsedPort,
+            username: username.trim(),
+            password: password.trim(),
+            maintenance_database: 'postgres',
+        };
+
+        const connection = await apiFetch<DatabaseServer>('/databases', {
+            method: 'POST',
+            body: payload,
+        });
+
+        setConnectedDatabases((current) => {
+            const next = current.filter((database) => database.name !== connection.name);
+            return [connection, ...next];
+        });
+
+        resetForm();
     };
 
     return (
@@ -68,7 +109,9 @@ export default function Database() {
                     onPortChange={setPort}
                     onUsernameChange={setUsername}
                     onPasswordChange={setPassword}
-                    onConnect={onConnect}
+                    onConnect={() => {
+                        void onConnect();
+                    }}
                 />
             </Hero>
 
@@ -97,7 +140,7 @@ export default function Database() {
                                     <TableCell>{database.host}</TableCell>
                                     <TableCell>{database.port}</TableCell>
                                     <TableCell>{database.username}</TableCell>
-                                    <TableCell>{database.status}</TableCell>
+                                    <TableCell>Connected</TableCell>
                                 </TableRow>
                             ))
                         )}
