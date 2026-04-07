@@ -38,21 +38,30 @@ export function useCreateApp() {
 
 export function useTools() {
     return useQuery({
-        queryKey: ['tools'],
-        queryFn: () => apiFetch<App[]>('/tools'),
+        queryKey: ['apps', 'tool'],
+        queryFn: () =>
+            apiFetch<App[]>('/apps', {
+                query: { type: 'tool' },
+            }),
     });
 }
 
 export function useSpaces() {
     return useQuery({
-        queryKey: ['spaces'],
-        queryFn: () => apiFetch<App[]>('/spaces'),
+        queryKey: ['apps', 'space'],
+        queryFn: () =>
+            apiFetch<App[]>('/apps', {
+                query: { type: 'space' },
+            }),
     });
 }
 
 export function useProcesses() {
     return useQuery({
-        queryKey: ['processes'],
-        queryFn: () => apiFetch<App[]>('/processes'),
+        queryKey: ['apps', 'process'],
+        queryFn: () =>
+            apiFetch<App[]>('/apps', {
+                query: { type: 'process' },
+            }),
     });
 }

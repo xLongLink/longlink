@@ -56,7 +56,7 @@ export default function Tools() {
                     </Empty>
                 </Card>
             ) : (
-                <Table endpoint="/tools" schema={tableSchema} />
+                <Table endpoint="/apps?type=tool" schema={tableSchema} />
             )}
         </div>
     );
