@@ -50,8 +50,14 @@ async def auth_oidc(request: Request):
         userinfo = await oidc.userinfo(token=token)
 
     subject = str(userinfo['sub'])
-    email = userinfo.get('email') or f'{subject}@users.noreply.oidc'
-    name = userinfo.get('name') or userinfo.get('preferred_username') or email
+    given_name = userinfo.get('given_name') or 'Example'
+    family_name = userinfo.get('family_name') or 'LongLink'
+    email = userinfo.get('email') or 'example@longlink.dev'
+    name = (
+        userinfo.get('name')
+        or userinfo.get('preferred_username')
+        or f'{given_name} {family_name}'
+    )
 
     user = await db.users.create_or_update_oidc_user(
         oidc_subject=subject,

@@ -12,6 +12,7 @@ export const getApiBaseUrl = () => normalizeBaseUrl(apiBaseUrl);
 
 type QueryValue = string | number | boolean | null | undefined;
 export type ApiQueryParams = Record<string, QueryValue>;
+type RequestCredentialsMode = 'omit' | 'same-origin' | 'include';
 
 export type ApiRequestOptions<TBody = unknown> = Omit<
     AxiosRequestConfig<TBody>,
@@ -20,6 +21,7 @@ export type ApiRequestOptions<TBody = unknown> = Omit<
     body?: TBody;
     query?: ApiQueryParams;
     appName?: string;
+    credentials?: RequestCredentialsMode;
 };
 
 const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '');
@@ -78,7 +80,8 @@ const toApiErrorMessage = (error: AxiosError) => {
 };
 
 export async function apiFetch<TResponse>(path: string, options: ApiRequestOptions = {}): Promise<TResponse> {
-    const { query, body, appName, ...config } = options;
+    const { query, body, appName, credentials, ...config } = options;
+    const withCredentials = credentials === 'include';
 
     try {
         const response = await axios.request<string>({
@@ -86,6 +89,7 @@ export async function apiFetch<TResponse>(path: string, options: ApiRequestOptio
             url: normalizePath(path, appName),
             params: query,
             data: body,
+            withCredentials,
             responseType: 'text',
             headers: {
                 Accept: 'application/json',
