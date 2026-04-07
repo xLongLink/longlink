@@ -1,6 +1,7 @@
+import httpx
 import src.db as db
 from typing import cast
-from fastapi import Request
+from fastapi import Request, HTTPException
 from src.env import env
 from src.auth import oauth
 from src.router import router
@@ -17,17 +18,33 @@ async def login_methods() -> list[str]:
 async def login_oidc(request: Request):
     oidc = cast(StarletteOAuth2App, oauth.create_client('oidc'))
 
-    return await oidc.authorize_redirect(
-        request,
-        redirect_uri=env.ENV_OIDC_REDIRECT_URI,
-    )
+    try:
+        return await oidc.authorize_redirect(
+            request,
+            redirect_uri=env.ENV_OIDC_REDIRECT_URI,
+        )
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                'OIDC provider metadata is unavailable. '
+                'Check ENV_OIDC_ISSUER and provider realm configuration.'
+            ),
+        ) from exc
 
 
 @router.get('/auth/oidc')
 async def auth_oidc(request: Request):
     oidc = cast(StarletteOAuth2App, oauth.create_client('oidc'))
 
-    token = await oidc.authorize_access_token(request)
+    try:
+        token = await oidc.authorize_access_token(request)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail='OIDC token exchange failed. Verify provider URL and client credentials.',
+        ) from exc
+
     userinfo = token.get('userinfo')
     if userinfo is None:
         userinfo = await oidc.userinfo(token=token)
