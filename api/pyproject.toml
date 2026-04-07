@@ -20,6 +20,7 @@ dependencies = [
     'pydantic==2.12.5',
     'pydantic-settings',
     'python-dotenv==1.2.1',
+    'psycopg2-binary==2.9.11',
     'sqlalchemy==2.0.46',
     'starlette==0.52.1',
     'uvicorn==0.40.0',
@@ -33,7 +34,6 @@ dev = [
     'pytest==8.4.2',
     'isort==8.0.1',
     'testcontainers[postgres]==4.13.2',
-    'psycopg2-binary==2.9.11',
 ]
 
 [tool.setuptools]
