@@ -38,6 +38,25 @@ bun run sdk
 bun run api
 ```
 
+## Local Infrastructure Setup
+
+Use the root `Makefile` to start and stop local infrastructure services:
+
+```bash
+make up
+```
+
+This command:
+
+- starts Docker Compose services in detached mode
+- creates the `compute` k3d cluster on API port `6550` (and ignores the error if it already exists)
+
+To stop services and remove the cluster:
+
+```bash
+make down
+```
+
 ## Git Hooks (Lefthook)
 
 Install Lefthook and enable repository hooks:
