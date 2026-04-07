@@ -1,6 +1,7 @@
-from .models import App, Env, User, Setting, Permission, DatabaseConnection
+from .models import (App, Env, User, Setting, Permission, StorageConnection,
+                     DatabaseConnection)
 from .services import (AppsService, EnvsService, UsersService, SettingsService,
-                       DatabasesService, PermissionsService)
+                       StoragesService, DatabasesService, PermissionsService)
 
 apps = AppsService()
 envs = EnvsService()
@@ -9,3 +10,5 @@ users = UsersService()
 permissions = PermissionsService()
 
 databases = DatabasesService()
+
+storages = StoragesService()
