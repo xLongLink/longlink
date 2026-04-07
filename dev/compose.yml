@@ -34,4 +34,4 @@ services:
     ports:
       - "18080:8080"
     volumes:
-      - ./keycloak-realm-longlink-control-plane.json:/opt/keycloak/data/import/longlink-control-plane.json:ro
+      - ./keycloak-realm-dev.json:/opt/keycloak/data/import/dev.json:ro

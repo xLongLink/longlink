@@ -33,7 +33,7 @@ class DevEnv(Env):
     # OIDC bridge credentials
     ENV_OIDC_CLIENT_ID: str | None = 'longlink-api'
     ENV_OIDC_CLIENT_SECRET: str | None = 'longlink-secret'
-    ENV_OIDC_ISSUER: str | None = 'http://localhost:18080/realms/longlink-control-plane'
+    ENV_OIDC_ISSUER: str | None = 'http://localhost:18080/realms/dev'
     ENV_OIDC_REDIRECT_URI: str = 'http://localhost:8000/auth/oidc'
     ENV_OIDC_SCOPES: str = 'openid profile email'
 
