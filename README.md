@@ -40,7 +40,7 @@ bun run api
 
 ## Local Infrastructure Setup
 
-Use the root `Makefile` to start and stop local infrastructure services:
+Use the root `Makefile` (which runs `dev/compose.yml`) to start and stop local infrastructure services:
 
 ```bash
 make up
@@ -63,7 +63,7 @@ Install Lefthook and enable repository hooks:
 
 ```bash
 pip install lefthook
-lefthook install
+LEFTHOOK_CONFIG=dev/lefthook.yml lefthook install
 ```
 
 Once installed, every commit runs:

@@ -1,5 +1,5 @@
 {
-  "realm": "longlink-control-plane",
+  "realm": "dev",
   "enabled": true,
   "clients": [
     {
@@ -17,6 +17,20 @@
       ],
       "webOrigins": [
         "http://localhost:8000"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
       ]
     }
   ]
