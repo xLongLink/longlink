@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: longlink-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: longlink
+      POSTGRES_PASSWORD: longlink
+      POSTGRES_DB: longlink
+    ports:
+      - "15432:5432"
+
+  minio:
+    image: minio/minio:latest
+    container_name: longlink-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "19000:9000"
+      - "19001:9001"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: longlink-keycloak
+    restart: unless-stopped
+    command: start-dev --http-port=8080
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: dev-file
+    ports:
+      - "18080:8080"
