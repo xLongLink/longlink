@@ -4,24 +4,22 @@ from src.env import env
 from authlib.integrations.starlette_client import OAuth
 
 oauth = OAuth()
-AVAILABLE_AUTH_METHODS: list[str] = []
 
 
 def _oidc_enabled() -> bool:
     return bool(env.ENV_OIDC_ISSUER and env.ENV_OIDC_CLIENT_ID and env.ENV_OIDC_CLIENT_SECRET)
 
 
-if _oidc_enabled():
-    oauth.register(
-        name='oidc',
-        client_id=env.ENV_OIDC_CLIENT_ID,
-        client_secret=env.ENV_OIDC_CLIENT_SECRET,
-        server_metadata_url=f"{env.ENV_OIDC_ISSUER.rstrip('/')}/.well-known/openid-configuration",
-        client_kwargs={'scope': env.ENV_OIDC_SCOPES},
-    )
-    AVAILABLE_AUTH_METHODS.append('oidc')
-else:
-    print('OIDC bridge authentication not configured')
+if not _oidc_enabled():
+    raise RuntimeError('OIDC bridge authentication is required but not configured.')
+
+oauth.register(
+    name='oidc',
+    client_id=env.ENV_OIDC_CLIENT_ID,
+    client_secret=env.ENV_OIDC_CLIENT_SECRET,
+    server_metadata_url=f"{env.ENV_OIDC_ISSUER.rstrip('/')}/.well-known/openid-configuration",
+    client_kwargs={'scope': env.ENV_OIDC_SCOPES},
+)
 
 
 async def authuser(request: Request) -> db.User:
