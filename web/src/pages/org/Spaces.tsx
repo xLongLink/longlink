@@ -58,7 +58,7 @@ export default function Spaces() {
                     </Empty>
                 </Card>
             ) : (
-                <Table endpoint="/spaces" schema={tableSchema} />
+                <Table endpoint="/apps?type=space" schema={tableSchema} />
             )}
         </div>
     );
