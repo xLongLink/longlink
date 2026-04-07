@@ -42,6 +42,52 @@ bun --cwd=web install
 bun --cwd=web dev
 ```
 
+### 1.1 Local infrastructure connection parameters
+
+After running `make up`, local dependencies are available from `dev/compose.yml` (PostgreSQL + MinIO) and from the `k3d` cluster created by the Makefile (`compute`). Use the following values when connecting providers in the settings screens.
+
+#### Database (PostgreSQL)
+
+Use these values in **Settings → Database → Connect database server**:
+
+- **Server name**: `local-postgres` (or any label you prefer)
+- **Host**: `localhost`
+- **Port**: `15432`
+- **Username**: `admin`
+- **Password**: `admin`
+- **Maintenance database** (API default): `postgres`
+
+> Docker service source: `postgres` in `dev/compose.yml` with `POSTGRES_USER=admin`, `POSTGRES_PASSWORD=admin`, and port mapping `15432:5432`.
+
+#### Storage (MinIO / S3-compatible)
+
+Use these values in **Settings → Storage → Connect storage provider**:
+
+- **Provider name**: `local-minio` (or any label you prefer)
+- **Endpoint URL**: `http://localhost:19000`
+- **Region**: `us-east-1` (recommended; optional in UI)
+- **Access key**: `admin`
+- **Secret key**: `admin`
+
+> Docker service source: `minio` in `dev/compose.yml` with `MINIO_ROOT_USER=admin`, `MINIO_ROOT_PASSWORD=admin`, and port mapping `19000:9000`.
+
+#### Compute (k3d cluster)
+
+`make up` creates a local cluster named `compute` with Kubernetes API exposed on port `6550`.
+
+- **Cluster name**: `compute`
+- **Kubernetes API server URL**: `https://localhost:6550`
+- **Default namespace**: `default`
+- **TLS verification**: disable if your local certificate is not trusted (`verify_ssl=false`)
+
+If you need exact kubeconfig-auth data for manual API calls, run:
+
+```bash
+k3d kubeconfig get compute
+```
+
+Use the credentials/certificates from that kubeconfig output.
+
 ### 2. Branching
 
 - `main` → stable
