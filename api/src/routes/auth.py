@@ -1,8 +1,8 @@
 import src.db as db
 from typing import cast
-from fastapi import Request, HTTPException
+from fastapi import Request
 from src.env import env
-from src.auth import AVAILABLE_AUTH_METHODS, oauth
+from src.auth import oauth
 from src.router import router
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
@@ -10,14 +10,11 @@ from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
 @router.get('/login')
 async def login_methods() -> list[str]:
-    return AVAILABLE_AUTH_METHODS
+    return ['oidc']
 
 
 @router.get('/login/oidc')
 async def login_oidc(request: Request):
-    if 'oidc' not in AVAILABLE_AUTH_METHODS:
-        raise HTTPException(404, 'Authentication method not available')
-
     oidc = cast(StarletteOAuth2App, oauth.create_client('oidc'))
 
     return await oidc.authorize_redirect(
@@ -28,9 +25,6 @@ async def login_oidc(request: Request):
 
 @router.get('/auth/oidc')
 async def auth_oidc(request: Request):
-    if 'oidc' not in AVAILABLE_AUTH_METHODS:
-        raise HTTPException(404, 'Authentication method not available')
-
     oidc = cast(StarletteOAuth2App, oauth.create_client('oidc'))
 
     token = await oidc.authorize_access_token(request)
