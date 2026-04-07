@@ -29,3 +29,6 @@ When `DEV=true`, the API now defaults to local Keycloak bridge credentials:
 
 If you run Keycloak directly on your machine (for example on `localhost:8080`) instead of the
 repository `compose.yml`, override `ENV_OIDC_ISSUER` in `api/.env`.
+
+`compose.yml` imports a development `longlink-control-plane` realm automatically
+on startup, including the `longlink-api` client and `longlink-secret` credentials.
