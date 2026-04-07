@@ -58,7 +58,7 @@ make up
 This command:
 
 - starts Docker Compose services in detached mode
-- creates the `compute` k3d cluster on API port `6550` (and ignores the error if it already exists)
+- creates the `compute` k3d cluster with a local registry `compute-registry` exposed at `0.0.0.0:5000` (and ignores the error if it already exists)
 
 To stop services and remove the cluster:
 
