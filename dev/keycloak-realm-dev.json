@@ -25,6 +25,9 @@
       "username": "admin",
       "enabled": true,
       "emailVerified": true,
+      "firstName": "Example",
+      "lastName": "LongLink",
+      "email": "example@longlink.dev",
       "credentials": [
         {
           "type": "password",
