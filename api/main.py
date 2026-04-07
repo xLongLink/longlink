@@ -40,6 +40,7 @@ import src.routes.apps
 import src.routes.auth
 import src.routes.user
 import src.routes.users
+import src.routes.computes
 import src.routes.settings
 import src.routes.storages
 import src.routes.databases
