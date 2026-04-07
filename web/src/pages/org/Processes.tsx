@@ -58,7 +58,7 @@ export default function Processes() {
                     </Empty>
                 </Card>
             ) : (
-                <Table endpoint="/processes" schema={tableSchema} />
+                <Table endpoint="/apps?type=process" schema={tableSchema} />
             )}
         </div>
     );
