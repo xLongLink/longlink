@@ -1,5 +1,5 @@
 <div align="center">
-<img src="../banner.png" width="50%" />
+<img src="public/banner.png" width="50%" />
 <p style="font-size: 1.5em;">Frontend UI</p>
 </div>
 
