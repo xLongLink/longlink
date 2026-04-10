@@ -141,3 +141,42 @@ script.bat
 
 
 .codex
+
+# Project-specific nested ignore rules consolidated at root
+/api/static/
+
+/sdk/longlink/static/
+
+/web/logs/
+/web/node_modules/
+/web/dist/
+/web/dist-ssr/
+/web/*.local
+/web/.vscode/*
+!/web/.vscode/extensions.json
+/web/.idea/
+/web/*.suo
+/web/*.ntvs*
+/web/*.njsproj
+/web/*.sln
+/web/*.sw?
+
+/docs/node_modules/
+/docs/out/
+/docs/dist/
+/docs/cache/
+/docs/.vitepress/cache/
+/docs/.vitepress/dist/
+/docs/*.tgz
+/docs/coverage/
+/docs/*.lcov
+/docs/logs/
+/docs/_.log
+/docs/report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+/docs/.env.development.local
+/docs/.env.test.local
+/docs/.env.production.local
+/docs/.env.local
+/docs/.eslintcache
+/docs/.cache/
+/docs/*.tsbuildinfo
