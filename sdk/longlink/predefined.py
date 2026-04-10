@@ -1,5 +1,5 @@
-from longlink.constants import PATH
 from longlink.router import xml_page
+from longlink.constants import PATH
 
 
 def issues_page(path: str = "/issues", name: str | None = None, icon: str | None = None) -> None:

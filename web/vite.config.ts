@@ -26,18 +26,19 @@ export default defineConfig(({ mode }) => {
             emptyOutDir: true,
         },
 
-        server: isApi || isSDK
-            ? {
-                  host: '0.0.0.0',
-                  port: devServerPort,
-                  proxy: {
-                      '/api': {
-                          target: devServerTarget,
-                          changeOrigin: true,
-                          rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
+        server:
+            isApi || isSDK
+                ? {
+                      host: '0.0.0.0',
+                      port: devServerPort,
+                      proxy: {
+                          '/api': {
+                              target: devServerTarget,
+                              changeOrigin: true,
+                              rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
+                          },
                       },
-                  },
-              }
-            : undefined,
+                  }
+                : undefined,
     };
 });

@@ -1,8 +1,6 @@
-from pathlib import Path
-
-from longlink import issues_page, xml_page
-
 import src.routes.sample
+from pathlib import Path
+from longlink import xml_page, issues_page
 
 PAGES_DIR = Path(__file__).resolve().parent / "src" / "pages"
 

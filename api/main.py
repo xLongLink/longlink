@@ -3,14 +3,14 @@ import os
 if __name__ == "__main__":
     os.environ.setdefault("DEV", "True")
 
-from pathlib import Path
 from fastapi import FastAPI
+from pathlib import Path
 from src.env import env
 from src.router import router
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 class SPAStaticFiles(StaticFiles):
