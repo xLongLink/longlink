@@ -1,16 +1,16 @@
-# LongLink
+<div align="center">
+<img src="../banner.png" width="50%" />
+<p style="font-size: 1.5em;">Applications SDK</p>
+</div>
 
-Used to build and publish LongLink appliations.
+## Features
+- TODO
 
-- A combination of streamlit / appwrite and fastapi.
-- Uses pydantic
-
-- An module shall be as slim as possible, focusing only on the business logic.
-- Automatic database migrations
+<br />
 
 ## CLI
 
-```
+```bash
 longlink init <module>
 longlink build
 longlink login
@@ -18,17 +18,11 @@ longlink logout
 longlink publish <module>
 ```
 
-## Stanalone
+<br />
 
-```
-pip install longlink
-```
+## Development
 
+```bash
+uv venv .venv
+uv pip install --python .venv/bin/python -e './sdk'
 ```
-pip install 'longlink[standalone]'
-```
-
-before update
-
-- Mirgations
-- Test cases

@@ -1,21 +1,14 @@
-# docs
+<div align="center">
+<img src="../banner.png" width="50%" />
+<p style="font-size: 1.5em;">Documentation</p>
+</div>
 
-From the repository root:
 
-```bash
-make docs
-```
+<br />
 
-Manual workflow:
+## Development
 
 ```bash
 bun install
-```
-
-To run:
-
-```bash
 bun run dev
 ```
-
-This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.

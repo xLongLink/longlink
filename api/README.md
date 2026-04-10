@@ -1,12 +1,26 @@
-# ViaVai API
+<div align="center">
+<img src="../banner.png" width="50%" />
+<p style="font-size: 1.5em;">Control Panel</p>
+</div>
+
+
+## Features
 
 - Core login of the Application.
 - Handle authentication, and routing to modules.
 
-## Development setup
+<br />
+
+## Development
 
 ```bash
-pip install -e '.[dev]'
+uv venv .venv
+```
+
+Install the API in editable mode with development dependencies:
+
+```bash
+uv pip install --python .venv/bin/python -e './api[dev]'
 ```
 
 ## Local development
@@ -14,7 +28,8 @@ pip install -e '.[dev]'
 Run the API server without reload/watch mode:
 
 ```bash
-DEV=True python -m uvicorn main:app --host 0.0.0.0 --port 8000
+cd api
+DEV=True ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ## OIDC bridge environment variables
