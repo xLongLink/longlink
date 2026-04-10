@@ -14,34 +14,34 @@ export default defineConfig({
 
     sidebar: [
       {
-        text: 'Control Plane',
+        text: '🧭 Control Plane',
         items: [
-          { text: 'Overview', link: '/' }
+          { text: '📄 Overview', link: '/' }
         ]
       },
       {
-        text: 'Applications SDK',
+        text: '🧩 Applications SDK',
         items: [
-          { text: 'Overview', link: '/applications-sdk/' },
+          { text: '📄 Overview', link: '/applications-sdk/' },
           {
-            text: 'Pages',
+            text: '📚 Pages',
             collapsed: true,
             items: [
-              { text: 'Introduction', link: '/applications-sdk/pages/' }
+              { text: '📄 Introduction', link: '/applications-sdk/pages/' }
             ]
           },
           {
-            text: 'Storage',
+            text: '🗂️ Storage',
             collapsed: true,
             items: [
-              { text: 'Introduction', link: '/applications-sdk/storage/' }
+              { text: '📄 Introduction', link: '/applications-sdk/storage/' }
             ]
           },
           {
-            text: 'Database',
+            text: '🗄️ Database',
             collapsed: true,
             items: [
-              { text: 'Introduction', link: '/applications-sdk/database/' }
+              { text: '📄 Introduction', link: '/applications-sdk/database/' }
             ]
           }
         ]
