@@ -1,0 +1,63 @@
+<page>
+  <component type="hero">
+    <props>
+      <title>Cart</title>
+      <subtitle>Sample cart page loaded from XML.</subtitle>
+      <icon>shopping-cart</icon>
+    </props>
+    <children />
+  </component>
+  <component type="table">
+    <props>
+      <data>
+        <item>
+          <sku>SKU-001</sku>
+          <name>Starter Subscription</name>
+          <quantity>1</quantity>
+          <price>49</price>
+        </item>
+        <item>
+          <sku>SKU-002</sku>
+          <name>Priority Support</name>
+          <quantity>1</quantity>
+          <price>19</price>
+        </item>
+      </data>
+    </props>
+    <children>
+      <component type="column">
+        <props>
+          <key>sku</key>
+          <label>SKU</label>
+          <content>{sku}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>name</key>
+          <label>Item</label>
+          <content>{name}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>quantity</key>
+          <label>Qty</label>
+          <content>{quantity}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>price</key>
+          <label>Price</label>
+          <align>right</align>
+          <content>{price}</content>
+        </props>
+        <children />
+      </component>
+    </children>
+  </component>
+</page>

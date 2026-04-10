@@ -1,0 +1,120 @@
+<page>
+  <component type="hero">
+    <props>
+      <title>Input Components</title>
+      <subtitle>Inputs loaded from XML, parsed with xmltodict, and returned as JSON.</subtitle>
+    </props>
+    <children />
+  </component>
+  <component type="input">
+    <props>
+      <kind>text</kind>
+      <label>Normal Input</label>
+      <placeholder>Lorem ipsum dolor sit amet</placeholder>
+      <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</description>
+      <submit>Save</submit>
+    </props>
+    <children />
+  </component>
+  <component type="input">
+    <props>
+      <kind>number</kind>
+      <label>Number Input</label>
+      <placeholder>Enter a number</placeholder>
+      <description>This input only accepts numeric values.</description>
+      <submit>Save</submit>
+    </props>
+    <children />
+  </component>
+  <component type="input">
+    <props>
+      <kind>password</kind>
+      <label>Password Input</label>
+      <placeholder>Enter your password</placeholder>
+      <description>This input hides the entered text.</description>
+      <submit>Save</submit>
+    </props>
+    <children />
+  </component>
+  <component type="input">
+    <props>
+      <kind>textarea</kind>
+      <label>Textarea Input</label>
+      <placeholder>Enter multiple lines of text</placeholder>
+      <description>This input allows for longer text entries.</description>
+      <submit>Save</submit>
+    </props>
+    <children />
+  </component>
+  <component type="textarea">
+    <props>
+      <label>Standalone Textarea</label>
+      <placeholder>Write your notes here</placeholder>
+      <description>This is a standalone textarea without save actions.</description>
+    </props>
+    <children />
+  </component>
+  <component type="input">
+    <props>
+      <kind>date</kind>
+      <label>Date Input</label>
+      <description>Select a date from the calendar.</description>
+      <submit>Save</submit>
+    </props>
+    <children />
+  </component>
+  <component type="input">
+    <props>
+      <kind>datetime</kind>
+      <label>Datetime Input</label>
+      <description>Select a date and time from the calendar.</description>
+      <submit>Save</submit>
+    </props>
+    <children />
+  </component>
+  <component type="select">
+    <props>
+      <label>Select Input</label>
+      <submit>Save</submit>
+      <options>
+        <item>
+          <label>Option 1</label>
+          <value>option_1</value>
+        </item>
+        <item>
+          <label>Option 2</label>
+          <value>option_2</value>
+        </item>
+        <item>
+          <label>Option 3</label>
+          <value>option_3</value>
+        </item>
+      </options>
+    </props>
+    <children />
+  </component>
+  <component type="switch">
+    <props>
+      <label>Switch Input</label>
+      <description>Toggle this setting on or off.</description>
+      <active>true</active>
+    </props>
+    <children />
+  </component>
+  <component type="checkbox">
+    <props>
+      <label>Checkbox Input</label>
+      <description>Select this option if you agree.</description>
+      <checked>true</checked>
+    </props>
+    <children />
+  </component>
+  <component type="button">
+    <props>
+      <text>Call /sample endpoint</text>
+      <variant>secondary</variant>
+      <url>/sample</url>
+    </props>
+    <children />
+  </component>
+</page>

@@ -1,0 +1,196 @@
+<page>
+  <component type="menu">
+    <children>
+      <component type="menusection">
+        <props>
+          <title>General</title>
+          <icon>settings</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children>
+              <component type="input">
+                <props>
+                  <label>Normal Input</label>
+                  <placeholder>Lorem ipsum dolor sit amet</placeholder>
+                  <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</description>
+                  <submit>Save</submit>
+                </props>
+                <children />
+              </component>
+            </children>
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Identity</title>
+          <icon>user</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Access Control</title>
+          <icon>lock</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Applications</title>
+          <icon>app-window</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Infrastructure</title>
+          <icon>server</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Storage</title>
+          <icon>database</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Audit &amp; Compliance</title>
+          <icon>file-text</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Backups &amp; Recovery</title>
+          <icon>hard-drive</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Security</title>
+          <icon>shield</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Billing &amp; Plan</title>
+          <icon>credit-card</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>API &amp; Integrations</title>
+          <icon>zap</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+      <component type="menusection">
+        <props>
+          <title>Advanced / System</title>
+          <icon>sliders</icon>
+        </props>
+        <children>
+          <component type="menuSubSection">
+            <props>
+              <title></title>
+              <root>true</root>
+            </props>
+            <children />
+          </component>
+        </children>
+      </component>
+    </children>
+  </component>
+</page>

@@ -1,3 +1,4 @@
+import json
 import inspect
 from typing import Any, Callable, Awaitable
 from fastapi import APIRouter
@@ -20,12 +21,19 @@ def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
         if is_page:
             from longlink.ui import Page
 
-            if not isinstance(body, Page):
+            if isinstance(body, Page):
+                payload = list(body)
+            elif isinstance(body, (dict, list)):
+                payload = body
+            else:
                 return PlainTextResponse(
-                    "Invalid response type. Page routes must return longlink.ui.Page.",
+                    "Invalid response type. Page routes must return longlink.ui.Page or a page schema dict/list.",
                     status_code=500,
                 )
-            return JSONResponse(list(body))
+            return Response(
+                content=json.dumps(payload),
+                media_type="application/json",
+            )
 
         return _format_response(handler, body)
 
