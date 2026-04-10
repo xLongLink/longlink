@@ -1,8 +1,20 @@
-from fastapi import FastAPI
 from pathlib import Path
-from longlink.router import api_router
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from longlink.router import api_router
+
+
+class SPAStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code != 404:
+                raise
+
+        return await super().get_response("index.html", scope)
 
 
 def create_app() -> FastAPI:
@@ -22,6 +34,6 @@ def create_app() -> FastAPI:
 
     static_dir = Path(__file__).resolve().parent / "static"
     if static_dir.exists():
-        app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+        app.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
 
     return app

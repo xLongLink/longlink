@@ -1,5 +1,6 @@
 import json
 import inspect
+from pathlib import Path
 from typing import Any, Callable, Awaitable
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -89,8 +90,9 @@ def route(path: str, methods: list[str] | None = None):
 def page(path: str, name: str, icon: str):
     def decorator(func: Handler) -> Handler:
         _pages.append({"path": path, "name": name, "icon": icon})
+        endpoint_path = f"/pages/{path.lstrip('/')}"
         api_router.add_api_route(
-            path,
+            endpoint_path,
             _build_endpoint(func, is_page=True),
             methods=["GET"],
             response_model=None,
@@ -98,6 +100,16 @@ def page(path: str, name: str, icon: str):
         return func
 
     return decorator
+
+
+def xml_page(path: str, name: str, icon: str, schema_path: str | Path) -> None:
+    xml_path = Path(schema_path)
+
+    @page(path, name=name, icon=icon)
+    async def _xml_page() -> list[dict[str, Any]]:
+        from longlink.xml import load_page_schema_from_xml
+
+        return load_page_schema_from_xml(xml_path)
 
 
 def pages() -> list[dict[str, str]]:

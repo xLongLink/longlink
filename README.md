@@ -1,6 +1,6 @@
 <div align="center">
 
-# LongLink
+<img src="banner.png" width="49.5%" />
 
 [![PyPI version](https://img.shields.io/pypi/v/longlink)](https://pypi.org/project/longlink/)
 [![Python versions](https://img.shields.io/pypi/pyversions/longlink)](https://pypi.org/project/longlink/)

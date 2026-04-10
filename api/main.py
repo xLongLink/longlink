@@ -3,13 +3,25 @@ import os
 if __name__ == "__main__":
     os.environ.setdefault("DEV", "True")
 
-from fastapi import FastAPI
 from pathlib import Path
+from fastapi import FastAPI
 from src.env import env
 from src.router import router
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+
+class SPAStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code != 404:
+                raise
+
+        return await super().get_response('index.html', scope)
 
 app = FastAPI(
     docs_url=None,
@@ -49,7 +61,7 @@ app.include_router(router)
 
 static_dir = Path(__file__).resolve().parent / 'static'
 if static_dir.exists():
-    app.mount('/', StaticFiles(directory=static_dir, html=True), name='static')
+    app.mount('/', SPAStaticFiles(directory=static_dir, html=True), name='static')
 
 
 if __name__ == '__main__':

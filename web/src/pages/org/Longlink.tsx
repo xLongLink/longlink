@@ -27,7 +27,7 @@ export default function Longlink() {
     }, [appMetadata?.pages]);
 
     const activePagePath = normalizedRoutePath || fallbackPagePath;
-    const pageEndpoint = appId ? (activePagePath.length > 0 ? `/apps/${appId}/${activePagePath}` : null) : null;
+    const pageEndpoint = appId ? (activePagePath.length > 0 ? `/apps/${appId}/pages/${activePagePath}` : null) : null;
 
     const { data, isLoading, error } = useApiData<unknown>(pageEndpoint);
 

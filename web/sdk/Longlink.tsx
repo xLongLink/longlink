@@ -30,7 +30,7 @@ export default function Longlink() {
     }, [availablePages]);
 
     const activePagePath = normalizedRoutePath || fallbackPagePath;
-    const pageEndpoint = activePagePath.length > 0 ? `/${activePagePath}` : null;
+    const pageEndpoint = activePagePath.length > 0 ? `/pages/${activePagePath}` : null;
 
     const { data, isLoading, error } = useApiData<unknown>(pageEndpoint);
     const pageData = Array.isArray(data) ? (data as RenderNodeSchema[]) : [];
