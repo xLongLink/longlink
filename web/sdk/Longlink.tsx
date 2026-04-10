@@ -33,7 +33,7 @@ export default function Longlink() {
     const pageEndpoint = activePagePath.length > 0 ? `/${activePagePath}` : null;
 
     const { data, isLoading, error } = useApiData<unknown>(pageEndpoint);
-    const samplePageData = Array.isArray(data) ? (data as RenderNodeSchema[]) : [];
+    const pageData = Array.isArray(data) ? (data as RenderNodeSchema[]) : [];
 
     if (error) {
         return <div>{error.message}</div>;
@@ -53,8 +53,8 @@ export default function Longlink() {
 
     return (
         <>
-            {samplePageData.map((node, index) => (
-                <Render key={index} {...node} />
+            {pageData.map((node, index) => (
+                <Render key={index} node={node} />
             ))}
         </>
     );

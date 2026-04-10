@@ -1,27 +1,8 @@
----
-# https://vitepress.dev/reference/default-theme-home-page
-layout: home
+# LongLink Documentation
 
-hero:
-  name: "LongLink"
-  text: "A VitePress Site"
-  tagline: My great project tagline
-  actions:
-    - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
-    - theme: alt
-      text: API Examples
-      link: /api-examples
-    - theme: alt
-      text: Alternatives
-      link: /alternatives
+This site now uses a docs-only layout. The root route opens the documentation index instead of a separate landing page.
 
-features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
----
+## Sections
+
+- [Control Plane](/)
+- [Applications SDK](/api-examples)

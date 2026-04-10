@@ -3,23 +3,27 @@ import { defineConfig } from 'vitepress'
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   srcDir: 'src',
-  title: "LongLink",
-  description: "A VitePress Site",
+  title: 'LongLink',
+  description: 'LongLink documentation',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' },
-      { text: 'Alternatives', link: '/alternatives' }
+      { text: 'Control Plane', link: '/' },
+      { text: 'Applications SDK', link: '/api-examples' }
     ],
 
     sidebar: [
       {
-        text: 'Examples',
+        text: 'Control Plane',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
+          { text: 'Overview', link: '/' }
+        ]
+      },
+      {
+        text: 'Applications SDK',
+        items: [
           { text: 'Runtime API Examples', link: '/api-examples' },
-          { text: 'Alternatives to LongLink', link: '/alternatives' }
+          { text: 'Markdown Examples', link: '/markdown-examples' }
         ]
       }
     ],
