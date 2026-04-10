@@ -1,4 +1,3 @@
-import type React from 'react';
 import Button from '@/longlink/Button';
 import Checkbox from '@/longlink/Checkbox';
 import Columns, { Column } from '@/longlink/Columns';
@@ -7,18 +6,54 @@ import Hero from '@/longlink/Hero';
 import Input from '@/longlink/Input';
 import Menu, { MenuSection, MenuSubSection } from '@/longlink/Menu';
 import Range from '@/longlink/Range';
+import {
+    createRegistry,
+    renderNode,
+    type ComponentNode,
+    type JsonNode,
+    type RegistryEntry,
+} from '@/longlink/rendering';
 import Separator from '@/longlink/Separator';
 import Select from '@/longlink/Select';
 import Switch from '@/longlink/Switch';
 import Table, { type ApiTableColumn } from '@/longlink/Table';
-import Textarea from '@/longlink/Textarea';
 import Tabs, { Tab } from '@/longlink/Tabs';
+import Textarea from '@/longlink/Textarea';
+import { isComponentNode } from '@/longlink/rendering';
 
-const registry = {
+function resolveTableColumns(node: ComponentNode): ApiTableColumn[] {
+    if (!Array.isArray(node.children)) {
+        return [];
+    }
+
+    return node.children
+        .filter((child): child is ComponentNode => isComponentNode(child) && child.type === 'column')
+        .map((child) => ({
+            key: String(child.props?.key ?? ''),
+            label: child.props?.label == null ? undefined : String(child.props.label),
+            align: child.props?.align == null ? undefined : (String(child.props.align) as ApiTableColumn['align']),
+            content: child.props?.content as ApiTableColumn['content'],
+            detail: child.props?.detail as ApiTableColumn['detail'],
+            value: child.props?.value == null ? undefined : String(child.props.value),
+        }))
+        .filter((column) => column.key);
+}
+
+const longlinkRegistry = createRegistry({
     hero: Hero,
     dialog: Dialog,
     button: Button,
-    table: Table,
+    table: {
+        component: Table as RegistryEntry['component'],
+        renderChildren: false,
+        getProps: (node) => ({
+            data: Array.isArray(node.props?.data) ? (node.props.data as object[]) : [],
+            columns: resolveTableColumns(node),
+            pageSize: node.props?.pageSize,
+            endpoint: node.props?.endpoint,
+            schema: node.props?.schema,
+        }),
+    },
     columns: Columns,
     column: Column,
     separator: Separator,
@@ -33,101 +68,20 @@ const registry = {
     checkbox: Checkbox,
     range: Range,
     textarea: Textarea,
+});
+
+export type RenderNodeSchema = JsonNode;
+
+type RenderProps = {
+    node: JsonNode;
 };
 
-type Registry = typeof registry;
-export type RegistryKey = keyof Registry;
-
-export type RenderNodeSchema = {
-    type: RegistryKey;
-    props?: Record<string, unknown>;
-    children?: RenderNodeSchema[] | RenderNodeSchema;
-};
-
-function isRenderNodeSchema(value: unknown): value is RenderNodeSchema {
-    if (!value || typeof value !== 'object') {
-        return false;
-    }
-
-    return 'type' in value;
+export function renderLonglinkNode(node: JsonNode) {
+    return renderNode(node, longlinkRegistry);
 }
 
-function normalizeChildren(children?: RenderNodeSchema[] | RenderNodeSchema): RenderNodeSchema[] {
-    if (!children) {
-        return [];
-    }
-
-    if (Array.isArray(children)) {
-        return children.filter(isRenderNodeSchema);
-    }
-
-    return isRenderNodeSchema(children) ? [children] : [];
-}
-
-function Render({ type, props, children }: RenderNodeSchema) {
-    const resolvedChildren = normalizeChildren(children);
-
-    if (type === 'menu') {
-        return (
-            <Menu>
-                {resolvedChildren.map((section, sectionIndex) => {
-                    if (section.type !== 'menusection') {
-                        return <Render key={sectionIndex} {...section} />;
-                    }
-
-                    return (
-                        <MenuSection
-                            key={sectionIndex}
-                            {...(section.props as React.ComponentProps<typeof MenuSection>)}
-                        >
-                            {normalizeChildren(section.children).map((subSection, subSectionIndex) => {
-                                if (subSection.type !== 'menuSubSection') {
-                                    return <Render key={subSectionIndex} {...subSection} />;
-                                }
-
-                                return (
-                                    <MenuSubSection
-                                        key={subSectionIndex}
-                                        {...(subSection.props as React.ComponentProps<typeof MenuSubSection>)}
-                                    >
-                                        {normalizeChildren(subSection.children).map((child, childIndex) => (
-                                            <Render key={childIndex} {...child} />
-                                        ))}
-                                    </MenuSubSection>
-                                );
-                            })}
-                        </MenuSection>
-                    );
-                })}
-            </Menu>
-        );
-    }
-
-    if (type === 'table') {
-        const columns: ApiTableColumn[] = resolvedChildren
-            .filter((child) => child.type === 'column')
-            .map((child) => ({
-                key: String(child.props?.key ?? ''),
-                label: child.props?.label == null ? undefined : String(child.props.label),
-                align:
-                    child.props?.align == null ? undefined : (String(child.props.align) as 'left' | 'center' | 'right'),
-                content: child.props?.content as ApiTableColumn['content'],
-                detail: child.props?.detail as ApiTableColumn['detail'],
-            }))
-            .filter((column) => column.key);
-
-        return <Table data={Array.isArray(props?.data) ? (props.data as object[]) : []} columns={columns} />;
-    }
-
-    const Component = registry[type] as React.ComponentType<Record<string, unknown>>;
-
-    return (
-        <Component {...props}>
-            {resolvedChildren.map((child, i) => (
-                <Render key={i} {...child} />
-            ))}
-        </Component>
-    );
+export function Render({ node }: RenderProps) {
+    return <>{renderLonglinkNode(node)}</>;
 }
 
 export default Render;
