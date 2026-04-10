@@ -1,8 +1,8 @@
 import json
 import inspect
-from pathlib import Path
 from typing import Any, Callable, Awaitable
 from fastapi import APIRouter
+from pathlib import Path
 from pydantic import BaseModel
 from functools import wraps
 from fastapi.responses import Response, JSONResponse, PlainTextResponse
