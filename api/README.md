@@ -9,6 +9,14 @@
 pip install -e '.[dev]'
 ```
 
+## Local development
+
+Run the API server without reload/watch mode:
+
+```bash
+DEV=True python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
 ## OIDC bridge environment variables
 
 The API uses a pure OIDC bridge based on Authlib and expects these variables:

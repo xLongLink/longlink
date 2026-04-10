@@ -1,8 +1,9 @@
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
 
 const isSdkMode = import.meta.env.MODE === 'sdk';
+const isApiMode = import.meta.env.MODE === 'api';
 
-const defaultApiBaseUrl = isSdkMode ? 'http://localhost:1707' : 'http://localhost:8000';
+const defaultApiBaseUrl = isSdkMode || isApiMode ? '/api' : 'http://localhost:8000';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.toString() ?? defaultApiBaseUrl;
 

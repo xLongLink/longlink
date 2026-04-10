@@ -102,10 +102,25 @@ def page(path: str, name: str, icon: str):
     return decorator
 
 
-def xml_page(path: str, name: str, icon: str, schema_path: str | Path) -> None:
+def xml_page(path: str, name: str | None = None, icon: str | None = None, schema_path: str | Path | None = None) -> None:
+    if schema_path is None:
+        raise ValueError("schema_path is required for xml_page().")
     xml_path = Path(schema_path)
 
-    @page(path, name=name, icon=icon)
+    resolved_name = name
+    resolved_icon = icon
+
+    if resolved_name is None or resolved_icon is None:
+        from longlink.xml import load_page_metadata_from_xml
+
+        metadata = load_page_metadata_from_xml(xml_path)
+        resolved_name = resolved_name or metadata.get("name")
+        resolved_icon = resolved_icon or metadata.get("icon")
+
+    if not resolved_name or not resolved_icon:
+        raise ValueError("XML pages must define both name and icon, either in xml_page() or in the XML root.")
+
+    @page(path, name=resolved_name, icon=resolved_icon)
     async def _xml_page() -> list[dict[str, Any]]:
         from longlink.xml import load_page_schema_from_xml
 

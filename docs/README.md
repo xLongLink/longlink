@@ -1,6 +1,12 @@
 # docs
 
-To install dependencies:
+From the repository root:
+
+```bash
+make docs
+```
+
+Manual workflow:
 
 ```bash
 bun install
@@ -9,7 +15,7 @@ bun install
 To run:
 
 ```bash
-bun run index.ts
+bun run dev
 ```
 
 This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.

@@ -1,13 +1,13 @@
-import type { LucideIcon } from 'lucide-react';
-import { BarChart3, Blocks, FileText, FolderKanban, Settings, Users, Workflow } from 'lucide-react';
-
-// import { getIconByName } from '@/components/Icon';
+import { createElement, type ComponentType } from 'react';
+import type { LucideProps } from 'lucide-react';
+import { BarChart3, Blocks, FolderKanban, Settings, Users, Workflow } from 'lucide-react';
+import { Icon } from '@/longlink/Icon';
 
 export type NavigationTab = {
     value: string;
     label: string;
     path?: string;
-    icon: LucideIcon;
+    icon: ComponentType<LucideProps>;
 };
 
 const organizationTabs: NavigationTab[] = [
@@ -40,6 +40,14 @@ const getTabValue = ({ path, name }: { path: string; name: string }) => {
     return name.toLowerCase().replace(/\s+/g, '-');
 };
 
+const NavigationPageIcon = ({ name }: { name?: string }): ComponentType<LucideProps> => {
+    function ResolvedNavigationPageIcon(props: LucideProps) {
+        return createElement(Icon, { name: name || 'file-text', fallback: 'file-text', ...props });
+    }
+
+    return ResolvedNavigationPageIcon;
+};
+
 export function getAppTabsFromPages(pages: AppNavigationPage[]): NavigationTab[] {
     if (pages.length === 0) {
         return [];
@@ -47,13 +55,12 @@ export function getAppTabsFromPages(pages: AppNavigationPage[]): NavigationTab[]
 
     return pages.map((page) => {
         const path = normalizeTabPath(page.path);
-        const icon = FileText;
 
         return {
             value: getTabValue({ path, name: page.name }),
             label: page.name,
             path,
-            icon,
+            icon: NavigationPageIcon({ name: page.icon }),
         };
     });
 }
