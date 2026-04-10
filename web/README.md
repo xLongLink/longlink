@@ -1,11 +1,29 @@
+<div align="center">
+<img src="../banner.png" width="50%" />
+<p style="font-size: 1.5em;">Frontend UI</p>
+</div>
+
+
 # React + TypeScript + Vite + shadcn/ui
 
 This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
 
-## Component Usage
+## Development setup
 
-- Shadcn Components are listred in `src/components/ui/`.
-- Prefer Shadcn components over custom UI.
-- Use consistent Tailwind utility classes.
+From the `web` directory, install dependencies with Bun:
 
-## Controlled UI DSL
+```bash
+bun install
+```
+
+Run the frontend in API mode:
+
+```bash
+bun run api --host 0.0.0.0 --port 5173
+```
+
+Run the frontend in SDK mode:
+
+```bash
+bun run sdk --host 0.0.0.0 --port 5174
+```

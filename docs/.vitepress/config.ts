@@ -8,45 +8,49 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'Control Plane', link: '/' },
-      { text: 'Applications SDK', link: '/applications-sdk/' }
+      { text: 'API', link: '/api/' },
+      { text: 'SDK', link: '/sdk/' }
     ],
 
-    sidebar: [
-      {
-        text: '🧭 Control Plane',
-        items: [
-          { text: '📄 Overview', link: '/' }
-        ]
-      },
-      {
-        text: '🧩 Applications SDK',
-        items: [
-          { text: '📄 Overview', link: '/applications-sdk/' },
-          {
-            text: '📚 Pages',
-            collapsed: true,
-            items: [
-              { text: '📄 Introduction', link: '/applications-sdk/pages/' }
-            ]
-          },
-          {
-            text: '🗂️ Storage',
-            collapsed: true,
-            items: [
-              { text: '📄 Introduction', link: '/applications-sdk/storage/' }
-            ]
-          },
-          {
-            text: '🗄️ Database',
-            collapsed: true,
-            items: [
-              { text: '📄 Introduction', link: '/applications-sdk/database/' }
-            ]
-          }
-        ]
-      }
-    ],
+    sidebar: {
+      '/api/': [
+        {
+          text: 'API',
+          items: [
+            { text: 'Overview', link: '/api/' }
+          ]
+        }
+      ],
+      '/sdk/': [
+        {
+          text: 'SDK',
+          items: [
+            { text: 'Overview', link: '/sdk/' },
+            {
+              text: 'Pages',
+              collapsed: true,
+              items: [
+                { text: 'Introduction', link: '/sdk/pages/' }
+              ]
+            },
+            {
+              text: 'Storage',
+              collapsed: true,
+              items: [
+                { text: 'Introduction', link: '/sdk/storage/' }
+              ]
+            },
+            {
+              text: 'Database',
+              collapsed: true,
+              items: [
+                { text: 'Introduction', link: '/sdk/database/' }
+              ]
+            }
+          ]
+        }
+      ]
+    },
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/vuejs/vitepress' }

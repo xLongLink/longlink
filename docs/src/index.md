@@ -1,8 +1,8 @@
 # LongLink Documentation
 
-This site now uses a docs-only layout. The root route opens the documentation index instead of a separate landing page.
+This site is split into separate namespaces for platform and application development documentation.
 
 ## Sections
 
-- [Control Plane](/)
-- [Applications SDK](/applications-sdk/)
+- [API](/api/)
+- [SDK](/sdk/)

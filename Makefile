@@ -4,31 +4,27 @@ SHELL := /bin/bash
 VENV_BIN := $(CURDIR)/.venv/bin
 SYSTEM_PYTHON ?= $(shell command -v python3 2>/dev/null || command -v python 2>/dev/null)
 PYTHON ?= $(if $(wildcard $(VENV_BIN)/python),$(VENV_BIN)/python,$(SYSTEM_PYTHON))
-PIP ?= $(if $(wildcard $(VENV_BIN)/pip),$(VENV_BIN)/pip,pip)
+UV ?= $(shell command -v uv 2>/dev/null)
 LONGLINK ?= $(if $(wildcard $(VENV_BIN)/longlink),$(VENV_BIN)/longlink,longlink)
 
 $(VENV_BIN)/python:
-	@if [ -z "$(SYSTEM_PYTHON)" ]; then \
-		echo "python3 or python is required to create .venv"; \
+	@if [ -z "$(UV)" ]; then \
+		echo "uv is required to create .venv"; \
 		exit 1; \
 	fi
-	$(SYSTEM_PYTHON) -m venv .venv
+	uv venv .venv
 
 
-$(VENV_BIN)/pip: $(VENV_BIN)/python
-	$(PYTHON) -m pip install --upgrade pip
-
-
-setup: $(VENV_BIN)/pip
-	$(PIP) install -e './api[dev]'
-	$(PIP) install -e './sdk'
+setup: $(VENV_BIN)/python
+	uv pip install --python $(PYTHON) -e './api[dev]'
+	uv pip install --python $(PYTHON) -e './sdk'
 	cd web && bun install
 	cd docs && bun install
 
 
-format: $(VENV_BIN)/pip
-	$(PIP) install -e './api[dev]'
-	$(PIP) install -e './sdk'
+format: $(VENV_BIN)/python
+	uv pip install --python $(PYTHON) -e './api[dev]'
+	uv pip install --python $(PYTHON) -e './sdk'
 	cd web && bun install
 	cd api && $(PYTHON) -m isort .
 	cd sdk && $(PYTHON) -m isort .
@@ -45,8 +41,8 @@ down:
 	k3d cluster delete compute
 
 
-api: $(VENV_BIN)/pip
-	$(PIP) install -e './api[dev]'
+api: $(VENV_BIN)/python
+	uv pip install --python $(PYTHON) -e './api[dev]'
 	cd api && DEV=True $(PYTHON) -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 
@@ -60,8 +56,8 @@ sdk:
 	cd web && bun run sdk --host 0.0.0.0 --port 5174
 
 
-sample: $(VENV_BIN)/pip
-	$(PIP) install -e './sdk'
+sample: $(VENV_BIN)/python
+	uv pip install --python $(PYTHON) -e './sdk'
 	cd sdk/sample && $(LONGLINK) dev
 
 
