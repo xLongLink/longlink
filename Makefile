@@ -18,5 +18,6 @@ api:
 web:
 	cd web && bun run api
 
+
 sample:
 	cd sdk/sample && $(LONGLINK) dev
