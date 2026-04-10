@@ -1,0 +1,86 @@
+<Page name="Issues" icon="circle-alert">
+  <component type="hero">
+    <props>
+      <title>Issues</title>
+      <subtitle>Default issue backlog rendered from the SDK predefined page.</subtitle>
+      <icon>circle-alert</icon>
+    </props>
+    <children />
+  </component>
+  <component type="table">
+    <props>
+      <data>
+        <item>
+          <id>ISS-101</id>
+          <title>Login form validation fails on empty password</title>
+          <priority>High</priority>
+          <status>Open</status>
+          <assignee>Alice</assignee>
+        </item>
+        <item>
+          <id>ISS-102</id>
+          <title>Dashboard widgets load in the wrong order</title>
+          <priority>Medium</priority>
+          <status>In Progress</status>
+          <assignee>Bruno</assignee>
+        </item>
+        <item>
+          <id>ISS-103</id>
+          <title>Export endpoint times out for large datasets</title>
+          <priority>Critical</priority>
+          <status>Blocked</status>
+          <assignee>Carla</assignee>
+        </item>
+        <item>
+          <id>ISS-104</id>
+          <title>Notification badge is not cleared after read</title>
+          <priority>Low</priority>
+          <status>Done</status>
+          <assignee>Diego</assignee>
+        </item>
+      </data>
+    </props>
+    <children>
+      <component type="column">
+        <props>
+          <key>id</key>
+          <label>ID</label>
+          <content>{id}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>title</key>
+          <label>Issue</label>
+          <content>{title}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>priority</key>
+          <label>Priority</label>
+          <content>{priority}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>status</key>
+          <label>Status</label>
+          <content>{status}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>assignee</key>
+          <label>Assignee</label>
+          <content>{assignee}</content>
+        </props>
+        <children />
+      </component>
+    </children>
+  </component>
+</Page>

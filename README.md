@@ -9,73 +9,58 @@
 
 </div>
 
-> [!WARNING]
-> Early-stage architecture. Core components under active development.
 
-LongLink is a multi-tenant operational runtime that enables organizations to build, deploy, and operate business applications within a unified, governed environment. It provides a centralized control plane that standardizes identity, permissions, storage, execution, and observability across all applications.
+## Why
 
-Instead of fragmented SaaS tools or custom-built systems, LongLink offers a structured platform where applications run in isolation but share consistent infrastructure and governance.
+<br />
+
+## Goals
+
+<br />
 
 ## Development
 
-Create and activate a virtual environment with standard Python tooling:
-
 ```bash
-python -m venv .venv
-source .venv/bin/activate # or .venv\Scripts\activate on Windows
-pip install -e './api[dev]' -e './sdk'
-```
-
-Run control plane:
-
-```bash
-cd api
-python main.py
-```
-
-Run sample app:
-
-```bash
-cd sdk/sample
-longlink dev
+make setup # Install all local dependencies
 ```
 
 ```bash
-cd web
-bun install
-bun run sdk
-bun run api
+make format
 ```
 
-## Local Infrastructure Setup
+<br />
 
-Use the root `Makefile` (which runs `dev/compose.yml`) to start and stop local infrastructure services:
+### Control plane
+
+The control plane logic is located in the `api` folder:
 
 ```bash
-make up
+make up     # Start the services, initialize the cluser
+make web    # Run the web app proxied to the api app
+make api    # Run the control plane
 ```
-
-This command:
-
-- starts Docker Compose services in detached mode
-- creates the `compute` k3d cluster with a local registry `compute-registry` exposed at `0.0.0.0:5000` (and ignores the error if it already exists)
-
-To stop services and remove the cluster:
 
 ```bash
-make down
+make down   # Stop services and remove the cluster
 ```
 
-## Git Hooks (Lefthook)
+<br />
 
-Install Lefthook and enable repository hooks:
+### Applications SDK
+
+The applications SDK is located in the `sdk` folder:
 
 ```bash
-pip install lefthook
-LEFTHOOK_CONFIG=dev/lefthook.yml lefthook install
+make sdk    # Run the web app proxied to the sample app
+make sample # Run the sample APP
 ```
 
-Once installed, every commit runs:
+<br />
 
-- Python import formatting in `api/` and `sdk/` with `python -m isort .`
-- Frontend formatting in `web/` with `bun run format`
+### Documentation
+
+The source code is located in `docs` folder:
+
+```bash
+make docs # Run the documentation site
+```
