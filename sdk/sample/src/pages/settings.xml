@@ -1,196 +1,42 @@
-<page>
-  <component type="menu">
-    <children>
-      <component type="menusection">
-        <props>
-          <title>General</title>
-          <icon>settings</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children>
-              <component type="input">
-                <props>
-                  <label>Normal Input</label>
-                  <placeholder>Lorem ipsum dolor sit amet</placeholder>
-                  <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</description>
-                  <submit>Save</submit>
-                </props>
-                <children />
-              </component>
-            </children>
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Identity</title>
-          <icon>user</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Access Control</title>
-          <icon>lock</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Applications</title>
-          <icon>app-window</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Infrastructure</title>
-          <icon>server</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Storage</title>
-          <icon>database</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Audit &amp; Compliance</title>
-          <icon>file-text</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Backups &amp; Recovery</title>
-          <icon>hard-drive</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Security</title>
-          <icon>shield</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Billing &amp; Plan</title>
-          <icon>credit-card</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>API &amp; Integrations</title>
-          <icon>zap</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-      <component type="menusection">
-        <props>
-          <title>Advanced / System</title>
-          <icon>sliders</icon>
-        </props>
-        <children>
-          <component type="menuSubSection">
-            <props>
-              <title></title>
-              <root>true</root>
-            </props>
-            <children />
-          </component>
-        </children>
-      </component>
-    </children>
-  </component>
-</page>
+<Page name="Settings" icon="settings">
+  <Menu>
+    <MenuSection title="General" icon="settings">
+      <MenuSubSection title="" root="true">
+        <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." submit="Save" />
+      </MenuSubSection>
+    </MenuSection>
+    <MenuSection title="Identity" icon="user">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Access Control" icon="lock">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Applications" icon="app-window">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Infrastructure" icon="server">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Storage" icon="database">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Audit &amp; Compliance" icon="file-text">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Backups &amp; Recovery" icon="hard-drive">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Security" icon="shield">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Billing &amp; Plan" icon="credit-card">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="API &amp; Integrations" icon="zap">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Advanced / System" icon="sliders">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+  </Menu>
+</Page>

@@ -121,7 +121,7 @@ def xml_page(path: str, name: str | None = None, icon: str | None = None, schema
         raise ValueError("XML pages must define both name and icon, either in xml_page() or in the XML root.")
 
     @page(path, name=resolved_name, icon=resolved_icon)
-    async def _xml_page() -> list[dict[str, Any]]:
+    async def _xml_page() -> dict[str, Any]:
         from longlink.xml import load_page_schema_from_xml
 
         return load_page_schema_from_xml(xml_path)

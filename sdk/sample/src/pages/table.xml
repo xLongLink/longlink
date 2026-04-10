@@ -1,71 +1,11 @@
-<page>
-  <component type="hero">
-    <props>
-      <title>Table demo</title>
-      <subtitle>Sample tabular dataset rendered from XML page schema.</subtitle>
-    </props>
-    <children />
-  </component>
-  <component type="table">
-    <props>
-      <data>
-        <item>
-          <id>p1</id>
-          <name>Marketing Website</name>
-          <owner>Alice</owner>
-          <status>In Progress</status>
-          <budget>$12,000</budget>
-        </item>
-        <item>
-          <id>p2</id>
-          <name>Mobile App</name>
-          <owner>Bruno</owner>
-          <status>Planning</status>
-          <budget>$35,000</budget>
-        </item>
-        <item>
-          <id>p3</id>
-          <name>Data Migration</name>
-          <owner>Carla</owner>
-          <status>Done</status>
-          <budget>$8,500</budget>
-        </item>
-      </data>
-    </props>
-    <children>
-      <component type="column">
-        <props>
-          <key>name</key>
-          <label>Project</label>
-          <content>{name}</content>
-        </props>
-        <children />
-      </component>
-      <component type="column">
-        <props>
-          <key>owner</key>
-          <label>Owner</label>
-          <content>{owner}</content>
-        </props>
-        <children />
-      </component>
-      <component type="column">
-        <props>
-          <key>status</key>
-          <label>Status</label>
-          <content>{status}</content>
-        </props>
-        <children />
-      </component>
-      <component type="column">
-        <props>
-          <key>budget</key>
-          <label>Budget</label>
-          <align>right</align>
-          <content>{budget}</content>
-        </props>
-        <children />
-      </component>
-    </children>
-  </component>
-</page>
+<Page name="Table" icon="table">
+  <Hero title="Table demo" subtitle="Sample tabular dataset rendered from XML page schema." />
+  <Table
+    data='[{"id":"p1","name":"Marketing Website","owner":"Alice","status":"In Progress","budget":"$12,000"},{"id":"p2","name":"Mobile App","owner":"Bruno","status":"Planning","budget":"$35,000"},{"id":"p3","name":"Data Migration","owner":"Carla","status":"Done","budget":"$8,500"}]'
+  >
+    <Column key="name" label="Project" content="{name}" />
+    <Column key="owner" label="Owner" content="{owner}" />
+    <Column key="status" label="Status" content="{status}" />
+    <Column key="budget" label="Budget" align="right" content="{budget}" />
+  </Table>
+</Page>
