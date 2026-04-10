@@ -9,7 +9,7 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Control Plane', link: '/' },
-      { text: 'Applications SDK', link: '/api-examples' }
+      { text: 'Applications SDK', link: '/applications-sdk/' }
     ],
 
     sidebar: [
@@ -22,8 +22,28 @@ export default defineConfig({
       {
         text: 'Applications SDK',
         items: [
-          { text: 'Runtime API Examples', link: '/api-examples' },
-          { text: 'Markdown Examples', link: '/markdown-examples' }
+          { text: 'Overview', link: '/applications-sdk/' },
+          {
+            text: 'Pages',
+            collapsed: true,
+            items: [
+              { text: 'Introduction', link: '/applications-sdk/pages/' }
+            ]
+          },
+          {
+            text: 'Storage',
+            collapsed: true,
+            items: [
+              { text: 'Introduction', link: '/applications-sdk/storage/' }
+            ]
+          },
+          {
+            text: 'Database',
+            collapsed: true,
+            items: [
+              { text: 'Introduction', link: '/applications-sdk/database/' }
+            ]
+          }
         ]
       }
     ],
