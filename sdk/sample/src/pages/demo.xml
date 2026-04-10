@@ -1,0 +1,65 @@
+<page>
+  <component type="hero">
+    <props>
+      <title>Demo</title>
+      <subtitle>Sample XML-driven page schema served by the SDK.</subtitle>
+      <icon>layout</icon>
+    </props>
+    <children />
+  </component>
+  <component type="button">
+    <props>
+      <text>Call /sample endpoint</text>
+      <variant>secondary</variant>
+      <url>/sample</url>
+    </props>
+    <children />
+  </component>
+  <component type="table">
+    <props>
+      <data>
+        <item>
+          <id>1</id>
+          <name>Alice</name>
+          <active>true</active>
+        </item>
+        <item>
+          <id>2</id>
+          <name>Bruno</name>
+          <active>false</active>
+        </item>
+        <item>
+          <id>3</id>
+          <name>Carla</name>
+          <active>true</active>
+        </item>
+      </data>
+    </props>
+    <children>
+      <component type="column">
+        <props>
+          <key>id</key>
+          <label>ID</label>
+          <content>{id}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>name</key>
+          <label>Name</label>
+          <content>{name}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>active</key>
+          <label>Active</label>
+          <content>{active}</content>
+        </props>
+        <children />
+      </component>
+    </children>
+  </component>
+</page>

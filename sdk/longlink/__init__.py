@@ -4,6 +4,7 @@ from longlink.ui import Page
 from longlink.app import create_app
 from longlink.router import get, put, page, post, pages, patch, route, delete
 from longlink.organization import org
+from longlink.xml import load_page_schema_from_xml
 
 # Official Starlette application instance.
 app = create_app()

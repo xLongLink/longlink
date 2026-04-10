@@ -1,0 +1,71 @@
+<page>
+  <component type="hero">
+    <props>
+      <title>Table demo</title>
+      <subtitle>Sample tabular dataset rendered from XML page schema.</subtitle>
+    </props>
+    <children />
+  </component>
+  <component type="table">
+    <props>
+      <data>
+        <item>
+          <id>p1</id>
+          <name>Marketing Website</name>
+          <owner>Alice</owner>
+          <status>In Progress</status>
+          <budget>$12,000</budget>
+        </item>
+        <item>
+          <id>p2</id>
+          <name>Mobile App</name>
+          <owner>Bruno</owner>
+          <status>Planning</status>
+          <budget>$35,000</budget>
+        </item>
+        <item>
+          <id>p3</id>
+          <name>Data Migration</name>
+          <owner>Carla</owner>
+          <status>Done</status>
+          <budget>$8,500</budget>
+        </item>
+      </data>
+    </props>
+    <children>
+      <component type="column">
+        <props>
+          <key>name</key>
+          <label>Project</label>
+          <content>{name}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>owner</key>
+          <label>Owner</label>
+          <content>{owner}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>status</key>
+          <label>Status</label>
+          <content>{status}</content>
+        </props>
+        <children />
+      </component>
+      <component type="column">
+        <props>
+          <key>budget</key>
+          <label>Budget</label>
+          <align>right</align>
+          <content>{budget}</content>
+        </props>
+        <children />
+      </component>
+    </children>
+  </component>
+</page>
