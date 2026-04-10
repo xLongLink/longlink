@@ -5,25 +5,39 @@ export default defineConfig({
   srcDir: 'src',
   title: 'LongLink',
   description: 'LongLink documentation',
+  head: [
+    ['link', { rel: 'icon', type: 'image/png', href: '/banner.png' }],
+    ['link', { rel: 'apple-touch-icon', href: '/banner.png' }]
+  ],
   themeConfig: {
+    logo: '/banner.png',
+    logoLink: 'https://longlink.dev',
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'API', link: '/api/' },
-      { text: 'SDK', link: '/sdk/' }
+      { text: 'Control Plane', link: '/api/' },
+      { text: 'Applications SDK', link: '/sdk/' }
     ],
 
     sidebar: {
       '/api/': [
         {
-          text: 'API',
+          text: 'Control Plane',
           items: [
-            { text: 'Overview', link: '/api/' }
+            { text: 'Overview', link: '/api/' },
+            { text: 'Organization', link: '/api/organization/' },
+            { text: 'Permissions', link: '/api/permissions/' },
+            { text: 'Applications', link: '/api/applications/' },
+            { text: 'Databases', link: '/api/databases/' },
+            { text: 'Storage', link: '/api/storage/' },
+            { text: 'Compute', link: '/api/compute/' },
+            { text: 'Logging', link: '/api/logging/' },
+            { text: 'Integrations', link: '/api/integrations/' }
           ]
         }
       ],
       '/sdk/': [
         {
-          text: 'SDK',
+          text: 'Applications SDK',
           items: [
             { text: 'Overview', link: '/sdk/' },
             {
@@ -53,7 +67,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/xLongLink/longlink' }
     ]
   }
 })

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
-import Render, { type RenderNodeSchema } from '@/components/Render';
+import Render, { normalizeRenderRoots, type RenderNodeSchema } from '@/components/Render';
 import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
 import { getPagesFromResponse } from './pages';
@@ -33,7 +33,7 @@ export default function Longlink() {
     const pageEndpoint = activePagePath.length > 0 ? `/pages/${activePagePath}` : null;
 
     const { data, isLoading, error } = useApiData<unknown>(pageEndpoint);
-    const pageData = Array.isArray(data) ? (data as RenderNodeSchema[]) : [];
+    const pageData = normalizeRenderRoots(data) as RenderNodeSchema[];
 
     if (error) {
         return <div>{error.message}</div>;
@@ -47,7 +47,7 @@ export default function Longlink() {
         return <div>No pages configured for this app.</div>;
     }
 
-    if (data !== null && !Array.isArray(data)) {
+    if (data !== null && pageData.length === 0) {
         return <div>Unexpected response format for {pageEndpoint}</div>;
     }
 

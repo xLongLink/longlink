@@ -4,5 +4,5 @@ This site is split into separate namespaces for platform and application develop
 
 ## Sections
 
-- [API](/api/)
-- [SDK](/sdk/)
+- [Control Plane](/api/)
+- [Applications SDK](/sdk/)

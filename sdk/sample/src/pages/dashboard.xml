@@ -1,18 +1,4 @@
-<page>
-  <component type="hero">
-    <props>
-      <title>Dashboard</title>
-      <subtitle>Sample dashboard page loaded from XML.</subtitle>
-      <icon>layout-dashboard</icon>
-    </props>
-    <children />
-  </component>
-  <component type="button">
-    <props>
-      <text>Refresh Data</text>
-      <variant>default</variant>
-      <url>/sample</url>
-    </props>
-    <children />
-  </component>
-</page>
+<Page name="Dashboard" icon="layout-dashboard">
+  <Hero title="Dashboard" subtitle="Sample dashboard page loaded from XML." icon="layout-dashboard" />
+  <Button text="Refresh Data" variant="default" url="/sample" />
+</Page>
