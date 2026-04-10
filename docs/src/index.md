@@ -5,4 +5,4 @@ This site now uses a docs-only layout. The root route opens the documentation in
 ## Sections
 
 - [Control Plane](/)
-- [Applications SDK](/api-examples)
+- [Applications SDK](/applications-sdk/)
