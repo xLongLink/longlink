@@ -1,10 +1,16 @@
-import { cloneElement, isValidElement, useEffect, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 import { type ApiTableColumn } from '@/components/table/buildColumns';
 import { Components, Layout } from '@/lib/registry';
-import { Button as UIButton } from '@/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/ui/dialog';
-import { Label } from '@/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/ui/dialog';
 import { Table as UITable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 import {
     createRegistry,
@@ -35,10 +41,13 @@ const TYPE_ALIASES: Record<string, string> = {
     columns: 'Columns',
     dialog: 'Dialog',
     dialogcontent: 'DialogContent',
+    dialogdescription: 'DialogDescription',
+    dialogfooter: 'DialogFooter',
+    dialogheader: 'DialogHeader',
+    dialogtitle: 'DialogTitle',
     dialogtrigger: 'DialogTrigger',
     blockquote: 'Blockquote',
     code: 'Code',
-    field: 'Field',
     h1: 'H1',
     h2: 'H2',
     h3: 'H3',
@@ -313,40 +322,6 @@ function Stack({
     );
 }
 
-function Field({ children, label }: { children?: ReactNode; label?: string }) {
-    if (!label && children == null) {
-        return null;
-    }
-
-    return (
-        <div className="space-y-2">
-            {typeof label === 'string' && label.trim() ? <Label>{label}</Label> : null}
-            {children}
-        </div>
-    );
-}
-
-function RuntimeDialogTrigger({ children }: { children?: ReactNode }) {
-    if (isValidElement(children)) {
-        return <DialogTrigger render={cloneElement(children)} />;
-    }
-
-    return <DialogTrigger render={<UIButton variant="outline" />}>{children}</DialogTrigger>;
-}
-
-function RuntimeDialogContent({ children, title }: { children?: ReactNode; title?: string }) {
-    return (
-        <DialogContent className="sm:max-w-3xl">
-            {typeof title === 'string' && title.trim() ? (
-                <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                </DialogHeader>
-            ) : null}
-            <div className="space-y-4">{children}</div>
-        </DialogContent>
-    );
-}
-
 function RuntimeTable({
     children,
     columns,
@@ -391,9 +366,12 @@ const runtimeRegistry = createRegistry({
         renderChildren: false,
     } satisfies RegistryEntry,
     Dialog,
-    DialogContent: RuntimeDialogContent,
-    DialogTrigger: RuntimeDialogTrigger,
-    Field,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
     Page,
     Stack,
     Table: {
