@@ -1,4 +1,3 @@
-# Importing components
 from .hero import Hero
 from typing import Any
 from .input import Input, InputKinds
@@ -12,48 +11,67 @@ from .separator import Separator
 from dataclasses import field, dataclass
 
 
+def _serialize_children(children: list[Component | str]) -> list[dict | str]:
+    serialized_children: list[dict | str] = []
+
+    for child in children:
+        if isinstance(child, str):
+            serialized_children.append(child)
+        else:
+            serialized_children.append(dict(child))
+
+    return serialized_children
+
+
 @dataclass
-class Tab(Component):
-    """
-    Container representing a single tab inside a `Tabs` component.
+class TabsTrigger(Component):
+    value: str
+    _children: list[Component | str] = field(default_factory=list)
 
-    Characteristics:
-    - Owns an isolated vertical component subtree.
-    - Children are rendered only when the tab is active (frontend responsibility).
-    - Behaves similarly to a constrained Page/Column in terms of composition.
-
-    Serialization shape:
-        {
-            "type": "tab",
-            "props": {
-                "name": <str>
-            },
-            "children": [ ...nested components... ]
-        }
-
-    The `name` is both:
-    - The display label in the tab header.
-    - The identifier used by the frontend to switch content.
-    """
-
-    name: str
-    _children: list[Component] = field(default_factory=list)
+    def add(self, child: Component | str):
+        self._children.append(child)
+        return self
 
     def __iter__(self):
-        yield 'type', 'tab'
+        yield 'type', 'tabsTrigger'
         yield 'props', {
-            'name': self.name,
+            'value': self.value,
         }
+        yield 'children', _serialize_children(self._children)
+
+
+@dataclass
+class TabsList(Component):
+    _children: list[TabsTrigger] = field(default_factory=list)
+
+    def trigger(self, value: str, label: str | None = None) -> TabsTrigger:
+        trigger = TabsTrigger(value=value)
+        if label is not None:
+            trigger.add(label)
+        self._children.append(trigger)
+        return trigger
+
+    def __iter__(self):
+        yield 'type', 'tabsList'
+        yield 'props', {}
         yield 'children', [dict(child) for child in self._children]
 
+
+@dataclass
+class TabsContent(Component):
+    value: str
+    _children: list[Component | str] = field(default_factory=list)
+
+    def add(self, child: Component | str):
+        self._children.append(child)
+        return self
+
     def hero(self, title: str, subtitle: str | None = None) -> Hero:
-        """Append a Hero component to this tab."""
         hero = Hero(title=title, subtitle=subtitle)
         self._children.append(hero)
         return hero
 
     def table(self, data: list[dict]) -> Table:
-        """Append a Table component to this tab."""
         table = Table(data=data)
         self._children.append(table)
         return table
@@ -64,24 +82,16 @@ class Tab(Component):
         variant: ButtonVariants = 'default',
         url: str | None = None,
     ) -> Button:
-        """Append a Button component to this tab."""
         button = Button(text=text, variant=variant, url=url)
         self._children.append(button)
         return button
 
     def columns(self, widths: list[int]) -> list[Column]:
-        """
-        Append a Columns layout to this tab.
-
-        `widths` defines relative column weights.
-        Returns the created Column instances for immediate population.
-        """
         columns = Columns()
         self._children.append(columns)
         return [columns.column(width=width) for width in widths]
 
     def separator(self) -> Separator:
-        """Insert a visual separator between components."""
         separator = Separator()
         self._children.append(separator)
         return separator
@@ -89,7 +99,7 @@ class Tab(Component):
     def input(
         self,
         name: str | None = None,
-        kind: InputKinds = "text",
+        kind: InputKinds = 'text',
         label: str | None = None,
         value: Any = None,
         placeholder: str | None = None,
@@ -98,11 +108,6 @@ class Tab(Component):
         disabled: bool = False,
         submit: str | None = None,
     ) -> Input:
-        """
-        Append an Input component to this tab.
-
-        Intended for lightweight forms or tab-scoped actions.
-        """
         input_component = Input(
             name=name,
             kind=kind,
@@ -129,7 +134,6 @@ class Tab(Component):
         disabled: bool = False,
         submit: str | None = None,
     ) -> Select:
-        """Append a standalone Select component to this tab."""
         select_component = Select(
             options=options,
             name=name,
@@ -144,7 +148,6 @@ class Tab(Component):
         self._children.append(select_component)
         return select_component
 
-
     def range(
         self,
         label: str | None = None,
@@ -154,7 +157,6 @@ class Tab(Component):
         step: float = 1,
         value: list[float] | None = None,
     ) -> Range:
-        """Append a Range component to this tab."""
         range_component = Range(
             label=label,
             description=description,
@@ -166,48 +168,34 @@ class Tab(Component):
         self._children.append(range_component)
         return range_component
 
+    def __iter__(self):
+        yield 'type', 'tabsContent'
+        yield 'props', {
+            'value': self.value,
+        }
+        yield 'children', _serialize_children(self._children)
+
 
 @dataclass
 class Tabs(Component):
-    """
-    Tabbed container that groups multiple `Tab` subtrees.
+    default_value: str | None = None
+    _children: list[Component] = field(default_factory=list)
 
-    Responsibilities:
-    - Maintains ordered tab labels.
-    - Owns corresponding `Tab` child components.
-    - Serializes both tab metadata and tab content subtrees.
+    def list(self) -> TabsList:
+        tabs_list = TabsList()
+        self._children.append(tabs_list)
+        return tabs_list
 
-    Serialization shape:
-        {
-            "type": "tabs",
-            "props": {
-                "tabs": [<tab_name_1>, <tab_name_2>, ...]
-            },
-            "children": [ ...tab subtrees... ]
-        }
-
-    The frontend is responsible for:
-    - Rendering the tab navigation header using `tabs`.
-    - Switching visible content based on active tab.
-    """
-
-    _tabs: list[str] = field(default_factory=list)
-    _children: list[Tab] = field(default_factory=list)
-
-    def tab(self, name: str) -> Tab:
-        """
-        Create and register a new Tab.
-
-        The order of creation defines visual order.
-        """
-        tab = Tab(name=name)
-        self._tabs.append(name)
-        self._children.append(tab)
-        return tab
+    def content(self, value: str) -> TabsContent:
+        content = TabsContent(value=value)
+        self._children.append(content)
+        return content
 
     def __iter__(self):
+        props = {}
+        if self.default_value is not None:
+            props['defaultValue'] = self.default_value
+
         yield 'type', 'tabs'
-        yield 'props', {
-            'tabs': self._tabs,
-        }
-        yield 'children', [dict(tab) for tab in self._children]
+        yield 'props', props
+        yield 'children', [dict(child) for child in self._children]

@@ -1,7 +1,6 @@
-from pathlib import Path
-from typing import Any
-
 import xmltodict
+from typing import Any
+from pathlib import Path
 
 
 def load_page_schema_from_xml(path: str | Path) -> dict[str, Any]:

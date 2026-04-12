@@ -32,3 +32,8 @@ The SDK allows to create the tabs that will be visible in the web application fo
 ## Avoid
 
 - For the time being, DO NOT WRITE ANY TEST CASES
+
+## Development Mode
+
+- The project is in development mode. Prefer the current model over backward compatibility.
+- It is acceptable to remove old systems or change APIs across the app when needed, as long as the new model works end to end.

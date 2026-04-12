@@ -1,0 +1,27 @@
+/* Make top-level sidebar sections more compact and remove separators between them. */
+.VPSidebar .group {
+	border-top: none !important;
+	padding-top: 0px !important;
+}
+
+.VPSidebar .VPSidebarItem.level-0 {
+	padding-bottom: 10px;
+}
+
+.VPSidebar .VPSidebarItem.collapsed.level-0 {
+	padding-bottom: 6px;
+}
+
+@media (min-width: 960px) {
+	.VPSidebarGroup .group {
+		padding-top: 6px;
+	}
+}
+
+/* Let markdown tables use the full available content width. */
+.vp-doc table {
+	display: table;
+	width: 100%;
+	max-width: 100%;
+}
+

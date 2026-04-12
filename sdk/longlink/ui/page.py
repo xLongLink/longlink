@@ -1,7 +1,7 @@
 from typing import Any
 from longlink.ui.hero import Hero
 from longlink.ui.menu import Menu
-from longlink.ui.tabs import Tab, Tabs
+from longlink.ui.tabs import Tabs
 from longlink.ui.input import Input, InputKinds
 from longlink.ui.range import Range
 from longlink.ui.table import Table
@@ -92,17 +92,11 @@ class Page:
         self._children.append(menu)
         return menu
 
-    def tabs(self, names: list[str]) -> list[Tab]:
-        """
-        Append a Tabs container to the page.
-
-        `names` defines the ordered tab labels.
-        Returns the created Tab instances for immediate population.
-        """
-        tabs = Tabs()
+    def tabs(self, default_value: str | None = None) -> Tabs:
+        """Append a Tabs container to the page."""
+        tabs = Tabs(default_value=default_value)
         self._children.append(tabs)
-        return [tabs.tab(name=name) for name in names]
-
+        return tabs
 
     def input(
         self,

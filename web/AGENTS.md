@@ -28,3 +28,8 @@ If there were any edits run:
 ```bash
 bun run format
 ```
+
+## Development Mode
+
+- The web app is in development mode. Do not preserve legacy rendering paths just for backward compatibility.
+- API and schema changes are acceptable while iterating, as long as the current model works correctly end to end.

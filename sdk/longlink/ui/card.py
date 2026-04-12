@@ -1,127 +1,130 @@
-# Import commonly nested components
-from .hero import Hero
-from .tabs import Tab, Tabs
-from .input import Input
-from .range import Range
-from .table import Table
-from .button import Button, ButtonVariants
-from .columns import Column, Columns
 from .__root__ import Component
-from .separator import Separator
 from dataclasses import field, dataclass
+
+
+def _serialize_children(children: list[Component | str]) -> list[dict | str]:
+    return [dict(child) if isinstance(child, Component) else child for child in children]
+
+
+@dataclass
+class CardTitle(Component):
+    text: str
+
+    def __iter__(self):
+        yield "type", "cardTitle"
+        yield "props", {}
+        yield "children", [self.text]
+
+
+@dataclass
+class CardDescription(Component):
+    text: str
+
+    def __iter__(self):
+        yield "type", "cardDescription"
+        yield "props", {}
+        yield "children", [self.text]
+
+
+@dataclass
+class CardAction(Component):
+    _children: list[Component] = field(default_factory=list)
+
+    def add(self, component: Component) -> Component:
+        self._children.append(component)
+        return component
+
+    def __iter__(self):
+        yield "type", "cardAction"
+        yield "props", {}
+        yield "children", [dict(child) for child in self._children]
+
+
+@dataclass
+class CardHeader(Component):
+    _children: list[Component] = field(default_factory=list)
+
+    def title(self, text: str) -> CardTitle:
+        title = CardTitle(text=text)
+        self._children.append(title)
+        return title
+
+    def description(self, text: str) -> CardDescription:
+        description = CardDescription(text=text)
+        self._children.append(description)
+        return description
+
+    def action(self) -> CardAction:
+        action = CardAction()
+        self._children.append(action)
+        return action
+
+    def add(self, component: Component) -> Component:
+        self._children.append(component)
+        return component
+
+    def __iter__(self):
+        yield "type", "cardHeader"
+        yield "props", {}
+        yield "children", [dict(child) for child in self._children]
+
+
+@dataclass
+class CardContent(Component):
+    _children: list[Component] = field(default_factory=list)
+
+    def add(self, component: Component) -> Component:
+        self._children.append(component)
+        return component
+
+    def __iter__(self):
+        yield "type", "cardContent"
+        yield "props", {}
+        yield "children", [dict(child) for child in self._children]
+
+
+@dataclass
+class CardFooter(Component):
+    _children: list[Component] = field(default_factory=list)
+
+    def add(self, component: Component) -> Component:
+        self._children.append(component)
+        return component
+
+    def __iter__(self):
+        yield "type", "cardFooter"
+        yield "props", {}
+        yield "children", [dict(child) for child in self._children]
 
 
 @dataclass
 class Card(Component):
-    """
-    Visual content container used to group related elements.
+    _children: list[Component | str] = field(default_factory=list)
 
-    Characteristics:
-    - Vertically stacks child components.
-    - Optional title and subtitle for header rendering.
-    - Optional bordered / elevated styling handled by frontend.
-    - No layout logic beyond vertical stacking.
+    def header(self) -> CardHeader:
+        header = CardHeader()
+        self._children.append(header)
+        return header
 
-    Intended use cases:
-    - Dashboard widgets
-    - Grouped settings blocks
-    - Information panels
-    - Statistics containers
+    def content(self) -> CardContent:
+        content = CardContent()
+        self._children.append(content)
+        return content
 
-    Serialization shape:
-        {
-            "type": "card",
-            "props": {
-                "title": <str | null>,
-                "subtitle": <str | null>
-            },
-            "children": [ ...nested components... ]
-        }
-    """
-
-    title: str | None = None
-    subtitle: str | None = None
-
-    _children: list[Component] = field(default_factory=list)
-
-    # ---- Child composition helpers ----
-
-    def hero(self, title: str, subtitle: str | None = None) -> Hero:
-        hero = Hero(title=title, subtitle=subtitle)
-        self._children.append(hero)
-        return hero
-
-    def table(self, data: list[dict]) -> Table:
-        table = Table(data=data)
-        self._children.append(table)
-        return table
-
-    def input(
-        self,
-        input_component: Input,
-    ) -> Input:
-        self._children.append(input_component)
-        return input_component
-
-    def button(
-        self,
-        text: str,
-        variant: ButtonVariants = "default",
-        url: str | None = None,
-    ) -> Button:
-        button = Button(text=text, variant=variant, url=url)
-        self._children.append(button)
-        return button
-
-    def columns(self, widths: list[int]) -> list[Column]:
-        columns = Columns()
-        self._children.append(columns)
-        return [columns.column(width=w) for w in widths]
-
-    def separator(self) -> Separator:
-        separator = Separator()
-        self._children.append(separator)
-        return separator
-
-    def tabs(self, names: list[str]) -> list[Tab]:
-        tabs = Tabs()
-        self._children.append(tabs)
-        return [tabs.tab(name=n) for n in names]
-
-
-    def range(
-        self,
-        label: str | None = None,
-        description: str | None = None,
-        min: float = 0,
-        max: float = 100,
-        step: float = 1,
-        value: list[float] | None = None,
-    ) -> Range:
-        range_component = Range(
-            label=label,
-            description=description,
-            min=min,
-            max=max,
-            step=step,
-            value=value if value is not None else [min, max],
-        )
-        self._children.append(range_component)
-        return range_component
+    def footer(self) -> CardFooter:
+        footer = CardFooter()
+        self._children.append(footer)
+        return footer
 
     def add(self, component: Component) -> Component:
-        """
-        Append any generic component.
-        """
         self._children.append(component)
         return component
 
-    # ---- Serialization ----
+    def text(self, value: str) -> str:
+        self._children.append(value)
+        return value
 
     def __iter__(self):
         yield "type", "card"
-        yield "props", {
-            "title": self.title,
-            "subtitle": self.subtitle,
-        }
-        yield "children", [dict(child) for child in self._children]
+        yield "props", {}
+        yield "children", _serialize_children(self._children)
