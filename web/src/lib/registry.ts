@@ -9,6 +9,7 @@ import Menu, { MenuSection, MenuSubSection } from '@/longlink/Menu';
 import Range from '@/longlink/Range';
 import Select from '@/longlink/Select';
 import Separator from '@/longlink/Separator';
+import Slider from '@/longlink/Slider';
 import Switch from '@/longlink/Switch';
 import Table from '@/longlink/Table';
 import Textarea from '@/longlink/Textarea';
@@ -53,6 +54,7 @@ export const Components = {
     Range,
     Select,
     Separator,
+    Slider,
     Switch,
     Textarea,
     Blockquote,

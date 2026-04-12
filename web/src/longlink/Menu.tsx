@@ -1,5 +1,6 @@
 import {
     Children,
+    Fragment,
     isValidElement,
     lazy,
     useEffect,
@@ -78,7 +79,7 @@ for (const path in iconImporters) {
     lazyIcons[match[1]] = lazy(iconImporters[path]);
 }
 
-function flattenParsedProps<T extends { props?: T }>(props: T): T {
+function flattenParsedProps<T extends object>(props: T & { props?: T }): T {
     if (!props.props) {
         return props;
     }
@@ -105,16 +106,37 @@ function resolveSubSectionIsRoot(props: ParsedMenuSubSectionProps): boolean {
     return flattenParsedProps(props).root ?? false;
 }
 
+function collectElementsOfType<T extends object>(
+    children: ReactNode,
+    component: (props: T) => ReactElement | null
+): ReactElement<T>[] {
+    const elements: ReactElement<T>[] = [];
+
+    for (const child of Children.toArray(children)) {
+        if (!isValidElement(child)) {
+            continue;
+        }
+
+        if (child.type === component) {
+            elements.push(child as ReactElement<T>);
+            continue;
+        }
+
+        if (child.type === Fragment) {
+            const fragmentChildProps = child.props as { children?: ReactNode };
+            elements.push(...collectElementsOfType(fragmentChildProps.children, component));
+        }
+    }
+
+    return elements;
+}
+
 function normalizeSections(children?: ReactNode): NormalizedSection[] {
-    const sections = Children.toArray(children).filter(
-        (child) => isValidElement(child) && child.type === MenuSection
-    ) as ReactElement<ParsedMenuSectionProps>[];
+    const sections = collectElementsOfType(children, MenuSection);
 
     return sections.map((section, sectionIndex) => {
         const sectionProps = flattenParsedProps(section.props);
-        const sectionChildren = Children.toArray(sectionProps.children).filter(
-            (child) => isValidElement(child) && child.type === MenuSubSection
-        ) as ReactElement<ParsedMenuSubSectionProps>[];
+        const sectionChildren = collectElementsOfType(sectionProps.children, MenuSubSection);
 
         const normalizedSubSections = sectionChildren.map((subSection, subIndex) => {
             const subSectionProps = flattenParsedProps(subSection.props);

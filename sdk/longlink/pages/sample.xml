@@ -1,5 +1,5 @@
 <Page name="Sample XML" icon="layout">
-  <Hero title="XML Component Catalog" subtitle="Reference page for the sample SDK app covering page, menu, layout, form, dialog, tabs, and table elements." icon="layout">
+  <Hero title="XML Component Catalog" subtitle="Reference page for the sample SDK app covering page, menu, layout, form, dialog, tabs, table, and slider elements." icon="layout">
     <Button text="Legacy POST action" variant="outline" url="/sample" />
   </Hero>
   <Menu>
@@ -39,6 +39,7 @@
                     <li>Stack</li>
                     <li>Card</li>
                     <li>Input</li>
+                    <li>Slider</li>
                     <li>Dialog</li>
                     <li>Tabs</li>
                     <li>Table</li>
@@ -62,6 +63,8 @@
                   />
                   <Switch label="Switch" description="Toggle a simple boolean setting." active="true" />
                   <Checkbox label="Checkbox" description="Example checkbox element." checked="true" />
+                  <Slider label="Slider" description="Single-value slider using the new runtime component." min="0" max="100" step="5" value="35" />
+                  <Slider label="Slider Range" description="Range slider with two thumbs through the same tag." min="0" max="100" step="10" value="[20,80]" />
                   <Range label="Range" description="Legacy slider component." min="0" max="100" step="10" value="[20,80]" />
                   <Textarea label="Textarea" placeholder="Write a note here" description="Standalone multiline input." />
                 </CardContent>
