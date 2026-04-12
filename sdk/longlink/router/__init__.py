@@ -20,15 +20,11 @@ def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
         body = await handler(*args, **kwargs)
 
         if is_page:
-            from longlink.ui import Page
-
-            if isinstance(body, Page):
-                payload = list(body)
-            elif isinstance(body, (dict, list)):
+            if isinstance(body, (dict, list)):
                 payload = body
             else:
                 return PlainTextResponse(
-                    "Invalid response type. Page routes must return longlink.ui.Page or a page schema dict/list.",
+                    "Invalid response type. Page routes must return an XML page schema dict/list.",
                     status_code=500,
                 )
             return Response(
