@@ -29,7 +29,7 @@ Design principles:
     - Layout containers:
         - Page (root)
         - Columns / Column
-        - Tabs / Tab
+        - Tabs / TabsList / TabsTrigger / TabsContent
         - Menu / Section / SubSection
         - Form / FormRow
         - Card
@@ -70,8 +70,13 @@ Design principles:
 
 7. Cards:
     - Visual grouping container.
-    - Vertically stacked children.
-    - Optional header metadata.
+    - Composed with CardHeader / CardContent / CardFooter.
+    - CardHeader may contain CardTitle / CardDescription / CardAction.
+
+8. Text primitives:
+    - Use explicit HTML-like nodes for content.
+    - Prefer h1 / h2 / h3 / h4 / p / blockquote / ul / li / code.
+    - Do not use a generic Text component.
 
 When designing a new component:
 
@@ -92,6 +97,8 @@ Provide:
 - Usage example
 - Design reasoning\*\*
 """
-
-
+from .card import (Card, CardTitle, CardAction, CardFooter, CardHeader,
+                   CardContent, CardDescription)
+from .html import H1, H2, H3, H4, P, Li, Ul, Code, Blockquote
 from .page import Page
+from .tabs import Tabs, TabsList, TabsContent, TabsTrigger

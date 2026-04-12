@@ -35,11 +35,11 @@ function renderTemplate(template: string, data: unknown): string {
 }
 
 function resolveCell(
-    legacyValue: string | undefined,
+    valueTemplate: string | undefined,
     cell: ApiTableCell | string | undefined,
     row: unknown
 ): ApiTableCell | undefined {
-    const resolvedCell = cell ?? legacyValue;
+    const resolvedCell = cell ?? valueTemplate;
 
     if (!resolvedCell) {
         return undefined;

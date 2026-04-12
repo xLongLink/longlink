@@ -2,7 +2,7 @@ from typing import Any
 from dataclasses import field, dataclass
 from longlink.ui.hero import Hero
 # Importing components
-from longlink.ui.tabs import Tab, Tabs
+from longlink.ui.tabs import Tabs
 from longlink.ui.input import Input, InputKinds
 from longlink.ui.table import Table
 from longlink.ui.button import Button, ButtonVariants
@@ -130,11 +130,11 @@ class MenuSubSection(Component):
         self._children.append(select_component)
         return select_component
 
-    def tabs(self, names: list[str]) -> list[Tab]:
+    def tabs(self, default_value: str | None = None) -> Tabs:
         """Append a Tabs container."""
-        tabs = Tabs()
+        tabs = Tabs(default_value=default_value)
         self._children.append(tabs)
-        return [tabs.tab(name=name) for name in names]
+        return tabs
 
     def __iter__(self):
         yield 'type', 'menuSubSection'
@@ -271,10 +271,10 @@ class MenuSection(Component):
         self._root._children.append(select_component)
         return select_component
 
-    def tabs(self, names: list[str]) -> list[Tab]:
-        tabs = Tabs()
+    def tabs(self, default_value: str | None = None) -> Tabs:
+        tabs = Tabs(default_value=default_value)
         self._root._children.append(tabs)
-        return [tabs.tab(name=name) for name in names]
+        return tabs
 
     def __iter__(self):
         yield 'type', 'menusection'
