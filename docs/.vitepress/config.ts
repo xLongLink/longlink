@@ -45,7 +45,37 @@ export default defineConfig({
               collapsed: true,
               items: [
                 { text: 'Introduction', link: '/sdk/pages/' },
-                { text: 'XML Pages', link: '/sdk/pages/xml' }
+                { text: 'XML Pages', link: '/sdk/pages/xml' },
+                { text: 'HTML Elements', link: '/sdk/pages/html-elements' },
+                {
+                  text: 'Layout',
+                  collapsed: true,
+                  items: [
+                    { text: 'Hero', link: '/sdk/pages/layout/hero' },
+                    { text: 'Menu', link: '/sdk/pages/layout/menu' },
+                    { text: 'Card', link: '/sdk/pages/layout/card' },
+                    { text: 'Columns', link: '/sdk/pages/layout/columns' },
+                    { text: 'Tabs', link: '/sdk/pages/layout/tabs' },
+                    { text: 'Table', link: '/sdk/pages/layout/table' }
+                  ]
+                },
+                {
+                  text: 'Components',
+                  collapsed: true,
+                  items: [
+                    { text: 'Button', link: '/sdk/pages/components/button' },
+                    { text: 'Checkbox', link: '/sdk/pages/components/checkbox' },
+                    { text: 'Dialog', link: '/sdk/pages/components/dialog' },
+                    { text: 'Icon', link: '/sdk/pages/components/icon' },
+                    { text: 'Input', link: '/sdk/pages/components/input' },
+                    { text: 'Range', link: '/sdk/pages/components/range' },
+                    { text: 'Select', link: '/sdk/pages/components/select' },
+                    { text: 'Separator', link: '/sdk/pages/components/separator' },
+                    { text: 'Slider', link: '/sdk/pages/components/slider' },
+                    { text: 'Switch', link: '/sdk/pages/components/switch' },
+                    { text: 'Textarea', link: '/sdk/pages/components/textarea' }
+                  ]
+                }
               ]
             },
             {

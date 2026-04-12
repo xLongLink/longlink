@@ -64,6 +64,7 @@ const TYPE_ALIASES: Record<string, string> = {
     range: 'Range',
     select: 'Select',
     separator: 'Separator',
+    slider: 'Slider',
     stack: 'Stack',
     switch: 'Switch',
     table: 'Table',
