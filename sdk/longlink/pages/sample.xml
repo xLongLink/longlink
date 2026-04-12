@@ -24,13 +24,11 @@
                   <CardTitle>Fields and Inputs</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Field label="Name">
-                    <Input name="name" placeholder="Full name" />
-                  </Field>
+                  <h4>Name</h4>
+                  <Input name="name" placeholder="Full name" />
 
-                  <Field label="Role">
-                    <Input name="role" placeholder="Role" />
-                  </Field>
+                  <h4>Role</h4>
+                  <Input name="role" placeholder="Role" />
 
                   <Separator />
 
@@ -40,7 +38,6 @@
                     <li>Menu</li>
                     <li>Stack</li>
                     <li>Card</li>
-                    <li>Field</li>
                     <li>Input</li>
                     <li>Dialog</li>
                     <li>Tabs</li>
@@ -76,9 +73,13 @@
             <DialogTrigger>
               Open sample dialog
             </DialogTrigger>
-            <DialogContent title="Dialog">
-              <p>Dialog, DialogTrigger, and DialogContent are available in XML pages.</p>
-              <blockquote>The default dialog close controls are part of the dialog component.</blockquote>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Dialog</DialogTitle>
+                <DialogDescription>Dialog content now follows the same explicit composition as shadcn.</DialogDescription>
+              </DialogHeader>
+              <p>Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, and DialogDescription are available in XML pages.</p>
+              <blockquote>Compose dialog structure directly in XML instead of relying on runtime title injection.</blockquote>
             </DialogContent>
           </Dialog>
         </Stack>
