@@ -2,7 +2,7 @@
 
 The SDK documentation covers how to build LongLink applications.
 
-Use this section to learn how to structure application features across pages, storage, and database capabilities.
+Use this section to learn how to structure application features across XML pages, storage, and database capabilities.
 
 ## Sections
 

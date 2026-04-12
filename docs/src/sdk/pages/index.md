@@ -1,15 +1,16 @@
 # Pages
 
-The Pages section explains how to define and organize application pages rendered in the web interface.
+The Pages section explains how to define application pages using XML.
+
+The SDK no longer exposes Python UI component classes.
+The frontend renders the XML page schema directly.
 
 ## Sections
 
-- [Layout](/sdk/pages/layout)
-- [Components](/sdk/pages/components)
-- [Logic](/sdk/pages/logic)
+- [XML Pages](/sdk/pages/xml)
 
 ## Notes
 
-- Layout pages describe structural containers such as `Columns`, `Tabs`, and `Menu`.
-- Component pages describe visual elements such as `Hero`, `Input`, and `Table`.
-- Logic pages are reserved for server-driven control-flow primitives that are not yet implemented in the current SDK.
+- Define each page in an XML file with a `<Page>` root element.
+- Register XML files with `xml_page(...)` or one of the predefined helpers.
+- The web frontend is responsible for rendering the XML structure.
