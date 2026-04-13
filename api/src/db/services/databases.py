@@ -1,95 +1,30 @@
 import re
 import asyncio
 import psycopg2
+from src.env import env
 from psycopg2 import sql
-from sqlalchemy import select
-from src.db.models import DatabaseConnection
-from src.db.session import get_session
 
 _DATABASE_NAME_PATTERN = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 
 
 class DatabasesService:
-    async def list(self) -> list[DatabaseConnection]:
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(select(DatabaseConnection))
-            return list(result.scalars().all())
-
-    async def get(self, name: str) -> DatabaseConnection | None:
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(select(DatabaseConnection).where(DatabaseConnection.name == name))
-            return result.scalar_one_or_none()
-
-    async def set(
-        self,
-        *,
-        name: str,
-        host: str,
-        port: int,
-        username: str,
-        password: str,
-        maintenance_database: str,
-        sslmode: str | None,
-    ) -> DatabaseConnection:
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(select(DatabaseConnection).where(DatabaseConnection.name == name))
-            connection = result.scalar_one_or_none()
-
-            if connection is None:
-                connection = DatabaseConnection(
-                    name=name,
-                    host=host,
-                    port=port,
-                    username=username,
-                    password=password,
-                    maintenance_database=maintenance_database,
-                    sslmode=sslmode,
-                )
-                session.add(connection)
-            else:
-                connection.host = host
-                connection.port = port
-                connection.username = username
-                connection.password = password
-                connection.maintenance_database = maintenance_database
-                connection.sslmode = sslmode
-
-            await session.commit()
-            await session.refresh(connection)
-            return connection
-
-    async def delete(self, name: str) -> bool:
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(select(DatabaseConnection).where(DatabaseConnection.name == name))
-            connection = result.scalar_one_or_none()
-            if connection is None:
-                return False
-
-            await session.delete(connection)
-            await session.commit()
-            return True
-
-    async def create_database(self, *, connection: DatabaseConnection, database_name: str) -> None:
+    async def create_database(self, *, database_name: str) -> None:
         if not _DATABASE_NAME_PATTERN.fullmatch(database_name):
             raise ValueError('Database name must start with a letter/underscore and contain only letters, numbers, and underscores')
 
-        await asyncio.to_thread(self._create_database_sync, connection, database_name)
+        await asyncio.to_thread(self._create_database_sync, database_name)
 
     @staticmethod
-    def _create_database_sync(connection: DatabaseConnection, database_name: str) -> None:
+    def _create_database_sync(database_name: str) -> None:
         connection_kwargs: dict[str, str | int] = {
-            'host': connection.host,
-            'port': connection.port,
-            'user': connection.username,
-            'password': connection.password,
-            'dbname': connection.maintenance_database,
+            'host': env.ENV_PROVISION_DATABASE_HOST,
+            'port': env.ENV_PROVISION_DATABASE_PORT,
+            'user': env.ENV_PROVISION_DATABASE_USERNAME,
+            'password': env.ENV_PROVISION_DATABASE_PASSWORD,
+            'dbname': env.ENV_PROVISION_DATABASE_MAINTENANCE_DATABASE,
         }
-        if connection.sslmode:
-            connection_kwargs['sslmode'] = connection.sslmode
+        if env.ENV_PROVISION_DATABASE_SSLMODE:
+            connection_kwargs['sslmode'] = env.ENV_PROVISION_DATABASE_SSLMODE
 
         admin_connection = psycopg2.connect(**connection_kwargs)
         try:
