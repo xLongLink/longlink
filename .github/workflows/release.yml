@@ -1,23 +1,8 @@
 name: Release
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      bump:
-        description: Version bump type
-        required: true
-        default: patch
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
   release:
-    types: [published]
+    types: [created]
 
 permissions:
   contents: write
@@ -26,120 +11,28 @@ permissions:
 
 jobs:
   release:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev')
+    if: github.event_name == 'release' && github.event.release.draft == true
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.next_version.outputs.tag }}
+      tag: ${{ steps.release_tag.outputs.tag }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Find previous release tag
-        id: previous_release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const releases = await github.paginate(github.rest.repos.listReleases, {
-              owner,
-              repo,
-              per_page: 100
-            });
-
-            const versionPattern = /^(\d+)\.(\d+)\.(\d+)$/;
-            const stableReleases = releases
-              .filter((release) => !release.draft && !release.prerelease)
-              .filter((release) => versionPattern.test(release.tag_name));
-
-            stableReleases.sort((a, b) => {
-              const av = a.tag_name.match(versionPattern).slice(1).map(Number);
-              const bv = b.tag_name.match(versionPattern).slice(1).map(Number);
-
-              if (av[0] !== bv[0]) return bv[0] - av[0];
-              if (av[1] !== bv[1]) return bv[1] - av[1];
-              return bv[2] - av[2];
-            });
-
-            const previous = stableReleases[0];
-            core.setOutput('tag', previous ? previous.tag_name : '0.0.0');
-
-      - name: Compute next release version
-        id: next_version
+      - name: Resolve release tag from draft release event
+        id: release_tag
         run: |
-          PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
-          BUMP_INPUT="${{ github.event.inputs.bump || 'patch' }}"
+          RAW_TAG="${{ github.event.release.tag_name }}"
+          TAG="${RAW_TAG#v}"
 
-          if [[ "$PREVIOUS_TAG" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            MAJOR="${BASH_REMATCH[1]}"
-            MINOR="${BASH_REMATCH[2]}"
-            PATCH="${BASH_REMATCH[3]}"
-          else
-            MAJOR=0
-            MINOR=0
-            PATCH=0
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release tag: $RAW_TAG"
+            exit 1
           fi
 
-          case "$BUMP_INPUT" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            patch)
-              PATCH=$((PATCH + 1))
-              ;;
-            *)
-              echo "Invalid bump type: $BUMP_INPUT"
-              exit 1
-              ;;
-          esac
-
-          NEXT_TAG="${MAJOR}.${MINOR}.${PATCH}"
-          echo "tag=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
-
-      - name: Build release notes from commits
-        id: notes
-        run: |
-          PREVIOUS_TAG="${{ steps.previous_release.outputs.tag }}"
-
-          COMMIT_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'- %s (%h)')
-          CONTRIBUTOR_LIST=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'%an' | sort -u | sed 's/^/- /')
-
-          if [ -z "$COMMIT_LIST" ]; then
-            COMMIT_LIST='- No new commits since the previous release.'
-          fi
-
-          if [ -z "$CONTRIBUTOR_LIST" ]; then
-            CONTRIBUTOR_LIST='- No contributors found for this release.'
-          fi
-
-          {
-            echo "notes<<EOF"
-            echo "## What's Changed"
-            echo "$COMMIT_LIST"
-            echo
-            echo "## Contributors"
-            echo "$CONTRIBUTOR_LIST"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.next_version.outputs.tag }}
-          name: Release ${{ steps.next_version.outputs.tag }}
-          body: ${{ steps.notes.outputs.notes }}
+          echo "tag=$RAW_TAG" >> "$GITHUB_OUTPUT"
 
   # The SDK is published to PyPI
   publish-sdk:
-    if: always() && (github.event_name == 'release' || needs.release.result == 'success')
+    if: always() && needs.release.result == 'success'
     needs: [release]
     runs-on: ubuntu-latest
 
@@ -165,7 +58,7 @@ jobs:
       - name: Resolve SDK package version
         id: sdk_version
         run: |
-          RAW_VERSION="${{ github.event_name == 'release' && github.event.release.tag_name || needs.release.outputs.tag }}"
+          RAW_VERSION="${{ needs.release.outputs.tag }}"
           SDK_VERSION="${RAW_VERSION#v}"
 
           if [[ ! "$SDK_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -188,7 +81,7 @@ jobs:
 
   # The API is packaged into a container, so we will publish the image to GHCR on each release.
   publish-api-image:
-    if: always() && (github.event_name == 'release' || needs.release.result == 'success')
+    if: always() && needs.release.result == 'success'
     needs: [release]
     runs-on: ubuntu-latest
 
@@ -213,7 +106,7 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/longlink
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ github.event_name == 'release' && github.event.release.tag_name || needs.release.outputs.tag }}
+            type=raw,value=${{ needs.release.outputs.tag }}
 
       - name: Build and push API image
         uses: docker/build-push-action@v6
