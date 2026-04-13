@@ -29,7 +29,6 @@ Both share a single codebase to enforce consistent styling and behavior, but are
 
 The documentation is built with VitePress and organized into two main sections: control plane (API) and application SDK. It is designed to accommodate users from diverse technical backgrounds, industries, and regions, so content must be written in a clear, precise, and unambiguous way, making it easy to understand and translate.
 
-
 ## Instructions
 
 - Read `AGENTS.md` every time you enter a folder

@@ -8,7 +8,6 @@ The platform combines a control plane with an applications SDK. The control plan
 
 This separation keeps platform concerns in one place. You can focus on application behavior, while LongLink manages governance, isolation, and lifecycle management.
 
-
 ## Goals
 
 - Provide a shared control plane for identity, permissions, storage, execution, and observability

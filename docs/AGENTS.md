@@ -36,11 +36,11 @@ Optional expanded content.
 
 Each resource page should usually include:
 
-* what the resource is for
-* the available methods
-* the request models
-* the returned models
-* short usage examples when useful
+- what the resource is for
+- the available methods
+- the request models
+- the returned models
+- short usage examples when useful
 
 # From “Zero to Running Applications”
 
@@ -60,11 +60,11 @@ Tutorials should start with minimal assumptions. Advanced guides can build on ea
 
 LongLink users include:
 
-* backend developers
-* frontend developers
-* platform engineers
-* data engineers
-* technical teams building internal tools
+- backend developers
+- frontend developers
+- platform engineers
+- data engineers
+- technical teams building internal tools
 
 Not every reader is familiar with distributed systems, container orchestration, or infrastructure design.
 
@@ -77,7 +77,6 @@ Bad
 
 Good
 “Each application runs in an isolated environment. The platform also tracks logs and metrics automatically.”
-
 
 # Professional and Direct Tone
 
@@ -125,19 +124,18 @@ Bad
 Good
 “Alembic handles database migrations.”
 
-
 # Avoid Ambiguous Pronouns
 
 Pronouns reduce clarity and complicate translation.
 
 Prefer explicit nouns such as:
 
-* the user
-* the application
-* the control plane
-* the SDK
-* the system
-* the API
+- the user
+- the application
+- the control plane
+- the SDK
+- the system
+- the API
 
 Example
 
@@ -146,7 +144,6 @@ Bad
 
 Good
 “When the application starts, the application connects to the database.”
-
 
 # Prefer Infinitive Forms Over Gerunds
 
@@ -182,11 +179,11 @@ LongLink has a structured architecture. Documentation must reflect it clearly.
 
 The control plane:
 
-* manages identity and permissions
-* provisions infrastructure
-* enforces isolation
-* manages application lifecycle
-* acts as a secure proxy
+- manages identity and permissions
+- provisions infrastructure
+- enforces isolation
+- manages application lifecycle
+- acts as a secure proxy
 
 Example
 
@@ -200,11 +197,11 @@ Good
 
 Applications are built using:
 
-* Python backend
-* FastAPI for APIs
-* SQLAlchemy and Alembic for database
-* fsspec for storage
-* XML-based UI definitions
+- Python backend
+- FastAPI for APIs
+- SQLAlchemy and Alembic for database
+- fsspec for storage
+- XML-based UI definitions
 
 Example
 
@@ -219,9 +216,9 @@ The UI is described using XML files.”
 
 The web layer:
 
-* renders XML-defined UI
-* communicates with APIs
-* is shared between SDK and control plane
+- renders XML-defined UI
+- communicates with APIs
+- is shared between SDK and control plane
 
 # Use Clear and Consistent Terminology
 
@@ -239,7 +236,6 @@ Preferred terms for LongLink documentation:
 
 Use terms consistently across all documents.
 
-
 # Describe System Behavior Precisely
 
 Applications run in isolated environments managed by the control plane.
@@ -251,7 +247,6 @@ Bad
 
 Good
 “The application runs in an isolated environment managed by the control plane.”
-
 
 # Describe Responsibilities Clearly
 
@@ -265,7 +260,6 @@ Bad
 Good
 “The control plane provisions resources and enforces permissions.
 The application defines business logic using the SDK.”
-
 
 # Step-by-Step Instructions
 
@@ -294,7 +288,6 @@ Good
 2. Define the data model using SQLAlchemy.
 3. Run database migrations using Alembic.
 4. Start the FastAPI server.
-
 
 # Avoid Marketing Language
 
