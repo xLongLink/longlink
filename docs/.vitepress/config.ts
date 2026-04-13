@@ -29,7 +29,8 @@ export default defineConfig({
       {
         text: 'Overview',
         items: [
-          { text: 'Introduction', link: '/' }
+          { text: 'Introduction', link: '/' },
+          { text: 'Roadmap', link: '/roadmap/' }
         ]
       },
       {
@@ -39,11 +40,9 @@ export default defineConfig({
           { text: 'Organization', link: '/api/organization/' },
           { text: 'Permissions', link: '/api/permissions/' },
           { text: 'Applications', link: '/api/applications/' },
-          { text: 'Databases', link: '/api/databases/' },
-          { text: 'Storage', link: '/api/storage/' },
-          { text: 'Compute', link: '/api/compute/' },
           { text: 'Logging', link: '/api/logging/' },
-          { text: 'Integrations', link: '/api/integrations/' }
+          { text: 'Integrations', link: '/api/integrations/' },
+          { text: 'Self Hosted', link: '/api/self-hosted/' },
         ]
       },
       {
@@ -55,7 +54,6 @@ export default defineConfig({
             collapsed: true,
             items: [
               { text: 'Introduction', link: '/sdk/pages/' },
-              { text: 'XML Pages', link: '/sdk/pages/xml' },
               { text: 'HTML Elements', link: '/sdk/pages/html-elements' },
               {
                 text: 'Layout',

@@ -1,7 +1,3 @@
 # LongLink Control Plane
 
-- Authentication
-- Permissions
-- Application Lifetime Management
-- Logging
-- 
+[TODO] What it does, what are the responsabilities
