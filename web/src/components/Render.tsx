@@ -1,96 +1,13 @@
-import { useEffect, type ReactNode } from 'react';
+import { isPlainObject } from 'es-toolkit/predicate';
 
-import { type ApiTableColumn } from '@/components/table/buildColumns';
-import { Components, Layout } from '@/lib/registry';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/ui/dialog';
-import { Table as UITable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
-import {
-    createRegistry,
-    renderNode,
-    transformJsonTree,
-    type ComponentNode,
-    type JsonNode,
-    type RegistryEntry,
-    isComponentNode,
-    isPrimitiveNode,
-} from '@/longlink/rendering';
+import { registry } from '@/lib/registry';
+import { renderNode, type ComponentNode, type JsonNode, isComponentNode, isPrimitiveNode } from '@/rendering';
 
 type RenderNodeSchema = unknown;
 
-const REMOVED_LOGIC_TYPES = new Set(['If', 'ForEach', 'Query', 'State']);
-
-const TYPE_ALIASES: Record<string, string> = {
-    button: 'Button',
-    card: 'Card',
-    cardaction: 'CardAction',
-    cardcontent: 'CardContent',
-    carddescription: 'CardDescription',
-    cardfooter: 'CardFooter',
-    cardheader: 'CardHeader',
-    cardtitle: 'CardTitle',
-    checkbox: 'Checkbox',
-    column: 'Column',
-    columns: 'Columns',
-    dialog: 'Dialog',
-    dialogcontent: 'DialogContent',
-    dialogdescription: 'DialogDescription',
-    dialogfooter: 'DialogFooter',
-    dialogheader: 'DialogHeader',
-    dialogtitle: 'DialogTitle',
-    dialogtrigger: 'DialogTrigger',
-    blockquote: 'Blockquote',
-    code: 'Code',
-    h1: 'H1',
-    h2: 'H2',
-    h3: 'H3',
-    h4: 'H4',
-    hero: 'Hero',
-    icon: 'Icon',
-    input: 'Input',
-    li: 'Li',
-    menu: 'Menu',
-    menusection: 'MenuSection',
-    menusubsection: 'MenuSubSection',
-    page: 'Page',
-    p: 'P',
-    range: 'Range',
-    select: 'Select',
-    separator: 'Separator',
-    slider: 'Slider',
-    stack: 'Stack',
-    switch: 'Switch',
-    table: 'Table',
-    tablebody: 'TableBody',
-    tablecell: 'TableCell',
-    tablehead: 'TableHead',
-    tableheader: 'TableHeader',
-    tablerow: 'TableRow',
-    tabs: 'Tabs',
-    tabscontent: 'TabsContent',
-    tabslist: 'TabsList',
-    tabstrigger: 'TabsTrigger',
-    textarea: 'Textarea',
-    ul: 'Ul',
-};
-
-const LonglinkButton = Components.Button;
-const LonglinkTable = Layout.Table;
-
-function normalizeType(type: string) {
-    return type.trim().toLowerCase();
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const ROOT_COMPONENT_NAMES = ['Page', 'page'] as const;
+const INTEGER_PATTERN = /^-?\d+$/;
+const FLOAT_PATTERN = /^-?\d+\.\d+$/;
 
 function coerceXmlScalar(value: unknown): unknown {
     if (typeof value !== 'string') {
@@ -120,15 +37,19 @@ function coerceXmlScalar(value: unknown): unknown {
         }
     }
 
-    if (/^-?\d+$/.test(trimmed)) {
+    if (INTEGER_PATTERN.test(trimmed)) {
         return Number.parseInt(trimmed, 10);
     }
 
-    if (/^-?\d+\.\d+$/.test(trimmed)) {
+    if (FLOAT_PATTERN.test(trimmed)) {
         return Number.parseFloat(trimmed);
     }
 
     return value;
+}
+
+function toNodeArray<T>(value: T | T[]) {
+    return Array.isArray(value) ? value : [value];
 }
 
 function normalizeXmlElement(name: string, value: unknown): ComponentNode {
@@ -165,8 +86,7 @@ function normalizeXmlElement(name: string, value: unknown): ComponentNode {
             continue;
         }
 
-        const childItems = Array.isArray(item) ? item : [item];
-        for (const childItem of childItems) {
+        for (const childItem of toNodeArray(item)) {
             children.push(normalizeXmlElement(key, childItem));
         }
     }
@@ -195,199 +115,14 @@ export function normalizeRenderRoots(schema: unknown): JsonNode[] {
         return [];
     }
 
-    if ('Page' in schema) {
-        return [normalizeXmlElement('Page', schema.Page)];
-    }
-
-    if ('page' in schema) {
-        return [normalizeXmlElement('Page', schema.page)];
+    for (const rootName of ROOT_COMPONENT_NAMES) {
+        if (rootName in schema) {
+            return [normalizeXmlElement(rootName, schema[rootName])];
+        }
     }
 
     return [];
 }
-
-function px(value: unknown, fallback: number) {
-    if (typeof value === 'number') {
-        return `${value}px`;
-    }
-
-    if (typeof value === 'string' && value.trim()) {
-        return /^\d+$/.test(value.trim()) ? `${value.trim()}px` : value;
-    }
-
-    return `${fallback}px`;
-}
-
-function extractText(node: JsonNode | JsonNode[] | undefined): string | undefined {
-    if (node == null) {
-        return undefined;
-    }
-
-    if (Array.isArray(node)) {
-        const parts = node
-            .map((child) => extractText(child))
-            .filter((part): part is string => typeof part === 'string' && part.length > 0);
-
-        return parts.length > 0 ? parts.join(' ') : undefined;
-    }
-
-    if (isPrimitiveNode(node)) {
-        return node == null ? undefined : String(node);
-    }
-
-    return undefined;
-}
-
-function extractColumnDefinitions(node: ComponentNode): ApiTableColumn[] | undefined {
-    if (!node.children) {
-        return undefined;
-    }
-
-    const children = Array.isArray(node.children) ? node.children : [node.children];
-    const columns = children
-        .filter((child): child is ComponentNode => isComponentNode(child) && child.type === 'Column')
-        .map((child) => (child.props ?? {}) as ApiTableColumn);
-
-    return columns.length > 0 ? columns : undefined;
-}
-
-function prepareNode(node: JsonNode): JsonNode {
-    return transformJsonTree(node, (currentNode) => {
-        if (!isComponentNode(currentNode)) {
-            return currentNode;
-        }
-
-        const nextType = TYPE_ALIASES[normalizeType(currentNode.type)] ?? currentNode.type;
-
-        if (REMOVED_LOGIC_TYPES.has(nextType)) {
-            return null;
-        }
-
-        return {
-            ...currentNode,
-            type: nextType,
-        };
-    });
-}
-
-function Page({ title, name, children }: { title?: string; name?: string; children?: ReactNode }) {
-    const documentTitle = title ?? name;
-
-    useEffect(() => {
-        if (typeof documentTitle === 'string' && documentTitle.trim()) {
-            document.title = documentTitle;
-        }
-    }, [documentTitle]);
-
-    return <div className="space-y-6">{children}</div>;
-}
-
-function Stack({
-    align = 'stretch',
-    children,
-    direction = 'column',
-    gap = 16,
-    justify = 'start',
-}: {
-    align?: string;
-    children?: ReactNode;
-    direction?: string;
-    gap?: number | string;
-    justify?: string;
-}) {
-    return (
-        <div
-            className={`flex ${direction === 'row' ? 'flex-row' : 'flex-col'}`}
-            style={{
-                gap: px(gap, 16),
-                justifyContent:
-                    justify === 'between'
-                        ? 'space-between'
-                        : justify === 'center'
-                          ? 'center'
-                          : justify === 'end'
-                            ? 'flex-end'
-                            : 'flex-start',
-                alignItems:
-                    align === 'center'
-                        ? 'center'
-                        : align === 'end'
-                          ? 'flex-end'
-                          : align === 'start'
-                            ? 'flex-start'
-                            : 'stretch',
-            }}
-        >
-            {children}
-        </div>
-    );
-}
-
-function RuntimeTable({
-    children,
-    columns,
-    data,
-    endpoint,
-    schema,
-    ...props
-}: {
-    children?: ReactNode;
-    columns?: ApiTableColumn[];
-    data?: object[];
-    endpoint?: string;
-    schema?: unknown;
-}) {
-    if (typeof endpoint === 'string' && schema != null) {
-        return <LonglinkTable {...props} endpoint={endpoint} schema={schema as never} />;
-    }
-
-    if (Array.isArray(data) && Array.isArray(columns)) {
-        return <LonglinkTable {...props} columns={columns} data={data} />;
-    }
-
-    return <UITable>{children}</UITable>;
-}
-
-const runtimeRegistry = createRegistry({
-    ...Layout,
-    ...Components,
-    Button: {
-        component: LonglinkButton,
-        getProps: (node) => {
-            const props = node.props ?? {};
-            const text = typeof props.text === 'string' ? props.text : extractText(node.children);
-            const action = typeof props.action === 'string' && props.action.startsWith('/') ? props.action : undefined;
-
-            return {
-                ...props,
-                text,
-                url: props.url ?? action,
-            };
-        },
-        renderChildren: false,
-    } satisfies RegistryEntry,
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    Page,
-    Stack,
-    Table: {
-        component: RuntimeTable,
-        getProps: (node) => ({
-            ...node.props,
-            columns: Array.isArray(node.props?.columns) ? node.props.columns : extractColumnDefinitions(node),
-        }),
-    } satisfies RegistryEntry,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-});
 
 export type { RenderNodeSchema };
 
@@ -396,8 +131,7 @@ type RenderProps = {
 };
 
 export function renderLonglinkNode(node: unknown) {
-    const roots = normalizeRenderRoots(node).map((root) => prepareNode(root));
-    return renderNode(roots, runtimeRegistry);
+    return renderNode(normalizeRenderRoots(node), registry);
 }
 
 export function Render({ node }: RenderProps) {
