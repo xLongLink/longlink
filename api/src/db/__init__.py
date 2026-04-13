@@ -1,5 +1,4 @@
-from .models import (App, Env, User, Setting, Permission, ComputeConnection,
-                     StorageConnection, DatabaseConnection)
+from .models import App, Env, User, Setting, Permission
 from .services import (AppsService, EnvsService, UsersService, ComputesService,
                        SettingsService, StoragesService, DatabasesService,
                        PermissionsService)
