@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  lastUpdated: true,
   srcDir: 'src',
   title: 'LongLink',
   description: 'LongLink documentation',
@@ -10,9 +11,15 @@ export default defineConfig({
     ['link', { rel: 'apple-touch-icon', href: '/banner.png' }]
   ],
   themeConfig: {
-    logo: '/banner.png',
-    logoLink: 'https://longlink.dev',
-    // https://vitepress.dev/reference/default-theme-config
+    search: {
+      provider: 'local'
+    },
+    editLink: {
+      pattern: 'https://github.com/xLongLink/longlink/edit/main/docs/src/:path',
+      text: 'Edit this page on GitHub'
+    },
+    logo: 'banner.png',
+    logoLink: 'https://www.longlink.dev',
     nav: [
       { text: 'Control Plane', link: '/api/' },
       { text: 'Applications SDK', link: '/sdk/' }
@@ -98,7 +105,11 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/xLongLink/longlink' }
+      { icon: 'github', link: 'https://github.com/xLongLink/longlink' },
+      {
+        icon: 'pypi',
+        link: 'https://pypi.org/project/longlink/'
+      }
     ]
   }
 })
