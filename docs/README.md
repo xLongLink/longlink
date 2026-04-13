@@ -3,7 +3,6 @@
 <p style="font-size: 1.5em;">Documentation</p>
 </div>
 
-
 <br />
 
 ## Development

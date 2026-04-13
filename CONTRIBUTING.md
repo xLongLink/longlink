@@ -7,16 +7,16 @@ This document defines how to contribute to the LongLink project. The goal is to 
 All contributions must respect the core design constraints:
 
 1. **Control plane owns infrastructure concerns**
-    - Authentication, permissions, storage, logging, execution policies
+   - Authentication, permissions, storage, logging, execution policies
 
 2. **Applications contain only business logic**
-    - No custom auth, no custom storage policies
+   - No custom auth, no custom storage policies
 
 3. **Deterministic execution**
-    - All state transitions occur server-side
+   - All state transitions occur server-side
 
 4. **Single source of truth**
-    - Actions define logic, UI, and API simultaneously
+   - Actions define logic, UI, and API simultaneously
 
 ## Repository Structure
 
@@ -125,14 +125,14 @@ When adding new functionality:
 - Must be defined as an **action**
 
 - Must be:
-    - Typed
-    - Stateless (unless explicitly part of workflow)
-    - Deterministic
+  - Typed
+  - Stateless (unless explicitly part of workflow)
+  - Deterministic
 
 - Must automatically support:
-    - UI rendering
-    - API access
-    - SDK invocation
+  - UI rendering
+  - API access
+  - SDK invocation
 
 ## Database Changes
 
@@ -148,12 +148,12 @@ longlink db migrate
 ## Testing
 
 - Unit tests for:
-    - SDK logic
-    - Control plane services
+  - SDK logic
+  - Control plane services
 
 - Integration tests for:
-    - Action execution
-    - Permission enforcement
+  - Action execution
+  - Permission enforcement
 
 ## Pull Requests
 

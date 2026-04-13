@@ -2,61 +2,61 @@ name: Tests
 
 # As we are in early development, we will trigger tests manually for now. We can add automatic triggers on push to dev/main branches later.
 on:
-    # push:
-    #     branches:
-    #         - dev
-    workflow_dispatch:
+  # push:
+  #     branches:
+  #         - dev
+  workflow_dispatch:
 
 jobs:
-    # The API is packaged into a container, therefore only needs to be tested on a single python version. We will run tests on the latest stable version of python.
-    api-tests:
-        runs-on: ubuntu-latest
+  # The API is packaged into a container, therefore only needs to be tested on a single python version. We will run tests on the latest stable version of python.
+  api-tests:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-            - name: Setup Python
-              uses: actions/setup-python@v6
-              with:
-                  python-version: '3.12'
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-            - name: Install dependencies
-              working-directory: api
-              run: pip install -e '.[dev]'
+      - name: Install dependencies
+        working-directory: api
+        run: pip install -e '.[dev]'
 
-            - name: Run tests
-              working-directory: api
-              run: pytest
+      - name: Run tests
+        working-directory: api
+        run: pytest
 
-    # The SDK must support different python versions, so we will run tests on multiple versions using a matrix strategy.
-    sdk-tests:
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                python-version:
-                    - '3.12'
-                    - '3.13'
-                    - '3.14'
+  # The SDK must support different python versions, so we will run tests on multiple versions using a matrix strategy.
+  sdk-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.12"
+          - "3.13"
+          - "3.14"
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-            - name: Setup Python
-              uses: actions/setup-python@v6
-              with:
-                  python-version: ${{ matrix.python-version }}
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
 
-            - name: Setup uv
-              uses: astral-sh/setup-uv@v7
-              with:
-                  enable-cache: true
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
 
-            - name: Install dependencies
-              working-directory: sdk
-              run: uv pip install --system -e '.[dev]'
+      - name: Install dependencies
+        working-directory: sdk
+        run: uv pip install --system -e '.[dev]'
 
-            - name: Run tests
-              working-directory: sdk
-              run: uv run pytest
+      - name: Run tests
+        working-directory: sdk
+        run: uv run pytest

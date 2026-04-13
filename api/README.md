@@ -3,7 +3,6 @@
 <p style="font-size: 1.5em;">Control Panel</p>
 </div>
 
-
 ## Features
 
 - Core login of the Application.
