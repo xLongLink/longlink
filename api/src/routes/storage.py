@@ -18,7 +18,7 @@ def _bucket_name_from_app_key(app_key: str) -> str:
     return bucket[:63].rstrip('-')
 
 
-@router.get('/storages')
+@router.get('/storage')
 async def list_storages() -> list[StorageConnectionResponse]:
     connections = await db.storages.list()
     return [
@@ -32,7 +32,7 @@ async def list_storages() -> list[StorageConnectionResponse]:
     ]
 
 
-@router.post('/storages')
+@router.post('/storage')
 async def set_storage_connection(payload: StorageConnectionCreate) -> StorageConnectionResponse:
     connection = await db.storages.set(
         name=payload.name,
@@ -50,7 +50,7 @@ async def set_storage_connection(payload: StorageConnectionCreate) -> StorageCon
     )
 
 
-@router.delete('/storages')
+@router.delete('/storage')
 async def delete_storage_connection(payload: StorageConnectionDelete) -> dict[str, str]:
     deleted = await db.storages.delete(payload.name)
     if not deleted:
@@ -59,7 +59,7 @@ async def delete_storage_connection(payload: StorageConnectionDelete) -> dict[st
     return {'status': 'deleted'}
 
 
-@router.post('/storages/apps/{app_id}/bucket')
+@router.post('/storage/apps/{app_id}/bucket')
 async def create_storage_bucket_for_app(app_id: str, connection_name: str = 'default') -> StorageBucketCreateResponse:
     app = await db.apps.get_by_uuid(app_id)
     if app is None:
