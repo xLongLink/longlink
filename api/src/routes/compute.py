@@ -20,7 +20,7 @@ def _pod_name_from_app_key(app_key: str, container_name: str) -> str:
     return pod_name[:63].rstrip('-.')
 
 
-@router.get('/computes')
+@router.get('/compute')
 async def list_computes() -> list[ComputeConnectionResponse]:
     connections = await db.computes.list()
     return [
@@ -35,7 +35,7 @@ async def list_computes() -> list[ComputeConnectionResponse]:
     ]
 
 
-@router.post('/computes')
+@router.post('/compute')
 async def set_compute_connection(payload: ComputeConnectionCreate) -> ComputeConnectionResponse:
     connection = await db.computes.set(
         name=payload.name,
@@ -55,7 +55,7 @@ async def set_compute_connection(payload: ComputeConnectionCreate) -> ComputeCon
     )
 
 
-@router.delete('/computes')
+@router.delete('/compute')
 async def delete_compute_connection(payload: ComputeConnectionDelete) -> dict[str, str]:
     deleted = await db.computes.delete(payload.name)
     if not deleted:
@@ -64,7 +64,7 @@ async def delete_compute_connection(payload: ComputeConnectionDelete) -> dict[st
     return {'status': 'deleted'}
 
 
-@router.post('/computes/apps/{app_id}/containers')
+@router.post('/compute/apps/{app_id}/containers')
 async def create_compute_container_for_app(
     app_id: str,
     payload: ComputeContainerCreate,

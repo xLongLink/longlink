@@ -8,7 +8,7 @@ from src.models.databases import (DatabaseCreateResponse,
                                   DatabaseConnectionResponse)
 
 
-@router.get('/databases')
+@router.get('/database')
 async def list_databases() -> list[DatabaseConnectionResponse]:
     connections = await db.databases.list()
     return [
@@ -24,7 +24,7 @@ async def list_databases() -> list[DatabaseConnectionResponse]:
     ]
 
 
-@router.post('/databases')
+@router.post('/database')
 async def set_database_connection(payload: DatabaseConnectionCreate) -> DatabaseConnectionResponse:
     connection = await db.databases.set(
         name=payload.name,
@@ -46,7 +46,7 @@ async def set_database_connection(payload: DatabaseConnectionCreate) -> Database
     )
 
 
-@router.delete('/databases')
+@router.delete('/database')
 async def delete_database_connection(payload: DatabaseConnectionDelete) -> dict[str, str]:
     deleted = await db.databases.delete(payload.name)
     if not deleted:
@@ -55,7 +55,7 @@ async def delete_database_connection(payload: DatabaseConnectionDelete) -> dict[
     return {'status': 'deleted'}
 
 
-@router.post('/databases/{database_name}')
+@router.post('/database/{database_name}')
 async def create_database(database_name: str, connection_name: str = 'default') -> DatabaseCreateResponse:
     connection = await db.databases.get(connection_name)
     if connection is None:

@@ -91,7 +91,8 @@ class DatabasesService:
         if connection.sslmode:
             connection_kwargs['sslmode'] = connection.sslmode
 
-        with psycopg2.connect(**connection_kwargs) as admin_connection:
+        admin_connection = psycopg2.connect(**connection_kwargs)
+        try:
             admin_connection.autocommit = True
             with admin_connection.cursor() as cursor:
                 cursor.execute('SELECT 1 FROM pg_database WHERE datname = %s', (database_name,))
@@ -99,3 +100,5 @@ class DatabasesService:
                     raise ValueError(f"Database '{database_name}' already exists")
 
                 cursor.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(database_name)))
+        finally:
+            admin_connection.close()
