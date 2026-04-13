@@ -11,6 +11,8 @@ export default defineConfig({
     ['link', { rel: 'apple-touch-icon', href: '/banner.png' }]
   ],
   themeConfig: {
+    logo: '/banner.png',
+    siteTitle: false,
     search: {
       provider: 'local'
     },
