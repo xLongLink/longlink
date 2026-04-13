@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ConnectApplicationDialog, CreateApplicationDialog } from '@/components/dialogs';
 import { apiFetch } from '@/lib/api';
-import AppButton from '@/longlink/Button';
 import Hero from '@/longlink/Hero';
+import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
+import { Dialog, DialogTrigger } from '@/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
 type Application = {
@@ -24,7 +25,7 @@ export default function Applications() {
     const [connectId, setConnectId] = useState('');
     const [connectError, setConnectError] = useState<string | null>(null);
     const [isConnectPending, setIsConnectPending] = useState(false);
-    const [connectCloseSignal, setConnectCloseSignal] = useState(0);
+    const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
 
     const canCreate = useMemo(() => {
         return createUrl.trim().length > 0 && createToken.trim().length > 0;
@@ -95,7 +96,7 @@ export default function Applications() {
             setConnectId('');
             setConnectUrl('');
             setConnectToken('');
-            setConnectCloseSignal((currentSignal) => currentSignal + 1);
+            setIsConnectDialogOpen(false);
             await loadApps();
         } catch (error) {
             setConnectError(error instanceof Error ? error.message : 'Could not connect app');
@@ -112,7 +113,8 @@ export default function Applications() {
                 icon="settings"
             >
                 <div className="flex items-center gap-2">
-                    <AppButton variant="outline" text="Connect app" closeSignal={connectCloseSignal}>
+                    <Dialog open={isConnectDialogOpen} onOpenChange={setIsConnectDialogOpen}>
+                        <DialogTrigger render={<Button variant="outline" />}>Connect app</DialogTrigger>
                         <ConnectApplicationDialog
                             url={connectUrl}
                             token={connectToken}
@@ -127,9 +129,10 @@ export default function Applications() {
                                 void onConnect();
                             }}
                         />
-                    </AppButton>
+                    </Dialog>
 
-                    <AppButton variant="outline" text="Create app">
+                    <Dialog>
+                        <DialogTrigger render={<Button variant="outline" />}>Create app</DialogTrigger>
                         <CreateApplicationDialog
                             url={createUrl}
                             token={createToken}
@@ -142,7 +145,7 @@ export default function Applications() {
                                 void onCreate();
                             }}
                         />
-                    </AppButton>
+                    </Dialog>
                 </div>
             </Hero>
 

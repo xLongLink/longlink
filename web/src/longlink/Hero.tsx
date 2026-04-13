@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import Button from '@/longlink/Button';
 import { Icon } from '@/longlink/Icon';
+import { Button } from '@/ui/button';
+import { Dialog, DialogTrigger } from '@/ui/dialog';
 
 type HeroProps = {
     icon?: string | null;
@@ -27,9 +28,16 @@ export function Hero({ title, subtitle, icon, action, children }: HeroProps) {
             </div>
 
             {action ? (
-                <Button variant="outline" text={action}>
-                    {children}
-                </Button>
+                children ? (
+                    <Dialog>
+                        <DialogTrigger render={<Button variant="outline" className="cursor-pointer" />}>
+                            {action}
+                        </DialogTrigger>
+                        {children}
+                    </Dialog>
+                ) : (
+                    <Button variant="outline">{action}</Button>
+                )
             ) : children ? (
                 <div className="shrink-0">{children}</div>
             ) : null}
