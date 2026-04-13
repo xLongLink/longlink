@@ -2,7 +2,7 @@ name: Release
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 permissions:
   contents: write
@@ -11,13 +11,13 @@ permissions:
 
 jobs:
   release:
-    if: github.event_name == 'release' && github.event.release.draft == true
+    if: github.event_name == 'release' && github.event.release.draft == false
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.release_tag.outputs.tag }}
 
     steps:
-      - name: Resolve release tag from draft release event
+      - name: Resolve release tag from release event
         id: release_tag
         run: |
           RAW_TAG="${{ github.event.release.tag_name }}"
