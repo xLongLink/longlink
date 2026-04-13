@@ -1,25 +1,23 @@
 from pydantic import Field, BaseModel
 
 
-class ComputeConnectionCreate(BaseModel):
-    name: str = Field(min_length=1, max_length=128)
-    api_server_url: str = Field(min_length=1, max_length=512)
-    admin_username: str = Field(min_length=1, max_length=255)
-    admin_password: str = Field(min_length=1, max_length=255)
-    default_namespace: str = Field(default='default', min_length=1, max_length=63)
-    verify_ssl: bool = True
+class ComputeUsageSummary(BaseModel):
+    running_pods: int = 0
+    namespaces: int = 0
+    free_bytes: int | None = None
 
 
-class ComputeConnectionDelete(BaseModel):
-    name: str = Field(min_length=1, max_length=128)
-
-
-class ComputeConnectionResponse(BaseModel):
-    name: str
+class ComputeConfigSummary(BaseModel):
     api_server_url: str
     admin_username: str
     default_namespace: str
     verify_ssl: bool
+
+
+class ComputeSummaryResponse(BaseModel):
+    configured: bool
+    config: ComputeConfigSummary | None = None
+    usage: ComputeUsageSummary = ComputeUsageSummary()
 
 
 class ComputeContainerEnv(BaseModel):
@@ -40,7 +38,6 @@ class ComputeContainerCreate(BaseModel):
 class ComputeContainerCreateResponse(BaseModel):
     app_id: str
     app_key: str
-    connection_name: str
     namespace: str
     pod_name: str
     image: str

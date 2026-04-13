@@ -1,28 +1,26 @@
-from pydantic import Field, BaseModel
+from pydantic import BaseModel
 
 
-class StorageConnectionCreate(BaseModel):
-    name: str = Field(min_length=1, max_length=128)
-    endpoint_url: str = Field(min_length=1, max_length=512)
-    access_key_id: str = Field(min_length=1, max_length=255)
-    secret_access_key: str = Field(min_length=1, max_length=255)
-    region_name: str | None = Field(default=None, max_length=64)
+class StorageUsageSummary(BaseModel):
+    used_bytes: int | None = None
+    free_bytes: int | None = None
+    bucket_count: int = 0
 
 
-class StorageConnectionDelete(BaseModel):
-    name: str = Field(min_length=1, max_length=128)
-
-
-class StorageConnectionResponse(BaseModel):
-    name: str
+class StorageConfigSummary(BaseModel):
     endpoint_url: str
     access_key_id: str
     region_name: str | None = None
+
+
+class StorageSummaryResponse(BaseModel):
+    configured: bool
+    config: StorageConfigSummary | None = None
+    usage: StorageUsageSummary = StorageUsageSummary()
 
 
 class StorageBucketCreateResponse(BaseModel):
     app_id: str
     app_key: str
     bucket: str
-    connection_name: str
     status: str = 'created'

@@ -17,6 +17,27 @@ class Env(BaseSettings):
     ENV_OIDC_REDIRECT_URI: str = 'http://localhost:8000/auth/oidc'
     ENV_OIDC_SCOPES: str = 'openid profile email'
 
+    # Platform database provisioning credentials
+    ENV_PROVISION_DATABASE_HOST: str | None = None
+    ENV_PROVISION_DATABASE_PORT: int = 5432
+    ENV_PROVISION_DATABASE_USERNAME: str | None = None
+    ENV_PROVISION_DATABASE_PASSWORD: str | None = None
+    ENV_PROVISION_DATABASE_NAME: str = 'postgres'
+    ENV_PROVISION_DATABASE_SSLMODE: str | None = None
+
+    # Platform storage provisioning credentials
+    ENV_PROVISION_STORAGE_ENDPOINT_URL: str | None = None
+    ENV_PROVISION_STORAGE_ACCESS_KEY_ID: str | None = None
+    ENV_PROVISION_STORAGE_SECRET_ACCESS_KEY: str | None = None
+    ENV_PROVISION_STORAGE_REGION_NAME: str | None = None
+
+    # Platform compute provisioning credentials
+    ENV_PROVISION_COMPUTE_API_SERVER_URL: str | None = None
+    ENV_PROVISION_COMPUTE_ADMIN_USERNAME: str | None = None
+    ENV_PROVISION_COMPUTE_ADMIN_PASSWORD: str | None = None
+    ENV_PROVISION_COMPUTE_DEFAULT_NAMESPACE: str = 'default'
+    ENV_PROVISION_COMPUTE_VERIFY_SSL: bool = True
+
     # Web URL used for auth redirects
     URL: str = 'http://localhost:5173'
 
@@ -36,6 +57,27 @@ class DevEnv(Env):
     ENV_OIDC_ISSUER: str | None = 'http://localhost:18080/realms/dev'
     ENV_OIDC_REDIRECT_URI: str = 'http://localhost:8000/auth/oidc'
     ENV_OIDC_SCOPES: str = 'openid profile email'
+
+    # Platform database provisioning credentials (dev/compose.yml)
+    ENV_PROVISION_DATABASE_HOST: str | None = 'localhost'
+    ENV_PROVISION_DATABASE_PORT: int = 15432
+    ENV_PROVISION_DATABASE_USERNAME: str | None = 'admin'
+    ENV_PROVISION_DATABASE_PASSWORD: str | None = 'admin'
+    ENV_PROVISION_DATABASE_NAME: str = 'admin'
+    ENV_PROVISION_DATABASE_SSLMODE: str | None = None
+
+    # Platform storage provisioning credentials (dev/compose.yml)
+    ENV_PROVISION_STORAGE_ENDPOINT_URL: str | None = 'http://localhost:19000'
+    ENV_PROVISION_STORAGE_ACCESS_KEY_ID: str | None = 'admin'
+    ENV_PROVISION_STORAGE_SECRET_ACCESS_KEY: str | None = 'admin'
+    ENV_PROVISION_STORAGE_REGION_NAME: str | None = 'us-east-1'
+
+    # Platform compute provisioning credentials
+    ENV_PROVISION_COMPUTE_API_SERVER_URL: str | None = None
+    ENV_PROVISION_COMPUTE_ADMIN_USERNAME: str | None = None
+    ENV_PROVISION_COMPUTE_ADMIN_PASSWORD: str | None = None
+    ENV_PROVISION_COMPUTE_DEFAULT_NAMESPACE: str = 'default'
+    ENV_PROVISION_COMPUTE_VERIFY_SSL: bool = False
 
     # Web URL used for auth redirects
     URL: str = 'http://localhost:5173'

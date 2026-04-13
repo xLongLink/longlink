@@ -2,9 +2,8 @@ import src.db as db
 import botocore
 from fastapi import HTTPException
 from src.router import router
-from src.models.storages import (StorageConnectionCreate,
-                                 StorageConnectionDelete,
-                                 StorageConnectionResponse,
+from src.models.storages import (StorageUsageSummary, StorageConfigSummary,
+                                 StorageSummaryResponse,
                                  StorageBucketCreateResponse)
 
 
@@ -19,61 +18,49 @@ def _bucket_name_from_app_key(app_key: str) -> str:
 
 
 @router.get('/storage')
-async def list_storages() -> list[StorageConnectionResponse]:
-    connections = await db.storages.list()
-    return [
-        StorageConnectionResponse(
-            name=connection.name,
-            endpoint_url=connection.endpoint_url,
-            access_key_id=connection.access_key_id,
-            region_name=connection.region_name,
+async def get_storage_summary() -> StorageSummaryResponse:
+    try:
+        config = db.storages.get_config()
+    except ValueError:
+        return StorageSummaryResponse(configured=False)
+
+    usage = StorageUsageSummary()
+    try:
+        measured = await db.storages.usage()
+        usage = StorageUsageSummary(
+            used_bytes=measured.used_bytes,
+            free_bytes=measured.free_bytes,
+            bucket_count=measured.bucket_count,
         )
-        for connection in connections
-    ]
+    except (ValueError, botocore.exceptions.BotoCoreError):
+        usage = StorageUsageSummary()
 
-
-@router.post('/storage')
-async def set_storage_connection(payload: StorageConnectionCreate) -> StorageConnectionResponse:
-    connection = await db.storages.set(
-        name=payload.name,
-        endpoint_url=payload.endpoint_url,
-        access_key_id=payload.access_key_id,
-        secret_access_key=payload.secret_access_key,
-        region_name=payload.region_name,
+    return StorageSummaryResponse(
+        configured=True,
+        config=StorageConfigSummary(
+            endpoint_url=config.endpoint_url,
+            access_key_id=config.access_key_id,
+            region_name=config.region_name,
+        ),
+        usage=usage,
     )
-
-    return StorageConnectionResponse(
-        name=connection.name,
-        endpoint_url=connection.endpoint_url,
-        access_key_id=connection.access_key_id,
-        region_name=connection.region_name,
-    )
-
-
-@router.delete('/storage')
-async def delete_storage_connection(payload: StorageConnectionDelete) -> dict[str, str]:
-    deleted = await db.storages.delete(payload.name)
-    if not deleted:
-        raise HTTPException(status_code=404, detail=f"Storage connection '{payload.name}' not found")
-
-    return {'status': 'deleted'}
 
 
 @router.post('/storage/apps/{app_id}/bucket')
-async def create_storage_bucket_for_app(app_id: str, connection_name: str = 'default') -> StorageBucketCreateResponse:
+async def create_storage_bucket_for_app(app_id: str) -> StorageBucketCreateResponse:
     app = await db.apps.get_by_uuid(app_id)
     if app is None:
         raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
 
-    connection = await db.storages.get(connection_name)
-    if connection is None:
-        raise HTTPException(status_code=404, detail=f"Storage connection '{connection_name}' not found")
-
     try:
         bucket_name = _bucket_name_from_app_key(app.key)
-        await db.storages.create_bucket(connection=connection, bucket_name=bucket_name)
+        await db.storages.create_bucket(bucket_name=bucket_name)
     except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
+        detail = str(error)
+        status_code = 400
+        if 'not configured' in detail:
+            status_code = 503
+        raise HTTPException(status_code=status_code, detail=detail) from error
     except botocore.exceptions.BotoCoreError as error:
         raise HTTPException(status_code=502, detail=f'Unable to create bucket: {str(error)}') from error
 
@@ -81,5 +68,4 @@ async def create_storage_bucket_for_app(app_id: str, connection_name: str = 'def
         app_id=app.id,
         app_key=app.key,
         bucket=bucket_name,
-        connection_name=connection_name,
     )

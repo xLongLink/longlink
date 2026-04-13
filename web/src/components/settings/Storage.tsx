@@ -1,157 +1,91 @@
-import { HardDrive } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { ConnectStorageProviderDialog } from '@/components/dialogs';
+import { useEffect, useState } from 'react';
 import Hero from '@/longlink/Hero';
 import { apiFetch } from '@/lib/api';
 import { Card } from '@/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
-type StorageConnection = {
-    name: string;
-    endpoint_url: string;
-    access_key_id: string;
-    region_name: string | null;
+type StorageSummary = {
+    configured: boolean;
+    config: {
+        endpoint_url: string;
+        access_key_id: string;
+        region_name: string | null;
+    } | null;
+    usage: {
+        used_bytes: number | null;
+        free_bytes: number | null;
+        bucket_count: number;
+    };
 };
 
-type StorageConnectionCreate = {
-    name: string;
-    endpoint_url: string;
-    access_key_id: string;
-    secret_access_key: string;
-    region_name: string | null;
+const formatBytes = (value: number | null) => {
+    if (value === null) {
+        return 'Not available';
+    }
+
+    if (value < 1024) {
+        return `${value} B`;
+    }
+
+    if (value < 1024 ** 2) {
+        return `${(value / 1024).toFixed(1)} KB`;
+    }
+
+    if (value < 1024 ** 3) {
+        return `${(value / 1024 ** 2).toFixed(1)} MB`;
+    }
+
+    return `${(value / 1024 ** 3).toFixed(2)} GB`;
 };
 
 export default function Storage() {
-    const [providerName, setProviderName] = useState('');
-    const [endpoint, setEndpoint] = useState('');
-    const [region, setRegion] = useState('');
-    const [accessKey, setAccessKey] = useState('');
-    const [secretKey, setSecretKey] = useState('');
-    const [connectedProviders, setConnectedProviders] = useState<StorageConnection[]>([]);
-
-    const canConnect = useMemo(() => {
-        return (
-            providerName.trim().length > 0 &&
-            endpoint.trim().length > 0 &&
-            accessKey.trim().length > 0 &&
-            secretKey.trim().length > 0
-        );
-    }, [accessKey, endpoint, providerName, secretKey]);
-
-    const resetForm = () => {
-        setProviderName('');
-        setEndpoint('');
-        setRegion('');
-        setAccessKey('');
-        setSecretKey('');
-    };
+    const [summary, setSummary] = useState<StorageSummary | null>(null);
 
     useEffect(() => {
-        const loadStorageConnections = async () => {
+        const loadSummary = async () => {
             try {
-                const connections = await apiFetch<StorageConnection[]>('/storages');
-                setConnectedProviders(connections);
+                const result = await apiFetch<StorageSummary>('/storage');
+                setSummary(result);
             } catch {
-                setConnectedProviders([]);
+                setSummary(null);
             }
         };
 
-        void loadStorageConnections();
+        void loadSummary();
     }, []);
 
-    const onConnect = async () => {
-        if (!canConnect) {
-            return;
-        }
-
-        const payload: StorageConnectionCreate = {
-            name: providerName.trim(),
-            endpoint_url: endpoint.trim(),
-            access_key_id: accessKey.trim(),
-            secret_access_key: secretKey.trim(),
-            region_name: region.trim() || null,
-        };
-
-        const connection = await apiFetch<StorageConnection>('/storages', {
-            method: 'POST',
-            body: payload,
-        });
-
-        setConnectedProviders((current) => {
-            const next = current.filter((provider) => provider.name !== connection.name);
-            return [connection, ...next];
-        });
-
-        resetForm();
-    };
+    const isConfigured = summary?.configured ?? false;
 
     return (
         <div className="space-y-6">
             <Hero
                 title="Storage Settings"
-                subtitle="Manage storage providers, quotas, and file policies"
+                subtitle="Storage provisioning is configured once from environment variables"
                 icon="settings"
-                action="Connect"
-            >
-                <ConnectStorageProviderDialog
-                    providerName={providerName}
-                    endpoint={endpoint}
-                    region={region}
-                    accessKey={accessKey}
-                    secretKey={secretKey}
-                    canConnect={canConnect}
-                    onProviderNameChange={setProviderName}
-                    onEndpointChange={setEndpoint}
-                    onRegionChange={setRegion}
-                    onAccessKeyChange={setAccessKey}
-                    onSecretKeyChange={setSecretKey}
-                    onConnect={() => {
-                        void onConnect();
-                    }}
-                />
-            </Hero>
+            />
 
-            <Card className="gap-0 overflow-hidden py-0">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Provider</TableHead>
-                            <TableHead>Endpoint</TableHead>
-                            <TableHead>Region</TableHead>
-                            <TableHead>Access key</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {connectedProviders.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                                    No connected storage providers yet.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            connectedProviders.map((provider) => (
-                                <TableRow key={`${provider.name}-${provider.endpoint_url}`}>
-                                    <TableCell className="font-medium">{provider.name}</TableCell>
-                                    <TableCell>{provider.endpoint_url}</TableCell>
-                                    <TableCell>{provider.region_name ?? '-'}</TableCell>
-                                    <TableCell>{provider.access_key_id}</TableCell>
-                                    <TableCell>Connected</TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+            <Card className="space-y-4 p-6">
+                <h3 className="text-base font-semibold">Configuration</h3>
+                <p className="text-sm text-muted-foreground">
+                    Status: {isConfigured ? 'Configured' : 'Not configured'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    Endpoint: {summary?.config?.endpoint_url ?? 'Not available'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    Access key: {summary?.config?.access_key_id ?? 'Not available'}
+                </p>
+                <p className="text-sm text-muted-foreground">Region: {summary?.config?.region_name ?? 'Not set'}</p>
             </Card>
 
-            <Card className="border-dashed p-4 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                    <HardDrive className="mt-0.5 h-4 w-4" />
-                    <p>
-                        Connected entries represent shared object storage providers. Applications can link dedicated
-                        buckets and file policies to one of these providers.
-                    </p>
-                </div>
+            <Card className="space-y-4 p-6">
+                <h3 className="text-base font-semibold">Usage</h3>
+                <p className="text-sm text-muted-foreground">Buckets: {summary?.usage.bucket_count ?? 0}</p>
+                <p className="text-sm text-muted-foreground">
+                    Used space: {formatBytes(summary?.usage.used_bytes ?? null)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    Free space: {formatBytes(summary?.usage.free_bytes ?? null)}
+                </p>
             </Card>
         </div>
     );

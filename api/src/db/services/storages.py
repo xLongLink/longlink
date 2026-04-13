@@ -1,89 +1,95 @@
 import re
 import boto3
 import asyncio
-from sqlalchemy import select
-from src.db.models import StorageConnection
-from src.db.session import get_session
+from src.env import env
+from dataclasses import dataclass
 from botocore.exceptions import ClientError
 
 _BUCKET_NAME_PATTERN = re.compile(r'^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$')
 
 
+@dataclass
+class StorageProvisionConfig:
+    endpoint_url: str
+    access_key_id: str
+    secret_access_key: str
+    region_name: str | None
+
+
+@dataclass
+class StorageUsage:
+    used_bytes: int | None
+    free_bytes: int | None
+    bucket_count: int
+
+
 class StoragesService:
-    async def list(self) -> list[StorageConnection]:
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(select(StorageConnection))
-            return list(result.scalars().all())
+    def get_config(self) -> StorageProvisionConfig:
+        if not env.ENV_PROVISION_STORAGE_ENDPOINT_URL:
+            raise ValueError('ENV_PROVISION_STORAGE_ENDPOINT_URL is not configured')
+        if not env.ENV_PROVISION_STORAGE_ACCESS_KEY_ID:
+            raise ValueError('ENV_PROVISION_STORAGE_ACCESS_KEY_ID is not configured')
+        if not env.ENV_PROVISION_STORAGE_SECRET_ACCESS_KEY:
+            raise ValueError('ENV_PROVISION_STORAGE_SECRET_ACCESS_KEY is not configured')
 
-    async def get(self, name: str) -> StorageConnection | None:
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(select(StorageConnection).where(StorageConnection.name == name))
-            return result.scalar_one_or_none()
+        return StorageProvisionConfig(
+            endpoint_url=env.ENV_PROVISION_STORAGE_ENDPOINT_URL,
+            access_key_id=env.ENV_PROVISION_STORAGE_ACCESS_KEY_ID,
+            secret_access_key=env.ENV_PROVISION_STORAGE_SECRET_ACCESS_KEY,
+            region_name=env.ENV_PROVISION_STORAGE_REGION_NAME,
+        )
 
-    async def set(
-        self,
-        *,
-        name: str,
-        endpoint_url: str,
-        access_key_id: str,
-        secret_access_key: str,
-        region_name: str | None,
-    ) -> StorageConnection:
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(select(StorageConnection).where(StorageConnection.name == name))
-            connection = result.scalar_one_or_none()
+    async def usage(self) -> StorageUsage:
+        config = self.get_config()
+        return await asyncio.to_thread(self._usage_sync, config)
 
-            if connection is None:
-                connection = StorageConnection(
-                    name=name,
-                    endpoint_url=endpoint_url,
-                    access_key_id=access_key_id,
-                    secret_access_key=secret_access_key,
-                    region_name=region_name,
-                )
-                session.add(connection)
-            else:
-                connection.endpoint_url = endpoint_url
-                connection.access_key_id = access_key_id
-                connection.secret_access_key = secret_access_key
-                connection.region_name = region_name
-
-            await session.commit()
-            await session.refresh(connection)
-            return connection
-
-    async def delete(self, name: str) -> bool:
-        Session = await get_session()
-        async with Session() as session:
-            result = await session.execute(select(StorageConnection).where(StorageConnection.name == name))
-            connection = result.scalar_one_or_none()
-            if connection is None:
-                return False
-
-            await session.delete(connection)
-            await session.commit()
-            return True
-
-    async def create_bucket(self, *, connection: StorageConnection, bucket_name: str) -> None:
+    async def create_bucket(self, *, bucket_name: str) -> None:
         if not _BUCKET_NAME_PATTERN.fullmatch(bucket_name):
             raise ValueError('Bucket name must be 3-63 chars, lowercase, numbers or hyphens only')
 
-        await asyncio.to_thread(self._create_bucket_sync, connection, bucket_name)
+        config = self.get_config()
+        await asyncio.to_thread(self._create_bucket_sync, config, bucket_name)
 
     @staticmethod
-    def _create_bucket_sync(connection: StorageConnection, bucket_name: str) -> None:
+    def _client_kwargs(config: StorageProvisionConfig) -> dict[str, str]:
         client_kwargs: dict[str, str] = {
-            'aws_access_key_id': connection.access_key_id,
-            'aws_secret_access_key': connection.secret_access_key,
-            'endpoint_url': connection.endpoint_url,
+            'aws_access_key_id': config.access_key_id,
+            'aws_secret_access_key': config.secret_access_key,
+            'endpoint_url': config.endpoint_url,
         }
-        if connection.region_name:
-            client_kwargs['region_name'] = connection.region_name
+        if config.region_name:
+            client_kwargs['region_name'] = config.region_name
+        return client_kwargs
 
-        client = boto3.client('s3', **client_kwargs)
+    @staticmethod
+    def _usage_sync(config: StorageProvisionConfig) -> StorageUsage:
+        client = boto3.client('s3', **StoragesService._client_kwargs(config))
+        buckets = client.list_buckets().get('Buckets', [])
+        total_size = 0
+
+        for bucket in buckets:
+            bucket_name = str(bucket.get('Name', ''))
+            continuation_token: str | None = None
+
+            while True:
+                list_kwargs: dict[str, str] = {'Bucket': bucket_name}
+                if continuation_token:
+                    list_kwargs['ContinuationToken'] = continuation_token
+
+                response = client.list_objects_v2(**list_kwargs)
+                for item in response.get('Contents', []):
+                    total_size += int(item.get('Size', 0))
+
+                if not response.get('IsTruncated'):
+                    break
+
+                continuation_token = response.get('NextContinuationToken')
+
+        return StorageUsage(used_bytes=total_size, free_bytes=None, bucket_count=len(buckets))
+
+    @staticmethod
+    def _create_bucket_sync(config: StorageProvisionConfig, bucket_name: str) -> None:
+        client = boto3.client('s3', **StoragesService._client_kwargs(config))
 
         try:
             client.head_bucket(Bucket=bucket_name)
@@ -94,7 +100,7 @@ class StoragesService:
                 raise
 
         create_kwargs: dict[str, str | dict[str, str]] = {'Bucket': bucket_name}
-        if connection.region_name and connection.region_name != 'us-east-1':
-            create_kwargs['CreateBucketConfiguration'] = {'LocationConstraint': connection.region_name}
+        if config.region_name and config.region_name != 'us-east-1':
+            create_kwargs['CreateBucketConfiguration'] = {'LocationConstraint': config.region_name}
 
         client.create_bucket(**create_kwargs)

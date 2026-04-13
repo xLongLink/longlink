@@ -1,22 +1,12 @@
-from pydantic import Field, BaseModel
+from pydantic import BaseModel
 
 
-class DatabaseConnectionCreate(BaseModel):
-    name: str = Field(min_length=1, max_length=128)
-    host: str = Field(min_length=1, max_length=255)
-    port: int = Field(default=5432, ge=1, le=65535)
-    username: str = Field(min_length=1, max_length=128)
-    password: str = Field(min_length=1, max_length=255)
-    maintenance_database: str = Field(default='postgres', min_length=1, max_length=128)
-    sslmode: str | None = Field(default=None, max_length=32)
+class DatabaseUsageSummary(BaseModel):
+    used_bytes: int | None = None
+    free_bytes: int | None = None
 
 
-class DatabaseConnectionDelete(BaseModel):
-    name: str = Field(min_length=1, max_length=128)
-
-
-class DatabaseConnectionResponse(BaseModel):
-    name: str
+class DatabaseConfigSummary(BaseModel):
     host: str
     port: int
     username: str
@@ -24,7 +14,12 @@ class DatabaseConnectionResponse(BaseModel):
     sslmode: str | None = None
 
 
+class DatabaseSummaryResponse(BaseModel):
+    configured: bool
+    config: DatabaseConfigSummary | None = None
+    usage: DatabaseUsageSummary = DatabaseUsageSummary()
+
+
 class DatabaseCreateResponse(BaseModel):
     database: str
-    connection_name: str
     status: str = 'created'

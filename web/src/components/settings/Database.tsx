@@ -1,151 +1,93 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ConnectDatabaseServerDialog } from '@/components/dialogs';
+import { useEffect, useState } from 'react';
 import Hero from '@/longlink/Hero';
 import { apiFetch } from '@/lib/api';
 import { Card } from '@/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
-type DatabaseServer = {
-    name: string;
-    host: string;
-    port: number;
-    username: string;
-    maintenance_database: string;
+type DatabaseSummary = {
+    configured: boolean;
+    config: {
+        host: string;
+        port: number;
+        username: string;
+        maintenance_database: string;
+        sslmode: string | null;
+    } | null;
+    usage: {
+        used_bytes: number | null;
+        free_bytes: number | null;
+    };
 };
 
-type DatabaseConnectionCreate = {
-    name: string;
-    host: string;
-    port: number;
-    username: string;
-    password: string;
-    maintenance_database: string;
+const formatBytes = (value: number | null) => {
+    if (value === null) {
+        return 'Not available';
+    }
+
+    if (value < 1024) {
+        return `${value} B`;
+    }
+
+    if (value < 1024 ** 2) {
+        return `${(value / 1024).toFixed(1)} KB`;
+    }
+
+    if (value < 1024 ** 3) {
+        return `${(value / 1024 ** 2).toFixed(1)} MB`;
+    }
+
+    return `${(value / 1024 ** 3).toFixed(2)} GB`;
 };
 
 export default function Database() {
-    const [serverName, setServerName] = useState('');
-    const [host, setHost] = useState('');
-    const [port, setPort] = useState('5432');
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [connectedDatabases, setConnectedDatabases] = useState<DatabaseServer[]>([]);
-
-    const canConnect = useMemo(() => {
-        return (
-            serverName.trim().length > 0 &&
-            host.trim().length > 0 &&
-            port.trim().length > 0 &&
-            username.trim().length > 0 &&
-            password.trim().length > 0
-        );
-    }, [host, password, port, serverName, username]);
-
-    const resetForm = () => {
-        setServerName('');
-        setHost('');
-        setPort('5432');
-        setUsername('');
-        setPassword('');
-    };
+    const [summary, setSummary] = useState<DatabaseSummary | null>(null);
 
     useEffect(() => {
-        const loadDatabaseConnections = async () => {
+        const loadSummary = async () => {
             try {
-                const connections = await apiFetch<DatabaseServer[]>('/databases');
-                setConnectedDatabases(connections);
+                const result = await apiFetch<DatabaseSummary>('/database');
+                setSummary(result);
             } catch {
-                setConnectedDatabases([]);
+                setSummary(null);
             }
         };
 
-        void loadDatabaseConnections();
+        void loadSummary();
     }, []);
 
-    const onConnect = async () => {
-        if (!canConnect) {
-            return;
-        }
-
-        const parsedPort = Number.parseInt(port.trim(), 10);
-
-        if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
-            return;
-        }
-
-        const payload: DatabaseConnectionCreate = {
-            name: serverName.trim(),
-            host: host.trim(),
-            port: parsedPort,
-            username: username.trim(),
-            password: password.trim(),
-            maintenance_database: 'postgres',
-        };
-
-        const connection = await apiFetch<DatabaseServer>('/databases', {
-            method: 'POST',
-            body: payload,
-        });
-
-        setConnectedDatabases((current) => {
-            const next = current.filter((database) => database.name !== connection.name);
-            return [connection, ...next];
-        });
-
-        resetForm();
-    };
+    const isConfigured = summary?.configured ?? false;
 
     return (
         <div className="space-y-6">
-            <Hero title="Database Settings" subtitle="Connect a database instance." icon="settings" action="Connect">
-                <ConnectDatabaseServerDialog
-                    serverName={serverName}
-                    host={host}
-                    port={port}
-                    username={username}
-                    password={password}
-                    canConnect={canConnect}
-                    onServerNameChange={setServerName}
-                    onHostChange={setHost}
-                    onPortChange={setPort}
-                    onUsernameChange={setUsername}
-                    onPasswordChange={setPassword}
-                    onConnect={() => {
-                        void onConnect();
-                    }}
-                />
-            </Hero>
+            <Hero
+                title="Database Settings"
+                subtitle="Database provisioning is configured once from environment variables"
+                icon="settings"
+            />
 
-            <Card className="gap-0 overflow-hidden py-0">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Server</TableHead>
-                            <TableHead>Host</TableHead>
-                            <TableHead>Port</TableHead>
-                            <TableHead>Username</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {connectedDatabases.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                                    No connected database servers yet.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            connectedDatabases.map((database) => (
-                                <TableRow key={`${database.name}-${database.host}-${database.port}`}>
-                                    <TableCell className="font-medium">{database.name}</TableCell>
-                                    <TableCell>{database.host}</TableCell>
-                                    <TableCell>{database.port}</TableCell>
-                                    <TableCell>{database.username}</TableCell>
-                                    <TableCell>Connected</TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+            <Card className="space-y-4 p-6">
+                <h3 className="text-base font-semibold">Configuration</h3>
+                <p className="text-sm text-muted-foreground">
+                    Status: {isConfigured ? 'Configured' : 'Not configured'}
+                </p>
+                <p className="text-sm text-muted-foreground">Host: {summary?.config?.host ?? 'Not available'}</p>
+                <p className="text-sm text-muted-foreground">Port: {summary?.config?.port ?? 'Not available'}</p>
+                <p className="text-sm text-muted-foreground">
+                    Username: {summary?.config?.username ?? 'Not available'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    Maintenance database: {summary?.config?.maintenance_database ?? 'Not available'}
+                </p>
+                <p className="text-sm text-muted-foreground">SSL mode: {summary?.config?.sslmode ?? 'Not set'}</p>
+            </Card>
+
+            <Card className="space-y-4 p-6">
+                <h3 className="text-base font-semibold">Usage</h3>
+                <p className="text-sm text-muted-foreground">
+                    Used space: {formatBytes(summary?.usage.used_bytes ?? null)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    Free space: {formatBytes(summary?.usage.free_bytes ?? null)}
+                </p>
             </Card>
         </div>
     );

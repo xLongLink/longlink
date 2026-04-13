@@ -1,113 +1,95 @@
-import { useMemo, useState } from 'react';
-import { ConnectContainerRuntimeDialog } from '@/components/dialogs';
+import { useEffect, useState } from 'react';
 import Hero from '@/longlink/Hero';
+import { apiFetch } from '@/lib/api';
 import { Card } from '@/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
-type ContainerRuntime = {
-    name: string;
-    registry: string;
-    namespace: string;
-    cpuLimit: string;
-    status: 'Connected';
+type ComputeSummary = {
+    configured: boolean;
+    config: {
+        api_server_url: string;
+        admin_username: string;
+        default_namespace: string;
+        verify_ssl: boolean;
+    } | null;
+    usage: {
+        running_pods: number;
+        namespaces: number;
+        free_bytes: number | null;
+    };
+};
+
+const formatBytes = (value: number | null) => {
+    if (value === null) {
+        return 'Not available';
+    }
+
+    if (value < 1024) {
+        return `${value} B`;
+    }
+
+    if (value < 1024 ** 2) {
+        return `${(value / 1024).toFixed(1)} KB`;
+    }
+
+    if (value < 1024 ** 3) {
+        return `${(value / 1024 ** 2).toFixed(1)} MB`;
+    }
+
+    return `${(value / 1024 ** 3).toFixed(2)} GB`;
 };
 
 export default function Container() {
-    const [runtimeName, setRuntimeName] = useState('');
-    const [registry, setRegistry] = useState('');
-    const [namespace, setNamespace] = useState('');
-    const [cpuLimit, setCpuLimit] = useState('1000m');
-    const [apiToken, setApiToken] = useState('');
-    const [connectedRuntimes, setConnectedRuntimes] = useState<ContainerRuntime[]>([]);
+    const [summary, setSummary] = useState<ComputeSummary | null>(null);
 
-    const canConnect = useMemo(() => {
-        return (
-            runtimeName.trim().length > 0 &&
-            registry.trim().length > 0 &&
-            namespace.trim().length > 0 &&
-            cpuLimit.trim().length > 0 &&
-            apiToken.trim().length > 0
-        );
-    }, [apiToken, cpuLimit, namespace, registry, runtimeName]);
+    useEffect(() => {
+        const loadSummary = async () => {
+            try {
+                const result = await apiFetch<ComputeSummary>('/compute');
+                setSummary(result);
+            } catch {
+                setSummary(null);
+            }
+        };
 
-    const onConnect = () => {
-        if (!canConnect) {
-            return;
-        }
+        void loadSummary();
+    }, []);
 
-        setConnectedRuntimes((current) => [
-            {
-                name: runtimeName.trim(),
-                registry: registry.trim(),
-                namespace: namespace.trim(),
-                cpuLimit: cpuLimit.trim(),
-                status: 'Connected',
-            },
-            ...current,
-        ]);
-
-        setRuntimeName('');
-        setRegistry('');
-        setNamespace('');
-        setCpuLimit('1000m');
-        setApiToken('');
-    };
+    const isConfigured = summary?.configured ?? false;
 
     return (
         <div className="space-y-6">
             <Hero
                 title="Compute Settings"
-                subtitle="Configure compute runtimes, registries, and quotas"
+                subtitle="Compute provisioning is configured once from environment variables"
                 icon="cpu"
-                action="Connect"
-            >
-                <ConnectContainerRuntimeDialog
-                    runtimeName={runtimeName}
-                    registry={registry}
-                    namespace={namespace}
-                    cpuLimit={cpuLimit}
-                    apiToken={apiToken}
-                    canConnect={canConnect}
-                    onRuntimeNameChange={setRuntimeName}
-                    onRegistryChange={setRegistry}
-                    onNamespaceChange={setNamespace}
-                    onCpuLimitChange={setCpuLimit}
-                    onApiTokenChange={setApiToken}
-                    onConnect={onConnect}
-                />
-            </Hero>
+            />
 
-            <Card className="gap-0 overflow-hidden py-0">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Runtime</TableHead>
-                            <TableHead>Registry</TableHead>
-                            <TableHead>Namespace</TableHead>
-                            <TableHead>CPU limit</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {connectedRuntimes.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                                    No connected container runtimes yet.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            connectedRuntimes.map((runtime) => (
-                                <TableRow key={`${runtime.name}-${runtime.namespace}-${runtime.registry}`}>
-                                    <TableCell className="font-medium">{runtime.name}</TableCell>
-                                    <TableCell>{runtime.registry}</TableCell>
-                                    <TableCell>{runtime.namespace}</TableCell>
-                                    <TableCell>{runtime.cpuLimit}</TableCell>
-                                    <TableCell>{runtime.status}</TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+            <Card className="space-y-4 p-6">
+                <h3 className="text-base font-semibold">Configuration</h3>
+                <p className="text-sm text-muted-foreground">
+                    Status: {isConfigured ? 'Configured' : 'Not configured'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    API server: {summary?.config?.api_server_url ?? 'Not available'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    Admin user: {summary?.config?.admin_username ?? 'Not available'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    Default namespace: {summary?.config?.default_namespace ?? 'Not available'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    SSL verification: {summary?.config?.verify_ssl ? 'Enabled' : 'Disabled'}
+                </p>
+            </Card>
+
+            <Card className="space-y-4 p-6">
+                <h3 className="text-base font-semibold">Usage</h3>
+                <p className="text-sm text-muted-foreground">Namespaces: {summary?.usage.namespaces ?? 0}</p>
+                <p className="text-sm text-muted-foreground">Running pods: {summary?.usage.running_pods ?? 0}</p>
+                <p className="text-sm text-muted-foreground">
+                    Free space: {formatBytes(summary?.usage.free_bytes ?? null)}
+                </p>
             </Card>
         </div>
     );
