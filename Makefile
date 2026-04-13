@@ -29,6 +29,7 @@ format: $(VENV_BIN)/python
 	cd api && $(PYTHON) -m isort .
 	cd sdk && $(PYTHON) -m isort .
 	cd web && bun run format
+	cd web && bunx prettier --write $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed 's#^#../#')
 
 
 up:
