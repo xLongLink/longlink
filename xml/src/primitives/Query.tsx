@@ -1,12 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { renderNode } from '../renderer/renderNode';
+import type { ReactNode } from 'react';
 import { interpolate } from '../runtime/interpolate';
-import type { PrimitiveProps } from '../types';
+import { RuntimeProvider, useRuntime } from '../runtime/useRuntime';
 
-export function Query({ node, ctx, registry }: PrimitiveProps) {
-    const id = node.params?.id;
-    const pathTemplate = node.params?.path;
-
+export function Query({ id, path: pathTemplate, children }: { id?: string; path?: string; children?: ReactNode }) {
     if (!id) {
         throw new Error('Query requires an "id" parameter');
     }
@@ -15,6 +12,8 @@ export function Query({ node, ctx, registry }: PrimitiveProps) {
         throw new Error('Query requires a "path" parameter');
     }
 
+    const runtime = useRuntime();
+    const { ctx } = runtime;
     const path = interpolate(pathTemplate, ctx);
 
     const { data } = useQuery({
@@ -33,5 +32,5 @@ export function Query({ node, ctx, registry }: PrimitiveProps) {
         },
     };
 
-    return renderNode(node.children, registry, childCtx);
+    return <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{children}</RuntimeProvider>;
 }
