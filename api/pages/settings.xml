@@ -1,0 +1,55 @@
+<Page name="Settings" icon="settings">
+  <Menu>
+    <MenuSection title="Organization" icon="globe">
+      <MenuSubSection title="" root="true">
+        <Stack gap="24">
+          <Card>
+            <CardHeader>
+              <CardTitle>Organization</CardTitle>
+              <CardDescription>General information about your organization.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Input name="ORG_NAME" label="Name" placeholder="Organization name" submit="Save" />
+              <Input name="ORG_NAME_LEGAL" label="Legal Name" placeholder="Legal entity name" submit="Save" />
+              <Input name="ORG_WEBSITE" label="Website" placeholder="https://example.com" submit="Save" />
+              <Input name="ORG_ADDRESS" label="Address" placeholder="123 Main St" submit="Save" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact</CardTitle>
+              <CardDescription>Contact details for your organization.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Input name="ORG_PHONE" label="Phone" placeholder="+1 (555) 000-0000" submit="Save" />
+              <Input name="ORG_MAIL_CONTACT" label="Contact Email" placeholder="contact@example.com" submit="Save" />
+              <Input name="ORG_MAIL_SUPPORT" label="Support Email" placeholder="support@example.com" submit="Save" />
+              <Input name="ORG_TAX_ID" label="Tax ID" placeholder="Tax identification number" submit="Save" />
+            </CardContent>
+          </Card>
+        </Stack>
+      </MenuSubSection>
+    </MenuSection>
+    <MenuSection title="Permissions" icon="users-round">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Applications" icon="app-window">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Database" icon="database">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Storage" icon="hard-drive">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Compute" icon="cpu">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Logging" icon="file-text">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Integrations" icon="unplug">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+  </Menu>
+</Page>
