@@ -1,5 +1,6 @@
 import { Fragment, createElement, type ReactNode } from 'react';
 import { interpolate } from '../runtime/interpolate';
+import { resolveCondition } from '../runtime/resolveCondition';
 import { resolveValue } from '../runtime/resolveValue';
 import { RuntimeChildren, RuntimeProvider } from '../runtime/useRuntime';
 import type { ASTNode, ExecutionContext, RegistryShape } from '../types';
@@ -9,7 +10,11 @@ type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record<string, unknown> {
     if (!params) return {};
 
-    return Object.fromEntries(Object.entries(params).map(([key, value]) => [key, resolveValue(value, ctx)]));
+    return Object.fromEntries(
+        Object.entries(params)
+            .filter(([key]) => key !== 'if')
+            .map(([key, value]) => [key, resolveValue(value, ctx)])
+    );
 }
 
 export function renderNode(
@@ -26,6 +31,10 @@ export function renderNode(
 
     if (node.name === 'text') {
         return node.value ? interpolate(node.value, ctx) : null;
+    }
+
+    if (!resolveCondition(node.params?.if, ctx)) {
+        return null;
     }
 
     const component = registry[node.name];

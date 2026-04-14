@@ -28,7 +28,7 @@ Example
       <Card>
         <CardHeader>
           <CardTitle>{user.title}</CardTitle>
-          <CardDescription if="{user.admin}">
+          <CardDescription if="user.admin">
             <Badge>Admin</Badge>
           </CardDescription>
         </CardHeader>
@@ -36,10 +36,20 @@ Example
           <Button
             path="/users/{user.id}"
             method="PATCH"
-            body="{ role: user.admin ? 'member' : 'admin' }"
+            body="{ role: 'member' }"
             invalidate="users"
+            if="user.admin"
           >
-            Toggle role
+            Revoke admin
+          </Button>
+          <Button
+            path="/users/{user.id}"
+            method="PATCH"
+            body="{ role: 'admin' }"
+            invalidate="users"
+            if="!user.admin"
+          >
+            Promote to admin
           </Button>
         </CardContent>
       </Card>

@@ -13,7 +13,7 @@ export function For({ each, as, children }: { each?: string; as?: string; childr
 
     const runtime = useRuntime();
     const { ctx } = runtime;
-    const items = evaluate(each, ctx);
+    const items = evaluate(each, ctx) ?? [];
 
     if (!Array.isArray(items)) {
         return null;
