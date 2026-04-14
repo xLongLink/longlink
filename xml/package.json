@@ -1,15 +1,33 @@
 {
-  "name": "react-xml",
-  "module": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@tanstack/react-query": "^5.99.0",
-    "zustand": "^5.0.12"
-  }
+    "name": "reactxml",
+    "module": "index.ts",
+    "type": "module",
+    "scripts": {
+        "dev": "vite example",
+        "format": "bunx prettier . --write"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "vite": "^8.0.8"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "@tanstack/react-query": "^5.99.0",
+        "fast-xml-parser": "^5.5.12",
+        "react": "^19.2.5",
+        "react-dom": "^19.2.5",
+        "zustand": "^5.0.12"
+    },
+    "prettier": {
+        "semi": true,
+        "singleQuote": true,
+        "printWidth": 120,
+        "tabWidth": 4,
+        "trailingComma": "es5",
+        "arrowParens": "always"
+    }
 }
