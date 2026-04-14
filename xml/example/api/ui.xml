@@ -7,7 +7,7 @@
   <Query id="users" path="http://localhost:8000/users">
     <Section>
       <Title>Submit With action()</Title>
-      <For each="users ?? []" as="user">
+      <For each="users" as="user">
         <Card>
           <Title>{user.name}</Title>
           <Text>@{user.username}</Text>
@@ -16,10 +16,20 @@
           <Button
             path="http://localhost:8000/users/{user.id}"
             method="PATCH"
-            body="{ role: user.role === 'Admin' ? 'Maintainer' : 'Admin', active: !user.active }"
+            body="{ role: 'Maintainer', active: !user.active }"
             invalidate="users"
+            if="user.role === 'Admin'"
           >
-            {user.role === 'Admin' ? 'Revoke admin + toggle status' : 'Promote to admin + toggle status'}
+            Revoke admin + toggle status
+          </Button>
+          <Button
+            path="http://localhost:8000/users/{user.id}"
+            method="PATCH"
+            body="{ role: 'Admin', active: !user.active }"
+            invalidate="users"
+            if="user.role === 'Maintainer'"
+          >
+            Promote to admin + toggle status
           </Button>
         </Card>
       </For>
