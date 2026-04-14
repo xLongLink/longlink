@@ -1,8 +1,15 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to release"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -11,17 +18,31 @@ permissions:
 
 jobs:
   release:
-    if: github.event_name == 'release' && github.event.release.draft == false
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.release_tag.outputs.tag }}
 
     steps:
-      - name: Resolve release tag from release event
+      - name: Resolve release tag
         id: release_tag
         run: |
-          RAW_TAG="${{ github.event.release.tag_name }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            RAW_TAG="${{ github.event.inputs.tag }}"
+          else
+            RAW_TAG="${{ github.ref_name }}"
+          fi
+
+          if [[ -z "$RAW_TAG" ]]; then
+            echo "Release tag is required."
+            exit 1
+          fi
+
           TAG="${RAW_TAG#v}"
+
+          if [[ ! "$RAW_TAG" =~ ^v.+$ ]]; then
+            echo "Invalid release tag: $RAW_TAG. It must start with 'v'."
+            exit 1
+          fi
 
           if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Invalid release tag: $RAW_TAG"
