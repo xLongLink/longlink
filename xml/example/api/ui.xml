@@ -2,24 +2,30 @@
 <Page>
   <Section>
     <Title>{pageTitle}</Title>
-    <Text>XML defines the UI tree. React handles rendering and re-renders.</Text>
+    <Text>XML defines the mutation and the wrapped React button executes it.</Text>
   </Section>
   <Query id="users" path="http://localhost:8000/users">
     <Section>
-      <Title>Fetched With Query</Title>
+      <Title>Submit With action()</Title>
       <For each="users ?? []" as="user">
-        <State id="draft" username="{user.username}">
-          <Card>
-            <Title>{user.name}</Title>
-            <Text>@{user.username}</Text>
-            <Text>Role: {user.role}</Text>
-            <Text>State snapshot: {draft.username}</Text>
-          </Card>
-        </State>
+        <Card>
+          <Title>{user.name}</Title>
+          <Text>@{user.username}</Text>
+          <Text>Role: {user.role}</Text>
+          <Text>Status: {user.active ? 'Active' : 'Disabled'}</Text>
+          <Button
+            path="http://localhost:8000/users/{user.id}"
+            method="PATCH"
+            body="{ role: user.role === 'Admin' ? 'Maintainer' : 'Admin', active: !user.active }"
+            invalidate="users"
+          >
+            {user.role === 'Admin' ? 'Revoke admin + toggle status' : 'Promote to admin + toggle status'}
+          </Button>
+        </Card>
       </For>
     </Section>
   </Query>
   <Section>
-    <Text>The example exercises top-down context with scope, query data, and local state.</Text>
+    <Text>The user list refreshes after each request through query invalidation.</Text>
   </Section>
 </Page>

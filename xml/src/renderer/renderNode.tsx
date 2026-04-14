@@ -1,6 +1,6 @@
 import { Fragment, createElement, type ReactNode } from 'react';
-import { evaluate } from '../runtime/evaluate';
 import { interpolate } from '../runtime/interpolate';
+import { resolveValue } from '../runtime/resolveValue';
 import type { ASTNode, ExecutionContext, PrimitiveComponent, RegistryShape } from '../types';
 
 type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
@@ -9,21 +9,10 @@ function isPrimitiveComponent(component: RegistryShape[string]): component is Pr
     return '$$reactxmlPrimitive' in component && component.$$reactxmlPrimitive === true;
 }
 
-function resolveParamValue(value: string, ctx: ExecutionContext): unknown {
-    const expressionMatch = value.match(/^\{([^}]+)\}$/);
-    const expression = expressionMatch?.[1];
-
-    if (expression) {
-        return evaluate(expression, ctx);
-    }
-
-    return interpolate(value, ctx);
-}
-
 function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record<string, unknown> {
     if (!params) return {};
 
-    return Object.fromEntries(Object.entries(params).map(([key, value]) => [key, resolveParamValue(value, ctx)]));
+    return Object.fromEntries(Object.entries(params).map(([key, value]) => [key, resolveValue(value, ctx)]));
 }
 
 export function renderNode(
