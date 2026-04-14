@@ -177,6 +177,14 @@ src/
 
 ## Usage
 
+Run the example frontend and API together with:
+
+```bash
+bun run dev
+```
+
+Run only one side when needed with `bun run web` or `bun run api`.
+
 ```js
 import { createRoot } from 'react-dom/client';
 import { render, createState, createRegistry } from 'reactxml';

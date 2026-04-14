@@ -3,7 +3,8 @@
     "module": "index.ts",
     "type": "module",
     "scripts": {
-        "dev": "vite example",
+        "dev": "sh -c 'bun run web & bun run api & wait'",
+        "web": "vite example",
         "api": "bun example/api/server.ts",
         "format": "bunx prettier . --write"
     },
