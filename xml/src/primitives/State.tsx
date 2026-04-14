@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { renderNode } from '../renderer/renderNode';
-import { resolveValue } from '../runtime/resolveValue';
-import type { PrimitiveProps } from '../types';
+import { useState, type ReactNode } from 'react';
+import { RuntimeProvider, useRuntime } from '../runtime/useRuntime';
 
-export function State({ node, ctx, registry }: PrimitiveProps) {
-    const id = node.params?.id;
-
+export function State({
+    id,
+    children,
+    ...initialState
+}: {
+    id?: string;
+    children?: ReactNode;
+    [key: string]: unknown;
+}) {
     if (!id) {
         throw new Error('State requires an "id" parameter');
     }
 
-    const initialState = Object.fromEntries(
-        Object.entries(node.params ?? {})
-            .filter(([key]) => key !== 'id')
-            .map(([key, value]) => [key, resolveValue(value, ctx)])
-    );
-
+    const runtime = useRuntime();
+    const { ctx } = runtime;
     const [value, setValue] = useState(initialState);
 
     const childCtx = {
@@ -26,5 +26,5 @@ export function State({ node, ctx, registry }: PrimitiveProps) {
         },
     };
 
-    return renderNode(node.children, registry, childCtx);
+    return <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{children}</RuntimeProvider>;
 }

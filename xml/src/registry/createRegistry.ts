@@ -1,19 +1,15 @@
-import { createElement, type ComponentType } from 'react';
+import { createElement } from 'react';
 import { For } from '../primitives/For';
 import { Page } from '../primitives/Page';
 import { Query } from '../primitives/Query';
 import { State } from '../primitives/State';
-import type { PrimitiveComponent, PrimitiveProps, RegistryShape } from '../types';
-
-function primitive<T extends ComponentType<PrimitiveProps>>(component: T): T & PrimitiveComponent {
-    return Object.assign(component, { $$reactxmlPrimitive: true as const }) as T & PrimitiveComponent;
-}
+import type { RegistryShape } from '../types';
 
 const defaultPrimitives = {
-    Page: primitive(Page),
-    Query: primitive(Query),
-    State: primitive(State),
-    For: primitive(For),
+    Page,
+    Query,
+    State,
+    For,
 } satisfies RegistryShape;
 
 export function createRegistry<const TRegistry extends RegistryShape>(

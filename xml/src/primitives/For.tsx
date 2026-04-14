@@ -1,12 +1,8 @@
-import { Fragment } from 'react';
-import { renderNode } from '../renderer/renderNode';
+import { Fragment, type ReactNode } from 'react';
 import { evaluate } from '../runtime/evaluate';
-import type { PrimitiveProps } from '../types';
+import { RuntimeProvider, useRuntime } from '../runtime/useRuntime';
 
-export function For({ node, ctx, registry }: PrimitiveProps) {
-    const each = node.params?.each;
-    const as = node.params?.as;
-
+export function For({ each, as, children }: { each?: string; as?: string; children?: ReactNode }) {
     if (!each) {
         throw new Error('For requires an "each" parameter');
     }
@@ -15,6 +11,8 @@ export function For({ node, ctx, registry }: PrimitiveProps) {
         throw new Error('For requires an "as" parameter');
     }
 
+    const runtime = useRuntime();
+    const { ctx } = runtime;
     const items = evaluate(each, ctx);
 
     if (!Array.isArray(items)) {
@@ -31,6 +29,10 @@ export function For({ node, ctx, registry }: PrimitiveProps) {
             },
         };
 
-        return <Fragment key={index}>{renderNode(node.children, registry, childCtx)}</Fragment>;
+        return (
+            <Fragment key={index}>
+                <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{children}</RuntimeProvider>
+            </Fragment>
+        );
     });
 }

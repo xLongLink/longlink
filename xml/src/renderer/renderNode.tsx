@@ -1,13 +1,10 @@
 import { Fragment, createElement, type ReactNode } from 'react';
 import { interpolate } from '../runtime/interpolate';
 import { resolveValue } from '../runtime/resolveValue';
-import type { ASTNode, ExecutionContext, PrimitiveComponent, RegistryShape } from '../types';
+import { RuntimeChildren, RuntimeProvider } from '../runtime/useRuntime';
+import type { ASTNode, ExecutionContext, RegistryShape } from '../types';
 
 type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
-
-function isPrimitiveComponent(component: RegistryShape[string]): component is PrimitiveComponent {
-    return '$$reactxmlPrimitive' in component && component.$$reactxmlPrimitive === true;
-}
 
 function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record<string, unknown> {
     if (!params) return {};
@@ -37,13 +34,9 @@ export function renderNode(
         throw new Error(`Unknown component "${node.name}"`);
     }
 
-    if (isPrimitiveComponent(component)) {
-        return createElement(component, { node, registry, ctx });
-    }
-
-    const children = node.children?.map((child, index) => (
-        <Fragment key={index}>{renderNode(child, registry, ctx)}</Fragment>
-    ));
-
-    return createElement(component, resolveParams(node.params, ctx), children);
+    return (
+        <RuntimeProvider value={{ node, registry, ctx }}>
+            {createElement(component, resolveParams(node.params, ctx), node.children ? <RuntimeChildren /> : undefined)}
+        </RuntimeProvider>
+    );
 }
