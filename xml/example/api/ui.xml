@@ -1,31 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Page>
   <Section>
-    <h1>{pageTitle}</h1>
-    <p>XML defines the UI flow. React only renders and executes.</p>
+    <Title>{pageTitle}</Title>
+    <Text>XML defines the UI tree. React handles rendering and re-renders.</Text>
   </Section>
-  <Query id="users" path="/api/users?active=true&amp;minAge=18">
+  <Query id="users" path="http://localhost:8000/users">
     <Section>
-      <For each="users" as="user">
-        <State id="form" username="{user.username}" password="{user.password}">
+      <Title>Fetched With Query</Title>
+      <For each="users ?? []" as="user">
+        <State id="draft" username="{user.username}">
           <Card>
-            <CardHeader>
-              <CardTitle>{user.title}</CardTitle>
-              <CardDescription>@{user.username}</CardDescription>
-              <Badge if="{user.admin}">Admin</Badge>
-            </CardHeader>
-            <CardContent>
-              <Input label="Username" bind="form.username" placeholder="Username" />
-              <Input label="Password" kind="password" bind="form.password" placeholder="Password" />
-              <Button action="submit" path="/api/users/{user.id}" body='{"username":"{form.username}","password":"{form.password}"}' invalidate="users">Save</Button>
-            </CardContent>
+            <Title>{user.name}</Title>
+            <Text>@{user.username}</Text>
+            <Text>Role: {user.role}</Text>
+            <Text>State snapshot: {draft.username}</Text>
           </Card>
         </State>
       </For>
     </Section>
   </Query>
-  <Fragment>
-    <hr />
-    <p>Edit form fields and save to trigger an API mutation plus query invalidation.</p>
-  </Fragment>
+  <Section>
+    <Text>The example exercises top-down context with scope, query data, and local state.</Text>
+  </Section>
 </Page>

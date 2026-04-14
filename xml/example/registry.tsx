@@ -1,65 +1,44 @@
 import { createRegistry } from '../src';
-
-function Page(props: React.HTMLAttributes<HTMLElement>) {
-    return <main {...props} />;
-}
-
 function Section(props: React.HTMLAttributes<HTMLElement>) {
-    return <section {...props} />;
+    return (
+        <section
+            {...props}
+            style={{
+                display: 'grid',
+                gap: '1rem',
+                ...props.style,
+            }}
+        />
+    );
 }
 
-function Card(props: React.HTMLAttributes<HTMLDivElement>) {
-    return <article {...props} />;
-}
-
-function CardHeader(props: React.HTMLAttributes<HTMLDivElement>) {
-    return <header {...props} />;
-}
-
-function CardTitle(props: React.HTMLAttributes<HTMLHeadingElement>) {
+function Title(props: React.HTMLAttributes<HTMLHeadingElement>) {
     return <h2 {...props} />;
 }
 
-function CardDescription(props: React.HTMLAttributes<HTMLParagraphElement>) {
+function Text(props: React.HTMLAttributes<HTMLParagraphElement>) {
     return <p {...props} />;
 }
 
-function CardContent(props: React.HTMLAttributes<HTMLDivElement>) {
-    return <div {...props} />;
-}
-
-function Badge(props: React.HTMLAttributes<HTMLSpanElement>) {
-    return <span {...props} />;
-}
-
-type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
-    label?: string;
-    kind?: string;
-};
-
-function Input({ label, kind, ...props }: InputProps) {
-    const inputType = kind ?? props.type ?? 'text';
-
+function Card(props: React.HTMLAttributes<HTMLDivElement>) {
     return (
-        <label>
-            {label ? <span>{label}</span> : null}
-            <input {...props} type={inputType} />
-        </label>
+        <article
+            {...props}
+            style={{
+                border: '1px solid #d4d4d8',
+                borderRadius: '0.75rem',
+                padding: '1rem',
+                display: 'grid',
+                gap: '0.5rem',
+                ...props.style,
+            }}
+        />
     );
-}
-function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-    return <button {...props} type={props.type ?? 'button'} />;
 }
 
 export const registry = createRegistry({
-    Page,
     Section,
+    Title,
+    Text,
     Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-    Badge,
-    Input,
-    Button,
 });

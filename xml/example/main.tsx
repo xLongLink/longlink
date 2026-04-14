@@ -10,9 +10,15 @@ const xmlTree = fromXml(await response.text());
 
 /* Setup ReactXML */
 const queryClient = new QueryClient();
-const app = renderNode(xmlTree, registry, createContext(), {
-    queryClient,
-});
+const app = renderNode(
+    xmlTree,
+    registry,
+    createContext({
+        scope: {
+            pageTitle: 'User Directory',
+        },
+    })
+);
 
 createRoot(document.getElementById('app')!).render(
     <StrictMode>
