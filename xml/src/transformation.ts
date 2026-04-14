@@ -1,16 +1,22 @@
-import { isArrayNode, isPrimitiveNode, isXmlElementNode } from './types';
+import { isArrayNode, isPrimitiveNode, isXmlElementNode } from './utils';
 import type { TransformContext, TransformVisitor, TraverseOptions, XmlElementNode, XmlNode } from './types';
 
+/** Builds a TransformContext describing a node's position in the tree. */
 function createContext(parent: XmlElementNode | null, index: number, depth: number): TransformContext {
     return { parent, index, depth };
 }
 
+/**
+ * Walks the node tree depth-first, calling each visitor's `enter` hook before descending
+ * and `exit` hook after. Visitors may return a replacement node to mutate the tree.
+ */
 export async function transformNodeTree(root: XmlNode, visitors: TransformVisitor[]): Promise<XmlNode> {
     return visitNode(root, visitors, null, 0, 0);
 }
 
 export const transformJsonTree = transformNodeTree;
 
+/** Applies visitors to a single node, then recurses into its children. */
 async function visitNode(
     node: XmlNode,
     visitors: TransformVisitor[],
@@ -60,6 +66,7 @@ async function visitNode(
     return currentNode;
 }
 
+/** Recursively visits the children of an element node, handling both single and array forms. */
 async function visitChildren(
     node: XmlElementNode,
     visitors: TransformVisitor[],
@@ -77,6 +84,10 @@ async function visitChildren(
     return visitNode(children, visitors, node, 0, depth);
 }
 
+/**
+ * Lazily iterates over every node in the tree depth-first, yielding each node with its context.
+ * Optionally filtered to only yield element nodes whose type is in `options.nodeTypes`.
+ */
 export function* traverseNodeTree(
     root: XmlNode,
     options: TraverseOptions = {}
@@ -86,6 +97,7 @@ export function* traverseNodeTree(
 
 export const traverseJsonTree = traverseNodeTree;
 
+/** Recursively walks a node and its descendants, yielding each with its traversal context. */
 function* walkNode(
     node: XmlNode,
     options: TraverseOptions,

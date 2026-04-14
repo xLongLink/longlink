@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useStore } from 'zustand';
 import { createStore } from 'zustand/vanilla';
-import { FRAGMENT, isArrayNode, isPrimitiveNode } from './types';
+import { FRAGMENT, isArrayNode, isPrimitiveNode } from './utils';
 import type {
     ActionRequest,
     ComponentRegistry,
@@ -31,6 +31,10 @@ interface RuntimeContextValue {
 const RuntimeContext = createContext<RuntimeContextValue | null>(null);
 const ScopeContext = createContext<RuntimeScope>(EMPTY_SCOPE);
 
+/**
+ * Creates a Zustand store that holds the runtime state for a ReactXML application.
+ * Includes global key-value state, query result cache, and per-instance local State node data.
+ */
 export function createState(initialGlobalState: Record<string, unknown> = {}): ReactXMLStore {
     return createStore<ReactXMLState>((set) => ({
         global: { ...initialGlobalState },
@@ -85,6 +89,10 @@ export function createState(initialGlobalState: Record<string, unknown> = {}): R
     }));
 }
 
+/**
+ * Renders an XmlNode tree into a React element tree using the provided component registry and store.
+ * Wraps the output in the runtime context providers (QueryClient, RuntimeContext, ScopeContext).
+ */
 export function renderNode(
     node: XmlNode,
     registry: ComponentRegistry,
@@ -111,6 +119,7 @@ export function renderNode(
     );
 }
 
+/** Dispatches a node to its specialised renderer: primitive, array, logic component, or standard element. */
 function NodeRenderer({ node }: { node: XmlNode }): ReactNode {
     if (isPrimitiveNode(node)) {
         return node;
@@ -136,6 +145,7 @@ function NodeRenderer({ node }: { node: XmlNode }): ReactNode {
     }
 }
 
+/** Renders a regular element node by resolving its props, looking up the component in the registry, and mounting it. */
 function StandardNode({ node }: { node: XmlElementNode }): ReactNode {
     const runtime = useRuntime();
     const scope = useScopeValues();
@@ -163,6 +173,7 @@ function StandardNode({ node }: { node: XmlElementNode }): ReactNode {
     return createElement(component, propsWithAction, children);
 }
 
+/** Executes a data-fetching query via react-query and exposes the result to child nodes through scope. */
 function QueryNode({ node }: { node: XmlElementNode }): ReactNode {
     const runtime = useRuntime();
     const scope = useScopeValues();
@@ -216,6 +227,7 @@ function QueryNode({ node }: { node: XmlElementNode }): ReactNode {
     return <ScopeContext.Provider value={nextScope}>{renderChildren(node.children)}</ScopeContext.Provider>;
 }
 
+/** Iterates over an array from scope and renders the node's children once per item. */
 function ForNode({ node }: { node: XmlElementNode }): ReactNode {
     const scope = useScopeValues();
     const each = resolveIterable(node.props?.each, scope);
@@ -242,6 +254,7 @@ function ForNode({ node }: { node: XmlElementNode }): ReactNode {
     });
 }
 
+/** Creates a keyed local state instance and exposes it as a named scope variable to child nodes. */
 function StateNode({ node }: { node: XmlElementNode }): ReactNode {
     const runtime = useRuntime();
     const scope = useScopeValues();
@@ -283,6 +296,7 @@ function StateNode({ node }: { node: XmlElementNode }): ReactNode {
     return <ScopeContext.Provider value={nextScope}>{renderChildren(node.children)}</ScopeContext.Provider>;
 }
 
+/** Returns the current RuntimeContext value, throwing if called outside the ReactXML runtime. */
 function useRuntime(): RuntimeContextValue {
     const runtime = useContext(RuntimeContext);
     if (!runtime) {
@@ -292,6 +306,7 @@ function useRuntime(): RuntimeContextValue {
     return runtime;
 }
 
+/** Merges global store state, query data, and the local scope chain into a single flat scope object. */
 function useScopeValues(): RuntimeScope {
     const runtime = useRuntime();
     const scope = useContext(ScopeContext);
@@ -313,6 +328,7 @@ function useScopeValues(): RuntimeScope {
     );
 }
 
+/** Converts an XmlNode children value into a React renderable, handling undefined, arrays, and single nodes. */
 function renderChildren(children: XmlNode | XmlNode[] | undefined): ReactNode {
     if (children === undefined) {
         return null;
@@ -329,6 +345,7 @@ function renderChildren(children: XmlNode | XmlNode[] | undefined): ReactNode {
     return <NodeRenderer node={children} />;
 }
 
+/** Looks up a component by type in the registry, returning Fragment for the fragment type and undefined for logic nodes. */
 function resolveComponent(type: string, registry: ComponentRegistry): ComponentRegistry[string] | undefined {
     if (type === FRAGMENT) {
         return Fragment;
@@ -341,6 +358,7 @@ function resolveComponent(type: string, registry: ComponentRegistry): ComponentR
     return registry[type];
 }
 
+/** Evaluates an `if` prop value against the current scope; undefined condition always returns true. */
 function resolveCondition(condition: unknown, scope: RuntimeScope): boolean {
     if (condition === undefined) {
         return true;
@@ -349,6 +367,7 @@ function resolveCondition(condition: unknown, scope: RuntimeScope): boolean {
     return Boolean(resolveReference(condition, scope.values));
 }
 
+/** Resolves the `each` prop to an array, wrapping non-array values in a single-element array. */
 function resolveIterable(input: unknown, scope: RuntimeScope): unknown[] {
     const resolved = resolveReference(input, scope.values);
 
@@ -363,6 +382,7 @@ function resolveIterable(input: unknown, scope: RuntimeScope): unknown[] {
     return [resolved];
 }
 
+/** Resolves all prop values in an element's props map against the current scope. */
 function resolveProps(props: Record<string, unknown> | undefined, scope: RuntimeScope): Record<string, unknown> {
     if (!props) {
         return {};
@@ -373,6 +393,7 @@ function resolveProps(props: Record<string, unknown> | undefined, scope: Runtime
     return Object.fromEntries(resolvedEntries);
 }
 
+/** Resolves a single prop value: evaluates `{expression}` syntax, interpolates `{template}` strings, or passes through unchanged. */
 function resolveValue(key: string, value: unknown, scope: Record<string, unknown>): unknown {
     if (typeof value === 'string') {
         if (key === 'each') {
@@ -410,6 +431,7 @@ function resolveValue(key: string, value: unknown, scope: Record<string, unknown
     return value;
 }
 
+/** Resolves a value as an expression or a dot-path reference into the scope, or returns it unchanged. */
 function resolveReference(input: unknown, scope: Record<string, unknown>): unknown {
     if (typeof input !== 'string') {
         return input;
@@ -427,11 +449,13 @@ function resolveReference(input: unknown, scope: Record<string, unknown>): unkno
     return input;
 }
 
+/** Evaluates a JavaScript expression string with the scope object in context using `with`. */
 function evaluateExpression(expression: string, scope: Record<string, unknown>): unknown {
     const evaluator = new Function('scope', `with (scope) { return (${expression}); }`);
     return evaluator(scope);
 }
 
+/** Extracts the initial state values from a State node's props, resolving expressions but skipping control props. */
 function extractStateInitialValues(
     props: Record<string, unknown> | undefined,
     scope: Record<string, unknown>
@@ -445,6 +469,7 @@ function extractStateInitialValues(
     return Object.fromEntries(entries.map(([key, value]) => [key, resolveValue(key, value, scope)]));
 }
 
+/** Injects `value`/`checked` and `onChange` props onto an element to bind it to a State node field. */
 function applyBindingProps(
     props: Record<string, unknown>,
     bind: string,
@@ -482,6 +507,7 @@ function applyBindingProps(
     };
 }
 
+/** Wraps an element's `onClick` to dispatch a fetch action and invalidate relevant queries on completion. */
 function applyActionProps(
     props: Record<string, unknown>,
     node: XmlElementNode,
@@ -530,6 +556,7 @@ function applyActionProps(
     };
 }
 
+/** Default action handler: sends a fetch request for the action and returns the parsed response body. */
 async function defaultActionHandler(request: ActionRequest): Promise<unknown> {
     const response = await fetch(request.path, {
         method: request.method,
@@ -544,6 +571,7 @@ async function defaultActionHandler(request: ActionRequest): Promise<unknown> {
     return readResponseBody(response);
 }
 
+/** Strips ReactXML control props (if, each, as, bind, action, etc.) before passing props to the component. */
 function omitControlProps(props: Record<string, unknown>): Record<string, unknown> {
     const nextProps = { ...props };
     delete nextProps.if;
@@ -556,6 +584,7 @@ function omitControlProps(props: Record<string, unknown>): Record<string, unknow
     return nextProps;
 }
 
+/** Returns a new scope that merges the parent scope with additional values and bindings. */
 function extendScope(scope: RuntimeScope, patch: Partial<RuntimeScope>): RuntimeScope {
     return {
         values: {

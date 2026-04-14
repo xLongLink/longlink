@@ -1,6 +1,5 @@
 import { createRegistry } from '../src';
 
-
 function Page(props: React.HTMLAttributes<HTMLElement>) {
     return <main {...props} />;
 }
@@ -64,4 +63,3 @@ export const registry = createRegistry({
     Input,
     Button,
 });
-

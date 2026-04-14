@@ -4,6 +4,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite example",
+        "api": "bun example/api/server.ts",
         "format": "bunx prettier . --write"
     },
     "devDependencies": {
