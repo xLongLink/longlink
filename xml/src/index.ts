@@ -1,23 +1,19 @@
-// Main entry point for React-JSONR
-export { renderNode } from './rendering';
-export { transformJsonTree, traverseJsonTree } from './transformation';
 export { createRegistry } from './registry';
-export type { 
-  JsonNode, 
-  ComponentNode, 
-  ComponentRegistry, 
-  TransformVisitor, 
-  TransformContext, 
-  RenderContext 
+export { createState, renderNode } from './rendering';
+export { transformJsonTree, transformNodeTree, traverseJsonTree, traverseNodeTree } from './transformation';
+export type {
+    ActionHandler,
+    ActionRequest,
+    ComponentRegistry,
+    LocalBinding,
+    ReactXMLState,
+    ReactXMLStore,
+    RenderOptions,
+    RuntimeScope,
+    TransformContext,
+    TransformVisitor,
+    TraverseOptions,
+    XmlElementNode,
+    XmlNode,
 } from './types';
-export { 
-  isComponentNode,
-  isPrimitiveNode,
-  isArrayNode,
-  createComponentNode,
-  createFragment,
-  createPortal,
-  FRAGMENT,
-  PORTAL
-} from './types';
-export type { TraverseOptions } from './transformation'; 
+export { FRAGMENT, createElementNode, createFragment, isArrayNode, isPrimitiveNode, isXmlElementNode } from './types';

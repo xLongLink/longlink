@@ -1,11 +1,13 @@
 # ReactXML
 
 Create a XML abstraction layer on top of React, so that the UI becomes a pure client of a rest API. This allows for a clear Separation of Concerns:
+
 - Backend (REST API) → owns data + mutations
 - XML layer → defines data flow + UI structure
 - React runtime → purely renders + executes
 
-Designed for: 
+Designed for:
+
 - Internal dashboards (Data-heavy: tables, forms, filters)
 - admin panels
 - moderation tools
@@ -14,7 +16,6 @@ Designed for:
 - Repetitive UI patterns
 - Low tolerance for inconsistency
 - High need for rapid iteration
-
 
 ```xml
 <Query id="users" path="/users?active=true&age>18&sort=ascending" />
@@ -40,10 +41,41 @@ Designed for:
 ```
 
 ## Features
+
 - Global state using `zustand`
 - Conditional rendering `if`
-- 
-- Logic Components: 
+-
+- Logic Components:
     - `<For>`
     - `<State>`
     - `<Query>` use TanStack Query
+
+## Usage
+
+```js
+import { renderNode, createState, createRegistry } from 'reactxml';
+
+
+const registry = createRegistry({
+  Card: ...,
+  CardHeader: ...,
+  ...
+});
+
+const global = createState({
+
+})
+
+
+function App() {
+    const component = renderNode(transformed, registry, global);
+
+    return <> {component} </>;
+}
+```
+
+## Development
+
+```
+uv run uvicorn main:app --reload
+```

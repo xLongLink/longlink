@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Page>
+  <Section>
+    <h1>{pageTitle}</h1>
+    <p>XML defines the UI flow. React only renders and executes.</p>
+  </Section>
+  <Query id="users" path="/api/users?active=true&amp;minAge=18">
+    <Section>
+      <For each="users" as="user">
+        <State id="form" username="{user.username}" password="{user.password}">
+          <Card>
+            <CardHeader>
+              <CardTitle>{user.title}</CardTitle>
+              <CardDescription>@{user.username}</CardDescription>
+              <Badge if="{user.admin}">Admin</Badge>
+            </CardHeader>
+            <CardContent>
+              <Input label="Username" bind="form.username" placeholder="Username" />
+              <Input label="Password" kind="password" bind="form.password" placeholder="Password" />
+              <Button action="submit" path="/api/users/{user.id}" body='{"username":"{form.username}","password":"{form.password}"}' invalidate="users">Save</Button>
+            </CardContent>
+          </Card>
+        </State>
+      </For>
+    </Section>
+  </Query>
+  <Fragment>
+    <hr />
+    <p>Edit form fields and save to trigger an API mutation plus query invalidation.</p>
+  </Fragment>
+</Page>
