@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createState, renderNode, fromXml } from '../src';
+import { createContext, renderNode, fromXml } from '../src';
 import { registry } from './registry';
 
 /* Fetch the UI tree from the API */
@@ -10,10 +10,7 @@ const xmlTree = fromXml(await response.text());
 
 /* Setup ReactXML */
 const queryClient = new QueryClient();
-const store = createState({
-    pageTitle: 'ReactXML Example',
-});
-const app = renderNode(xmlTree, registry, store, {
+const app = renderNode(xmlTree, registry, createContext(), {
     queryClient,
 });
 
