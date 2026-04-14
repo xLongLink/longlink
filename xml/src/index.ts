@@ -1,20 +1,15 @@
-export { createRegistry } from './registry';
-export { createState, renderNode } from './rendering';
-export { transformJsonTree, transformNodeTree, traverseJsonTree, traverseNodeTree } from './transformation';
-export { fromXml } from './xml';
+export { xmlToAST as fromXml } from './compiler/parseXML';
+export { renderNode } from './renderer/renderNode';
+export { createContext } from './registry/createContext';
+export { createRegistry } from './registry/createRegistry';
+export { evaluate } from './runtime/evaluate';
+export { interpolate } from './runtime/interpolate';
 export type {
-    ActionHandler,
-    ActionRequest,
-    ComponentRegistry,
-    LocalBinding,
-    ReactXMLState,
-    ReactXMLStore,
-    RenderOptions,
-    RuntimeScope,
-    TransformContext,
-    TransformVisitor,
-    TraverseOptions,
-    XmlElementNode,
-    XmlNode,
+    ASTNode,
+    ExecutionContext,
+    PrimitiveComponent,
+    PrimitiveProps,
+    RegistryComponent,
+    RegistryEntry,
+    RegistryShape,
 } from './types';
-export { FRAGMENT, createElementNode, createFragment, isArrayNode, isPrimitiveNode, isXmlElementNode } from './utils';
