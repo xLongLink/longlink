@@ -2,7 +2,7 @@ import src.db as db
 from fastapi import HTTPException
 from src.env import env
 from src.router import router
-from src.models.computes import (ComputeContainerCreate,
+from src.models.computes import (ComputeEnvironment, ComputeContainerCreate,
                                  ComputeContainerCreateResponse)
 from kubernetes.client.exceptions import ApiException
 
@@ -16,6 +16,18 @@ def _pod_name_from_app_key(app_key: str, container_name: str) -> str:
 
     pod_name = f'{app_normalized}-{container_normalized}'
     return pod_name[:63].rstrip('-.')
+
+
+@router.get('/compute')
+async def list_compute_environments() -> list[ComputeEnvironment]:
+    return [
+        ComputeEnvironment(
+            key='default',
+            api_server_url=env.ENV_PROVISION_COMPUTE_API_SERVER_URL,
+            default_namespace=env.ENV_PROVISION_COMPUTE_DEFAULT_NAMESPACE,
+            verify_ssl=env.ENV_PROVISION_COMPUTE_VERIFY_SSL,
+        )
+    ]
 
 
 @router.post('/compute/apps/{app_id}/containers')

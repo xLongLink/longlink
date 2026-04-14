@@ -1,6 +1,13 @@
 from pydantic import Field, BaseModel
 
 
+class ComputeEnvironment(BaseModel):
+    key: str
+    api_server_url: str
+    default_namespace: str
+    verify_ssl: bool
+
+
 class ComputeContainerEnv(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     value: str = Field(default='')
