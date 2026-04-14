@@ -23,7 +23,7 @@ def load_page_metadata_from_xml(path: str | Path) -> dict[str, str]:
 
 
 def _get_page_root(document: dict[str, Any]) -> dict[str, Any]:
-    root = document.get("Page") or document.get("page")
+    root = document.get("Page")
     if not isinstance(root, dict):
         raise ValueError("XML page document must contain a <Page> root element.")
 

@@ -40,3 +40,4 @@ The documentation is built with VitePress and organized into two main sections: 
 - The project is in development mode; prefer the current model over backward compatibility
 - Default to concise communication
 - Finish only when success criteria are met
+- When you are done, run `make format` from the root to format the code
