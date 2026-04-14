@@ -1,0 +1,8 @@
+<Page name="Processes" icon="workflow">
+  <Hero title="Processes" icon="workflow" />
+  <Table endpoint="/apps?type=process">
+    <Column key="name" label="Name" content="{name}" link="/{id}" />
+    <Column key="url" label="URL" content="{url}" />
+    <Column key="type" label="Type" content="{type}" />
+  </Table>
+</Page>
