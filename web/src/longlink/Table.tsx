@@ -217,3 +217,5 @@ export function Table<T extends object>(props: TableProps) {
 }
 
 export default Table;
+
+export { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';

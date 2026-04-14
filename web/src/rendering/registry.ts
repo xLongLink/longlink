@@ -14,30 +14,6 @@ function toRegistryEntry(component: ComponentType<any> | RegistryEntry): Registr
     };
 }
 
-function normalizeRegistryKey(value: string) {
-    return value
-        .trim()
-        .replace(/[\s_-]+/g, '')
-        .toLowerCase();
-}
-
 export function createRegistry(customComponents: Record<string, ComponentType<any> | RegistryEntry>) {
-    const registryEntries = mapValues(customComponents, toRegistryEntry);
-    const normalizedEntries = new Map(
-        Object.entries(registryEntries).map(([key, entry]) => [normalizeRegistryKey(key), entry])
-    );
-
-    return new Proxy(registryEntries, {
-        get(target, prop: string | symbol) {
-            if (typeof prop !== 'string') {
-                return undefined;
-            }
-
-            if (prop in target) {
-                return target[prop];
-            }
-
-            return normalizedEntries.get(normalizeRegistryKey(prop));
-        },
-    }) as ComponentRegistry;
+    return mapValues(customComponents, toRegistryEntry) as ComponentRegistry;
 }
