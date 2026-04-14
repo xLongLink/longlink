@@ -1,11 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { QueryClient } from '@tanstack/react-query';
-import { createState, renderNode } from '../src';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createState, renderNode, fromXml } from '../src';
 import { registry } from './registry';
-import { xmlTree } from './xml';
-import { QueryClientProvider } from '@tanstack/react-query';
 
+/* Fetch the UI tree from the API */
+const response = await fetch('http://localhost:8000/');
+const xmlTree = fromXml(await response.text());
 
 /* Setup ReactXML */
 const queryClient = new QueryClient();
@@ -16,12 +17,8 @@ const app = renderNode(xmlTree, registry, store, {
     queryClient,
 });
 
-
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById('app')!).render(
     <StrictMode>
-        <QueryClientProvider client={queryClient}>
-            {app}
-        </QueryClientProvider>
+        <QueryClientProvider client={queryClient}>{app}</QueryClientProvider>
     </StrictMode>
 );
-
