@@ -1,19 +1,7 @@
 import { useState } from 'react';
 import { renderNode } from '../renderer/renderNode';
-import { evaluate } from '../runtime/evaluate';
-import { interpolate } from '../runtime/interpolate';
+import { resolveValue } from '../runtime/resolveValue';
 import type { PrimitiveProps } from '../types';
-
-function resolveInitialValue(value: string, ctx: PrimitiveProps['ctx']): unknown {
-    const expressionMatch = value.match(/^\{([^}]+)\}$/);
-    const expression = expressionMatch?.[1];
-
-    if (expression) {
-        return evaluate(expression, ctx);
-    }
-
-    return interpolate(value, ctx);
-}
 
 export function State({ node, ctx, registry }: PrimitiveProps) {
     const id = node.params?.id;
@@ -25,7 +13,7 @@ export function State({ node, ctx, registry }: PrimitiveProps) {
     const initialState = Object.fromEntries(
         Object.entries(node.params ?? {})
             .filter(([key]) => key !== 'id')
-            .map(([key, value]) => [key, resolveInitialValue(value, ctx)])
+            .map(([key, value]) => [key, resolveValue(value, ctx)])
     );
 
     const [value, setValue] = useState(initialState);

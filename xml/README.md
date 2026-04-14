@@ -22,26 +22,27 @@ Example
 ```xml
 <Page name="Example" icon="circle-alert">
 
-  <!-- Sample example -->
+  <!-- Mutation example -->
   <Query id="users" path="/users?active=true&age>18&sort=ascending">
     <For each="users" as="user">
-      <State id="form" username="{user.username}" password="{user.password}">
-        <Card>
-          <CardHeader>
-            <CardTitle>{user.title}</CardTitle>
-              <CardDescription if="{user.admin}">
-                <Badge> Admin <Badge>
-              </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Input kind="text" label="Username" bind="form.username"/>
-            <Input kind="password" label="Password" bind="form.password" />
-            <Button path="/users/{user.id}" body="{ 'username': form.username, 'password': form.password }" invalidate="users">
-                Save
-            </Button>
-          </CardContent>
-        </Card>
-      </State>
+      <Card>
+        <CardHeader>
+          <CardTitle>{user.title}</CardTitle>
+          <CardDescription if="{user.admin}">
+            <Badge>Admin</Badge>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            path="/users/{user.id}"
+            method="PATCH"
+            body="{ role: user.admin ? 'member' : 'admin' }"
+            invalidate="users"
+          >
+            Toggle role
+          </Button>
+        </CardContent>
+      </Card>
     </For>
   </Query>
 
@@ -153,7 +154,7 @@ src/
 │
 ├── runtime/               # Evaluate IR → live runtime nodes + scoped execution
 │   ├── evaluateNode.ts    # Convert IR node → RuntimeNode (resolve directives, attach scope, prepare execution)
-│   ├── resolveValue.ts    # Evaluate DirectiveValue (expressions, templates, literals) against scope
+│   ├── resolveValue.ts    # Resolve attribute values as expressions, templates, or literals
 │   ├── resolveChildren.ts # Recursively evaluate children nodes with proper scope propagation
 │   ├── createScope.ts     # Create and link ScopeFrames (state/query/loop nesting)
 │   ├── executionContext.ts# Runtime context container (registry, store, queryClient, transport)
@@ -187,21 +188,20 @@ Run only one side when needed with `bun run web` or `bun run api`.
 
 ```js
 import { createRoot } from 'react-dom/client';
-import { render, createState, createRegistry } from 'reactxml';
+import { action, createContext, createRegistry, fromXml, renderNode } from 'reactxml';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 /* Fetch the UI tree from the API */
-const xmlTree = await fetch('http://localhost:8000/ui.xml').text();
+const response = await fetch('http://localhost:8000/');
+const xmlTree = fromXml(await response.text());
 
 /* Setup ReactXML */
 const queryClient = new QueryClient();
-const state = createState(queryClient)
 
-
-function Button({ action, children, ...rest }) {
+function Button({ action, pending, children, ...rest }) {
   return (
-    <button onClick={action} {...rest}>
-      {children}
+    <button onClick={action} disabled={pending} {...rest}>
+      {pending ? 'Saving...' : children}
     </button>
   )
 }
@@ -210,15 +210,15 @@ function Button({ action, children, ...rest }) {
 const registry = createRegistry({
   Text,
   Card,
-  action(Button), // any component that has path, body, invalidate, method parameters
+  Button: action(Button),
   ...
 });
 
-const component = render(xmlTree, registry, state);
+const component = renderNode(xmlTree, registry, createContext());
 
 createRoot(document.getElementById('app')!).render(
-    <QueryClientProvider client={queryClient}>
-        {component}
-    </QueryClientProvider>;
-}
+  <QueryClientProvider client={queryClient}>
+    {component}
+  </QueryClientProvider>
+);
 ```

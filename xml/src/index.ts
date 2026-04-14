@@ -1,6 +1,7 @@
 export { xmlToAST as fromXml } from './compiler/parseXML';
 export { renderNode } from './renderer/renderNode';
 export { createContext } from './registry/createContext';
+export { action } from './registry/action';
 export { createRegistry } from './registry/createRegistry';
 export { evaluate } from './runtime/evaluate';
 export { interpolate } from './runtime/interpolate';

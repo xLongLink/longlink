@@ -1,4 +1,5 @@
-import { createRegistry } from '../src';
+import { action, createRegistry } from '../src';
+
 function Section(props: React.HTMLAttributes<HTMLElement>) {
     return (
         <section
@@ -36,9 +37,40 @@ function Card(props: React.HTMLAttributes<HTMLDivElement>) {
     );
 }
 
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    action: React.MouseEventHandler<HTMLButtonElement>;
+    pending: boolean;
+};
+
+function Button({ action: runAction, pending, children, ...props }: ButtonProps) {
+    const { disabled, onClick: _onClick, ...rest } = props;
+
+    return (
+        <button
+            type="button"
+            onClick={runAction}
+            disabled={pending || disabled}
+            {...rest}
+            style={{
+                border: 'none',
+                borderRadius: '0.625rem',
+                background: pending ? '#94a3b8' : '#0f172a',
+                color: '#fff',
+                padding: '0.625rem 0.875rem',
+                cursor: pending ? 'wait' : 'pointer',
+                justifySelf: 'start',
+                ...rest.style,
+            }}
+        >
+            {pending ? 'Saving...' : children}
+        </button>
+    );
+}
+
 export const registry = createRegistry({
     Section,
     Title,
     Text,
     Card,
+    Button: action(Button),
 });
