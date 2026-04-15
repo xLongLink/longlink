@@ -1,5 +1,6 @@
 import Render from '@/components/Render';
 import { useApiData } from '@/hooks/use-data';
+import { resolveXmlPayload } from '@/lib/xml';
 
 type OrganizationPageProps = {
     page: 'overview' | 'tools' | 'spaces' | 'processes' | 'people' | 'settings';
@@ -7,7 +8,8 @@ type OrganizationPageProps = {
 
 export default function OrganizationPage({ page }: OrganizationPageProps) {
     const endpoint = `/pages/${page}`;
-    const { data, isLoading, error } = useApiData<string>(endpoint);
+    const { data, isLoading, error } = useApiData<string | { xml?: string | null; content?: string | null }>(endpoint);
+    const xml = resolveXmlPayload(data);
 
     if (error) {
         return <div>{error.message}</div>;
@@ -17,9 +19,9 @@ export default function OrganizationPage({ page }: OrganizationPageProps) {
         return <div>Loading...</div>;
     }
 
-    if (!data) {
+    if (!xml) {
         return <div>Unexpected response format for {endpoint}</div>;
     }
 
-    return <Render xml={data} />;
+    return <Render xml={xml} />;
 }
