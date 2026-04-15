@@ -11,14 +11,8 @@ import Login from '@/pages/user/Login';
 import Profile from '@/pages/user/Profile';
 import NotFound from '@/pages/NotFound';
 
-// Organization related pages
-import People from '@/pages/org/People';
-import SettingsPage from '@/pages/org/Settings';
-import Overview from '@/pages/org/Overview';
-import Tools from '@/pages/org/Tools';
-import Spaces from '@/pages/org/Spaces';
-import Processes from '@/pages/org/Processes';
 import Longlink from '@/pages/org/Longlink';
+import OrganizationPage from '@/pages/org/OrganizationPage';
 
 const withAuth = (element: ReactElement) => <RequireAuth>{element}</RequireAuth>;
 
@@ -28,12 +22,12 @@ const router = createBrowserRouter([
         element: withAuth(<Layout />),
         children: [
             { index: true, element: <Navigate to="/overview" replace /> },
-            { path: 'overview', element: <Overview /> },
-            { path: 'tools', element: <Tools /> },
-            { path: 'spaces', element: <Spaces /> },
-            { path: 'processes', element: <Processes /> },
-            { path: 'people', element: <People /> },
-            { path: 'settings', element: <SettingsPage /> },
+            { path: 'overview', element: <OrganizationPage page="overview" /> },
+            { path: 'tools', element: <OrganizationPage page="tools" /> },
+            { path: 'spaces', element: <OrganizationPage page="spaces" /> },
+            { path: 'processes', element: <OrganizationPage page="processes" /> },
+            { path: 'people', element: <OrganizationPage page="people" /> },
+            { path: 'settings', element: <OrganizationPage page="settings" /> },
             {
                 path: ':appId/*',
                 element: <Longlink />,

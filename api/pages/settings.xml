@@ -3,53 +3,187 @@
     <MenuSection title="Organization" icon="globe">
       <MenuSubSection title="" root="true">
         <Stack gap="24">
+          <Hero
+            title="Organization Settings"
+            subtitle="Configure your organization public and legal details"
+            icon="settings"
+          />
+          <Columns gap="16">
+            <Column span="6">
+              <Input
+                name="ORG_NAME"
+                label="Organization name"
+                placeholder="Organization display name"
+                submit="/settings/ORG_NAME"
+              />
+            </Column>
+            <Column span="6">
+              <Input
+                name="ORG_NAME_LEGAL"
+                label="Legal name"
+                placeholder="Registered legal entity name"
+                submit="/settings/ORG_NAME_LEGAL"
+              />
+            </Column>
+            <Column span="6">
+              <Input
+                name="ORG_TAX_ID"
+                label="Registration / tax ID"
+                placeholder="Company registration or tax ID"
+                submit="/settings/ORG_TAX_ID"
+              />
+            </Column>
+            <Column span="6">
+              <Input
+                name="ORG_PHONE"
+                label="Phone number"
+                placeholder="+1 (000) 000-0000"
+                submit="/settings/ORG_PHONE"
+              />
+            </Column>
+            <Column span="6">
+              <Input
+                name="ORG_MAIL_CONTACT"
+                label="Primary contact email"
+                placeholder="contact@company.com"
+                submit="/settings/ORG_MAIL_CONTACT"
+              />
+            </Column>
+            <Column span="6">
+              <Input
+                name="ORG_MAIL_SUPPORT"
+                label="Support email"
+                placeholder="support@company.com"
+                submit="/settings/ORG_MAIL_SUPPORT"
+              />
+            </Column>
+            <Column span="12">
+              <Input
+                name="ORG_WEBSITE"
+                label="Website"
+                placeholder="https://company.com"
+                submit="/settings/ORG_WEBSITE"
+              />
+            </Column>
+            <Column span="12">
+              <Input
+                name="ORG_ADDRESS"
+                kind="textarea"
+                label="Physical address"
+                placeholder="Street, city, state, ZIP/postal code, country"
+                submit="/settings/ORG_ADDRESS"
+              />
+            </Column>
+          </Columns>
+        </Stack>
+      </MenuSubSection>
+    </MenuSection>
+
+    <MenuSection title="Permissions" icon="users-round">
+      <MenuSubSection title="" root="true">
+        <Stack gap="24">
+          <Hero
+            title="Permissions Settings"
+            subtitle="Manage team-based access and role boundaries"
+            icon="settings"
+            action="Create team"
+          />
           <Card>
             <CardHeader>
-              <CardTitle>Organization</CardTitle>
-              <CardDescription>General information about your organization.</CardDescription>
+              <CardTitle>Teams</CardTitle>
+              <CardDescription>Organization teams and access boundaries.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Input name="ORG_NAME" label="Name" placeholder="Organization name" submit="Save" />
-              <Input name="ORG_NAME_LEGAL" label="Legal Name" placeholder="Legal entity name" submit="Save" />
-              <Input name="ORG_WEBSITE" label="Website" placeholder="https://example.com" submit="Save" />
-              <Input name="ORG_ADDRESS" label="Address" placeholder="123 Main St" submit="Save" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact</CardTitle>
-              <CardDescription>Contact details for your organization.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Input name="ORG_PHONE" label="Phone" placeholder="+1 (555) 000-0000" submit="Save" />
-              <Input name="ORG_MAIL_CONTACT" label="Contact Email" placeholder="contact@example.com" submit="Save" />
-              <Input name="ORG_MAIL_SUPPORT" label="Support Email" placeholder="support@example.com" submit="Save" />
-              <Input name="ORG_TAX_ID" label="Tax ID" placeholder="Tax identification number" submit="Save" />
+              <P className="text-sm text-muted-foreground">No teams created yet.</P>
             </CardContent>
           </Card>
         </Stack>
       </MenuSubSection>
     </MenuSection>
-    <MenuSection title="Permissions" icon="users-round">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
+
     <MenuSection title="Applications" icon="app-window">
-      <MenuSubSection title="" root="true" />
+      <MenuSubSection title="" root="true">
+        <Stack gap="24">
+          <Hero
+            title="Application Settings"
+            subtitle="Control app defaults, permissions, and lifecycle settings"
+            icon="settings"
+          />
+          <Table endpoint="/apps">
+            <Column key="name" label="Name" content="{name}" />
+            <Column key="url" label="URL" content="{url}" />
+            <Column key="type" label="Type" content="{type}" />
+          </Table>
+        </Stack>
+      </MenuSubSection>
     </MenuSection>
+
     <MenuSection title="Database" icon="database">
-      <MenuSubSection title="" root="true" />
+      <MenuSubSection title="" root="true">
+        <Stack gap="24">
+          <Hero title="Database Settings" subtitle="Connect a database instance." icon="settings" action="Connect" />
+          <Table endpoint="/databases">
+            <Column key="name" label="Server" content="{name}" />
+            <Column key="host" label="Host" content="{host}" />
+            <Column key="port" label="Port" content="{port}" />
+            <Column key="username" label="Username" content="{username}" />
+          </Table>
+        </Stack>
+      </MenuSubSection>
     </MenuSection>
+
     <MenuSection title="Storage" icon="hard-drive">
-      <MenuSubSection title="" root="true" />
+      <MenuSubSection title="" root="true">
+        <Stack gap="24">
+          <Hero
+            title="Storage Settings"
+            subtitle="Manage storage providers, quotas, and file policies"
+            icon="settings"
+            action="Connect"
+          />
+          <Table endpoint="/storages">
+            <Column key="name" label="Provider" content="{name}" />
+            <Column key="endpoint_url" label="Endpoint" content="{endpoint_url}" />
+            <Column key="region_name" label="Region" content="{region_name}" />
+            <Column key="access_key_id" label="Access key" content="{access_key_id}" />
+          </Table>
+          <Card>
+            <CardContent>
+              <P className="text-sm text-muted-foreground">
+                Connected entries represent shared object storage providers. Applications can link dedicated buckets and
+                file policies to one of these providers.
+              </P>
+            </CardContent>
+          </Card>
+        </Stack>
+      </MenuSubSection>
     </MenuSection>
+
     <MenuSection title="Compute" icon="cpu">
-      <MenuSubSection title="" root="true" />
+      <MenuSubSection title="" root="true">
+        <Hero
+          title="Compute Settings"
+          subtitle="Configure compute runtimes, registries, and quotas"
+          icon="cpu"
+          action="Connect"
+        />
+      </MenuSubSection>
     </MenuSection>
+
     <MenuSection title="Logging" icon="file-text">
-      <MenuSubSection title="" root="true" />
+      <MenuSubSection title="" root="true">
+        <Hero title="Logging Setup" icon="settings" />
+      </MenuSubSection>
     </MenuSection>
+
     <MenuSection title="Integrations" icon="unplug">
-      <MenuSubSection title="" root="true" />
+      <MenuSubSection title="" root="true">
+        <Hero
+          title="Integration Settings"
+          subtitle="Connect external services and manage integration access"
+          icon="settings"
+        />
+      </MenuSubSection>
     </MenuSection>
   </Menu>
 </Page>

@@ -1,5 +1,10 @@
 <Page name="People" icon="users">
-  <Hero title="People" icon="users" action="Add Person" />
+  <Hero
+    title="People"
+    subtitle="Invite teammates and collaborators to start working together."
+    icon="users"
+    action="Add Person"
+  />
   <Table endpoint="/users">
     <Column key="name" label="Name" content="{name}" detail="{email}" bold="true" />
   </Table>
