@@ -20,17 +20,21 @@ def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
         body = await handler(*args, **kwargs)
 
         if is_page:
-            if isinstance(body, (dict, list)):
-                payload = body
+            if isinstance(body, str):
+                return Response(
+                    content=body,
+                    media_type="text/xml",
+                )
+            elif isinstance(body, (dict, list)):
+                return Response(
+                    content=json.dumps(body),
+                    media_type="application/json",
+                )
             else:
                 return PlainTextResponse(
-                    "Invalid response type. Page routes must return an XML page schema dict/list.",
+                    "Invalid response type. Page routes must return an XML string, dict, or list.",
                     status_code=500,
                 )
-            return Response(
-                content=json.dumps(payload),
-                media_type="application/json",
-            )
 
         return _format_response(handler, body)
 
