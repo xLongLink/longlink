@@ -6,9 +6,9 @@ It is designed to integrate directly with the application model: each applicatio
 
 The SDK handles:
 
-- model definition using SQLAlchemy
-- schema evolution through Alembic-based migrations
-- automatic migration management via CLI tooling
+* model definition using SQLAlchemy
+* schema evolution through Alembic-based migrations
+* automatic migration management via CLI tooling
 
 Migrations are generated and applied through built-in commands, such as:
 
@@ -20,6 +20,6 @@ This ensures that database schemas remain **synchronized with application logic*
 
 The result is a database layer that is:
 
-- tightly integrated with application logic
-- versioned and reproducible through migrations
-- managed through a minimal, standardized interface
+* tightly integrated with application logic
+* versioned and reproducible through migrations
+* managed through a minimal, standardized interface
