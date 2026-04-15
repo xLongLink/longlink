@@ -1,5 +1,9 @@
 <Page name="Spaces" icon="folder-kanban">
-  <Hero title="Spaces" icon="folder-kanban" />
+  <Hero
+    title="Spaces"
+    subtitle="Spaces help organize work into focused environments for your organization."
+    icon="folder-kanban"
+  />
   <Table endpoint="/apps?type=space">
     <Column key="name" label="Name" content="{name}" link="/{id}" />
     <Column key="url" label="URL" content="{url}" />
