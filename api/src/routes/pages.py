@@ -1,10 +1,8 @@
-from pathlib import Path
 import re
-
 from fastapi import HTTPException
-from fastapi.responses import Response
-
+from pathlib import Path
 from src.router import router
+from fastapi.responses import Response
 
 PAGES_DIR = Path(__file__).resolve().parents[2] / 'pages'
 PAGE_NAME_PATTERN = re.compile(r'^[a-z0-9-]+$')
