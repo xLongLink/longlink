@@ -1,188 +1,57 @@
 # Contributing to LongLink
 
-This document defines how to contribute to the LongLink project. The goal is to maintain architectural consistency, enforce platform principles, and ensure long-term scalability.
+Thanks for contributing.
 
-## Guiding Principles
+This guide explains the essentials so you can move quickly without breaking the platform model.
 
-All contributions must respect the core design constraints:
+## Before you start
 
-1. **Control plane owns infrastructure concerns**
-   - Authentication, permissions, storage, logging, execution policies
+- Read `AGENTS.md` in the folder you are changing.
+- Keep the current architecture direction.
+- Prefer the current development model over backward compatibility.
 
-2. **Applications contain only business logic**
-   - No custom auth, no custom storage policies
+## Project map
 
-3. **Deterministic execution**
-   - All state transitions occur server-side
+- `api/` → Control plane (auth, permissions, lifecycle, orchestration)
+- `sdk/` → Python SDK for application development
+- `web/` → Frontend runtime and control-plane UI integration
+- `xml/` → ReactXML runtime (XML to React rendering)
+- `docs/` → Platform and SDK documentation
 
-4. **Single source of truth**
-   - Actions define logic, UI, and API simultaneously
+Each area has its own local `CONTRIBUTING.md` with focused rules.
 
-## Repository Structure
-
-- `api/` → Control plane (FastAPI)
-- `sdk/` → Python SDK
-- `web/` → Frontend renderer
-
-## Development Workflow
-
-### 1. Setup Environment
+## Quick setup
 
 ```bash
 uv venv
 source .venv/bin/activate
 uv pip install -e './api[dev]'
 uv pip install -e './sdk'
-```
-
-Frontend:
-
-```bash
 bun --cwd=web install
-bun --cwd=web dev
 ```
 
-### 1.1 Local infrastructure connection parameters
+## Working style
 
-After running `make up`, local dependencies are available from `dev/compose.yml` (PostgreSQL + MinIO) and from the `k3d` cluster created by the Makefile (`compute`). Use the following values when connecting providers in the settings screens.
+- Keep changes small and clear.
+- Remove obsolete code when replacing old flows.
+- Keep responsibilities separated:
+  - Control plane handles governance/infrastructure concerns.
+  - Applications handle business logic.
+  - Web and XML layers render UI/runtime behavior.
 
-#### Database (PostgreSQL)
+## Formatting
 
-Use these values in **Settings → Database → Connect database server**:
-
-- **Server name**: `local-postgres` (or any label you prefer)
-- **Host**: `localhost`
-- **Port**: `15432`
-- **Username**: `admin`
-- **Password**: `admin`
-- **Maintenance database** (API default): `postgres`
-
-> Docker service source: `postgres` in `dev/compose.yml` with `POSTGRES_USER=admin`, `POSTGRES_PASSWORD=admin`, and port mapping `15432:5432`.
-
-#### Storage (MinIO / S3-compatible)
-
-Use these values in **Settings → Storage → Connect storage provider**:
-
-- **Provider name**: `local-minio` (or any label you prefer)
-- **Endpoint URL**: `http://localhost:19000`
-- **Region**: `us-east-1` (recommended; optional in UI)
-- **Access key**: `admin`
-- **Secret key**: `admin`
-
-> Docker service source: `minio` in `dev/compose.yml` with `MINIO_ROOT_USER=admin`, `MINIO_ROOT_PASSWORD=admin`, and port mapping `19000:9000`.
-
-#### Compute (k3d cluster)
-
-`make up` creates a local cluster named `compute` with Kubernetes API exposed on port `6550`.
-
-- **Cluster name**: `compute`
-- **Kubernetes API server URL**: `https://localhost:6550`
-- **Default namespace**: `default`
-- **TLS verification**: disable if your local certificate is not trusted (`verify_ssl=false`)
-
-If you need exact kubeconfig-auth data for manual API calls, run:
+When you are done:
 
 ```bash
-k3d kubeconfig get compute
+make format
 ```
 
-Use the credentials/certificates from that kubeconfig output.
+## Pull requests
 
-### 2. Branching
+A good PR should:
 
-- `main` → stable
-- `dev` → integration
-- feature branches → `feature/<name>`
-
-### 3. Code Standards
-
-#### Python
-
-- Use type hints everywhere
-- Follow PEP8
-- Prefer explicit over implicit
-- No hidden side effects
-
-#### API (Control Plane)
-
-- Must enforce permissions centrally
-- No business logic leakage from apps
-
-#### SDK
-
-- Must remain opinionated and constrained
-- Avoid introducing flexibility that breaks consistency
-
-#### Web
-
-- Pure renderer
-- No business logic in frontend
-
-## Actions Design Rules
-
-When adding new functionality:
-
-- Must be defined as an **action**
-
-- Must be:
-  - Typed
-  - Stateless (unless explicitly part of workflow)
-  - Deterministic
-
-- Must automatically support:
-  - UI rendering
-  - API access
-  - SDK invocation
-
-## Database Changes
-
-- Use migration system via CLI:
-
-```bash
-longlink db migrate
-```
-
-- No manual schema drift
-- All models must be defined in SDK
-
-## Testing
-
-- Unit tests for:
-  - SDK logic
-  - Control plane services
-
-- Integration tests for:
-  - Action execution
-  - Permission enforcement
-
-## Pull Requests
-
-Each PR must:
-
-- Clearly state purpose
-- Explain architectural impact
-- Avoid breaking platform invariants
-- Include tests (if applicable)
-
-## What NOT to Do
-
-- ❌ Add authentication inside apps
-- ❌ Introduce client-side logic
-- ❌ Duplicate infrastructure concerns
-- ❌ Bypass control plane
-- ❌ Add unstructured APIs outside actions
-
-## Open Areas
-
-- Permissions system design
-- Workflow engine implementation
-- Application lifecycle management
-- UI schema standardization
-
-## Communication
-
-Be precise. Avoid ambiguity. All design discussions should be grounded in system constraints.
-
-## License
-
-[TODO]
+- explain what changed
+- explain why it changed
+- mention any architectural impact
+- include validation steps you ran
