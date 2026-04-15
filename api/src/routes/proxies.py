@@ -59,6 +59,7 @@ async def proxy_path(req: Request, app_name: str, full_path: str):
             json_payload = await req.json()
 
         upstream = await apps.request(app.id, req.method.upper(), path, params=query_params, json=json_payload)
-        return Response(content=upstream.content, status_code=upstream.status_code)
+        content_type = upstream.headers.get('content-type', 'text/plain')
+        return Response(content=upstream.content, status_code=upstream.status_code, media_type=content_type)
     except httpx.RequestError:
         raise HTTPException(status_code=502, detail='Upstream request failed')

@@ -3,10 +3,11 @@ from typing import Any
 from pathlib import Path
 
 
-def load_page_schema_from_xml(path: str | Path) -> dict[str, Any]:
-    document = xmltodict.parse(Path(path).read_text(encoding="utf-8"))
+def load_page_schema_from_xml(path: str | Path) -> str:
+    content = Path(path).read_text(encoding="utf-8")
+    document = xmltodict.parse(content)
     _get_page_root(document)
-    return document
+    return content
 
 
 def load_page_metadata_from_xml(path: str | Path) -> dict[str, str]:

@@ -18,7 +18,7 @@ import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/longli
 import Textarea from '@/longlink/Textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/longlink/Tabs';
 import { Blockquote, Code, H1, H2, H3, H4, Li, P, Ul } from '@/longlink/Typography';
-import { createRegistry } from '@/rendering';
+import { createRegistry } from 'reactxml';
 
 export const Layout = {
     Hero,
