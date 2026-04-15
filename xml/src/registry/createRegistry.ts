@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import { For } from '../primitives/For';
+import { Grid } from '../primitives/Grid';
 import { Page } from '../primitives/Page';
 import { Query } from '../primitives/Query';
 import { State } from '../primitives/State';
@@ -10,6 +11,7 @@ const defaultPrimitives = {
     Query,
     State,
     For,
+    Grid,
 } satisfies RegistryShape;
 
 export function createRegistry<const TRegistry extends RegistryShape>(

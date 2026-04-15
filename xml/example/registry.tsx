@@ -1,4 +1,5 @@
 import { action, createRegistry } from '../src';
+import { Grid } from '../src';
 
 function Section(props: React.HTMLAttributes<HTMLElement>) {
     return (
@@ -29,11 +30,11 @@ function Card(props: React.HTMLAttributes<HTMLDivElement>) {
                 border: '1px solid #d4d4d8',
                 borderRadius: '0.75rem',
                 padding: '1rem',
-                display: 'grid',
-                gap: '0.5rem',
                 ...props.style,
             }}
-        />
+        >
+            <Grid gap="0.5rem">{props.children}</Grid>
+        </article>
     );
 }
 
