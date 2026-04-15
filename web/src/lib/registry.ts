@@ -22,7 +22,7 @@ import Separator from '@/longlink/Separator';
 import Slider from '@/longlink/Slider';
 import Stack from '@/longlink/Stack';
 import Switch from '@/longlink/Switch';
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/longlink/Table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/longlink/Table';
 import Textarea from '@/longlink/Textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/longlink/Tabs';
 import { Blockquote, Code, H1, H2, H3, H4, Li, P, Ul } from '@/longlink/Typography';
@@ -73,6 +73,7 @@ export const Components = {
     Slider,
     Stack,
     Switch,
+    Table,
     TableBody,
     TableCell,
     TableHead,
