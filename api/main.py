@@ -56,6 +56,7 @@ import src.routes.compute
 import src.routes.storage
 import src.routes.database
 import src.routes.settings
+import src.routes.pages
 
 app.include_router(router)
 
