@@ -37,13 +37,7 @@ type StackProps = {
     justify?: string;
 };
 
-export function Stack({
-    align = 'stretch',
-    children,
-    direction = 'column',
-    gap = 16,
-    justify = 'start',
-}: StackProps) {
+export function Stack({ align = 'stretch', children, direction = 'column', gap = 16, justify = 'start' }: StackProps) {
     return createElement(
         'div',
         {

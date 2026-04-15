@@ -2,7 +2,15 @@ import { Button } from '@/longlink/Button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/longlink/Card';
 import Checkbox from '@/longlink/Checkbox';
 import Columns, { Column } from '@/longlink/Columns';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/longlink/Dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/longlink/Dialog';
 import Hero from '@/longlink/Hero';
 import { Icon } from '@/longlink/Icon';
 import Input from '@/longlink/Input';
