@@ -34,6 +34,11 @@ function convertNode(entry: PreserveOrderNode): ASTNode | null {
     const nodeName = Object.keys(entry).find((key) => key !== ATTRIBUTES_NODE_NAME);
     if (!nodeName) return null;
 
+    // Ignore XML declarations/directives (e.g. <!doctype ...>, <?xml ...?>)
+    if (nodeName.startsWith('!') || nodeName.startsWith('?')) {
+        return null;
+    }
+
     /* Text Node */
     if (nodeName === TEXT_NODE_NAME) {
         const text = entry[TEXT_NODE_NAME];
