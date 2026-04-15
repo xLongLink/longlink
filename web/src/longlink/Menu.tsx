@@ -2,16 +2,16 @@ import {
     Children,
     Fragment,
     isValidElement,
-    lazy,
     useEffect,
     useMemo,
     useState,
     type ReactElement,
-    type LazyExoticComponent,
     type ReactNode,
 } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { AppWindow } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
+import { Icon } from '@/longlink/Icon';
 
 // import { getIconByName } from '@/components/Icon';
 
@@ -62,22 +62,9 @@ type NormalizedSection = {
     subSections: NormalizedSubSection[];
 };
 
-type IconModule = {
-    default: LucideIcon;
-};
-
-const iconImporters = import.meta.glob<IconModule>('/node_modules/lucide-react/dist/esm/icons/*.js');
-const lazyIcons: Record<string, LazyExoticComponent<LucideIcon>> = {};
-
-for (const path in iconImporters) {
-    const match = path.match(/icons\/(.*)\.js$/);
-
-    if (!match) {
-        continue;
-    }
-
-    lazyIcons[match[1]] = lazy(iconImporters[path]);
-}
+const MenuSectionIcon = ({ iconName, ...props }: { iconName: string } & LucideProps) => (
+    <Icon name={iconName} fallback="app-window" {...props} />
+);
 
 function flattenParsedProps<T extends object>(props: T & { props?: T }): T {
     if (!props.props) {
@@ -98,8 +85,13 @@ function resolveSectionIcon(props: ParsedMenuSectionProps): LucideIcon {
     if (!iconName) {
         return AppWindow;
     }
+    const resolvedIconName = iconName;
 
-    return (lazyIcons[iconName] ?? AppWindow) as LucideIcon;
+    function ResolvedMenuSectionIcon(iconProps: LucideProps) {
+        return <MenuSectionIcon iconName={resolvedIconName} {...iconProps} />;
+    }
+
+    return ResolvedMenuSectionIcon as LucideIcon;
 }
 
 function resolveSubSectionIsRoot(props: ParsedMenuSubSectionProps): boolean {
