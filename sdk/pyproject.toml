@@ -42,15 +42,13 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://example.com"
-Documentation = "https://readthedocs.org"
-Repository = "https://github.com/me/spam.git"
-"Bug Tracker" = "https://github.com/me/spam/issues"
-Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+Homepage = "https://www.longlink.dev"
+Documentation = "https://docs.longlink.dev"
+Repository = "https://github.com/xLongLink/longlink.git"
+"Bug Tracker" = "https://github.com/xLongLink/longlink/issues"
 
 [project.scripts]
 longlink = "longlink.__main__:main"
-
 
 [tool.isort]
 from_first = false
