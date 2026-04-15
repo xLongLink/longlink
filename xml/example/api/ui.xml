@@ -7,35 +7,34 @@
   <Query id="users" path="http://localhost:8000/users">
     <Section>
       <Title>Submit With action()</Title>
-      <For each="users" as="user">
-        <Card>
-          <Title>{user.name}</Title>
-          <Text>@{user.username}</Text>
-          <Text>Role: {user.role}</Text>
-          <Text>Status: {user.active ? 'Active' : 'Disabled'}</Text>
-          <Button
-            path="http://localhost:8000/users/{user.id}"
-            method="PATCH"
-            body="{ role: 'Maintainer', active: !user.active }"
-            invalidate="users"
-            if="user.role === 'Admin'"
-          >
-            Revoke admin + toggle status
-          </Button>
-          <Button
-            path="http://localhost:8000/users/{user.id}"
-            method="PATCH"
-            body="{ role: 'Admin', active: !user.active }"
-            invalidate="users"
-            if="user.role === 'Maintainer'"
-          >
-            Promote to admin + toggle status
-          </Button>
-        </Card>
-      </For>
+      <Grid columns="repeat(auto-fit, minmax(18rem, 1fr))" gap="1rem">
+        <For each="users" as="user">
+          <Card>
+            <Title>{user.name}</Title>
+            <Text>@{user.username}</Text>
+            <Text>Role: {user.role}</Text>
+            <Text>Status: {user.active ? 'Active' : 'Disabled'}</Text>
+            <Button
+              path="http://localhost:8000/users/{user.id}"
+              method="PATCH"
+              body="{ role: 'Maintainer', active: !user.active }"
+              invalidate="users"
+              if="user.role === 'Admin'"
+            >
+              Revoke admin + toggle status
+            </Button>
+            <Button
+              path="http://localhost:8000/users/{user.id}"
+              method="PATCH"
+              body="{ role: 'Admin', active: !user.active }"
+              invalidate="users"
+              if="user.role === 'Maintainer'"
+            >
+              Promote to admin + toggle status
+            </Button>
+          </Card>
+        </For>
+      </Grid>
     </Section>
   </Query>
-  <Section>
-    <Text>The user list refreshes after each request through query invalidation.</Text>
-  </Section>
 </Page>
