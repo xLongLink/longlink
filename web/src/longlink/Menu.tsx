@@ -103,13 +103,26 @@ function collectElementsOfType<T extends object>(
     component: (props: T) => ReactElement | null
 ): ReactElement<T>[] {
     const elements: ReactElement<T>[] = [];
+    const typedComponent = component as { displayName?: string; name?: string };
+    const componentName = typedComponent.displayName ?? typedComponent.name;
+
+    const isMatchingComponent = (child: ReactElement) => {
+        if (child.type === component) {
+            return true;
+        }
+
+        const childType = child.type as { displayName?: string; name?: string };
+        const childTypeName = childType.displayName ?? childType.name;
+
+        return Boolean(componentName && childTypeName && childTypeName === componentName);
+    };
 
     for (const child of Children.toArray(children)) {
         if (!isValidElement(child)) {
             continue;
         }
 
-        if (child.type === component) {
+        if (isMatchingComponent(child)) {
             elements.push(child as ReactElement<T>);
             continue;
         }
