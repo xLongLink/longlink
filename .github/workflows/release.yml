@@ -89,10 +89,35 @@ jobs:
 
           echo "value=$SDK_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Build the distribution
+      - name: Set SDK version
         working-directory: sdk
         env:
-          LONG_LINK_VERSION: ${{ steps.sdk_version.outputs.value }}
+          SDK_VERSION: ${{ steps.sdk_version.outputs.value }}
+        run: |
+          python - <<'PYTHON'
+          from pathlib import Path
+          import os
+          import tomllib
+
+          version = os.environ["SDK_VERSION"]
+          pyproject_path = Path("pyproject.toml")
+          data = tomllib.loads(pyproject_path.read_text())
+          old_version = data["project"]["version"]
+
+          if old_version == version:
+              raise SystemExit("SDK version is already set.")
+
+          pyproject_path.write_text(
+              pyproject_path.read_text().replace(
+                  f'version = "{old_version}"',
+                  f'version = "{version}"',
+                  1,
+              )
+          )
+          PYTHON
+
+      - name: Build the distribution
+        working-directory: sdk
         run: python -m build
 
       - name: Publish to PyPI (OIDC)
