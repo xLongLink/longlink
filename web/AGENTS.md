@@ -11,10 +11,10 @@ You are working on a vite tailwind shadcn project.
 ```
 web/
 ├── src/
-│   ├── components/     # Shared UI components
-│   ├── hooks/         # Custom React hooks
-│   ├── libs/          # Utility libraries (API, logging)
-│   ├── longlink/      # LongLink integration
+│   ├── components/   # Shared UI components
+│   ├── hooks/        # Custom React hooks
+│   ├── libs/         # Utility libraries (API, logging)
+│   ├── longlink/     # LongLink integration
 │   ├── pages/        # Page definitions
 │   ├── ui/           # shadcn/ui components
 │   ├── xml/          # ReactXML runtime
