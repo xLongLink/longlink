@@ -6,7 +6,6 @@ import Layout from './Layout';
 import Longlink from './pages/org/Longlink';
 import OrganizationPage from './pages/org/OrganizationPage';
 import Login from './pages/user/Login';
-import Profile from './pages/user/Profile';
 import NotFound from './pages/NotFound';
 import SdkLayout from './sdk/Layout';
 import SdkLonglink from './sdk/Longlink';
@@ -57,7 +56,7 @@ const router = createBrowserRouter([
     {
         path: '/profile',
         element: withAuth(<Layout />),
-        children: [{ index: true, element: <Profile /> }],
+        children: [{ index: true, element: <OrganizationPage page="profile" /> }],
     },
     { path: '*', element: withAuth(<NotFound />) },
 ]);
