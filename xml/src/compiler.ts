@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
-import type { ASTNode } from './types';
+import type { ASTNode, PreserveOrderNode } from './types';
 
 
 const TEXT_NODE_NAME = '#text';
@@ -22,8 +22,6 @@ const parser = new XMLParser({
     trimValues: false,
     ignoreDeclaration: true,
 });
-
-type PreserveOrderNode = Record<string, any>;
 
 
 /**

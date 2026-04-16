@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, MouseEvent } from 'react';
 
 
 /** A single node in the XML abstract syntax tree produced by the compiler. */
@@ -31,3 +31,33 @@ export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<P
 
 /** A map of component name → RegistryComponent used to resolve XML tags. */
 export type RegistryShape = Record<string, RegistryComponent<any>>;
+
+/** Raw output shape from fast-xml-parser when preserveOrder is enabled. */
+export type PreserveOrderNode = Record<string, any>;
+
+/** A node or array of nodes that can be rendered by renderNode. */
+export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
+
+/** State provided by RuntimeProvider to the render tree. */
+export type RuntimeState = {
+    node: ASTNode;
+    ctx: ExecutionContext;
+    registry: RegistryShape;
+};
+
+/** Handler for action component clicks. */
+export type ActionHandler = (event: MouseEvent<any>) => Promise<void>;
+
+/** Props accepted by the action HOC. */
+export type ActionProps = {
+    path?: string;
+    method?: string;
+    body?: unknown;
+    invalidate?: string | string[];
+};
+
+/** Props injected by the action HOC into the wrapped component. */
+export type ActionComponentProps = {
+    action: ActionHandler;
+    pending: boolean;
+};

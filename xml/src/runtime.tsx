@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { renderNode } from './renderers';
-import type { ASTNode, ExecutionContext, RegistryShape } from './types';
+import type { ASTNode, ExecutionContext, RegistryShape, RuntimeState } from './types';
 
 
 /**
@@ -142,12 +142,6 @@ function setDeep(obj: any, path: string[], value: any): any {
 // ---------------------------------------------------------------------------
 // useRuntime / RuntimeProvider / RuntimeChildren
 // ---------------------------------------------------------------------------
-
-type RuntimeState = {
-    node: ASTNode;
-    ctx: ExecutionContext;
-    registry: RegistryShape;
-};
 
 const RuntimeContext = createContext<RuntimeState | null>(null);
 

@@ -1,8 +1,6 @@
 import { Fragment, createElement, type ReactNode } from 'react';
 import { interpolate, resolveCondition, resolveSet, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
-import type { ASTNode, ExecutionContext, RegistryShape } from './types';
-
-type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
+import type { ASTNode, ExecutionContext, RegistryShape, RenderableASTNode } from './types';
 
 
 /**
