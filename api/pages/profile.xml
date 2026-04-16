@@ -1,0 +1,111 @@
+<Page name="Profile" icon="user-round">
+  <Menu>
+    <MenuSection title="Profile" icon="user-round">
+      <MenuSubSection title="" root="true">
+        <Stack gap="24">
+          <Hero
+            title="General settings"
+            subtitle="Update your public profile details and avatar"
+            icon="user-round"
+          />
+          <Columns gap="16">
+            <Column span="6">
+              <Input
+                name="PROFILE_NAME"
+                label="Name"
+                placeholder="Your full name"
+                submit="/settings/PROFILE_NAME"
+              />
+            </Column>
+            <Column span="6">
+              <Input
+                name="PROFILE_EMAIL"
+                label="Email"
+                placeholder="you@company.com"
+                submit="/settings/PROFILE_EMAIL"
+              />
+            </Column>
+            <Column span="12">
+              <Input
+                name="PROFILE_AVATAR"
+                label="Avatar URL"
+                placeholder="https://cdn.company.com/avatar.png"
+                submit="/settings/PROFILE_AVATAR"
+              />
+            </Column>
+          </Columns>
+        </Stack>
+      </MenuSubSection>
+    </MenuSection>
+
+    <MenuSection title="Appearance" icon="palette">
+      <MenuSubSection title="" root="true">
+        <Stack gap="24">
+          <Hero
+            title="Appearance preferences"
+            subtitle="Control how LongLink looks and feels on your devices"
+            icon="palette"
+          />
+          <Card>
+            <CardHeader>
+              <CardTitle>Theme</CardTitle>
+              <CardDescription>Choose visual defaults for your workspace.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Switch
+                label="Sync with system"
+                description="Automatically switch between light and dark themes."
+                active="true"
+              />
+              <Switch
+                label="Compact mode"
+                description="Reduce spacing for dense dashboards and tables."
+              />
+            </CardContent>
+          </Card>
+          <Input
+            name="PROFILE_LANGUAGE"
+            label="Display language"
+            placeholder="English (United States)"
+            submit="/settings/PROFILE_LANGUAGE"
+          />
+        </Stack>
+      </MenuSubSection>
+    </MenuSection>
+
+    <MenuSection title="Notifications" icon="bell">
+      <MenuSubSection title="" root="true">
+        <Stack gap="24">
+          <Hero
+            title="Notification preferences"
+            subtitle="Choose how you want to stay informed"
+            icon="bell"
+          />
+          <Card>
+            <CardHeader>
+              <CardTitle>In-app alerts</CardTitle>
+              <CardDescription>Control which events trigger in-app notifications.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Switch
+                label="Mentions and assignments"
+                description="Get notified when you are tagged in conversations or tasks."
+                active="true"
+              />
+              <Switch
+                label="Workflow updates"
+                description="Receive updates when automation status changes."
+              />
+            </CardContent>
+          </Card>
+          <Input
+            name="PROFILE_QUIET_HOURS"
+            label="Notification schedule"
+            placeholder="22:00 - 07:00"
+            submit="/settings/PROFILE_QUIET_HOURS"
+          />
+        </Stack>
+      </MenuSubSection>
+    </MenuSection>
+  </Menu>
+</Page>
