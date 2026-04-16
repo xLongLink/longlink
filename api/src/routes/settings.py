@@ -6,11 +6,6 @@ from src.router import router
 from src.models.settings import SettingSet, SettingSetItem, SettingResponse
 
 
-def _invalid_key_error(error: ValueError) -> HTTPException:
-    """Convert a ValueError to an HTTPException with 400 status."""
-    return HTTPException(status_code=400, detail=str(error))
-
-
 @router.get("/settings")
 async def get_settings(keys: List[str] = Query(...)) -> List[SettingResponse]:
     """Return settings for the given keys."""
@@ -20,7 +15,7 @@ async def get_settings(keys: List[str] = Query(...)) -> List[SettingResponse]:
         try:
             setting = await db.settings.get(key, app_id=None)
         except ValueError as error:
-            raise _invalid_key_error(error) from error
+            return HTTPException(status_code=400, detail=str(error))
 
         if setting is None:
             raise HTTPException(status_code=404, detail=f"Setting '{key}' not found")
@@ -45,7 +40,7 @@ async def set_settings(payload: List[SettingSetItem]) -> List[SettingResponse]:
         try:
             setting = await db.settings.set(item.key, item.value, app_id=None)
         except ValueError as error:
-            raise _invalid_key_error(error) from error
+            raise HTTPException(status_code=400, detail=str(error))
 
         results.append(
             SettingResponse(
@@ -66,7 +61,7 @@ async def get_setting(key: str) -> SettingResponse:
     try:
         setting = await db.settings.get(key, app_id=None)
     except ValueError as error:
-        raise _invalid_key_error(error) from error
+        raise HTTPException(status_code=400, detail=str(error))
 
     if setting is None:
         raise HTTPException(status_code=404, detail=f"Setting '{key}' not found")
@@ -84,7 +79,7 @@ async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
     try:
         setting = await db.settings.set(key, payload.value, app_id=None)
     except ValueError as error:
-        raise _invalid_key_error(error) from error
+        raise HTTPException(status_code=400, detail=str(error))
 
     await apps.org()
 
@@ -101,7 +96,7 @@ async def set_setting(key: str, payload: SettingSet) -> SettingResponse:
     try:
         setting = await db.settings.set(key, payload.value, app_id=None)
     except ValueError as error:
-        raise _invalid_key_error(error) from error
+        raise HTTPException(status_code=400, detail=str(error))
 
     await apps.org()
 

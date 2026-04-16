@@ -11,11 +11,15 @@ type AppMetadata = {
 };
 
 const toPageList = (value: unknown): PageInfo[] => {
+    if (!value) {
+        return [];
+    }
+
     if (Array.isArray(value)) {
         return value as PageInfo[];
     }
 
-    if (value && typeof value === 'object' && 'pages' in value) {
+    if (value && typeof value === 'object' && Array.isArray((value as AppMetadata).pages)) {
         return (value as AppMetadata).pages ?? [];
     }
 
@@ -25,19 +29,17 @@ const toPageList = (value: unknown): PageInfo[] => {
 function OrgNavigation() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { data: pagesResponse, isLoading } = useApiData<PageInfo[] | AppMetadata>('/pages');
+    const { data: pagesResponse, isLoading } = useApiData<PageInfo[] | { pages: PageInfo[] }>('/pages');
 
-    const pageList = isLoading ? [] : toPageList(pagesResponse);
+    const pageList = toPageList(pagesResponse);
 
-    const tabs = isLoading
-        ? []
-        : getAppTabsFromPages(
-              pageList.map((p) => ({
-                  name: p.name,
-                  path: p.path,
-                  icon: p.icon,
-              }))
-          );
+    const tabs = getAppTabsFromPages(
+        pageList.map((p) => ({
+            name: p.name,
+            path: p.path,
+            icon: p.icon,
+        }))
+    );
 
     const activeTabConfig = getActiveTabConfig({
         tabs,
