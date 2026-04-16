@@ -124,9 +124,16 @@ export function resolveSet(target: string, valueExpr: string, ctx: ExecutionCont
 
     /* Return a closure that evaluates the expression and writes to state */
     return () => {
-        const [current, setter] = stateEntry;
+        const [, setter] = stateEntry;
         const newValue = evaluate(valueExpr, ctx);
-        setter(propPath.length === 0 ? newValue : setDeep(current, propPath, newValue));
+
+        if (propPath.length === 0) {
+            setter(newValue);
+            return;
+        }
+
+        // Use functional setter update so multiple set: handlers in one click compose safely.
+        setter((previous: unknown) => setDeep(previous, propPath, newValue));
     };
 }
 
