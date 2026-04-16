@@ -5,7 +5,7 @@ from src.router import router
 from src.models.apps import AppType, AppCreate, AppMetadata, AppResponse
 
 
-@router.get('/apps')
+@router.get("/apps")
 async def list_apps(type: AppType | None = None) -> list[AppResponse]:
     """List registered apps, optionally filtered by type."""
     if type is not None:
@@ -13,20 +13,31 @@ async def list_apps(type: AppType | None = None) -> list[AppResponse]:
     else:
         registered_apps = await db.apps.list()
 
-    return [AppResponse(id=app.id, name=app.name, url=app.url, type=app.type) for app in registered_apps]
+    return [
+        AppResponse(id=app.id, name=app.name, url=app.url, type=app.type)
+        for app in registered_apps
+    ]
 
 
-@router.post('/apps')
+@router.post("/apps")
 async def create_app(payload: AppCreate) -> AppResponse:
-    """Create a new app."""
-    metadata_response = await apps.raw(f'{payload.url.rstrip("/")}/metadata.json', "GET")
+    """Create a new app by fetching its metadata and registering it."""
+    # Fetch app metadata from the provided URL
+    metadata_response = await apps.raw(
+        f"{payload.url.rstrip('/')}/metadata.json", "GET"
+    )
     if not metadata_response.is_success:
-        raise HTTPException( status_code=400, detail=f'Unable to fetch metadata.json ({metadata_response.status_code})')
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unable to fetch metadata.json ({metadata_response.status_code})",
+        )
 
     try:
         metadata = AppMetadata.model_validate(metadata_response.json())
     except ValueError as exc:
-        raise HTTPException(status_code=400,detail='App metadata response is invalid') from exc
+        raise HTTPException(
+            status_code=400, detail="App metadata response is invalid"
+        ) from exc
 
     try:
         app = await db.apps.create(

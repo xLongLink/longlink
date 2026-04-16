@@ -8,6 +8,7 @@ type CheckboxProps = {
     checked?: boolean;
 };
 
+/** Renders a checkbox with label and description. */
 export function Checkbox({ label, description, checked = false }: CheckboxProps) {
     const id = useId();
 

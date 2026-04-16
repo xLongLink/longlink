@@ -8,6 +8,7 @@ type SwitchProps = {
     active?: boolean;
 };
 
+/** Renders a toggle switch with label and description. */
 export function Switch({ label, description, active = false }: SwitchProps) {
     const id = useId();
 

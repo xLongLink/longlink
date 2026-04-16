@@ -20,6 +20,7 @@ type SelectProps = {
     submit?: string;
 };
 
+/** Renders a select dropdown with options and optional submit button. */
 export function Select({ name, label, value, placeholder, description, options, disabled, submit }: SelectProps) {
     const renderControl = () => (
         <UISelect name={name} disabled={disabled} defaultValue={String(value ?? '')}>

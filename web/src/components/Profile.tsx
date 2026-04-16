@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import { useSignOut, useUser } from '@/hooks/use-user';
 
+/** Renders a user profile dropdown with avatar, profile link, and sign out. */
 export function UserProfile() {
     const navigate = useNavigate();
     const { data: user } = useUser();

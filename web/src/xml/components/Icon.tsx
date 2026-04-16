@@ -26,9 +26,7 @@ function resolveLazyIcon(name: string): React.LazyExoticComponent<LucideIcon> | 
     return lazyIcon;
 }
 
-/* 
-    Simple icon component that dynamically imports icons from lucide-react based on the provided name prop.
-*/
+/** Renders an icon by dynamically loading from lucide-react. */
 export function Icon({ name, fallback = 'box', ...props }: IconProps) {
     const Component = resolveLazyIcon(name) ?? resolveLazyIcon(fallback);
 

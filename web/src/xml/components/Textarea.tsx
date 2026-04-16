@@ -7,6 +7,7 @@ type TextareaProps = {
     description?: string;
 };
 
+/** Renders a textarea input with label and description. */
 export function Textarea({ label, placeholder, description }: TextareaProps) {
     return (
         <div className="space-y-2">

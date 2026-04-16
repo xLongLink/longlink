@@ -26,6 +26,7 @@ function normalizeValue(value: SliderValue | undefined, min: number, max: number
     return [min, max];
 }
 
+/** Renders a slider input with label, description, and value display. */
 export function Slider({
     label,
     description,

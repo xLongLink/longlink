@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Navigate } from 'react-router';
 import { useUser } from '@/hooks/use-user';
 
+/** Redirects to /login if user is not authenticated. */
 export function RequireAuth({ children }: { children: ReactElement }) {
     const { data: user, isLoading } = useUser();
 

@@ -84,6 +84,7 @@ function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
     });
 }
 
+/** Renders a menu section container (passthrough). */
 export function MenuSection({ children }: MenuSectionProps) {
     return <>{children}</>;
 }
@@ -92,6 +93,7 @@ export function MenuSubSection({ children }: MenuSubSectionProps) {
     return <>{children}</>;
 }
 
+/** Renders a menu with sections parsed from AST children. */
 export function Menu(_props: MenuProps) {
     const { node, registry, ctx } = useRuntime();
 

@@ -72,6 +72,7 @@ function renderCellRow(cell: ApiTableCell, fallbackBold = false) {
 }
 
 export function buildColumns<T extends object>(columns: ApiTableColumn[]): ColumnDef<T>[] {
+    /** Builds TanStack Table column definitions from API column configs. */
     return columns.map((column) => {
         const align = column.align ?? 'left';
 

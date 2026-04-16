@@ -52,6 +52,7 @@ const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => 
     };
 };
 
+/** Renders a flexible input control with support for text, number, password, textarea, date, and datetime types. */
 export function Input({
     name,
     kind = 'text',

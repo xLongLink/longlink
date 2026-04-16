@@ -6,6 +6,7 @@ type PageProps = {
     children?: ReactNode;
 };
 
+/** Renders a page container that sets the document title and wraps children. */
 export function Page({ title, name, children }: PageProps) {
     const documentTitle = title ?? name;
 
