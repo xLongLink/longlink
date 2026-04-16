@@ -25,12 +25,14 @@ export function Query({ id, path: pathTemplate, children }: { id?: string; path?
     const runtime = useRuntime();
     const { ctx } = runtime;
     const path = interpolate(pathTemplate, ctx);
+    const baseUrl = ctx.baseUrl ?? '';
+    const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
 
     /* Fetch and cache query results via TanStack Query */
     const { data } = useQuery({
-        queryKey: [id, path],
+        queryKey: [id, url],
         queryFn: async () => {
-            const response = await fetch(path);
+            const response = await fetch(url);
             return response.json();
         },
     });

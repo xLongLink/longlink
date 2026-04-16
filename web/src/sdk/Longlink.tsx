@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
-import Render from '@/components/Render';
+import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
 import { getPagesFromResponse } from './pages';
@@ -50,5 +50,7 @@ export default function SdkLonglink() {
         return <div>Unexpected response format for {pageEndpoint}</div>;
     }
 
-    return <Render xml={data} />;
+    const ast = fromXml(data);
+    const ctx = createContext({ baseUrl: '/api' });
+    return <>{renderNode(ast, registry, ctx)}</>;
 }

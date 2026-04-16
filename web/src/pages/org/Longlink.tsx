@@ -1,4 +1,4 @@
-import Render from '@/components/Render';
+import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
 import { resolveXmlPayload } from '@/lib/xml';
@@ -51,5 +51,7 @@ export default function Longlink() {
         return <div>Unexpected response format for {pageEndpoint}</div>;
     }
 
-    return <Render xml={xml} />;
+    const ast = fromXml(xml);
+    const ctx = createContext({ baseUrl: '/api' });
+    return <>{renderNode(ast, registry, ctx)}</>;
 }

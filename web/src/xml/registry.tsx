@@ -46,6 +46,7 @@ export function createContext(initial: Partial<ExecutionContext> = {}): Executio
         state: initial.state ?? {},
         queries: initial.queries ?? {},
         scope: initial.scope ?? {},
+        baseUrl: initial.baseUrl ?? '',
     };
 }
 
@@ -185,6 +186,7 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
     function ActionComponent({ path, method = 'POST', body, invalidate, ...props }: Props) {
         const queryClient = useQueryClient();
         const [pending, setPending] = useState(false);
+        const baseUrl = (props as any)._baseUrl ?? '';
 
         /* Execute request, then invalidate listed query keys on success */
         const handleAction: ActionHandler = async (event) => {
@@ -195,7 +197,8 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
             setPending(true);
 
             try {
-                const response = await fetch(path, buildRequestInit(method.toUpperCase(), body));
+                const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
+                const response = await fetch(url, buildRequestInit(method.toUpperCase(), body));
 
                 if (!response.ok) {
                     throw new Error(`Request failed with status ${response.status}`);

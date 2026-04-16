@@ -1,4 +1,4 @@
-import Render from '@/components/Render';
+import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { useApiData } from '@/hooks/use-data';
 import { resolveXmlPayload } from '@/lib/xml';
 
@@ -23,5 +23,7 @@ export default function OrganizationPage({ page }: OrganizationPageProps) {
         return <div>Unexpected response format for {endpoint}</div>;
     }
 
-    return <Render xml={xml} />;
+    const ast = fromXml(xml);
+    const ctx = createContext({ baseUrl: '/api' });
+    return <>{renderNode(ast, registry, ctx)}</>;
 }

@@ -9,14 +9,9 @@ from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
 
-@router.get('/login')
-async def login_methods() -> list[str]:
-    return ['oidc']
-
-
-@router.get('/login/oidc')
+@router.get("/login/oidc")
 async def login_oidc(request: Request):
-    oidc = cast(StarletteOAuth2App, oauth.create_client('oidc'))
+    oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
 
     try:
         return await oidc.authorize_redirect(
@@ -27,50 +22,50 @@ async def login_oidc(request: Request):
         raise HTTPException(
             status_code=502,
             detail=(
-                'OIDC provider metadata is unavailable. '
-                'Check ENV_OIDC_ISSUER and provider realm configuration.'
+                "OIDC provider metadata is unavailable. "
+                "Check ENV_OIDC_ISSUER and provider realm configuration."
             ),
         ) from exc
 
 
-@router.get('/auth/oidc')
+@router.get("/auth/oidc")
 async def auth_oidc(request: Request):
-    oidc = cast(StarletteOAuth2App, oauth.create_client('oidc'))
+    oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
 
     try:
         token = await oidc.authorize_access_token(request)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=502,
-            detail='OIDC token exchange failed. Verify provider URL and client credentials.',
+            detail="OIDC token exchange failed. Verify provider URL and client credentials.",
         ) from exc
 
-    userinfo = token.get('userinfo')
+    userinfo = token.get("userinfo")
     if userinfo is None:
         userinfo = await oidc.userinfo(token=token)
 
-    subject = str(userinfo['sub'])
-    given_name = userinfo.get('given_name') or 'Example'
-    family_name = userinfo.get('family_name') or 'LongLink'
-    email = userinfo.get('email') or 'example@longlink.dev'
+    subject = str(userinfo["sub"])
+    given_name = userinfo.get("given_name") or "Example"
+    family_name = userinfo.get("family_name") or "LongLink"
+    email = userinfo.get("email") or "example@longlink.dev"
     name = (
-        userinfo.get('name')
-        or userinfo.get('preferred_username')
-        or f'{given_name} {family_name}'
+        userinfo.get("name")
+        or userinfo.get("preferred_username")
+        or f"{given_name} {family_name}"
     )
 
     user = await db.users.create_or_update_oidc_user(
         oidc_subject=subject,
         email=email,
         name=name,
-        avatar=userinfo.get('picture'),
+        avatar=userinfo.get("picture"),
     )
 
-    request.session['userid'] = user.id
+    request.session["userid"] = user.id
     return RedirectResponse(env.URL)
 
 
-@router.get('/logout')
+@router.get("/logout")
 async def logout(request: Request):
     request.session.clear()
-    return {'ok': True}
+    return {"ok": True}

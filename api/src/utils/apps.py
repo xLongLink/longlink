@@ -2,9 +2,8 @@ import httpx
 import src.db as db
 import asyncio
 from typing import Any, Literal
-from src.organization import organization_settings_payload
 
-HttpMethod = Literal['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
+HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
 _lock = asyncio.Lock()
 _clients: dict[str, httpx.AsyncClient] = {}
 
@@ -15,21 +14,35 @@ async def close():
     _clients.clear()
 
 
-async def raw(url: str, method: HttpMethod = 'GET', headers: dict[str, str] | None = None, params: dict[str, str] | None = None, json: dict[str, Any] | None = None) -> httpx.Response:
+async def raw(
+    url: str,
+    method: HttpMethod = "GET",
+    headers: dict[str, str] | None = None,
+    params: dict[str, str] | None = None,
+    json: dict[str, Any] | None = None,
+) -> httpx.Response:
     """Make a raw HTTP request. This can be used to call an app before it's registered into the system, for the metadata fetching for example."""
     async with httpx.AsyncClient(timeout=30.0) as client:
-        return await client.request(method=method, url=url, headers=headers, params=params, json=json)
+        return await client.request(
+            method=method, url=url, headers=headers, params=params, json=json
+        )
 
 
-async def request(uuid: str, method: HttpMethod, url: str, params: dict[str, str] | None = None, json: dict[str, Any] | None = None) -> httpx.Response:
+async def request(
+    uuid: str,
+    method: HttpMethod,
+    url: str,
+    params: dict[str, str] | None = None,
+    json: dict[str, Any] | None = None,
+) -> httpx.Response:
     """Make a request to an app. This will automatically handle authentication and connection pooling."""
     client = _clients.get(uuid)
     if client is None:
         async with _lock:
             app = await db.apps.get_by_uuid(uuid)
             if app is None:
-                raise ValueError('App not found')
-        
+                raise ValueError("App not found")
+
             client = httpx.AsyncClient(
                 base_url=app.url,
                 headers={"Authorization": f"Bearer {app.token}"},
@@ -42,33 +55,49 @@ async def request(uuid: str, method: HttpMethod, url: str, params: dict[str, str
             )
 
             _clients[uuid] = client
-    
+
     return await client.request(method=method, url=url, params=params, json=json)
+
 
 # Convenience wrappers
 async def get(uuid: str, url: str, params: dict[str, str] | None = None):
     """Make a GET request to an app. Used to retrieve resources."""
-    return await request(uuid, 'GET', url, params=params)
+    return await request(uuid, "GET", url, params=params)
 
 
-async def post( uuid: str, url: str, params: dict[str, str] | None = None, json: dict[str, Any] | None = None):
+async def post(
+    uuid: str,
+    url: str,
+    params: dict[str, str] | None = None,
+    json: dict[str, Any] | None = None,
+):
     """Make a POST request to an app. Used to create resources."""
-    return await request(uuid, 'POST', url, params=params, json=json)
+    return await request(uuid, "POST", url, params=params, json=json)
 
 
-async def put(uuid: str, url: str, params: dict[str, str] | None = None, json: dict[str, Any] | None = None):
+async def put(
+    uuid: str,
+    url: str,
+    params: dict[str, str] | None = None,
+    json: dict[str, Any] | None = None,
+):
     """Make a PUT request to an app. Used to update/replace resources. (full replace)"""
-    return await request(uuid, 'PUT', url, params=params, json=json)
+    return await request(uuid, "PUT", url, params=params, json=json)
 
 
-async def patch( uuid: str, url: str, params: dict[str, str] | None = None, json: dict[str, Any] | None = None):
+async def patch(
+    uuid: str,
+    url: str,
+    params: dict[str, str] | None = None,
+    json: dict[str, Any] | None = None,
+):
     """Make a PATCH request to an app. Used to partially update resources. (partial replace)"""
-    return await request(uuid, 'PATCH', url, params=params, json=json)
+    return await request(uuid, "PATCH", url, params=params, json=json)
 
 
-async def delete(uuid: str, url: str, params: dict[str, str] | None = None ):
+async def delete(uuid: str, url: str, params: dict[str, str] | None = None):
     """Make a DELETE request to an app. Used to delete resources."""
-    return await request(uuid, 'DELETE', url, params=params)
+    return await request(uuid, "DELETE", url, params=params)
 
 
 # async def head( uuid: str, url: str, params: dict[str, str] | None = None):
@@ -83,16 +112,16 @@ async def delete(uuid: str, url: str, params: dict[str, str] | None = None ):
 
 async def org(uuid: str | None = None):
     """Update the organization settings for the app with the given uuid, or all apps if uuid is None."""
-    payload = await organization_settings_payload()
+    payload = await db.settings.get_organization()
 
     if uuid is not None:
         app = await db.apps.get_by_uuid(uuid)
         if app is None:
-            raise ValueError('App not found')
+            raise ValueError("App not found")
 
-        await raw(f'{app.url.rstrip("/")}/organization', method='PUT', json=payload)
+        await raw(f"{app.url.rstrip('/')}/organization", method="PUT", json=payload)
         return
 
     registered_apps = await db.apps.list()
     for app in registered_apps:
-        await raw(f'{app.url.rstrip("/")}/organization', method='PUT', json=payload)
+        await raw(f"{app.url.rstrip('/')}/organization", method="PUT", json=payload)
