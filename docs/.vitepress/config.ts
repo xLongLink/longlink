@@ -91,6 +91,13 @@ export default defineConfig({
             ]
           },
           {
+            text: 'Environments',
+            collapsed: true,
+            items: [
+              { text: 'Introduction', link: '/sdk/environments/' }
+            ]
+          },
+          {
             text: 'Database',
             collapsed: true,
             items: [
