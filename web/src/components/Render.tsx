@@ -1,4 +1,4 @@
-import { fromXml, renderNode, createContext } from 'reactxml';
+import { fromXml, renderNode, createContext } from '@/xml';
 import { registry } from '@/lib/registry';
 
 type RenderProps = {

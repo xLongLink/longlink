@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { interpolate, RuntimeProvider, useRuntime } from '../runtime';
 
-
 /**
  * Fetches data via TanStack Query and exposes the result to descendants.
  *
