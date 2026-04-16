@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { interpolate } from '../runtime/interpolate';
-import { RuntimeProvider, useRuntime } from '../runtime/useRuntime';
+import { interpolate, RuntimeProvider, useRuntime } from '../runtime';
 
 export function Query({ id, path: pathTemplate, children }: { id?: string; path?: string; children?: ReactNode }) {
     if (!id) {

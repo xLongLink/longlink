@@ -1,0 +1,4 @@
+[test]
+# Preload the DOM environment so document, window, HTMLElement etc. are available
+# in all test files via happy-dom's global registrator.
+preload = ["./tests/setup.ts"]

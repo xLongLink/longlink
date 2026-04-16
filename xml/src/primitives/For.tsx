@@ -1,6 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { evaluate } from '../runtime/evaluate';
-import { RuntimeProvider, useRuntime } from '../runtime/useRuntime';
+import { evaluate, RuntimeProvider, useRuntime } from '../runtime';
 
 export function For({ each, as, children }: { each?: string; as?: string; children?: ReactNode }) {
     if (!each) {

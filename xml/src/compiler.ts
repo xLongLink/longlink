@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
-import type { ASTNode } from '../types';
+import type { ASTNode } from './types';
 
 const TEXT_NODE_NAME = '#text';
 const ATTRIBUTES_NODE_NAME = ':@';
@@ -34,12 +34,10 @@ function convertNode(entry: PreserveOrderNode): ASTNode | null {
     const nodeName = Object.keys(entry).find((key) => key !== ATTRIBUTES_NODE_NAME);
     if (!nodeName) return null;
 
-    // Ignore XML declarations/directives (e.g. <!doctype ...>, <?xml ...?>)
     if (nodeName.startsWith('!') || nodeName.startsWith('?')) {
         return null;
     }
 
-    /* Text Node */
     if (nodeName === TEXT_NODE_NAME) {
         const text = entry[TEXT_NODE_NAME];
 
@@ -50,7 +48,6 @@ function convertNode(entry: PreserveOrderNode): ASTNode | null {
         return null;
     }
 
-    /* Element Node */
     const rawAttributes = entry[ATTRIBUTES_NODE_NAME];
     const params: Record<string, string> = {};
     if (rawAttributes && typeof rawAttributes === 'object') {
@@ -76,18 +73,4 @@ function convertNode(entry: PreserveOrderNode): ASTNode | null {
         ...(Object.keys(params).length > 0 && { params }),
         ...(children.length > 0 && { children }),
     };
-}
-
-if (import.meta.main) {
-    const sampleXML = `
-        <note id="1">
-            <to>User</to>
-            <from>System</from>
-            <message>Hello World</message>
-        </note>
-    `;
-
-    const ast = xmlToAST(sampleXML);
-
-    console.log(JSON.stringify(ast, null, 2));
 }

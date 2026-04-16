@@ -1,9 +1,6 @@
 import { Fragment, createElement, type ReactNode } from 'react';
-import { interpolate } from '../runtime/interpolate';
-import { resolveCondition } from '../runtime/resolveCondition';
-import { resolveValue } from '../runtime/resolveValue';
-import { RuntimeChildren, RuntimeProvider } from '../runtime/useRuntime';
-import type { ASTNode, ExecutionContext, RegistryShape } from '../types';
+import { interpolate, resolveCondition, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
+import type { ASTNode, ExecutionContext, RegistryShape } from './types';
 
 type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 
@@ -48,4 +45,8 @@ export function renderNode(
             {createElement(component, resolveParams(node.params, ctx), node.children ? <RuntimeChildren /> : undefined)}
         </RuntimeProvider>
     );
+}
+
+export function render(ast: ASTNode[], registry: RegistryShape, ctx: ExecutionContext): ReactNode {
+    return ast.map((node, index) => <Fragment key={index}>{renderNode(node, registry, ctx)}</Fragment>);
 }

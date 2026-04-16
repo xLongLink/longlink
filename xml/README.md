@@ -162,28 +162,13 @@ src/
 ├── compiler/              # XML → validated semantic IR (no runtime execution)
 │   └── parseXML.ts        # Parse raw XML string → basic AST (nodes, attributes, text)
 │
-├── runtime/               # Evaluate IR → live runtime nodes + scoped execution
-│   ├── evaluateNode.ts    # Convert IR node → RuntimeNode (resolve directives, attach scope, prepare execution)
-│   ├── resolveValue.ts    # Resolve attribute values as expressions, templates, or literals
-│   ├── resolveChildren.ts # Recursively evaluate children nodes with proper scope propagation
-│   ├── createScope.ts     # Create and link ScopeFrames (state/query/loop nesting)
-│   ├── executionContext.ts# Runtime context container (registry, store, queryClient, transport)
-│   └── errors.ts          # Runtime error helpers (scoped errors, debug traces, source mapping)
-│
 ├── primitives/            # Core semantic building blocks (control flow + data wiring)
 │   ├── Page.tsx           # Root container (initial scope, layout entry, top-level orchestration)
 │   ├── Query.tsx          # Data fetching via TanStack Query (exposes data, loading, error, refetch)
 │   ├── State.tsx          # Scoped reactive state (Zustand-backed, persistent per scope path)
-│   └── For.tsx            # Iteration over collections (creates loop scope, enforces key stability)
-│
-├── renderer/              # RuntimeNode → React elements (pure rendering layer)
-│   └── renderNode.tsx     # Entry: dispatch node to primitive or component renderer
-│
-├── registry/              # Component + primitive resolution system
-│   ├── createContext.ts   # Create the global context
-│   └── createRegistry.ts  # Register component adapters (UI library binding)
-│
-└── index.ts               # Public API (render, createStore, createRegistry, setup helpers)
+│   ├── For.tsx            # Iteration over collections (creates loop scope, enforces key stability)
+│   ├── Grid.tsx           # Grid layout component
+│   └── index.ts           # Public API (render, createStore, createRegistry, setup helpers)
 ```
 
 ## Usage
