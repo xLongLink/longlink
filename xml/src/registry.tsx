@@ -7,9 +7,6 @@ import { Query } from './primitives/Query';
 import { State } from './primitives/State';
 import type { ExecutionContext, RegistryShape } from './types';
 
-// ---------------------------------------------------------------------------
-// createContext
-// ---------------------------------------------------------------------------
 
 /**
  * Creates a minimal ExecutionContext with empty state, queries, and scope.
@@ -23,9 +20,6 @@ export function createContext(initial: Partial<ExecutionContext> = {}): Executio
     };
 }
 
-// ---------------------------------------------------------------------------
-// createRegistry
-// ---------------------------------------------------------------------------
 
 const defaultPrimitives = {
     Page,

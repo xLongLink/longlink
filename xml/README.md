@@ -41,9 +41,9 @@ An XML abstraction layer on top of React that turns the UI into a pure REST API 
   <State id="filter" value="month">
     <Query id="chart" path="/stats?period={filter.value}">
       <ButtonGroup>
-        <Button variant="outline" set="filter.value = 'week'">Weekly</Button>
-        <Button variant="outline" set="filter.value = 'month'">Monthly</Button>
-        <Button variant="outline" set="filter.value = 'year'">Yearly</Button>
+        <Button variant="outline" set:filter.value="'week'">Weekly</Button>
+        <Button variant="outline" set:filter.value="'month'">Monthly</Button>
+        <Button variant="outline" set:filter.value="'year'">Yearly</Button>
       </ButtonGroup>
       <BarChart data="{chart}" />
     </Query>
@@ -86,7 +86,7 @@ An XML abstraction layer on top of React that turns the UI into a pure REST API 
 | `<State id ...props>` | Scoped reactive state backed by Zustand; initial values set as props |
 | `<For each as>` | Iterates over a collection, creating a child scope per item |
 | `if` attribute | Conditionally renders an element; `if="!expr"` for negation |
-| `set` attribute | Updates a state value on click, e.g. `set="filter.value = 'week'"` |
+| `set:<target>` attribute | Updates a state value on click, e.g. `set:filter.value="'week'"` |
 | `path / method / body` | Wires a component to a REST mutation (GET/POST/PATCH/DELETE) |
 | `invalidate` | Refetches the named query after a successful mutation |
 | `{expr}` interpolation | Resolves scoped expressions in attributes and text content |

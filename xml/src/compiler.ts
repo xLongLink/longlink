@@ -1,9 +1,17 @@
 import { XMLParser } from 'fast-xml-parser';
 import type { ASTNode } from './types';
 
+
 const TEXT_NODE_NAME = '#text';
 const ATTRIBUTES_NODE_NAME = ':@';
 
+/**
+ * Shared parser instance configured to produce a preserve-order array of nodes.
+ * Attribute names are kept verbatim (no prefix), values are never auto-cast, and
+ * XML declarations are dropped. The `set:target` namespace-like syntax is handled
+ * transparently because fast-xml-parser does not normalise namespace prefixes in
+ * attribute names with this configuration.
+ */
 const parser = new XMLParser({
     preserveOrder: true,
     ignoreAttributes: false,
@@ -17,6 +25,13 @@ const parser = new XMLParser({
 
 type PreserveOrderNode = Record<string, any>;
 
+
+/**
+ * Parses an XML string into an array of ASTNodes.
+ *
+ * The returned array represents the top-level children of the document.
+ * Whitespace-only text nodes and XML declarations are silently dropped.
+ */
 export function xmlToAST(xml: string): ASTNode[] {
     const parsed = parser.parse(xml) as PreserveOrderNode[];
 
@@ -30,6 +45,18 @@ export function xmlToAST(xml: string): ASTNode[] {
     return children;
 }
 
+
+/**
+ * Converts a single preserve-order parser entry into an ASTNode.
+ *
+ * Returns null for:
+ *   - Entries with no recognisable tag name
+ *   - Processing instructions (`?...`) and DOCTYPE declarations (`!...`)
+ *   - Text nodes that are empty or contain only whitespace
+ *
+ * Attribute values are always strings; non-string values (e.g. booleans
+ * produced by fast-xml-parser) are discarded.
+ */
 function convertNode(entry: PreserveOrderNode): ASTNode | null {
     const nodeName = Object.keys(entry).find((key) => key !== ATTRIBUTES_NODE_NAME);
     if (!nodeName) return null;

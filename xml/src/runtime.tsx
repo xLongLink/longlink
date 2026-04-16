@@ -2,9 +2,6 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { renderNode } from './renderers';
 import type { ASTNode, ExecutionContext, RegistryShape } from './types';
 
-// ---------------------------------------------------------------------------
-// evaluate
-// ---------------------------------------------------------------------------
 
 /**
  * Evaluates a JavaScript expression string against the current execution context.
@@ -27,9 +24,6 @@ export function evaluate(expr: string, ctx: ExecutionContext): any {
     return new Function(...Object.keys(scope), `return ${expr}`)(...Object.values(scope));
 }
 
-// ---------------------------------------------------------------------------
-// interpolate
-// ---------------------------------------------------------------------------
 
 /**
  * Replaces all `{expression}` placeholders in a string with their evaluated values.
@@ -45,9 +39,6 @@ export function interpolate(str: string, ctx: ExecutionContext): string {
     return str.replace(/\{([^}]+)\}/g, (_, expr) => String(evaluate(expr, ctx)));
 }
 
-// ---------------------------------------------------------------------------
-// resolveValue
-// ---------------------------------------------------------------------------
 
 /**
  * Resolves an attribute value string against the current execution context.
@@ -81,9 +72,6 @@ export function resolveValue(value: string, ctx: ExecutionContext): unknown {
     return evaluate(`(${value})`, ctx);
 }
 
-// ---------------------------------------------------------------------------
-// resolveCondition
-// ---------------------------------------------------------------------------
 
 /**
  * Resolves a condition string to a boolean for use in `if` attributes.
@@ -107,6 +95,47 @@ export function resolveCondition(condition: string | undefined, ctx: ExecutionCo
     }
 
     return Boolean(evaluate(trimmed, ctx));
+}
+
+
+/**
+ * Produces a click handler for a `set:<target>` attribute.
+ *
+ * The `target` is a dot-separated path where the first segment identifies a
+ * reactive state variable and the remaining segments describe a property path
+ * within that state's value object.
+ *
+ * Examples:
+ *   resolveSet("filter.value", "'week'", ctx)
+ *     → calls ctx.state["filter"][1]({ ...current, value: "week" })
+ *
+ *   resolveSet("filter", "'week'", ctx)
+ *     → calls ctx.state["filter"][1]("week")  (replaces the whole value)
+ *
+ * Throws if the first segment does not match a known state key.
+ */
+export function resolveSet(target: string, valueExpr: string, ctx: ExecutionContext): () => void {
+    const dotIndex = target.indexOf('.');
+    const stateKey = dotIndex === -1 ? target : target.slice(0, dotIndex);
+    const propPath = dotIndex === -1 ? [] : target.slice(dotIndex + 1).split('.');
+
+    const stateEntry = ctx.state[stateKey];
+
+    if (!stateEntry) {
+        throw new Error(`set: unknown state "${stateKey}"`);
+    }
+
+    return () => {
+        const [current, setter] = stateEntry;
+        const newValue = evaluate(valueExpr, ctx);
+        setter(propPath.length === 0 ? newValue : setDeep(current, propPath, newValue));
+    };
+}
+
+function setDeep(obj: any, path: string[], value: any): any {
+    if (path.length === 0) return value;
+    const [head, ...tail] = path;
+    return { ...obj, [head]: setDeep(obj?.[head], tail, value) };
 }
 
 // ---------------------------------------------------------------------------
