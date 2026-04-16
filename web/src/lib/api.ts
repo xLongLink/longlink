@@ -1,5 +1,3 @@
-import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
-
 const apiBaseUrl = '/api';
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
@@ -10,10 +8,7 @@ type QueryValue = string | number | boolean | null | undefined;
 export type ApiQueryParams = Record<string, QueryValue>;
 type RequestCredentialsMode = 'omit' | 'same-origin' | 'include';
 
-export type ApiRequestOptions<TBody = unknown> = Omit<
-    AxiosRequestConfig<TBody>,
-    'baseURL' | 'params' | 'url' | 'data'
-> & {
+export type ApiRequestOptions<TBody = unknown> = {
     body?: TBody;
     query?: ApiQueryParams;
     appName?: string;
@@ -43,10 +38,8 @@ const normalizePath = (path: string, appName?: string) => {
 
 const buildApiUrl = (path: string, appName?: string) => `${getApiBaseUrl()}${normalizePath(path, appName)}`;
 
-const toApiErrorMessage = (error: AxiosError) => {
-    const status = error.response?.status;
-    const defaultMessage = `API request failed (${status ?? 'unknown'})`;
-    const responseData = error.response?.data;
+const toApiErrorMessage = (status: number, responseData: unknown) => {
+    const defaultMessage = `API request failed (${status})`;
 
     if (typeof responseData === 'string' && responseData.trim().length > 0) {
         return responseData;
@@ -60,42 +53,81 @@ const toApiErrorMessage = (error: AxiosError) => {
     return defaultMessage;
 };
 
+const buildUrl = (path: string, query?: ApiQueryParams) => {
+    const url = new URL(buildApiUrl(path), window.location.origin);
+    if (query) {
+        for (const [key, value] of Object.entries(query)) {
+            if (value != null) {
+                url.searchParams.set(key, String(value));
+            }
+        }
+    }
+    return url.toString().replace(window.location.origin, '');
+};
+
+/**
+ * Makes an API request to the backend with automatic JSON handling.
+ * Supports query parameters, custom body types, and app-scoped paths.
+ * Throws an Error with the response message on failure.
+ */
 export async function apiFetch<TResponse>(path: string, options: ApiRequestOptions = {}): Promise<TResponse> {
-    const { query, body, appName, credentials, ...config } = options;
+    const { query, body, credentials } = options;
     const withCredentials = credentials === 'include';
 
-    try {
-        const response = await axios.request<string>({
-            baseURL: getApiBaseUrl(),
-            url: normalizePath(path, appName),
-            params: query,
-            data: body,
-            withCredentials,
-            responseType: 'text',
-            headers: {
-                Accept: 'application/json',
-                ...config.headers,
-            },
-            ...config,
-        });
+    const url = buildUrl(path, query);
 
-        if (response.status === 204 || response.data.length === 0) {
-            return undefined as TResponse;
+    const headers: Record<string, string> = {
+        Accept: 'application/json',
+    };
+
+    let fetchOptions: RequestInit = {
+        credentials: withCredentials ? 'include' : 'same-origin',
+    };
+
+    if (body !== undefined) {
+        if (
+            body instanceof FormData ||
+            body instanceof URLSearchParams ||
+            body instanceof Blob ||
+            typeof body === 'string'
+        ) {
+            fetchOptions = { ...fetchOptions, method: 'POST', body };
+        } else {
+            headers['Content-Type'] = 'application/json';
+            fetchOptions = { ...fetchOptions, method: 'POST', body: JSON.stringify(body) };
         }
-
-        const contentType = response.headers['content-type'];
-        if (contentType?.includes('application/json')) {
-            return JSON.parse(response.data) as TResponse;
-        }
-
-        return response.data as TResponse;
-    } catch (error) {
-        if (error instanceof AxiosError) {
-            throw new Error(toApiErrorMessage(error));
-        }
-
-        throw error;
     }
+
+    fetchOptions.headers = headers;
+
+    const response = await fetch(url, fetchOptions);
+
+    if (response.status === 204) {
+        return undefined as TResponse;
+    }
+
+    const text = await response.text();
+
+    if (text.length === 0) {
+        return undefined as TResponse;
+    }
+
+    if (!response.ok) {
+        let data: unknown;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            data = text;
+        }
+        throw new Error(toApiErrorMessage(response.status, data));
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+        return JSON.parse(text) as TResponse;
+    }
+
+    return text as unknown as TResponse;
 }
 
 export const buildAppApiPath = (path: string, appName?: string) => buildApiUrl(path, appName);

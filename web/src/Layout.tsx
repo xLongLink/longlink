@@ -1,41 +1,50 @@
-import { Loader2, BarChart3, Blocks, FolderKanban, Settings, Users, Workflow } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { useApiData } from '@/hooks/use-data';
-import { getActiveTabConfig, getAppTabsFromPages, type AppNavigationPage } from '@/lib/navigation';
+import { getActiveTabConfig, getAppTabsFromPages, type PageInfo, type AppNavigationPage } from '@/lib/navigation';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
 };
 
-const orgTabs = [
-    { value: 'overview', label: 'Overview', path: 'overview', icon: BarChart3 },
-    { value: 'tools', label: 'Tools', path: 'tools', icon: Blocks },
-    { value: 'spaces', label: 'Spaces', path: 'spaces', icon: FolderKanban },
-    { value: 'processes', label: 'Processes', path: 'processes', icon: Workflow },
-    { value: 'people', label: 'People', path: 'people', icon: Users },
-    { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
-];
-
 function OrgNavigation() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { data: pages, isLoading } = useApiData<PageInfo[]>('/pages');
+
+    const tabs = isLoading
+        ? []
+        : getAppTabsFromPages(
+              (pages ?? []).map((p) => ({
+                  name: p.name,
+                  path: p.path,
+                  icon: p.icon,
+              }))
+          );
 
     const activeTabConfig = getActiveTabConfig({
-        tabs: orgTabs,
+        tabs,
         locationPath: location.pathname,
         basePath: '',
     });
 
-    const activeTab = activeTabConfig?.value ?? orgTabs[0]?.value ?? '';
+    const activeTab = activeTabConfig?.value ?? tabs[0]?.value ?? '';
+
+    if (tabs.length === 0) {
+        return null;
+    }
 
     return (
         <Tabs
             value={activeTab}
             onValueChange={(value) => {
-                const nextTab = orgTabs.find((tab) => tab.value === value);
+                if (isLoading) {
+                    return;
+                }
+                const nextTab = tabs.find((tab) => tab.value === value);
                 if (!nextTab) {
                     return;
                 }
@@ -44,12 +53,15 @@ function OrgNavigation() {
             }}
         >
             <TabsList variant="line" className="gap-4">
-                {orgTabs.map((tab) => (
-                    <TabsTrigger key={tab.value} value={tab.value} className="cursor-pointer">
-                        <tab.icon className="h-4 w-4" />
-                        {tab.label}
-                    </TabsTrigger>
-                ))}
+                {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                        <TabsTrigger key={tab.value} value={tab.value} className="cursor-pointer">
+                            <Icon className="h-4 w-4" />
+                            {tab.label}
+                        </TabsTrigger>
+                    );
+                })}
             </TabsList>
         </Tabs>
     );

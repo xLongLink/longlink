@@ -1,6 +1,5 @@
 import { createElement, type ComponentType } from 'react';
 import type { LucideProps } from 'lucide-react';
-import { BarChart3, Blocks, FolderKanban, Settings, Users, Workflow } from 'lucide-react';
 import { Icon } from '@/xml/components/Icon';
 
 export type NavigationTab = {
@@ -10,34 +9,16 @@ export type NavigationTab = {
     icon: ComponentType<LucideProps>;
 };
 
-const organizationTabs: NavigationTab[] = [
-    { value: 'overview', label: 'Overview', path: 'overview', icon: BarChart3 },
-    { value: 'tools', label: 'Tools', path: 'tools', icon: Blocks },
-    { value: 'spaces', label: 'Spaces', path: 'spaces', icon: FolderKanban },
-    {
-        value: 'processes',
-        label: 'Processes',
-        path: 'processes',
-        icon: Workflow,
-    },
-    { value: 'people', label: 'People', path: 'people', icon: Users },
-    { value: 'settings', label: 'Settings', path: 'settings', icon: Settings },
-];
+export type PageInfo = {
+    name: string;
+    path: string;
+    icon: string;
+};
 
 export type AppNavigationPage = {
     path: string;
     name: string;
     icon?: string;
-};
-
-const normalizeTabPath = (path: string) => path.replace(/^\/+|\/+$/g, '');
-
-const getTabValue = ({ path, name }: { path: string; name: string }) => {
-    if (path.length > 0) {
-        return path;
-    }
-
-    return name.toLowerCase().replace(/\s+/g, '-');
 };
 
 const NavigationPageIcon = ({ name }: { name?: string }): ComponentType<LucideProps> => {
@@ -48,43 +29,27 @@ const NavigationPageIcon = ({ name }: { name?: string }): ComponentType<LucidePr
     return ResolvedNavigationPageIcon;
 };
 
+/**
+ * Converts application pages into navigation tab configurations.
+ * Each page becomes a tab with its name as label and icon.
+ */
 export function getAppTabsFromPages(pages: AppNavigationPage[]): NavigationTab[] {
     if (pages.length === 0) {
         return [];
     }
 
-    return pages.map((page) => {
-        const path = normalizeTabPath(page.path);
-
-        return {
-            value: getTabValue({ path, name: page.name }),
-            label: page.name,
-            path,
-            icon: NavigationPageIcon({ name: page.icon }),
-        };
-    });
+    return pages.map((page) => ({
+        value: page.path,
+        label: page.name,
+        path: page.path,
+        icon: NavigationPageIcon({ name: page.icon }),
+    }));
 }
 
-export type TabsConfig = {
-    tabs: NavigationTab[];
-    basePathSuffix?: string;
-};
-
-export function getTabsConfig({
-    section: _section,
-    appId,
-    appTabs,
-}: {
-    section: 'account' | 'organization';
-    appId?: string;
-    appTabs?: NavigationTab[];
-}): TabsConfig {
-    const tabs = appId ? (appTabs ?? []) : organizationTabs;
-    const basePathSuffix = appId;
-
-    return { tabs, basePathSuffix };
-}
-
+/**
+ * Determines the active navigation tab based on current location path.
+ * Matches the first tab whose path prefixes the location, falling back to the first tab.
+ */
 export function getActiveTabConfig({
     tabs,
     locationPath,
@@ -106,6 +71,10 @@ export function getActiveTabConfig({
     return matchedTab ?? tabs[0];
 }
 
+/**
+ * Formats an organization slug into a title-case display name.
+ * Splits on hyphens and capitalizes each segment.
+ */
 export function formatOrganizationName(value: string) {
     return value
         .split('-')
@@ -113,6 +82,10 @@ export function formatOrganizationName(value: string) {
         .join(' ');
 }
 
+/**
+ * Formats an application name into a display label.
+ * Known apps use their branding, others are formatted via formatOrganizationName.
+ */
 export function formatAppName(value: string) {
     const appNames: Record<string, string> = {
         longlink: 'Longlink',
@@ -121,5 +94,3 @@ export function formatAppName(value: string) {
     };
     return appNames[value] ?? formatOrganizationName(value);
 }
-
-export const NavigationIcon = BarChart3;
