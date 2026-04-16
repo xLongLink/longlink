@@ -52,6 +52,10 @@ longlink/
 - Default to concise communication
 - Finish only when success criteria are met
 - When you are done, run `make format` from the root to format the code
+- All javascript functions must have a JSDoc description (`/** ... */`) placed directly above the function declaration, explaining its purpose and behaviour.
+- All python functions must include a docstring (""" ... """) immediately after the function definition, explaining its purpose and behaviour.
+- Any javascript code block that contains non-trivial logic must have a short inline comment (/_ ... _/) on its own line describing that block.
+- Any python non-trivial logic block must be preceded by a standalone inline comment (# ...) explaining what the block does.
 
 ## Caveman
 

@@ -53,5 +53,6 @@ length_sort = true
 [tool.pytest.ini_options]
 markers = [
     "integration: marks integration tests requiring docker/keycloak",
+    "unit: marks unit tests",
 ]
 asyncio_mode = "auto"

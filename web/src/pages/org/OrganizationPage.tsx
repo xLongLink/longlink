@@ -1,15 +1,13 @@
 import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { useApiData } from '@/hooks/use-data';
-import { resolveXmlPayload } from '@/lib/xml';
 
 type OrganizationPageProps = {
-    page: 'overview' | 'tools' | 'spaces' | 'processes' | 'people' | 'settings';
+    page: string;
 };
 
 export default function OrganizationPage({ page }: OrganizationPageProps) {
     const endpoint = `/pages/${page}`;
-    const { data, isLoading, error } = useApiData<string | { xml?: string | null; content?: string | null }>(endpoint);
-    const xml = resolveXmlPayload(data);
+    const { data, isLoading, error } = useApiData<string>(endpoint);
 
     if (error) {
         return <div>{error.message}</div>;
@@ -19,11 +17,11 @@ export default function OrganizationPage({ page }: OrganizationPageProps) {
         return <div>Loading...</div>;
     }
 
-    if (!xml) {
+    if (!data) {
         return <div>Unexpected response format for {endpoint}</div>;
     }
 
-    const ast = fromXml(xml);
+    const ast = fromXml(data);
     const ctx = createContext({ baseUrl: '/api' });
     return <>{renderNode(ast, registry, ctx)}</>;
 }

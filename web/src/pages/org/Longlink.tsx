@@ -1,7 +1,6 @@
 import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
-import { resolveXmlPayload } from '@/lib/xml';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 
@@ -30,10 +29,7 @@ export default function Longlink() {
     const activePagePath = normalizedRoutePath || fallbackPagePath;
     const pageEndpoint = appId ? (activePagePath.length > 0 ? `/apps/${appId}/pages/${activePagePath}` : null) : null;
 
-    const { data, isLoading, error } = useApiData<string | { xml?: string | null; content?: string | null }>(
-        pageEndpoint
-    );
-    const xml = resolveXmlPayload(data);
+    const { data, isLoading, error } = useApiData<string>(pageEndpoint);
 
     if (error) {
         return <div>{error.message}</div>;
@@ -47,11 +43,11 @@ export default function Longlink() {
         return <div>No pages configured for this app.</div>;
     }
 
-    if (!xml) {
+    if (!data) {
         return <div>Unexpected response format for {pageEndpoint}</div>;
     }
 
-    const ast = fromXml(xml);
+    const ast = fromXml(data);
     const ctx = createContext({ baseUrl: '/api' });
     return <>{renderNode(ast, registry, ctx)}</>;
 }

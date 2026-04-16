@@ -52,5 +52,5 @@ export default function SdkLonglink() {
 
     const ast = fromXml(data);
     const ctx = createContext({ baseUrl: '/api' });
-    return <>{renderNode(ast, registry, ctx)}</>;
+    return renderNode(ast, registry, ctx);
 }
