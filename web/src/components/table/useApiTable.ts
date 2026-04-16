@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { type PaginationState, type SortingState } from '@tanstack/react-table';
 
 import { apiFetch } from '@/lib/api';
 
@@ -12,12 +11,10 @@ type TableResponse =
 
 type UseApiTableParams = {
     endpoint: string;
-    pagination: PaginationState;
-    sorting: SortingState;
 };
 
-/** Hook that fetches and manages table data with pagination and sorting. */
-export function useApiTable<T extends object>({ endpoint, pagination, sorting }: UseApiTableParams) {
+/** Hook that fetches and manages table data from API endpoint. */
+export function useApiTable<T extends object>({ endpoint }: UseApiTableParams) {
     const [data, setData] = useState<T[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -29,6 +26,7 @@ export function useApiTable<T extends object>({ endpoint, pagination, sorting }:
             try {
                 const response = await apiFetch<TableResponse>(endpoint);
 
+                // Normalize API payload variants into consistent data/total state.
                 if (Array.isArray(response)) {
                     setData(response as T[]);
                     setTotal(response.length);
@@ -42,7 +40,7 @@ export function useApiTable<T extends object>({ endpoint, pagination, sorting }:
         };
 
         void fetchData();
-    }, [endpoint, pagination, sorting]);
+    }, [endpoint]);
 
     return {
         data,
