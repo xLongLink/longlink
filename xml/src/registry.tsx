@@ -5,7 +5,7 @@ import { Grid } from './primitives/Grid';
 import { Page } from './primitives/Page';
 import { Query } from './primitives/Query';
 import { State } from './primitives/State';
-import type { ExecutionContext, RegistryShape } from './types';
+import type { ActionHandler, ActionProps, ActionComponentProps, ExecutionContext, RegistryShape } from './types';
 
 
 /**
@@ -46,20 +46,6 @@ export function createRegistry<const TRegistry extends RegistryShape>(
 // ---------------------------------------------------------------------------
 // action
 // ---------------------------------------------------------------------------
-
-type ActionHandler = (event: MouseEvent<any>) => Promise<void>;
-
-export type ActionProps = {
-    path?: string;
-    method?: string;
-    body?: unknown;
-    invalidate?: string | string[];
-};
-
-export type ActionComponentProps = {
-    action: ActionHandler;
-    pending: boolean;
-};
 
 function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
     if (Array.isArray(value)) {

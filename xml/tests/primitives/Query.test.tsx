@@ -38,10 +38,10 @@ describe('Query', () => {
     it('makes fetched data available in the child context via its id', async () => {
         // Mock global fetch so no real HTTP request is made
         const original = global.fetch;
-        global.fetch = async () =>
+        global.fetch = (async () =>
             new Response(JSON.stringify({ name: 'Alice' }), {
                 headers: { 'Content-Type': 'application/json' },
-            });
+            })) as unknown as typeof global.fetch;
 
         try {
             renderWithQuery(
@@ -63,12 +63,12 @@ describe('Query', () => {
         // The path "/api/users/{userId}" should be resolved using the current context
         const captured: string[] = [];
         const original = global.fetch;
-        global.fetch = async (url) => {
+        global.fetch = ((url: URL | RequestInfo) => {
             captured.push(String(url));
-            return new Response(JSON.stringify({}), {
+            return Promise.resolve(new Response(JSON.stringify({}), {
                 headers: { 'Content-Type': 'application/json' },
-            });
-        };
+            }));
+        }) as unknown as typeof global.fetch;
 
         try {
             const ctx = makeCtx({}, {}, { userId: '42' });
@@ -89,10 +89,10 @@ describe('Query', () => {
     it('preserves existing queries in the child context', async () => {
         // An outer query "existing" must still be visible inside a nested Query
         const original = global.fetch;
-        global.fetch = async () =>
+        global.fetch = (async () =>
             new Response(JSON.stringify('new'), {
                 headers: { 'Content-Type': 'application/json' },
-            });
+            })) as unknown as typeof global.fetch;
 
         try {
             const ctx = makeCtx({}, { existing: 'keep-me' });
