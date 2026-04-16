@@ -5,5 +5,6 @@ export { action } from './registry/action';
 export { createRegistry } from './registry/createRegistry';
 export { evaluate } from './runtime/evaluate';
 export { interpolate } from './runtime/interpolate';
+export { useRuntime } from './runtime/useRuntime';
 export { Grid } from './primitives/Grid';
 export type { ASTNode, ExecutionContext, RegistryComponent, RegistryShape } from './types';
