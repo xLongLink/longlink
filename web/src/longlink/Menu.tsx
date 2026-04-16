@@ -1,19 +1,10 @@
-import {
-    Children,
-    Fragment,
-    isValidElement,
-    useEffect,
-    useMemo,
-    useState,
-    type ReactElement,
-    type ReactNode,
-} from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { AppWindow } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
+import { AppWindow } from 'lucide-react';
+import { renderNode, useRuntime } from 'reactxml';
+import type { ASTNode } from 'reactxml';
 import { Icon } from '@/longlink/Icon';
-
-// import { getIconByName } from '@/components/Icon';
 
 import {
     Menu as BaseMenu,
@@ -24,34 +15,26 @@ import {
 } from '@/ui/menu';
 
 type MenuProps = {
-    children?: ReactNode;
+    children?: React.ReactNode;
 };
 
 type MenuSectionProps = {
     title: string;
     icon?: string | null;
-    children?: ReactNode;
+    children?: React.ReactNode;
 };
 
 type MenuSubSectionProps = {
     title: string;
     root?: boolean;
-    children?: ReactNode;
-};
-
-type ParsedMenuSectionProps = MenuSectionProps & {
-    props?: MenuSectionProps;
-};
-
-type ParsedMenuSubSectionProps = MenuSubSectionProps & {
-    props?: MenuSubSectionProps;
+    children?: React.ReactNode;
 };
 
 type NormalizedSubSection = {
     id: string;
     title: string;
     isRoot: boolean;
-    children?: ReactNode;
+    node: ASTNode;
 };
 
 type NormalizedSection = {
@@ -66,102 +49,37 @@ const MenuSectionIcon = ({ iconName, ...props }: { iconName: string } & LucidePr
     <Icon name={iconName} fallback="app-window" {...props} />
 );
 
-function flattenParsedProps<T extends object>(props: T & { props?: T }): T {
-    if (!props.props) {
-        return props;
-    }
+function makeIcon(iconName: string | undefined): LucideIcon {
+    if (!iconName) return AppWindow;
 
-    return {
-        ...props.props,
-        ...props,
-        props: undefined,
-    };
+    const name = iconName;
+    function ResolvedIcon(props: LucideProps) {
+        return <MenuSectionIcon iconName={name} {...props} />;
+    }
+    return ResolvedIcon as LucideIcon;
 }
 
-function resolveSectionIcon(props: ParsedMenuSectionProps): LucideIcon {
-    const sectionProps = flattenParsedProps(props);
-    const iconName = sectionProps.icon;
+function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
+    const sectionNodes = (menuNode.children ?? []).filter((n) => n.name === 'MenuSection');
 
-    if (!iconName) {
-        return AppWindow;
-    }
-    const resolvedIconName = iconName;
+    return sectionNodes.map((sectionNode, sectionIndex) => {
+        const subSectionNodes = (sectionNode.children ?? []).filter((n) => n.name === 'MenuSubSection');
 
-    function ResolvedMenuSectionIcon(iconProps: LucideProps) {
-        return <MenuSectionIcon iconName={resolvedIconName} {...iconProps} />;
-    }
+        const normalizedSubSections: NormalizedSubSection[] = subSectionNodes.map((subNode, subIndex) => ({
+            id: `section-${sectionIndex}-sub-${subIndex}`,
+            title: subNode.params?.title ?? '',
+            isRoot: subNode.params?.root === 'true',
+            node: subNode,
+        }));
 
-    return ResolvedMenuSectionIcon as LucideIcon;
-}
-
-function resolveSubSectionIsRoot(props: ParsedMenuSubSectionProps): boolean {
-    return flattenParsedProps(props).root ?? false;
-}
-
-function collectElementsOfType<T extends object>(
-    children: ReactNode,
-    component: (props: T) => ReactElement | null
-): ReactElement<T>[] {
-    const elements: ReactElement<T>[] = [];
-    const typedComponent = component as { displayName?: string; name?: string };
-    const componentName = typedComponent.displayName ?? typedComponent.name;
-
-    const isMatchingComponent = (child: ReactElement) => {
-        if (child.type === component) {
-            return true;
-        }
-
-        const childType = child.type as { displayName?: string; name?: string };
-        const childTypeName = childType.displayName ?? childType.name;
-
-        return Boolean(componentName && childTypeName && childTypeName === componentName);
-    };
-
-    for (const child of Children.toArray(children)) {
-        if (!isValidElement(child)) {
-            continue;
-        }
-
-        if (isMatchingComponent(child)) {
-            elements.push(child as ReactElement<T>);
-            continue;
-        }
-
-        if (child.type === Fragment) {
-            const fragmentChildProps = child.props as { children?: ReactNode };
-            elements.push(...collectElementsOfType(fragmentChildProps.children, component));
-        }
-    }
-
-    return elements;
-}
-
-function normalizeSections(children?: ReactNode): NormalizedSection[] {
-    const sections = collectElementsOfType(children, MenuSection);
-
-    return sections.map((section, sectionIndex) => {
-        const sectionProps = flattenParsedProps(section.props);
-        const sectionChildren = collectElementsOfType(sectionProps.children, MenuSubSection);
-
-        const normalizedSubSections = sectionChildren.map((subSection, subIndex) => {
-            const subSectionProps = flattenParsedProps(subSection.props);
-
-            return {
-                id: `section-${sectionIndex}-sub-${subIndex}`,
-                title: subSectionProps.title,
-                isRoot: resolveSubSectionIsRoot(subSection.props),
-                children: subSectionProps.children,
-            };
-        });
-
-        const rootSubSection = normalizedSubSections.find((subSection) => subSection.isRoot);
+        const rootSubSection = normalizedSubSections.find((s) => s.isRoot);
 
         return {
             id: `section-${sectionIndex}`,
-            title: sectionProps.title,
-            icon: resolveSectionIcon(section.props),
+            title: sectionNode.params?.title ?? '',
+            icon: makeIcon(sectionNode.params?.icon),
             rootSubSection,
-            subSections: normalizedSubSections.filter((subSection) => !subSection.isRoot),
+            subSections: normalizedSubSections.filter((s) => !s.isRoot),
         };
     });
 }
@@ -174,16 +92,15 @@ export function MenuSubSection({ children }: MenuSubSectionProps) {
     return <>{children}</>;
 }
 
-export function Menu({ children }: MenuProps) {
-    const sections = useMemo(() => normalizeSections(children), [children]);
+export function Menu(_props: MenuProps) {
+    const { node, registry, ctx } = useRuntime();
+
+    const sections = useMemo(() => parseSectionsFromAST(node), [node]);
+
     const [activeValue, setActiveValue] = useState<string | undefined>(() => {
-        const firstSection = sections[0];
-
-        if (!firstSection) {
-            return undefined;
-        }
-
-        return firstSection.rootSubSection ? firstSection.id : (firstSection.subSections[0]?.id ?? firstSection.id);
+        const first = sections[0];
+        if (!first) return undefined;
+        return first.rootSubSection ? first.id : (first.subSections[0]?.id ?? first.id);
     });
 
     useEffect(() => {
@@ -194,26 +111,20 @@ export function Menu({ children }: MenuProps) {
 
         const hasActiveValue = sections.some(
             (section) =>
-                section.id === activeValue || section.subSections.some((subSection) => subSection.id === activeValue)
+                section.id === activeValue || section.subSections.some((sub) => sub.id === activeValue)
         );
 
         if (!hasActiveValue) {
-            const firstSection = sections[0];
-
-            if (!firstSection) {
+            const first = sections[0];
+            if (!first) {
                 setActiveValue(undefined);
                 return;
             }
-
-            setActiveValue(
-                firstSection.rootSubSection ? firstSection.id : (firstSection.subSections[0]?.id ?? firstSection.id)
-            );
+            setActiveValue(first.rootSubSection ? first.id : (first.subSections[0]?.id ?? first.id));
         }
     }, [activeValue, sections]);
 
-    if (!sections.length) {
-        return null;
-    }
+    if (!sections.length) return null;
 
     return (
         <BaseMenu value={activeValue} onValueChange={setActiveValue} ariaLabel="Longlink menu">
@@ -221,12 +132,8 @@ export function Menu({ children }: MenuProps) {
                 <MenuList>
                     {sections.map((section) => (
                         <BaseMenuSection key={section.id} value={section.id} label={section.title} icon={section.icon}>
-                            {section.subSections.map((subSection) => (
-                                <BaseMenuSubSection
-                                    key={subSection.id}
-                                    value={subSection.id}
-                                    label={subSection.title}
-                                />
+                            {section.subSections.map((sub) => (
+                                <BaseMenuSubSection key={sub.id} value={sub.id} label={sub.title} />
                             ))}
                         </BaseMenuSection>
                     ))}
@@ -237,12 +144,14 @@ export function Menu({ children }: MenuProps) {
                 {sections.map((section) => (
                     <div key={`${section.id}-content`}>
                         {section.rootSubSection ? (
-                            <MenuContent value={section.id}>{section.rootSubSection.children}</MenuContent>
+                            <MenuContent value={section.id}>
+                                {renderNode(section.rootSubSection.node.children, registry, ctx)}
+                            </MenuContent>
                         ) : null}
 
-                        {section.subSections.map((subSection) => (
-                            <MenuContent key={subSection.id} value={subSection.id}>
-                                {subSection.children}
+                        {section.subSections.map((sub) => (
+                            <MenuContent key={sub.id} value={sub.id}>
+                                {renderNode(sub.node.children, registry, ctx)}
                             </MenuContent>
                         ))}
                     </div>
