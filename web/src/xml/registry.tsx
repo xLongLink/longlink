@@ -1,4 +1,4 @@
-import { createElement, useState, type ComponentProps, type ComponentType, type MouseEvent } from 'react';
+import { createElement, useState, type ComponentProps, type ComponentType } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { For } from './primitives/For';
 import { Grid } from './primitives/Grid';

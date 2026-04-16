@@ -2,8 +2,8 @@ import { useMemo, useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { AppWindow } from 'lucide-react';
-import { renderNode, useRuntime } from 'reactxml';
-import type { ASTNode } from 'reactxml';
+import { renderNode, useRuntime } from '@/xml';
+import type { ASTNode } from '@/xml';
 import { Icon } from '@/longlink/Icon';
 
 import {

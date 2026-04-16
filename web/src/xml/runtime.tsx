@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { renderNode } from './renderers';
-import type { ASTNode, ExecutionContext, RegistryShape, RuntimeState } from './types';
+import type { ExecutionContext, RuntimeState } from './types';
 
 /**
  * Evaluates a JavaScript expression string against the current execution context.
