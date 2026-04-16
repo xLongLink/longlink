@@ -25,7 +25,8 @@ dependencies = [
     'starlette==0.52.1',
     'uvicorn==0.40.0',
     'kubernetes==35.0.0',
-    'boto3==1.40.61'
+    'boto3==1.40.61',
+    'xmltodict==0.14.2'
 ]
 
 [project.optional-dependencies]
