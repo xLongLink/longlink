@@ -1,8 +1,5 @@
 import type { ReactNode } from 'react';
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 
 /**
  * Root layout primitive. Acts as a transparent wrapper that renders its

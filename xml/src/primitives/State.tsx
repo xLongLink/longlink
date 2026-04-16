@@ -1,9 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { RuntimeProvider, useRuntime } from '../runtime';
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
 
 /**
  * Declares a scoped reactive state variable identified by `id`.
