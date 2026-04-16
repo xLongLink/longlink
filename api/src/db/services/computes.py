@@ -2,6 +2,8 @@ from src.utils import compute
 
 
 class ComputesService:
+    """Service for managing compute resources (containers)."""
+
     async def create_container(
         self,
         *,

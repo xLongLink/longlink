@@ -180,3 +180,6 @@ script.bat
 /docs/.eslintcache
 /docs/.cache/
 /docs/*.tsbuildinfo
+
+
+.ruff_cache/

@@ -5,8 +5,9 @@ from src.router import router
 from src.models.users import UserResponse
 
 
-@router.get('/users')
+@router.get("/users")
 async def list_users(_: db.User = Depends(authuser)) -> list[UserResponse]:
+    """Return all registered users. Requires authentication."""
     users = await db.users.list()
     return [
         UserResponse(

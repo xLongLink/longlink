@@ -4,9 +4,9 @@ from src.utils import url
 
 
 class AppType(str, Enum):
-    tool = 'tool'
-    space = 'space'
-    process = 'process'
+    tool = "tool"
+    space = "space"
+    process = "process"
 
 
 class AppCreate(BaseModel):
@@ -14,14 +14,16 @@ class AppCreate(BaseModel):
     url: str
     key: str
 
-    @field_validator('url', mode='before')
+    @field_validator("url", mode="before")
     @classmethod
     def normalize_url_field(cls, value: str) -> str:
+        """Normalize URL by ensuring proper scheme and no trailing slash."""
         return url.normalize(value)
 
-    @field_validator('id', mode='before')
+    @field_validator("id", mode="before")
     @classmethod
     def normalize_id(cls, value: str | None) -> str | None:
+        """Normalize id by stripping whitespace and converting empty strings to None."""
         if value is None:
             return None
         normalized = value.strip()

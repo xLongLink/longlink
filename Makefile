@@ -1,4 +1,4 @@
-.PHONY: up down setup format api web sample docs
+.PHONY: up down install format api web sample docs
 
 SHELL := /bin/bash
 VENV_BIN := $(CURDIR)/.venv/bin
@@ -15,7 +15,7 @@ $(VENV_BIN)/python:
 	uv venv .venv
 
 
-setup: $(VENV_BIN)/python
+install: $(VENV_BIN)/python
 	uv pip install --python $(PYTHON) -e './api[dev]'
 	uv pip install --python $(PYTHON) -e './sdk'
 	cd web && bun install
@@ -43,20 +43,16 @@ down:
 
 
 api: $(VENV_BIN)/python
-	uv pip install --python $(PYTHON) -e './api[dev]'
 	cd api && DEV=True $(PYTHON) -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 
 web:
-	cd web && bun install
 	cd web && bun run dev --host 0.0.0.0 --port 5173
 
 
 sample: $(VENV_BIN)/python
-	uv pip install --python $(PYTHON) -e './sdk'
 	cd sdk/sample && $(LONGLINK) dev
 
 
 docs:
-	cd docs && bun install
 	cd docs && bun run dev

@@ -12,6 +12,7 @@ type RangeProps = {
     value?: number[];
 };
 
+/** Renders a range slider with two handles for min/max selection. */
 export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max] }: RangeProps) {
     const normalizedValue = value.length === 2 ? value : [value[0] ?? min, value[1] ?? max];
 

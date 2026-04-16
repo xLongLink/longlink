@@ -8,21 +8,33 @@ from kubernetes.client.exceptions import ApiException
 
 
 def _pod_name_from_app_key(app_key: str, container_name: str) -> str:
-    app_normalized = ''.join(character for character in app_key.lower() if character.isalnum() or character in {'-', '.'}).strip('-.')
-    container_normalized = ''.join(character for character in container_name.lower() if character.isalnum() or character in {'-', '.'}).strip('-.')
+    """Generate a valid Kubernetes pod name from app key and container name."""
+    app_normalized = "".join(
+        character
+        for character in app_key.lower()
+        if character.isalnum() or character in {"-", "."}
+    ).strip("-.")
+    container_normalized = "".join(
+        character
+        for character in container_name.lower()
+        if character.isalnum() or character in {"-", "."}
+    ).strip("-.")
 
     if not app_normalized or not container_normalized:
-        raise ValueError('App key and container name must include valid lowercase characters')
+        raise ValueError(
+            "App key and container name must include valid lowercase characters"
+        )
 
-    pod_name = f'{app_normalized}-{container_normalized}'
-    return pod_name[:63].rstrip('-.')
+    pod_name = f"{app_normalized}-{container_normalized}"
+    return pod_name[:63].rstrip("-.")
 
 
-@router.get('/compute')
+@router.get("/compute")
 async def list_compute_environments() -> list[ComputeEnvironment]:
+    """Return available compute environments."""
     return [
         ComputeEnvironment(
-            key='default',
+            key="default",
             api_server_url=env.ENV_PROVISION_COMPUTE_API_SERVER_URL,
             default_namespace=env.ENV_PROVISION_COMPUTE_DEFAULT_NAMESPACE,
             verify_ssl=env.ENV_PROVISION_COMPUTE_VERIFY_SSL,
@@ -30,11 +42,12 @@ async def list_compute_environments() -> list[ComputeEnvironment]:
     ]
 
 
-@router.post('/compute/apps/{app_id}/containers')
+@router.post("/compute/apps/{app_id}/containers")
 async def create_compute_container_for_app(
     app_id: str,
     payload: ComputeContainerCreate,
 ) -> ComputeContainerCreateResponse:
+    """Create a compute container for the specified app."""
     app = await db.apps.get_by_uuid(app_id)
     if app is None:
         raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
@@ -56,7 +69,9 @@ async def create_compute_container_for_app(
         raise HTTPException(status_code=400, detail=str(error)) from error
     except ApiException as error:
         detail = error.body or str(error)
-        raise HTTPException(status_code=502, detail=f'Unable to create container: {detail}') from error
+        raise HTTPException(
+            status_code=502, detail=f"Unable to create container: {detail}"
+        ) from error
 
     return ComputeContainerCreateResponse(
         app_id=app.id,

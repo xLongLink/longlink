@@ -7,11 +7,13 @@ from src.models.settings import SettingSet, SettingSetItem, SettingResponse
 
 
 def _invalid_key_error(error: ValueError) -> HTTPException:
+    """Convert a ValueError to an HTTPException with 400 status."""
     return HTTPException(status_code=400, detail=str(error))
 
 
-@router.get('/settings')
+@router.get("/settings")
 async def get_settings(keys: List[str] = Query(...)) -> List[SettingResponse]:
+    """Return settings for the given keys."""
     results: List[SettingResponse] = []
 
     for key in keys:
@@ -34,8 +36,9 @@ async def get_settings(keys: List[str] = Query(...)) -> List[SettingResponse]:
     return results
 
 
-@router.put('/settings')
+@router.put("/settings")
 async def set_settings(payload: List[SettingSetItem]) -> List[SettingResponse]:
+    """Create or update multiple settings at once."""
     results: List[SettingResponse] = []
 
     for item in payload:
@@ -57,8 +60,9 @@ async def set_settings(payload: List[SettingSetItem]) -> List[SettingResponse]:
     return results
 
 
-@router.get('/settings/{key}')
+@router.get("/settings/{key}")
 async def get_setting(key: str) -> SettingResponse:
+    """Return a single setting by key."""
     try:
         setting = await db.settings.get(key, app_id=None)
     except ValueError as error:
@@ -74,8 +78,9 @@ async def get_setting(key: str) -> SettingResponse:
     )
 
 
-@router.post('/settings/{key}')
+@router.post("/settings/{key}")
 async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
+    """Create or update a setting by key (POST creates or replaces)."""
     try:
         setting = await db.settings.set(key, payload.value, app_id=None)
     except ValueError as error:
@@ -90,8 +95,9 @@ async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
     )
 
 
-@router.put('/settings/{key}')
+@router.put("/settings/{key}")
 async def set_setting(key: str, payload: SettingSet) -> SettingResponse:
+    """Create or update a setting by key (PUT replaces the value)."""
     try:
         setting = await db.settings.set(key, payload.value, app_id=None)
     except ValueError as error:

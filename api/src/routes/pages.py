@@ -19,6 +19,7 @@ class PageInfo(BaseModel):
 
 
 def parse_page_attributes(xml_content: str) -> dict:
+    """Extract attributes from a Page XML tag."""
     match = PAGE_TAG_PATTERN.search(xml_content)
     if not match:
         return {}
@@ -29,6 +30,7 @@ def parse_page_attributes(xml_content: str) -> dict:
 
 
 def get_all_pages() -> List[PageInfo]:
+    """Scan the pages directory and return metadata for all available pages."""
     pages = []
     if not PAGES_DIR.is_dir():
         return pages
@@ -47,11 +49,13 @@ def get_all_pages() -> List[PageInfo]:
 
 @router.get("/pages")
 async def list_pages() -> List[PageInfo]:
+    """Return a list of all available pages."""
     return get_all_pages()
 
 
 @router.get("/pages/{page_name}")
 async def get_page(page_name: str) -> Response:
+    """Return the XML content of a specific page."""
     normalized_page_name = page_name.strip().lower()
 
     if not PAGE_NAME_PATTERN.match(normalized_page_name):

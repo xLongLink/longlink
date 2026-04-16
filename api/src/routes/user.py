@@ -5,13 +5,15 @@ from src.models import UserUpdate
 from src.router import router
 
 
-@router.get('/user')
+@router.get("/user")
 async def get_user_details(user: db.User = Depends(authuser)):
+    """Return the authenticated user's details."""
     return user
 
 
-@router.patch('/user')
+@router.patch("/user")
 async def patch_user_details(payload: UserUpdate, user: db.User = Depends(authuser)):
+    """Update the authenticated user's details."""
     params = payload.model_dump(exclude_unset=True)
     if not params:
         return user

@@ -1,3 +1,0 @@
-"""
-Normalize the registry type
-"""

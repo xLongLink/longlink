@@ -14,6 +14,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 
 class SPAStaticFiles(StaticFiles):
+    """Static file server that serves index.html for unmatched SPA routes."""
+
     async def get_response(self, path: str, scope):
         try:
             return await super().get_response(path, scope)

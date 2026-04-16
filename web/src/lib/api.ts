@@ -9,6 +9,7 @@ export type ApiQueryParams = Record<string, QueryValue>;
 type RequestCredentialsMode = 'omit' | 'same-origin' | 'include';
 
 export type ApiRequestOptions<TBody = unknown> = {
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     body?: TBody;
     query?: ApiQueryParams;
     appName?: string;
@@ -71,7 +72,7 @@ const buildUrl = (path: string, query?: ApiQueryParams) => {
  * Throws an Error with the response message on failure.
  */
 export async function apiFetch<TResponse>(path: string, options: ApiRequestOptions = {}): Promise<TResponse> {
-    const { query, body, credentials } = options;
+    const { method, query, body, credentials } = options;
     const withCredentials = credentials === 'include';
 
     const url = buildUrl(path, query);
@@ -91,11 +92,13 @@ export async function apiFetch<TResponse>(path: string, options: ApiRequestOptio
             body instanceof Blob ||
             typeof body === 'string'
         ) {
-            fetchOptions = { ...fetchOptions, method: 'POST', body };
+            fetchOptions = { ...fetchOptions, method: method || 'POST', body };
         } else {
             headers['Content-Type'] = 'application/json';
-            fetchOptions = { ...fetchOptions, method: 'POST', body: JSON.stringify(body) };
+            fetchOptions = { ...fetchOptions, method: method || 'POST', body: JSON.stringify(body) };
         }
+    } else if (method) {
+        fetchOptions.method = method;
     }
 
     fetchOptions.headers = headers;

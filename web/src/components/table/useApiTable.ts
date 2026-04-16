@@ -16,6 +16,7 @@ type UseApiTableParams = {
     sorting: SortingState;
 };
 
+/** Hook that fetches and manages table data with pagination and sorting. */
 export function useApiTable<T extends object>({ endpoint, pagination, sorting }: UseApiTableParams) {
     const [data, setData] = useState<T[]>([]);
     const [total, setTotal] = useState(0);

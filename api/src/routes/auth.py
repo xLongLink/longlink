@@ -11,6 +11,7 @@ from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
 @router.get("/login/oidc")
 async def login_oidc(request: Request):
+    """Initiate OIDC login flow by redirecting to the identity provider."""
     oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
 
     try:
@@ -30,6 +31,7 @@ async def login_oidc(request: Request):
 
 @router.get("/auth/oidc")
 async def auth_oidc(request: Request):
+    """Handle OIDC callback, exchange code for token, and create/update user."""
     oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
 
     try:
@@ -67,5 +69,6 @@ async def auth_oidc(request: Request):
 
 @router.get("/logout")
 async def logout(request: Request):
+    """Clear the user session and log out."""
     request.session.clear()
     return {"ok": True}

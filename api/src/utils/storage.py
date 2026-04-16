@@ -3,33 +3,44 @@ import boto3
 from src.env import env
 from botocore.exceptions import ClientError
 
-_BUCKET_NAME_PATTERN = re.compile(r'^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$')
+_BUCKET_NAME_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$")
 
 
 def create(bucket_name: str) -> None:
+    """Create an S3 bucket using boto3."""
     if not _BUCKET_NAME_PATTERN.fullmatch(bucket_name):
-        raise ValueError('Bucket name must be 3-63 chars, lowercase, numbers or hyphens only')
+        raise ValueError(
+            "Bucket name must be 3-63 chars, lowercase, numbers or hyphens only"
+        )
 
     client_kwargs: dict[str, str] = {
-        'aws_access_key_id': env.ENV_PROVISION_STORAGE_ACCESS_KEY_ID,
-        'aws_secret_access_key': env.ENV_PROVISION_STORAGE_SECRET_ACCESS_KEY,
-        'endpoint_url': env.ENV_PROVISION_STORAGE_ENDPOINT_URL,
+        "aws_access_key_id": env.ENV_PROVISION_STORAGE_ACCESS_KEY_ID,
+        "aws_secret_access_key": env.ENV_PROVISION_STORAGE_SECRET_ACCESS_KEY,
+        "endpoint_url": env.ENV_PROVISION_STORAGE_ENDPOINT_URL,
     }
     if env.ENV_PROVISION_STORAGE_REGION_NAME:
-        client_kwargs['region_name'] = env.ENV_PROVISION_STORAGE_REGION_NAME
+        client_kwargs["region_name"] = env.ENV_PROVISION_STORAGE_REGION_NAME
 
-    client = boto3.client('s3', **client_kwargs)
+    client = boto3.client("s3", **client_kwargs)
 
+    # Check if bucket already exists
     try:
         client.head_bucket(Bucket=bucket_name)
         raise ValueError(f"Bucket '{bucket_name}' already exists")
     except ClientError as error:
-        error_code = str(error.response.get('Error', {}).get('Code', ''))
-        if error_code not in {'404', 'NoSuchBucket', 'NotFound'}:
+        # Only ignore "not found" errors; re-raise access/permission errors
+        error_code = str(error.response.get("Error", {}).get("Code", ""))
+        if error_code not in {"404", "NoSuchBucket", "NotFound"}:
             raise
 
-    create_kwargs: dict[str, str | dict[str, str]] = {'Bucket': bucket_name}
-    if env.ENV_PROVISION_STORAGE_REGION_NAME and env.ENV_PROVISION_STORAGE_REGION_NAME != 'us-east-1':
-        create_kwargs['CreateBucketConfiguration'] = {'LocationConstraint': env.ENV_PROVISION_STORAGE_REGION_NAME}
+    # Configure region for non-default regions
+    create_kwargs: dict[str, str | dict[str, str]] = {"Bucket": bucket_name}
+    if (
+        env.ENV_PROVISION_STORAGE_REGION_NAME
+        and env.ENV_PROVISION_STORAGE_REGION_NAME != "us-east-1"
+    ):
+        create_kwargs["CreateBucketConfiguration"] = {
+            "LocationConstraint": env.ENV_PROVISION_STORAGE_REGION_NAME
+        }
 
     client.create_bucket(**create_kwargs)

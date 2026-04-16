@@ -11,13 +11,12 @@ export type User = {
     date_creation?: string;
 };
 
+/** Hook that fetches the current user. */
 export function useUser() {
     return useQuery({
         queryKey: ['user'],
-        queryFn: () =>
-            apiFetch<User>('/user', {
-                credentials: 'include',
-            }),
+        queryFn: () => apiFetch<User>('/me'),
+        staleTime: Infinity,
     });
 }
 
