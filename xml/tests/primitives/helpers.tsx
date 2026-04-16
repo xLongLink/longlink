@@ -36,11 +36,7 @@ export function renderWithRuntime(
 }
 
 /** Renders children inside both a QueryClientProvider and a RuntimeProvider. */
-export function renderWithQuery(
-    children: ReactNode,
-    ctx: ExecutionContext = makeCtx(),
-    registry: RegistryShape = {}
-) {
+export function renderWithQuery(children: ReactNode, ctx: ExecutionContext = makeCtx(), registry: RegistryShape = {}) {
     const node: ASTNode = { name: 'root' };
     const client = new QueryClient({
         defaultOptions: { queries: { retry: false } },

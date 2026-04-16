@@ -1,7 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 import type { ASTNode, PreserveOrderNode } from './types';
 
-
 const TEXT_NODE_NAME = '#text';
 const ATTRIBUTES_NODE_NAME = ':@';
 
@@ -23,7 +22,6 @@ const parser = new XMLParser({
     ignoreDeclaration: true,
 });
 
-
 /**
  * Parses an XML string into an array of ASTNodes.
  *
@@ -43,7 +41,6 @@ export function xmlToAST(xml: string): ASTNode[] {
 
     return children;
 }
-
 
 /**
  * Converts a single preserve-order parser entry into an ASTNode.

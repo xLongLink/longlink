@@ -80,16 +80,16 @@ An XML abstraction layer on top of React that turns the UI into a pure REST API 
 
 ## Features
 
-| Feature | Description |
-|---|---|
-| `<Query id path>` | Fetches data via TanStack Query; exposes result under `id` in scope |
-| `<State id ...props>` | Scoped reactive state backed by Zustand; initial values set as props |
-| `<For each as>` | Iterates over a collection, creating a child scope per item |
-| `if` attribute | Conditionally renders an element; `if="!expr"` for negation |
-| `set:<target>` attribute | Updates a state value on click, e.g. `set:filter.value="'week'"` |
-| `path / method / body` | Wires a component to a REST mutation (GET/POST/PATCH/DELETE) |
-| `invalidate` | Refetches the named query after a successful mutation |
-| `{expr}` interpolation | Resolves scoped expressions in attributes and text content |
+| Feature                  | Description                                                          |
+| ------------------------ | -------------------------------------------------------------------- |
+| `<Query id path>`        | Fetches data via TanStack Query; exposes result under `id` in scope  |
+| `<State id ...props>`    | Scoped reactive state backed by Zustand; initial values set as props |
+| `<For each as>`          | Iterates over a collection, creating a child scope per item          |
+| `if` attribute           | Conditionally renders an element; `if="!expr"` for negation          |
+| `set:<target>` attribute | Updates a state value on click, e.g. `set:filter.value="'week'"`     |
+| `path / method / body`   | Wires a component to a REST mutation (GET/POST/PATCH/DELETE)         |
+| `invalidate`             | Refetches the named query after a successful mutation                |
+| `{expr}` interpolation   | Resolves scoped expressions in attributes and text content           |
 
 ## Architecture
 
@@ -158,13 +158,13 @@ createRoot(document.getElementById('app')!).render(
 
 ### Public API
 
-| Export | Description |
-|---|---|
-| `fromXml(xml)` | Parse an XML string into an AST |
-| `renderNode(node, registry, ctx)` | Render an AST node into a React element |
-| `render(xml, registry)` | Parse and render in one call |
-| `createRegistry(components)` | Build the component registry |
-| `createContext()` | Create a fresh execution context |
-| `action(Component)` | Wrap a component to receive `action` and `pending` props |
-| `evaluate(expr, ctx)` | Evaluate a scoped expression |
-| `interpolate(str, ctx)` | Resolve `{expr}` placeholders in a string |
+| Export                            | Description                                              |
+| --------------------------------- | -------------------------------------------------------- |
+| `fromXml(xml)`                    | Parse an XML string into an AST                          |
+| `renderNode(node, registry, ctx)` | Render an AST node into a React element                  |
+| `render(xml, registry)`           | Parse and render in one call                             |
+| `createRegistry(components)`      | Build the component registry                             |
+| `createContext()`                 | Create a fresh execution context                         |
+| `action(Component)`               | Wrap a component to receive `action` and `pending` props |
+| `evaluate(expr, ctx)`             | Evaluate a scoped expression                             |
+| `interpolate(str, ctx)`           | Resolve `{expr}` placeholders in a string                |
