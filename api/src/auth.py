@@ -3,7 +3,6 @@ from fastapi import Request, HTTPException
 from src.env import env
 from authlib.integrations.starlette_client import OAuth
 
-
 oauth = OAuth()
 oauth.register(
     name="oidc",
