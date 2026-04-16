@@ -1,69 +1,62 @@
 # ReactXML
 
-Create a XML abstraction layer on top of React, so that the UI becomes a pure client of a rest API. This allows for a clear Separation of Concerns:
+An XML abstraction layer on top of React that turns the UI into a pure REST API client. The backend owns data and mutations; the XML layer declares structure and data flow; React handles rendering.
 
-- Backend (REST API) → owns data + mutations
-- XML layer → defines data flow + UI structure
-- React runtime → purely renders + executes
+**Designed for:** internal dashboards, admin panels, back-office tools, and any CRUD-heavy UI that values consistency and rapid iteration over custom logic.
 
-Designed for:
-
-- Internal dashboards (Data-heavy: tables, forms, filters)
-- admin panels
-- moderation tools
-- back-office systems
-- CRUD-dominant workflows
-- Repetitive UI patterns
-- Low tolerance for inconsistency
-- High need for rapid iteration
-
-Example
+## Example
 
 ```xml
-<Page name="Example" icon="circle-alert">
+<Page name="Dashboard" icon="layout-dashboard">
 
-  <!-- Mutation example -->
-  <Query id="users" path="/users?active=true&age>18&sort=ascending">
+  <!-- Fetch data, iterate, conditionally mutate -->
+  <Query id="users" path="/users?active=true">
     <For each="users" as="user">
       <Card>
-        <CardHeader>
-          <CardTitle>{user.title}</CardTitle>
-          <CardDescription if="user.admin">
-            <Badge>Admin</Badge>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            path="/users/{user.id}"
-            method="PATCH"
-            body="{ role: 'member' }"
-            invalidate="users"
-            if="user.admin"
-          >
-            Revoke admin
-          </Button>
-          <Button
-            path="/users/{user.id}"
-            method="PATCH"
-            body="{ role: 'admin' }"
-            invalidate="users"
-            if="!user.admin"
-          >
-            Promote to admin
-          </Button>
-        </CardContent>
+        <CardTitle>{user.name}</CardTitle>
+        <Badge if="user.admin">Admin</Badge>
+        <Button
+          path="/users/{user.id}"
+          method="PATCH"
+          body="{ role: 'member' }"
+          invalidate="users"
+          if="user.admin"
+        >
+          Revoke admin
+        </Button>
+        <Button
+          path="/users/{user.id}"
+          method="PATCH"
+          body="{ role: 'admin' }"
+          invalidate="users"
+          if="!user.admin"
+        >
+          Promote to admin
+        </Button>
       </Card>
     </For>
   </Query>
 
-  <!-- Sample Table Example -->
+  <!-- Local state drives a query parameter -->
+  <State id="filter" value="month">
+    <Query id="chart" path="/stats?period={filter.value}">
+      <ButtonGroup>
+        <Button variant="outline" set="filter.value = 'week'">Weekly</Button>
+        <Button variant="outline" set="filter.value = 'month'">Monthly</Button>
+        <Button variant="outline" set="filter.value = 'year'">Yearly</Button>
+      </ButtonGroup>
+      <BarChart data="{chart}" />
+    </Query>
+  </State>
+
+  <!-- Table with inline mutations -->
   <Query id="invoices" path="/invoices?paid=false">
     <Table>
-      <TableCaption>A list of your recent invoices.</TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead>Invoice</TableHead>
           <TableHead>Amount</TableHead>
+          <TableHead />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -72,148 +65,106 @@ Example
             <TableCell>{invoice.id}</TableCell>
             <TableCell>{invoice.amount}</TableCell>
             <TableCell>
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button variant="ghost" size="icon" className="size-8"><MoreHorizontalIcon /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem >
-                    <Dialog>
-                        <DialogTrigger>
-                          Edit
-                        <DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Edit Invoice {invoice.id}</DialogTitle>
-                          </DialogHeader>
-                            <Input id="amount" name="username" defaultValue="{invoice.amount}" />
-                            <DialogFooter>
-                              <DialogClose>
-                                <Button variant="outline">Cancel</Button>
-                              </DialogClose>
-                              <Button path="/invoices/{invoice.id}" method="PATCH" body="{'amount': amount }">
-                                Save changes
-                              </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem path="/invoices" method="POST" body="{'amount': invoice.amound }" invalidate="invoices">
-                    Duplicate
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem path="/invoices/{invoice.id}" method="DELETE" invalidate="invoices" variant="destructive">
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button path="/invoices/{invoice.id}" method="DELETE" invalidate="invoices" variant="destructive">
+                Delete
+              </Button>
             </TableCell>
           </TableRow>
         </For>
       </TableBody>
-    <TableFooter>
-      <TableRow>
-        <TableCell colSpan="3">Total</TableCell>
-        <TableCell>{invoices.total}</TableCell>
-      </TableRow>
-    <TableFooter>
     </Table>
   </Query>
 
-  <!-- Data Table Example, this shall support pagination, ecc using @tanstack/react-table -->
-
-  <!-- Chart example - use recharts -->
-  <State id="filter" value="month">
-    <Query id="chart" path="/chart?filter={filter.value}">
-    <ButtonGroup>
-      <Button variant="outline" set="filter.value = 'week'">Weekly</Button>
-      <Button variant="outline" set="filter.value = 'month'">Monthly</Button>
-      <Button variant="outline" set="filter.value = 'year'">Yearly</Button>
-    </ButtonGroup>
-    <ChartContainer>
-      <BarChart data="{chart}">
-        <CartesianGrid vertical="false" />
-        <XAxis dataKey="{filter}" tickLine="false" tickMargin="10" axisLine="false" tickFormatter={"(value) => value.slice(0, 3)"}/>
-        <ChartTooltipContent />
-        <ChartLegendContent />
-        <Bar dataKey="desktop" fill="var(--color-desktop)" radius="4" />
-        <Bar dataKey="mobile" fill="var(--color-mobile)" radius="4" />
-      </BarChart>
-    </ChartContainer>
-    </Query>
-  </State>
-<Page>
+</Page>
 ```
 
 ## Features
 
-- Global state using `zustand`
-- Conditional rendering `if` as parameter, if false not render
-- State update `set` as parameter allows to set or update a state
-- Logic Components:
-    - `<For each="list of items" as="item">`
-    - `<State id="<name of the state>" ...props >` the state will have the defined values
-    - `<Query id="<name of the state>" path="where to fetch the data">` use TanStack Query
+| Feature | Description |
+|---|---|
+| `<Query id path>` | Fetches data via TanStack Query; exposes result under `id` in scope |
+| `<State id ...props>` | Scoped reactive state backed by Zustand; initial values set as props |
+| `<For each as>` | Iterates over a collection, creating a child scope per item |
+| `if` attribute | Conditionally renders an element; `if="!expr"` for negation |
+| `set` attribute | Updates a state value on click, e.g. `set="filter.value = 'week'"` |
+| `path / method / body` | Wires a component to a REST mutation (GET/POST/PATCH/DELETE) |
+| `invalidate` | Refetches the named query after a successful mutation |
+| `{expr}` interpolation | Resolves scoped expressions in attributes and text content |
 
-# Architecture
+## Architecture
 
 ```
 src/
-├── compiler/              # XML → validated semantic IR (no runtime execution)
-│   └── parseXML.ts        # Parse raw XML string → basic AST (nodes, attributes, text)
-│
-├── primitives/            # Core semantic building blocks (control flow + data wiring)
-│   ├── Page.tsx           # Root container (initial scope, layout entry, top-level orchestration)
-│   ├── Query.tsx          # Data fetching via TanStack Query (exposes data, loading, error, refetch)
-│   ├── State.tsx          # Scoped reactive state (Zustand-backed, persistent per scope path)
-│   ├── For.tsx            # Iteration over collections (creates loop scope, enforces key stability)
-│   ├── Grid.tsx           # Grid layout component
-│   └── index.ts           # Public API (render, createStore, createRegistry, setup helpers)
+├── compiler.ts    # Parse XML string → internal AST (nodes, attributes, text)
+├── runtime.tsx    # Evaluate expressions and resolve scoped values
+├── renderers.tsx  # Convert runtime nodes into React elements
+├── registry.tsx   # Register components and runtime context
+├── types.ts       # Shared runtime and AST types
+├── primitives/    # Built-in control-flow and data components
+│   ├── Page.tsx   # Root container — initial scope, layout entry
+│   ├── Query.tsx  # Data fetching via TanStack Query
+│   ├── State.tsx  # Scoped reactive state (Zustand-backed)
+│   ├── For.tsx    # Iteration over collections
+│   └── Grid.tsx   # Grid layout
+└── index.ts       # Public API
 ```
 
 ## Usage
 
-Run the example frontend and API together with:
+Start the example (frontend + API):
 
 ```bash
 bun run dev
 ```
 
-Run only one side when needed with `bun run web` or `bun run api`.
+Or run each side independently: `bun run web` / `bun run api`.
 
-```js
+### Integration
+
+```ts
 import { createRoot } from 'react-dom/client';
-import { action, createContext, createRegistry, fromXml, renderNode } from 'reactxml';
+import { fromXml, renderNode, createRegistry, createContext, action } from 'reactxml';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-/* Fetch the UI tree from the API */
-const response = await fetch('http://localhost:8000/');
-const xmlTree = fromXml(await response.text());
+// Fetch the UI tree from the server
+const xml = await fetch('http://localhost:8000/').then(r => r.text());
+const tree = fromXml(xml);
 
-/* Setup ReactXML */
-const queryClient = new QueryClient();
-
+// Wrap action components with the mutation helper
 function Button({ action, pending, children, ...rest }) {
   return (
     <button onClick={action} disabled={pending} {...rest}>
       {pending ? 'Saving...' : children}
     </button>
-  )
+  );
 }
 
-/* Register the components */
+// Register all components used in the XML
 const registry = createRegistry({
-  Text,
   Card,
+  Badge,
   Button: action(Button),
-  ...
+  // ...
 });
 
-const component = renderNode(xmlTree, registry, createContext());
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById('app')!).render(
   <QueryClientProvider client={queryClient}>
-    {component}
+    {renderNode(tree, registry, createContext())}
   </QueryClientProvider>
 );
 ```
+
+### Public API
+
+| Export | Description |
+|---|---|
+| `fromXml(xml)` | Parse an XML string into an AST |
+| `renderNode(node, registry, ctx)` | Render an AST node into a React element |
+| `render(xml, registry)` | Parse and render in one call |
+| `createRegistry(components)` | Build the component registry |
+| `createContext()` | Create a fresh execution context |
+| `action(Component)` | Wrap a component to receive `action` and `pending` props |
+| `evaluate(expr, ctx)` | Evaluate a scoped expression |
+| `interpolate(str, ctx)` | Resolve `{expr}` placeholders in a string |
