@@ -1,10 +1,12 @@
 import os
 from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Envs(BaseSettings):
-    """App specific secrets"""
+    """App specific secrets."""
+
     DEV: bool = False
     KEY: str  # Example: 'samplekey'
 
@@ -21,6 +23,8 @@ class Envs(BaseSettings):
 
 
 class EnvsDev(Envs):
+    """Development defaults for local execution."""
+
     DEV: bool = True
     KEY: str = 'longlink'
 
@@ -32,15 +36,12 @@ class EnvsDev(Envs):
 
 @lru_cache(maxsize=1)
 def get_envs() -> Envs:
+    """Load and cache environment settings for current process."""
+
     if os.getenv('DEV', '').lower() in {'1', 'true', 'yes', 'on'}:
-        return EnvsDev()  # type: ignore
+        return EnvsDev()  # type: ignore[return-value]
 
-    return Envs()  # type: ignore
-
-
-class _LazyEnvs:
-    def __getattr__(self, item):
-        return getattr(get_envs(), item)
+    return Envs()  # type: ignore[return-value]
 
 
-envs = _LazyEnvs()
+envs: Envs = get_envs()
