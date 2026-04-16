@@ -1,5 +1,57 @@
 import { createElement, useState, type ComponentProps, type ComponentType, type MouseEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { For } from './primitives/For';
+import { Grid } from './primitives/Grid';
+import { Page } from './primitives/Page';
+import { Query } from './primitives/Query';
+import { State } from './primitives/State';
+import type { ExecutionContext, RegistryShape } from './types';
+
+// ---------------------------------------------------------------------------
+// createContext
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a minimal ExecutionContext with empty state, queries, and scope.
+ * Accepts optional partial overrides for any of the three fields.
+ */
+export function createContext(initial: Partial<ExecutionContext> = {}): ExecutionContext {
+    return {
+        state: initial.state ?? {},
+        queries: initial.queries ?? {},
+        scope: initial.scope ?? {},
+    };
+}
+
+// ---------------------------------------------------------------------------
+// createRegistry
+// ---------------------------------------------------------------------------
+
+const defaultPrimitives = {
+    Page,
+    Query,
+    State,
+    For,
+    Grid,
+} satisfies RegistryShape;
+
+/**
+ * Creates a component registry by merging the built-in primitives with the
+ * provided custom components. Custom components override primitives with the
+ * same name.
+ */
+export function createRegistry<const TRegistry extends RegistryShape>(
+    registry: TRegistry
+): typeof defaultPrimitives & TRegistry {
+    return {
+        ...defaultPrimitives,
+        ...registry,
+    };
+}
+
+// ---------------------------------------------------------------------------
+// action
+// ---------------------------------------------------------------------------
 
 type ActionHandler = (event: MouseEvent<any>) => Promise<void>;
 
@@ -41,21 +93,21 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
         body instanceof Blob ||
         typeof body === 'string'
     ) {
-        return {
-            method,
-            body,
-        };
+        return { method, body };
     }
 
     return {
         method,
         body: JSON.stringify(body),
-        headers: {
-            'content-type': 'application/json',
-        },
+        headers: { 'content-type': 'application/json' },
     };
 }
 
+/**
+ * Higher-order component that injects `action` and `pending` props into the
+ * wrapped component. The `action` handler calls `path` with `method` and `body`,
+ * then invalidates the listed query keys on success.
+ */
 export function action<TComponent extends ComponentType<any>>(Component: TComponent) {
     type Props = Omit<ComponentProps<TComponent>, keyof ActionComponentProps> & ActionProps;
 
@@ -66,9 +118,7 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
         const handleAction: ActionHandler = async (event) => {
             event.preventDefault();
 
-            if (!path || pending) {
-                return;
-            }
+            if (!path || pending) return;
 
             setPending(true);
 

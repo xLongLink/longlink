@@ -21,7 +21,7 @@ src/
 └── index.ts      # Public API
 
 example/          # Minimal integration example
-tests/            # Existing test area; do not add new tests for now
+tests/            # Test suite for the runtime pipeline
 ```
 
 ## Working Rules
@@ -29,4 +29,4 @@ tests/            # Existing test area; do not add new tests for now
 - Prefer the current runtime model over backward compatibility
 - Remove obsolete code when replacing an older approach
 - Keep changes concise and aligned with the repository structure above
-- Do not add new tests
+- Tests are encouraged: keep them simple, well-commented, and focused on one behaviour per test

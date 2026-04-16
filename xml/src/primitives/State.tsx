@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { RuntimeProvider, useRuntime } from '../runtime/useRuntime';
+import { RuntimeProvider, useRuntime } from '../runtime';
 
 export function State({
     id,

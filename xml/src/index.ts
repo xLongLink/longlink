@@ -1,10 +1,6 @@
-export { xmlToAST as fromXml } from './compiler/parseXML';
-export { renderNode } from './renderer/renderNode';
-export { createContext } from './registry/createContext';
-export { action } from './registry/action';
-export { createRegistry } from './registry/createRegistry';
-export { evaluate } from './runtime/evaluate';
-export { interpolate } from './runtime/interpolate';
-export { useRuntime } from './runtime/useRuntime';
+export { xmlToAST as fromXml } from './compiler';
+export { renderNode, render } from './renderers';
+export { createContext, action, createRegistry } from './registry';
+export { evaluate, interpolate, useRuntime } from './runtime';
 export { Grid } from './primitives/Grid';
 export type { ASTNode, ExecutionContext, RegistryComponent, RegistryShape } from './types';

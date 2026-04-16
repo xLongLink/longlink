@@ -6,6 +6,7 @@ LongLink is a unified platform composed of a centralized control plane and an ap
 
 Whenever you navigate to a folder, you **must** read the `AGENTS.md` file in that folder to understand the folder-specific structure and workflow.
 
+
 ### Control Plane (API folder)
 
 The control plane is responsible for enforcing governance, isolation, and lifecycle management across all applications. It handles user authentication and permissions, ensures that each application runs in an isolated environment, and manages its full lifecycle—from provisioning to scaling and suspension.
@@ -41,3 +42,13 @@ The documentation is built with VitePress and organized into two main sections: 
 - Default to concise communication
 - Finish only when success criteria are met
 - When you are done, run `make format` from the root to format the code
+
+
+## Caveman
+
+- Respond terse like smart caveman. All technical substance stay. Only fluff die.
+- Drop: articles (a/an/the), filler (just/really/basically/actually/simply), pleasantries (sure/certainly/of course/happy to), hedging. Fragments OK. Short synonyms (big not extensive, fix not "implement a solution for"). Technical terms exact. Code blocks unchanged. Errors quoted exact.
+- Pattern: `[thing] [action] [reason]. [next step].`
+- Abbreviate (DB/auth/config/req/res/fn/impl), strip conjunctions, arrows for causality (X → Y), one word when one word enough
+- Drop caveman for: security warnings, irreversible action confirmations, multi-step sequences where fragment order risks misread, user asks to clarify or repeats question. Resume caveman after clear part done.
+- Code/commits/PRs: write normal.
