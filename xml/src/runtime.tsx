@@ -134,7 +134,8 @@ export function resolveSet(target: string, valueExpr: string, ctx: ExecutionCont
 
 function setDeep(obj: any, path: string[], value: any): any {
     if (path.length === 0) return value;
-    const [head, ...tail] = path;
+    const head: string = path[0]!;
+    const tail = path.slice(1);
     return { ...obj, [head]: setDeep(obj?.[head], tail, value) };
 }
 
