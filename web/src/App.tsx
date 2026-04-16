@@ -11,6 +11,11 @@ import SdkLayout from './sdk/Layout';
 import SdkLonglink from './sdk/Longlink';
 import { RequireAuth } from '@/components/Auth';
 
+const buildMode = import.meta.env.MODE;
+
+const isSdkBuild = buildMode === 'sdk';
+const isDevelopment = buildMode === 'development';
+
 function GlobalLoader() {
     const isFetching = useIsFetching();
     const isMutating = useIsMutating();
@@ -27,14 +32,20 @@ function GlobalLoader() {
     );
 }
 
+/**
+ * Wraps route element with auth guard.
+ */
 const withAuth = (element: ReactElement) => <RequireAuth>{element}</RequireAuth>;
 
-const router = createBrowserRouter([
+const sdkRoutes = [
     {
-        path: '/sdk',
+        path: '/',
         element: <SdkLayout />,
         children: [{ path: '*', element: <SdkLonglink /> }],
     },
+];
+
+const apiRoutes = [
     {
         path: '/',
         element: withAuth(<Layout />),
@@ -59,8 +70,37 @@ const router = createBrowserRouter([
         children: [{ index: true, element: <OrganizationPage page="profile" /> }],
     },
     { path: '*', element: withAuth(<NotFound />) },
-]);
+];
 
+/**
+ * Builds route tree based on bundle mode.
+ */
+function getRoutes() {
+    // SDK bundle serves app from root without control-plane auth routes.
+    if (isSdkBuild) {
+        return sdkRoutes;
+    }
+
+    // Dev bundle exposes both trees so SDK path and API path work together.
+    if (isDevelopment) {
+        return [
+            {
+                path: '/sdk',
+                element: <SdkLayout />,
+                children: [{ path: '*', element: <SdkLonglink /> }],
+            },
+            ...apiRoutes,
+        ];
+    }
+
+    return apiRoutes;
+}
+
+const router = createBrowserRouter(getRoutes());
+
+/**
+ * Renders app shell, router, global toaster.
+ */
 export default function App() {
     return (
         <>
