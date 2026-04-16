@@ -21,7 +21,8 @@ class SPAStaticFiles(StaticFiles):
             if exc.status_code != 404:
                 raise
 
-        return await super().get_response('index.html', scope)
+        return await super().get_response("index.html", scope)
+
 
 app = FastAPI(
     docs_url=None,
@@ -31,18 +32,18 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:8000',
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8000",
     ],
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.add_middleware(
     SessionMiddleware,
     secret_key=env.KEY,
-    same_site='lax',
+    same_site="lax",
     https_only=False,
 )
 
@@ -57,19 +58,16 @@ import src.routes.compute
 import src.routes.storage
 import src.routes.database
 import src.routes.settings
+import src.routes.organization
 
 app.include_router(router)
 
-static_dir = Path(__file__).resolve().parent / 'static'
+static_dir = Path(__file__).resolve().parent / "static"
 if static_dir.exists():
-    app.mount('/', SPAStaticFiles(directory=static_dir, html=True), name='static')
+    app.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(
-        'main:app',
-        host='0.0.0.0',
-        port=8000
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)

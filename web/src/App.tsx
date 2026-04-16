@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
 import { useIsFetching, useIsMutating } from '@tanstack/react-query';
-import { ThemeProvider } from '@/components/theme';
 import { Toaster } from '@/ui/sonner';
 import Layout from './Layout';
 import Longlink from './pages/org/Longlink';
@@ -65,10 +64,10 @@ const router = createBrowserRouter([
 
 export default function App() {
     return (
-        <ThemeProvider>
+        <>
             <GlobalLoader />
             <RouterProvider router={router} />
             <Toaster />
-        </ThemeProvider>
+        </>
     );
 }

@@ -76,7 +76,11 @@ export function renderNode(
 
     return (
         <RuntimeProvider value={{ node, registry, ctx }}>
-            {createElement(component, resolveParams(node.params, ctx), node.children ? <RuntimeChildren /> : undefined)}
+            {createElement(
+                component,
+                { ...resolveParams(node.params, ctx), _baseUrl: ctx.baseUrl },
+                node.children ? <RuntimeChildren /> : undefined
+            )}
         </RuntimeProvider>
     );
 }

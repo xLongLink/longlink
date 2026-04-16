@@ -21,6 +21,7 @@ export type ExecutionContext = {
     state: Record<string, [any, Function]>;
     queries: Record<string, any>;
     scope: Record<string, any>;
+    baseUrl?: string;
 };
 
 /** A React component that can be registered and rendered from XML. */
