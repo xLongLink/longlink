@@ -47,6 +47,10 @@ export function createRegistry<const TRegistry extends RegistryShape>(
 // action
 // ---------------------------------------------------------------------------
 
+/**
+ * Normalizes the `invalidate` prop into an array of query keys.
+ * Accepts a string (comma-separated), an array, or an invalid value.
+ */
 function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
     if (Array.isArray(value)) {
         return value;
@@ -62,11 +66,17 @@ function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
         .filter(Boolean);
 }
 
+/**
+ * Builds a RequestInit object from method and body.
+ * Handles native body types (FormData, URLSearchParams, Blob, string) directly,
+ * serializing all other values as JSON with a content-type header.
+ */
 function buildRequestInit(method: string, body: unknown): RequestInit {
     if (method === 'GET' || method === 'HEAD' || body === undefined) {
         return { method };
     }
 
+    /* Pass native body types through as-is */
     if (
         body instanceof FormData ||
         body instanceof URLSearchParams ||
@@ -76,6 +86,7 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
         return { method, body };
     }
 
+    /* Serialize unknown types as JSON */
     return {
         method,
         body: JSON.stringify(body),
@@ -95,6 +106,7 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
         const queryClient = useQueryClient();
         const [pending, setPending] = useState(false);
 
+        /* Execute request, then invalidate listed query keys on success */
         const handleAction: ActionHandler = async (event) => {
             event.preventDefault();
 
@@ -117,6 +129,7 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
             }
         };
 
+        /* Inject action handler and pending state into wrapped component */
         return createElement(Component as ComponentType<any>, {
             ...(props as ComponentProps<TComponent>),
             action: handleAction,

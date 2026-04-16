@@ -18,6 +18,7 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
     const resolved: Record<string, unknown> = {};
     const setHandlers: Array<() => void> = [];
 
+    /* Resolve each attribute: if/else for conditionals, set: for state writes, rest via resolveValue */
     for (const [key, value] of Object.entries(params)) {
         if (key === 'if') continue;
 
@@ -29,6 +30,7 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
         resolved[key] = resolveValue(value, ctx);
     }
 
+    /* Collapse multiple set: handlers into a single onClick */
     if (setHandlers.length > 0) {
         resolved.onClick = () => { for (const handler of setHandlers) handler(); };
     }

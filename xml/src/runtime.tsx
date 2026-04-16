@@ -15,6 +15,7 @@ import type { ASTNode, ExecutionContext, RegistryShape, RuntimeState } from './t
  * Throws a SyntaxError if the expression string is not valid JavaScript.
  */
 export function evaluate(expr: string, ctx: ExecutionContext): any {
+    /* Build scope: state values, then queries, then local scope (highest priority) */
     const scope = {
         ...Object.fromEntries(Object.entries(ctx.state).map(([key, [value]]) => [key, value])),
         ...ctx.queries,
@@ -115,6 +116,7 @@ export function resolveCondition(condition: string | undefined, ctx: ExecutionCo
  * Throws if the first segment does not match a known state key.
  */
 export function resolveSet(target: string, valueExpr: string, ctx: ExecutionContext): () => void {
+    /* Parse dot-separated target into state key and property path */
     const dotIndex = target.indexOf('.');
     const stateKey = dotIndex === -1 ? target : target.slice(0, dotIndex);
     const propPath = dotIndex === -1 ? [] : target.slice(dotIndex + 1).split('.');
@@ -125,6 +127,7 @@ export function resolveSet(target: string, valueExpr: string, ctx: ExecutionCont
         throw new Error(`set: unknown state "${stateKey}"`);
     }
 
+    /* Return a closure that evaluates the expression and writes to state */
     return () => {
         const [current, setter] = stateEntry;
         const newValue = evaluate(valueExpr, ctx);
@@ -132,6 +135,10 @@ export function resolveSet(target: string, valueExpr: string, ctx: ExecutionCont
     };
 }
 
+/**
+ * Recursively sets a nested property on an object following a path array.
+ * Returns a new object with the deep property updated, preserving immutability.
+ */
 function setDeep(obj: any, path: string[], value: any): any {
     if (path.length === 0) return value;
     const head: string = path[0]!;

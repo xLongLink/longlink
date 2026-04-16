@@ -31,7 +31,12 @@ tests/             # Test suite for the runtime pipeline
 
 ## Working Rules
 
+- This is a Bun project — use `bun` instead of `npm`/`npx` for scripts and package management
 - Prefer the current runtime model over backward compatibility
 - Remove obsolete code when replacing an older approach
 - Keep changes concise and aligned with the repository structure above
 - Tests are encouraged: keep them simple, well-commented, and focused on one behaviour per test
+
+## Commenting Conventions
+
+All exported functions must have a JSDoc description (`/** ... */`) placed directly above the function declaration, explaining its purpose and behaviour. Any code block that contains non-trivial logic must have a short inline comment (`/* ... */`) on its own line describing that block. Use `bun run` (or `bun` directly) to typecheck and format the code.
