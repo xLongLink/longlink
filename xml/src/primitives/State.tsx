@@ -31,6 +31,7 @@ export function State({
     const { ctx } = runtime;
     const [value, setValue] = useState(initialState);
 
+    /* Register this state in context as a [value, setter] tuple */
     const childCtx = {
         ...ctx,
         state: {

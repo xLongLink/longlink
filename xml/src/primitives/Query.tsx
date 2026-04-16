@@ -30,6 +30,7 @@ export function Query({ id, path: pathTemplate, children }: { id?: string; path?
     const { ctx } = runtime;
     const path = interpolate(pathTemplate, ctx);
 
+    /* Fetch and cache query results via TanStack Query */
     const { data } = useQuery({
         queryKey: [id, path],
         queryFn: async () => {
@@ -38,6 +39,7 @@ export function Query({ id, path: pathTemplate, children }: { id?: string; path?
         },
     });
 
+    /* Expose fetched data to descendants under the given id */
     const childCtx = {
         ...ctx,
         queries: {

@@ -31,6 +31,7 @@ export function For({ each, as, children }: { each?: string; as?: string; childr
         return null;
     }
 
+    /* Inject item and $index into scope for each iteration */
     return items.map((item, index) => {
         const childCtx = {
             ...ctx,

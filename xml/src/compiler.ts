@@ -35,6 +35,7 @@ export function xmlToAST(xml: string): ASTNode[] {
 
     const children: ASTNode[] = [];
 
+    /* Convert each parser entry, skipping nulls (whitespace-only text, declarations) */
     for (const entry of parsed) {
         const node = convertNode(entry);
         if (node) children.push(node);
@@ -73,6 +74,7 @@ function convertNode(entry: PreserveOrderNode): ASTNode | null {
         return null;
     }
 
+    /* Extract string attribute values only (discard booleans/numbers from parser) */
     const rawAttributes = entry[ATTRIBUTES_NODE_NAME];
     const params: Record<string, string> = {};
     if (rawAttributes && typeof rawAttributes === 'object') {
@@ -83,6 +85,7 @@ function convertNode(entry: PreserveOrderNode): ASTNode | null {
         }
     }
 
+    /* Recursively convert child nodes */
     const childrenRaw = entry[nodeName];
     const children: ASTNode[] = [];
 
