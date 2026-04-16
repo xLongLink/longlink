@@ -58,7 +58,6 @@ import src.routes.pages
 import src.routes.users
 import src.routes.compute
 import src.routes.storage
-import src.routes.database
 import src.routes.settings
 import src.routes.organization
 
