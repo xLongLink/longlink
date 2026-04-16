@@ -2,10 +2,40 @@ import { createElement, useState, type ComponentProps, type ComponentType } from
 import { useQueryClient } from '@tanstack/react-query';
 import { For } from './primitives/For';
 import { Grid } from './primitives/Grid';
-import { Page } from './primitives/Page';
+import { Page as PrimitivesPage } from './primitives/Page';
 import { Query } from './primitives/Query';
 import { State } from './primitives/State';
 import type { ActionHandler, ActionProps, ActionComponentProps, ExecutionContext, RegistryShape } from './types';
+
+import { Button } from './components/Button';
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/Card';
+import Checkbox from './components/Checkbox';
+import { Icon } from './components/Icon';
+import Input from './components/Input';
+import Menu, { MenuSection, MenuSubSection } from './components/Menu';
+import Range from './components/Range';
+import Select from './components/Select';
+import Separator from './components/Separator';
+import Slider from './components/Slider';
+import Switch from './components/Switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/Table';
+import Textarea from './components/Textarea';
+import { Blockquote, Code, H1, H2, H3, H4, Li, P, Ul } from './components/Typography';
+
+import Columns, { Column } from './layout/Columns';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from './layout/Dialog';
+import Hero from './layout/Hero';
+import Page from './layout/Page';
+import Stack from './layout/Stack';
+import { Tabs, TabsList, TabsTrigger } from './layout/Tabs';
 
 /**
  * Creates a minimal ExecutionContext with empty state, queries, and scope.
@@ -19,13 +49,65 @@ export function createContext(initial: Partial<ExecutionContext> = {}): Executio
     };
 }
 
-const defaultPrimitives = {
+const defaultRegistry = {
     Page,
+    PrimitivesPage,
     Query,
     State,
     For,
     Grid,
+    Button,
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    Checkbox,
+    Columns,
+    Column,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    Hero,
+    Icon,
+    Input,
+    Li,
+    Menu,
+    MenuSection,
+    MenuSubSection,
+    Range,
+    Select,
+    Separator,
+    Slider,
+    Stack,
+    Switch,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+    Textarea,
+    Blockquote,
+    Code,
+    H1,
+    H2,
+    H3,
+    H4,
+    P,
+    Ul,
+    Tabs,
+    TabsList,
+    TabsTrigger,
 } satisfies RegistryShape;
+
+export const registry = defaultRegistry;
 
 /**
  * Creates a component registry by merging the built-in primitives with the
@@ -33,11 +115,11 @@ const defaultPrimitives = {
  * same name.
  */
 export function createRegistry<const TRegistry extends RegistryShape>(
-    registry: TRegistry
-): typeof defaultPrimitives & TRegistry {
+    customRegistry: TRegistry
+): typeof defaultRegistry & TRegistry {
     return {
-        ...defaultPrimitives,
-        ...registry,
+        ...defaultRegistry,
+        ...customRegistry,
     };
 }
 

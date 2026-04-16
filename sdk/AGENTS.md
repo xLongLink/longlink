@@ -1,6 +1,17 @@
 # AGENTS.md
 
-This folder contains the LongLink Python SDK, the folder contains:
+This folder contains the LongLink Python SDK.
+
+## Architecture
+
+```
+sdk/
+├── longlink/           # Core SDK code
+├── sample/           # Sample applications
+└── tests/           # Unit tests
+```
+
+This folder contains:
 
 - `tests` - Unit tests for the SDK
 - `longlink` - Core SDK code

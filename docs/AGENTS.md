@@ -6,6 +6,17 @@ Users may come from different technical backgrounds, industries, and regions. Do
 
 LongLink provides a standardized system for identity, permissions, storage, execution, and observability. Documentation must reflect these goals: clarity, consistency, and technical accuracy.
 
+## Architecture
+
+```
+docs/
+├── src/
+│   ├── api/           # Control plane API documentation
+│   ├── sdk/          # Application SDK documentation
+│   └── public/       # Public assets
+└── .vitepress/      # VitePress configuration
+```
+
 ## Custom Containers
 
 Supported patterns:

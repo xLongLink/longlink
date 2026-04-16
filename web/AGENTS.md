@@ -6,6 +6,24 @@ You are working on a vite tailwind shadcn project.
 - Ensure consistency across the application.
 - For static content, do not use .map(); write each JSX element explicitly inline.
 
+## Architecture
+
+```
+web/
+├── src/
+│   ├── components/     # Shared UI components
+│   ├── hooks/         # Custom React hooks
+│   ├── libs/          # Utility libraries (API, logging)
+│   ├── longlink/      # LongLink integration
+│   ├── pages/        # Page definitions
+│   ├── ui/           # shadcn/ui components
+│   ├── xml/          # ReactXML runtime
+│   ├── layouts/       # Layout components
+│   ├── App.tsx       # Main app entry
+│   └── Layout.tsx    # Layout wrapper
+└── pages/            # Vite page routes
+```
+
 ## Code structure
 
 - `assets`

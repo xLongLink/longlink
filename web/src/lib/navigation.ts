@@ -1,7 +1,7 @@
 import { createElement, type ComponentType } from 'react';
 import type { LucideProps } from 'lucide-react';
 import { BarChart3, Blocks, FolderKanban, Settings, Users, Workflow } from 'lucide-react';
-import { Icon } from '@/longlink/Icon';
+import { Icon } from '@/xml/components/Icon';
 
 export type NavigationTab = {
     value: string;

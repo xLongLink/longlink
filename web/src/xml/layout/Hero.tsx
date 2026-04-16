@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Icon } from '@/longlink/Icon';
+import { Icon } from '@/xml/components/Icon';
 import { Button } from '@/ui/button';
 import { Dialog, DialogTrigger } from '@/ui/dialog';
 

@@ -2,6 +2,15 @@
 
 Thanks for contributing to the Python SDK.
 
+## Architecture
+
+```
+sdk/
+├── longlink/           # Core SDK code
+├── sample/           # Sample applications
+└── tests/           # Unit tests
+```
+
 ## What this folder owns
 
 The SDK defines how applications are built on LongLink.

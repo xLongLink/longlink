@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/ui/card';
 import { buttonVariants } from '@/ui/button';
 import { useUser } from '@/hooks/use-user';
 
-import { Table } from '@/longlink/Table';
+import { Table } from '@/xml/components/Table';
 
 export default function NotFound() {
     const location = useLocation();
