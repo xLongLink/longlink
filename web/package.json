@@ -10,7 +10,8 @@
         "lint": "eslint . --fix",
         "preview": "vite preview",
         "format": "bunx prettier . --write",
-        "dev": "vite"
+        "dev": "vite",
+        "test": "bun test"
     },
     "dependencies": {
         "@base-ui/react": "^1.4.0",
