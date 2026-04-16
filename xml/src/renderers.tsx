@@ -1,19 +1,53 @@
 import { Fragment, createElement, type ReactNode } from 'react';
-import { interpolate, resolveCondition, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
+import { interpolate, resolveCondition, resolveSet, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RegistryShape } from './types';
 
 type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 
+
+/**
+ * Converts raw ASTNode params into resolved React props.
+ *
+ * - `if` is stripped (consumed by the caller for conditional rendering).
+ * - `set:<target>` attributes are collected into a single `onClick` handler.
+ *   Each handler evaluates its value expression and writes to the named state
+ *   path when the element is clicked (see `resolveSet`).
+ * - All remaining attributes are resolved via `resolveValue`.
+ */
 function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record<string, unknown> {
     if (!params) return {};
 
-    return Object.fromEntries(
-        Object.entries(params)
-            .filter(([key]) => key !== 'if')
-            .map(([key, value]) => [key, resolveValue(value, ctx)])
-    );
+    const resolved: Record<string, unknown> = {};
+    const setHandlers: Array<() => void> = [];
+
+    for (const [key, value] of Object.entries(params)) {
+        if (key === 'if') continue;
+
+        if (key.startsWith('set:')) {
+            setHandlers.push(resolveSet(key.slice(4), value, ctx));
+            continue;
+        }
+
+        resolved[key] = resolveValue(value, ctx);
+    }
+
+    if (setHandlers.length > 0) {
+        resolved.onClick = () => { for (const handler of setHandlers) handler(); };
+    }
+
+    return resolved;
 }
 
+
+/**
+ * Renders a single ASTNode (or array/null) into React elements.
+ *
+ * - Text nodes are interpolated and returned as strings.
+ * - Nodes whose `if` param evaluates to false are skipped.
+ * - Component lookup is performed against the registry; unknown tags throw.
+ * - Each rendered element is wrapped in a RuntimeProvider so child primitives
+ *   and `<RuntimeChildren />` can access the current node, registry, and context.
+ */
 export function renderNode(
     node: RenderableASTNode,
     registry: RegistryShape,
@@ -47,6 +81,11 @@ export function renderNode(
     );
 }
 
+
+/**
+ * Renders a top-level ASTNode array into a React node.
+ * Wraps each root node in a Fragment with a stable index key.
+ */
 export function render(ast: ASTNode[], registry: RegistryShape, ctx: ExecutionContext): ReactNode {
     return ast.map((node, index) => <Fragment key={index}>{renderNode(node, registry, ctx)}</Fragment>);
 }

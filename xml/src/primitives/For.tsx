@@ -1,6 +1,19 @@
 import { Fragment, type ReactNode } from 'react';
 import { evaluate, RuntimeProvider, useRuntime } from '../runtime';
 
+// ---------------------------------------------------------------------------
+// For
+// ---------------------------------------------------------------------------
+
+/**
+ * Iterates over a collection and renders children once per item.
+ *
+ * - `each` — expression that evaluates to an array in the current context.
+ * - `as`   — name under which each item is exposed to child expressions.
+ *
+ * Each iteration also injects `$index` into scope.
+ * Non-array results are silently ignored (renders nothing).
+ */
 export function For({ each, as, children }: { each?: string; as?: string; children?: ReactNode }) {
     if (!each) {
         throw new Error('For requires an "each" parameter');

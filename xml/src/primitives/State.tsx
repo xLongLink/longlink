@@ -1,6 +1,19 @@
 import { useState, type ReactNode } from 'react';
 import { RuntimeProvider, useRuntime } from '../runtime';
 
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+
+/**
+ * Declares a scoped reactive state variable identified by `id`.
+ *
+ * All remaining props become the initial value of the state object, so
+ * `<State id="filter" value="month">` initialises `filter` as `{ value: "month" }`.
+ *
+ * The state is exposed to descendants via `ctx.state[id]` as a
+ * `[currentValue, setter]` tuple, matching React's useState shape.
+ */
 export function State({
     id,
     children,
