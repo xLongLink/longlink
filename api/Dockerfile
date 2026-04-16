@@ -19,7 +19,7 @@ WORKDIR /app
 
 COPY api /app
 RUN pip install --no-cache-dir .
-COPY --from=web-builder /web/dist /app/static
+COPY --from=web-builder /api/static /app/static
 
 EXPOSE 8000
 
