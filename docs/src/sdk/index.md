@@ -47,3 +47,9 @@ Run the development server:
 ```bash
 longlink dev
 ```
+
+## Configuration
+
+To configure runtime variables for database and storage, see the environments guide:
+
+- [Environments](/sdk/environments/)
