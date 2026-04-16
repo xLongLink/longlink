@@ -7,7 +7,6 @@ import { Query } from './primitives/Query';
 import { State } from './primitives/State';
 import type { ActionHandler, ActionProps, ActionComponentProps, ExecutionContext, RegistryShape } from './types';
 
-
 /**
  * Creates a minimal ExecutionContext with empty state, queries, and scope.
  * Accepts optional partial overrides for any of the three fields.
@@ -19,7 +18,6 @@ export function createContext(initial: Partial<ExecutionContext> = {}): Executio
         scope: initial.scope ?? {},
     };
 }
-
 
 const defaultPrimitives = {
     Page,

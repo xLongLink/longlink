@@ -2,7 +2,6 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { renderNode } from './renderers';
 import type { ASTNode, ExecutionContext, RegistryShape, RuntimeState } from './types';
 
-
 /**
  * Evaluates a JavaScript expression string against the current execution context.
  *
@@ -25,7 +24,6 @@ export function evaluate(expr: string, ctx: ExecutionContext): any {
     return new Function(...Object.keys(scope), `return ${expr}`)(...Object.values(scope));
 }
 
-
 /**
  * Replaces all `{expression}` placeholders in a string with their evaluated values.
  *
@@ -39,7 +37,6 @@ export function evaluate(expr: string, ctx: ExecutionContext): any {
 export function interpolate(str: string, ctx: ExecutionContext): string {
     return str.replace(/\{([^}]+)\}/g, (_, expr) => String(evaluate(expr, ctx)));
 }
-
 
 /**
  * Resolves an attribute value string against the current execution context.
@@ -73,7 +70,6 @@ export function resolveValue(value: string, ctx: ExecutionContext): unknown {
     return evaluate(`(${value})`, ctx);
 }
 
-
 /**
  * Resolves a condition string to a boolean for use in `if` attributes.
  *
@@ -97,7 +93,6 @@ export function resolveCondition(condition: string | undefined, ctx: ExecutionCo
 
     return Boolean(evaluate(trimmed, ctx));
 }
-
 
 /**
  * Produces a click handler for a `set:<target>` attribute.

@@ -2,7 +2,6 @@ import { Fragment, createElement, type ReactNode } from 'react';
 import { interpolate, resolveCondition, resolveSet, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RegistryShape, RenderableASTNode } from './types';
 
-
 /**
  * Converts raw ASTNode params into resolved React props.
  *
@@ -32,12 +31,13 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
 
     /* Collapse multiple set: handlers into a single onClick */
     if (setHandlers.length > 0) {
-        resolved.onClick = () => { for (const handler of setHandlers) handler(); };
+        resolved.onClick = () => {
+            for (const handler of setHandlers) handler();
+        };
     }
 
     return resolved;
 }
-
 
 /**
  * Renders a single ASTNode (or array/null) into React elements.
@@ -80,7 +80,6 @@ export function renderNode(
         </RuntimeProvider>
     );
 }
-
 
 /**
  * Renders a top-level ASTNode array into a React node.

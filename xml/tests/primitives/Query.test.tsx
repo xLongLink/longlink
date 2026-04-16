@@ -65,9 +65,11 @@ describe('Query', () => {
         const original = global.fetch;
         global.fetch = ((url: URL | RequestInfo) => {
             captured.push(String(url));
-            return Promise.resolve(new Response(JSON.stringify({}), {
-                headers: { 'Content-Type': 'application/json' },
-            }));
+            return Promise.resolve(
+                new Response(JSON.stringify({}), {
+                    headers: { 'Content-Type': 'application/json' },
+                })
+            );
         }) as unknown as typeof global.fetch;
 
         try {
