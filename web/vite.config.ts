@@ -1,18 +1,23 @@
 import path from 'path';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-    const isSDK = mode === 'sdk';
-    const isApi = mode === 'api';
-    const devServerTarget = isSDK ? 'http://localhost:1707' : 'http://localhost:8000';
-    const devServerPort = isSDK ? 5174 : 5173;
+    const env = loadEnv(mode, process.cwd(), '');
+
+    const isSdkBuild = mode === 'sdk';
+    const isApiBuild = mode === 'api';
+
+    const buildOutDir = isSdkBuild
+        ? path.resolve(__dirname, '../sdk/longlink/static')
+        : isApiBuild
+          ? path.resolve(__dirname, '../api/static')
+          : path.resolve(__dirname, './dist');
+
+    const devServerPort = env.VITE_DEV_PORT ? parseInt(env.VITE_DEV_PORT) : 5173;
 
     return {
-        root: path.resolve(__dirname, isSDK ? 'sdk' : 'api'),
-
         plugins: [react(), tailwindcss()],
 
         resolve: {
@@ -22,23 +27,20 @@ export default defineConfig(({ mode }) => {
         },
 
         build: {
-            outDir: path.resolve(__dirname, isSDK ? '../sdk/longlink/static' : '../api/static'),
+            outDir: buildOutDir,
             emptyOutDir: true,
         },
 
-        server:
-            isApi || isSDK
-                ? {
-                      host: '0.0.0.0',
-                      port: devServerPort,
-                      proxy: {
-                          '/api': {
-                              target: devServerTarget,
-                              changeOrigin: true,
-                              rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
-                          },
-                      },
-                  }
-                : undefined,
+        server: {
+            host: '0.0.0.0',
+            port: devServerPort,
+            proxy: {
+                '/api': {
+                    target: 'http://localhost:8000',
+                    changeOrigin: true,
+                    rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
+                },
+            },
+        },
     };
 });

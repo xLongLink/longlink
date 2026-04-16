@@ -5,13 +5,12 @@
     "type": "module",
     "scripts": {
         "build": "tsc -b && vite build",
+        "build:api": "tsc -b && vite build --mode api",
+        "build:sdk": "tsc -b && vite build --mode sdk",
         "lint": "eslint . --fix",
         "preview": "vite preview",
         "format": "bunx prettier . --write",
-        "build:api": "tsc -b && vite build --mode api",
-        "build:sdk": "tsc -b && vite build --mode sdk",
-        "api": "vite --mode api",
-        "sdk": "vite --mode sdk"
+        "dev": "vite"
     },
     "dependencies": {
         "reactxml": "file:../xml",
