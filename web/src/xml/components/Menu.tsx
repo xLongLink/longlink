@@ -4,7 +4,7 @@ import type { LucideProps } from 'lucide-react';
 import { AppWindow } from 'lucide-react';
 import { renderNode, useRuntime } from '@/xml';
 import type { ASTNode } from '@/xml';
-import { Icon } from '@/longlink/Icon';
+import { Icon } from '@/xml/components/Icon';
 
 import {
     Menu as BaseMenu,

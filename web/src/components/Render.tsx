@@ -1,5 +1,4 @@
-import { fromXml, renderNode, createContext } from '@/xml';
-import { registry } from '@/lib/registry';
+import { fromXml, renderNode, createContext, registry } from '@/xml';
 
 type RenderProps = {
     xml: string;

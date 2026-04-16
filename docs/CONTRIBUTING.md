@@ -2,6 +2,18 @@
 
 Thanks for improving LongLink documentation.
 
+## Architecture
+
+```
+docs/
+├── src/
+│   ├── api/           # Control plane API documentation
+│   ├── sdk/          # Application SDK documentation
+│   ├── public/       # Public assets
+│   └── index.md     # Documentation entry
+└── .vitepress/      # VitePress configuration
+```
+
 ## Goal
 
 Write docs that are clear, direct, and easy to translate.

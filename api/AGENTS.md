@@ -3,6 +3,23 @@
 You are working on the backend (`api`).
 Is a FastAPI application that handles authentication, permissions, and routing to various modules.
 
+## Architecture
+
+```
+api/
+├── src/
+│   ├── apps/         # Application models
+│   ├── db/          # Database models and services
+│   ├── middleware/  # Middleware
+│   ├── models/      # Pydantic models
+│   ├── routes/      # API routes
+│   └── utils/       # Utilities
+├── alembic/       # Database migrations
+├── tests/        # Tests
+├── main.py       # FastAPI entry
+└── pages/      # Static pages for the control plane UI
+```
+
 - Define constrained values with a shared Enum (e.g., AppType) instead of raw strings.
 - Use Pydantic models (BaseModel) to validate any external JSON (like metadata.json).
 - Rely on model_validate() (Pydantic v2) for parsing and validation in one step.

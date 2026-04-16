@@ -1,4 +1,4 @@
-.PHONY: up down setup format api web sdk sample docs
+.PHONY: up down setup format api web sample docs
 
 SHELL := /bin/bash
 VENV_BIN := $(CURDIR)/.venv/bin
@@ -49,12 +49,7 @@ api: $(VENV_BIN)/python
 
 web:
 	cd web && bun install
-	cd web && bun run api --host 0.0.0.0 --port 5173
-
-
-sdk:
-	cd web && bun install
-	cd web && bun run sdk --host 0.0.0.0 --port 5174
+	cd web && bun run dev --host 0.0.0.0 --port 5173
 
 
 sample: $(VENV_BIN)/python

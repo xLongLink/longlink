@@ -10,6 +10,18 @@ This guide explains the essentials so you can move quickly without breaking the 
 - Keep the current architecture direction.
 - Prefer the current development model over backward compatibility.
 
+## Architecture
+
+```
+longlink/
+├── api/           # Control plane (auth, permissions, lifecycle, orchestration)
+├── sdk/           # Python SDK for application development
+├── web/           # Frontend runtime and control-plane UI integration
+├── xml/           # ReactXML runtime (XML to React rendering)
+├── docs/          # Platform and SDK documentation
+└── dev/          # Development tools
+```
+
 ## Project map
 
 - `api/` → Control plane (auth, permissions, lifecycle, orchestration)
