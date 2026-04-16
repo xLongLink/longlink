@@ -1,22 +1,42 @@
 import type { ReactElement } from 'react';
-import { Toaster } from '@/ui/sonner';
-import { ThemeProvider } from '@/components/theme';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
 import { useIsFetching, useIsMutating } from '@tanstack/react-query';
+import { ThemeProvider } from '@/components/theme';
+import { Toaster } from '@/ui/sonner';
 import Layout from './Layout';
+import Longlink from './pages/org/Longlink';
+import OrganizationPage from './pages/org/OrganizationPage';
+import Login from './pages/user/Login';
+import Profile from './pages/user/Profile';
+import NotFound from './pages/NotFound';
+import SdkLayout from './sdk/Layout';
+import SdkLonglink from './sdk/Longlink';
 import { RequireAuth } from '@/components/Auth';
 
-// Import pages
-import Login from '@/pages/user/Login';
-import Profile from '@/pages/user/Profile';
-import NotFound from '@/pages/NotFound';
+function GlobalLoader() {
+    const isFetching = useIsFetching();
+    const isMutating = useIsMutating();
+    const isLoading = isFetching > 0 || isMutating > 0;
 
-import Longlink from '@/pages/org/Longlink';
-import OrganizationPage from '@/pages/org/OrganizationPage';
+    if (!isLoading) {
+        return null;
+    }
+
+    return (
+        <div className="fixed left-0 top-0 z-50 h-1 w-full overflow-hidden bg-transparent">
+            <div className="h-full w-full animate-pulse bg-blue-500/80" />
+        </div>
+    );
+}
 
 const withAuth = (element: ReactElement) => <RequireAuth>{element}</RequireAuth>;
 
 const router = createBrowserRouter([
+    {
+        path: '/sdk',
+        element: <SdkLayout />,
+        children: [{ path: '*', element: <SdkLonglink /> }],
+    },
     {
         path: '/',
         element: withAuth(<Layout />),
@@ -42,22 +62,6 @@ const router = createBrowserRouter([
     },
     { path: '*', element: withAuth(<NotFound />) },
 ]);
-
-function GlobalLoader() {
-    const isFetching = useIsFetching();
-    const isMutating = useIsMutating();
-    const isLoading = isFetching > 0 || isMutating > 0;
-
-    if (!isLoading) {
-        return null;
-    }
-
-    return (
-        <div className="fixed left-0 top-0 z-50 h-1 w-full overflow-hidden bg-transparent">
-            <div className="h-full w-full animate-pulse bg-blue-500/80" />
-        </div>
-    );
-}
 
 export default function App() {
     return (

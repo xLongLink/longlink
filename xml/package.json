@@ -1,6 +1,13 @@
 {
     "name": "reactxml",
-    "module": "index.ts",
+    "main": "src/index.ts",
+    "module": "src/index.ts",
+    "exports": {
+        ".": {
+            "import": "./src/index.ts",
+            "types": "./src/index.ts"
+        }
+    },
     "type": "module",
     "scripts": {
         "dev": "sh -c 'bun run web & bun run api & wait'",

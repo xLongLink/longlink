@@ -1,11 +1,6 @@
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
 
-const isSdkMode = import.meta.env.MODE === 'sdk';
-const isApiMode = import.meta.env.MODE === 'api';
-
-const defaultApiBaseUrl = isSdkMode || isApiMode ? '/api' : 'http://localhost:8000';
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.toString() ?? defaultApiBaseUrl;
+const apiBaseUrl = '/api';
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
 
@@ -27,22 +22,7 @@ export type ApiRequestOptions<TBody = unknown> = Omit<
 
 const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '');
 
-const normalizeAppPathForSdk = (path: string) => {
-    const sdkPathMatch = path.match(/^\/apps\/[^/]+\/(.+)$/);
-
-    if (!sdkPathMatch) {
-        return path;
-    }
-
-    const sdkRelativePath = trimSlashes(sdkPathMatch[1] ?? '');
-    return sdkRelativePath.length > 0 ? `/${sdkRelativePath}` : '/';
-};
-
 const normalizePath = (path: string, appName?: string) => {
-    if (isSdkMode) {
-        return normalizeAppPathForSdk(path);
-    }
-
     if (path.startsWith('/apps/')) {
         return path;
     }

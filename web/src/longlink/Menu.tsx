@@ -110,8 +110,7 @@ export function Menu(_props: MenuProps) {
         }
 
         const hasActiveValue = sections.some(
-            (section) =>
-                section.id === activeValue || section.subSections.some((sub) => sub.id === activeValue)
+            (section) => section.id === activeValue || section.subSections.some((sub) => sub.id === activeValue)
         );
 
         if (!hasActiveValue) {

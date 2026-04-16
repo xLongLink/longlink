@@ -9,7 +9,9 @@ type AppMetadata = {
     pages?: AppNavigationPage[];
 };
 
-export default function Layout() {
+export default function SdkLayout() {
+    const location = useLocation();
+    const navigate = useNavigate();
     const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/pages');
     const pages = getPagesFromResponse(pagesResponse);
 
@@ -24,20 +26,13 @@ export default function Layout() {
           ]
         : getAppTabsFromPages(pages);
 
-    return <Navigation tabs={tabs} isTabsLoading={isLoading} />;
-}
-
-function Navigation({ tabs, isTabsLoading }: { tabs: ReturnType<typeof getAppTabsFromPages>; isTabsLoading: boolean }) {
-    const location = useLocation();
-    const navigate = useNavigate();
-
     const activeTabConfig = getActiveTabConfig({
         tabs,
-        locationPath: location.pathname,
+        locationPath: location.pathname.replace(/^\/sdk/, ''),
         basePath: '',
     });
 
-    const activeTab = isTabsLoading ? 'loading' : (activeTabConfig?.value ?? tabs[0]?.value ?? '');
+    const activeTab = isLoading ? 'loading' : (activeTabConfig?.value ?? tabs[0]?.value ?? '');
 
     return (
         <div className="min-h-screen text-white">
@@ -47,7 +42,7 @@ function Navigation({ tabs, isTabsLoading }: { tabs: ReturnType<typeof getAppTab
                         <Tabs
                             value={activeTab}
                             onValueChange={(value) => {
-                                if (isTabsLoading) {
+                                if (isLoading) {
                                     return;
                                 }
                                 const nextTab = tabs.find((tab) => tab.value === value);
@@ -55,7 +50,7 @@ function Navigation({ tabs, isTabsLoading }: { tabs: ReturnType<typeof getAppTab
                                     return;
                                 }
                                 const nextPath = nextTab.path ?? '';
-                                navigate(nextPath === '' ? '/' : `/${nextPath}`);
+                                navigate(`/sdk${nextPath === '' ? '' : `/${nextPath}`}`);
                             }}
                         >
                             <TabsList variant="line" className="gap-4">
@@ -65,7 +60,7 @@ function Navigation({ tabs, isTabsLoading }: { tabs: ReturnType<typeof getAppTab
                                         <TabsTrigger
                                             key={tab.value}
                                             value={tab.value}
-                                            disabled={isTabsLoading}
+                                            disabled={isLoading}
                                             className="cursor-pointer"
                                         >
                                             <Icon
