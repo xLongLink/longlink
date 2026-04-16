@@ -1,18 +1,11 @@
-import { useMemo, useState } from 'react';
-import { type SortingState, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-
-import { Table as UITable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/ui/pagination';
-import { buildColumns, textAlignClasses, type ApiTableColumn, type TableAlign } from '@/components/table/buildColumns';
+    type ApiTableCell,
+    textAlignClasses,
+    type ApiTableColumn,
+    type TableAlign,
+} from '@/components/table/buildColumns';
 import { useApiTable } from '@/components/table/useApiTable';
+import { Table as UITable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
 
 export type { ApiTableColumn, TableAlign };
 
@@ -40,84 +33,95 @@ type DataTableProps = {
 
 type TableProps = SchemaTableProps | DataTableProps;
 
+/** Resolves nested object values from dot-path templates used by table columns. */
+function resolvePath(data: unknown, path: string): unknown {
+    // Walk object tree with dot-path access from schema config.
+    return path.split('.').reduce<unknown>((acc, key) => (acc as Record<string, unknown>)?.[key], data);
+}
+
+/** Renders a template string by replacing {path} placeholders with row values. */
+function renderTemplate(template: string, data: unknown): string {
+    // Replace each token with matching value from current row.
+    return template.replace(/\{([^}]+)\}/g, (_, path) => {
+        const value = resolvePath(data, path.trim());
+        return value == null ? '' : String(value);
+    });
+}
+
+/** Builds displayable cell payload from table column config and row data. */
+function resolveCell(
+    valueTemplate: string | undefined,
+    cell: ApiTableCell | string | undefined,
+    row: unknown
+): ApiTableCell | undefined {
+    const resolvedCell = cell ?? valueTemplate;
+
+    if (!resolvedCell) {
+        return undefined;
+    }
+
+    if (typeof resolvedCell === 'string') {
+        return { value: renderTemplate(resolvedCell, row) };
+    }
+
+    return {
+        ...resolvedCell,
+        value: renderTemplate(resolvedCell.value, row),
+        link: resolvedCell.link ? renderTemplate(resolvedCell.link, row) : undefined,
+    };
+}
+
+/** Renders one line inside table cell, optionally as link and bold text. */
+function renderCellLine(cell: ApiTableCell, fallbackBold = false) {
+    const className = (cell.bold ?? fallbackBold) ? 'font-medium' : '';
+    const content = <span className={className}>{cell.value}</span>;
+
+    if (!cell.link) {
+        return content;
+    }
+
+    return (
+        <a className="hover:underline" href={cell.link}>
+            {content}
+        </a>
+    );
+}
+
+/** Computes visible content and detail fragments for one table column. */
+function buildColumnCell(column: ApiTableColumn, row: unknown) {
+    const content = resolveCell(column.value, column.content, row);
+    const detail = resolveCell(undefined, column.detail, row);
+
+    return {
+        content,
+        detail,
+    };
+}
+
+/** Renders LongLink XML table with shadcn table primitives and plain row rendering. */
 export function Table<T extends object>(props: TableProps) {
-    const [pagination, setPagination] = useState({
-        pageIndex: 0,
-        pageSize: props.pageSize ?? 10,
-    });
-
-    const [sorting, setSorting] = useState<SortingState>([]);
-
     const isSchemaMode = 'endpoint' in props;
+    const apiData = useApiTable<T>({ endpoint: isSchemaMode ? (props as SchemaTableProps).endpoint : '/__noop__' });
 
-    const apiEndpoint = isSchemaMode ? (props as SchemaTableProps).endpoint : '/__noop__';
-
-    const apiData = useApiTable<T>({
-        endpoint: apiEndpoint,
-        pagination,
-        sorting,
-    });
     const data = (isSchemaMode ? apiData.data : props.data) as T[];
-    const total = isSchemaMode ? apiData.total : props.data.length;
     const loading = isSchemaMode ? apiData.loading : false;
-    const columnsConfig = isSchemaMode ? (props.schema?.schema?.columns ?? []) : props.columns;
-
-    const columns = useMemo(() => buildColumns<T>(columnsConfig ?? []), [columnsConfig]);
-
-    const table = useReactTable({
-        data,
-        columns,
-        state: {
-            pagination,
-            sorting,
-        },
-        onPaginationChange: setPagination,
-        onSortingChange: setSorting,
-        manualPagination: isSchemaMode,
-        manualSorting: isSchemaMode,
-        pageCount: Math.max(Math.ceil(total / pagination.pageSize), 1),
-        getCoreRowModel: getCoreRowModel(),
-    });
-
-    const currentPage = pagination.pageIndex + 1;
-    const totalPages = table.getPageCount();
-
-    const pageItems = useMemo(() => {
-        if (totalPages <= 5) {
-            return Array.from({ length: totalPages }, (_, index) => index + 1);
-        }
-
-        return [1, 2, totalPages - 1, totalPages];
-    }, [totalPages]);
+    const columns = isSchemaMode ? (props.schema?.schema?.columns ?? []) : props.columns;
 
     return (
         <div className="overflow-hidden rounded-md border">
             <UITable>
                 <TableHeader className="bg-muted/50">
-                    {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                            {headerGroup.headers.map((header) => {
-                                const align =
-                                    (
-                                        header.column.columnDef.meta as {
-                                            align?: TableAlign;
-                                        }
-                                    )?.align ?? 'left';
+                    <TableRow>
+                        {columns.map((column) => {
+                            const align = column.align ?? 'left';
 
-                                return (
-                                    <TableHead
-                                        key={header.id}
-                                        className={`cursor-pointer ${textAlignClasses[align]}`}
-                                        onClick={header.column.getToggleSortingHandler()}
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(header.column.columnDef.header, header.getContext())}
-                                    </TableHead>
-                                );
-                            })}
-                        </TableRow>
-                    ))}
+                            return (
+                                <TableHead key={column.key} className={textAlignClasses[align]}>
+                                    {column.label ?? column.key}
+                                </TableHead>
+                            );
+                        })}
+                    </TableRow>
                 </TableHeader>
 
                 <TableBody>
@@ -130,20 +134,29 @@ export function Table<T extends object>(props: TableProps) {
                                 Loading...
                             </TableCell>
                         </TableRow>
-                    ) : table.getRowModel().rows.length > 0 ? (
-                        table.getRowModel().rows.map((row) => (
-                            <TableRow key={row.id}>
-                                {row.getVisibleCells().map((cell) => {
-                                    const align =
-                                        (
-                                            cell.column.columnDef.meta as {
-                                                align?: TableAlign;
-                                            }
-                                        )?.align ?? 'left';
+                    ) : data.length > 0 ? (
+                        data.map((row, rowIndex) => (
+                            <TableRow key={`row-${rowIndex}`}>
+                                {columns.map((column) => {
+                                    const align = column.align ?? 'left';
+                                    const { content, detail } = buildColumnCell(column, row);
 
                                     return (
-                                        <TableCell key={cell.id} className={textAlignClasses[align]}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        <TableCell
+                                            key={`${column.key}-${rowIndex}`}
+                                            className={textAlignClasses[align]}
+                                        >
+                                            {/* Keep content/detail rendering from schema while using plain table layout. */}
+                                            <div className={`leading-tight ${textAlignClasses[align]}`}>
+                                                {content ? (
+                                                    <div className="text-sm">{renderCellLine(content, true)}</div>
+                                                ) : null}
+                                                {detail ? (
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {renderCellLine(detail)}
+                                                    </div>
+                                                ) : null}
+                                            </div>
                                         </TableCell>
                                     );
                                 })}
@@ -161,57 +174,6 @@ export function Table<T extends object>(props: TableProps) {
                     )}
                 </TableBody>
             </UITable>
-
-            <div className="border-t p-3 text-sm">
-                <Pagination className="mx-0 w-full justify-center">
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href="#"
-                                onClick={(event) => {
-                                    event.preventDefault();
-                                    table.previousPage();
-                                }}
-                                aria-disabled={!table.getCanPreviousPage()}
-                                className={!table.getCanPreviousPage() ? 'pointer-events-none opacity-50' : ''}
-                            />
-                        </PaginationItem>
-
-                        {pageItems.map((page) => (
-                            <PaginationItem key={`page-${page}`}>
-                                <PaginationLink
-                                    href="#"
-                                    isActive={page === currentPage}
-                                    onClick={(event) => {
-                                        event.preventDefault();
-                                        table.setPageIndex(page - 1);
-                                    }}
-                                >
-                                    {page}
-                                </PaginationLink>
-                            </PaginationItem>
-                        ))}
-
-                        {totalPages > 5 && (
-                            <PaginationItem key="ellipsis">
-                                <PaginationEllipsis />
-                            </PaginationItem>
-                        )}
-
-                        <PaginationItem>
-                            <PaginationNext
-                                href="#"
-                                onClick={(event) => {
-                                    event.preventDefault();
-                                    table.nextPage();
-                                }}
-                                aria-disabled={!table.getCanNextPage()}
-                                className={!table.getCanNextPage() ? 'pointer-events-none opacity-50' : ''}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
-            </div>
         </div>
     );
 }
