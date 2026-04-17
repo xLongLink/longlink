@@ -170,24 +170,28 @@
     <MenuSection title="Database" icon="database">
       <MenuSubSection title="" root="true">
         <Stack gap="24">
-          <Hero title="Database Settings" subtitle="Connect a database instance." icon="settings" action="Connect" />
-          <Query id="databases" path="/databases">
+          <Hero
+            title="Database Overview"
+            subtitle="Cluster capacity and usage stats for quick resource visibility."
+            icon="settings"
+          />
+          <Query id="databaseOverview" path="/databases/overview">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Server</TableHead>
-                  <TableHead>Host</TableHead>
-                  <TableHead>Port</TableHead>
-                  <TableHead>Username</TableHead>
+                  <TableHead>Metric</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>Description</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <For each="databases ?? []" as="database">
+                <For each="databaseOverview ?? []" as="metric">
                   <TableRow>
-                    <TableCell>{database.name}</TableCell>
-                    <TableCell>{database.host}</TableCell>
-                    <TableCell>{database.port}</TableCell>
-                    <TableCell>{database.username}</TableCell>
+                    <TableCell>{metric.label}</TableCell>
+                    <TableCell>{metric.value}</TableCell>
+                    <TableCell>{metric.unit ?? '-'}</TableCell>
+                    <TableCell>{metric.description ?? '-'}</TableCell>
                   </TableRow>
                 </For>
               </TableBody>
