@@ -14,10 +14,6 @@ class Table(SQLModel):
     updated_at: Optional[datetime] = Field(default=None, nullable=True)
 
 
-# Keep backward-compatible alias for code still importing `Base`.
-Base = Table
-
-
 def get_session() -> Session:
     """Create DB session bound to SDK engine."""
     return Session(engine)

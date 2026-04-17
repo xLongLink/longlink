@@ -71,14 +71,7 @@ See complete examples in:
 - [Database](/sdk/database/)
 - [Storage](/sdk/storage/)
 
-## Configuration
 
-To configure runtime variables for database and storage, see:
 
-- [Environments](/sdk/environments/)
 
-## API Endpoints
-
-To define endpoint handlers on top of wrapped FastAPI app, see:
-
-- [Endpoints](/sdk/endpoints/)
+- [Official FastAPI Backend Template]https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend
