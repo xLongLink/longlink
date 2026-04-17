@@ -1,6 +1,11 @@
 # Environments
 
-In order to manage enviroment variables longlink expose a `Enviroments` class that is a wrapper on top of `pydantic_settings`. Enviroments are loaded and validated at startup time, ensuring that the rest of the application logic works. 
+The `Environments` class defines and validates environment variables for an application.
+
+The class is a wrapper around [Pydantic Settings](https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/).
+LongLink loads and validates all environment variables at application startup.
+
+This ensures that configuration errors are detected early, before the application starts handling requests.
 
 
 ## Usage

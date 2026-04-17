@@ -13,22 +13,8 @@ You define endpoint handlers on the wrapped FastAPI app.
 ## Basic endpoint example
 
 ```python
-
 router
 
-from longlink import App, ENV
-
-
-env = ENV()
-application = App(env=env)
-app = application.fastapi
-
-
-@app.get("/health")
-def health() -> dict[str, str]:
-    """Return basic service health status."""
-
-    return {"status": "ok"}
 ```
 
 ## Endpoint with request and response models
