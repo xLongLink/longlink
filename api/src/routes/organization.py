@@ -1,7 +1,9 @@
 import src.db as db
 import src.utils.apps
+from fastapi import APIRouter
 from src.config import OrganizationSettings
-from src.router import router
+
+router = APIRouter()
 
 
 @router.get("/organization")

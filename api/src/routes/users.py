@@ -1,8 +1,9 @@
 import src.db as db
-from fastapi import Depends
+from fastapi import Depends, APIRouter
 from src.auth import authuser
-from src.router import router
 from src.models.users import UserResponse
+
+router = APIRouter()
 
 
 @router.get("/users")
