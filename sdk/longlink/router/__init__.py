@@ -68,14 +68,12 @@ def _format_response(handler: Handler, body: Any) -> Response | JSONResponse | P
     return PlainTextResponse(str(body))
 
 
-class LongLinkRouter(APIRouter):
+class Router(APIRouter):
     """APIRouter that applies LongLink response formatting to route handlers."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Create router and initialize in-memory page metadata store."""
-
         super().__init__(*args, **kwargs)
-        self._pages: list[dict[str, str]] = []
 
     def add_api_route(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
         """Register route after wrapping endpoint with LongLink response handling."""
@@ -97,83 +95,3 @@ class LongLinkRouter(APIRouter):
             return func
 
         return decorator
-
-    def xml_page(
-        self,
-        path: str,
-        name: str | None = None,
-        icon: str | None = None,
-        schema_path: str | Path | None = None,
-    ) -> None:
-        """Register XML-backed page endpoint using explicit data or XML metadata."""
-
-def route(path: str, methods: list[str] | None = None):
-    normalized_methods = [method.upper() for method in (methods or ["GET"])]
-
-    def decorator(func: Handler) -> Handler:
-        api_router.add_api_route(
-            path,
-            _build_endpoint(func),
-            methods=normalized_methods,
-            response_model=None,
-        )
-        return func
-
-    return decorator
-
-
-def page(path: str, name: str, icon: str):
-    return LongLinkRouter.page(api_router, path, name, icon)
-
-
-def xml_page(path: str, name: str | None = None, icon: str | None = None, schema_path: str | Path | None = None) -> None:
-    if schema_path is None:
-        raise ValueError("schema_path is required for xml_page().")
-    xml_path = Path(schema_path)
-
-    resolved_name = name
-    resolved_icon = icon
-
-    if resolved_name is None or resolved_icon is None:
-        from longlink.utils.xml import load_page_metadata_from_xml
-
-        metadata = load_page_metadata_from_xml(xml_path)
-        resolved_name = resolved_name or metadata.get("name")
-        resolved_icon = resolved_icon or metadata.get("icon")
-
-    if not resolved_name or not resolved_icon:
-        raise ValueError("XML pages must define both name and icon, either in xml_page() or in the XML root.")
-
-    @page(path, name=resolved_name, icon=resolved_icon)
-    async def _xml_page() -> dict[str, Any]:
-        from longlink.utils.xml import load_page_schema_from_xml
-
-        return load_page_schema_from_xml(xml_path)
-
-        resolved_name = name
-        resolved_icon = icon
-
-        if resolved_name is None or resolved_icon is None:
-            from longlink.xml import load_page_metadata_from_xml
-
-            metadata = load_page_metadata_from_xml(xml_path)
-            resolved_name = resolved_name or metadata.get("name")
-            resolved_icon = resolved_icon or metadata.get("icon")
-
-        if not resolved_name or not resolved_icon:
-            raise ValueError("XML pages must define both name and icon, either in xml_page() or in the XML root.")
-
-        async def xml_endpoint() -> dict[str, Any]:
-            """Load XML schema for runtime renderer."""
-
-            from longlink.xml import load_page_schema_from_xml
-
-            return load_page_schema_from_xml(xml_path)
-
-        # Keep endpoint registration and metadata registration coupled.
-        self.page(path, name=resolved_name, icon=resolved_icon)(xml_endpoint)
-
-    def pages(self) -> list[dict[str, str]]:
-        """Return registered page metadata."""
-
-        return list(self._pages)
