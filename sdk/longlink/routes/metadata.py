@@ -1,11 +1,10 @@
-from fastapi import APIRouter
-from longlink.router import get
+from fastapi import Request, APIRouter
 
 metadata_router = APIRouter()
 
 
 @metadata_router.get("/openapi.json")
-async def get_openapi():
+async def get_openapi(request: Request):
     """Return current application OpenAPI schema."""
 
-    return get.openapi()
+    return request.app.openapi()

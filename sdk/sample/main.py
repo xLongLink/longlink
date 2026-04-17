@@ -1,8 +1,7 @@
 from app.envs import env
+from longlink import LongLink
 from app.pages import pages
 from app.routes import routers
-from longlink import LongLink
-
 
 app = LongLink(env=env)
 

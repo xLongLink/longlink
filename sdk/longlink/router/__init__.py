@@ -2,7 +2,6 @@ import json
 import inspect
 from typing import Any, Callable
 from fastapi import APIRouter
-from pathlib import Path
 from pydantic import BaseModel
 from functools import wraps
 from fastapi.responses import Response, JSONResponse, PlainTextResponse
@@ -11,22 +10,20 @@ Handler = Callable[..., Any]
 
 
 def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
+    """Wrap route handler to normalize SDK response serialization behavior."""
+
     @wraps(handler)
     async def endpoint(*args, **kwargs):
+        """Execute handler and convert result to FastAPI response."""
+
         result = handler(*args, **kwargs)
         body = await result if inspect.isawaitable(result) else result
 
         if is_page:
             if isinstance(body, str):
-                return Response(
-                    content=body,
-                    media_type="text/xml",
-                )
+                return Response(content=body, media_type="text/xml")
             if isinstance(body, (dict, list)):
-                return Response(
-                    content=json.dumps(body),
-                    media_type="application/json",
-                )
+                return Response(content=json.dumps(body), media_type="application/json")
             return PlainTextResponse(
                 "Invalid response type. Page routes must return an XML string, dict, or list.",
                 status_code=500,
@@ -39,6 +36,8 @@ def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
 
 
 def _format_response(handler: Handler, body: Any) -> Response | JSONResponse | PlainTextResponse:
+    """Serialize handler return value using annotation-aware defaults."""
+
     return_type = inspect.signature(handler).return_annotation
 
     if (
@@ -73,7 +72,9 @@ class Router(APIRouter):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Create router and initialize in-memory page metadata store."""
+
         super().__init__(*args, **kwargs)
+        self._pages: list[dict[str, str]] = []
 
     def add_api_route(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
         """Register route after wrapping endpoint with LongLink response handling."""
@@ -84,6 +85,8 @@ class Router(APIRouter):
         """Register page endpoint and track metadata for page listing."""
 
         def decorator(func: Handler) -> Handler:
+            """Attach page route and register page metadata for router instance."""
+
             self._pages.append({"path": path, "name": name, "icon": icon})
             endpoint_path = f"/pages/{path.lstrip('/')}"
             super().add_api_route(
@@ -95,3 +98,8 @@ class Router(APIRouter):
             return func
 
         return decorator
+
+    def pages(self) -> list[dict[str, str]]:
+        """Return page metadata registered through `@router.page`."""
+
+        return self._pages
