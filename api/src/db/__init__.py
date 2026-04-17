@@ -1,6 +1,7 @@
 from .models import App, Env, User, Setting, Permission  # noqa: F401
 from .services import (AppsService, EnvsService, UsersService, ComputesService,
-                       SettingsService, StoragesService, PermissionsService)
+                       SettingsService, StoragesService, DatabasesService,
+                       PermissionsService)
 
 apps = AppsService()
 envs = EnvsService()
@@ -11,3 +12,4 @@ permissions = PermissionsService()
 storages = StoragesService()
 
 computes = ComputesService()
+databases = DatabasesService()
