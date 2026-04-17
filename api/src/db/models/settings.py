@@ -1,10 +1,9 @@
-from datetime import datetime
-from sqlalchemy import Text, String, Integer, DateTime, ForeignKey, func
+from sqlalchemy import Text, String, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
-from src.db.models.__base__ import Base
+from src.db.models.__base__ import Base, AuditMixin
 
 
-class Setting(Base):
+class Setting(Base, AuditMixin):
     '''Represent a platform setting at org or app scope.'''
     __tablename__ = 'settings'
 
@@ -14,7 +13,3 @@ class Setting(Base):
     key: Mapped[str] = mapped_column(String(128), nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False)
     appid: Mapped[str | None] = mapped_column(ForeignKey('apps.id', ondelete='CASCADE'), nullable=True)
-
-    # Timestamp informations
-    date_update: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
-    date_creation: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
