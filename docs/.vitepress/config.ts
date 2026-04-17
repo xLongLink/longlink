@@ -46,6 +46,7 @@ export default defineConfig({
         text: 'Applications SDK',
         items: [
           { text: 'Overview', link: '/sdk/' },
+          { text: 'Environments', link: '/sdk/environments/' },
           {
             text: 'Pages',
             collapsed: true,
@@ -83,37 +84,15 @@ export default defineConfig({
               }
             ]
           },
-          {
-            text: 'Storage',
-            collapsed: true,
-            items: [
-              { text: 'Introduction', link: '/sdk/storage/' }
-            ]
-          },
-          {
-            text: 'Environments',
-            collapsed: true,
-            items: [
-              { text: 'Introduction', link: '/sdk/environments/' }
-            ]
-          },
-          {
-            text: 'Database',
-            collapsed: true,
-            items: [
-              { text: 'Introduction', link: '/sdk/database/' }
-            ]
-          }
+          { text: 'Storage', link: '/sdk/storage/' },
+          { text: 'Database', link: '/sdk/database/' },
         ]
       }
     ],
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/xLongLink/longlink' },
-      {
-        icon: 'pypi',
-        link: 'https://pypi.org/project/longlink/'
-      }
+      { icon: 'pypi', link: 'https://pypi.org/project/longlink/' }
     ]
   }
 })
