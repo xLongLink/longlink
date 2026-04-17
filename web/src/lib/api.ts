@@ -1,8 +1,34 @@
-const apiBaseUrl = '/api';
+const controlPlaneApiBaseUrl = '/api';
+const sdkDevApiBaseUrl = '/sdk-api';
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
 
-export const getApiBaseUrl = () => normalizeBaseUrl(apiBaseUrl);
+/**
+ * Detects SDK runtime context in development and SDK build modes.
+ */
+const isSdkRuntime = () => {
+    if (import.meta.env.MODE === 'sdk') {
+        return true;
+    }
+
+    if (!import.meta.env.DEV) {
+        return false;
+    }
+
+    // SDK dev route lives under /sdk when running the unified development server.
+    return window.location.pathname.startsWith('/sdk');
+};
+
+/**
+ * Resolves API base URL for current runtime mode.
+ */
+export const getApiBaseUrl = () => {
+    if (isSdkRuntime()) {
+        return normalizeBaseUrl(import.meta.env.DEV ? sdkDevApiBaseUrl : '');
+    }
+
+    return normalizeBaseUrl(controlPlaneApiBaseUrl);
+};
 
 type QueryValue = string | number | boolean | null | undefined;
 export type ApiQueryParams = Record<string, QueryValue>;
@@ -67,9 +93,9 @@ const buildUrl = (path: string, query?: ApiQueryParams) => {
 };
 
 /**
- * Makes an API request to the backend with automatic JSON handling.
- * Supports query parameters, custom body types, and app-scoped paths.
- * Throws an Error with the response message on failure.
+ * Makes an API request to backend with automatic JSON handling.
+ * Supports query parameters, custom body types, app-scoped paths.
+ * Throws Error with response message on failure.
  */
 export async function apiFetch<TResponse>(path: string, options: ApiRequestOptions = {}): Promise<TResponse> {
     const { method, query, body, credentials } = options;
