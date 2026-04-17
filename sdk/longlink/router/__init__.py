@@ -1,5 +1,5 @@
-import inspect
 import json
+import inspect
 from typing import Any, Callable
 from fastapi import APIRouter
 from pathlib import Path
@@ -9,9 +9,7 @@ from fastapi.responses import Response, JSONResponse, PlainTextResponse
 
 Handler = Callable[..., Any]
 
-api_router = APIRouter()
 _pages: list[dict[str, str]] = []
-
 
 
 def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
@@ -26,16 +24,15 @@ def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
                     content=body,
                     media_type="text/xml",
                 )
-            elif isinstance(body, (dict, list)):
+            if isinstance(body, (dict, list)):
                 return Response(
                     content=json.dumps(body),
                     media_type="application/json",
                 )
-            else:
-                return PlainTextResponse(
-                    "Invalid response type. Page routes must return an XML string, dict, or list.",
-                    status_code=500,
-                )
+            return PlainTextResponse(
+                "Invalid response type. Page routes must return an XML string, dict, or list.",
+                status_code=500,
+            )
 
         return _format_response(handler, body)
 
@@ -97,70 +94,46 @@ class LongLinkRouter(APIRouter):
 
         return decorator
 
+    def xml_page(
+        self,
+        path: str,
+        name: str | None = None,
+        icon: str | None = None,
+        schema_path: str | Path | None = None,
+    ) -> None:
+        """Register XML-backed page endpoint using explicit data or XML metadata."""
 
-def route(path: str, methods: list[str] | None = None):
-    normalized_methods = [method.upper() for method in (methods or ["GET"])]
+        if schema_path is None:
+            raise ValueError("schema_path is required for xml_page().")
+        xml_path = Path(schema_path)
 
-    def decorator(func: Handler) -> Handler:
-        api_router.add_api_route(
-            path,
-            _build_endpoint(func),
-            methods=normalized_methods,
-            response_model=None,
-        )
-        return func
+        resolved_name = name
+        resolved_icon = icon
 
-    return decorator
+        if resolved_name is None or resolved_icon is None:
+            from longlink.xml import load_page_metadata_from_xml
 
+            metadata = load_page_metadata_from_xml(xml_path)
+            resolved_name = resolved_name or metadata.get("name")
+            resolved_icon = resolved_icon or metadata.get("icon")
 
-def page(path: str, name: str, icon: str):
-    return LongLinkRouter.page(api_router, path, name, icon)
+        if not resolved_name or not resolved_icon:
+            raise ValueError("XML pages must define both name and icon, either in xml_page() or in the XML root.")
 
+        async def xml_endpoint() -> dict[str, Any]:
+            """Load XML schema for runtime renderer."""
 
-def xml_page(path: str, name: str | None = None, icon: str | None = None, schema_path: str | Path | None = None) -> None:
-    if schema_path is None:
-        raise ValueError("schema_path is required for xml_page().")
-    xml_path = Path(schema_path)
+            from longlink.xml import load_page_schema_from_xml
 
-    resolved_name = name
-    resolved_icon = icon
+            return load_page_schema_from_xml(xml_path)
 
-    if resolved_name is None or resolved_icon is None:
-        from longlink.xml import load_page_metadata_from_xml
+        # Keep endpoint registration and metadata registration coupled.
+        self.page(path, name=resolved_name, icon=resolved_icon)(xml_endpoint)
 
-        metadata = load_page_metadata_from_xml(xml_path)
-        resolved_name = resolved_name or metadata.get("name")
-        resolved_icon = resolved_icon or metadata.get("icon")
+    def pages(self) -> list[dict[str, str]]:
+        """Return registered page metadata."""
 
-    if not resolved_name or not resolved_icon:
-        raise ValueError("XML pages must define both name and icon, either in xml_page() or in the XML root.")
-
-    @page(path, name=resolved_name, icon=resolved_icon)
-    async def _xml_page() -> dict[str, Any]:
-        from longlink.xml import load_page_schema_from_xml
-
-        return load_page_schema_from_xml(xml_path)
+        return list(_pages)
 
 
-def pages() -> list[dict[str, str]]:
-    return list(_pages)
-
-
-def get(path: str):
-    return route(path, ["GET"])
-
-
-def post(path: str):
-    return route(path, ["POST"])
-
-
-def put(path: str):
-    return route(path, ["PUT"])
-
-
-def patch(path: str):
-    return route(path, ["PATCH"])
-
-
-def delete(path: str):
-    return route(path, ["DELETE"])
+api_router = LongLinkRouter()
