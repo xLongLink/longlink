@@ -1,9 +1,8 @@
-import importlib
 import os
 import sys
-
 import click
 import uvicorn
+import importlib
 
 
 def _set_dev_env_defaults() -> None:

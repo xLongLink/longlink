@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pathlib import Path
-from longlink.envs import ENV, get_envs
+from longlink.envs import ENV
 from longlink.router import api_router
 from longlink.routes import sdk_router
 from fastapi.staticfiles import StaticFiles
@@ -26,21 +26,40 @@ class SPAStaticFiles(StaticFiles):
 class LongLink(FastAPI):
     """LongLink SDK FastAPI application with platform defaults attached."""
 
-    def __init__(self, env: ENV | None = None, **kwargs):
+    def __init__(
+        self,
+        title: str,
+        summary: str | None = None,
+        description: str | None = None,
+        version: str = "0.1.0",
+        terms_of_service: str | None = None,
+        contact: dict | None = None,
+        license_info: dict | None = None,
+        env: ENV | None = None,
+        **kwargs,
+    ):
         """Create FastAPI app and apply LongLink middleware, routes, and state."""
+        super().__init__(
+            title=title,
+            summary=summary,
+            description=description,
+            version=version,
+            terms_of_service=terms_of_service,
+            contact=contact,
+            license_info=license_info,
+            **kwargs,
+        )
 
-        super().__init__(**kwargs)
-        self.env = env or get_envs()
-        self._configure()
+        # TODO: dependencies=[Depends(verify_token), Depends(verify_key)] ensure that all the routes are protected
 
-    def _configure(self) -> None:
-        """Configure middleware, routes, static assets, and LongLink state."""
+        ## Configure middleware, routes, static assets, and LongLink state.
 
         # Keep validated env accessible to route handlers and extensions.
-        self.state.env = self.env
-        self.state.longlink_app = self
+        # self.state.env = self.env
+        # self.state.longlink_app = self
 
-        self.add_middleware(CORSMiddleware,
+        self.add_middleware(
+            CORSMiddleware,
             allow_origins=[
                 "http://localhost:3000",
                 "http://localhost:5173",
@@ -55,4 +74,6 @@ class LongLink(FastAPI):
 
         static_dir = Path(__file__).resolve().parent / "static"
         if static_dir.exists():
-            self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
+            self.mount(
+                "/", SPAStaticFiles(directory=static_dir, html=True), name="static"
+            )

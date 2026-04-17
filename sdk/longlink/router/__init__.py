@@ -177,6 +177,3 @@ def xml_page(path: str, name: str | None = None, icon: str | None = None, schema
         """Return registered page metadata."""
 
         return list(self._pages)
-
-
-api_router = LongLinkRouter()
