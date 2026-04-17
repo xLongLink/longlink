@@ -27,29 +27,9 @@ class SPAStaticFiles(StaticFiles):
 class LongLink(FastAPI):
     """LongLink SDK FastAPI application with platform defaults attached."""
 
-    def __init__(
-        self,
-        title: str = "LongLink App",
-        summary: str | None = None,
-        description: str | None = None,
-        version: str = "0.1.0",
-        terms_of_service: str | None = None,
-        contact: dict | None = None,
-        license_info: dict | None = None,
-        env: BaseSettings | None = None,
-        **kwargs,
-    ):
+    def __init__(self, env: BaseSettings | None = None, **kwargs):
         """Create FastAPI app and apply LongLink middleware, routes, and state."""
-        super().__init__(
-            title=title,
-            summary=summary,
-            description=description,
-            version=version,
-            terms_of_service=terms_of_service,
-            contact=contact,
-            license_info=license_info,
-            **kwargs,
-        )
+        super().__init__(**kwargs)
 
         # Keep shared runtime state for SDK routes.
         self.state.env = env
