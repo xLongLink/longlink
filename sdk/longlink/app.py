@@ -40,8 +40,7 @@ class LongLink(FastAPI):
         self.state.env = self.env
         self.state.longlink_app = self
 
-        self.add_middleware(
-            CORSMiddleware,
+        self.add_middleware(CORSMiddleware,
             allow_origins=[
                 "http://localhost:3000",
                 "http://localhost:5173",
@@ -56,12 +55,4 @@ class LongLink(FastAPI):
 
         static_dir = Path(__file__).resolve().parent / "static"
         if static_dir.exists():
-            self.mount(
-                "/",
-                SPAStaticFiles(directory=static_dir, html=True),
-                name="static",
-            )
-
-
-# Backwards-compatible alias while SDK migrates naming to LongLink.
-App = LongLink
+            self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
