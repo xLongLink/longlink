@@ -2,7 +2,7 @@ import json
 import click
 from pathlib import Path
 from datetime import UTC, datetime
-from longlink.metadata import load_metadata
+from longlink.utils.metadata import load_metadata
 
 DOCKERFILE_TEMPLATE = """FROM python:3.12-slim
 

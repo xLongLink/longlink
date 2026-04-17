@@ -1,7 +1,7 @@
 """Metadata route."""
 
 from longlink.router import get
-from longlink.metadata import metadata
+from longlink.utils.metadata import metadata
 
 
 @get('/metadata.json')
