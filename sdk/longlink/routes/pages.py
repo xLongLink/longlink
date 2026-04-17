@@ -1,9 +1,10 @@
 from fastapi import Request, APIRouter
 
-pages_router = APIRouter()
+
+router = APIRouter()
 
 
-@pages_router.get("/pages")
+@router.get("/pages")
 async def get_available_pages(request: Request) -> list[dict[str, str]]:
     """Return metadata for all registered pages."""
 
