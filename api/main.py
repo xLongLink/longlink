@@ -59,6 +59,7 @@ import src.routes.users
 import src.routes.compute
 import src.routes.storage
 import src.routes.settings
+import src.routes.databases
 import src.routes.organization
 
 app.include_router(router)
