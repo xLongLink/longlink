@@ -1,0 +1,1 @@
+from longlink.storage.base import Storage, get_storage

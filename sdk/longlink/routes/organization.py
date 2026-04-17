@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from longlink.organization import OrganizationSettings, org
+from longlink.utils.organization import OrganizationSettings, org
 
 organization_router = APIRouter()
 
