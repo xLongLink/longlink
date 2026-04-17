@@ -1,5 +1,7 @@
 from enum import Enum
-from pydantic import EmailStr, BaseModel
+
+from pydantic import EmailStr
+from sqlmodel import SQLModel
 
 """
 Features
@@ -15,10 +17,8 @@ class StatusEnum(str, Enum):
     ARCHIVED = "Archived"
 
 
-class Contract(BaseModel):
+class Contract(SQLModel):
     name: str
     company: str
     email: EmailStr
     status: StatusEnum
-
-
