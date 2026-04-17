@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from pathlib import Path
-from longlink.envs import ENV
-from longlink.router import api_router
 from longlink.routes import sdk_router
+from fastapi.responses import Response
+from pydantic_settings import BaseSettings
 from fastapi.staticfiles import StaticFiles
+from longlink.utils.page import Page
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -28,14 +29,14 @@ class LongLink(FastAPI):
 
     def __init__(
         self,
-        title: str,
+        title: str = "LongLink App",
         summary: str | None = None,
         description: str | None = None,
         version: str = "0.1.0",
         terms_of_service: str | None = None,
         contact: dict | None = None,
         license_info: dict | None = None,
-        env: ENV | None = None,
+        env: BaseSettings | None = None,
         **kwargs,
     ):
         """Create FastAPI app and apply LongLink middleware, routes, and state."""
@@ -50,13 +51,9 @@ class LongLink(FastAPI):
             **kwargs,
         )
 
-        # TODO: dependencies=[Depends(verify_token), Depends(verify_key)] ensure that all the routes are protected
-
-        ## Configure middleware, routes, static assets, and LongLink state.
-
-        # Keep validated env accessible to route handlers and extensions.
-        # self.state.env = self.env
-        # self.state.longlink_app = self
+        # Keep shared runtime state for SDK routes.
+        self.state.env = env
+        self.state.pages: list[dict[str, str]] = []
 
         self.add_middleware(
             CORSMiddleware,
@@ -69,11 +66,39 @@ class LongLink(FastAPI):
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        self.include_router(api_router)
         self.include_router(sdk_router)
 
         static_dir = Path(__file__).resolve().parent / "static"
         if static_dir.exists():
-            self.mount(
-                "/", SPAStaticFiles(directory=static_dir, html=True), name="static"
-            )
+            self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
+
+    def include_page(self, page: str | Path) -> None:
+        """Register XML page file and expose it through a generated `/pages/*` route."""
+
+        page_file = Page(page)
+        page_content = page_file.load_page_schema()
+        metadata = page_file.load_page_metadata()
+
+        page_path = page_file.path.stem
+
+        # Persist page metadata for discovery endpoint.
+        self.state.pages.append(
+            {
+                "path": f"/pages/{page_path}",
+                "name": metadata.get("name", page_path.replace("_", " ").title()),
+                "icon": metadata.get("icon", "FileText"),
+            }
+        )
+
+        async def _page_endpoint(content: str = page_content) -> Response:
+            """Return static XML content for registered page file."""
+
+            return Response(content=content, media_type="text/xml")
+
+        self.add_api_route(
+            f"/pages/{page_path}",
+            _page_endpoint,
+            methods=["GET"],
+            response_model=None,
+            name=f"page_{page_path}",
+        )
