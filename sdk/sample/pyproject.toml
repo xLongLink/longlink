@@ -16,13 +16,20 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=8.0.0",
+  "pytest",
+  "isort"
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
 
-
 [tool.longlink]
 apptype = "tool"
+
+
+[tool.isort]
+from_first = false
+no_sections = true
+lines_between_types = 0
+length_sort = true
