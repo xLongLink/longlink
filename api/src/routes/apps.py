@@ -1,8 +1,9 @@
 import src.db as db
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from src.utils import apps
-from src.router import router
 from src.models.apps import AppType, AppCreate, AppMetadata, AppResponse
+
+router = APIRouter()
 
 
 @router.get("/apps")

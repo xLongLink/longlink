@@ -1,10 +1,11 @@
 import src.db as db
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from src.env import env
-from src.router import router
 from src.models.computes import (ComputeEnvironment, ComputeContainerCreate,
                                  ComputeContainerCreateResponse)
 from kubernetes.client.exceptions import ApiException
+
+router = APIRouter()
 
 
 def _pod_name_from_app_key(app_key: str, container_name: str) -> str:

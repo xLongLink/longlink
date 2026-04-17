@@ -1,6 +1,8 @@
 import src.db as db
-from src.router import router
+from fastapi import APIRouter
 from src.models.storages import StorageConnection
+
+router = APIRouter()
 
 
 @router.get("/storage")

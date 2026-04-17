@@ -1,11 +1,12 @@
 import httpx
 import src.db as db
-from fastapi import Request, Response, HTTPException
+from fastapi import Request, Response, APIRouter, HTTPException
 from src.utils import apps
-from src.router import router
 from fastapi.responses import JSONResponse
 
 ALLOWED_METHODS = ["GET", "POST"]
+
+router = APIRouter()
 
 
 @router.api_route("/apps/{app_name}", methods=ALLOWED_METHODS)
