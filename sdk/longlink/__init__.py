@@ -5,6 +5,7 @@ from longlink.xml import load_page_schema_from_xml
 from longlink.envs import ENV, Envs, ENVDev, EnvsDev, envs, get_envs
 from longlink.router import (LongLinkRouter, get, put, page, post, pages,
                              patch, route, delete, xml_page, api_router)
+from longlink.database import Table
 from longlink.utils.xml import load_page_schema_from_xml
 from longlink.predefined import issues_page, sample_page
 from longlink.organization import org

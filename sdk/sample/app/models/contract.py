@@ -1,7 +1,6 @@
 from enum import Enum
+from longlink import Table
 from pydantic import EmailStr
-from sqlmodel import SQLModel
-
 
 
 class StatusEnum(str, Enum):
@@ -10,7 +9,7 @@ class StatusEnum(str, Enum):
     ARCHIVED = "Archived"
 
 
-class Contract(SQLModel):
+class Contract(Table):
     name: str
     company: str
     email: EmailStr
