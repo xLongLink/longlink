@@ -4,33 +4,14 @@ import { Card, CardContent } from '@/ui/card';
 import { buttonVariants } from '@/ui/button';
 import { useUser } from '@/hooks/use-user';
 
-import { Table } from '@/xml/components/Table';
-
+/**
+ * Renders fallback 404 page for unknown routes.
+ */
 export default function NotFound() {
     const location = useLocation();
     const { data: user } = useUser();
     const primaryLink = user ? '/' : '/';
     const primaryLabel = user ? 'Back to dashboard' : 'Back to home';
-
-    return (
-        <Table
-            endpoint="/sample"
-            schema={{
-                title: 'Users',
-                schema: {
-                    columns: [
-                        {
-                            key: 'user',
-                            label: 'Name',
-                            align: 'left',
-                            value: '{name}',
-                            detail: '{email}',
-                        },
-                    ],
-                },
-            }}
-        />
-    );
 
     return (
         <div className="flex min-h-screen items-center justify-center px-6 py-12 text-white">
