@@ -1,15 +1,14 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlmodel import Session, SQLModel, create_engine
 
 DATABASE_URL = "sqlite:///./test.db"
 
-engine = create_engine(DATABASE_URL, echo=False, future=True)
+engine = create_engine(DATABASE_URL, echo=False)
 
-SessionLocal = sessionmaker(
-    bind=engine,
-    autoflush=False,
-    autocommit=False,
-    future=True,
-)
 
-Base = declarative_base()
+# Keep backward-compatible alias for code still importing `Base`.
+Base = SQLModel
+
+
+def get_session() -> Session:
+    """Create DB session bound to SDK engine."""
+    return Session(engine)
