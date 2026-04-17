@@ -8,6 +8,5 @@ sample/
 │   ├── types/      # Pydantic types
 │   ├── pages/      # XML page definitions
 │   └── cron/      # Cron jobs
-├── main.py         # Application entry
-└── metadata.json  # Application metadata
+└── main.py         # Application entry
 ```

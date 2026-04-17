@@ -1,6 +1,3 @@
-import os
-from functools import lru_cache
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,27 +29,3 @@ class ENVDev(ENV):
     storage_key: str = 'dev'
     storage_secret: str = 'dev'
     storage_endpoint: str = 'http://localhost:9000'
-
-
-def _is_dev_enabled() -> bool:
-    """Return whether current process should load development defaults."""
-
-    return os.getenv('DEV', '').lower() in {'1', 'true', 'yes', 'on'}
-
-
-@lru_cache(maxsize=1)
-def get_envs() -> ENV:
-    """Load and cache default SDK environment for current process."""
-
-    if _is_dev_enabled():
-        return ENVDev()  # type: ignore[return-value]
-
-    return ENV()  # type: ignore[return-value]
-
-
-# Backwards-compatible aliases while SDK moves to `ENV` naming.
-Envs = ENV
-EnvsDev = ENVDev
-
-# Default process-level SDK environment.
-envs: ENV = get_envs()
