@@ -14,9 +14,6 @@
 ```bash
 longlink init <module>
 longlink build
-longlink login
-longlink logout
-longlink publish <module>
 ```
 
 <br />
