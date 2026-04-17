@@ -1,13 +1,13 @@
-import json
 import inspect
-from typing import Any, Callable, Awaitable
+import json
+from typing import Any, Callable
 from fastapi import APIRouter
 from pathlib import Path
 from pydantic import BaseModel
 from functools import wraps
 from fastapi.responses import Response, JSONResponse, PlainTextResponse
 
-Handler = Callable[..., Awaitable[Any]]
+Handler = Callable[..., Any]
 
 api_router = APIRouter()
 _pages: list[dict[str, str]] = []
@@ -17,7 +17,8 @@ _pages: list[dict[str, str]] = []
 def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
     @wraps(handler)
     async def endpoint(*args, **kwargs):
-        body = await handler(*args, **kwargs)
+        result = handler(*args, **kwargs)
+        body = await result if inspect.isawaitable(result) else result
 
         if is_page:
             if isinstance(body, str):
@@ -72,6 +73,31 @@ def _format_response(handler: Handler, body: Any) -> Response | JSONResponse | P
     return PlainTextResponse(str(body))
 
 
+class LongLinkRouter(APIRouter):
+    """APIRouter that applies LongLink response formatting to route handlers."""
+
+    def add_api_route(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
+        """Register route after wrapping endpoint with LongLink response handling."""
+
+        super().add_api_route(path, _build_endpoint(endpoint), **kwargs)
+
+    def page(self, path: str, name: str, icon: str) -> Callable[[Handler], Handler]:
+        """Register page endpoint and track metadata for page listing."""
+
+        def decorator(func: Handler) -> Handler:
+            _pages.append({"path": path, "name": name, "icon": icon})
+            endpoint_path = f"/pages/{path.lstrip('/')}"
+            super().add_api_route(
+                endpoint_path,
+                _build_endpoint(func, is_page=True),
+                methods=["GET"],
+                response_model=None,
+            )
+            return func
+
+        return decorator
+
+
 def route(path: str, methods: list[str] | None = None):
     normalized_methods = [method.upper() for method in (methods or ["GET"])]
 
@@ -88,18 +114,7 @@ def route(path: str, methods: list[str] | None = None):
 
 
 def page(path: str, name: str, icon: str):
-    def decorator(func: Handler) -> Handler:
-        _pages.append({"path": path, "name": name, "icon": icon})
-        endpoint_path = f"/pages/{path.lstrip('/')}"
-        api_router.add_api_route(
-            endpoint_path,
-            _build_endpoint(func, is_page=True),
-            methods=["GET"],
-            response_model=None,
-        )
-        return func
-
-    return decorator
+    return LongLinkRouter.page(api_router, path, name, icon)
 
 
 def xml_page(path: str, name: str | None = None, icon: str | None = None, schema_path: str | Path | None = None) -> None:

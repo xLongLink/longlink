@@ -1,7 +1,8 @@
-import src.routes.sample
 from longlink import LongLink, issues_page, sample_page
+from src.routes.sample import router
 
 app = LongLink()
+app.include_router(router)
 
 # xml_page("/cart", name="Cart", icon="shopping-cart", schema_path=PAGES_DIR / "cart.xml")
 # xml_page("/dashboard", name="Dashboard", icon="layout-dashboard", schema_path=PAGES_DIR / "dashboard.xml")
