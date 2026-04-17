@@ -3,9 +3,7 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/inter';
 
-
 @custom-variant dark (&:is(.dark *));
-
 
 :root {
     --background: oklch(1 0 0);
