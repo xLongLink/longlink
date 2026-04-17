@@ -15,6 +15,10 @@ class Context:
         self.envs = request.app.state.env
 
 
+def get_env(request: Request):
+    return request.app.state.env
+
+
 def get_context(
     request: Request,
     storage: Storage = Depends(get_storage),
