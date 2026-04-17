@@ -71,7 +71,4 @@ See complete examples in:
 - [Database](/sdk/database/)
 - [Storage](/sdk/storage/)
 
-
-
-
 - [Official FastAPI Backend Template]https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend

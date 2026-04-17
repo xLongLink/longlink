@@ -7,7 +7,6 @@ LongLink loads and validates all environment variables at application startup.
 
 This ensures that configuration errors are detected early, before the application starts handling requests.
 
-
 ## Usage
 
 ```python
@@ -19,7 +18,7 @@ class Env(Enviroments):
 
     FEATURE_FLAG: bool
     EXTERNAL_API: str
-    
+
 
 env = Env()
 app = App(env=env)

@@ -1,6 +1,6 @@
 import fsspec
+from typing import Any
 from fastapi import Request
-from longlink.utils.settings import Settings
 
 
 class Storage:
@@ -25,19 +25,7 @@ class Storage:
 
 
 def get_storage(request: Request) -> Storage:
-    """Create request-scoped storage client from app environment settings."""
+    """Create request-scoped storage client from app state filesystem."""
 
-    envs = request.app.state.env or Settings()
-
-    # Select local filesystem for development, S3-compatible filesystem otherwise.
-    if envs.DEV:
-        fs = fsspec.filesystem("file")
-    else:
-        fs = fsspec.filesystem(
-            "s3",
-            key=envs.storage_key,
-            secret=envs.storage_secret,
-            client_kwargs={"endpoint_url": envs.storage_endpoint},
-        )
-
+    fs = request.app.state.fs
     return Storage(fs)

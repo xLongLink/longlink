@@ -1,10 +1,6 @@
-from typing import Optional
+from typing import Any, Optional
 from datetime import datetime
-from sqlmodel import Field, Session, SQLModel, create_engine
-
-DATABASE_URL = "sqlite:///./test.db"
-
-engine = create_engine(DATABASE_URL, echo=False)
+from sqlmodel import Field, Session, SQLModel
 
 
 class Table(SQLModel):
@@ -14,6 +10,7 @@ class Table(SQLModel):
     updated_at: Optional[datetime] = Field(default=None, nullable=True)
 
 
-def get_session() -> Session:
+def get_session(request: Any) -> Session:
     """Create DB session bound to SDK engine."""
+    engine = request.app.state.engine
     return Session(engine)

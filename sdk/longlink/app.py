@@ -1,7 +1,10 @@
+import fsspec
+from typing import Any
 from fastapi import FastAPI
 from pathlib import Path
 from pydantic import BaseModel
-from longlink.routes import sdk_router
+from sqlmodel import create_engine
+from longlink.routes import routes
 from fastapi.responses import Response
 from pydantic_settings import BaseSettings
 from fastapi.staticfiles import StaticFiles
@@ -28,7 +31,11 @@ class SPAStaticFiles(StaticFiles):
 class State(BaseModel):
     """Shared application state for SDK routes."""
 
+    model_config = {"arbitrary_types_allowed": True}
+
     env: BaseSettings | None = None
+    engine: Any = None
+    fs: Any = None
     pages: list[Page] = []
 
 
@@ -39,8 +46,21 @@ class LongLink(FastAPI):
         """Create FastAPI app and apply LongLink middleware, routes, and state."""
         super().__init__(**kwargs)
 
+        database_url = getattr(env, "DATABASE_URL", "sqlite:///./test.db")
+        engine = create_engine(database_url, echo=False)
+
+        if getattr(env, "DEV", True):
+            fs = fsspec.filesystem("file")
+        else:
+            fs = fsspec.filesystem(
+                "s3",
+                key=getattr(env, "storage_key", None),
+                secret=getattr(env, "storage_secret", None),
+                client_kwargs={"endpoint_url": getattr(env, "storage_endpoint", None)},
+            )
+
         # Keep shared runtime state for SDK routes.
-        self.state = State(env=env)
+        self.state = State(env=env, engine=engine, fs=fs)
 
         self.add_middleware(
             CORSMiddleware,
@@ -54,7 +74,8 @@ class LongLink(FastAPI):
             allow_headers=["*"],
         )
 
-        # TODO: Register SDK routes and middleware here.
+        for router in routes:
+            self.include_router(router)
 
 
 

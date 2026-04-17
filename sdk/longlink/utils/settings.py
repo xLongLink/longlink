@@ -1,3 +1,4 @@
+from fastapi import Depends, Request
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -25,3 +26,4 @@ class Settings(BaseSettings):
         if self.DEV:
             self.DBURL = "sqlite:///./dev.db"
         return self
+
