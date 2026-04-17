@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
+import { getApiBaseUrl } from '@/lib/api';
 import { getPagesFromResponse } from './pages';
 
 type AppMetadata = {
@@ -51,6 +52,6 @@ export default function SdkLonglink() {
     }
 
     const ast = fromXml(data);
-    const ctx = createContext({ baseUrl: '/api' });
+    const ctx = createContext({ baseUrl: getApiBaseUrl() });
     return renderNode(ast, registry, ctx);
 }
