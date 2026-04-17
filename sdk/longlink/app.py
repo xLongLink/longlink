@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pathlib import Path
+from pydantic import BaseModel
 from longlink.routes import sdk_router
 from fastapi.responses import Response
 from pydantic_settings import BaseSettings
@@ -24,6 +25,13 @@ class SPAStaticFiles(StaticFiles):
         return await super().get_response("index.html", scope)
 
 
+class State(BaseModel):
+    """Shared application state for SDK routes."""
+
+    env: BaseSettings | None = None
+    pages: list[Page] = []
+
+
 class LongLink(FastAPI):
     """LongLink SDK FastAPI application with platform defaults attached."""
 
@@ -32,8 +40,7 @@ class LongLink(FastAPI):
         super().__init__(**kwargs)
 
         # Keep shared runtime state for SDK routes.
-        self.state.env = env
-        self.state.pages: list[dict[str, str]] = []
+        self.state = State(env=env)
 
         self.add_middleware(
             CORSMiddleware,
@@ -46,7 +53,10 @@ class LongLink(FastAPI):
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        self.include_router(sdk_router)
+
+        # TODO: Register SDK routes and middleware here.
+
+
 
         static_dir = Path(__file__).resolve().parent / "static"
         if static_dir.exists():
@@ -56,7 +66,7 @@ class LongLink(FastAPI):
         """Register XML page file and expose it through a generated `/pages/*` route."""
 
         page_file = Page(page)
-        page_content = page_file.load_page_schema()
+        page_content = page_file.schema()
         metadata = page_file.load_page_metadata()
 
         page_path = page_file.path.stem
