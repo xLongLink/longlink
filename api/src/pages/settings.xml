@@ -143,11 +143,26 @@
               </Stack>
             </DialogContent>
           </Hero>
-          <Table endpoint="/apps">
-            <Column key="name" label="Name" content="{name}" />
-            <Column key="url" label="URL" content="{url}" />
-            <Column key="type" label="Type" content="{type}" />
-          </Table>
+          <Query id="apps" path="/apps">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>URL</TableHead>
+                  <TableHead>Type</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <For each="apps ?? []" as="app">
+                  <TableRow>
+                    <TableCell>{app.name}</TableCell>
+                    <TableCell>{app.url}</TableCell>
+                    <TableCell>{app.type}</TableCell>
+                  </TableRow>
+                </For>
+              </TableBody>
+            </Table>
+          </Query>
         </Stack>
       </MenuSubSection>
     </MenuSection>
@@ -156,12 +171,28 @@
       <MenuSubSection title="" root="true">
         <Stack gap="24">
           <Hero title="Database Settings" subtitle="Connect a database instance." icon="settings" action="Connect" />
-          <Table endpoint="/databases">
-            <Column key="name" label="Server" content="{name}" />
-            <Column key="host" label="Host" content="{host}" />
-            <Column key="port" label="Port" content="{port}" />
-            <Column key="username" label="Username" content="{username}" />
-          </Table>
+          <Query id="databases" path="/databases">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Server</TableHead>
+                  <TableHead>Host</TableHead>
+                  <TableHead>Port</TableHead>
+                  <TableHead>Username</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <For each="databases ?? []" as="database">
+                  <TableRow>
+                    <TableCell>{database.name}</TableCell>
+                    <TableCell>{database.host}</TableCell>
+                    <TableCell>{database.port}</TableCell>
+                    <TableCell>{database.username}</TableCell>
+                  </TableRow>
+                </For>
+              </TableBody>
+            </Table>
+          </Query>
         </Stack>
       </MenuSubSection>
     </MenuSection>
@@ -175,12 +206,28 @@
             icon="settings"
             action="Connect"
           />
-          <Table endpoint="/storages">
-            <Column key="name" label="Provider" content="{name}" />
-            <Column key="endpoint_url" label="Endpoint" content="{endpoint_url}" />
-            <Column key="region_name" label="Region" content="{region_name}" />
-            <Column key="access_key_id" label="Access key" content="{access_key_id}" />
-          </Table>
+          <Query id="storages" path="/storages">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Provider</TableHead>
+                  <TableHead>Endpoint</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Access key</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <For each="storages ?? []" as="storage">
+                  <TableRow>
+                    <TableCell>{storage.name}</TableCell>
+                    <TableCell>{storage.endpoint_url}</TableCell>
+                    <TableCell>{storage.region_name}</TableCell>
+                    <TableCell>{storage.access_key_id}</TableCell>
+                  </TableRow>
+                </For>
+              </TableBody>
+            </Table>
+          </Query>
         </Stack>
       </MenuSubSection>
     </MenuSection>
