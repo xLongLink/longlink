@@ -1,36 +1,56 @@
-import json
-from typing import Literal
+import tomllib
+from typing import Any, Literal
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import Field, BaseModel
 
 
 class Metadata(BaseModel):
-    """LongLink app metadata model loaded from metadata.json."""
+    """LongLink app metadata model loaded from `pyproject.toml`."""
 
-    name: str = 'Sample LongLink app'
-    description: str = ''
-    type: Literal['tool', 'space', 'process'] = 'tool'
+    name: str = "Sample LongLink app"
+    version: str = "0.1.0"
+    dependencies: list[str] = Field(default_factory=list)
+    description: str = ""
+    type: Literal["tool", "space", "process"] = "tool"
 
 
-def load_metadata() -> Metadata:
-    """Load app metadata from cwd metadata.json with safe defaults."""
+def _read_project_section(pyproject_path: Path) -> dict[str, Any]:
+    """Read and return `project` section from a pyproject file."""
 
-    metadata_file = Path.cwd() / 'metadata.json'
+    with pyproject_path.open("rb") as pyproject_file:
+        payload = tomllib.load(pyproject_file)
 
-    if not metadata_file.exists():
-        print('Warning: metadata.json is missing. Using default metadata values.')
+    project = payload.get("project")
+    if not isinstance(project, dict):
+        return {}
+    return project
+
+
+def load_metadata(pyproject_path: Path | None = None) -> Metadata:
+    """Load app metadata from cwd `pyproject.toml` with safe defaults."""
+
+    source_file = pyproject_path or (Path.cwd() / "pyproject.toml")
+    if not source_file.exists():
+        print("Warning: pyproject.toml is missing. Using default metadata values.")
         return Metadata()
 
     try:
-        # Parse metadata file if present; fallback to defaults on parse/read issues.
-        payload = json.loads(metadata_file.read_text())
-    except (json.JSONDecodeError, OSError):
+        # Parse pyproject project table and map known keys into SDK metadata model.
+        project = _read_project_section(source_file)
+    except (tomllib.TOMLDecodeError, OSError):
         return Metadata()
 
-    if not isinstance(payload, dict):
+    if not project:
         return Metadata()
 
-    return Metadata.model_validate(payload)
+    return Metadata.model_validate(
+        {
+            "name": project.get("name"),
+            "version": project.get("version"),
+            "dependencies": project.get("dependencies"),
+            "description": project.get("description"),
+        }
+    )
 
 
 metadata = load_metadata()
