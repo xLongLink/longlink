@@ -36,6 +36,7 @@ dev = [
     'pytest==8.4.2',
     'pytest-asyncio==1.2.0',
     'isort==8.0.1',
+    'testcontainers==4.13.2',
 ]
 
 [tool.setuptools]
