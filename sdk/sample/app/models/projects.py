@@ -3,12 +3,6 @@ from typing import Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel
 
-"""
-Features:
-Status workflow transitions
-File attachments
-Task list (embedded)
-"""
 
 
 class ProjectStatus(str, Enum):

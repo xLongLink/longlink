@@ -1,7 +1,7 @@
-from longlink import LongLinkRouter
-from src.types import UserModel
+from longlink import Router
+from app.types import UserModel
 
-router = LongLinkRouter()
+router = Router()
 
 
 @router.get("/sample")
