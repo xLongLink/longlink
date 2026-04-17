@@ -1,12 +1,11 @@
-from pathlib import Path
-
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException as StarletteHTTPException
-
+from pathlib import Path
 from longlink.envs import ENV, get_envs
 from longlink.router import api_router
+from longlink.routes import sdk_router
+from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 
 class SPAStaticFiles(StaticFiles):
@@ -53,6 +52,7 @@ class LongLink(FastAPI):
             allow_headers=["*"],
         )
         self.include_router(api_router)
+        self.include_router(sdk_router)
 
         static_dir = Path(__file__).resolve().parent / "static"
         if static_dir.exists():

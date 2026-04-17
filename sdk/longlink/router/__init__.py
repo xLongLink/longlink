@@ -9,10 +9,6 @@ from fastapi.responses import Response, JSONResponse, PlainTextResponse
 
 Handler = Callable[..., Any]
 
-api_router = APIRouter()
-_pages: list[dict[str, str]] = []
-
-
 
 def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
     @wraps(handler)
@@ -26,16 +22,15 @@ def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
                     content=body,
                     media_type="text/xml",
                 )
-            elif isinstance(body, (dict, list)):
+            if isinstance(body, (dict, list)):
                 return Response(
                     content=json.dumps(body),
                     media_type="application/json",
                 )
-            else:
-                return PlainTextResponse(
-                    "Invalid response type. Page routes must return an XML string, dict, or list.",
-                    status_code=500,
-                )
+            return PlainTextResponse(
+                "Invalid response type. Page routes must return an XML string, dict, or list.",
+                status_code=500,
+            )
 
         return _format_response(handler, body)
 
@@ -76,6 +71,12 @@ def _format_response(handler: Handler, body: Any) -> Response | JSONResponse | P
 class LongLinkRouter(APIRouter):
     """APIRouter that applies LongLink response formatting to route handlers."""
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Create router and initialize in-memory page metadata store."""
+
+        super().__init__(*args, **kwargs)
+        self._pages: list[dict[str, str]] = []
+
     def add_api_route(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
         """Register route after wrapping endpoint with LongLink response handling."""
 
@@ -85,7 +86,7 @@ class LongLinkRouter(APIRouter):
         """Register page endpoint and track metadata for page listing."""
 
         def decorator(func: Handler) -> Handler:
-            _pages.append({"path": path, "name": name, "icon": icon})
+            self._pages.append({"path": path, "name": name, "icon": icon})
             endpoint_path = f"/pages/{path.lstrip('/')}"
             super().add_api_route(
                 endpoint_path,
@@ -97,6 +98,14 @@ class LongLinkRouter(APIRouter):
 
         return decorator
 
+    def xml_page(
+        self,
+        path: str,
+        name: str | None = None,
+        icon: str | None = None,
+        schema_path: str | Path | None = None,
+    ) -> None:
+        """Register XML-backed page endpoint using explicit data or XML metadata."""
 
 def route(path: str, methods: list[str] | None = None):
     normalized_methods = [method.upper() for method in (methods or ["GET"])]
@@ -141,26 +150,33 @@ def xml_page(path: str, name: str | None = None, icon: str | None = None, schema
 
         return load_page_schema_from_xml(xml_path)
 
+        resolved_name = name
+        resolved_icon = icon
 
-def pages() -> list[dict[str, str]]:
-    return list(_pages)
+        if resolved_name is None or resolved_icon is None:
+            from longlink.xml import load_page_metadata_from_xml
+
+            metadata = load_page_metadata_from_xml(xml_path)
+            resolved_name = resolved_name or metadata.get("name")
+            resolved_icon = resolved_icon or metadata.get("icon")
+
+        if not resolved_name or not resolved_icon:
+            raise ValueError("XML pages must define both name and icon, either in xml_page() or in the XML root.")
+
+        async def xml_endpoint() -> dict[str, Any]:
+            """Load XML schema for runtime renderer."""
+
+            from longlink.xml import load_page_schema_from_xml
+
+            return load_page_schema_from_xml(xml_path)
+
+        # Keep endpoint registration and metadata registration coupled.
+        self.page(path, name=resolved_name, icon=resolved_icon)(xml_endpoint)
+
+    def pages(self) -> list[dict[str, str]]:
+        """Return registered page metadata."""
+
+        return list(self._pages)
 
 
-def get(path: str):
-    return route(path, ["GET"])
-
-
-def post(path: str):
-    return route(path, ["POST"])
-
-
-def put(path: str):
-    return route(path, ["PUT"])
-
-
-def patch(path: str):
-    return route(path, ["PATCH"])
-
-
-def delete(path: str):
-    return route(path, ["DELETE"])
+api_router = LongLinkRouter()
