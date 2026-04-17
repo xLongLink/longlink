@@ -1,11 +1,10 @@
-from fastapi import APIRouter
-from longlink.router import api_router
+from fastapi import Request, APIRouter
 
 pages_router = APIRouter()
 
 
-@pages_router.get('/pages')
-async def get_available_pages() -> list[dict[str, str]]:
+@pages_router.get("/pages")
+async def get_available_pages(request: Request) -> list[dict[str, str]]:
     """Return metadata for all registered pages."""
 
-    return api_router.pages()
+    return request.app.state.pages
