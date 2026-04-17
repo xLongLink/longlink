@@ -10,4 +10,4 @@ sdk_router.include_router(metadata_router)
 sdk_router.include_router(organization_router)
 sdk_router.include_router(pages_router)
 
-__all__ = ['metadata_router', 'organization_router', 'pages_router', 'sdk_router']
+__all__ = ["metadata_router", "organization_router", "pages_router", "sdk_router"]

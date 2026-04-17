@@ -9,8 +9,6 @@ from fastapi.responses import Response, JSONResponse, PlainTextResponse
 
 Handler = Callable[..., Any]
 
-_pages: list[dict[str, str]] = []
-
 
 def _build_endpoint(handler: Handler, *, is_page: bool = False) -> Handler:
     @wraps(handler)
@@ -73,6 +71,12 @@ def _format_response(handler: Handler, body: Any) -> Response | JSONResponse | P
 class LongLinkRouter(APIRouter):
     """APIRouter that applies LongLink response formatting to route handlers."""
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Create router and initialize in-memory page metadata store."""
+
+        super().__init__(*args, **kwargs)
+        self._pages: list[dict[str, str]] = []
+
     def add_api_route(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
         """Register route after wrapping endpoint with LongLink response handling."""
 
@@ -82,7 +86,7 @@ class LongLinkRouter(APIRouter):
         """Register page endpoint and track metadata for page listing."""
 
         def decorator(func: Handler) -> Handler:
-            _pages.append({"path": path, "name": name, "icon": icon})
+            self._pages.append({"path": path, "name": name, "icon": icon})
             endpoint_path = f"/pages/{path.lstrip('/')}"
             super().add_api_route(
                 endpoint_path,
@@ -133,7 +137,7 @@ class LongLinkRouter(APIRouter):
     def pages(self) -> list[dict[str, str]]:
         """Return registered page metadata."""
 
-        return list(_pages)
+        return list(self._pages)
 
 
 api_router = LongLinkRouter()
