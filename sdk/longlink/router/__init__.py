@@ -1,5 +1,5 @@
-import inspect
 import json
+import inspect
 from typing import Any, Callable
 from fastapi import APIRouter
 from pathlib import Path
@@ -126,7 +126,7 @@ def xml_page(path: str, name: str | None = None, icon: str | None = None, schema
     resolved_icon = icon
 
     if resolved_name is None or resolved_icon is None:
-        from longlink.xml import load_page_metadata_from_xml
+        from longlink.utils.xml import load_page_metadata_from_xml
 
         metadata = load_page_metadata_from_xml(xml_path)
         resolved_name = resolved_name or metadata.get("name")
@@ -137,7 +137,7 @@ def xml_page(path: str, name: str | None = None, icon: str | None = None, schema
 
     @page(path, name=resolved_name, icon=resolved_icon)
     async def _xml_page() -> dict[str, Any]:
-        from longlink.xml import load_page_schema_from_xml
+        from longlink.utils.xml import load_page_schema_from_xml
 
         return load_page_schema_from_xml(xml_path)
 
