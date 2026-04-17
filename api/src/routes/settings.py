@@ -1,9 +1,10 @@
 import src.db as db
 from typing import List
-from fastapi import Query, HTTPException
+from fastapi import Query, APIRouter, HTTPException
 from src.utils import apps
-from src.router import router
 from src.models.settings import SettingSet, SettingSetItem, SettingResponse
+
+router = APIRouter()
 
 
 @router.get("/settings")

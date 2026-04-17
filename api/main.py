@@ -6,7 +6,7 @@ if __name__ == "__main__":
 from fastapi import FastAPI
 from pathlib import Path
 from src.env import env
-from src.router import router
+from src.routes import routers
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,18 +51,8 @@ app.add_middleware(
 
 
 # Register routers
-import src.routes.apps
-import src.routes.auth
-import src.routes.user
-import src.routes.pages
-import src.routes.users
-import src.routes.compute
-import src.routes.storage
-import src.routes.settings
-import src.routes.databases
-import src.routes.organization
-
-app.include_router(router)
+for router in routers:
+    app.include_router(router)
 
 static_dir = Path(__file__).resolve().parent / "static"
 if static_dir.exists():
