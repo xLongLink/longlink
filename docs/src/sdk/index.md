@@ -56,9 +56,16 @@ You can extend `ENV` with project-specific variables and pass the resulting obje
 See complete examples in:
 
 - [Environments](/sdk/environments/)
+- [Endpoints](/sdk/endpoints/)
 
 ## Configuration
 
 To configure runtime variables for database and storage, see the environments guide:
 
 - [Environments](/sdk/environments/)
+
+## API Endpoints
+
+To define endpoint handlers on top of the wrapped FastAPI app, see:
+
+- [Endpoints](/sdk/endpoints/)
