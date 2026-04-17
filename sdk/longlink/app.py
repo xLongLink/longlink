@@ -89,16 +89,3 @@ class LongLink(FastAPI):
                 "icon": metadata.get("icon", "FileText"),
             }
         )
-
-        async def _page_endpoint(content: str = page_content) -> Response:
-            """Return static XML content for registered page file."""
-
-            return Response(content=content, media_type="text/xml")
-
-        self.add_api_route(
-            f"/pages/{page_path}",
-            _page_endpoint,
-            methods=["GET"],
-            response_model=None,
-            name=f"page_{page_path}",
-        )
