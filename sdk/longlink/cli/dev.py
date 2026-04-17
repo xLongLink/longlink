@@ -34,9 +34,9 @@ def load_app():
         if hasattr(application, "fastapi"):
             return application.fastapi
 
-    from longlink import app
-
-    return app
+    raise RuntimeError(
+        "main.py must export `app` as FastAPI instance. Example: `from longlink import LongLink; app = LongLink()`."
+    )
 
 
 @click.command(name="dev")

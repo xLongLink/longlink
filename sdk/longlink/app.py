@@ -24,24 +24,24 @@ class SPAStaticFiles(StaticFiles):
         return await super().get_response("index.html", scope)
 
 
-class App:
-    """LongLink SDK application wrapper around FastAPI and validated env."""
+class LongLink(FastAPI):
+    """LongLink SDK FastAPI application with platform defaults attached."""
 
-    def __init__(self, env: ENV, fastapi_app: FastAPI | None = None):
-        """Create application wrapper and bind validated env to FastAPI state."""
+    def __init__(self, env: ENV | None = None, **kwargs):
+        """Create FastAPI app and apply LongLink middleware, routes, and state."""
 
-        self.env = env
-        self.fastapi = fastapi_app or FastAPI()
+        super().__init__(**kwargs)
+        self.env = env or get_envs()
         self._configure()
 
     def _configure(self) -> None:
-        """Configure middleware, routes, static assets, and application state."""
+        """Configure middleware, routes, static assets, and LongLink state."""
 
         # Keep validated env accessible to route handlers and extensions.
-        self.fastapi.state.env = self.env
-        self.fastapi.state.longlink_app = self
+        self.state.env = self.env
+        self.state.longlink_app = self
 
-        self.fastapi.add_middleware(
+        self.add_middleware(
             CORSMiddleware,
             allow_origins=[
                 "http://localhost:3000",
@@ -52,24 +52,16 @@ class App:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        self.fastapi.include_router(api_router)
+        self.include_router(api_router)
 
         static_dir = Path(__file__).resolve().parent / "static"
         if static_dir.exists():
-            self.fastapi.mount(
+            self.mount(
                 "/",
                 SPAStaticFiles(directory=static_dir, html=True),
                 name="static",
             )
 
 
-def create_longlink_app(env: ENV | None = None) -> App:
-    """Create LongLink app wrapper with explicit or default environment."""
-
-    return App(env=env or get_envs())
-
-
-def create_app(env: ENV | None = None) -> FastAPI:
-    """Create and return FastAPI application for backwards compatibility."""
-
-    return create_longlink_app(env=env).fastapi
+# Backwards-compatible alias while SDK migrates naming to LongLink.
+App = LongLink
