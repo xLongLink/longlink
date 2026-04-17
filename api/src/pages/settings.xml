@@ -181,14 +181,6 @@
             <Column key="region_name" label="Region" content="{region_name}" />
             <Column key="access_key_id" label="Access key" content="{access_key_id}" />
           </Table>
-          <Card>
-            <CardContent>
-              <P className="text-sm text-muted-foreground">
-                Connected entries represent shared object storage providers. Applications can link dedicated buckets and
-                file policies to one of these providers.
-              </P>
-            </CardContent>
-          </Card>
         </Stack>
       </MenuSubSection>
     </MenuSection>

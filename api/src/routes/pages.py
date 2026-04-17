@@ -44,8 +44,11 @@ def get_all_pages() -> List[PageInfo]:
     if not PAGES_DIR.is_dir():
         return pages
 
-    # Read each XML page file and build response metadata with sane defaults.
+    page_order = ["overview", "tools", "spaces", "processes", "people", "settings"]
+
     for page_file in sorted(PAGES_DIR.glob("*.xml")):
+        if page_file.stem == "profile":
+            continue
         attrs = parse_page_attributes(page_file.read_text(encoding="utf-8"))
         pages.append(
             PageInfo(
@@ -54,6 +57,8 @@ def get_all_pages() -> List[PageInfo]:
                 icon=attrs.get("icon", "file-text"),
             )
         )
+
+    pages.sort(key=lambda p: page_order.index(p.path) if p.path in page_order else 999)
     return pages
 
 

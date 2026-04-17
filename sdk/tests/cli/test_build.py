@@ -1,8 +1,6 @@
-import json
 import re
-
+import json
 from click.testing import CliRunner
-
 from longlink.cli.build import build_app, build_command
 
 

@@ -1,7 +1,6 @@
 from pathlib import Path
 from click.testing import CliRunner
-
-from longlink.cli.init import init_command, setup
+from longlink.cli.init import setup, init_command
 
 
 def test_setup_creates_folder_and_copies_sample(monkeypatch, tmp_path):

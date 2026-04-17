@@ -118,7 +118,9 @@ dmypy.json
 .pyre/
 
 # IDE
-.vscode/
+/.vscode/
+!/.vscode/
+!/.vscode/launch.json
 .idea/
 *.swp
 *.swo
