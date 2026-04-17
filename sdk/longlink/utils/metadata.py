@@ -5,12 +5,16 @@ from pydantic import BaseModel
 
 
 class Metadata(BaseModel):
+    """LongLink app metadata model loaded from metadata.json."""
+
     name: str = 'Sample LongLink app'
     description: str = ''
     type: Literal['tool', 'space', 'process'] = 'tool'
 
 
 def load_metadata() -> Metadata:
+    """Load app metadata from cwd metadata.json with safe defaults."""
+
     metadata_file = Path.cwd() / 'metadata.json'
 
     if not metadata_file.exists():
@@ -18,6 +22,7 @@ def load_metadata() -> Metadata:
         return Metadata()
 
     try:
+        # Parse metadata file if present; fallback to defaults on parse/read issues.
         payload = json.loads(metadata_file.read_text())
     except (json.JSONDecodeError, OSError):
         return Metadata()
