@@ -48,6 +48,15 @@ Run the development server:
 longlink dev
 ```
 
+## Application Construction
+
+The SDK creates applications through an `App` wrapper that contains a FastAPI instance and a validated environment object.
+You can extend `ENV` with project-specific variables and pass the resulting object to `App`.
+
+See complete examples in:
+
+- [Environments](/sdk/environments/)
+
 ## Configuration
 
 To configure runtime variables for database and storage, see the environments guide:
