@@ -1,9 +1,10 @@
-from typing import Optional
 from datetime import datetime
-from pydantic import Field, BaseModel
+from typing import Optional
+
+from sqlmodel import Field, SQLModel
 
 
-class UserModel(BaseModel):
+class UserModel(SQLModel):
     id: int
     username: str = Field(min_length=3, max_length=30)
     email: str
