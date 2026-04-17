@@ -1,12 +1,13 @@
 import httpx
 import src.db as db
 from typing import cast
-from fastapi import Request, HTTPException
+from fastapi import Request, APIRouter, HTTPException
 from src.env import env
 from src.auth import oauth
-from src.router import router
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
+
+router = APIRouter()
 
 
 @router.get("/login/oidc")

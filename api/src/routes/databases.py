@@ -1,7 +1,8 @@
 import src.db as db
-from fastapi import HTTPException
-from src.router import router
+from fastapi import APIRouter, HTTPException
 from src.models.databases import DatabaseOverviewMetric
+
+router = APIRouter()
 
 
 @router.get("/databases/overview")

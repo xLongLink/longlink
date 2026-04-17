@@ -1,11 +1,12 @@
 import xmltodict
 from typing import List
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from pathlib import Path
 from pydantic import BaseModel
-from src.router import router
 from fastapi.responses import Response
 from xml.parsers.expat import ExpatError
+
+router = APIRouter()
 
 PAGES_DIR = Path(__file__).resolve().parents[1] / "pages"
 PAGE_NAME_PATTERN = "abcdefghijklmnopqrstuvwxyz0123456789-"
