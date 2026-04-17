@@ -1,6 +1,6 @@
 import fsspec
 from fastapi import Request
-from longlink.envs import Settings
+from longlink.utils.settings import Settings
 
 
 class Storage:

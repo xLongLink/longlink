@@ -1,7 +1,7 @@
 """Public SDK exports for LongLink applications."""
 
 from longlink.app import LongLink
-from longlink.envs import Settings, Enviroments, Environments
+from longlink.utils.settings import Settings, Enviroments, Environments
 from longlink.router import Router
 from longlink.context import (Context, ContextDep, SessionDep, StorageDep,
                               get_context)

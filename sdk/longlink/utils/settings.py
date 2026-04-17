@@ -25,7 +25,3 @@ class Settings(BaseSettings):
         if self.DEV:
             self.DBURL = "sqlite:///./dev.db"
         return self
-
-
-Enviroments = Settings
-Environments = Settings

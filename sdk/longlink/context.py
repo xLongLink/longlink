@@ -14,11 +14,6 @@ class Context:
         self.session = session
         self.envs = request.app.state.env
 
-        # Keep concise aliases used by apps migrating from previous SDK names.
-        self.fs = self.storage
-        self.database = self.session
-        self.db = self.database
-
 
 def get_context(
     request: Request,
