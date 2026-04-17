@@ -2,12 +2,6 @@ from enum import Enum
 from pydantic import EmailStr
 from sqlmodel import SQLModel
 
-"""
-Features
-Create / Edit
-Role-based visibility
-Attach documents
-"""
 
 
 class StatusEnum(str, Enum):

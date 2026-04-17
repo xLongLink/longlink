@@ -13,6 +13,9 @@ You define endpoint handlers on the wrapped FastAPI app.
 ## Basic endpoint example
 
 ```python
+
+router
+
 from longlink import App, ENV
 
 
