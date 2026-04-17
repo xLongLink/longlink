@@ -2,6 +2,7 @@ import json
 import click
 from pathlib import Path
 from datetime import UTC, datetime
+from longlink.utils.metadata import load_metadata
 
 DOCKERFILE_TEMPLATE = """FROM python:3.12-slim
 
@@ -18,12 +19,17 @@ CMD ["longlink", "dev"]
 
 
 def create_version() -> str:
+    """Generate timestamp-based version string for build artifacts."""
+
     return datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
 
 def build_app(base_path: Path | None = None) -> tuple[Path, Path, str]:
+    """Create Dockerfile and deployment manifest for current app."""
+
     root = (base_path or Path.cwd()).resolve()
     version = create_version()
+    metadata = load_metadata(root / "pyproject.toml")
 
     dockerfile_path = root / "Dockerfile"
     dockerfile_path.write_text(DOCKERFILE_TEMPLATE)
@@ -32,6 +38,7 @@ def build_app(base_path: Path | None = None) -> tuple[Path, Path, str]:
         "version": version,
         "generated_at": datetime.now(UTC).isoformat(),
         "dockerfile": dockerfile_path.name,
+        "metadata": metadata.model_dump(),
     }
 
     manifest_path = root / "manifest.json"
