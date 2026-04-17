@@ -1,19 +1,30 @@
 # Application SDK
 
-Applications in LongLink are **logic-centric components** designed to implement business rules, validation, and process control.
+LongLink SDK is wrapper around proven Python ecosystem tools.
+Goal is to keep development flow as close as possible to native FastAPI stack, while adding platform integration and normalized interfaces.
 
-They do not manage infrastructure, persistence, or rendering directly. Instead, each application defines **how data is validated, processed, and enforced**, while the platform handles execution, storage, and delivery.
+SDK centers around these building blocks:
 
-An application is therefore a **pure Python logic layer** responsible for:
+- FastAPI for REST API design and runtime behavior
+- SQLModel for relational data models built on SQLAlchemy
+- Alembic for schema migration lifecycle
+- Pydantic for request and response models, plus Pydantic Settings for configuration
+- S3-compatible object storage exposed through a normalization layer aligned with the S3 specification
 
-- enforcing business constraints
-- validating and transforming data
-- orchestrating workflows and decisions
+This design means you can use standard FastAPI ecosystem patterns first, then rely on SDK wrappers to reduce boilerplate for platform concerns.
 
-Each application operates in isolation with:
+## What SDK Adds
 
-- a dedicated database for structured data
-- a dedicated object storage for unstructured data and files
+SDK does not replace ecosystem tools.
+SDK wraps and connects tools so you can focus on business logic.
+
+SDK provides:
+
+- app bootstrap wrapper around FastAPI
+- environment and settings wiring with typed validation
+- normalized database and migration conventions
+- normalized object storage access for S3-compatible providers
+- integration points with LongLink control plane lifecycle
 
 ## Application Types
 
@@ -50,22 +61,24 @@ longlink dev
 
 ## Application Construction
 
-The SDK creates applications through an `App` wrapper that contains a FastAPI instance and a validated environment object.
-You can extend `ENV` with project-specific variables and pass the resulting object to `App`.
+The SDK creates applications through an `App` wrapper that contains a FastAPI instance and validated settings.
+You can extend settings with project-specific values and pass the resulting object to `App`.
 
 See complete examples in:
 
 - [Environments](/sdk/environments/)
 - [Endpoints](/sdk/endpoints/)
+- [Database](/sdk/database/)
+- [Storage](/sdk/storage/)
 
 ## Configuration
 
-To configure runtime variables for database and storage, see the environments guide:
+To configure runtime variables for database and storage, see:
 
 - [Environments](/sdk/environments/)
 
 ## API Endpoints
 
-To define endpoint handlers on top of the wrapped FastAPI app, see:
+To define endpoint handlers on top of wrapped FastAPI app, see:
 
 - [Endpoints](/sdk/endpoints/)

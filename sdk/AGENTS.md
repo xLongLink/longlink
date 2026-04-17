@@ -6,18 +6,34 @@ This folder contains the LongLink Python SDK.
 
 ```
 sdk/
-├── longlink/           # Core SDK code
+├── longlink/         # Core SDK code
 ├── sample/           # Sample applications
-└── tests/           # Unit tests
+└── tests/            # Unit tests
 ```
 
-This folder contains:
+## SDK Direction
 
-- `tests` - Unit tests for the SDK
-- `longlink` - Core SDK code
-- `sample` - Sample projects using the SDK
+The SDK must stay close to the FastAPI ecosystem.
+Treat SDK as thin wrapper that simplifies integration, not custom framework that replaces ecosystem defaults.
 
-You can install the SDK locally in development mode with the following command:
+Core stack expectations:
+
+- FastAPI for API behavior and routing
+- SQLModel (SQLAlchemy-based) for DB models
+- Alembic for DB migrations
+- Pydantic and Pydantic Settings for data validation and app configuration
+- S3-compatible storage with normalized behavior aligned to S3 specification
+
+When implementing SDK features:
+
+- prefer native FastAPI, SQLModel, Alembic, and Pydantic patterns
+- add wrappers only to remove repetitive boilerplate or enforce platform conventions
+- keep abstractions explicit and easy to map back to underlying ecosystem tools
+- keep storage interfaces provider-agnostic by normalizing to S3-compatible semantics
+
+## Local Development
+
+Install SDK in development mode:
 
 ```bash
 pip install -e './sdk'
@@ -25,20 +41,16 @@ pip install -e './sdk'
 
 ## Tests
 
-To run the unit tests, use the following command:
+Run unit tests:
 
 ```bash
 pytest tests
 ```
 
-## SDK
-
-The sdk folder contains the code to create a LongLink application. Each repository shall create a single application, therefore there is no need for
-
 ## Pre-Commit
 
-Fix imports with `isort`:
+Fix imports:
 
-```
+```bash
 python -m isort .
 ```
