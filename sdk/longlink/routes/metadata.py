@@ -2,6 +2,8 @@
 
 from fastapi import APIRouter
 from longlink.metadata import metadata
+from longlink.router import get
+from longlink.utils.metadata import metadata
 
 metadata_router = APIRouter()
 
