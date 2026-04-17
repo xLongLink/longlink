@@ -6,6 +6,20 @@ import click
 import uvicorn
 
 
+def _set_dev_env_defaults() -> None:
+    """Seed local development environment with SDK-safe default secrets."""
+
+    # Ensure dev mode stays enabled for parent process and uvicorn reload workers.
+    os.environ["DEV"] = "True"
+
+    # Provide local-first defaults so sample apps boot without external secrets.
+    os.environ.setdefault("KEY", "longlink")
+    os.environ.setdefault("DBURL", "sqlite:///./dev.db")
+    os.environ.setdefault("storage_key", "dev")
+    os.environ.setdefault("storage_secret", "dev")
+    os.environ.setdefault("storage_endpoint", "http://localhost:9000")
+
+
 def load_app():
     """Load user module and return FastAPI app instance for uvicorn factory."""
 
@@ -30,7 +44,7 @@ def dev_command():
     """Run LongLink application locally with auto-reload enabled."""
 
     sys.path.insert(0, os.getcwd())
-    os.environ["DEV"] = "True"
+    _set_dev_env_defaults()
 
     uvicorn.run(
         "longlink.cli.dev:load_app",
