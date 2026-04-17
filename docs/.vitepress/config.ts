@@ -47,6 +47,7 @@ export default defineConfig({
         items: [
           { text: 'Overview', link: '/sdk/' },
           { text: 'Environments', link: '/sdk/environments/' },
+          { text: 'Endpoints', link: '/sdk/endpoints/' },
           {
             text: 'Pages',
             collapsed: true,
