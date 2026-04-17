@@ -1,4 +1,4 @@
-from .base import Base, get_session
+from .base import Base, Table, get_session
 
 
 class Database:
@@ -7,4 +7,4 @@ class Database:
     pass
 
 
-__all__ = ["Base", "Database", "get_session"]
+__all__ = ["Base", "Database", "Table", "get_session"]
