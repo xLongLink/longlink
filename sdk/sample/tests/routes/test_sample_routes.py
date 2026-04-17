@@ -1,13 +1,7 @@
 """Route tests for sample LongLink app."""
 
-import os
-from fastapi.testclient import TestClient
-
-# Provide required settings before importing sample app module.
-os.environ.setdefault("FEATURE_FLAG", "true")
-os.environ.setdefault("EXTERNAL_API", "https://example.test")
-
 from main import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
