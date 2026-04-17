@@ -1,14 +1,21 @@
-from longlink import Router
+from fastapi import Depends
+from longlink import Router, Context, get_context
 from app.types import UserModel
 
 router = Router()
 
 
 @router.get("/sample")
-async def sample_get_endpoint():
+async def sample_get_endpoint(ctx: Context = Depends(get_context)):
     """Handle sample GET request."""
 
-    return "Sample GET endpoint received data"
+    return {
+        "message": "Sample GET endpoint received data",
+        "has_storage": ctx.storage is not None,
+        "has_fs_alias": ctx.fs is ctx.storage,
+        "has_db_alias": ctx.db is ctx.database,
+        "env_loaded": ctx.envs is not None,
+    }
 
 
 @router.post("/sample")
