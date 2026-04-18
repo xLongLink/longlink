@@ -49,10 +49,7 @@ def create_item(payload: ItemCreate) -> ItemResponse:
     return ItemResponse(id=1, name=payload.name)
 ```
 
-## FastAPI references
-
-LongLink endpoint layer follows FastAPI behavior.
-Use FastAPI docs for decorator options, validation, dependency injection, and OpenAPI metadata.
+## references
 
 - [FastAPI tutorial](https://fastapi.tiangolo.com/tutorial/)
 - [Path operation decorators](https://fastapi.tiangolo.com/tutorial/path-operation-configuration/)
@@ -60,7 +57,3 @@ Use FastAPI docs for decorator options, validation, dependency injection, and Op
 - [Dependencies](https://fastapi.tiangolo.com/tutorial/dependencies/)
 - [Response models](https://fastapi.tiangolo.com/tutorial/response-model/)
 
-::: tip
-Use standard FastAPI patterns for routers and dependencies.
-LongLink wrapper does not replace FastAPI routing model.
-:::

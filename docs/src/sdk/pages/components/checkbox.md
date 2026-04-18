@@ -11,3 +11,6 @@ Use `<Checkbox>` for boolean input with a label.
   checked="true"
 />
 ```
+
+
+## References
