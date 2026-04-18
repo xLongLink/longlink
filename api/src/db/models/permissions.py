@@ -1,10 +1,11 @@
 import uuid
-from sqlalchemy import String, Integer, UniqueConstraint
+from datetime import datetime
+from sqlalchemy import String, Integer, DateTime, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
-from src.db.models.__base__ import Base, AuditMixin
+from src.db.models.__base__ import Base
 
 
-class Permission(Base, AuditMixin):
+class Permission(Base):
     '''Represent the access level granted to one user for one app.'''
     __tablename__ = 'permissions'
     __table_args__ = (
@@ -15,3 +16,13 @@ class Permission(Base, AuditMixin):
     user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     app_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     level: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    deleted_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
