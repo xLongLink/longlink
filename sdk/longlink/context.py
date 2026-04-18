@@ -1,35 +1,31 @@
+from __future__ import annotations
+
+from dataclasses import InitVar, dataclass
 from typing import Annotated
 from fastapi import Depends, Request
 from sqlmodel import Session
-from longlink.storage import Storage, get_storage
 from longlink.database import get_session
+from longlink.storage import Storage, get_storage
+from longlink.utils.settings import Settings, get_env
 
 
-class Context:
+@dataclass
+class AppContext:
     """Request context exposing SDK dependencies with stable aliases."""
-
-    def __init__(self, storage: Storage, session: Session, request: Request):
-        """Store request-scoped resources and compatibility aliases."""
-        self.storage = storage
-        self.session = session
-        self.envs = request.app.state.env
-
-
-def get_env(request: Request):
-    return request.app.state.env
-
+    envs: Settings
+    storage: Storage
+    session: Session
+    request: InitVar[Request]
+    
 
 def get_context(
     request: Request,
+    envs: Settings = Depends(get_env),
     storage: Storage = Depends(get_storage),
     session: Session = Depends(get_session),
-) -> Context:
+) -> AppContext:
     """Build request context from storage and DB session dependencies."""
+    return AppContext(storage=storage, session=session, request=request, envs=envs)
 
-    return Context(storage=storage, session=session, request=request)
 
-
-SessionDep = Annotated[Session, Depends(get_session)]
-StorageDep = Annotated["Storage", Depends(get_storage)]
-ContextDep = Annotated["Context", Depends(get_context)]
-
+Context = Annotated[AppContext, Depends(get_context)]
