@@ -6,10 +6,39 @@ This folder contains the LongLink Python SDK.
 
 ```
 sdk/
-├── longlink/         # Core SDK code
-├── sample/           # Sample applications
-└── tests/            # Unit tests
+├── longlink/           # Core SDK (the package itself)
+│   ├── app.py          # FastAPI app factory
+│   ├── cli/            # CLI commands (init, build, migrate)
+│   ├── context.py      # Application context
+│   ├── database/       # DB connection, session, models
+│   ├── pages/          # Page definitions
+│   ├── routes/         # API routes
+│   ├── static/         # Static file serving
+│   ├── storage/        # S3-compatible storage abstraction
+│   ├── types/          # Shared types
+│   └── utils/          # Utilities
+├── sample/             # Sample app demonstrating SDK usage
+│   └── app/            # App implementation (models, routes, pages)
+└── tests/              # Unit tests
+    ├── cli/            # CLI tests
+    └── utils/          # Utils tests
 ```
+
+## How LongLink is Structured
+
+LongLink is a unified platform with two main components:
+
+1. **Control Plane** (`api/`) - Centralized governance layer handling:
+   - User authentication and permissions
+   - Application lifecycle management (provisioning, scaling, suspension)
+   - External infrastructure orchestration (Kubernetes, S3, PostgreSQL/MySQL)
+   - Secure proxy between frontend and backend services
+   - Audit logging
+
+2. **Applications SDK** (`sdk/`) - Enables building apps on the platform:
+   - Python SDK with FastAPI, SQLModel, Alembic, Pydantic
+   - XML-based declarative UI (renders to React components)
+   - Standardized stack so developers focus on business logic
 
 ## SDK Direction
 

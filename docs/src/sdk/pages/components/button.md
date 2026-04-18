@@ -14,5 +14,4 @@ Use `<Button>` for page actions.
 - Use `url` for the action target.
 - Use `variant` to change visual emphasis.
 
-
 ## References

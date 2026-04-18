@@ -24,7 +24,6 @@ The result is a database layer that is:
 - versioned and reproducible through migrations
 - managed through a minimal, standardized interface
 
-
 ## References
 
 - [SQLModel GitHub](https://github.com/fastapi/sqlmodel)
