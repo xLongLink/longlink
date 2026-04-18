@@ -15,11 +15,14 @@ class SPAStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
         """Return static file response, falling back to SPA entrypoint on 404."""
 
+        not_found_exc: HTTPException | None = None
+
         try:
             return await super().get_response(path, scope)
         except HTTPException as exc:
             if exc.status_code != 404:
                 raise
+            not_found_exc = exc
 
         method = scope.get("method", "").upper()
         headers = dict(scope.get("headers", []))
@@ -27,7 +30,9 @@ class SPAStaticFiles(StaticFiles):
 
         # Only serve SPA fallback for browser navigations that explicitly accept HTML.
         if method != "GET" or "text/html" not in accept_header:
-            raise exc
+            if not_found_exc is not None:
+                raise not_found_exc
+            raise HTTPException(status_code=404)
 
         return await super().get_response("index.html", scope)
 
