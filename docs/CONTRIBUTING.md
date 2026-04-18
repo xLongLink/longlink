@@ -26,47 +26,25 @@ Write docs clear, direct, easy to translate.
 - Explain responsibilities clearly (control plane vs SDK vs application).
 - Use consistent terms (`application`, `control plane`, `SDK`, `API`, `XML page`).
 - Avoid unnecessary jargon; explain specialized terms briefly.
-
-## LongLink architecture language
-
-- Control plane manages identity, permissions, provisioning, isolation, lifecycle, secure proxy.
-- Applications SDK defines backend using FastAPI + SQLAlchemy/Alembic/fsspec + XML UI definitions.
-- Web layer renders XML-defined UI and communicates with APIs.
-
-Describe ownership explicitly. Avoid ambiguous `we`.
-Use `You` for reader actions and `LongLink` for platform behavior.
+- Describe ownership explicitly. Avoid ambiguous `we`.
+- Use `You` for reader actions and `LongLink` for platform behavior.
 
 ## Recommended page structure
 
-When relevant, include:
+When relevant, follow the format:
 
-1. What resource/feature is for
-2. Available methods
-3. Request models/parameters
-4. Returned models
-5. Minimal usage examples
+```md
+# <Feature>
 
-## Step-by-step guidance
+<Introduction>
 
-Tutorials should go from first contact to running application end to end.
-Do not skip required steps.
+## Usage
 
-Typical sequence:
+```py
+<Minimal usage examples>
+```
 
-1. Create application
-2. Define data model
-3. Run migrations
-4. Implement API endpoints
-5. Define XML pages
-6. Deploy application
-7. Access application in web interface
+## Resources
 
-## VitePress containers
-
-Supported custom containers:
-
-- `info`
-- `tip`
-- `warning`
-- `danger`
-- `details`
+- [Description](url)
+```
