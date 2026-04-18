@@ -1,12 +1,11 @@
-from fastapi import Depends
-from longlink import Router, Context, get_context
+from longlink import Router, Context
 from app.types import UserModel
 
 router = Router()
 
 
 @router.get("/sample")
-async def sample_get_endpoint(ctx: Context = Depends(get_context)):
+async def sample_get_endpoint(ctx: Context):
     """Handle sample GET request."""
 
     return {
@@ -15,6 +14,7 @@ async def sample_get_endpoint(ctx: Context = Depends(get_context)):
         "has_fs_alias": ctx.fs is ctx.storage,
         "has_db_alias": ctx.db is ctx.database,
         "env_loaded": ctx.envs is not None,
+        "organization_name": ctx.organization.ORG_NAME,
     }
 
 
@@ -73,7 +73,7 @@ async def sample_post_user_endpoint() -> UserModel:
         username="testuser",
         email="testuser@example.com",
         is_active=True,
-        age=30
+        age=30,
     )
 
 
