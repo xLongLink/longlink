@@ -1,4 +1,4 @@
-from fastapi import Depends, Request
+from fastapi import Request
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -26,4 +26,10 @@ class Settings(BaseSettings):
         if self.DEV:
             self.DBURL = "sqlite:///./dev.db"
         return self
+
+
+
+def get_env(request: Request):
+    """Helper to access SDK environment settings from request context."""
+    return request.app.state.env
 

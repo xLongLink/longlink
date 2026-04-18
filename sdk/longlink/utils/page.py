@@ -4,7 +4,12 @@ from pathlib import Path
 
 
 class Page:
-    """Load and validate XML page documents from disk."""
+    """Load and validate XML page documents from disk.
+    Pages are served under the /pages/ endpoint and can be used to define custom UI components and interactions.
+
+    - /pages GET: List all available pages with metadata.
+    - /pages/{name} GET: Retrieve full page schema for a given page name.
+    """
 
     def __init__(self, path: str | Path) -> None:
         """Store XML file path for later parsing operations."""
