@@ -1,12 +1,12 @@
 # Contributing in `sdk/`
 
-Thanks for contributing to the Python SDK.
+Thanks for contributing to Python SDK.
 
 ## Architecture
 
-```
+```text
 sdk/
-├── longlink/           # Core SDK (the package itself)
+├── longlink/           # Core SDK package
 │   ├── app.py          # FastAPI app factory
 │   ├── cli/            # CLI commands (init, build, migrate)
 │   ├── context.py      # Application context
@@ -26,14 +26,18 @@ sdk/
 
 ## What this folder owns
 
-The SDK defines how applications are built on LongLink.
+SDK defines how applications are built on LongLink.
 
 ## Keep changes aligned
 
-- Keep the SDK opinionated and consistent.
+- Keep SDK close to FastAPI ecosystem.
+- Treat SDK as thin wrapper: remove boilerplate, enforce conventions; do not replace ecosystem defaults.
+- Prefer native FastAPI, SQLModel/SQLAlchemy, Alembic, and Pydantic patterns.
+- Keep abstractions explicit and easy to map to underlying tools.
+- Keep storage interfaces provider-agnostic and normalized to S3-compatible semantics.
 - Prefer simple, explicit APIs.
 - Remove obsolete code when replacing behavior.
-- Do not add tests right now (project rule in current phase).
+- Do not add tests right now (current project phase).
 
 ## Useful commands
 
