@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from longlink.state import Context
 
-
 router = APIRouter()
 
 

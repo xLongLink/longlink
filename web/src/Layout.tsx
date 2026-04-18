@@ -4,34 +4,31 @@ import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { useApiData } from '@/hooks/use-data';
-import { getActiveTabConfig, getAppTabsFromPages, type PageInfo, type AppNavigationPage } from '@/lib/navigation';
+import { getActiveTabConfig, getAppTabsFromPages, type AppNavigationPage } from '@/lib/navigation';
+import { getPagesFromResponse } from '@/sdk/pages';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
 };
 
-const toPageList = (value: unknown): PageInfo[] => {
-    if (!value) {
-        return [];
-    }
-
-    if (Array.isArray(value)) {
-        return value as PageInfo[];
-    }
-
-    if (value && typeof value === 'object' && Array.isArray((value as AppMetadata).pages)) {
-        return (value as AppMetadata).pages ?? [];
-    }
-
-    return [];
+/**
+ * Normalizes pages API response into navigation pages with icon fallback.
+ * Supports both array and wrapped response shapes.
+ */
+const toNavigationPages = (value: unknown): AppNavigationPage[] => {
+    return getPagesFromResponse(value).map((page) => ({
+        path: page.path,
+        name: page.name,
+        icon: page.icon ?? 'file-text',
+    }));
 };
 
 function OrgNavigation() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { data: pagesResponse, isLoading } = useApiData<PageInfo[] | { pages: PageInfo[] }>('/pages');
+    const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/pages');
 
-    const pageList = toPageList(pagesResponse);
+    const pageList = toNavigationPages(pagesResponse);
 
     const tabs = getAppTabsFromPages(
         pageList.map((p) => ({
@@ -131,7 +128,13 @@ function AppLayout() {
                   icon: Loader2,
               },
           ]
-        : getAppTabsFromPages(appMetadata?.pages ?? []);
+        : getAppTabsFromPages(
+              (appMetadata?.pages ?? []).map((page) => ({
+                  path: page.path,
+                  name: page.name,
+                  icon: page.icon ?? 'file-text',
+              }))
+          );
 
     const basePath = `/${appId}`;
     const activeTabConfig = getActiveTabConfig({
