@@ -1,5 +1,7 @@
+from uuid import uuid4
 from longlink import Router, Context
 from app.types import UserModel
+from app.models.projects import Project, LinkedContact, ProjectStatus
 
 router = Router()
 
@@ -19,10 +21,38 @@ async def sample_get_endpoint(ctx: Context):
 
 
 @router.post("/sample")
-async def sample_post_endpoint():
-    """Handle sample POST request."""
+async def sample_post_endpoint(ctx: Context):
+    """Create sample records in filesystem and database using request context."""
 
-    return "Sample POST endpoint response"
+    project_id = str(uuid4())
+    filename = f"sample-projects/{project_id}.txt"
+    file_contents = f"Created project {project_id} from sample context endpoint."
+
+    # Persist data to the configured filesystem abstraction.
+    ctx.storage.write_bytes(filename, file_contents.encode("utf-8"))
+
+    project = Project(
+        id=project_id,
+        name="Context Storage Demo Project",
+        linked_contact=LinkedContact(
+            id="contact-1",
+            name="Sample Contact",
+            email="sample@example.com",
+        ),
+        status=ProjectStatus.ACTIVE,
+        budget=1000,
+        owner="sample-user",
+    )
+
+    # Persist data to the configured database session abstraction.
+    ctx.session.add(project)
+    ctx.session.commit()
+
+    return {
+        "message": "Sample POST endpoint saved data to filesystem and database",
+        "project_id": project_id,
+        "filesystem_path": filename,
+    }
 
 
 @router.put("/sample")
