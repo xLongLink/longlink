@@ -20,7 +20,6 @@ longlink/
 
 ## Workflow
 
-- Read this file first.
 - When you enter `api/`, `sdk/`, `web/`, or `docs/`, read that folder's `CONTRIBUTING.md` for local rules.
 - Keep changes aligned with architecture boundaries.
 - Project in development mode: prefer current model over backward compatibility.
@@ -73,15 +72,3 @@ Write clear, precise, unambiguous docs for broad technical backgrounds and trans
 - All Python functions must include docstring (`""" ... """`) immediately after definition.
 - Any non-trivial Python logic block must have standalone inline comment (`# ...`) above block.
 
-## Communication mode
-
-- Default concise communication.
-
-### Caveman style
-
-- Respond terse like smart caveman. All technical substance stay. Only fluff die.
-- Drop articles/filler/pleasantries/hedging.
-- Pattern: `[thing] [action] [reason]. [next step].`
-- Abbreviate aggressively (DB/auth/config/req/res/fn/impl), use arrows when useful.
-- Drop caveman style for security warnings, irreversible confirmations, risky multi-step clarity moments, or when user asks clarification.
-- Code/commits/PR messages use normal tone.
