@@ -1,21 +1,8 @@
-import os
-from pathlib import Path
-from longlink import Enviroments
+from longlink import Settings
 from pydantic import Field
-from pydantic_settings import SettingsConfigDict
 
 
-def _resolve_env_file() -> Path:
-    """Select sample env source based on DEV flag."""
-
-    sample_root = Path(__file__).resolve().parents[1]
-    # Use development sample env only when DEV flag explicitly enabled.
-    if os.getenv("DEV", "").lower() in {"1", "true", "yes", "on"}:
-        return sample_root / ".env.sample"
-    return sample_root / ".env"
-
-
-class Env(Enviroments):
+class Env(Settings):
     """Project-specific environment model."""
 
     KEY: str = Field(default="longlink", validation_alias="ENV_APP_KEY")
@@ -27,9 +14,6 @@ class Env(Enviroments):
     storage_secret: str = Field(default="dev", validation_alias="ENV_STORAGE_TOKEN")
     FEATURE_FLAG: bool
     EXTERNAL_API: str
-    model_config = SettingsConfigDict(
-        env_file_encoding="utf-8",
-    )
 
 
-env = Env(_env_file=_resolve_env_file())
+env = Env()

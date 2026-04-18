@@ -10,4 +10,3 @@ class Organization(BaseModel):
     ORG_MAIL_SUPPORT: str = ''
     ORG_WEBSITE: str = ''
     ORG_ADDRESS: str = ''
-

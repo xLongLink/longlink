@@ -14,14 +14,21 @@ class Page:
     def __init__(self, path: str | Path) -> None:
         """Store XML file path for later parsing operations."""
         self.path = Path(path)
+        self._schema: dict[str, Any] | None = None
+
+    @property
+    def name(self) -> str:
+        """Return page name from metadata."""
+        return self.metadata.get("name", self.path.stem)
 
     @property
     def schema(self) -> dict[str, Any]:
         """Return full page document as a dict for downstream processing."""
-        with self.path.open("rb", encoding="utf-8") as handler:
-            content = handler.read()
-            document = xmltodict.parse(content)
-        return document
+        if self._schema is None:
+            with self.path.open("rb", encoding="utf-8") as handler:
+                content = handler.read()
+                self._schema = xmltodict.parse(content)
+        return self._schema
     
     @property
     def metadata(self) -> dict[str, str]:

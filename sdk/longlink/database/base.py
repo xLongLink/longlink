@@ -1,10 +1,8 @@
-from datetime import datetime
 from typing import Iterator, Optional
-
-from sqlalchemy.engine import Engine
-from sqlalchemy import create_engine as create_sqlalchemy_engine
+from datetime import datetime
 from sqlmodel import Field, Session, SQLModel
-
+from sqlalchemy import create_engine as create_sqlalchemy_engine
+from sqlalchemy.engine import Engine
 from longlink.utils.settings import Settings
 
 
