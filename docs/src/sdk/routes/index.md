@@ -56,4 +56,3 @@ def create_item(payload: ItemCreate) -> ItemResponse:
 - [Request body with Pydantic](https://fastapi.tiangolo.com/tutorial/body/)
 - [Dependencies](https://fastapi.tiangolo.com/tutorial/dependencies/)
 - [Response models](https://fastapi.tiangolo.com/tutorial/response-model/)
-

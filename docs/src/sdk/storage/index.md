@@ -13,7 +13,6 @@ from longlink import
 
 ```
 
-
 ## References
 
 - [fsspec Documentation](https://filesystem-spec.readthedocs.io/en/latest/)

@@ -1,6 +1,9 @@
 from typing import Any, Optional
 from datetime import datetime
+from sqlalchemy.engine import Engine
 from sqlmodel import Field, Session, SQLModel
+from sqlalchemy import create_engine as create_sqlalchemy_engine
+from longlink.utils.settings import Settings
 
 
 class Table(SQLModel):
@@ -10,7 +13,6 @@ class Table(SQLModel):
     updated_at: Optional[datetime] = Field(default=None, nullable=True)
 
 
-def get_session(request: Any) -> Session:
-    """Create DB session bound to SDK engine."""
-    engine = request.app.state.engine
-    return Session(engine)
+def create_engine(env: Settings) -> Engine:
+    """Create SQLAlchemy engine from database URL."""
+    return create_sqlalchemy_engine(env.DBURL)

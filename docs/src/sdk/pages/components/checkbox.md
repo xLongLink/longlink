@@ -12,5 +12,4 @@ Use `<Checkbox>` for boolean input with a label.
 />
 ```
 
-
 ## References

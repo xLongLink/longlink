@@ -1,9 +1,9 @@
+from __future__ import annotations
 import fsspec
 from typing import Any
 from fastapi import FastAPI
 from pathlib import Path
 from pydantic import BaseModel
-from sqlmodel import create_engine
 from longlink.routes import routes
 from fastapi.responses import Response
 from pydantic_settings import BaseSettings
@@ -11,6 +11,26 @@ from fastapi.staticfiles import StaticFiles
 from longlink.utils.page import Page
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Annotated
+from fastapi import Depends, Request
+from sqlmodel import Session
+from dataclasses import dataclass
+from longlink.storage import Storage,
+from longlink.utils.settings import Settings, get_env
+from longlink.utils.organization import Organization
+from sqlalchemy.engine import Engine
+
+
+@dataclass
+class State:
+    """Request context exposing SDK dependencies and aliases."""
+    pages: list[Page] = []
+
+    env: Settings
+    org: Organization
+    engine: Engine
+    storage: Storage
+    
 
 
 class SPAStaticFiles(StaticFiles):
@@ -28,16 +48,6 @@ class SPAStaticFiles(StaticFiles):
         return await super().get_response("index.html", scope)
 
 
-class State(BaseModel):
-    """Shared application state for SDK routes."""
-
-    model_config = {"arbitrary_types_allowed": True}
-
-    env: BaseSettings | None = None
-    engine: Any = None
-    fs: Any = None
-    pages: list[Page] = []
-
 
 class LongLink(FastAPI):
     """LongLink SDK FastAPI application with platform defaults attached."""
@@ -46,38 +56,33 @@ class LongLink(FastAPI):
         """Create FastAPI app and apply LongLink middleware, routes, and state."""
         super().__init__(**kwargs)
 
-        database_url = getattr(env, "DATABASE_URL", "sqlite:///./test.db")
-        engine = create_engine(database_url, echo=False)
-
-        if getattr(env, "DEV", True):
-            fs = fsspec.filesystem("file")
-        else:
-            fs = fsspec.filesystem(
-                "s3",
-                key=getattr(env, "storage_key", None),
-                secret=getattr(env, "storage_secret", None),
-                client_kwargs={"endpoint_url": getattr(env, "storage_endpoint", None)},
-            )
+        engine = create_engine(env, echo=False)
 
         # Keep shared runtime state for SDK routes.
-        self.state = State(env=env, engine=engine, fs=fs)
-
-        self.add_middleware(
-            CORSMiddleware,
-            allow_origins=[
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://localhost:8000",
-            ],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+        self.state = State(
+            org=Organization(),
+            env=env,
+            engine=engine,
+            storage=get_storage(fs),
+            session=get_session(engine),
+            request=None,  # Populated per-request in dependency.
         )
 
         for router in routes:
             self.include_router(router)
 
-
+        if env.DEV:
+            self.add_middleware(
+                CORSMiddleware,
+                allow_origins=[
+                    "http://localhost:3000",
+                    "http://localhost:5173",
+                    "http://localhost:8000",
+                ],
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
 
         static_dir = Path(__file__).resolve().parent / "static"
         if static_dir.exists():
@@ -85,18 +90,13 @@ class LongLink(FastAPI):
 
     def include_page(self, page: str | Path) -> None:
         """Register XML page file and expose it through a generated `/pages/*` route."""
-
-        page_file = Page(page)
-        page_content = page_file.schema()
-        metadata = page_file.load_page_metadata()
-
-        page_path = page_file.path.stem
-
         # Persist page metadata for discovery endpoint.
-        self.state.pages.append(
-            {
-                "path": f"/pages/{page_path}",
-                "name": metadata.get("name", page_path.replace("_", " ").title()),
-                "icon": metadata.get("icon", "FileText"),
-            }
-        )
+        self.state.pages.append(Page(page))
+
+
+def get_context(request: Request) -> State:
+    """Build request context from settings, organization, storage, and DB dependencies."""
+    return []
+
+
+Context = Annotated[State, Depends(get_context)]

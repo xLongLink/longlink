@@ -6,9 +6,22 @@ Thanks for contributing to the Python SDK.
 
 ```
 sdk/
-├── longlink/           # Core SDK code
-├── sample/           # Sample applications
-└── tests/           # Unit tests
+├── longlink/           # Core SDK (the package itself)
+│   ├── app.py          # FastAPI app factory
+│   ├── cli/            # CLI commands (init, build, migrate)
+│   ├── context.py      # Application context
+│   ├── database/       # DB connection, session, models
+│   ├── pages/          # Page definitions
+│   ├── routes/         # API routes
+│   ├── static/         # Static file serving
+│   ├── storage/        # S3-compatible storage abstraction
+│   ├── types/          # Shared types
+│   └── utils/          # Utilities
+├── sample/             # Sample app demonstrating SDK usage
+│   └── app/            # App implementation (models, routes, pages)
+└── tests/              # Unit tests
+    ├── cli/            # CLI tests
+    └── utils/          # Utils tests
 ```
 
 ## What this folder owns
