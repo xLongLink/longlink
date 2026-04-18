@@ -52,11 +52,13 @@ export function interpolate(str: string, ctx: ExecutionContext): string {
  *   so it is parsed as an object literal instead.
  */
 export function resolveValue(value: string, ctx: ExecutionContext): unknown {
-    if (!value.startsWith('{') || !value.endsWith('}')) {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue.startsWith('{') || !trimmedValue.endsWith('}')) {
         return interpolate(value, ctx);
     }
 
-    const expression = value.slice(1, -1).trim();
+    const expression = trimmedValue.slice(1, -1).trim();
 
     try {
         return evaluate(expression, ctx);
@@ -67,7 +69,7 @@ export function resolveValue(value: string, ctx: ExecutionContext): unknown {
     }
 
     // Re-wrap in parens so `{key: value}` is parsed as an object literal, not a labeled statement.
-    return evaluate(`(${value})`, ctx);
+    return evaluate(`(${trimmedValue})`, ctx);
 }
 
 /**
