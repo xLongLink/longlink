@@ -21,6 +21,14 @@ class SPAStaticFiles(StaticFiles):
             if exc.status_code != 404:
                 raise
 
+        method = scope.get("method", "").upper()
+        headers = dict(scope.get("headers", []))
+        accept_header = headers.get(b"accept", b"").decode("latin-1").lower()
+
+        # Only serve SPA fallback for browser navigations that explicitly accept HTML.
+        if method != "GET" or "text/html" not in accept_header:
+            raise exc
+
         return await super().get_response("index.html", scope)
 
 
