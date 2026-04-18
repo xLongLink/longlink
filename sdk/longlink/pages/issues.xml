@@ -1,7 +1,7 @@
 <Page name="Issues" icon="circle-alert">
   <Hero title="Issues" subtitle="Default issue backlog rendered from the SDK predefined page." icon="circle-alert" />
   <Table
-    data='[{"id":"ISS-101","title":"Login form validation fails on empty password","priority":"High","status":"Open","assignee":"Alice"},{"id":"ISS-102","title":"Dashboard widgets load in the wrong order","priority":"Medium","status":"In Progress","assignee":"Bruno"},{"id":"ISS-103","title":"Export endpoint times out for large datasets","priority":"Critical","status":"Blocked","assignee":"Carla"},{"id":"ISS-104","title":"Notification badge is not cleared after read","priority":"Low","status":"Done","assignee":"Diego"}]'
+    data="{[{ id: 'ISS-101', title: 'Login form validation fails on empty password', priority: 'High', status: 'Open', assignee: 'Alice' }, { id: 'ISS-102', title: 'Dashboard widgets load in the wrong order', priority: 'Medium', status: 'In Progress', assignee: 'Bruno' }, { id: 'ISS-103', title: 'Export endpoint times out for large datasets', priority: 'Critical', status: 'Blocked', assignee: 'Carla' }, { id: 'ISS-104', title: 'Notification badge is not cleared after read', priority: 'Low', status: 'Done', assignee: 'Diego' }]}"
   >
     <Column key="id" label="ID" content="{id}" />
     <Column key="title" label="Issue" content="{title}" />
