@@ -27,23 +27,24 @@ class SPAStaticFiles(StaticFiles):
 
 class LongLink(FastAPI):
     """FastAPI app that owns SDK service creation and shared request state."""
-    state: State
+    context: State
 
     def __init__(self, env: BaseSettings | None = None, **kwargs):
         """Build app, initialize managed services, mount routes, and attach static files."""
         super().__init__(**kwargs)
 
         settings = env if isinstance(env, Settings) else Settings()
-        self.state = create_state(settings)
-
-        # Mount static files if the directory exists, serving the SPA frontend and assets
-        static_dir = Path(__file__).resolve().parent / "static"
-        if static_dir.exists():
-            self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
+        self.context = create_state(settings)
+        self.state.context = self.context
 
         # Register API routes from the router module
         for router in routes:
             self.include_router(router)
+
+        # Mount static files after API routes so `/pages` and other SDK endpoints stay reachable.
+        static_dir = Path(__file__).resolve().parent / "static"
+        if static_dir.exists():
+            self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
             
         # Enable CORS in development for local frontend access to API routes
         if settings.DEV:
@@ -61,7 +62,27 @@ class LongLink(FastAPI):
 
     def include_page(self, page: str | Path) -> None:
         """Register XML page file for discovery endpoint."""
-        self.state.pages.append(Page(page))
+        page_path = Path(page)
+        candidate_paths: list[Path] = []
+
+        # Resolve non-existent declarations against common app roots used by sample projects.
+        if not page_path.exists():
+            normalized_page_path = (
+                page_path.relative_to(page_path.anchor)
+                if page_path.is_absolute()
+                else page_path
+            )
+            candidate_paths = [
+                Path.cwd() / normalized_page_path,
+                Path.cwd() / "app" / normalized_page_path,
+            ]
+
+        for candidate in candidate_paths:
+            if candidate.exists():
+                page_path = candidate
+                break
+
+        self.context.pages.append(Page(page_path))
 
     def include_issues_page(self) -> None:
         """Register the default issues page if it exists."""
