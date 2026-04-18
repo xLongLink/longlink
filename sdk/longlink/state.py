@@ -12,12 +12,10 @@ from longlink.utils.settings import Settings
 @dataclass
 class State:
     """Request-scoped SDK context with app-managed services and aliases."""
-    pages: list[Page] = field(default_factory=list)
-
     engine: Engine
     storage: Storage
     session: Session
-    
+    pages: list[Page] = field(default_factory=list)
 
 
 def create_state(env: Settings) -> State:

@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from pathlib import Path
 from longlink.state import State, create_state
+from longlink.utils import Page, Settings
 from longlink.routes import routes
 from pydantic_settings import BaseSettings
 from fastapi.staticfiles import StaticFiles
-from longlink.utils import Page, Settings
 from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
