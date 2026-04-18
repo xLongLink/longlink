@@ -1,4 +1,4 @@
-.PHONY: up down install format api web sample docs
+.PHONY: up down install format build api web sample docs
 
 SHELL := /bin/bash
 VENV_BIN := $(CURDIR)/.venv/bin
@@ -30,6 +30,12 @@ format: $(VENV_BIN)/python
 	cd sdk && $(PYTHON) -m isort .
 	cd web && bun run format
 	cd web && bunx prettier --write $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed 's#^#../#')
+
+
+build:
+	cd web && bun install
+	cd web && bun run build:api
+	cd web && bun run build:sdk
 
 
 up:

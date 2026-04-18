@@ -4,10 +4,9 @@ from longlink.state import State, create_state
 from longlink.routes import routes
 from pydantic_settings import BaseSettings
 from fastapi.staticfiles import StaticFiles
-from longlink.utils.page import Page
-from starlette.exceptions import HTTPException as StarletteHTTPException
+from longlink.utils import Page, Settings
+from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from longlink.utils.settings import Settings
 
 
 class SPAStaticFiles(StaticFiles):
@@ -18,7 +17,7 @@ class SPAStaticFiles(StaticFiles):
 
         try:
             return await super().get_response(path, scope)
-        except StarletteHTTPException as exc:
+        except HTTPException as exc:
             if exc.status_code != 404:
                 raise
 

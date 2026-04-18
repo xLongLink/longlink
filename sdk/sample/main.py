@@ -2,7 +2,6 @@ from app.api import routers
 from app.envs import env
 from longlink import LongLink
 
-
 app = LongLink(env=env)
 
 # Register routers

@@ -1,5 +1,5 @@
 # Sample LongLink app
 
-The project showcase a lightweight operational system as example of how to use LongLink SDK.
+Internal ordering system for office hardware: keyboards, mice, monitors, and other equipment.
 
-Align with the official example in https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend
+Employees browse available products, create requisition requests, and track order status.
