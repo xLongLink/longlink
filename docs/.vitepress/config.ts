@@ -48,6 +48,8 @@ export default defineConfig({
           { text: 'Overview', link: '/sdk/' },
           { text: 'Environments', link: '/sdk/environments/' },
           { text: 'Routes', link: '/sdk/routes/' },
+          { text: 'Storage', link: '/sdk/storage/' },
+          { text: 'Database', link: '/sdk/database/' },
           {
             text: 'Pages',
             collapsed: true,
@@ -85,8 +87,7 @@ export default defineConfig({
               }
             ]
           },
-          { text: 'Storage', link: '/sdk/storage/' },
-          { text: 'Database', link: '/sdk/database/' },
+          { text: 'Tests', link: '/sdk/tests/' },
         ]
       }
     ],

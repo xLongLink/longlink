@@ -6,8 +6,8 @@ It is designed to integrate directly with the application model: each applicatio
 
 The SDK handles:
 
-- model definition using SQLAlchemy
-- schema evolution through Alembic-based migrations
+- model definition using [SQLAlchemy](https://www.sqlalchemy.org/)
+- schema evolution through [Alembic](https://alembic.sqlalchemy.org/en/latest/) migrations
 - automatic migration management via CLI tooling
 
 Migrations are generated and applied through built-in commands, such as:
@@ -23,3 +23,13 @@ The result is a database layer that is:
 - tightly integrated with application logic
 - versioned and reproducible through migrations
 - managed through a minimal, standardized interface
+
+
+## References
+
+- [SQLModel GitHub](https://github.com/fastapi/sqlmodel)
+- [SQLModel Documentation](https://sqlmodel.tiangolo.com/)
+- [SQLAlchemy GitHub](https://github.com/sqlalchemy/sqlalchemy)
+- [SQLAlchemy Documentation](https://www.sqlalchemy.org/)
+- [Alembic Documentation](https://alembic.sqlalchemy.org/en/latest/)
+- [Alembic GitHub](https://github.com/sqlalchemy/alembic)
