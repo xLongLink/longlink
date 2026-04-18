@@ -87,7 +87,7 @@ export default defineConfig({
               }
             ]
           },
-          { text: 'Tests', link: '/sdk/tests/' },
+          { text: 'Testing', link: '/sdk/testing/' },
         ]
       }
     ],
