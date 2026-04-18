@@ -15,6 +15,8 @@ export default function SdkLayout() {
     const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/pages');
     const pages = getPagesFromResponse(pagesResponse);
 
+    const sdkBasePath = import.meta.env.MODE === 'sdk' ? '' : '/sdk';
+
     const tabs = isLoading
         ? [
               {
@@ -28,7 +30,7 @@ export default function SdkLayout() {
 
     const activeTabConfig = getActiveTabConfig({
         tabs,
-        locationPath: location.pathname.replace(/^\/sdk/, ''),
+        locationPath: sdkBasePath ? location.pathname.replace(/^\/sdk/, '') : location.pathname,
         basePath: '',
     });
 
@@ -50,7 +52,7 @@ export default function SdkLayout() {
                                     return;
                                 }
                                 const nextPath = nextTab.path ?? '';
-                                navigate(`/sdk${nextPath === '' ? '' : `/${nextPath}`}`);
+                                navigate(`${sdkBasePath}${nextPath === '' ? '' : `/${nextPath}`}`);
                             }}
                         >
                             <TabsList variant="line" className="gap-4">
