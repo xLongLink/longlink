@@ -1,8 +1,10 @@
-from typing import Any, Optional
 from datetime import datetime
+from typing import Iterator, Optional
+
 from sqlalchemy.engine import Engine
-from sqlmodel import Field, Session, SQLModel
 from sqlalchemy import create_engine as create_sqlalchemy_engine
+from sqlmodel import Field, Session, SQLModel
+
 from longlink.utils.settings import Settings
 
 
@@ -16,3 +18,10 @@ class Table(SQLModel):
 def create_engine(env: Settings) -> Engine:
     """Create SQLAlchemy engine from database URL."""
     return create_sqlalchemy_engine(env.DBURL)
+
+
+def get_session(engine: Engine) -> Iterator[Session]:
+    """Yield SQLModel session bound to engine."""
+
+    with Session(engine) as session:
+        yield session
