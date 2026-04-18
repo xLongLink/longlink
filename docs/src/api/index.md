@@ -33,3 +33,30 @@ All interactions with applications go through the control plane:
 4. Applications handle business logic and return responses
 
 This ensures consistency, security, and centralized control across the system.
+
+## Control Plane and Application Data Flow
+
+```mermaid
+flowchart LR
+    user[User]
+    control_plane[LongLink Control Plane]
+    app[Application Service]
+    app_db[(Application Database)]
+    app_storage[(Application Storage)]
+    audit[(Audit Logs and Observability)]
+
+    user -->|Authenticated request| control_plane
+    control_plane -->|Permission check and routing| app
+    app -->|Read and write business data| app_db
+    app -->|Read and write files| app_storage
+    app -->|Application response| control_plane
+    control_plane -->|Standardized response| user
+    control_plane -->|Governance events| audit
+```
+
+Flow summary:
+
+1. The user sends a request to LongLink through the control plane.
+2. The control plane authenticates the user, checks permissions, and routes the request.
+3. The application executes business logic and accesses its isolated database and storage.
+4. The application response returns through the control plane, which also records governance and observability events.
