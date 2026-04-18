@@ -3,7 +3,6 @@ import importlib.util
 from alembic import command
 from pathlib import Path
 from alembic.config import Config
-from longlink.database.base import Base, engine
 
 CURRENT_FILE = Path(__file__).resolve()
 MODELS_PATH = Path.cwd() / "src" / "models"
