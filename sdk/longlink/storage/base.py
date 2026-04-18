@@ -1,5 +1,4 @@
 import fsspec
-
 from longlink.utils.settings import Settings
 
 
@@ -38,8 +37,3 @@ def create_storage(env: Settings) -> Storage:
         )
     return Storage(fs)
 
-
-def get_storage(env: Settings) -> Storage:
-    """Backward-compatible alias for storage factory."""
-
-    return create_storage(env)

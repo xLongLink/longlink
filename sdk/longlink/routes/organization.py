@@ -1,18 +1,18 @@
 from fastapi import APIRouter
-from longlink.utils.organization import OrganizationSettings, org
-
-organization_router = APIRouter()
+from longlink.utils import Organization, organization
 
 
-@organization_router.post('/organization')
-@organization_router.put('/organization')
-async def update_organization_settings(payload: OrganizationSettings) -> OrganizationSettings:
+router = APIRouter()
+
+
+@router.put('/organization')
+@router.post('/organization')
+async def update_organization_settings(payload: Organization) -> Organization:
     """Synchronize organization settings with in-memory organization state."""
-
     updated_settings = payload.model_dump()
 
     # Mirror payload fields into shared organization settings singleton.
     for key, value in updated_settings.items():
-        setattr(org, key, value)
+        setattr(organization, key, value)
 
-    return org
+    return organization

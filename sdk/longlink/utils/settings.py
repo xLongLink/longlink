@@ -1,4 +1,3 @@
-from fastapi import Request
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,14 +9,14 @@ class Settings(BaseSettings):
     KEY: str = "longlink"
 
     # Database
-    DBURL: str | None = None
+    DBURL: str
 
     # Storage
     storage_key: str = "dev"
     storage_secret: str = "dev"
     storage_endpoint: str = "http://localhost:9000"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=(".env", ".env.sample"),env_file_encoding="utf-8")
 
     @model_validator(mode="after")
     def apply_dev_defaults(self):
@@ -26,10 +25,4 @@ class Settings(BaseSettings):
         if self.DEV:
             self.DBURL = "sqlite:///./dev.db"
         return self
-
-
-
-def get_env(request: Request):
-    """Helper to access SDK environment settings from request context."""
-    return request.app.state.env
 
