@@ -1,29 +1,45 @@
 # Contributing in `api/`
 
-Thanks for helping improve the control plane.
+Thanks for helping improve control plane.
+
+## Architecture
+
+```text
+api/
+├── src/
+│   ├── apps/         # Application models
+│   ├── db/           # Database models and services
+│   ├── middleware/   # Middleware
+│   ├── models/       # Pydantic models
+│   ├── routes/       # API routes
+│   └── utils/        # Utilities
+├── alembic/          # Database migrations
+├── tests/            # Tests
+├── main.py           # FastAPI entry
+└── pages/            # Static pages for control-plane UI
+```
 
 ## What this folder owns
 
-The API is the control plane. It is responsible for authentication, permissions, governance, and orchestration.
+API is control plane. Responsible for authentication, permissions, governance, orchestration.
 
 ## Keep changes aligned
 
-- Keep validation in Pydantic schemas.
-- Use shared enums for constrained values.
-- Let FastAPI typing handle request/query validation.
+- Define constrained values with shared Enums (for example `AppType`) instead of raw strings.
+- Use Pydantic models (`BaseModel`) to validate external JSON (for example `metadata.json`).
+- Use `model_validate()` (Pydantic v2) for parse + validation in one step.
+- Let FastAPI typing handle request/query validation automatically (for example `AppType | None`).
+- Centralize validation in schemas, not route handlers.
+- Provide defaults at schema level (for example `type: AppType = AppType.tool`).
 - Keep route handlers focused on orchestration.
-- Normalize external input at boundaries.
-- Translate meaningful exceptions into proper HTTP responses.
-
-## Practical rules
-
-- Reuse schemas/enums across layers when possible.
-- Avoid embedding validation logic directly in route handlers.
-- Remove outdated paths when introducing the new model.
+- Normalize external input once at boundaries.
+- Catch only meaningful exceptions and map to proper HTTP responses.
+- Reuse schemas/enums across API, service, persistence layers.
+- Remove outdated paths when introducing new model.
 
 ## Formatting
 
-Before opening a PR:
+Before opening PR:
 
 ```bash
 python -m isort .
