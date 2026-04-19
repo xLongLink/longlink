@@ -5,17 +5,15 @@ from pathlib import Path
 from datetime import UTC, datetime
 from longlink.utils.metadata import load_metadata
 
-DOCKERFILE_TEMPLATE = """FROM python:3.12-slim
+DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.12-bookworm
 
 WORKDIR /app
 
-COPY . /app
+COPY . .
 
-RUN pip install --no-cache-dir .
+RUN uv sync --frozen
 
-EXPOSE 1707
-
-CMD ["longlink", "dev"]
+CMD ["uv", "run", "python", "-m", "longlink"]
 """
 
 
