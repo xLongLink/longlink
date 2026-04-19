@@ -1,7 +1,6 @@
 import src.db as db
 from fastapi import APIRouter, HTTPException
 from src.env import env
-from src.utils import apps
 from src.models.apps import AppType, AppCreate, AppMetadata, AppResponse
 
 router = APIRouter()
@@ -23,8 +22,10 @@ async def list_apps(type: AppType | None = None) -> list[AppResponse]:
 
 @router.post("/apps")
 async def create_app(payload: AppCreate) -> AppResponse:
-    """Create a new app by fetching its metadata and registering it."""
-    existing_url = await db.apps.get_by_url(payload.url)
+    """Create a new app by provisioning its container and registering it."""
+    app_url = f"http://{payload.key}.localhost"
+
+    existing_url = await db.apps.get_by_url(app_url)
     if existing_url is not None:
         raise HTTPException(status_code=409, detail="App URL already exists")
 
@@ -36,23 +37,6 @@ async def create_app(payload: AppCreate) -> AppResponse:
         existing_id = await db.apps.get_by_uuid(payload.id)
         if existing_id is not None:
             raise HTTPException(status_code=409, detail="App id already exists")
-
-    # Fetch app metadata from the provided URL
-    metadata_response = await apps.raw(
-        f"{payload.url.rstrip('/')}/metadata.json", "GET"
-    )
-    if not metadata_response.is_success:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unable to fetch metadata.json ({metadata_response.status_code})",
-        )
-
-    try:
-        metadata = AppMetadata.model_validate(metadata_response.json())
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=400, detail="App metadata response is invalid"
-        ) from exc
 
     namespace = env.ENV_PROVISION_COMPUTE_DEFAULT_NAMESPACE
     pod_name = f"{payload.key}-app".strip().lower()
@@ -71,9 +55,11 @@ async def create_app(payload: AppCreate) -> AppResponse:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     try:
+        # Register the app immediately and let runtime metadata be resolved later.
+        metadata = AppMetadata(name=payload.key, type=AppType.tool)
         app = await db.apps.create(
             metadata.name,
-            url=payload.url,
+            url=app_url,
             key=payload.key,
             app_type=metadata.type,
             app_id=payload.id,
