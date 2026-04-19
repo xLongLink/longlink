@@ -4,7 +4,7 @@ LongLink is a platform for building and running applications that manage and con
 
 It enables organizations to create full-code, purpose-built applications that encapsulate data, validation logic, and workflows in a structured and reliable way. Rather than focusing on infrastructure concerns, teams can focus directly on how their business operates.
 
-The platform is conceptually divided into two parts: a control plane that manages the system, and applications that implement business logic and processes.
+The platform is conceptually divided into two parts: the [control plane](/api/) that manages the system, and [applications](/sdk/) that implement business logic and processes.
 
 ## Why
 
