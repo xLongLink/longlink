@@ -33,7 +33,7 @@ export function Breadcrumb() {
                     <img
                         src="/favicon.ico"
                         alt="LongLink favicon"
-                        className="size-5 rounded-md border border-white/15 bg-white/5 p-0.5"
+                        className="size-8 rounded-md p-0.5"
                     />
                 </BreadcrumbItem>
                 <BreadcrumbItem>

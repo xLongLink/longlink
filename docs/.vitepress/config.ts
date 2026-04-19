@@ -9,8 +9,8 @@ export default withMermaid(defineConfig({
   description: 'LongLink documentation',
   head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
   themeConfig: {
-    logo: 'banner.png',
-    siteTitle: false,
+    logo: '/image.png',
+    siteTitle: "LongLink",
     search: {
       provider: 'local'
     },
