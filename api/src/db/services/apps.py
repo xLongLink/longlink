@@ -42,6 +42,15 @@ class AppsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
+    async def get_by_url(self, url: str) -> App | None:
+        '''Return a registered app by URL.'''
+
+        Session = await get_session()
+        async with Session() as session:
+            statement = select(App).where(App.url == url)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
     async def get_by_key(self, key: str) -> App | None:
         '''Return a registered app by key.'''
 

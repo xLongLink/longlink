@@ -16,7 +16,56 @@
                   Choose how you want to register an application in this workspace.
                 </DialogDescription>
               </DialogHeader>
+              <State>
+                <Var name="createApp.id" value="" />
+                <Var name="createApp.key" value="" />
+                <Var name="createApp.url" value="" />
+                <Var name="createApp.image" value="" />
+              </State>
               <Stack gap="12">
+                <Input
+                  kind="text"
+                  label="App id (optional)"
+                  bind="createApp.id"
+                  placeholder="custom-app-id"
+                />
+                <Input
+                  kind="text"
+                  label="App key"
+                  bind="createApp.key"
+                  placeholder="sampleapp"
+                />
+                <Input
+                  kind="text"
+                  label="App URL"
+                  bind="createApp.url"
+                  placeholder="http://sampleapp.localhost"
+                />
+                <Input
+                  kind="text"
+                  label="Image reference"
+                  bind="createApp.image"
+                  placeholder="localhost:5000/sampleapp:20260419_185022"
+                />
+                <Button
+                  text="Create application"
+                  variant="default"
+                  action="/apps"
+                  method="POST"
+                  payload='{
+                    "id": "{createApp.id}",
+                    "key": "{createApp.key}",
+                    "url": "{createApp.url}",
+                    "image": "{createApp.image}"
+                  }'
+                  onSuccess="
+                    refetch(apps);
+                    set(createApp.id, '');
+                    set(createApp.key, '');
+                    set(createApp.url, '');
+                    set(createApp.image, '');
+                  "
+                />
               </Stack>
             </DialogContent>
           </Hero>
