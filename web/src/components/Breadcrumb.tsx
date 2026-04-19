@@ -24,17 +24,13 @@ export function Breadcrumb() {
     const { data: appMetadata } = useApiData<{ name?: string }>(appId ? `/apps/${appId}` : null);
 
     const appName = appId ? appMetadata?.name?.trim() || formatAppName(appId) : undefined;
-    const organizationName = organizationNameData?.value.trim() || 'Organization';
+    const organizationName = organizationNameData?.value?.trim() || 'Organization';
 
     return (
         <UIBreadcrumb>
             <BreadcrumbList>
                 <BreadcrumbItem>
-                    <img
-                        src="/favicon.ico"
-                        alt="LongLink favicon"
-                        className="size-8 rounded-md p-0.5"
-                    />
+                    <img src="/favicon.ico" alt="LongLink favicon" className="size-8 rounded-md p-0.5" />
                 </BreadcrumbItem>
                 <BreadcrumbItem>
                     <BreadcrumbLink
