@@ -1,74 +1,62 @@
 # Application SDK
 
-LongLink SDK is wrapper around proven Python ecosystem tools.
-Goal is to keep development flow as close as possible to native FastAPI stack, while adding platform integration and normalized interfaces.
+The LongLink SDK is a thin integration layer built on top of the standard Python backend ecosystem. It does not introduce a new framework or replace existing tools. Instead, it provides a structured way to compose and connect them within the LongLink platform.
 
-SDK centers around these building blocks:
+Applications follow a simple model:
 
-- FastAPI for REST API design and runtime behavior
-- SQLModel for relational data models built on SQLAlchemy
-- Alembic for schema migration lifecycle
-- Pydantic for request and response models, plus Pydantic Settings for configuration
-- S3-compatible object storage exposed through a normalization layer aligned with the S3 specification
-
-This design means you can use standard FastAPI ecosystem patterns first, then rely on SDK wrappers to reduce boilerplate for platform concerns.
-
-## What SDK Adds
-
-SDK does not replace ecosystem tools.
-SDK wraps and connects tools so you can focus on business logic.
-
-SDK provides:
-
-- app bootstrap wrapper around FastAPI
-- environment and settings wiring with typed validation
-- normalized database and migration conventions
-- normalized object storage access for S3-compatible providers
-- integration points with LongLink control plane lifecycle
-
-## Application Types
-
-There are three main types of applications:
-
-- **Systems**
-  Long-lived applications supporting core organizational functions such as accounting, content management, marketing, or compliance
-
-- **Workspaces**
-  Applications scoped to a specific client or external entity, providing isolated environments for managing related data and operations
-
-- **Workflows**
-  Applications that execute a defined process with a clear lifecycle, enforcing required steps, validations, and completion criteria
+- Business logic lives in the application code
+- Structured data is stored in a relational database
+- Unstructured data is stored in S3-compatible object storage
 
 ## Getting Started
 
-Install the SDK:
+### Install
 
 ```bash
 pip install longlink
 ```
 
-Initialize a new application:
+### Initialize a Project
 
 ```bash
 longlink init
 ```
 
-Run the development server:
+This creates a standardized project structure:
+
+```
+├── app/
+│   ├── api/          # API routes
+│   ├── models/       # Database models
+│   ├── pages/        # XML page definitions
+│   ├── types/        # Data schemas
+│   ├── utils/        # Shared utilities
+│   └── envs.py       # Configuration
+├── tests/
+│   ├── api/          # API tests
+│   └── conftest.py   # Test setup
+│
+├── .env.sample       # Environment template
+├── AGENTS.md         # Platform metadata
+├── main.py           # Entry point
+├── pyproject.toml    # Project configuration
+└── README.md
+```
+
+### Local Development
+
+Install development dependencies:
+
+```bash
+pip install .[dev]
+```
+
+Run the application locally:
 
 ```bash
 longlink dev
 ```
 
-## Application Construction
+## Additional Resources
 
-The SDK creates applications through an `App` wrapper that contains a FastAPI instance and validated settings.
-You can extend settings with project-specific values and pass the resulting object to `App`.
-
-See complete examples in:
-
-- [Environments](/sdk/environments/)
-- [Endpoints](/sdk/endpoints/)
-- [Database](/sdk/database/)
-- [Storage](/sdk/storage/)
-
-- [Official FastAPI Backend Template]https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend
+- [Official FastAPI Backend Template](https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend)
