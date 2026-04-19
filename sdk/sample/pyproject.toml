@@ -21,6 +21,17 @@ dev = [
   "isort"
 ]
 
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "app",
+  "main.py",
+  "README.md",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
