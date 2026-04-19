@@ -1,7 +1,11 @@
 from alembic import context
-from longlink.database.base import Base, engine
+from sqlmodel import SQLModel
+from longlink.database.base import create_engine
+from longlink.utils.settings import Settings
 
-target_metadata = Base.metadata
+settings = Settings()
+engine = create_engine(settings)
+target_metadata = SQLModel.metadata
 
 
 def run_migrations_offline() -> None:
