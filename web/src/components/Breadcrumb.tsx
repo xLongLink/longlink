@@ -15,6 +15,9 @@ type SettingResponse = {
     app_id: number | null;
 };
 
+/**
+ * Render the top navigation breadcrumb for organization, app, and profile routes.
+ */
 export function Breadcrumb() {
     const { appId } = useParams();
     const location = useLocation();
@@ -28,6 +31,13 @@ export function Breadcrumb() {
     return (
         <UIBreadcrumb>
             <BreadcrumbList>
+                <BreadcrumbItem>
+                    <img
+                        src="/favicon.ico"
+                        alt="LongLink favicon"
+                        className="size-5 rounded-md border border-white/15 bg-white/5 p-0.5"
+                    />
+                </BreadcrumbItem>
                 <BreadcrumbItem>
                     <BreadcrumbLink
                         render={(props) => (
