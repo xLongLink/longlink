@@ -1,6 +1,5 @@
 from enum import Enum
 from pydantic import BaseModel, field_validator
-from src.utils import url
 
 
 class AppType(str, Enum):
@@ -11,15 +10,8 @@ class AppType(str, Enum):
 
 class AppCreate(BaseModel):
     id: str | None = None
-    url: str
     key: str
     image: str
-
-    @field_validator("url", mode="before")
-    @classmethod
-    def normalize_url_field(cls, value: str) -> str:
-        """Normalize URL by ensuring proper scheme and no trailing slash."""
-        return url.normalize(value)
 
     @field_validator("id", mode="before")
     @classmethod
