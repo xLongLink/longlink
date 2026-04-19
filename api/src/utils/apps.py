@@ -108,20 +108,3 @@ async def delete(uuid: str, url: str, params: dict[str, str] | None = None):
 # async def options(uuid: str,url: str,params: dict[str, str] | None = None):
 #     """Make an OPTIONS request to an app."""
 #     return await request(uuid, 'OPTIONS', url, params=params)
-
-
-async def org(uuid: str | None = None):
-    """Update the organization settings for the app with the given uuid, or all apps if uuid is None."""
-    payload = await db.settings.get_organization()
-
-    if uuid is not None:
-        app = await db.apps.get_by_uuid(uuid)
-        if app is None:
-            raise ValueError("App not found")
-
-        await raw(f"{app.url.rstrip('/')}/organization", method="PUT", json=payload)
-        return
-
-    registered_apps = await db.apps.list()
-    for app in registered_apps:
-        await raw(f"{app.url.rstrip('/')}/organization", method="PUT", json=payload)

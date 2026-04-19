@@ -16,7 +16,6 @@ async def sample_get_endpoint(ctx: Context):
         "has_fs_alias": ctx.fs is ctx.storage,
         "has_db_alias": ctx.db is ctx.database,
         "env_loaded": ctx.envs is not None,
-        "organization_name": ctx.organization.ORG_NAME,
     }
 
 
