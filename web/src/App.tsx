@@ -50,10 +50,8 @@ const apiRoutes = [
         path: '/',
         element: withAuth(<Layout />),
         children: [
-            { index: true, element: <Navigate to="/overview" replace /> },
-            { path: 'overview', element: <OrganizationPage page="overview" /> },
+            { index: true, element: <Navigate to="/applications" replace /> },
             { path: 'applications', element: <OrganizationPage page="applications" /> },
-            { path: 'people', element: <OrganizationPage page="people" /> },
             { path: 'settings', element: <OrganizationPage page="settings" /> },
             {
                 path: ':appId/*',
