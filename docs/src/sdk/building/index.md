@@ -5,8 +5,6 @@
 - Once containerized can be placed in any registry-
 - Can be connected to the control panel and deployed
 
-
 ```bash
 longling build
 ```
-
