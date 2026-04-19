@@ -1,1 +1,1 @@
-from longlink.storage.base import Storage, create_storage
+from longlink.storage.base import create_storage
