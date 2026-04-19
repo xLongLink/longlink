@@ -1,8 +1,9 @@
+import fsspec
 from typing import Annotated
 from fastapi import Depends, Request
 from sqlmodel import Session
 from dataclasses import field, dataclass
-from longlink.storage import Storage, create_storage
+from longlink.storage import create_storage
 from sqlalchemy.engine import Engine
 from longlink.utils.page import Page
 from longlink.database.base import create_engine
@@ -13,20 +14,25 @@ from longlink.utils.settings import Settings
 class State:
     """Request-scoped SDK context with app-managed services and aliases."""
     engine: Engine
-    storage: Storage
+    _fs: fsspec.AbstractFileSystem
     session: Session
     pages: list[Page] = field(default_factory=list)
+
+    def fs(self) -> fsspec.AbstractFileSystem:
+        """Return the native fsspec filesystem configured for this application."""
+
+        return self._fs
 
 
 def create_state(env: Settings) -> State:
     """Create SDK state from app settings and managed service factories."""
 
     engine = create_engine(env)
-    storage = create_storage(env)
+    filesystem = create_storage(env)
     session = Session(engine)
     return State(
         engine=engine,
-        storage=storage,
+        _fs=filesystem,
         session=session,
     )
 
