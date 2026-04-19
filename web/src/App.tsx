@@ -60,11 +60,6 @@ const apiRoutes = [
         ],
     },
     { path: '/login', element: <Login /> },
-    {
-        path: '/profile',
-        element: withAuth(<Layout />),
-        children: [{ index: true, element: <OrganizationPage page="profile" /> }],
-    },
     { path: '*', element: withAuth(<NotFound />) },
 ];
 

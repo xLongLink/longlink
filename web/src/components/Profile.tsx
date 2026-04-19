@@ -1,4 +1,4 @@
-import { LogOut, User } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import {
     DropdownMenu,
@@ -12,7 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import { useSignOut, useUser } from '@/hooks/use-user';
 
-/** Renders a user profile dropdown with avatar, profile link, and sign out. */
+/** Renders a user profile dropdown with authentication actions. */
 export function UserProfile() {
     const navigate = useNavigate();
     const { data: user } = useUser();
@@ -47,13 +47,6 @@ export function UserProfile() {
                         </div>
                     </DropdownMenuLabel>
                 </DropdownMenuGroup>
-                <DropdownMenuSeparator className="my-2" />
-                <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    <Link to="/profile" className="flex w-full items-center">
-                        <User className="mr-2 h-4 w-4 text-white/70" />
-                        Profile
-                    </Link>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem className="text-red-300 focus:text-red-200 cursor-pointer transition-colors hover:bg-white/10 p-2">
                     {user ? (

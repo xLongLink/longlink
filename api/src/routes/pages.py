@@ -48,8 +48,6 @@ def get_all_pages() -> List[PageInfo]:
     page_order = ["applications", "settings"]
 
     for page_file in sorted(PAGES_DIR.glob("*.xml")):
-        if page_file.stem == "profile":
-            continue
         attrs = parse_page_attributes(page_file.read_text(encoding="utf-8"))
         pages.append(
             PageInfo(
