@@ -1,44 +1,38 @@
 # LongLink
 
-LongLink is designed to help organizations build and run internal applications that manage and control business processes.
+LongLink is a platform for building and running applications that manage and control business processes.
 
-Instead of spreading data and workflows across multiple systems, LongLink encourages creating dedicated applications for each task. Each application focuses on a specific responsibility—such as managing data, validating information, or guiding a workflow—making processes clearer, more reliable, and easier to manage.
+It enables organizations to create full-code, purpose-built applications that encapsulate data, validation logic, and workflows in a structured and reliable way. Rather than focusing on infrastructure concerns, teams can focus directly on how their business operates.
 
-The platform handles infrastructure, security, and data organization, allowing teams to focus on how their business operates rather than how systems are built and maintained.
+The platform is conceptually divided into two parts: a control plane that manages the system, and applications that implement business logic and processes.
 
 ## Why
 
-## Goals
+Business operations are often spread across multiple tools, spreadsheets, and loosely connected systems. This fragmentation leads to inconsistent data, duplicated logic, and manual workarounds, reducing reliability and increasing operational risk.
 
-- Make business processes easier to design, manage, and control
-- Reduce complexity by organizing work into clear, purpose-built applications
-- Ensure data is structured, secure, and easy to access
-- Provide consistency across tools and workflows
-- Support compliance, traceability, and auditability
+LongLink addresses this by consolidating data, validation, and process logic into dedicated applications. Instead of relying on people to enforce rules and coordinate steps, the system ensures that data is structured, validated, and processed correctly by design.
 
-## Control Plane
+This allows computers to perform their intended role: managing state, enforcing constraints, and executing workflows deterministically. As a result, processes become more consistent, traceable, and easier to maintain.
 
-The control plane is the central system that manages the platform. It:
+By centralizing data flow and business logic, LongLink reduces system complexity and provides a clear, controlled foundation for building and evolving business processes—particularly in environments where data is otherwise fragmented and difficult to manage.
 
-- Handles user access and permissions
-- Ensures each application is secure and isolated
-- Manages how applications are created, updated, and removed
-- Organizes data and storage automatically
-- Provides visibility, audit, and compliance controls
 
-In simple terms, it acts as the management layer that keeps everything consistent, secure, and under control.
+## Principles
 
-## Applications
+* **Application-centric design**
+  Each business responsibility is encapsulated in a dedicated application with clear boundaries.
 
-Applications in LongLink are focused, purpose-built components that handle specific business needs. Each application manages its own data and logic, while the platform ensures everything runs reliably in the background.
+* **Data ownership and locality**
+  Data is managed within the application that is responsible for it, avoiding fragmentation and duplication.
 
-There are three main types of applications:
+* **Validation by design**
+  Business rules are enforced systematically, not through manual checks or external coordination.
 
-- **Systems**
-  Long-lived applications that support core organizational functions, such as accounting, content management, marketing, or compliance. These are stable and used across the organization over time.
+* **Deterministic workflows**
+  Processes execute in a controlled and predictable manner, with explicit state transitions.
 
-- **Workspaces**
-  Applications dedicated to a specific client or external entity. They provide a structured and isolated environment to manage client-related data and activities.
+* **Separation of concerns**
+  Infrastructure and operational complexity are handled by the platform, allowing applications to focus on business logic.
 
-- **Workflows**
-  Applications designed to execute and control a specific process with a clear start and end. They ensure that all required steps, validations, and documents are completed correctly before the process is finalized.
+* **Traceability and auditability**
+  All actions, data changes, and process steps are recorded and can be inspected.
