@@ -1,7 +1,6 @@
 import src.db as db
 from typing import List
 from fastapi import Query, APIRouter, HTTPException
-from src.utils import apps
 from src.models.settings import SettingSet, SettingSetItem, SettingResponse
 
 router = APIRouter()
@@ -51,8 +50,6 @@ async def set_settings(payload: List[SettingSetItem]) -> List[SettingResponse]:
             )
         )
 
-    await apps.org()
-
     return results
 
 
@@ -82,8 +79,6 @@ async def post_setting(key: str, payload: SettingSet) -> SettingResponse:
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
 
-    await apps.org()
-
     return SettingResponse(
         key=setting.key,
         value=setting.value,
@@ -98,8 +93,6 @@ async def set_setting(key: str, payload: SettingSet) -> SettingResponse:
         setting = await db.settings.set(key, payload.value, app_id=None)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
-
-    await apps.org()
 
     return SettingResponse(
         key=setting.key,
