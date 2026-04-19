@@ -16,23 +16,22 @@ This allows computers to perform their intended role: managing state, enforcing 
 
 By centralizing data flow and business logic, LongLink reduces system complexity and provides a clear, controlled foundation for building and evolving business processes—particularly in environments where data is otherwise fragmented and difficult to manage.
 
-
 ## Principles
 
-* **Application-centric design**
+- **Application-centric design**
   Each business responsibility is encapsulated in a dedicated application with clear boundaries.
 
-* **Data ownership and locality**
+- **Data ownership and locality**
   Data is managed within the application that is responsible for it, avoiding fragmentation and duplication.
 
-* **Validation by design**
+- **Validation by design**
   Business rules are enforced systematically, not through manual checks or external coordination.
 
-* **Deterministic workflows**
+- **Deterministic workflows**
   Processes execute in a controlled and predictable manner, with explicit state transitions.
 
-* **Separation of concerns**
+- **Separation of concerns**
   Infrastructure and operational complexity are handled by the platform, allowing applications to focus on business logic.
 
-* **Traceability and auditability**
+- **Traceability and auditability**
   All actions, data changes, and process steps are recorded and can be inspected.
