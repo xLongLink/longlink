@@ -96,9 +96,3 @@ class LongLink(FastAPI):
                 break
 
         self.context.pages.append(Page(page_path))
-
-    def include_issues_page(self) -> None:
-        """Register the default issues page if it exists."""
-        issues_page = Path(__file__).resolve().parent / "pages" / "issues.xml"
-        if issues_page.exists():
-            self.include_page(issues_page)

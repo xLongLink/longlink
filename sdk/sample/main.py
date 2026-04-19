@@ -12,7 +12,6 @@ for router in routers:
 # Register pages
 app.include_page("/pages/cart.xml")
 app.include_page("/pages/dashboard.xml")
-app.include_issues_page()
 app.include_page("/pages/demo.xml")
 app.include_page("/pages/input.xml")
 app.include_page("/pages/settings.xml")
