@@ -36,8 +36,6 @@ make format # Format the code
 
 ### Control plane
 
-The control plane logic is located in the `api` folder:
-
 ```bash
 make up     # Start the services, initialize the cluser
 make web    # Run the web app proxied to the api app
@@ -50,7 +48,6 @@ make down   # Stop services and remove the cluster
 
 ### Applications SDK
 
-The applications SDK is located in the `sdk` folder:
 
 ```bash
 make sdk    # Run the web app proxied to the sample app
@@ -58,8 +55,6 @@ make sample # Run the sample APP
 ```
 
 ### Documentation
-
-The source code is located in `docs` folder:
 
 ```bash
 make docs # Run the documentation site
