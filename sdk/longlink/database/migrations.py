@@ -23,12 +23,41 @@ for py_file in MODELS_PATH.glob("*.py"):
     spec.loader.exec_module(module)
 
 
-def make_migrations() -> None:
-    """Generate new Alembic revision from metadata diff."""
+def make_migrations() -> bool:
+    """Generate new Alembic revision from metadata diff.
+
+    Returns:
+        bool: True when a new migration file is created, otherwise False.
+    """
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
     cfg.set_main_option("version_locations", "migrations")
-    command.revision(cfg)
+    migration_created = True
+
+    def _skip_empty_revision(
+        _context: object, _revision: object, directives: list[object]
+    ) -> None:
+        """Skip writing a migration script when autogenerate finds no changes."""
+        nonlocal migration_created
+        if not directives:
+            migration_created = False
+            return
+
+        # The first directive is Alembic's MigrationScript for this revision.
+        script = directives[0]
+        upgrade_ops = getattr(script, "upgrade_ops", None)
+
+        # When no schema operations are detected, prevent file generation.
+        if upgrade_ops is not None and upgrade_ops.is_empty():
+            directives[:] = []
+            migration_created = False
+
+    command.revision(
+        cfg,
+        autogenerate=True,
+        process_revision_directives=_skip_empty_revision,
+    )
+    return migration_created
 
 
 def migrate() -> None:
