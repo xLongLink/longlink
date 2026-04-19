@@ -34,8 +34,6 @@ export default withMermaid(defineConfig({
         text: 'Control Plane',
         items: [
           { text: 'Overview', link: '/api/' },
-          { text: 'Organization', link: '/api/organization/' },
-          { text: 'Permissions', link: '/api/permissions/' },
           { text: 'Applications', link: '/api/applications/' },
           { text: 'Self Hosted', link: '/api/self-hosted/' },
         ]
