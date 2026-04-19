@@ -8,7 +8,6 @@ The platform handles infrastructure, security, and data organization, allowing t
 
 ## Why
 
-
 ## Goals
 
 - Make business processes easier to design, manage, and control

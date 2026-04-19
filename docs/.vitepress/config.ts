@@ -7,10 +7,7 @@ export default withMermaid(defineConfig({
   srcDir: 'src',
   title: 'LongLink',
   description: 'LongLink documentation',
-  head: [
-    ['link', { rel: 'icon', type: 'image/png', href: '/banner.png' }],
-    ['link', { rel: 'apple-touch-icon', href: '/banner.png' }]
-  ],
+  head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
   themeConfig: {
     logo: 'banner.png',
     siteTitle: false,

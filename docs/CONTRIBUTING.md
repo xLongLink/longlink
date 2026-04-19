@@ -33,7 +33,7 @@ Write docs clear, direct, easy to translate.
 
 When relevant, follow the format:
 
-```md
+````md
 # <Feature>
 
 <Introduction>
@@ -43,8 +43,12 @@ When relevant, follow the format:
 ```py
 <Minimal usage examples>
 ```
+````
 
 ## Resources
 
 - [Description](url)
+
+```
+
 ```
