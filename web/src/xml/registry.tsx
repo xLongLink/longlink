@@ -6,7 +6,7 @@ import { Page as PrimitivesPage } from './primitives/Page';
 import { Query } from './primitives/Query';
 import { State } from './primitives/State';
 import type { ActionHandler, ActionProps, ActionComponentProps, ExecutionContext, RegistryShape } from './types';
-import { useRuntime } from './runtime';
+import { resolveValue, useRuntime } from './runtime';
 
 import { Button } from './components/Button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/Card';
@@ -193,6 +193,33 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
 }
 
 /**
+ * Resolves template expressions in action payload values using runtime context.
+ *
+ * - Strings wrapped as `{expression}` are evaluated and can return non-string values.
+ * - Strings containing embedded `{expression}` placeholders are interpolated.
+ * - Arrays and plain objects are traversed recursively.
+ * - Non-plain objects (FormData, Blob, Date, URLSearchParams, etc.) are preserved.
+ */
+function resolveActionPayload(value: unknown, ctx: ExecutionContext): unknown {
+    if (typeof value === 'string') {
+        return resolveValue(value, ctx);
+    }
+
+    if (Array.isArray(value)) {
+        /* Resolve nested template values for every array item. */
+        return value.map((entry) => resolveActionPayload(entry, ctx));
+    }
+
+    if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+        /* Resolve nested template values for plain object properties. */
+        const resolvedEntries = Object.entries(value).map(([key, entry]) => [key, resolveActionPayload(entry, ctx)]);
+        return Object.fromEntries(resolvedEntries);
+    }
+
+    return value;
+}
+
+/**
  * Higher-order component that injects `action` and `pending` props into the
  * wrapped component. The `action` handler calls `path` with `method` and `body`,
  * then invalidates the listed query keys on success.
@@ -254,7 +281,8 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
             try {
                 const baseUrl = runtime.ctx.baseUrl ?? '';
                 const requestUrl = resolvedPath.startsWith('http') ? resolvedPath : `${baseUrl}${resolvedPath}`;
-                const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), body ?? payload));
+                const requestBody = resolveActionPayload(body ?? payload, runtime.ctx);
+                const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), requestBody));
 
                 if (!response.ok) {
                     throw new Error(`Request failed with status ${response.status}`);
