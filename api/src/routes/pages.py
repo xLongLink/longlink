@@ -45,7 +45,7 @@ def get_all_pages() -> List[PageInfo]:
     if not PAGES_DIR.is_dir():
         return pages
 
-    page_order = ["overview", "tools", "spaces", "processes", "people", "settings"]
+    page_order = ["overview", "applications", "people", "settings"]
 
     for page_file in sorted(PAGES_DIR.glob("*.xml")):
         if page_file.stem == "profile":

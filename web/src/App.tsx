@@ -52,9 +52,7 @@ const apiRoutes = [
         children: [
             { index: true, element: <Navigate to="/overview" replace /> },
             { path: 'overview', element: <OrganizationPage page="overview" /> },
-            { path: 'tools', element: <OrganizationPage page="tools" /> },
-            { path: 'spaces', element: <OrganizationPage page="spaces" /> },
-            { path: 'processes', element: <OrganizationPage page="processes" /> },
+            { path: 'applications', element: <OrganizationPage page="applications" /> },
             { path: 'people', element: <OrganizationPage page="people" /> },
             { path: 'settings', element: <OrganizationPage page="settings" /> },
             {
