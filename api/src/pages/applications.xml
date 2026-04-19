@@ -1,5 +1,5 @@
 <Page name="Applications" icon="blocks">
-  <State id="createApp" key="" image="" appId="">
+  <State id="createApp" key="" image="">
     <Hero
       title="Applications"
       subtitle="Manage applications available to your organization."
@@ -14,7 +14,6 @@
           </DialogDescription>
         </DialogHeader>
         <Stack gap="12">
-          <Input kind="text" label="App id (optional)" value="{createApp.appId}" placeholder="custom-app-id" />
           <Input kind="text" label="App key" value="{createApp.key}" placeholder="sampleapp" />
           <Input
             kind="text"
@@ -27,13 +26,11 @@
             action="/apps"
             method="POST"
             payload='{
-              "id": "{createApp.appId}",
               "key": "{createApp.key}",
               "image": "{createApp.image}"
             }'
             onSuccess="
               refetch(applications);
-              set(createApp.appId, '');
               set(createApp.key, '');
               set(createApp.image, '');
             "
