@@ -165,6 +165,22 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
         body instanceof Blob ||
         typeof body === 'string'
     ) {
+        if (typeof body === 'string') {
+            const trimmedBody = body.trim();
+
+            /* Preserve JSON string payloads as application/json for API handlers. */
+            if (
+                (trimmedBody.startsWith('{') && trimmedBody.endsWith('}')) ||
+                (trimmedBody.startsWith('[') && trimmedBody.endsWith(']'))
+            ) {
+                return {
+                    method,
+                    body,
+                    headers: { 'content-type': 'application/json' },
+                };
+            }
+        }
+
         return { method, body };
     }
 
