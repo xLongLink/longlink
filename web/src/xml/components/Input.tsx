@@ -9,9 +9,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/ui/popover';
 import { Textarea } from '@/ui/textarea';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api';
+import { useRuntime } from '../runtime';
 
 type InputProps = {
     name?: string;
+    bind?: string;
     kind?: 'text' | 'number' | 'password' | 'textarea' | 'date' | 'datetime';
     label?: string;
     value?: string | number | boolean;
@@ -24,6 +26,21 @@ type InputProps = {
 
 const DATE_FORMAT = 'yyyy-MM-dd';
 const DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm";
+
+/** Recursively clones nested state while replacing the value at `path`. */
+const setDeep = (obj: unknown, path: string[], value: unknown): unknown => {
+    if (path.length === 0) {
+        return value;
+    }
+
+    const [head, ...tail] = path;
+    const source = typeof obj === 'object' && obj !== null ? (obj as Record<string, unknown>) : {};
+
+    return {
+        ...source,
+        [head as string]: setDeep(source[head as string], tail, value),
+    };
+};
 
 const parseDateValue = (rawValue: string): Date | undefined => {
     if (!rawValue) {
@@ -55,6 +72,7 @@ const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => 
 /** Renders a flexible input control with support for text, number, password, textarea, date, and datetime types. */
 export function Input({
     name,
+    bind,
     kind = 'text',
     label,
     value,
@@ -65,6 +83,7 @@ export function Input({
     submit,
 }: InputProps) {
     const { appId } = useParams();
+    const runtime = useRuntime();
     const defaultFieldValue = useMemo(() => {
         if (typeof value === 'string' || typeof value === 'number') {
             return String(value);
@@ -121,6 +140,29 @@ export function Input({
         });
     };
 
+    const handleBindChange = (nextValue: string) => {
+        if (!bind) {
+            return;
+        }
+
+        const [stateKey, ...path] = bind.split('.');
+        const stateEntry = runtime.ctx.state[stateKey];
+
+        if (!stateEntry) {
+            throw new Error(`Input bind: unknown state "${stateKey}"`);
+        }
+
+        const [, setter] = stateEntry;
+
+        if (path.length === 0) {
+            setter(nextValue);
+            return;
+        }
+
+        /* Use a functional setter to avoid race conditions across rapid input updates. */
+        setter((previous: unknown) => setDeep(previous, path, nextValue));
+    };
+
     const renderControl = () => {
         if (kind === 'textarea') {
             return (
@@ -131,7 +173,9 @@ export function Input({
                     required={required}
                     disabled={disabled}
                     onChange={(event) => {
-                        setTextValue(event.currentTarget.value);
+                        const nextValue = event.currentTarget.value;
+                        setTextValue(nextValue);
+                        handleBindChange(nextValue);
                     }}
                     onBlur={(event) => {
                         void handleBlur(event.currentTarget.value);
@@ -254,7 +298,9 @@ export function Input({
                 required={required}
                 disabled={disabled}
                 onChange={(event) => {
-                    setTextValue(event.currentTarget.value);
+                    const nextValue = event.currentTarget.value;
+                    setTextValue(nextValue);
+                    handleBindChange(nextValue);
                 }}
                 onBlur={(event) => {
                     void handleBlur(event.currentTarget.value);
