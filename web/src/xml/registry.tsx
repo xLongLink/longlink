@@ -6,6 +6,7 @@ import { Page as PrimitivesPage } from './primitives/Page';
 import { Query } from './primitives/Query';
 import { State } from './primitives/State';
 import type { ActionHandler, ActionProps, ActionComponentProps, ExecutionContext, RegistryShape } from './types';
+import { useRuntime } from './runtime';
 
 import { Button } from './components/Button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/Card';
@@ -183,22 +184,60 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
 export function action<TComponent extends ComponentType<any>>(Component: TComponent) {
     type Props = Omit<ComponentProps<TComponent>, keyof ActionComponentProps> & ActionProps;
 
-    function ActionComponent({ path, method = 'POST', body, invalidate, ...props }: Props) {
+    /**
+     * Evaluates a successful action callback.
+     * Supports either a function callback or a script string with `refetch(...)` and `set(...)`.
+     */
+    async function executeOnSuccess(
+        onSuccess: ActionProps['onSuccess'],
+        helpers: { refetch: (key: string) => Promise<void>; set: (target: string, value: unknown) => void }
+    ): Promise<void> {
+        if (!onSuccess) {
+            return;
+        }
+
+        if (typeof onSuccess === 'function') {
+            await onSuccess();
+            return;
+        }
+
+        /* Execute XML script snippets with explicit helper bindings. */
+        const runScript = new Function('refetch', 'set', onSuccess) as (
+            refetch: (key: string) => Promise<void>,
+            set: (target: string, value: unknown) => void
+        ) => unknown;
+        await runScript(helpers.refetch, helpers.set);
+    }
+
+    function ActionComponent({
+        path,
+        action: actionPath,
+        url,
+        method = 'POST',
+        body,
+        payload,
+        invalidate,
+        onSuccess,
+        ...props
+    }: Props) {
         const queryClient = useQueryClient();
         const [pending, setPending] = useState(false);
-        const baseUrl = (props as any)._baseUrl ?? '';
+        const runtime = useRuntime();
+        const resolvedPath = path ?? actionPath ?? url;
+
+        const { _baseUrl: _unusedBaseUrl, ...restProps } = props as ComponentProps<TComponent> & { _baseUrl?: string };
 
         /* Execute request, then invalidate listed query keys on success */
         const handleAction: ActionHandler = async (event) => {
             event.preventDefault();
 
-            if (!path || pending) return;
+            if (!resolvedPath || pending) return;
 
             setPending(true);
 
             try {
-                const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
-                const response = await fetch(url, buildRequestInit(method.toUpperCase(), body));
+                const requestUrl = resolvedPath.startsWith('http') ? resolvedPath : resolvedPath;
+                const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), body ?? payload));
 
                 if (!response.ok) {
                     throw new Error(`Request failed with status ${response.status}`);
@@ -207,6 +246,20 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
                 for (const queryKey of normalizeInvalidate(invalidate)) {
                     await queryClient.invalidateQueries({ queryKey: [queryKey] });
                 }
+
+                await executeOnSuccess(onSuccess, {
+                    refetch: async (key) => queryClient.invalidateQueries({ queryKey: [key] }),
+                    set: (target, value) => {
+                        const stateEntry = runtime.ctx.state[target];
+
+                        if (!stateEntry) {
+                            throw new Error(`set: unknown state "${target}"`);
+                        }
+
+                        const [, setter] = stateEntry;
+                        setter(value);
+                    },
+                });
             } finally {
                 setPending(false);
             }
@@ -214,7 +267,7 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
 
         /* Inject action handler and pending state into wrapped component */
         return createElement(Component as ComponentType<any>, {
-            ...(props as ComponentProps<TComponent>),
+            ...restProps,
             action: handleAction,
             pending,
         });
