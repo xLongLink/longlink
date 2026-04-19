@@ -30,12 +30,9 @@ The goal is to provide a consistent platform where applications feel native, sta
 
 ## Development
 
-
 ```bash
 make format # Format the code
 ```
-
-<br />
 
 ### Control plane
 
@@ -51,8 +48,6 @@ make api    # Run the control plane
 make down   # Stop services and remove the cluster
 ```
 
-<br />
-
 ### Applications SDK
 
 The applications SDK is located in the `sdk` folder:
@@ -61,8 +56,6 @@ The applications SDK is located in the `sdk` folder:
 make sdk    # Run the web app proxied to the sample app
 make sample # Run the sample APP
 ```
-
-<br />
 
 ### Documentation
 
