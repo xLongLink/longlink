@@ -45,7 +45,7 @@ def get_all_pages() -> List[PageInfo]:
     if not PAGES_DIR.is_dir():
         return pages
 
-    page_order = ["applications", "settings"]
+    page_order = ["applications"]
 
     for page_file in sorted(PAGES_DIR.glob("*.xml")):
         attrs = parse_page_attributes(page_file.read_text(encoding="utf-8"))
