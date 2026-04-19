@@ -21,9 +21,10 @@ class SampleResponse(BaseModel):
 
 @router.get("/sample", response_model=SampleResponse)
 async def sample(ctx: Context) -> SampleResponse:
-    # Access storage and database context
-    storage = ctx.storage
-    database = ctx.database
+    # Access the native fsspec filesystem from request context
+    fs = ctx.fs()
+    with fs.open("sample.txt", "wb") as file_handle:
+        file_handle.write(b"hello from route")
 
     return SampleResponse(id=1, name="apple")
 

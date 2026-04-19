@@ -10,12 +10,13 @@ router = Router()
 async def sample_get_endpoint(ctx: Context):
     """Handle sample GET request."""
 
+    filesystem = ctx.fs()
     return {
         "message": "Sample GET endpoint received data",
-        "has_storage": ctx.storage is not None,
-        "has_fs_alias": ctx.fs is ctx.storage,
-        "has_db_alias": ctx.db is ctx.database,
-        "env_loaded": ctx.envs is not None,
+        "filesystem_protocol": filesystem.protocol,
+        "filesystem_type": type(filesystem).__name__,
+        "has_database_session": ctx.session is not None,
+        "has_engine": ctx.engine is not None,
     }
 
 
@@ -27,8 +28,10 @@ async def sample_post_endpoint(ctx: Context):
     filename = f"sample-projects/{project_id}.txt"
     file_contents = f"Created project {project_id} from sample context endpoint."
 
-    # Persist data to the configured filesystem abstraction.
-    ctx.storage.write_bytes(filename, file_contents.encode("utf-8"))
+    # Persist data with native fsspec APIs exposed by the request context.
+    filesystem = ctx.fs()
+    with filesystem.open(filename, "wb") as file_handle:
+        file_handle.write(file_contents.encode("utf-8"))
 
     project = Project(
         id=project_id,
