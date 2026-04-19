@@ -8,7 +8,6 @@ def test_list_pages_returns_parsed_page_attributes(client, monkeypatch, tmp_path
 
     monkeypatch.setattr(pages_routes, "PAGES_DIR", tmp_path)
     (tmp_path / "applications.xml").write_text('<Page name="Applications" icon="blocks"/>', encoding="utf-8")
-    (tmp_path / "settings.xml").write_text('<Page name="Settings" icon="settings"/>', encoding="utf-8")
     (tmp_path / "custom-page.xml").write_text('<Page name="Custom"/>', encoding="utf-8")
 
     response = client.get("/pages")
@@ -16,7 +15,6 @@ def test_list_pages_returns_parsed_page_attributes(client, monkeypatch, tmp_path
     assert response.status_code == 200
     assert response.json() == [
         {"name": "Applications", "path": "applications", "icon": "blocks"},
-        {"name": "Settings", "path": "settings", "icon": "settings"},
         {"name": "Custom", "path": "custom-page", "icon": "file-text"},
     ]
 
