@@ -33,11 +33,6 @@ async def create_app(payload: AppCreate) -> AppResponse:
     if existing_key is not None:
         raise HTTPException(status_code=409, detail="App key already exists")
 
-    if payload.id is not None:
-        existing_id = await db.apps.get_by_uuid(payload.id)
-        if existing_id is not None:
-            raise HTTPException(status_code=409, detail="App id already exists")
-
     namespace = env.ENV_PROVISION_COMPUTE_DEFAULT_NAMESPACE
     pod_name = f"{payload.key}-app".strip().lower()
 
@@ -62,7 +57,6 @@ async def create_app(payload: AppCreate) -> AppResponse:
             url=app_url,
             key=payload.key,
             app_type=metadata.type,
-            app_id=payload.id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc

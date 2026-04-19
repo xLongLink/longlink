@@ -66,7 +66,6 @@ class AppsService:
         url: str,
         key: str,
         app_type: str,
-        app_id: str | None = None,
     ) -> App:
         '''Add a new app to the database.'''
 
@@ -85,21 +84,12 @@ class AppsService:
             if existing_key is not None:
                 raise ValueError('App key already exists')
 
-            if app_id is not None:
-                id_statement = select(App).where(App.id == app_id)
-                id_result = await session.execute(id_statement)
-                existing_id = id_result.scalar_one_or_none()
-                if existing_id is not None:
-                    raise ValueError('App id already exists')
-
             app_kwargs: dict[str, str] = {
                 'name': name,
                 'url': url,
                 'key': key,
                 'type': app_type,
             }
-            if app_id is not None:
-                app_kwargs['id'] = app_id
 
             app = App(**app_kwargs)
             session.add(app)
