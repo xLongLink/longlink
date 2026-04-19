@@ -1,88 +1,70 @@
 <Page name="Applications" icon="blocks">
-  <State>
-    <Var name="createApp.id" value="" />
-    <Var name="createApp.key" value="" />
-    <Var name="createApp.url" value="" />
-    <Var name="createApp.image" value="" />
-  </State>
-  <Hero
-    title="Applications"
-    subtitle="Manage applications available to your organization."
-    icon="blocks"
-    action="Create"
-  >
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Create application</DialogTitle>
-        <DialogDescription>
-          Register a new application in this workspace.
-        </DialogDescription>
-      </DialogHeader>
-      <Stack gap="12">
-        <Input
-          kind="text"
-          label="App id (optional)"
-          bind="createApp.id"
-          placeholder="custom-app-id"
-        />
-        <Input
-          kind="text"
-          label="App key"
-          bind="createApp.key"
-          placeholder="sampleapp"
-        />
-        <Input
-          kind="text"
-          label="App URL"
-          bind="createApp.url"
-          placeholder="http://sampleapp.localhost"
-        />
-        <Input
-          kind="text"
-          label="Image reference"
-          bind="createApp.image"
-          placeholder="localhost:5000/sampleapp:20260419_185022"
-        />
-        <Button
-          text="Create application"
-          variant="default"
-          action="/apps"
-          method="POST"
-          payload='{
-            "id": "{createApp.id}",
-            "key": "{createApp.key}",
-            "url": "{createApp.url}",
-            "image": "{createApp.image}"
-          }'
-          onSuccess="
-            refetch(applications);
-            set(createApp.id, '');
-            set(createApp.key, '');
-            set(createApp.url, '');
-            set(createApp.image, '');
-          "
-        />
-      </Stack>
-    </DialogContent>
-  </Hero>
-  <Query id="applications" path="/apps">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>URL</TableHead>
-          <TableHead>Type</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <For each="applications ?? []" as="application">
+  <State id="createApp" key="" url="" image="" appId="">
+    <Hero
+      title="Applications"
+      subtitle="Manage applications available to your organization."
+      icon="blocks"
+      action="Create"
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create application</DialogTitle>
+          <DialogDescription>
+            Register a new application in this workspace.
+          </DialogDescription>
+        </DialogHeader>
+        <Stack gap="12">
+          <Input kind="text" label="App id (optional)" value="{createApp.appId}" placeholder="custom-app-id" />
+          <Input kind="text" label="App key" value="{createApp.key}" placeholder="sampleapp" />
+          <Input kind="text" label="App URL" value="{createApp.url}" placeholder="http://sampleapp.localhost" />
+          <Input
+            kind="text"
+            label="Image reference"
+            value="{createApp.image}"
+            placeholder="localhost:5000/sampleapp:20260419_185022"
+          />
+          <Button
+            variant="default"
+            action="/apps"
+            method="POST"
+            payload='{
+              "id": "{createApp.appId}",
+              "key": "{createApp.key}",
+              "url": "{createApp.url}",
+              "image": "{createApp.image}"
+            }'
+            onSuccess="
+              refetch(applications);
+              set(createApp.appId, '');
+              set(createApp.key, '');
+              set(createApp.url, '');
+              set(createApp.image, '');
+            "
+          >
+            Create application
+          </Button>
+        </Stack>
+      </DialogContent>
+    </Hero>
+    <Query id="applications" path="/apps">
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell>{application.name}</TableCell>
-            <TableCell>{application.url}</TableCell>
-            <TableCell>{application.type}</TableCell>
+            <TableHead>Name</TableHead>
+            <TableHead>URL</TableHead>
+            <TableHead>Type</TableHead>
           </TableRow>
-        </For>
-      </TableBody>
-    </Table>
-  </Query>
+        </TableHeader>
+        <TableBody>
+          <For each="applications ?? []" as="application">
+            <TableRow>
+              <TableCell>{application.name}</TableCell>
+              <TableCell>{application.url}</TableCell>
+              <TableCell>{application.type}</TableCell>
+            </TableRow>
+          </For>
+        </TableBody>
+      </Table>
+    </Query>
+  </State>
 </Page>
