@@ -8,7 +8,6 @@ To install the development dependencies, run:
 pip install .[dev]
 ```
 
-
 ## Usage
 
 You can execute all tests or target a specific test file using the following commands:
@@ -23,11 +22,11 @@ pytest tests/test_app.py
 Asynchronous Testing with `pytest`
 
 ```py
-import pytest 
+import pytest
 
-@pytest.mark.asyncio 
-async def test_healthcheck(client): 
-    response = await client.get('/health') 
+@pytest.mark.asyncio
+async def test_healthcheck(client):
+    response = await client.get('/health')
 
     assert response.status_code == 200
 ```
@@ -46,7 +45,6 @@ def test_healthcheck():
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 ```
-
 
 ## Additional Resources
 

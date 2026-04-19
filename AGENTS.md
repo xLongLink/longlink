@@ -71,4 +71,3 @@ Write clear, precise, unambiguous docs for broad technical backgrounds and trans
 - Any non-trivial JavaScript logic block must have standalone inline comment (`/* ... */`) above block.
 - All Python functions must include docstring (`""" ... """`) immediately after definition.
 - Any non-trivial Python logic block must have standalone inline comment (`# ...`) above block.
-

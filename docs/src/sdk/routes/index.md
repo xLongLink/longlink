@@ -3,7 +3,6 @@
 LongLink SDK wraps FastAPI.
 You define endpoint handlers on the wrapped FastAPI app.
 
-
 ## Basic endpoint example
 
 ```python
