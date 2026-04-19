@@ -57,7 +57,7 @@ const defaultRegistry = {
     State,
     For,
     Grid,
-    Button,
+    Button: action(Button),
     Card,
     CardAction,
     CardContent,
