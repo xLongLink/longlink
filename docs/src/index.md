@@ -6,6 +6,9 @@ Instead of spreading data and workflows across multiple systems, LongLink encour
 
 The platform handles infrastructure, security, and data organization, allowing teams to focus on how their business operates rather than how systems are built and maintained.
 
+## Why
+
+
 ## Goals
 
 - Make business processes easier to design, manage, and control
