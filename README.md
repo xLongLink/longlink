@@ -30,9 +30,6 @@ The goal is to provide a consistent platform where applications feel native, sta
 
 ## Development
 
-```bash
-make setup  # Install all local dependencies
-```
 
 ```bash
 make format # Format the code
