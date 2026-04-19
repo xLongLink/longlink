@@ -14,10 +14,11 @@
           </DialogDescription>
         </DialogHeader>
         <Stack gap="12">
-          <Input kind="text" label="App key" value="{createApp.appKey}" placeholder="sampleapp" />
+          <Input kind="text" label="App key" bind="createApp.appKey" value="{createApp.appKey}" placeholder="sampleapp" />
           <Input
             kind="text"
             label="Image reference"
+            bind="createApp.image"
             value="{createApp.image}"
             placeholder="localhost:5000/sampleapp:20260419_185022"
           />
