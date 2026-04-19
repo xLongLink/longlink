@@ -7,7 +7,7 @@ import {
 } from '@/ui/breadcrumb';
 import { formatAppName } from '@/lib/navigation';
 import { useApiData } from '@/hooks/use-data';
-import { Link, useLocation, useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 
 type SettingResponse = {
     key: string;
@@ -17,12 +17,10 @@ type SettingResponse = {
 
 export function Breadcrumb() {
     const { appId } = useParams();
-    const location = useLocation();
     const { data: organizationNameData } = useApiData<SettingResponse>('/settings/ORG_NAME');
     const { data: appMetadata } = useApiData<{ name?: string }>(appId ? `/apps/${appId}` : null);
 
     const appName = appId ? appMetadata?.name?.trim() || formatAppName(appId) : undefined;
-    const isProfileView = location.pathname.startsWith('/profile');
     const organizationName = organizationNameData?.value.trim() || 'Organization';
 
     return (
@@ -45,20 +43,6 @@ export function Breadcrumb() {
                                 render={(props) => (
                                     <Link {...props} to={`/${appId}`} className="text-sm font-semibold text-white/70">
                                         {appName}
-                                    </Link>
-                                )}
-                            />
-                        </BreadcrumbItem>
-                    </>
-                ) : null}
-                {isProfileView ? (
-                    <>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink
-                                render={(props) => (
-                                    <Link {...props} to="/profile" className="text-sm font-semibold text-white/70">
-                                        Profile
                                     </Link>
                                 )}
                             />
