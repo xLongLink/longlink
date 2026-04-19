@@ -1,26 +1,24 @@
 from datetime import datetime
-from sqlalchemy import String, Integer, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlmodel import Field
 from src.db.models.__base__ import Base
 
 
-class User(Base):
+class User(Base, table=True):
     '''Represent a user account authenticated via OIDC.'''
 
     __tablename__ = 'users'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(128), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    avatar: Mapped[str | None] = mapped_column(String(2048), nullable=True)
-    oidc_subject: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    email: str = Field(unique=True, max_length=255)
+    avatar: str | None = Field(default=None, max_length=2048)
+    oidc_subject: str | None = Field(default=None, unique=True, max_length=255)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={'onupdate': datetime.utcnow},
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
-    )
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    deleted_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    deleted_at: datetime | None = None
+    created_by: str | None = Field(default=None, max_length=255)
+    updated_by: str | None = Field(default=None, max_length=255)
+    deleted_by: str | None = Field(default=None, max_length=255)
