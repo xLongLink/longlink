@@ -4,9 +4,14 @@ import re
 import asyncio
 from src.env import env
 from kubernetes import client
+from urllib3.exceptions import HTTPError
 from kubernetes.client.exceptions import ApiException
 
 _NAME_PATTERN = re.compile(r"^[a-z0-9]([-.a-z0-9]{0,61}[a-z0-9])?$")
+
+
+class ComputeConnectionError(RuntimeError):
+    """Raised when the control plane cannot connect to the compute API."""
 
 
 async def create(
@@ -61,44 +66,47 @@ def _create_sync(
     with client.ApiClient(configuration) as api_client:
         core = client.CoreV1Api(api_client)
 
-        # Create namespace if it doesn't exist
         try:
-            core.read_namespace(name=namespace)
-        except ApiException as error:
-            if error.status != 404:
-                raise
-            core.create_namespace(
-                body=client.V1Namespace(metadata=client.V1ObjectMeta(name=namespace))
+            # Create namespace if it doesn't exist
+            try:
+                core.read_namespace(name=namespace)
+            except ApiException as error:
+                if error.status != 404:
+                    raise
+                core.create_namespace(
+                    body=client.V1Namespace(metadata=client.V1ObjectMeta(name=namespace))
+                )
+
+            # Check if pod already exists
+            try:
+                core.read_namespaced_pod(name=pod_name, namespace=namespace)
+                raise ValueError(
+                    f"Container '{pod_name}' already exists in namespace '{namespace}'"
+                )
+            except ApiException as error:
+                if error.status != 404:
+                    raise
+
+            # Build container spec with environment variables and optional port
+            container = client.V1Container(
+                name=pod_name,
+                image=image,
+                command=command,
+                args=args,
+                env=[
+                    client.V1EnvVar(name=name, value=value)
+                    for name, value in env_vars.items()
+                ],
+                ports=[client.V1ContainerPort(container_port=container_port)]
+                if container_port
+                else None,
             )
 
-        # Check if pod already exists
-        try:
-            core.read_namespaced_pod(name=pod_name, namespace=namespace)
-            raise ValueError(
-                f"Container '{pod_name}' already exists in namespace '{namespace}'"
+            pod = client.V1Pod(
+                metadata=client.V1ObjectMeta(name=pod_name, labels={"app": pod_name}),
+                spec=client.V1PodSpec(containers=[container], restart_policy="Always"),
             )
-        except ApiException as error:
-            if error.status != 404:
-                raise
 
-        # Build container spec with environment variables and optional port
-        container = client.V1Container(
-            name=pod_name,
-            image=image,
-            command=command,
-            args=args,
-            env=[
-                client.V1EnvVar(name=name, value=value)
-                for name, value in env_vars.items()
-            ],
-            ports=[client.V1ContainerPort(container_port=container_port)]
-            if container_port
-            else None,
-        )
-
-        pod = client.V1Pod(
-            metadata=client.V1ObjectMeta(name=pod_name, labels={"app": pod_name}),
-            spec=client.V1PodSpec(containers=[container], restart_policy="Always"),
-        )
-
-        core.create_namespaced_pod(namespace=namespace, body=pod)
+            core.create_namespaced_pod(namespace=namespace, body=pod)
+        except HTTPError as error:
+            raise ComputeConnectionError("Unable to reach compute API server") from error
