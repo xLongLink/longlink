@@ -1,0 +1,27 @@
+<Page name="Applications" icon="blocks">
+  <Hero
+    title="Applications"
+    subtitle="Manage applications available to your organization."
+    icon="blocks"
+  />
+  <Query id="applications" path="/apps">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>URL</TableHead>
+          <TableHead>Type</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <For each="applications ?? []" as="application">
+          <TableRow>
+            <TableCell>{application.name}</TableCell>
+            <TableCell>{application.url}</TableCell>
+            <TableCell>{application.type}</TableCell>
+          </TableRow>
+        </For>
+      </TableBody>
+    </Table>
+  </Query>
+</Page>
