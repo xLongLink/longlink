@@ -7,38 +7,16 @@
             title="Application Settings"
             subtitle="Control app defaults, permissions, and lifecycle settings"
             icon="settings"
-            action="Manage applications"
+            action="Create application"
           >
-            <DialogContent className="sm:max-w-xl">
+            <DialogContent>
               <DialogHeader>
-                <DialogTitle>Manage applications</DialogTitle>
+                <DialogTitle>Create application</DialogTitle>
                 <DialogDescription>
                   Choose how you want to register an application in this workspace.
                 </DialogDescription>
               </DialogHeader>
               <Stack gap="12">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Connect application</CardTitle>
-                    <CardDescription>
-                      Link an existing deployed app and keep current runtime configuration.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="outline">Connect application</Button>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Add application</CardTitle>
-                    <CardDescription>
-                      Create a new application record and configure it for this organization.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button>Add application</Button>
-                  </CardContent>
-                </Card>
               </Stack>
             </DialogContent>
           </Hero>
@@ -52,7 +30,7 @@
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <For each="apps ?? []" as="app">
+                <For each="apps" as="app">
                   <TableRow>
                     <TableCell>{app.name}</TableCell>
                     <TableCell>{app.url}</TableCell>
