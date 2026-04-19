@@ -6,12 +6,10 @@ from src.routes.users import router as users_router
 from src.routes.proxies import router as proxies_router
 from src.routes.storage import router as storage_router
 from src.routes.settings import router as settings_router
-from src.routes.organization import router as organization_router
 
 routers = [
     apps_router,
     auth_router,
-    organization_router,
     pages_router,
     proxies_router,
     settings_router,

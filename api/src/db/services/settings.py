@@ -52,17 +52,3 @@ class SettingsService:
             await session.commit()
             await session.refresh(setting)
             return setting
-
-    async def get_organization(self) -> dict[str, str]:
-        """Return organization settings as a dict."""
-        Session = await get_session()
-        async with Session() as session:
-            statement = select(Setting).where(Setting.appid.is_(None))
-            result = await session.execute(statement)
-            settings = result.scalars().all()
-            return {s.key: s.value for s in settings}
-
-    async def save_organization(self, values: dict[str, str]) -> None:
-        """Save multiple organization settings."""
-        for key, value in values.items():
-            await self.set(key, value, app_id=None)
