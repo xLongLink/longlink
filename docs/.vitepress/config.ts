@@ -48,7 +48,6 @@ export default withMermaid(defineConfig({
           { text: 'Routes', link: '/sdk/routes/' },
           { text: 'Storage', link: '/sdk/storage/' },
           { text: 'Database', link: '/sdk/database/' },
-          { text: 'Build and Publish', link: '/sdk/building/' },
           {
             text: 'Pages',
             collapsed: true,
@@ -87,6 +86,7 @@ export default withMermaid(defineConfig({
             ]
           },
           { text: 'Testing', link: '/sdk/testing/' },
+          { text: 'Build & Publish', link: '/sdk/building/' },
         ]
       }
     ],
