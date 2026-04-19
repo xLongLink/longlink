@@ -48,7 +48,6 @@ make down   # Stop services and remove the cluster
 
 ### Applications SDK
 
-
 ```bash
 make sdk    # Run the web app proxied to the sample app
 make sample # Run the sample APP
