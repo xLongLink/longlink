@@ -1,28 +1,27 @@
 from datetime import datetime
-from sqlalchemy import Text, String, Integer, DateTime, ForeignKey, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlmodel import Field
 from src.db.models.__base__ import Base
 
 
-class Env(Base):
+class Env(Base, table=True):
     '''Represent an application secret environment variable.
     Envs are stored as secrets and injected in the app container as environment variables.
     '''
+
     __tablename__ = 'envs'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     # Propriety
-    key: Mapped[str] = mapped_column(String(128), nullable=False)
-    value: Mapped[str] = mapped_column(Text, nullable=False)
-    appid: Mapped[str] = mapped_column(ForeignKey('apps.id', ondelete='CASCADE'), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+    key: str = Field(max_length=128)
+    value: str
+    appid: str = Field(foreign_key='apps.id')
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={'onupdate': datetime.utcnow},
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
-    )
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    deleted_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    deleted_at: datetime | None = None
+    created_by: str | None = Field(default=None, max_length=255)
+    updated_by: str | None = Field(default=None, max_length=255)
+    deleted_by: str | None = Field(default=None, max_length=255)

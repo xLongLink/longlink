@@ -22,6 +22,7 @@ dependencies = [
     'python-dotenv==1.2.1',
     'psycopg2-binary==2.9.11',
     'sqlalchemy==2.0.46',
+    'sqlmodel==0.0.24',
     'starlette==0.52.1',
     'uvicorn==0.40.0',
     'kubernetes==35.0.0',

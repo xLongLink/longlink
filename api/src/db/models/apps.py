@@ -1,26 +1,25 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlmodel import Field
 from src.db.models.__base__ import Base
 
 
-class App(Base):
+class App(Base, table=True):
     '''Represent an application installed in the platform.'''
+
     __tablename__ = 'apps'
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    url: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
-    key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
-    type: Mapped[str] = mapped_column(String(16), nullable=False, default='tool')
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True, max_length=36)
+    url: str = Field(unique=True, max_length=255)
+    name: str = Field(max_length=100)
+    key: str = Field(unique=True, max_length=64)
+    type: str = Field(default='tool', max_length=16)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={'onupdate': datetime.utcnow},
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
-    )
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    deleted_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    deleted_at: datetime | None = None
+    created_by: str | None = Field(default=None, max_length=255)
+    updated_by: str | None = Field(default=None, max_length=255)
+    deleted_by: str | None = Field(default=None, max_length=255)
