@@ -2,6 +2,7 @@ import src.db as db
 from fastapi import APIRouter, HTTPException
 from src.env import env
 from src.models.apps import AppType, AppCreate, AppMetadata, AppResponse
+from src.utils.compute import ComputeConnectionError
 
 router = APIRouter()
 
@@ -48,6 +49,11 @@ async def create_app(payload: AppCreate) -> AppResponse:
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ComputeConnectionError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Compute API is unavailable. Check compute service connectivity.",
+        ) from exc
 
     try:
         # Register the app immediately and let runtime metadata be resolved later.
