@@ -28,7 +28,7 @@ Run the API server without reload/watch mode:
 
 ```bash
 cd api
-DEV=True ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
+../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ## OIDC bridge environment variables
@@ -43,14 +43,7 @@ The API uses a pure OIDC bridge based on Authlib and expects these variables:
 
 ### Local development defaults (Keycloak)
 
-When `DEV=true`, the API now defaults to local Keycloak bridge credentials:
+Copy `api/.env.sample` to `api/.env` and adjust values as needed for your local setup.
 
-- `ENV_OIDC_ISSUER=http://localhost:18080/realms/dev`
-- `ENV_OIDC_CLIENT_ID=longlink-api`
-- `ENV_OIDC_CLIENT_SECRET=longlink-secret`
-
-If you run Keycloak directly on your machine (for example on `localhost:8080`) instead of the
-repository `dev/compose.yml`, override `ENV_OIDC_ISSUER` in `api/.env`.
-
-`dev/compose.yml` imports a development `dev` realm automatically
-on startup, including the `longlink-api` client and `longlink-secret` credentials.
+`dev/compose.yml` imports a development `dev` realm automatically on startup,
+including the `longlink-api` client and `longlink-secret` credentials.
