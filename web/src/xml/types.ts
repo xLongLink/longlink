@@ -49,9 +49,13 @@ export type ActionHandler = (event: MouseEvent<any>) => Promise<void>;
 /** Props accepted by the action HOC. */
 export type ActionProps = {
     path?: string;
+    action?: string;
+    url?: string;
     method?: string;
     body?: unknown;
+    payload?: unknown;
     invalidate?: string | string[];
+    onSuccess?: string | (() => void | Promise<void>);
 };
 
 /** Props injected by the action HOC into the wrapped component. */
