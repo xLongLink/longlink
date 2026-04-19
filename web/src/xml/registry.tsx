@@ -236,7 +236,8 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
             setPending(true);
 
             try {
-                const requestUrl = resolvedPath.startsWith('http') ? resolvedPath : resolvedPath;
+                const baseUrl = runtime.ctx.baseUrl ?? '';
+                const requestUrl = resolvedPath.startsWith('http') ? resolvedPath : `${baseUrl}${resolvedPath}`;
                 const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), body ?? payload));
 
                 if (!response.ok) {
