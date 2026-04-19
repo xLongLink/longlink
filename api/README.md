@@ -1,7 +1,10 @@
 <div align="center">
-<img src="../web/public/banner.png" width="50%" />
-<p style="font-size: 1.5em;">Control Panel</p>
+
+# Control Panel
+
 </div>
+
+<br />
 
 ## Features
 
