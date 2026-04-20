@@ -3,7 +3,6 @@ import asyncio
 import kr8s.asyncio as kr8s_asyncio
 from kr8s.asyncio.objects import Pod, Service
 
-
 DEFAULT_NAMESPACE = "default"
 
 # IMPORTANT: use HTTPS (your proxy is TLS)
