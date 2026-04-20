@@ -32,7 +32,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
     if existing_key is not None:
         raise HTTPException(status_code=409, detail="App key already exists")
 
-    namespace = env.ENV_PROVISION_COMPUTE_DEFAULT_NAMESPACE
+    namespace = env.ENV_PROVISION_COMPUTE_NAMESPACE
     pod_name = f"{payload.key}-app".strip().lower()
 
     try:
