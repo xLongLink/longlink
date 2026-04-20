@@ -1,5 +1,11 @@
-.PHONY: up down format build api web sample docs
+.PHONY: up down format build api web sample docs install
 
+
+install:
+	bun i --cwd web
+	bun i --cwd docs
+	cd api && uv sync --extra dev
+	cd sdk && uv sync --extra dev
 
 format:
 	cd api && uv sync --extra dev
