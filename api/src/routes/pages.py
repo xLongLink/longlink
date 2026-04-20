@@ -1,10 +1,9 @@
-import xmltodict
 from typing import List
 from fastapi import APIRouter, HTTPException
 from pathlib import Path
 from pydantic import BaseModel
+from src.utils.page import Page
 from fastapi.responses import Response
-from xml.parsers.expat import ExpatError
 
 router = APIRouter()
 
@@ -18,27 +17,6 @@ class PageInfo(BaseModel):
     icon: str = "file-text"
 
 
-def parse_page_attributes(xml_content: str) -> dict[str, str]:
-    """Extract normalized attributes from root <Page> tag."""
-    try:
-        parsed_xml = xmltodict.parse(xml_content)
-    except ExpatError:
-        return {}
-
-    page_node = parsed_xml.get("Page")
-    if not isinstance(page_node, dict):
-        return {}
-
-    # Normalize root attribute names from xmltodict keys like @name, @icon.
-    attributes: dict[str, str] = {}
-    for key, value in page_node.items():
-        if not key.startswith("@") or not isinstance(value, str):
-            continue
-        attributes[key.removeprefix("@").lower()] = value
-
-    return attributes
-
-
 def get_all_pages() -> List[PageInfo]:
     """Scan pages directory and return metadata for each XML page."""
     pages: List[PageInfo] = []
@@ -48,12 +26,12 @@ def get_all_pages() -> List[PageInfo]:
     page_order = ["applications"]
 
     for page_file in sorted(PAGES_DIR.glob("*.xml")):
-        attrs = parse_page_attributes(page_file.read_text(encoding="utf-8"))
+        page = Page(page_file)
         pages.append(
             PageInfo(
-                name=attrs.get("name", page_file.stem.replace("-", " ").title()),
+                name=page.metadata.get("name", page_file.stem.replace("-", " ").title()),
                 path=page_file.stem,
-                icon=attrs.get("icon", "file-text"),
+                icon=page.metadata.get("icon", "file-text"),
             )
         )
 
@@ -88,7 +66,5 @@ async def get_page(page_name: str) -> Response:
     if not page_path.is_file() or page_path.parent != PAGES_DIR.resolve():
         raise HTTPException(status_code=404, detail="Page not found")
 
-    return Response(
-        content=page_path.read_text(encoding="utf-8"),
-        media_type="application/xml",
-    )
+    page = Page(page_path)
+    return Response(content=page.content, media_type="application/xml")
