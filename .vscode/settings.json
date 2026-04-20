@@ -1,9 +1,0 @@
-{
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}/sdk/sample",
-    "${workspaceFolder}/sdk/sample/app",
-    "${workspaceFolder}/sdk"
-  ],
-  "python.envFile": "${workspaceFolder}/sdk/sample/.env.sample"
-}
