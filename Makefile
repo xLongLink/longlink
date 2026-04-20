@@ -2,8 +2,8 @@
 
 
 format:
-	cd api && uv sync --dev
-	cd sdk && uv sync --dev
+	cd api && uv sync --extra dev
+	cd sdk && uv sync --extra dev
 	cd api && uv run isort .
 	cd sdk && uv run isort .
 	bun run --cwd web format
