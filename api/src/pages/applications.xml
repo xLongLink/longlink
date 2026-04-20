@@ -47,7 +47,6 @@
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>URL</TableHead>
-            <TableHead>Type</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -55,7 +54,6 @@
             <TableRow>
               <TableCell>{application.name}</TableCell>
               <TableCell>{application.url}</TableCell>
-              <TableCell>{application.type}</TableCell>
             </TableRow>
           </For>
         </TableBody>

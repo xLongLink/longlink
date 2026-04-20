@@ -1,7 +1,7 @@
 import src.db as db
 from fastapi import APIRouter, HTTPException
 from src.env import env
-from src.models.apps import AppType, AppCreate, AppMetadata, AppResponse
+from src.models.apps import AppCreate, AppResponse
 from src.utils.compute import ComputeConnectionError
 from src.models.computes import ActiveContainer
 
@@ -9,15 +9,12 @@ router = APIRouter()
 
 
 @router.get("/apps")
-async def list_apps(type: AppType | None = None) -> list[AppResponse]:
-    """List registered apps, optionally filtered by type."""
-    if type is not None:
-        registered_apps = await db.apps.list_by_type(type)
-    else:
-        registered_apps = await db.apps.list()
+async def list_apps() -> list[AppResponse]:
+    """List registered apps."""
+    registered_apps = await db.apps.list()
 
     return [
-        AppResponse(id=app.id, name=app.name, url=app.url, type=app.type)
+        AppResponse(id=app.id, name=app.name, url=app.url)
         for app in registered_apps
     ]
 
@@ -88,14 +85,12 @@ async def create_app(payload: AppCreate) -> AppResponse:
 
     try:
         # Register the app immediately and let runtime metadata be resolved later.
-        metadata = AppMetadata(name=payload.key, type=AppType.tool)
         app = await db.apps.create(
-            metadata.name,
+            payload.key,
             url=app_url,
             key=payload.key,
-            app_type=metadata.type,
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return AppResponse(id=app.id, name=app.name, url=app.url, type=app.type)
+    return AppResponse(id=app.id, name=app.name, url=app.url)
