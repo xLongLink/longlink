@@ -12,6 +12,10 @@ Employees browse available products, create requisition requests, and track orde
 2. Builds a Docker image tagged with the app name and a timestamp version.
 3. Pushes that image to a Docker registry (default: `localhost:5000`, which is common for local k3d setups).
 
+Because this sample depends on the local SDK package (`longlink` via `tool.uv.sources`),
+the generated Docker build now uses the `sdk/` directory as build context. This keeps the
+relative dependency path valid while still using the `sdk/sample/Dockerfile` file.
+
 ### Prerequisites
 
 - Docker daemon is running.
@@ -25,11 +29,15 @@ k3d registry create compute-registry --port 5000
 
 ### Build and push using default registry
 
+From `sdk/sample`:
+
 ```bash
 longlink build
 ```
 
 ### Build and push using a custom k3d registry endpoint
+
+From `sdk/sample`:
 
 ```bash
 longlink build --registry my-registry.localhost:5001
