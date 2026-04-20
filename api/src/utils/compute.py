@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import re
+import kr8s
 import asyncio
+from kr8s import (ServerError, NotFoundError, APITimeoutError,
+                  ConnectionClosedError)
 from src.env import env
-from kubernetes import client, config
-from urllib3.exceptions import HTTPError
-from kubernetes.client.exceptions import ApiException
-from kubernetes.config.config_exception import ConfigException
+from kr8s.objects import Pod, Namespace
+from urllib.parse import ParseResult, quote, urlparse
 
 _NAME_PATTERN = re.compile(r"^[a-z0-9]([-.a-z0-9]{0,61}[a-z0-9])?$")
 
@@ -57,57 +58,50 @@ def _create_sync(
     env_vars: dict[str, str],
     container_port: int | None,
 ) -> None:
-    """Create namespace and pod using Kubernetes API (runs in thread)."""
+    """Create namespace and pod using Kubernetes API."""
     # Try the explicit API server configuration first because deployments may
     # provide a dedicated compute endpoint that should take precedence.
-    configuration = client.Configuration()
-    configuration.host = env.ENV_PROVISION_COMPUTE_API_SERVER_URL
-    configuration.username = env.ENV_PROVISION_COMPUTE_ADMIN_USERNAME
-    configuration.password = env.ENV_PROVISION_COMPUTE_ADMIN_PASSWORD
-    configuration.verify_ssl = env.ENV_PROVISION_COMPUTE_VERIFY_SSL
+    compute_api_server_url = _build_authenticated_compute_url(
+        api_server_url=env.ENV_PROVISION_COMPUTE_API_SERVER_URL,
+        username=env.ENV_PROVISION_COMPUTE_ADMIN_USERNAME,
+        password=env.ENV_PROVISION_COMPUTE_ADMIN_PASSWORD,
+    )
 
     try:
-        with client.ApiClient(configuration) as api_client:
-            _create_namespaced_pod(
-                api_client=api_client,
-                namespace=namespace,
-                pod_name=pod_name,
-                image=image,
-                command=command,
-                args=args,
-                env_vars=env_vars,
-                container_port=container_port,
-            )
+        _create_namespaced_pod(
+            api=kr8s.api(url=compute_api_server_url),
+            namespace=namespace,
+            pod_name=pod_name,
+            image=image,
+            command=command,
+            args=args,
+            env_vars=env_vars,
+            container_port=container_port,
+        )
         return
-    except HTTPError:
+    except (APITimeoutError, ConnectionClosedError, OSError, ServerError):
         pass
 
     # Fall back to kubeconfig to support local development where the Kubernetes
     # API may be reachable only through kubectl context instead of the proxy URL.
     try:
-        config.load_kube_config()
-    except ConfigException as error:
-        raise ComputeConnectionError("Unable to reach compute API server") from error
-
-    try:
-        with client.ApiClient() as api_client:
-            _create_namespaced_pod(
-                api_client=api_client,
-                namespace=namespace,
-                pod_name=pod_name,
-                image=image,
-                command=command,
-                args=args,
-                env_vars=env_vars,
-                container_port=container_port,
-            )
-    except HTTPError as error:
+        _create_namespaced_pod(
+            api=kr8s.api(),
+            namespace=namespace,
+            pod_name=pod_name,
+            image=image,
+            command=command,
+            args=args,
+            env_vars=env_vars,
+            container_port=container_port,
+        )
+    except (APITimeoutError, ConnectionClosedError, OSError, ServerError) as error:
         raise ComputeConnectionError("Unable to reach compute API server") from error
 
 
 def _create_namespaced_pod(
     *,
-    api_client: client.ApiClient,
+    api: kr8s.Api,
     namespace: str,
     pod_name: str,
     image: str,
@@ -117,43 +111,76 @@ def _create_namespaced_pod(
     container_port: int | None,
 ) -> None:
     """Create namespace and pod using a pre-configured Kubernetes API client."""
-    core = client.CoreV1Api(api_client)
 
     # Create namespace lazily so first app deployment can bootstrap environment.
-    try:
-        core.read_namespace(name=namespace)
-    except ApiException as error:
-        if error.status != 404:
-            raise
-        core.create_namespace(
-            body=client.V1Namespace(metadata=client.V1ObjectMeta(name=namespace))
-        )
+    if not _resource_exists(kind="namespaces", name=namespace, api=api):
+        Namespace({"metadata": {"name": namespace}}, api=api).create()
 
     # Prevent duplicate pod names to keep app key mapping stable.
-    try:
-        core.read_namespaced_pod(name=pod_name, namespace=namespace)
+    if _resource_exists(kind="pods", name=pod_name, namespace=namespace, api=api):
         raise ValueError(
             f"Container '{pod_name}' already exists in namespace '{namespace}'"
         )
-    except ApiException as error:
-        if error.status != 404:
-            raise
 
     # Build container and pod specs from request parameters.
-    container = client.V1Container(
-        name=pod_name,
-        image=image,
-        command=command,
-        args=args,
-        env=[client.V1EnvVar(name=name, value=value) for name, value in env_vars.items()],
-        ports=[client.V1ContainerPort(container_port=container_port)]
-        if container_port
-        else None,
-    )
+    container_spec: dict[str, object] = {
+        "name": pod_name,
+        "image": image,
+        "env": [{"name": name, "value": value} for name, value in env_vars.items()],
+    }
+    if command:
+        container_spec["command"] = command
+    if args:
+        container_spec["args"] = args
+    if container_port:
+        container_spec["ports"] = [{"containerPort": container_port}]
 
-    pod = client.V1Pod(
-        metadata=client.V1ObjectMeta(name=pod_name, labels={"app": pod_name}),
-        spec=client.V1PodSpec(containers=[container], restart_policy="Always"),
+    pod = Pod(
+        {
+            "metadata": {"name": pod_name, "labels": {"app": pod_name}},
+            "spec": {"containers": [container_spec], "restartPolicy": "Always"},
+        },
+        namespace=namespace,
+        api=api,
     )
+    pod.create()
 
-    core.create_namespaced_pod(namespace=namespace, body=pod)
+
+def _resource_exists(
+    *,
+    kind: str,
+    name: str,
+    namespace: str | None = None,
+    api: kr8s.Api,
+) -> bool:
+    """Check whether a Kubernetes resource exists."""
+    try:
+        return any(kr8s.get(kind, name, namespace=namespace, api=api))
+    except NotFoundError:
+        return False
+
+
+def _build_authenticated_compute_url(
+    *,
+    api_server_url: str,
+    username: str,
+    password: str,
+) -> str:
+    """Build API server URL with basic-auth credentials."""
+    parsed_url = urlparse(api_server_url)
+    encoded_username = quote(username, safe="")
+    encoded_password = quote(password, safe="")
+    authenticated_netloc = (
+        f"{encoded_username}:{encoded_password}@{parsed_url.hostname or ''}"
+    )
+    if parsed_url.port is not None:
+        authenticated_netloc = f"{authenticated_netloc}:{parsed_url.port}"
+
+    return ParseResult(
+        scheme=parsed_url.scheme,
+        netloc=authenticated_netloc,
+        path=parsed_url.path,
+        params=parsed_url.params,
+        query=parsed_url.query,
+        fragment=parsed_url.fragment,
+    ).geturl()
