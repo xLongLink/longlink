@@ -1,4 +1,8 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
-  "python.terminal.activateEnvironment": true
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/api/src",
+    "${workspaceFolder}/sdk"
+  ],
+  "python.terminal.activateEnvironment": false
 }
