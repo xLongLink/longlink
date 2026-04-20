@@ -1,16 +1,15 @@
 .PHONY: up down format build api web sample docs
 
 install:
-	test -d .venv || uv venv .venv
-	uv pip install --python .venv/bin/python -e './api[dev]'
-	uv pip install --python .venv/bin/python -e './sdk'
+	cd api && uv sync
+	cd sdk && uv sync
 	bun install --cwd web
 	bun install --cwd docs
 
 
 format: install
-	cd api && uv run --python ../.venv/bin/python isort .
-	cd sdk && uv run --python ../.venv/bin/python isort .
+	cd api && uv run isort .
+	cd sdk && uv run isort .
 	bun run --cwd web format
 	cd web && bunx prettier --write $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed 's#^#../#')
 
