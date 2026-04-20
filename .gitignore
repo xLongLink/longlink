@@ -185,3 +185,4 @@ script.bat
 
 
 .ruff_cache/
+kubeconfig.yaml
