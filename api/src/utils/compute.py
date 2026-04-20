@@ -1,192 +1,176 @@
-from __future__ import annotations
-
+import httpx
 import asyncio
 import kr8s.asyncio as kr8s_asyncio
-from src.env import env
-from urllib.parse import ParseResult, quote, urlparse
-from kr8s.asyncio.objects import Pod, Service, Namespace
+from kr8s.asyncio.objects import Pod, Service
 
 
-class ComputeConnectionError(RuntimeError):
-    """Raised when the control plane cannot connect to the compute API."""
+DEFAULT_NAMESPACE = "default"
 
+# IMPORTANT: use HTTPS (your proxy is TLS)
+KUBECTL_PROXY = "http://127.0.0.1:8001"
 
+# -----------------------------
+# CREATE POD + SERVICE
+# -----------------------------
 async def create(
     *,
-    namespace: str,
     pod_name: str,
     image: str,
-    command: list[str] | None,
-    args: list[str] | None,
-    env_vars: dict[str, str],
-    container_port: int | None,
+    env_vars: dict[str, str] | None = None,
 ) -> str:
-    """Create a namespaced pod and service, then return in-cluster service URL."""
-    # Build an authenticated URL so the compute API can be reached by admin credentials.
-    compute_api_server_url = _build_authenticated_compute_url(
-        api_server_url=env.ENV_PROVISION_COMPUTE_API_SERVER_URL,
-        username=env.ENV_PROVISION_COMPUTE_ADMIN_USERNAME,
-        password=env.ENV_PROVISION_COMPUTE_ADMIN_PASSWORD,
-    )
-    candidate_urls = [compute_api_server_url]
+    api = await kr8s_asyncio.api()
 
-    # Retry with HTTPS when compute endpoint is TLS-only but configuration still uses HTTP.
-    if urlparse(compute_api_server_url).scheme == "http":
-        candidate_urls.append(_with_https_scheme(compute_api_server_url))
+    labels = {"app": pod_name}
 
-    last_error: Exception | None = None
-    for candidate_url in candidate_urls:
-        try:
-            api = await kr8s_asyncio.api(
-                url=candidate_url,
-                bypass_tls_verify=not env.ENV_PROVISION_COMPUTE_VERIFY_SSL,
-            )
-            return await _create_namespaced_pod(
-                api=api,
-                namespace=namespace,
-                pod_name=pod_name,
-                image=image,
-                command=command,
-                args=args,
-                env_vars=env_vars,
-                container_port=container_port,
-            )
-        except Exception as exc:  # pragma: no cover - depends on runtime connectivity.
-            last_error = exc
-            if "Client sent an HTTP request to an HTTPS server" not in str(exc):
-                raise
-
-    raise ComputeConnectionError("Failed to connect to compute API") from last_error
-
-
-async def _create_namespaced_pod(
-    *,
-    api: kr8s_asyncio.Api,
-    namespace: str,
-    pod_name: str,
-    image: str,
-    command: list[str] | None,
-    args: list[str] | None,
-    env_vars: dict[str, str],
-    container_port: int | None,
-) -> str:
-    """Create namespace, pod, and service, then return in-cluster DNS URL."""
-    if container_port is None:
-        raise ValueError("container_port is required to expose the app service")
-
-    # Ensure namespace exists before creating the pod.
-    namespace_obj = await Namespace({"metadata": {"name": namespace}}, api=api)
+    # --- POD ---
     try:
-        await namespace_obj.create()
+        await Pod.get(pod_name, namespace=DEFAULT_NAMESPACE, api=api)
     except Exception:
-        # Namespace might already exist and is safe to ignore.
-        pass
+        container = {
+            "name": pod_name,
+            "image": image,
+            "ports": [{"containerPort": 80}],
+        }
 
-    container_spec: dict[str, object] = {
-        "name": pod_name,
-        "image": image,
-        "env": [{"name": name, "value": value} for name, value in env_vars.items()],
-    }
+        if env_vars:
+            container["env"] = [
+                {"name": k, "value": v} for k, v in env_vars.items()
+            ]
 
-    if command:
-        container_spec["command"] = command
-    if args:
-        container_spec["args"] = args
-    if container_port:
-        container_spec["ports"] = [{"containerPort": container_port}]
-
-    pod = await Pod(
-        {
-            "metadata": {"name": pod_name, "labels": {"app": pod_name}},
-            "spec": {"containers": [container_spec], "restartPolicy": "Always"},
-        },
-        namespace=namespace,
-        api=api,
-    )
-    await pod.create()
-
-    # Wait until the pod is healthy before creating or reusing the service.
-    await pod.wait("condition=Ready", timeout=60)
-
-    service = await Service(
-        {
-            "metadata": {"name": pod_name},
-            "spec": {
-                "selector": {"app": pod_name},
-                "ports": [
-                    {
-                        "protocol": "TCP",
-                        "port": container_port,
-                        "targetPort": container_port,
-                    }
-                ],
-                "type": "ClusterIP",
+        pod = Pod(
+            {
+                "metadata": {"name": pod_name, "labels": labels},
+                "spec": {"containers": [container]},
             },
-        },
-        namespace=namespace,
-        api=api,
+            namespace=DEFAULT_NAMESPACE,
+            api=api,
+        )
+        await pod.create()
+
+    # --- SERVICE ---
+    try:
+        await Service.get(pod_name, namespace=DEFAULT_NAMESPACE, api=api)
+    except Exception:
+        service = Service(
+            {
+                "metadata": {"name": pod_name},
+                "spec": {
+                    "selector": labels,
+                    "ports": [
+                        {
+                            "name": "http",
+                            "port": 80,
+                            "targetPort": 80,
+                        }
+                    ],
+                },
+            },
+            namespace=DEFAULT_NAMESPACE,
+            api=api,
+        )
+        await service.create()
+
+    # --- WAIT UNTIL READY ---
+    while True:
+        pod = await Pod.get(pod_name, namespace=DEFAULT_NAMESPACE, api=api)
+
+        if (
+            pod.status.phase == "Running"
+            and pod.status.conditions
+            and any(
+                c.type == "Ready" and c.status == "True"
+                for c in pod.status.conditions
+            )
+        ):
+            break
+
+        await asyncio.sleep(1)
+
+    return pod_name
+
+
+# -----------------------------
+# PROXY VIA KUBECTL PROXY
+# -----------------------------
+async def query_via_proxy(service_name: str) -> httpx.Response:
+    url = (
+        f"{KUBECTL_PROXY}/api/v1/namespaces/{DEFAULT_NAMESPACE}/"
+        f"services/{service_name}/proxy/"
     )
+
+    async with httpx.AsyncClient(
+        timeout=10.0,
+        # verify=False,  # REQUIRED for self-signed TLS
+    ) as client:
+        return await client.get(url)
+
+
+# -----------------------------
+# LIST
+# -----------------------------
+async def list() -> list[str]:
+    api = await kr8s_asyncio.api()
+
+    return [
+        pod.metadata.name
+        async for pod in Pod.list(namespace=DEFAULT_NAMESPACE, api=api)
+    ]
+
+
+# -----------------------------
+# REMOVE
+# -----------------------------
+async def remove(*, pod_name: str) -> None:
+    api = await kr8s_asyncio.api()
 
     try:
-        await service.create()
+        pod = await Pod.get(pod_name, namespace=DEFAULT_NAMESPACE, api=api)
+        await pod.delete()
     except Exception:
-        # Service may already exist for this app name.
         pass
 
-    return f"http://{pod_name}.{namespace}.svc.cluster.local:{container_port}"
+    try:
+        service = await Service.get(
+            pod_name, namespace=DEFAULT_NAMESPACE, api=api
+        )
+        await service.delete()
+    except Exception:
+        pass
 
 
-def _build_authenticated_compute_url(
-    *,
-    api_server_url: str,
-    username: str,
-    password: str,
-) -> str:
-    """Build API server URL with basic-auth credentials."""
-    parsed_url = urlparse(api_server_url)
-    encoded_username = quote(username, safe="")
-    encoded_password = quote(password, safe="")
-    authenticated_netloc = (
-        f"{encoded_username}:{encoded_password}@{parsed_url.hostname or ''}"
-    )
-    if parsed_url.port is not None:
-        authenticated_netloc = f"{authenticated_netloc}:{parsed_url.port}"
-
-    return ParseResult(
-        scheme=parsed_url.scheme,
-        netloc=authenticated_netloc,
-        path=parsed_url.path,
-        params=parsed_url.params,
-        query=parsed_url.query,
-        fragment=parsed_url.fragment,
-    ).geturl()
-
-
-def _with_https_scheme(url: str) -> str:
-    """Return URL with HTTPS scheme while preserving all remaining parts."""
-    parsed_url = urlparse(url)
-    return ParseResult(
-        scheme="https",
-        netloc=parsed_url.netloc,
-        path=parsed_url.path,
-        params=parsed_url.params,
-        query=parsed_url.query,
-        fragment=parsed_url.fragment,
-    ).geturl()
-
-
+# -----------------------------
+# MAIN
+# -----------------------------
 async def _example_main() -> None:
-    """Run a sample deployment with explicit values requested by the task."""
-    url = await create(
-        namespace="default",
-        pod_name="sampleapp",
-        image="localhost:5000/sampleapp:20260419_185022",
-        command=None,
-        args=None,
-        env_vars={},
-        container_port=8000,
+    pod_name = "fastapi-sample"
+
+    print("Creating pod + service...")
+    service_name = await create(
+        pod_name=pod_name,
+        image="tiangolo/uvicorn-gunicorn-fastapi:python3.11",
+        env_vars={
+            # REQUIRED for this image to work correctly
+            "APP_MODULE": "app.main:app"
+        },
     )
-    print(url)
+    print(f"Service ready: {service_name}")
+
+    await asyncio.sleep(2)
+
+    print("\nQuerying via kubectl proxy...")
+    response = await query_via_proxy(service_name)
+
+    print(f"GET / -> {response.status_code}")
+    print(response.text[:300])
+
+    print("\nListing pods:")
+    pods = await list()
+    for p in pods:
+        print(f"- {p}")
+
+    print("\nDeleting resources...")
+    await remove(pod_name=pod_name)
+    print(f"Deleted: {pod_name}")
 
 
 if __name__ == "__main__":
