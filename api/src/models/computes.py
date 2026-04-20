@@ -30,13 +30,3 @@ class ComputeContainerCreateResponse(BaseModel):
     pod_name: str
     image: str
     status: str = 'created'
-
-
-class ActiveContainer(BaseModel):
-    namespace: str
-    pod_name: str
-    phase: str
-    images: list[str]
-    is_app: bool
-    app_id: str | None = None
-    app_key: str | None = None
