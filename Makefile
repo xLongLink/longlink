@@ -1,20 +1,16 @@
 .PHONY: up down format build api web sample docs
 
-install:
-	cd api && uv sync
-	cd sdk && uv sync
-	bun install --cwd web
-	bun install --cwd docs
 
-
-format: install
+format:
+	cd api && uv sync --dev
+	cd sdk && uv sync --dev
 	cd api && uv run isort .
 	cd sdk && uv run isort .
 	bun run --cwd web format
 	cd web && bunx prettier --write $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed 's#^#../#')
 
 
-build: install
+build: 
 	bun run --cwd web build:api --logLevel warn
 	bun run --cwd web build:sdk --logLevel warn 
 
@@ -29,17 +25,21 @@ down:
 	k3d cluster delete compute
 
 
-api: install
+api: 
+	cd api && uv sync --dev
 	cd api && DEV=True uv run uvicorn main:app --host 0.0.0.0 --port 8000
 
 
-web: install
+web: 
+	bun i --cwd web --dev
 	bun run --cwd web dev --host 0.0.0.0 --port 5173
 
 
-sample: install
+sample:
+	cd sdk && uv sync
 	cd sdk/sample && uv run longlink dev
 
 
-docs: install
+docs:
+	bun i --cwd docs
 	bun run --cwd docs dev
