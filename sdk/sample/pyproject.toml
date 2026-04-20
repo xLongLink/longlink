@@ -14,6 +14,9 @@ dependencies = [
   "uvicorn",
 ]
 
+[tool.uv.sources]
+longlink = { path = ".." }
+
 [project.optional-dependencies]
 dev = [
   "pytest",
