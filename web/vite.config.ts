@@ -7,13 +7,9 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     const isSdkBuild = mode === 'sdk';
-    const isApiBuild = mode === 'api';
-
     const buildOutDir = isSdkBuild
-        ? path.resolve(__dirname, '../sdk/longlink/static')
-        : isApiBuild
-          ? path.resolve(__dirname, '../api/static')
-          : path.resolve(__dirname, './dist');
+        ? path.resolve(__dirname, '../sdk/longlink/.static')
+        : path.resolve(__dirname, '../api/.static');
 
     const devServerPort = env.VITE_DEV_PORT ? parseInt(env.VITE_DEV_PORT) : 5173;
 
