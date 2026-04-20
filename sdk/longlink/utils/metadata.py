@@ -1,6 +1,6 @@
 import os
 import tomllib
-from typing import Any, Literal
+from typing import Any
 from pathlib import Path
 from pydantic import BaseModel, model_validator
 
@@ -16,7 +16,6 @@ class Metadata(BaseModel):
     terms_of_service: str | None = None
     contact: dict[str, Any] | None = None
     license_info: dict[str, Any] | None = None
-    apptype: Literal["tool", "space", "process"] = "tool"
 
     @model_validator(mode="before")
     @classmethod
@@ -50,7 +49,6 @@ class Metadata(BaseModel):
                     "terms_of_service": tool_data.get("terms_of_service") or result["terms_of_service"],
                     "contact": tool_data.get("contact") or result["contact"],
                     "license_info": tool_data.get("license_info") or result["license_info"],
-                    "apptype": tool_data.get("apptype") or result["apptype"],
                 }
             )
 

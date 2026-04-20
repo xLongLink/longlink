@@ -40,8 +40,6 @@ testpaths = ["tests"]
 pythonpath = ["."]
 
 [tool.longlink]
-apptype = "tool"
-
 
 [tool.isort]
 from_first = false

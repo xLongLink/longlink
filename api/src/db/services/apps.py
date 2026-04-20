@@ -15,15 +15,6 @@ class AppsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def list_by_type(self, app_type: str) -> list[App]:
-        '''Return all registered apps matching a type.'''
-
-        Session = await get_session()
-        async with Session() as session:
-            statement = select(App).where(App.type == app_type)
-            result = await session.execute(statement)
-            return list(result.scalars().all())
-
     async def get_by_uuid(self, app_uuid: str) -> App | None:
         '''Return a registered app by UUID.'''
 
@@ -65,7 +56,6 @@ class AppsService:
         name: str,
         url: str,
         key: str,
-        app_type: str,
     ) -> App:
         '''Add a new app to the database.'''
 
@@ -88,7 +78,6 @@ class AppsService:
                 'name': name,
                 'url': url,
                 'key': key,
-                'type': app_type,
             }
 
             app = App(**app_kwargs)
