@@ -1,9 +1,10 @@
 import httpx
 import src.db as db
 from typing import cast
-from fastapi import Request, APIRouter, HTTPException
+from fastapi import Depends, Request, APIRouter, HTTPException
 from src.env import env
-from src.auth import oauth
+from src.auth import oauth, authuser
+from src.models import UserUpdate
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
@@ -73,3 +74,20 @@ async def logout(request: Request):
     """Clear the user session and log out."""
     request.session.clear()
     return {"ok": True}
+
+
+@router.get("/me")
+async def get_me(user: db.User = Depends(authuser)):
+    """Return the authenticated user's details."""
+    return user
+
+
+@router.patch("/me")
+async def patch_me(payload: UserUpdate, user: db.User = Depends(authuser)):
+    """Update the authenticated user's details."""
+    params = payload.model_dump(exclude_unset=True)
+    if not params:
+        return user
+
+    updated_user = await db.users.update(user.id, **params)
+    return updated_user
