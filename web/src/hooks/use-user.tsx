@@ -15,7 +15,7 @@ export type User = {
 export function useUser() {
     return useQuery({
         queryKey: ['user'],
-        queryFn: () => apiFetch<User>('/user'),
+        queryFn: () => apiFetch<User>('/me'),
         staleTime: Infinity,
     });
 }
