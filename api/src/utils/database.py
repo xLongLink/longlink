@@ -1,7 +1,11 @@
 import asyncio
 import psycopg2
 from src.env import env
-from psycopg2 import sql
+from psycopg2 import sql, errors
+
+
+class DatabaseAlreadyExistsError(ValueError):
+    """Raised when trying to create a database that already exists."""
 
 
 async def create(database_name: str) -> None:
@@ -21,20 +25,15 @@ def _create_sync(database_name: str) -> None:
     if env.ENV_PROVISION_DATABASE_SSLMODE:
         connection_kwargs["sslmode"] = env.ENV_PROVISION_DATABASE_SSLMODE
 
-    admin_connection = psycopg2.connect(**connection_kwargs)
     try:
-        admin_connection.autocommit = True
-        with admin_connection.cursor() as cursor:
-            # Guard against duplicate DB names before CREATE DATABASE.
-            cursor.execute(
-                "SELECT 1 FROM pg_database WHERE datname = %s", (database_name,)
-            )
-            if cursor.fetchone() is not None:
-                raise ValueError(f"Database '{database_name}' already exists")
-
-            # Use SQL identifier escaping to prevent injection in DB name.
-            cursor.execute(
-                sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name))
-            )
-    finally:
-        admin_connection.close()
+        with psycopg2.connect(**connection_kwargs) as admin_connection:
+            admin_connection.autocommit = True
+            with admin_connection.cursor() as cursor:
+                # Use SQL identifier escaping to prevent injection in DB name.
+                cursor.execute(
+                    sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name))
+                )
+    except errors.DuplicateDatabase as error:
+        raise DatabaseAlreadyExistsError(
+            f"Database '{database_name}' already exists"
+        ) from error
