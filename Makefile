@@ -6,8 +6,8 @@ format:
 	cd sdk && uv sync --extra dev
 	cd api && uv run isort .
 	cd sdk && uv run isort .
-	bun run --cwd web format
-	cd web && bunx prettier --write $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed 's#^#../#')
+	bun run --cwd web format --log-level warn 
+	cd web && bunx prettier --log-level warn --write $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed 's#^#../#')
 
 
 build: 
