@@ -23,6 +23,7 @@ build:
 up:
 	docker compose -f dev/compose.yml up -d
 	k3d cluster create compute --api-port 0.0.0.0:8001 --registry-create compute-registry:0.0.0.0:5000 || true
+	k3d kubeconfig get compute > api/kubeconfig.yaml
 
 
 down:
