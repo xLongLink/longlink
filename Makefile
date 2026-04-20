@@ -31,12 +31,12 @@ down:
 
 
 api: 
-	cd api && uv sync --dev
+	cd api && uv sync --extra dev
 	cd api && DEV=True uv run uvicorn main:app --host 0.0.0.0 --port 8000
 
 
 web: 
-	bun i --cwd web --dev
+	bun i --cwd web --extra dev
 	bun run --cwd web dev --host 0.0.0.0 --port 5173
 
 
