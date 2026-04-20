@@ -20,7 +20,7 @@ dependencies = [
     'pydantic==2.12.5',
     'pydantic-settings',
     'python-dotenv==1.2.1',
-    'psycopg2-binary==2.9.11',
+    'psycopg[binary,pool]',
     'sqlalchemy==2.0.46',
     'sqlmodel==0.0.24',
     'starlette==0.52.1',

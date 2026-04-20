@@ -1,7 +1,6 @@
-import asyncio
-import psycopg2
+import psycopg
+from psycopg import sql, errors
 from src.env import env
-from psycopg2 import sql, errors
 
 
 class DatabaseAlreadyExistsError(ValueError):
@@ -10,11 +9,6 @@ class DatabaseAlreadyExistsError(ValueError):
 
 async def create(database_name: str) -> None:
     """Create a database in the provisioned PostgreSQL cluster."""
-    await asyncio.to_thread(_create_sync, database_name)
-
-
-def _create_sync(database_name: str) -> None:
-    """Create database in PostgreSQL maintenance database connection."""
     connection_kwargs: dict[str, str | int] = {
         "host": env.ENV_PROVISION_DATABASE_HOST,
         "port": env.ENV_PROVISION_DATABASE_PORT,
@@ -26,11 +20,10 @@ def _create_sync(database_name: str) -> None:
         connection_kwargs["sslmode"] = env.ENV_PROVISION_DATABASE_SSLMODE
 
     try:
-        with psycopg2.connect(**connection_kwargs) as admin_connection:
-            admin_connection.autocommit = True
-            with admin_connection.cursor() as cursor:
-                # Use SQL identifier escaping to prevent injection in DB name.
-                cursor.execute(
+        async with await psycopg.AsyncConnection.connect(**connection_kwargs) as conn:
+            conn.autocommit = True
+            async with conn.cursor() as cursor:
+                await cursor.execute(
                     sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name))
                 )
     except errors.DuplicateDatabase as error:
