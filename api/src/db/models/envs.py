@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import Field
 from src.db.models.__base__ import Base
 
@@ -16,10 +16,10 @@ class Env(Base, table=True):
     key: str = Field(max_length=128)
     value: str
     appid: str = Field(foreign_key='apps.id')
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow,
-        sa_column_kwargs={'onupdate': datetime.utcnow},
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column_kwargs={'onupdate': lambda: datetime.now(timezone.utc)},
     )
     deleted_at: datetime | None = None
     created_by: str | None = Field(default=None, max_length=255)

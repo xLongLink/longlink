@@ -1,9 +1,9 @@
 import src.db as db
 from fastapi import APIRouter, HTTPException
 from src.env import env
+from src.utils import compute
 from src.models.apps import AppCreate, AppResponse
 from src.utils.compute import ComputeConnectionError
-from src.models.computes import ActiveContainer
 
 router = APIRouter()
 
@@ -16,36 +16,6 @@ async def list_apps() -> list[AppResponse]:
     return [
         AppResponse(id=app.id, name=app.name, url=app.url)
         for app in registered_apps
-    ]
-
-
-@router.get("/apps/containers")
-async def list_active_containers(namespace: str | None = None) -> list[ActiveContainer]:
-    """List active cluster containers and flag which ones belong to registered apps."""
-    app_registry = await db.apps.list()
-    app_by_pod_name = {f"{app.key}-app": app for app in app_registry}
-
-    try:
-        containers = await db.computes.list_active_containers(namespace=namespace)
-    except ComputeConnectionError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail="Compute API is unavailable. Check compute service connectivity.",
-        ) from exc
-
-    # Mark each active pod as app or non-app using current app-to-pod naming model.
-    return [
-        ActiveContainer(
-            namespace=str(container["namespace"]),
-            pod_name=str(container["pod_name"]),
-            phase=str(container["phase"]),
-            images=[str(image) for image in container["images"]],
-            is_app=matched_app is not None,
-            app_id=matched_app.id if matched_app else None,
-            app_key=matched_app.key if matched_app else None,
-        )
-        for container in containers
-        for matched_app in [app_by_pod_name.get(str(container["pod_name"]))]
     ]
 
 
@@ -66,7 +36,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
     pod_name = f"{payload.key}-app".strip().lower()
 
     try:
-        await db.computes.create_container(
+        await compute.create(
             namespace=namespace,
             pod_name=pod_name,
             image=payload.image,
