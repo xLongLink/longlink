@@ -28,22 +28,35 @@ async def create(
         username=env.ENV_PROVISION_COMPUTE_ADMIN_USERNAME,
         password=env.ENV_PROVISION_COMPUTE_ADMIN_PASSWORD,
     )
+    candidate_urls = [compute_api_server_url]
 
-    try:
-        api = await kr8s_asyncio.api(url=compute_api_server_url)
-    except Exception as exc:  # pragma: no cover - depends on runtime connectivity.
-        raise ComputeConnectionError("Failed to connect to compute API") from exc
+    # Retry with HTTPS when compute endpoint is TLS-only but configuration still uses HTTP.
+    if urlparse(compute_api_server_url).scheme == "http":
+        candidate_urls.append(_with_https_scheme(compute_api_server_url))
 
-    return await _create_namespaced_pod(
-        api=api,
-        namespace=namespace,
-        pod_name=pod_name,
-        image=image,
-        command=command,
-        args=args,
-        env_vars=env_vars,
-        container_port=container_port,
-    )
+    last_error: Exception | None = None
+    for candidate_url in candidate_urls:
+        try:
+            api = await kr8s_asyncio.api(
+                url=candidate_url,
+                bypass_tls_verify=not env.ENV_PROVISION_COMPUTE_VERIFY_SSL,
+            )
+            return await _create_namespaced_pod(
+                api=api,
+                namespace=namespace,
+                pod_name=pod_name,
+                image=image,
+                command=command,
+                args=args,
+                env_vars=env_vars,
+                container_port=container_port,
+            )
+        except Exception as exc:  # pragma: no cover - depends on runtime connectivity.
+            last_error = exc
+            if "Client sent an HTTP request to an HTTPS server" not in str(exc):
+                raise
+
+    raise ComputeConnectionError("Failed to connect to compute API") from last_error
 
 
 async def _create_namespaced_pod(
@@ -142,6 +155,19 @@ def _build_authenticated_compute_url(
     return ParseResult(
         scheme=parsed_url.scheme,
         netloc=authenticated_netloc,
+        path=parsed_url.path,
+        params=parsed_url.params,
+        query=parsed_url.query,
+        fragment=parsed_url.fragment,
+    ).geturl()
+
+
+def _with_https_scheme(url: str) -> str:
+    """Return URL with HTTPS scheme while preserving all remaining parts."""
+    parsed_url = urlparse(url)
+    return ParseResult(
+        scheme="https",
+        netloc=parsed_url.netloc,
         path=parsed_url.path,
         params=parsed_url.params,
         query=parsed_url.query,
