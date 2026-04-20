@@ -25,7 +25,7 @@ dependencies = [
     'sqlmodel==0.0.24',
     'starlette==0.52.1',
     'uvicorn==0.40.0',
-    'kubernetes==35.0.0',
+    'kr8s==0.20.4',
     'boto3==1.40.61',
     'xmltodict==0.14.2'
 ]
