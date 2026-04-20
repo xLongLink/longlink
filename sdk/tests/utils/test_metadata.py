@@ -43,7 +43,6 @@ description = "Demo description"
     assert metadata.name == "demo-app"
     assert metadata.version == "1.2.3"
     assert metadata.description == "Demo description"
-    assert metadata.apptype == "tool"
 
 
 def test_load_metadata_prefers_tool_longlink_section(tmp_path):
@@ -61,7 +60,6 @@ version = "0.0.1"
 [tool.longlink]
 name = "tool-name"
 version = "9.9.9"
-apptype = "process"
 """.strip()
     )
 
@@ -69,7 +67,6 @@ apptype = "process"
 
     assert metadata.name == "tool-name"
     assert metadata.version == "9.9.9"
-    assert metadata.apptype == "process"
 
 
 def test_load_metadata_accepts_explicit_overrides(tmp_path):
@@ -86,7 +83,6 @@ version = "0.0.1"
 """.strip()
     )
 
-    metadata = module.load_metadata(pyproject, name="override-name", apptype="space")
+    metadata = module.load_metadata(pyproject, name="override-name")
 
     assert metadata.name == "override-name"
-    assert metadata.apptype == "space"
