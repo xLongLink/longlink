@@ -9,6 +9,7 @@ from kubernetes.client.exceptions import ApiException
 from kubernetes.config.config_exception import ConfigException
 
 _NAME_PATTERN = re.compile(r"^[a-z0-9]([-.a-z0-9]{0,61}[a-z0-9])?$")
+_ACTIVE_PHASES = {"Pending", "Running"}
 
 
 class ComputeConnectionError(RuntimeError):
@@ -46,6 +47,11 @@ async def create(
         env_vars,
         container_port,
     )
+
+
+async def list_active_containers(namespace: str | None = None) -> list[dict[str, object]]:
+    """List active Kubernetes pods and their container images."""
+    return await asyncio.to_thread(_list_active_containers_sync, namespace)
 
 
 def _create_sync(
@@ -103,6 +109,69 @@ def _create_sync(
             )
     except HTTPError as error:
         raise ComputeConnectionError("Unable to reach compute API server") from error
+
+
+def _list_active_containers_sync(namespace: str | None) -> list[dict[str, object]]:
+    """Collect active pod details from Kubernetes using available connection options."""
+    # Try explicit compute endpoint first to honor control-plane configuration.
+    configuration = client.Configuration()
+    configuration.host = env.ENV_PROVISION_COMPUTE_API_SERVER_URL
+    configuration.username = env.ENV_PROVISION_COMPUTE_ADMIN_USERNAME
+    configuration.password = env.ENV_PROVISION_COMPUTE_ADMIN_PASSWORD
+    configuration.verify_ssl = env.ENV_PROVISION_COMPUTE_VERIFY_SSL
+
+    try:
+        with client.ApiClient(configuration) as api_client:
+            return _list_active_pods(api_client=api_client, namespace=namespace)
+    except HTTPError:
+        pass
+
+    # Fall back to local kubeconfig to support k3d and other local clusters.
+    try:
+        config.load_kube_config()
+    except ConfigException as error:
+        raise ComputeConnectionError("Unable to reach compute API server") from error
+
+    try:
+        with client.ApiClient() as api_client:
+            return _list_active_pods(api_client=api_client, namespace=namespace)
+    except HTTPError as error:
+        raise ComputeConnectionError("Unable to reach compute API server") from error
+
+
+def _list_active_pods(
+    *,
+    api_client: client.ApiClient,
+    namespace: str | None,
+) -> list[dict[str, object]]:
+    """Return active pods from a namespace or all namespaces for a configured API client."""
+    core = client.CoreV1Api(api_client)
+
+    # Query either a specific namespace or all namespaces based on caller input.
+    if namespace:
+        pod_list = core.list_namespaced_pod(namespace=namespace)
+    else:
+        pod_list = core.list_pod_for_all_namespaces()
+
+    active_containers: list[dict[str, object]] = []
+
+    # Keep only active phases so terminated workloads are excluded from UI views.
+    for pod in pod_list.items:
+        pod_phase = pod.status.phase if pod.status and pod.status.phase else "Unknown"
+        if pod_phase not in _ACTIVE_PHASES:
+            continue
+
+        pod_images = [container.image for container in pod.spec.containers or []]
+        active_containers.append(
+            {
+                "namespace": pod.metadata.namespace or "",
+                "pod_name": pod.metadata.name or "",
+                "phase": pod_phase,
+                "images": pod_images,
+            }
+        )
+
+    return active_containers
 
 
 def _create_namespaced_pod(
