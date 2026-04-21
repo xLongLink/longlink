@@ -1,3 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: compute-router
+  namespace: default
+  labels:
+    managed-by: control-plane
+    compute-role: base
+spec:
+  selector:
+    app: compute-router
+  ports:
+  - port: 5678
+    targetPort: 5678
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compute-router
+  namespace: default
+  labels:
+    managed-by: control-plane
+    compute-role: base
+    app: compute-router
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: compute-router
+  template:
+    metadata:
+      labels:
+        app: compute-router
+    spec:
+      containers:
+      - name: compute-router
+        image: hashicorp/http-echo:1.0.0
+        args:
+        - -listen=:5678
+        - -status=404
+        - -text=application not found
+        ports:
+        - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample1
+  namespace: default
+  labels:
+    managed-by: control-plane
+    compute-role: application
+spec:
+  selector:
+    app: sample1
+  ports:
+  - port: 80
+    targetPort: 80
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +64,8 @@ metadata:
   namespace: default
   labels:
     managed-by: control-plane
+    compute-role: application
+    app: sample1
 spec:
   replicas: 1
   selector:
@@ -20,71 +81,6 @@ spec:
         image: tiangolo/uvicorn-gunicorn-fastapi:python3.11
         ports:
         - containerPort: 80
-        command:
-        - /bin/sh
-        - -c
-        args:
-        - "\nmkdir -p /app\n\ncat <<EOF > /app/main.py\nfrom fastapi import FastAPI\n\
-          \napp = FastAPI()\n\n@app.get(\"/\")\ndef root():\n    return {\"service\"\
-          : \"sample1\"}\nEOF\n\nuvicorn main:app --host 0.0.0.0 --port 80\n"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: sample1
-  namespace: default
-  labels:
-    managed-by: control-plane
-spec:
-  selector:
-    app: sample1
-  ports:
-  - port: 80
-    targetPort: 80
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: sample2
-  namespace: default
-  labels:
-    managed-by: control-plane
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sample2
-  template:
-    metadata:
-      labels:
-        app: sample2
-    spec:
-      containers:
-      - name: sample2
-        image: tiangolo/uvicorn-gunicorn-fastapi:python3.11
-        ports:
-        - containerPort: 80
-        command:
-        - /bin/sh
-        - -c
-        args:
-        - "\nmkdir -p /app\n\ncat <<EOF > /app/main.py\nfrom fastapi import FastAPI\n\
-          \napp = FastAPI()\n\n@app.get(\"/\")\ndef root():\n    return {\"service\"\
-          : \"sample2\"}\nEOF\n\nuvicorn main:app --host 0.0.0.0 --port 80\n"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: sample2
-  namespace: default
-  labels:
-    managed-by: control-plane
-spec:
-  selector:
-    app: sample2
-  ports:
-  - port: 80
-    targetPort: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -96,8 +92,14 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
   labels:
     managed-by: control-plane
+    compute-role: base
 spec:
   ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: compute-router
+      port:
+        number: 5678
   rules:
   - host: localhost
     http:
@@ -107,12 +109,5 @@ spec:
         backend:
           service:
             name: sample1
-            port:
-              number: 80
-      - path: /sample2(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: sample2
             port:
               number: 80
