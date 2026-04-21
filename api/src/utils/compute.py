@@ -229,7 +229,8 @@ class Compute:
         return sorted(self.applications)
 
     def apply(self) -> list[dict]:
-        """Apply the current desired state to the Kubernetes cluster."""
+        """Apply the persisted desired state file to the Kubernetes cluster."""
+        # Persist the currently loaded in-memory state before delegating to kubectl.
         target = self.save()
         manifests = kubectl.apply(target, kubeconfig=self.kubeconfig_path)
         desired_resources = {self._manifest_key(manifest) for manifest in manifests}
@@ -244,15 +245,21 @@ class Compute:
         return manifests
 
     def create(self, name: str, image: str) -> list[dict]:
-        """Add or replace one managed application, then persist and apply state."""
+        """Add or replace one application in state.yaml, then apply that state."""
         _validate_kubernetes_name(self.namespace, "Namespace")
         _validate_kubernetes_name(name, "Application name")
+        self.load()
+
+        # Mutation is intentionally state-first: update desired state, not the cluster.
         self.applications[name] = {"image": image}
         return self.apply()
 
     def delete(self, name: str) -> list[dict]:
-        """Remove one managed application, then persist and apply state."""
+        """Remove one application from state.yaml, then apply that state."""
         _validate_kubernetes_name(name, "Application name")
+        self.load()
+
+        # Deletion is intentionally state-first: remove from desired state before apply.
         self.applications.pop(name, None)
         return self.apply()
 
