@@ -19,5 +19,4 @@ spec:
   rules:
     - host: $ingress_host
       http:
-        paths:
-$paths
+        paths: []

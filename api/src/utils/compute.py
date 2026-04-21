@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
-from string import Template
-from textwrap import indent
-
 import yaml
-from src.constants import PATH
+from string import Template
+from pathlib import Path
 from src.env import env
-
 from src.utils import kubectl
+from kubernetes import client, config
+from src.constants import PATH
+from kubernetes.client.rest import ApiException
+
 
 TEMPLATES_PATH = PATH / "templates" / "compute"
 
@@ -47,9 +47,73 @@ class Compute:
         rendered = Template(template_text.read_text(encoding="utf-8")).safe_substitute(**context)
         return yaml.safe_load(rendered)
 
-    def _ingress_paths_yaml(self) -> str:
-        """Return the ingress paths block for the current application set."""
-        paths = [
+    def _api_client(self) -> client.ApiClient:
+        """Return a Kubernetes API client for the configured kubeconfig."""
+        config.load_kube_config(config_file=str(self.kubeconfig_path))
+        return client.ApiClient()
+
+    def _manifest_key(self, manifest: dict) -> tuple[str, str, str]:
+        """Return the unique resource key for one manifest."""
+        metadata = manifest["metadata"]
+        return (
+            manifest["kind"],
+            metadata["name"],
+            metadata.get("namespace", self.namespace),
+        )
+
+    def _managed_live_resources(self, api_client: client.ApiClient) -> list[tuple[str, str, str]]:
+        """Return managed live resources in the configured namespace."""
+        resources: list[tuple[str, str, str]] = []
+
+        # Only reconcile resources created by the compute state manager.
+        for kind, items in (
+            (
+                "Deployment",
+                client.AppsV1Api(api_client).list_namespaced_deployment(self.namespace).items,
+            ),
+            (
+                "Service",
+                client.CoreV1Api(api_client).list_namespaced_service(self.namespace).items,
+            ),
+            (
+                "Ingress",
+                client.NetworkingV1Api(api_client).list_namespaced_ingress(self.namespace).items,
+            ),
+        ):
+            for item in items:
+                labels = item.metadata.labels or {}
+                if labels.get("managed-by") != "control-plane":
+                    continue
+                if labels.get("compute-role") not in {"base", "application"}:
+                    continue
+                resources.append((kind, item.metadata.name, item.metadata.namespace or self.namespace))
+
+        return resources
+
+    def _delete_live_resource(
+        self,
+        api_client: client.ApiClient,
+        kind: str,
+        name: str,
+        namespace: str,
+    ) -> None:
+        """Delete one live managed resource if it exists."""
+        try:
+            if kind == "Deployment":
+                client.AppsV1Api(api_client).delete_namespaced_deployment(name, namespace)
+            elif kind == "Service":
+                client.CoreV1Api(api_client).delete_namespaced_service(name, namespace)
+            elif kind == "Ingress":
+                client.NetworkingV1Api(api_client).delete_namespaced_ingress(name, namespace)
+            else:
+                raise ValueError(f"Unsupported kind: {kind}")
+        except ApiException as exc:
+            if exc.status != 404:
+                raise ValueError(f"Failed deleting {kind} '{name}'") from exc
+
+    def _ingress_paths(self) -> list[dict]:
+        """Return the ingress paths for the current application set."""
+        return [
             {
                 "path": f"/{name}(/|$)(.*)",
                 "pathType": "ImplementationSpecific",
@@ -57,7 +121,6 @@ class Compute:
             }
             for name in sorted(self.applications)
         ]
-        return indent(yaml.safe_dump(paths, sort_keys=False).rstrip(), " " * 10)
 
     def _base_manifests(self) -> list[dict]:
         """Return the shared router manifests required for all application states."""
@@ -89,13 +152,22 @@ class Compute:
 
     def _ingress_manifest(self) -> dict:
         """Return the shared ingress manifest for all managed applications."""
-        return self._render_template(
+        paths = self._ingress_paths()
+        manifest = self._render_template(
             "ingress.yml",
             ingress_host=self.ingress_host,
             ingress_name=self.ingress_name,
             namespace=self.namespace,
-            paths=self._ingress_paths_yaml(),
         )
+
+        # An ingress rule cannot contain an empty paths list, so drop rules entirely
+        # when only the default backend should remain.
+        if paths:
+            manifest["spec"]["rules"][0]["http"]["paths"] = paths
+        else:
+            manifest["spec"].pop("rules", None)
+
+        return manifest
 
     def manifests(self) -> list[dict]:
         """Build the full desired cluster state from the current application map."""
@@ -157,32 +229,20 @@ class Compute:
         self.load()
         return sorted(self.applications)
 
-    def show(self) -> list[dict]:
-        """Return the full persisted desired state manifests."""
-        return self.load()
-
     def apply(self) -> list[dict]:
         """Apply the current desired state to the Kubernetes cluster."""
         target = self.save()
-        return kubectl.apply(target, kubeconfig=self.kubeconfig_path)
+        manifests = kubectl.apply(target, kubeconfig=self.kubeconfig_path)
+        desired_resources = {self._manifest_key(manifest) for manifest in manifests}
+        api_client = self._api_client()
 
-    def _delete_live_resource(self, kind: str, name: str) -> None:
-        """Delete one live application resource if it exists."""
-        from kubernetes import client, config
-        from kubernetes.client.rest import ApiException
+        # Prune managed resources that are no longer present in the desired state.
+        for kind, name, namespace in self._managed_live_resources(api_client):
+            if (kind, name, namespace) in desired_resources:
+                continue
+            self._delete_live_resource(api_client, kind, name, namespace)
 
-        try:
-            config.load_kube_config(config_file=str(self.kubeconfig_path))
-            api_client = client.ApiClient()
-            if kind == "Deployment":
-                client.AppsV1Api(api_client).delete_namespaced_deployment(name, self.namespace)
-            elif kind == "Service":
-                client.CoreV1Api(api_client).delete_namespaced_service(name, self.namespace)
-            else:
-                raise ValueError(f"Unsupported kind: {kind}")
-        except ApiException as exc:
-            if exc.status != 404:
-                raise ValueError(f"Failed deleting {kind} '{name}'") from exc
+        return manifests
 
     def create(self, name: str, image: str) -> list[dict]:
         """Add or replace one managed application, then persist and apply state."""
@@ -195,8 +255,6 @@ class Compute:
         """Remove one managed application, then persist and apply state."""
         _validate_kubernetes_name(name, "Application name")
         self.applications.pop(name, None)
-        self._delete_live_resource("Service", name)
-        self._delete_live_resource("Deployment", name)
         return self.apply()
 
 
@@ -209,5 +267,6 @@ if __name__ == "__main__":
     compute.create("sample1", "tiangolo/uvicorn-gunicorn-fastapi:python3.11")
     compute.create("sample2", "tiangolo/uvicorn-gunicorn-fastapi:python3.11")
     print(compute.list())
-    print(compute.show())
     compute.delete("sample2")
+    compute.delete("sample1")
+    print(compute.list())
