@@ -1,17 +1,24 @@
 from __future__ import annotations
-import os
+
 import re
 import yaml
+from string import Template
 from pathlib import Path
+from src.env import env
+from textwrap import indent
 from kubernetes import client, config
+from src.constants import PATH
 from kubernetes.client.rest import ApiException
 
-DEFAULT_KUBECONFIG = Path(__file__).resolve().parents[2] / "kubeconfig.yaml"
-DEFAULT_STATE_PATH = Path(__file__).resolve().parents[2] / "state.yaml"
+TEMPLATES_PATH = PATH / "templates" / "compute"
 
 
-class ComputeConnectionError(RuntimeError):
-    """Raised when the Kubernetes API cannot be reached or configured."""
+def _validate_kubernetes_name(value: str, label: str) -> None:
+    """Validate a Kubernetes DNS label value before connecting to the cluster."""
+    if not re.match(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", value):
+        raise ValueError(
+            f"{label} must contain only lowercase letters, numbers, and hyphens"
+        )
 
 
 class Compute:
@@ -19,202 +26,82 @@ class Compute:
 
     def __init__(
         self,
-        kubeconfig_path: str | Path,
-        state_path: str | Path = DEFAULT_STATE_PATH,
+        kubeconfig: str | Path,
+        state_path: str | Path = "state.yaml",
         namespace: str = "default",
         ingress_name: str = "control-ingress",
         ingress_host: str = "localhost",
     ) -> None:
         """Initialize the compute state manager and Kubernetes client."""
-        self.kubeconfig_path = Path(kubeconfig_path).expanduser()
+        self.kubeconfig_path = Path(kubeconfig).expanduser()
         self.state_path = Path(state_path).expanduser()
         self.namespace = namespace
         self.ingress_name = ingress_name
         self.ingress_host = ingress_host
         self.applications: dict[str, dict[str, str]] = {}
-        self.api_client = self._load_api_client()
+        config.load_kube_config(config_file=str(self.kubeconfig_path))
+        self.api_client = client.ApiClient()
 
-    def _load_api_client(self) -> client.ApiClient:
-        """Load Kubernetes config and return a configured API client."""
-        try:
-            if self.kubeconfig_path.exists():
-                config.load_kube_config(config_file=str(self.kubeconfig_path))
-            elif DEFAULT_KUBECONFIG.exists():
-                config.load_kube_config(config_file=str(DEFAULT_KUBECONFIG))
-            else:
-                config.load_incluster_config()
-        except Exception as exc:
-            raise ComputeConnectionError("Unable to load Kubernetes configuration") from exc
+    def _render_template(self, template_name: str, **context: str) -> dict:
+        """Render one YAML template into a manifest dictionary."""
+        template_text = TEMPLATES_PATH / template_name
+        rendered = Template(template_text.read_text(encoding="utf-8")).safe_substitute(**context)
+        return yaml.safe_load(rendered)
 
-        return client.ApiClient()
+    def _ingress_paths_yaml(self) -> str:
+        """Return the ingress paths block for the current application set."""
+        paths = [
+            {
+                "path": f"/{name}(/|$)(.*)",
+                "pathType": "ImplementationSpecific",
+                "backend": {"service": {"name": name, "port": {"number": 80}}},
+            }
+            for name in sorted(self.applications)
+        ]
+        return indent(yaml.safe_dump(paths, sort_keys=False).rstrip(), " " * 10)
 
-    def _validate_name(self, value: str, label: str) -> None:
-        """Validate a Kubernetes DNS label value."""
-        if not re.match(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", value):
-            raise ValueError(
-                f"{label} must contain only lowercase letters, numbers, and hyphens"
+    def _base_manifests(self) -> list[dict]:
+        """Return the shared router manifests required for all application states."""
+        return [
+            self._render_template("base-router-service.yml", namespace=self.namespace),
+            self._render_template("base-router-deployment.yml", namespace=self.namespace),
+        ]
+
+    def _application_manifests(self) -> list[dict]:
+        """Return the service and deployment manifests for managed applications."""
+        manifests: list[dict] = []
+        for name, application in sorted(self.applications.items()):
+            manifests.append(
+                self._render_template(
+                    "application-service.yml",
+                    name=name,
+                    namespace=self.namespace,
+                )
             )
-
-    def _base_router_deployment_manifest(self) -> dict:
-        """Return the fallback deployment that keeps ingress routing valid."""
-        return {
-            "apiVersion": "apps/v1",
-            "kind": "Deployment",
-            "metadata": {
-                "name": "compute-router",
-                "namespace": self.namespace,
-                "labels": {
-                    "managed-by": "control-plane",
-                    "compute-role": "base",
-                    "app": "compute-router",
-                },
-            },
-            "spec": {
-                "replicas": 1,
-                "selector": {"matchLabels": {"app": "compute-router"}},
-                "template": {
-                    "metadata": {"labels": {"app": "compute-router"}},
-                    "spec": {
-                        "containers": [
-                            {
-                                "name": "compute-router",
-                                "image": "hashicorp/http-echo:1.0.0",
-                                "args": [
-                                    "-listen=:5678",
-                                    "-status=404",
-                                    "-text=application not found",
-                                ],
-                                "ports": [{"containerPort": 5678}],
-                            }
-                        ]
-                    },
-                },
-            },
-        }
-
-    def _base_router_service_manifest(self) -> dict:
-        """Return the fallback service used as ingress default backend."""
-        return {
-            "apiVersion": "v1",
-            "kind": "Service",
-            "metadata": {
-                "name": "compute-router",
-                "namespace": self.namespace,
-                "labels": {"managed-by": "control-plane", "compute-role": "base"},
-            },
-            "spec": {
-                "selector": {"app": "compute-router"},
-                "ports": [{"port": 5678, "targetPort": 5678}],
-            },
-        }
-
-    def _deployment_manifest(self, name: str, image: str) -> dict:
-        """Return the deployment manifest for one managed application."""
-        return {
-            "apiVersion": "apps/v1",
-            "kind": "Deployment",
-            "metadata": {
-                "name": name,
-                "namespace": self.namespace,
-                "labels": {
-                    "managed-by": "control-plane",
-                    "compute-role": "application",
-                    "app": name,
-                },
-            },
-            "spec": {
-                "replicas": 1,
-                "selector": {"matchLabels": {"app": name}},
-                "template": {
-                    "metadata": {"labels": {"app": name}},
-                    "spec": {
-                        "containers": [
-                            {
-                                "name": name,
-                                "image": image,
-                                "ports": [{"containerPort": 80}],
-                            }
-                        ]
-                    },
-                },
-            },
-        }
-
-    def _service_manifest(self, name: str) -> dict:
-        """Return the service manifest for one managed application."""
-        return {
-            "apiVersion": "v1",
-            "kind": "Service",
-            "metadata": {
-                "name": name,
-                "namespace": self.namespace,
-                "labels": {
-                    "managed-by": "control-plane",
-                    "compute-role": "application",
-                },
-            },
-            "spec": {
-                "selector": {"app": name},
-                "ports": [{"port": 80, "targetPort": 80}],
-            },
-        }
+            manifests.append(
+                self._render_template(
+                    "application-deployment.yml",
+                    image=application["image"],
+                    name=name,
+                    namespace=self.namespace,
+                )
+            )
+        return manifests
 
     def _ingress_manifest(self) -> dict:
         """Return the shared ingress manifest for all managed applications."""
-        paths = []
-
-        # Keep a single shared ingress and extend it as applications are added.
-        for name in sorted(self.applications):
-            paths.append(
-                {
-                    "path": f"/{name}(/|$)(.*)",
-                    "pathType": "ImplementationSpecific",
-                    "backend": {
-                        "service": {"name": name, "port": {"number": 80}},
-                    },
-                }
-            )
-
-        return {
-            "apiVersion": "networking.k8s.io/v1",
-            "kind": "Ingress",
-            "metadata": {
-                "name": self.ingress_name,
-                "namespace": self.namespace,
-                "annotations": {
-                    "nginx.ingress.kubernetes.io/use-regex": "true",
-                    "nginx.ingress.kubernetes.io/rewrite-target": "/$2",
-                },
-                "labels": {"managed-by": "control-plane", "compute-role": "base"},
-            },
-            "spec": {
-                "ingressClassName": "nginx",
-                "defaultBackend": {
-                    "service": {
-                        "name": "compute-router",
-                        "port": {"number": 5678},
-                    }
-                },
-                "rules": [
-                    {
-                        "host": self.ingress_host,
-                        "http": {"paths": paths},
-                    }
-                ],
-            },
-        }
+        return self._render_template(
+            "ingress.yml",
+            ingress_host=self.ingress_host,
+            ingress_name=self.ingress_name,
+            namespace=self.namespace,
+            paths=self._ingress_paths_yaml(),
+        )
 
     def manifests(self) -> list[dict]:
         """Build the full desired cluster state from the current application map."""
-        manifests = [
-            self._base_router_service_manifest(),
-            self._base_router_deployment_manifest(),
-        ]
-
-        for name, application in sorted(self.applications.items()):
-            manifests.append(self._service_manifest(name))
-            manifests.append(self._deployment_manifest(name, application["image"]))
-
+        manifests = self._base_manifests()
+        manifests.extend(self._application_manifests())
         manifests.append(self._ingress_manifest())
         return manifests
 
@@ -310,7 +197,7 @@ class Compute:
             for manifest in manifests:
                 self._apply_manifest(manifest)
         except ApiException as exc:
-            raise ComputeConnectionError("Failed to apply manifests to Kubernetes") from exc
+            raise ValueError("Failed to apply manifests to Kubernetes") from exc
 
         return manifests
 
@@ -325,19 +212,19 @@ class Compute:
                 raise ValueError(f"Unsupported kind: {kind}")
         except ApiException as exc:
             if exc.status != 404:
-                raise ComputeConnectionError(f"Failed deleting {kind} '{name}'") from exc
+                raise ValueError(f"Failed deleting {kind} '{name}'") from exc
 
     def create(self, name: str, image: str) -> list[dict]:
         """Add or replace one managed application, then persist and apply state."""
-        self._validate_name(self.namespace, "Namespace")
-        self._validate_name(name, "Application name")
+        _validate_kubernetes_name(self.namespace, "Namespace")
+        _validate_kubernetes_name(name, "Application name")
         self.applications[name] = {"image": image}
         self.save()
         return self.apply()
 
     def delete(self, name: str) -> list[dict]:
         """Remove one managed application, then persist and apply state."""
-        self._validate_name(name, "Application name")
+        _validate_kubernetes_name(name, "Application name")
         self.applications.pop(name, None)
         self._delete_live_resource("Service", name)
         self._delete_live_resource("Deployment", name)
@@ -345,52 +232,14 @@ class Compute:
         return self.apply()
 
 
-def _default_compute(namespace: str = "default") -> Compute:
-    """Return a compute instance configured from the standard kubeconfig path."""
-    kubeconfig_path = Path(os.environ.get("KUBECONFIG", "/app/kubeconfig")).expanduser()
-    return Compute(kubeconfig_path=kubeconfig_path, namespace=namespace)
 
-
-def _validate_kubernetes_name(value: str, label: str) -> None:
-    """Validate a Kubernetes DNS label value before connecting to the cluster."""
-    if not re.match(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", value):
-        raise ValueError(
-            f"{label} must contain only lowercase letters, numbers, and hyphens"
-        )
-
-
-async def create(
-    namespace: str,
-    pod_name: str,
-    image: str,
-    command: list[str] | None = None,
-    args: list[str] | None = None,
-    env_vars: dict[str, str] | None = None,
-    container_port: int | None = None,
-) -> list[dict]:
-    """Backward-compatible async wrapper around the state-driven compute manager."""
-    del command, args, env_vars, container_port
-    _validate_kubernetes_name(namespace, "Namespace")
-    _validate_kubernetes_name(pod_name, "Application name")
-    compute = _default_compute(namespace=namespace)
-    compute.load()
-    return compute.create(name=pod_name, image=image)
-
-
-async def delete(namespace: str, pod_name: str) -> list[dict]:
-    """Backward-compatible async wrapper around application deletion."""
-    _validate_kubernetes_name(namespace, "Namespace")
-    _validate_kubernetes_name(pod_name, "Application name")
-    compute = _default_compute(namespace=namespace)
-    compute.load()
-    return compute.delete(name=pod_name)
+compute = Compute(kubeconfig=env.ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH, namespace=env.ENV_PROVISION_COMPUTE_NAMESPACE)
 
 
 if __name__ == "__main__":
-    manager = Compute(kubeconfig_path=DEFAULT_KUBECONFIG)
-    manager.load()
-    manager.create("sample1", "tiangolo/uvicorn-gunicorn-fastapi:python3.11")
-    manager.create("sample2", "tiangolo/uvicorn-gunicorn-fastapi:python3.11")
-    print(manager.list())
-    print(manager.show())
-    manager.delete("sample2")
+    compute.load()
+    compute.create("sample1", "tiangolo/uvicorn-gunicorn-fastapi:python3.11")
+    compute.create("sample2", "tiangolo/uvicorn-gunicorn-fastapi:python3.11")
+    print(compute.list())
+    print(compute.show())
+    compute.delete("sample2")
