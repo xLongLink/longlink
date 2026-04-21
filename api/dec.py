@@ -1,12 +1,10 @@
-import time
 import os
-import httpx
+import time
 import yaml
-from fastapi import FastAPI, Request, Response
+import httpx
 import uvicorn
-
+from fastapi import FastAPI, Request, Response
 from kubernetes import client, config
-
 
 # =========================
 # CONFIG
