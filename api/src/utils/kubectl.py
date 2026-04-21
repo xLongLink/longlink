@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import yaml
 import subprocess
 from pathlib import Path
-
-import yaml
 from src.env import env
 
 
