@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import re
-import yaml
-from string import Template
 from pathlib import Path
-from src.env import env
+from string import Template
 from textwrap import indent
-from kubernetes import client, config
+
+import yaml
 from src.constants import PATH
-from kubernetes.client.rest import ApiException
+from src.env import env
+
+from src.utils import kubectl
 
 TEMPLATES_PATH = PATH / "templates" / "compute"
 
@@ -32,15 +33,13 @@ class Compute:
         ingress_name: str = "control-ingress",
         ingress_host: str = "localhost",
     ) -> None:
-        """Initialize the compute state manager and Kubernetes client."""
+        """Initialize the compute state manager."""
         self.kubeconfig_path = Path(kubeconfig).expanduser()
         self.state_path = Path(state_path).expanduser()
         self.namespace = namespace
         self.ingress_name = ingress_name
         self.ingress_host = ingress_host
         self.applications: dict[str, dict[str, str]] = {}
-        config.load_kube_config(config_file=str(self.kubeconfig_path))
-        self.api_client = client.ApiClient()
 
     def _render_template(self, template_name: str, **context: str) -> dict:
         """Render one YAML template into a manifest dictionary."""
@@ -162,52 +161,23 @@ class Compute:
         """Return the full persisted desired state manifests."""
         return self.load()
 
-    def _apply_manifest(self, manifest: dict) -> object:
-        """Apply a single manifest via Kubernetes server-side apply."""
-        namespace = manifest["metadata"].get("namespace", self.namespace)
-        name = manifest["metadata"]["name"]
-        kind = manifest["kind"]
-
-        if kind == "Deployment":
-            path = f"/apis/apps/v1/namespaces/{namespace}/deployments/{name}"
-        elif kind == "Service":
-            path = f"/api/v1/namespaces/{namespace}/services/{name}"
-        elif kind == "Ingress":
-            path = f"/apis/networking.k8s.io/v1/namespaces/{namespace}/ingresses/{name}"
-        else:
-            raise ValueError(f"Unsupported kind: {kind}")
-
-        return self.api_client.call_api(
-            path,
-            "PATCH",
-            header_params={"Content-Type": "application/apply-patch+yaml"},
-            query_params=[("fieldManager", "control-plane"), ("force", "true")],
-            body=manifest,
-            response_type="object",
-            _preload_content=False,
-        )
-
     def apply(self) -> list[dict]:
         """Apply the current desired state to the Kubernetes cluster."""
-        manifests = self.manifests()
-        order = {"Service": 1, "Deployment": 2, "Ingress": 3}
-        manifests.sort(key=lambda manifest: order.get(manifest["kind"], 99))
-
-        try:
-            for manifest in manifests:
-                self._apply_manifest(manifest)
-        except ApiException as exc:
-            raise ValueError("Failed to apply manifests to Kubernetes") from exc
-
-        return manifests
+        target = self.save()
+        return kubectl.apply(target, kubeconfig=self.kubeconfig_path)
 
     def _delete_live_resource(self, kind: str, name: str) -> None:
         """Delete one live application resource if it exists."""
+        from kubernetes import client, config
+        from kubernetes.client.rest import ApiException
+
         try:
+            config.load_kube_config(config_file=str(self.kubeconfig_path))
+            api_client = client.ApiClient()
             if kind == "Deployment":
-                client.AppsV1Api(self.api_client).delete_namespaced_deployment(name, self.namespace)
+                client.AppsV1Api(api_client).delete_namespaced_deployment(name, self.namespace)
             elif kind == "Service":
-                client.CoreV1Api(self.api_client).delete_namespaced_service(name, self.namespace)
+                client.CoreV1Api(api_client).delete_namespaced_service(name, self.namespace)
             else:
                 raise ValueError(f"Unsupported kind: {kind}")
         except ApiException as exc:
@@ -219,7 +189,6 @@ class Compute:
         _validate_kubernetes_name(self.namespace, "Namespace")
         _validate_kubernetes_name(name, "Application name")
         self.applications[name] = {"image": image}
-        self.save()
         return self.apply()
 
     def delete(self, name: str) -> list[dict]:
@@ -228,7 +197,6 @@ class Compute:
         self.applications.pop(name, None)
         self._delete_live_resource("Service", name)
         self._delete_live_resource("Deployment", name)
-        self.save()
         return self.apply()
 
 
