@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compute-router
+  namespace: $namespace
+  labels:
+    managed-by: control-plane
+    compute-role: base
+    app: compute-router
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: compute-router
+  template:
+    metadata:
+      labels:
+        app: compute-router
+    spec:
+      containers:
+        - name: compute-router
+          image: hashicorp/http-echo:1.0.0
+          args:
+            - -listen=:5678
+            - -status=404
+            - -text=application not found
+          ports:
+            - containerPort: 5678
