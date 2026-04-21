@@ -1,9 +1,9 @@
 import os
-import asyncio
+import time
 from pathlib import Path
 
-import kr8s.asyncio as kr8s
-from kr8s.asyncio.objects import Ingress, Service, Deployment
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 
 # =========================
 # CONFIG
@@ -18,143 +18,159 @@ NAMESPACE = "default"
 # INIT API
 # =========================
 
-async def get_api():
+def get_clients():
     if KUBECONFIG_PATH:
         kubeconfig_path = Path(KUBECONFIG_PATH).expanduser()
         if kubeconfig_path.exists():
-            return await kr8s.api(kubeconfig=str(kubeconfig_path))
+            config.load_kube_config(config_file=str(kubeconfig_path))
+        elif DEFAULT_KUBECONFIG.exists():
+            config.load_kube_config(config_file=str(DEFAULT_KUBECONFIG))
+        else:
+            config.load_incluster_config()
+    else:
+        config.load_incluster_config()
 
-    if DEFAULT_KUBECONFIG.exists():
-        return await kr8s.api(kubeconfig=str(DEFAULT_KUBECONFIG))
-
-    return await kr8s.api()
+    return (
+        client.AppsV1Api(),
+        client.CoreV1Api(),
+        client.NetworkingV1Api(),
+    )
 
 
 # =========================
 # REMOVE
 # =========================
 
-async def remove(name: str):
-    await get_api()
+def remove(name: str):
+    apps, core, net = get_clients()
 
-    async def safe_delete(cls):
+    def safe_delete(func):
         try:
-            obj = await cls.get(name, namespace=NAMESPACE)
-            await obj.delete()
-        except Exception:
+            func()
+        except ApiException:
             pass
 
-    await safe_delete(Ingress)
-    await safe_delete(Service)
-    await safe_delete(Deployment)
+    safe_delete(lambda: net.delete_namespaced_ingress(name, NAMESPACE))
+    safe_delete(lambda: core.delete_namespaced_service(name, NAMESPACE))
+    safe_delete(lambda: apps.delete_namespaced_deployment(name, NAMESPACE))
 
 
 # =========================
-# CREATE (FINAL FIX)
+# CREATE
 # =========================
 
-async def create(name: str, image: str):
-    await get_api()
+def create(name: str, image: str):
+    apps, core, net = get_clients()
 
-    # clean previous resources
-    await remove(name)
+    # cleanup
+    remove(name)
 
     # -------------------------
     # Deployment
     # -------------------------
-    deployment = await Deployment({
-        "metadata": {
-            "name": name,
-            "namespace": NAMESPACE,
-            "labels": {"app": name}
-        },
-        "spec": {
-            "replicas": 1,
-            "selector": {"matchLabels": {"app": name}},
-            "template": {
-                "metadata": {"labels": {"app": name}},
-                "spec": {
-                    "containers": [{
-                        "name": name,
-                        "image": image,
-                        "ports": [{"containerPort": 80}]
-                    }]
-                }
-            }
-        }
-    })
-    await deployment.create()
+    deployment = client.V1Deployment(
+        metadata=client.V1ObjectMeta(
+            name=name,
+            namespace=NAMESPACE,
+            labels={"app": name}
+        ),
+        spec=client.V1DeploymentSpec(
+            replicas=1,
+            selector=client.V1LabelSelector(
+                match_labels={"app": name}
+            ),
+            template=client.V1PodTemplateSpec(
+                metadata=client.V1ObjectMeta(labels={"app": name}),
+                spec=client.V1PodSpec(
+                    containers=[
+                        client.V1Container(
+                            name=name,
+                            image=image,
+                            ports=[client.V1ContainerPort(container_port=80)],
+                        )
+                    ]
+                )
+            )
+        )
+    )
+
+    apps.create_namespaced_deployment(NAMESPACE, deployment)
 
     # -------------------------
     # Service
     # -------------------------
-    service = await Service({
-        "metadata": {
-            "name": name,
-            "namespace": NAMESPACE
-        },
-        "spec": {
-            "selector": {"app": name},
-            "ports": [{"port": 80, "targetPort": 80}],
-            "type": "ClusterIP"
-        }
-    })
-    await service.create()
+    service = client.V1Service(
+        metadata=client.V1ObjectMeta(
+            name=name,
+            namespace=NAMESPACE
+        ),
+        spec=client.V1ServiceSpec(
+            selector={"app": name},
+            ports=[client.V1ServicePort(port=80, target_port=80)],
+            type="ClusterIP"
+        )
+    )
+
+    core.create_namespaced_service(NAMESPACE, service)
 
     # -------------------------
-    # Ingress (FINAL FIX)
+    # Ingress
     # -------------------------
-    ingress = await Ingress({
-        "metadata": {
-            "name": name,
-            "namespace": NAMESPACE,
-            "annotations": {
+    ingress = client.V1Ingress(
+        metadata=client.V1ObjectMeta(
+            name=name,
+            namespace=NAMESPACE,
+            annotations={
                 "nginx.ingress.kubernetes.io/rewrite-target": "/$2",
                 "nginx.ingress.kubernetes.io/use-regex": "true"
             }
-        },
-        "spec": {
-            "ingressClassName": "nginx",   # <-- CRITICAL FIX
-            "rules": [{
-                "http": {
-                    "paths": [{
-                        "path": f"/{name}(/|$)(.*)",
-                        "pathType": "ImplementationSpecific",
-                        "backend": {
-                            "service": {
-                                "name": name,
-                                "port": {"number": 80},
-                            }
-                        },
-                    }]
-                }
-            }]
-        }
-    })
-    await ingress.create()
+        ),
+        spec=client.V1IngressSpec(
+            ingress_class_name="nginx",
+            rules=[
+                client.V1IngressRule(
+                    http=client.V1HTTPIngressRuleValue(
+                        paths=[
+                            client.V1HTTPIngressPath(
+                                path=f"/{name}(/|$)(.*)",
+                                path_type="ImplementationSpecific",
+                                backend=client.V1IngressBackend(
+                                    service=client.V1IngressServiceBackend(
+                                        name=name,
+                                        port=client.V1ServiceBackendPort(number=80)
+                                    )
+                                )
+                            )
+                        ]
+                    )
+                )
+            ]
+        )
+    )
+
+    net.create_namespaced_ingress(NAMESPACE, ingress)
 
     # -------------------------
     # Wait for pod ready
     # -------------------------
     for _ in range(60):
-        pods = [pod async for pod in kr8s.get(
-            "pods",
+        pods = core.list_namespaced_pod(
             namespace=NAMESPACE,
             label_selector=f"app={name}"
-        )]
+        )
 
         ready = False
-        for pod in pods:
+        for pod in pods.items:
             if pod.status.phase == "Running":
-                for c in pod.status.get("conditions", []):
-                    if c["type"] == "Ready" and c["status"] == "True":
+                for c in pod.status.conditions or []:
+                    if c.type == "Ready" and c.status == "True":
                         ready = True
                         break
 
         if ready:
             break
 
-        await asyncio.sleep(2)
+        time.sleep(2)
     else:
         raise RuntimeError(f"Pod for {name} not ready")
 
@@ -162,18 +178,16 @@ async def create(name: str, image: str):
     # Get ingress endpoint
     # -------------------------
     for _ in range(30):
-        ingress = await Ingress.get(name, namespace=NAMESPACE)
+        ing = net.read_namespaced_ingress(name, NAMESPACE)
 
-        lb = getattr(ingress.status, "loadBalancer", None)
-        if lb:
-            entries = getattr(lb, "ingress", None) or []
-            if entries:
-                entry = entries[0]
-                address = getattr(entry, "ip", None) or getattr(entry, "hostname", None)
-                if address:
-                    return f"http://{address}/{name}"
+        lb = ing.status.load_balancer
+        if lb and lb.ingress:
+            entry = lb.ingress[0]
+            address = entry.ip or entry.hostname
+            if address:
+                return f"http://{address}/{name}"
 
-        await asyncio.sleep(2)
+        time.sleep(2)
 
     raise RuntimeError(f"Ingress for {name} has no address")
 
@@ -183,17 +197,14 @@ async def create(name: str, image: str):
 # =========================
 
 if __name__ == "__main__":
-    async def run():
-        e1 = await create(
-            "fastapi-test",
-            "tiangolo/uvicorn-gunicorn-fastapi:python3.11"
-        )
-        print("Endpoint:", e1)
+    e1 = create(
+        "fastapi-test",
+        "tiangolo/uvicorn-gunicorn-fastapi:python3.11"
+    )
+    print("Endpoint:", e1)
 
-        e2 = await create(
-            "fastapi-test2",
-            "tiangolo/uvicorn-gunicorn-fastapi:python3.11"
-        )
-        print("Endpoint:", e2)
-
-    asyncio.run(run())
+    e2 = create(
+        "fastapi-test2",
+        "tiangolo/uvicorn-gunicorn-fastapi:python3.11"
+    )
+    print("Endpoint:", e2)
