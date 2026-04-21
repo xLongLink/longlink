@@ -10,7 +10,6 @@ from kubernetes import client, config
 from src.constants import PATH
 from kubernetes.client.rest import ApiException
 
-
 TEMPLATES_PATH = PATH / "templates" / "compute"
 
 
