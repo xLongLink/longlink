@@ -2,6 +2,8 @@ import os
 import httpx
 import uvicorn
 from fastapi import FastAPI, Request, Response
+from src.env import env
+from src.utils import kubectl
 from src.utils.compute import compute as compute_state
 
 SERVICES = ["sample1", "sample2"]
@@ -77,7 +79,10 @@ def setup():
     for service in SERVICES:
         compute_state.applications[service] = {"image": IMAGE}
 
-    compute_state.apply()
+    kubectl.apply(
+        compute_state.save(),
+        kubeconfig=env.ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH,
+    )
 
     print("[READY] system operational")
 

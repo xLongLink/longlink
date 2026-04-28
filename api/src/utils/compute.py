@@ -1,24 +1,13 @@
 from __future__ import annotations
 
-import re
 import yaml
-from string import Template
 from pathlib import Path
 from src.env import env
-from src.utils import kubectl
-from kubernetes import client, config
 from src.constants import PATH
-from kubernetes.client.rest import ApiException
+from src.utils.validate import knames
+from src.utils.templates import yaml as template_yaml
 
 TEMPLATES_PATH = PATH / "templates" / "compute"
-
-
-def _validate_kubernetes_name(value: str, label: str) -> None:
-    """Validate a Kubernetes DNS label value before connecting to the cluster."""
-    if not re.match(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", value):
-        raise ValueError(
-            f"{label} must contain only lowercase letters, numbers, and hyphens"
-        )
 
 
 class Compute:
@@ -26,89 +15,17 @@ class Compute:
 
     def __init__(
         self,
-        kubeconfig: str | Path,
         state_path: str | Path = "state.yaml",
         namespace: str = "default",
         ingress_name: str = "control-ingress",
         ingress_host: str = "localhost",
     ) -> None:
         """Initialize the compute state manager."""
-        self.kubeconfig_path = Path(kubeconfig).expanduser()
         self.state_path = Path(state_path).expanduser()
         self.namespace = namespace
         self.ingress_name = ingress_name
         self.ingress_host = ingress_host
         self.applications: dict[str, dict[str, str]] = {}
-
-    def _render_template(self, template_name: str, **context: str) -> dict:
-        """Render one YAML template into a manifest dictionary."""
-        template_text = TEMPLATES_PATH / template_name
-        rendered = Template(template_text.read_text(encoding="utf-8")).safe_substitute(**context)
-        return yaml.safe_load(rendered)
-
-    def _api_client(self) -> client.ApiClient:
-        """Return a Kubernetes API client for the configured kubeconfig."""
-        config.load_kube_config(config_file=str(self.kubeconfig_path))
-        return client.ApiClient()
-
-    def _manifest_key(self, manifest: dict) -> tuple[str, str, str]:
-        """Return the unique resource key for one manifest."""
-        metadata = manifest["metadata"]
-        return (
-            manifest["kind"],
-            metadata["name"],
-            metadata.get("namespace", self.namespace),
-        )
-
-    def _managed_live_resources(self, api_client: client.ApiClient) -> list[tuple[str, str, str]]:
-        """Return managed live resources in the configured namespace."""
-        resources: list[tuple[str, str, str]] = []
-
-        # Only reconcile resources created by the compute state manager.
-        for kind, items in (
-            (
-                "Deployment",
-                client.AppsV1Api(api_client).list_namespaced_deployment(self.namespace).items,
-            ),
-            (
-                "Service",
-                client.CoreV1Api(api_client).list_namespaced_service(self.namespace).items,
-            ),
-            (
-                "Ingress",
-                client.NetworkingV1Api(api_client).list_namespaced_ingress(self.namespace).items,
-            ),
-        ):
-            for item in items:
-                labels = item.metadata.labels or {}
-                if labels.get("managed-by") != "control-plane":
-                    continue
-                if labels.get("compute-role") not in {"base", "application"}:
-                    continue
-                resources.append((kind, item.metadata.name, item.metadata.namespace or self.namespace))
-
-        return resources
-
-    def _delete_live_resource(
-        self,
-        api_client: client.ApiClient,
-        kind: str,
-        name: str,
-        namespace: str,
-    ) -> None:
-        """Delete one live managed resource if it exists."""
-        try:
-            if kind == "Deployment":
-                client.AppsV1Api(api_client).delete_namespaced_deployment(name, namespace)
-            elif kind == "Service":
-                client.CoreV1Api(api_client).delete_namespaced_service(name, namespace)
-            elif kind == "Ingress":
-                client.NetworkingV1Api(api_client).delete_namespaced_ingress(name, namespace)
-            else:
-                raise ValueError(f"Unsupported kind: {kind}")
-        except ApiException as exc:
-            if exc.status != 404:
-                raise ValueError(f"Failed deleting {kind} '{name}'") from exc
 
     def _ingress_paths(self) -> list[dict]:
         """Return the ingress paths for the current application set."""
@@ -124,8 +41,8 @@ class Compute:
     def _base_manifests(self) -> list[dict]:
         """Return the shared router manifests required for all application states."""
         return [
-            self._render_template("base-router-service.yml", namespace=self.namespace),
-            self._render_template("base-router-deployment.yml", namespace=self.namespace),
+            template_yaml(TEMPLATES_PATH / "base-router-service.yml", namespace=self.namespace),
+            template_yaml(TEMPLATES_PATH / "base-router-deployment.yml", namespace=self.namespace),
         ]
 
     def _application_manifests(self) -> list[dict]:
@@ -133,15 +50,15 @@ class Compute:
         manifests: list[dict] = []
         for name, application in sorted(self.applications.items()):
             manifests.append(
-                self._render_template(
-                    "application-service.yml",
+                template_yaml(
+                    TEMPLATES_PATH / "application-service.yml",
                     name=name,
                     namespace=self.namespace,
                 )
             )
             manifests.append(
-                self._render_template(
-                    "application-deployment.yml",
+                template_yaml(
+                    TEMPLATES_PATH / "application-deployment.yml",
                     image=application["image"],
                     name=name,
                     namespace=self.namespace,
@@ -152,8 +69,8 @@ class Compute:
     def _ingress_manifest(self) -> dict:
         """Return the shared ingress manifest for all managed applications."""
         paths = self._ingress_paths()
-        manifest = self._render_template(
-            "ingress.yml",
+        manifest = template_yaml(
+            TEMPLATES_PATH / "ingress.yml",
             ingress_host=self.ingress_host,
             ingress_name=self.ingress_name,
             namespace=self.namespace,
@@ -228,37 +145,24 @@ class Compute:
         self.load()
         return sorted(self.applications)
 
-    def apply(self) -> list[dict]:
-        """Apply the current desired state to the Kubernetes cluster."""
-        target = self.save()
-        manifests = kubectl.apply(target, kubeconfig=self.kubeconfig_path)
-        desired_resources = {self._manifest_key(manifest) for manifest in manifests}
-        api_client = self._api_client()
-
-        # Prune managed resources that are no longer present in the desired state.
-        for kind, name, namespace in self._managed_live_resources(api_client):
-            if (kind, name, namespace) in desired_resources:
-                continue
-            self._delete_live_resource(api_client, kind, name, namespace)
-
-        return manifests
-
     def create(self, name: str, image: str) -> list[dict]:
-        """Add or replace one managed application, then persist and apply state."""
-        _validate_kubernetes_name(self.namespace, "Namespace")
-        _validate_kubernetes_name(name, "Application name")
+        """Add or replace one managed application, then persist state."""
+        knames(self.namespace, "Namespace")
+        knames(name, "Application name")
         self.applications[name] = {"image": image}
-        return self.apply()
+        self.save()
+        return self.manifests()
 
     def delete(self, name: str) -> list[dict]:
-        """Remove one managed application, then persist and apply state."""
-        _validate_kubernetes_name(name, "Application name")
+        """Remove one managed application, then persist state."""
+        knames(name, "Application name")
         self.applications.pop(name, None)
-        return self.apply()
+        self.save()
+        return self.manifests()
 
 
 
-compute = Compute(kubeconfig=env.ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH, namespace=env.ENV_PROVISION_COMPUTE_NAMESPACE)
+compute = Compute(namespace=env.ENV_PROVISION_COMPUTE_NAMESPACE)
 
 
 if __name__ == "__main__":

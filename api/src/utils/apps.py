@@ -1,9 +1,12 @@
+import os
 import httpx
 import src.db as db
 import asyncio
 from typing import Any, Literal
+from src.utils.compute import compute as compute_state
 
 HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+CLUSTER_URL = os.getenv("CLUSTER_URL", "http://localhost:8080").rstrip("/")
 _lock = asyncio.Lock()
 _clients: dict[str, httpx.AsyncClient] = {}
 
@@ -35,17 +38,27 @@ async def request(
     params: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
 ) -> httpx.Response:
-    """Make a request to an app. This will automatically handle authentication and connection pooling."""
+    """Make a request to an app through the shared ingress endpoint."""
+    upstream_path = url.lstrip("/")
     client = _clients.get(uuid)
     if client is None:
         async with _lock:
+            client = _clients.get(uuid)
+            if client is not None:
+                return await client.request(
+                    method=method,
+                    url=upstream_path,
+                    params=params,
+                    json=json,
+                )
+
             app = await db.apps.get_by_uuid(uuid)
             if app is None:
                 raise ValueError("App not found")
 
             client = httpx.AsyncClient(
-                base_url=app.url,
-                headers={"Authorization": f"Bearer {app.token}"},
+                base_url=f"{CLUSTER_URL}/{app.key}",
+                headers={"Host": compute_state.ingress_host},
                 timeout=30.0,
                 limits=httpx.Limits(
                     max_connections=50,
@@ -56,7 +69,12 @@ async def request(
 
             _clients[uuid] = client
 
-    return await client.request(method=method, url=url, params=params, json=json)
+    return await client.request(
+        method=method,
+        url=upstream_path,
+        params=params,
+        json=json,
+    )
 
 
 # Convenience wrappers
