@@ -59,27 +59,14 @@ async def list_apps() -> list[AppResponse]:
 async def proxy_root(req: Request, app_name: str):
     """Proxy requests to app root to fetch pages listing."""
     app = await _get_app(app_name)
+    upstream = await _forward(f"{app.key}/pages", req)
 
-    try:
-        upstream = await _forward(f"{app.key}/pages", req)
+    if not 200 <= upstream.status_code < 300:
+        return upstream
 
-        if not 200 <= upstream.status_code < 300:
-            raise HTTPException(
-                status_code=upstream.status_code,
-                detail="Unable to fetch pages from the app",
-            )
+    pages = json.loads(upstream.body)
 
-        try:
-            pages = json.loads(upstream.body)
-        except ValueError as exc:
-            raise HTTPException(
-                status_code=502,
-                detail="Invalid pages response from app",
-            ) from exc
-
-        return JSONResponse(content={"pages": pages}, status_code=200)
-    except httpx.RequestError:
-        raise HTTPException(status_code=502, detail="Upstream request failed")
+    return JSONResponse(content={"pages": pages}, status_code=200)
 
 
 @router.api_route("/apps/{app_name}/{full_path:path}", methods=ALLOWED_METHODS)
@@ -89,7 +76,4 @@ async def proxy_path(req: Request, app_name: str, full_path: str):
 
     path = full_path.lstrip("/")
 
-    try:
-        return await _forward(f"{app.key}/{path}", req)
-    except httpx.RequestError:
-        raise HTTPException(status_code=502, detail="Upstream request failed")
+    return await _forward(f"{app.key}/{path}", req)
