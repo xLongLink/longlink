@@ -13,6 +13,7 @@ class App(Base, table=True):
     url: str = Field(unique=True, max_length=255)
     name: str = Field(max_length=100)
     key: str = Field(unique=True, max_length=64)
+    image: str = Field(max_length=255)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

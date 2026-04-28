@@ -47,6 +47,7 @@
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>URL</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -54,6 +55,17 @@
             <TableRow>
               <TableCell>{application.name}</TableCell>
               <TableCell>{application.url}</TableCell>
+              <TableCell>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  action="/apps/{application.id}"
+                  method="DELETE"
+                  onSuccess="refetch(applications);"
+                >
+                  Delete
+                </Button>
+              </TableCell>
             </TableRow>
           </For>
         </TableBody>

@@ -116,7 +116,7 @@ function AppLayout() {
         return <OrgLayout />;
     }
 
-    const appMetadataEndpoint = `/apps/${appId}`;
+    const appMetadataEndpoint = `/apps/${appId}/metadata`;
     const { data: appMetadata, isLoading: isAppMetadataLoading } = useApiData<AppMetadata>(appMetadataEndpoint);
 
     const tabs = isAppMetadataLoading

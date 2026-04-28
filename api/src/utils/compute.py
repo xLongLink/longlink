@@ -224,6 +224,19 @@ class Compute:
         self.load()
         return sorted(self.applications)
 
+    def replace_applications(self, applications: dict[str, str]) -> list[dict]:
+        """Replace managed applications with an API-derived application map."""
+        knames(self.namespace, "Namespace")
+
+        # State is derived from the API registry, so remove any stale YAML-only apps.
+        self.applications = {}
+        for name, image in applications.items():
+            knames(name, "Application name")
+            self.applications[name] = {"image": image}
+
+        self.save()
+        return self.manifests()
+
     def apply(self) -> list[dict]:
         """Apply the persisted desired state file to the Kubernetes cluster."""
         # Persist the currently loaded in-memory state before delegating to kubectl.
@@ -244,6 +257,7 @@ class Compute:
         """Add or replace one managed application, then persist state."""
         knames(self.namespace, "Namespace")
         knames(name, "Application name")
+        self.load()
         self.applications[name] = {"image": image}
         self.save()
         return self.manifests()
@@ -251,6 +265,7 @@ class Compute:
     def delete(self, name: str) -> list[dict]:
         """Remove one managed application, then persist state."""
         knames(name, "Application name")
+        self.load()
         self.applications.pop(name, None)
         self.save()
         return self.manifests()

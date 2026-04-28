@@ -15,7 +15,7 @@ export default function Longlink() {
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
     const { data: appMetadata, isLoading: isAppMetadataLoading } = useApiData<AppMetadata>(
-        appId && normalizedRoutePath.length === 0 ? `/apps/${appId}` : null
+        appId && normalizedRoutePath.length === 0 ? `/apps/${appId}/metadata` : null
     );
 
     const fallbackPagePath = useMemo(() => {

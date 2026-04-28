@@ -21,7 +21,7 @@ type SettingResponse = {
 export function Breadcrumb() {
     const { appId } = useParams();
     const { data: organizationNameData } = useApiData<SettingResponse>('/settings/ORG_NAME');
-    const { data: appMetadata } = useApiData<{ name?: string }>(appId ? `/apps/${appId}` : null);
+    const { data: appMetadata } = useApiData<{ name?: string }>(appId ? `/apps/${appId}/metadata` : null);
 
     const appName = appId ? appMetadata?.name?.trim() || formatAppName(appId) : undefined;
     const organizationName = organizationNameData?.value?.trim() || 'Organization';

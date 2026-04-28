@@ -1,5 +1,6 @@
 import { createElement, useState, type ComponentProps, type ComponentType } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { For } from './primitives/For';
 import { Grid } from './primitives/Grid';
 import { Page as PrimitivesPage } from './primitives/Page';
@@ -193,6 +194,28 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
 }
 
 /**
+ * Reads a submit response into a short toast message.
+ */
+async function readResponseMessage(response: Response): Promise<string> {
+    const contentType = response.headers.get('content-type') ?? '';
+
+    /* Prefer a concise JSON message when API responses provide one. */
+    if (contentType.includes('application/json')) {
+        const data = (await response.json()) as unknown;
+
+        if (data && typeof data === 'object' && 'message' in data && typeof data.message === 'string') {
+            return data.message;
+        }
+
+        return JSON.stringify(data);
+    }
+
+    /* Fall back to response text, keeping empty responses readable. */
+    const message = await response.text();
+    return message || 'Request completed';
+}
+
+/**
  * Resolves template expressions in action payload values using runtime context.
  *
  * - Strings wrapped as `{expression}` are evaluated and can return non-string values.
@@ -280,13 +303,20 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
 
             try {
                 const baseUrl = runtime.ctx.baseUrl ?? '';
-                const requestUrl = resolvedPath.startsWith('http') ? resolvedPath : `${baseUrl}${resolvedPath}`;
+                const resolvedRequestPath = String(resolveValue(resolvedPath, runtime.ctx));
+                const requestUrl = resolvedRequestPath.startsWith('http')
+                    ? resolvedRequestPath
+                    : `${baseUrl}${resolvedRequestPath}`;
                 const requestBody = resolveActionPayload(body ?? payload, runtime.ctx);
                 const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), requestBody));
+                const responseMessage = await readResponseMessage(response);
 
                 if (!response.ok) {
-                    throw new Error(`Request failed with status ${response.status}`);
+                    toast.error(responseMessage || `Request failed with status ${response.status}`);
+                    return;
                 }
+
+                toast.success(responseMessage);
 
                 for (const queryKey of normalizeInvalidate(invalidate)) {
                     await queryClient.invalidateQueries({ queryKey: [queryKey] });

@@ -96,7 +96,7 @@ export default function App() {
         <>
             <GlobalLoader />
             <RouterProvider router={router} />
-            <Toaster />
+            <Toaster position="bottom-right" />
         </>
     );
 }

@@ -7,7 +7,7 @@ from src.models.apps import AppResponse
 from fastapi.responses import JSONResponse
 from src.utils.compute import compute as compute_state
 
-ALLOWED_METHODS = ["GET", "POST"]
+ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 CLUSTER_URL = os.getenv("CLUSTER_URL", "http://localhost:8080").rstrip("/")
 
 router = APIRouter()
@@ -15,10 +15,12 @@ client_http = httpx.AsyncClient()
 
 
 async def _get_app(app_name: str):
-    """Resolve one registered app by UUID first, then by name."""
+    """Resolve one registered app by UUID, name, or key."""
     app = await db.apps.get_by_uuid(app_name)
     if app is None:
         app = await db.apps.get_by_name(app_name)
+    if app is None:
+        app = await db.apps.get_by_key(app_name)
     if app is None:
         raise HTTPException(status_code=404, detail=f"App '{app_name}' not found")
     return app
@@ -55,9 +57,9 @@ async def list_apps() -> list[AppResponse]:
     ]
 
 
-@router.api_route("/apps/{app_name}", methods=ALLOWED_METHODS)
-async def proxy_root(req: Request, app_name: str):
-    """Proxy requests to app root to fetch pages listing."""
+@router.get("/apps/{app_name}/metadata")
+async def get_app_metadata(req: Request, app_name: str):
+    """Return app metadata used by the control-plane web runtime."""
     app = await _get_app(app_name)
     upstream = await _forward(f"{app.key}/pages", req)
 
@@ -66,7 +68,22 @@ async def proxy_root(req: Request, app_name: str):
 
     pages = json.loads(upstream.body)
 
-    return JSONResponse(content={"pages": pages}, status_code=200)
+    return JSONResponse(
+        content={
+            "id": app.id,
+            "name": app.name,
+            "url": app.url,
+            "pages": pages,
+        },
+        status_code=200,
+    )
+
+
+@router.api_route("/apps/{app_name}", methods=ALLOWED_METHODS)
+async def proxy_root(req: Request, app_name: str):
+    """Proxy requests to the app root through the shared ingress endpoint."""
+    app = await _get_app(app_name)
+    return await _forward(app.key, req)
 
 
 @router.api_route("/apps/{app_name}/{full_path:path}", methods=ALLOWED_METHODS)
