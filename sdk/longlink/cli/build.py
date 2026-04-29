@@ -15,7 +15,7 @@ WORKDIR {workdir}
 
 RUN uv sync --frozen
 
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--log-level", "debug"]
 """
 
 
@@ -97,6 +97,12 @@ def run_docker_build(dockerfile_path: Path, build_context: Path, image_tag: str)
     )
 
 
+def run_docker_tag(old_tag: str, new_tag: str) -> None:
+    """Retag a Docker image with a different registry/name."""
+
+    subprocess.run(["docker", "tag", old_tag, new_tag], check=True)
+
+
 def run_docker_push(image_tag: str) -> None:
     """Push built Docker image to the configured registry."""
 
@@ -109,27 +115,38 @@ def run_docker_push(image_tag: str) -> None:
     "--registry",
     default="localhost:5000",
     show_default=True,
-    help="Docker registry used for image push (for k3d typically localhost:5000).",
+    help="Docker registry address used for pushing from the host (e.g. localhost:5000).",
+)
+@click.option(
+    "--pull-registry",
+    default=None,
+    help="Docker registry address used in K8s manifests for pulling from inside the cluster (defaults to same as --registry). For k3d, use compute-registry:5000.",
 )
 @click.option(
     "--tag",
     default=None,
     help="Docker image tag to use instead of a timestamp, for example dev.",
 )
-def build_command(registry: str, tag: str | None):
+def build_command(registry: str, pull_registry: str | None, tag: str | None):
     """Create Dockerfile, build Docker image, and push image to registry."""
 
     try:
         dockerfile_path, manifest_path, version, app_name, build_context = build_app(tag=tag)
-        image_tag = build_image_tag(app_name, version, registry)
+        push_tag = build_image_tag(app_name, version, registry)
+        k8s_image = build_image_tag(app_name, version, pull_registry or registry)
 
-        run_docker_build(dockerfile_path, build_context, image_tag)
-        run_docker_push(image_tag)
+        run_docker_build(dockerfile_path, build_context, push_tag)
+        run_docker_push(push_tag)
+
+        # Re-tag locally so the manifest shows the correct K8s pull reference.
+        if registry != (pull_registry or registry):
+            run_docker_tag(push_tag, k8s_image)
 
         click.echo(f"Build artifacts created for version {version}")
         click.echo(f"- Dockerfile: {dockerfile_path}")
         click.echo(f"- Manifest: {manifest_path}")
-        click.echo(f"- Image: {image_tag}")
+        click.echo(f"- Pushed image: {push_tag}")
+        click.echo(f"- K8s image reference: {k8s_image}")
     except subprocess.CalledProcessError as error:
         raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
     except FileNotFoundError as error:

@@ -18,6 +18,8 @@ format:
 build: 
 	bun run --cwd web build:api --logLevel warn
 	bun run --cwd web build:sdk --logLevel warn 
+	cd sdk && uv sync
+	cd sdk/sample && uv run longlink build --pull-registry compute-registry:5000
 
 
 up:

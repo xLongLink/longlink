@@ -1,8 +1,11 @@
-from fastapi import FastAPI
+import sys
+import traceback
+from fastapi import FastAPI, Request
 from pathlib import Path
 from longlink.state import State, create_state
 from longlink.utils import Page, Settings
 from longlink.routes import routes
+from fastapi.responses import JSONResponse
 from pydantic_settings import BaseSettings
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
@@ -72,6 +75,35 @@ class LongLink(FastAPI):
                 allow_methods=["*"],
                 allow_headers=["*"],
             )
+
+        self.add_exception_handler(HTTPException, self._handle_http_exception)
+        self.add_exception_handler(Exception, self._handle_unexpected_exception)
+
+    async def _handle_http_exception(self, request: Request, exc: HTTPException) -> JSONResponse:
+        """Return structured error response for HTTP exceptions."""
+
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": exc.detail,
+                "status_code": exc.status_code,
+            },
+        )
+
+    async def _handle_unexpected_exception(self, request: Request, exc: Exception) -> JSONResponse:
+        """Return detailed error response for unhandled exceptions, including traceback."""
+
+        tb_lines = traceback.format_exception(type(exc), exc, exc.__traceback__)
+        error_detail = "".join(tb_lines)
+
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+                "traceback": error_detail,
+            },
+        )
 
     def include_page(self, page: str | Path) -> None:
         """Register XML page file for discovery endpoint."""
