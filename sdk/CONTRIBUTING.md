@@ -1,7 +1,3 @@
-# Contributing in `sdk/`
-
-Thanks for contributing to Python SDK.
-
 ## Architecture
 
 ```text

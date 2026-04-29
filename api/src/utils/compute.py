@@ -119,25 +119,16 @@ class Compute:
 
     def _base_manifests(self) -> list[dict]:
         """Return the shared router manifests required for all application states."""
-        return [
-            template_yaml(TEMPLATES_PATH / "base-router-service.yml", namespace=self.namespace),
-            template_yaml(TEMPLATES_PATH / "base-router-deployment.yml", namespace=self.namespace),
-        ]
+        manifests = template_yaml(TEMPLATES_PATH / "compute-router.yml", namespace=self.namespace)
+        return manifests if isinstance(manifests, list) else [manifests]
 
     def _application_manifests(self) -> list[dict]:
         """Return the service and deployment manifests for managed applications."""
         manifests: list[dict] = []
         for name, application in sorted(self.applications.items()):
-            manifests.append(
+            manifests.extend(
                 template_yaml(
-                    TEMPLATES_PATH / "application-service.yml",
-                    name=name,
-                    namespace=self.namespace,
-                )
-            )
-            manifests.append(
-                template_yaml(
-                    TEMPLATES_PATH / "application-deployment.yml",
+                    TEMPLATES_PATH / "application.yml",
                     image=application["image"],
                     name=name,
                     namespace=self.namespace,

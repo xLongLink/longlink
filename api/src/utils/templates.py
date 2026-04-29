@@ -5,8 +5,9 @@ from string import Template
 from pathlib import Path
 
 
-def yaml(template_path: str | Path, **context: str) -> dict:
-    """Render one YAML template file into a manifest dictionary."""
+def yaml(template_path: str | Path, **context: str) -> dict | list[dict]:
+    """Render one YAML template file into a manifest dictionary or list."""
     source = Path(template_path)
     rendered = Template(source.read_text(encoding="utf-8")).safe_substitute(**context)
-    return pyyaml.safe_load(rendered)
+    docs = list(pyyaml.safe_load_all(rendered))
+    return docs if len(docs) > 1 else docs[0]

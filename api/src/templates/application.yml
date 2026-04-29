@@ -1,3 +1,8 @@
+# Template for compute application resources.
+# Defines both deployment and service for an application.
+# Managed by control-plane for application workloads.
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,3 +27,18 @@ spec:
           image: $image
           ports:
             - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $name
+  namespace: $namespace
+  labels:
+    managed-by: control-plane
+    compute-role: application
+spec:
+  selector:
+    app: $name
+  ports:
+    - port: 80
+      targetPort: 80

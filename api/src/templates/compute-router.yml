@@ -1,3 +1,8 @@
+# Base router resources for compute namespace.
+# Deploys default backend returning 404 when no application matches.
+# Includes both deployment and service for the router.
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,3 +31,18 @@ spec:
             - -text=application not found
           ports:
             - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: compute-router
+  namespace: $namespace
+  labels:
+    managed-by: control-plane
+    compute-role: base
+spec:
+  selector:
+    app: compute-router
+  ports:
+    - port: 5678
+      targetPort: 5678

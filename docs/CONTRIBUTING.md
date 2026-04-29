@@ -1,7 +1,3 @@
-# Contributing in `docs/`
-
-Thanks for improving LongLink documentation.
-
 ## Architecture
 
 ```text
@@ -14,10 +10,6 @@ docs/
 └── .vitepress/        # VitePress configuration
 ```
 
-## Goal
-
-Write docs clear, direct, easy to translate.
-
 ## Writing rules
 
 - Use short, concrete sentences.
@@ -28,27 +20,3 @@ Write docs clear, direct, easy to translate.
 - Avoid unnecessary jargon; explain specialized terms briefly.
 - Describe ownership explicitly. Avoid ambiguous `we`.
 - Use `You` for reader actions and `LongLink` for platform behavior.
-
-## Recommended page structure
-
-When relevant, follow the format:
-
-````md
-# <Feature>
-
-<Introduction>
-
-## Usage
-
-```py
-<Minimal usage examples>
-```
-````
-
-## Resources
-
-- [Description](url)
-
-```
-
-```

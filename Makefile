@@ -12,7 +12,7 @@ format:
 	cd sdk && uv sync --extra dev
 	cd api && uv run isort .
 	cd sdk && uv run isort .
-	cd web && bunx prettier --log-level warn --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed 's#^#../#')
+	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
 
 
 build: 
