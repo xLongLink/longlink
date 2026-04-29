@@ -9,13 +9,13 @@ from longlink.utils.metadata import load_metadata
 
 DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.12-bookworm
 
-WORKDIR {workdir}
-
 COPY . /workspace
+
+WORKDIR {workdir}
 
 RUN uv sync --frozen
 
-CMD ["uv", "run", "python", "-m", "longlink"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
 """
 
 

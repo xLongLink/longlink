@@ -111,13 +111,12 @@ function AppLayout() {
     const { appId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
+    const appMetadataEndpoint = appId ? `/apps/${appId}/metadata` : null;
+    const { data: appMetadata, isLoading: isAppMetadataLoading } = useApiData<AppMetadata>(appMetadataEndpoint);
 
     if (!appId) {
         return <OrgLayout />;
     }
-
-    const appMetadataEndpoint = `/apps/${appId}/metadata`;
-    const { data: appMetadata, isLoading: isAppMetadataLoading } = useApiData<AppMetadata>(appMetadataEndpoint);
 
     const tabs = isAppMetadataLoading
         ? [
@@ -136,7 +135,7 @@ function AppLayout() {
               }))
           );
 
-    const basePath = `/${appId}`;
+    const basePath = `/applications/${appId}`;
     const activeTabConfig = getActiveTabConfig({
         tabs,
         locationPath: location.pathname,

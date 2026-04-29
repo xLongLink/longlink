@@ -47,7 +47,11 @@ export function Breadcrumb() {
                         <BreadcrumbItem>
                             <BreadcrumbLink
                                 render={(props) => (
-                                    <Link {...props} to={`/${appId}`} className="text-sm font-semibold text-white/70">
+                                    <Link
+                                        {...props}
+                                        to={`/applications/${appId}`}
+                                        className="text-sm font-semibold text-white/70"
+                                    >
                                         {appName}
                                     </Link>
                                 )}

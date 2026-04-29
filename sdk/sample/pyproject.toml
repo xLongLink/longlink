@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-longlink = { path = ".." }
+longlink = { path = "..", editable = true }
 
 [project.optional-dependencies]
 dev = [

@@ -55,7 +55,14 @@
             <TableRow>
               <TableCell>{application.name}</TableCell>
               <TableCell>{application.url}</TableCell>
-              <TableCell>
+              <TableCell className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  href="/applications/{application.name}"
+                >
+                  Open
+                </Button>
                 <Button
                   variant="destructive"
                   size="sm"

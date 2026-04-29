@@ -208,7 +208,7 @@ wheels = [
 [[package]]
 name = "longlink"
 version = "0.0.0"
-source = { directory = "../" }
+source = { editable = "../" }
 dependencies = [
     { name = "alembic" },
     { name = "click" },
@@ -507,7 +507,7 @@ dev = [
 requires-dist = [
     { name = "fastapi" },
     { name = "isort", marker = "extra == 'dev'" },
-    { name = "longlink", directory = "../" },
+    { name = "longlink", editable = "../" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "uvicorn" },
