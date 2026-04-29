@@ -16,10 +16,9 @@ Configure the API container with these provisioning variables.
 
 ### Compute (Kubernetes)
 
-- `ENV_PROVISION_COMPUTE_KUBE_API_SERVER`
+- `ENV_PROVISION_COMPUTE_URL`
 - `ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH`
 - `ENV_PROVISION_COMPUTE_NAMESPACE`
-- `ENV_PROVISION_COMPUTE_VERIFY_SSL`
 
 ### Database (PostgreSQL)
 
