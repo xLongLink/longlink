@@ -1,4 +1,7 @@
 import re
+import yaml as pyyaml
+from string import Template
+from pathlib import Path
 from src.env import env
 from urllib.parse import urlparse
 
@@ -46,3 +49,11 @@ def app_path(app_key: str, path: str = "") -> str:
 def app_url(app_key: str) -> str:
     """Return the public compute base URL for an app."""
     return f"{env.ENV_COMPUTE_URL.rstrip('/')}/{app_path(app_key)}"
+
+
+def yaml(template_path: str | Path, **context: str) -> dict | list[dict]:
+    """Render one YAML template file into a manifest dictionary or list."""
+    source = Path(template_path)
+    rendered = Template(source.read_text(encoding="utf-8")).safe_substitute(**context)
+    docs = list(pyyaml.safe_load_all(rendered))
+    return docs if len(docs) > 1 else docs[0]

@@ -5,7 +5,7 @@ from src.env import env
 from src.utils import kubectl
 from src.models.apps import AppCreate, AppResponse
 from src.utils.utils import app_url as compute_app_url
-from src.utils.compute import compute as compute_state
+from src.utils.compute import compute
 
 router = APIRouter()
 
@@ -14,19 +14,19 @@ def _get_pod_logs(app_key: str) -> str:
     """Fetch the last logs from pods belonging to the app deployment."""
     from kubernetes import client, config
 
-    config.load_kube_config(config_file=str(compute_state.kubeconfig_path))
+    config.load_kube_config(config_file=str(compute.kubeconfig_path))
     core_api = client.CoreV1Api()
 
     try:
         pods = core_api.list_namespaced_pod(
-            compute_state.namespace,
+            compute.namespace,
             label_selector=f"app={app_key}",
         )
         for pod in pods.items:
             try:
                 return core_api.read_namespaced_pod_log(
                     pod.metadata.name,
-                    compute_state.namespace,
+                    compute.namespace,
                     tail_lines=50,
                 )
             except client.ApiException:
@@ -40,12 +40,12 @@ def _check_pod_failure(app_key: str) -> str | None:
     """Check if any pod for the app is in a failed state and return the reason."""
     from kubernetes import client, config
 
-    config.load_kube_config(config_file=str(compute_state.kubeconfig_path))
+    config.load_kube_config(config_file=str(compute.kubeconfig_path))
     core_api = client.CoreV1Api()
 
     try:
         pods = core_api.list_namespaced_pod(
-            compute_state.namespace,
+            compute.namespace,
             label_selector=f"app={app_key}",
         )
         for pod in pods.items:
@@ -71,14 +71,14 @@ def _wait_for_deployment_ready(app_key: str, timeout: int = 30, interval: int = 
     """Wait until the app deployment reports ready, or raise with container logs on failure."""
     from kubernetes import client, config
 
-    config.load_kube_config(config_file=str(compute_state.kubeconfig_path))
+    config.load_kube_config(config_file=str(compute.kubeconfig_path))
     apps_api = client.AppsV1Api()
     deadline = time.time() + timeout
     last_conditions = ""
 
     while time.time() < deadline:
         try:
-            deployment = apps_api.read_namespaced_deployment(app_key, compute_state.namespace)
+            deployment = apps_api.read_namespaced_deployment(app_key, compute.namespace)
             ready_replicas = deployment.status.ready_replicas or 0
             if ready_replicas >= 1:
                 return
@@ -114,7 +114,7 @@ def _wait_for_deployment_ready(app_key: str, timeout: int = 30, interval: int = 
 async def _sync_compute_state_from_api() -> None:
     """Persist compute state from the registered API application rows."""
     registered_apps = await db.apps.list()
-    compute_state.replace_applications(
+    compute.replace_applications(
         {app.name: app.image for app in registered_apps}
     )
 
@@ -142,7 +142,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
     try:
         await _sync_compute_state_from_api()
         kubectl.apply(
-            compute_state.save(),
+            compute.save(),
             kubeconfig=env.ENV_COMPUTE_KUBE_CONFIG_PATH,
         )
         _wait_for_deployment_ready(app_name)
@@ -182,7 +182,7 @@ async def delete_app(app_name: str) -> Response:
 
     try:
         await _sync_compute_state_from_api()
-        compute_state.apply()
+        compute.apply()
     except ValueError as exc:
         raise HTTPException(
             status_code=500,

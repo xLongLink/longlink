@@ -6,6 +6,7 @@ from pathlib import Path
 from src.env import env
 
 
+# kubectl get pods
 def apply(f: str | Path, kubeconfig: str | Path | None = None) -> list[dict]:
     """Apply a multi-document YAML state file to Kubernetes like `kubectl apply -f`."""
     file_path = Path(f).expanduser()

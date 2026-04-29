@@ -5,12 +5,10 @@ from pathlib import Path
 from src.env import env
 from src.utils import kubectl
 from kubernetes import client, config
-from src.constants import ROOT
+from src.constants import TEMPLATES
+from src.utils.utils import yaml as template_yaml
 from src.utils.utils import knames
-from src.utils.templates import yaml as template_yaml
 from kubernetes.client.rest import ApiException
-
-TEMPLATES = ROOT / "templates" / "compute"
 
 
 class Compute:
