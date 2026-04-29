@@ -2,9 +2,6 @@ FROM oven/bun:1 AS web-builder
 
 WORKDIR /web
 COPY web/package.json web/bun.lock ./
-COPY xml /xml
-RUN bun install --frozen-lockfile
-WORKDIR /xml
 RUN bun install --frozen-lockfile
 WORKDIR /web
 COPY web/ ./
