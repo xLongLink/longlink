@@ -2,8 +2,8 @@ import httpx
 import src.db as db
 import asyncio
 from typing import Any, Literal
+from src.utils.utils import COMPUTE_URL, app_path
 from src.utils.compute import compute as compute_state
-from src.utils.compute_urls import CLUSTER_URL, app_path
 
 HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
 _lock = asyncio.Lock()
@@ -61,7 +61,7 @@ async def request(
                 )
 
             client = httpx.AsyncClient(
-                base_url=CLUSTER_URL,
+                base_url=COMPUTE_URL,
                 headers={"Host": compute_state.ingress_host},
                 timeout=30.0,
                 limits=httpx.Limits(

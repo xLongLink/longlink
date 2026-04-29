@@ -35,7 +35,18 @@ export function evaluate(expr: string, ctx: ExecutionContext): any {
  * Example: interpolate("Hello {name}!", ctx) → "Hello World!"
  */
 export function interpolate(str: string, ctx: ExecutionContext): string {
-    return str.replace(/\{([^}]+)\}/g, (_, expr) => String(evaluate(expr, ctx)));
+    return str.replace(/\{([^}]+)\}/g, (match, expr) => {
+        try {
+            return String(evaluate(expr, ctx));
+        } catch (error) {
+            if (error instanceof SyntaxError) {
+                /* Leave literal brace text untouched when it is not a valid expression. */
+                return match;
+            }
+
+            throw error;
+        }
+    });
 }
 
 /**

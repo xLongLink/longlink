@@ -24,6 +24,12 @@ web/
 
 Project renders LongLink UI and connects to platform APIs.
 
+## How it works
+
+- In development, the app runs from the Vite dev server, so changes in `src/` update immediately without a full rebuild.
+- After `bun run build`, Vite compiles the web app into static production assets that are served from the build output.
+- Keep this split in mind when changing routing, assets, or runtime behavior: development favors fast iteration, while the build output is the production artifact.
+
 ## Keep changes aligned
 
 - Use shadcn components for reusable UI elements.

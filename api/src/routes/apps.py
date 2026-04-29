@@ -4,8 +4,8 @@ from fastapi import Response, APIRouter, HTTPException
 from src.env import env
 from src.utils import kubectl
 from src.models.apps import AppCreate, AppResponse
+from src.utils.utils import app_url as compute_app_url
 from src.utils.compute import compute as compute_state
-from src.utils.compute_urls import app_url as compute_app_url
 
 router = APIRouter()
 

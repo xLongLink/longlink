@@ -1,4 +1,3 @@
-import os
 import httpx
 import uvicorn
 from fastapi import FastAPI, Request, Response
@@ -9,19 +8,13 @@ from src.utils.compute import compute as compute_state
 SERVICES = ["sample1", "sample2"]
 IMAGE = "tiangolo/uvicorn-gunicorn-fastapi:python3.11"
 
-CLUSTER_URL = os.getenv("CLUSTER_URL", "http://localhost:8080")
-
-
-# =========================
-# FASTAPI PROXY
-# =========================
 app = FastAPI()
 client_http = httpx.AsyncClient()
 
 
 async def forward(path: str, request: Request):
     """Proxy one request through the shared ingress endpoint."""
-    url = f"{CLUSTER_URL}/{path}"
+    url = f"{env.ENV_PROVISION_COMPUTE_URL.rstrip('/')}/{path}"
 
     resp = await client_http.request(
         request.method,
