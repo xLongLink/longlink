@@ -1,10 +1,12 @@
 # LongLink
 
-LongLink is a platform for building and running applications that manage and control business processes.
+LongLink is a platform designed for data and processes validation
 
-It enables organizations to create full-code, purpose-built applications that encapsulate data, validation logic, and workflows in a structured and reliable way. Rather than focusing on infrastructure concerns, teams can focus directly on how their business operates.
+LongLink is a for building and running applications that manage and control .
 
 The platform is conceptually divided into two parts: the [control plane](/api/) that manages the system, and [applications](/sdk/) that implement business logic and processes.
+
+It enables organizations to create full-code, purpose-built applications that encapsulate data, validation logic, and workflows in a structured and reliable way. Rather than focusing on infrastructure concerns, teams can focus directly on how their business operates.
 
 ## Why
 
