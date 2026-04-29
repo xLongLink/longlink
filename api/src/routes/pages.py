@@ -1,13 +1,11 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
-from pathlib import Path
 from pydantic import BaseModel
+from src.constants import ROOT
 from src.utils.page import Page
 from fastapi.responses import Response
 
 router = APIRouter()
-
-PAGES_DIR = Path(__file__).resolve().parents[1] / "pages"
 
 
 class PageInfo(BaseModel):
@@ -19,12 +17,12 @@ class PageInfo(BaseModel):
 def get_all_pages() -> List[PageInfo]:
     """Scan pages directory and return metadata for each XML page."""
     pages: List[PageInfo] = []
-    if not PAGES_DIR.is_dir():
+    if not (ROOT / "Pages").is_dir():
         return pages
 
     page_order = ["applications"]
 
-    for page_file in sorted(PAGES_DIR.glob("*.xml")):
+    for page_file in sorted((ROOT / "Pages").glob("*.xml")):
         page = Page(page_file)
         pages.append(
             PageInfo(
@@ -47,9 +45,9 @@ async def list_pages() -> List[PageInfo]:
 @router.get("/pages/{page_name}")
 async def get_page(page_name: str) -> Response:
     """Return XML content for requested page."""
-    page_path = (PAGES_DIR / f"{page_name.strip().lower()}.xml").resolve()
+    page_path = (ROOT / "Pages" / f"{page_name.strip().lower()}.xml").resolve()
 
-    if not page_path.is_file() or page_path.parent != PAGES_DIR.resolve():
+    if not page_path.is_file() or page_path.parent != (ROOT / "Pages").resolve():
         raise HTTPException(status_code=404, detail="Page not found")
 
     page = Page(page_path)

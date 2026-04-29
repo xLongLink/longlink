@@ -14,7 +14,7 @@ client_http = httpx.AsyncClient()
 
 async def forward(path: str, request: Request):
     """Proxy one request through the shared ingress endpoint."""
-    url = f"{env.ENV_PROVISION_COMPUTE_URL.rstrip('/')}/{path}"
+    url = f"{env.ENV_COMPUTE_URL.rstrip('/')}/{path}"
 
     resp = await client_http.request(
         request.method,
@@ -74,7 +74,7 @@ def setup():
 
     kubectl.apply(
         compute_state.save(),
-        kubeconfig=env.ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH,
+        kubeconfig=env.ENV_COMPUTE_KUBE_CONFIG_PATH,
     )
 
     print("[READY] system operational")

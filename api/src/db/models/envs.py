@@ -15,7 +15,7 @@ class Env(Base, table=True):
     # Propriety
     key: str = Field(max_length=128)
     value: str
-    appid: str = Field(foreign_key='apps.id')
+    appname: str = Field(foreign_key='apps.name')
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

@@ -115,30 +115,25 @@ async def _sync_compute_state_from_api() -> None:
     """Persist compute state from the registered API application rows."""
     registered_apps = await db.apps.list()
     compute_state.replace_applications(
-        {app.key: app.image for app in registered_apps}
+        {app.name: app.image for app in registered_apps}
     )
 
 
 @router.post("/apps")
 async def create_app(payload: AppCreate) -> AppResponse:
     """Create a new app by provisioning its container and registering it."""
-    app_key = payload.key.strip().lower()
-    app_url = compute_app_url(app_key)
+    app_name = payload.name.strip().lower()
+    app_url = compute_app_url(app_name)
 
-    existing_url = await db.apps.get_by_url(app_url)
-    if existing_url is not None:
-        raise HTTPException(status_code=409, detail="App URL already exists")
-
-    existing_key = await db.apps.get_by_key(app_key)
-    if existing_key is not None:
-        raise HTTPException(status_code=409, detail="App key already exists")
+    existing_app = await db.apps.get(app_name)
+    if existing_app is not None:
+        raise HTTPException(status_code=409, detail="App name already exists")
 
     try:
         # Register the app immediately and let runtime metadata be resolved later.
         app = await db.apps.create(
-            app_key,
+            app_name,
             url=app_url,
-            key=app_key,
             image=payload.image,
         )
     except ValueError as exc:
@@ -148,9 +143,9 @@ async def create_app(payload: AppCreate) -> AppResponse:
         await _sync_compute_state_from_api()
         kubectl.apply(
             compute_state.save(),
-            kubeconfig=env.ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH,
+            kubeconfig=env.ENV_COMPUTE_KUBE_CONFIG_PATH,
         )
-        _wait_for_deployment_ready(app_key)
+        _wait_for_deployment_ready(app_name)
     except ValueError as exc:
         raise HTTPException(
             status_code=500,
@@ -167,18 +162,18 @@ async def create_app(payload: AppCreate) -> AppResponse:
             detail=str(exc),
         ) from exc
 
-    return AppResponse(id=app.id, name=app.name, url=compute_app_url(app.key))
+    return AppResponse(name=app.name, url=compute_app_url(app.name))
 
 
-@router.delete("/apps/{app_id}", status_code=204)
-async def delete_app(app_id: str) -> Response:
+@router.delete("/apps/{app_name}", status_code=204)
+async def delete_app(app_name: str) -> Response:
     """Delete an app by removing its compute resources and registry row."""
-    app = await db.apps.get_by_uuid(app_id)
+    app = await db.apps.get(app_name)
     if app is None:
         raise HTTPException(status_code=404, detail="App not found")
 
     try:
-        deleted_app = await db.apps.delete(app.id)
+        deleted_app = await db.apps.delete(app.name)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 

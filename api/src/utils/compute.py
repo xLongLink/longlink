@@ -5,12 +5,12 @@ from pathlib import Path
 from src.env import env
 from src.utils import kubectl
 from kubernetes import client, config
-from src.constants import PATH
+from src.constants import ROOT
 from src.utils.utils import knames
 from src.utils.templates import yaml as template_yaml
 from kubernetes.client.rest import ApiException
 
-TEMPLATES_PATH = PATH / "templates" / "compute"
+TEMPLATES_PATH = ROOT / "templates" / "compute"
 
 
 class Compute:
@@ -26,7 +26,7 @@ class Compute:
     ) -> None:
         """Initialize the compute state manager."""
         self.kubeconfig_path = Path(
-            kubeconfig or env.ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH
+            kubeconfig or env.ENV_COMPUTE_KUBE_CONFIG_PATH
         ).expanduser()
         self.state_path = Path(state_path).expanduser()
         self.namespace = namespace
@@ -119,7 +119,7 @@ class Compute:
 
     def _base_manifests(self) -> list[dict]:
         """Return the shared router manifests required for all application states."""
-        manifests = template_yaml(TEMPLATES_PATH / "compute-router.yml", namespace=self.namespace)
+        manifests = template_yaml(TEMPLATES_PATH / "router.yml", namespace=self.namespace)
         return manifests if isinstance(manifests, list) else [manifests]
 
     def _application_manifests(self) -> list[dict]:
@@ -263,7 +263,7 @@ class Compute:
 
 
 
-compute = Compute(namespace=env.ENV_PROVISION_COMPUTE_NAMESPACE)
+compute = Compute(namespace=env.ENV_COMPUTE_NAMESPACE)
 
 
 if __name__ == "__main__":

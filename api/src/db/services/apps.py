@@ -16,16 +16,7 @@ class AppsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def get_by_uuid(self, app_uuid: str) -> App | None:
-        '''Return a registered app by UUID.'''
-
-        Session = await get_session()
-        async with Session() as session:
-            statement = select(App).where(App.id == app_uuid)
-            result = await session.execute(statement)
-            return result.scalar_one_or_none()
-
-    async def get_by_name(self, name: str) -> App | None:
+    async def get(self, name: str) -> App | None:
         '''Return a registered app by name.'''
 
         Session = await get_session()
@@ -34,29 +25,10 @@ class AppsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def get_by_url(self, url: str) -> App | None:
-        '''Return a registered app by URL.'''
-
-        Session = await get_session()
-        async with Session() as session:
-            statement = select(App).where(App.url == url)
-            result = await session.execute(statement)
-            return result.scalar_one_or_none()
-
-    async def get_by_key(self, key: str) -> App | None:
-        '''Return a registered app by key.'''
-
-        Session = await get_session()
-        async with Session() as session:
-            statement = select(App).where(App.key == key)
-            result = await session.execute(statement)
-            return result.scalar_one_or_none()
-
     async def create(
         self,
         name: str,
         url: str,
-        key: str,
         image: str,
     ) -> App:
         '''Add a new app to the database.'''
@@ -70,16 +42,9 @@ class AppsService:
             if existing_app is not None:
                 raise ValueError('App URL already exists')
 
-            key_statement = select(App).where(App.key == key)
-            key_result = await session.execute(key_statement)
-            existing_key = key_result.scalar_one_or_none()
-            if existing_key is not None:
-                raise ValueError('App key already exists')
-
             app_kwargs: dict[str, str] = {
                 'name': name,
                 'url': url,
-                'key': key,
                 'image': image,
             }
 
@@ -89,14 +54,14 @@ class AppsService:
             await session.refresh(app)
             return app
 
-    async def delete(self, app_id: str) -> App | None:
-        '''Delete an app by UUID and return the deleted app when found.'''
+    async def delete(self, name: str) -> App | None:
+        '''Delete an app by name and return the deleted app when found.'''
 
         Session = await get_session()
 
         async with Session() as session:
             # Load the app first so callers can still access its identifying fields.
-            statement = select(App).where(App.id == app_id)
+            statement = select(App).where(App.name == name)
             result = await session.execute(statement)
             app = result.scalar_one_or_none()
             if app is None:

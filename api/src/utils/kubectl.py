@@ -10,7 +10,7 @@ def apply(f: str | Path, kubeconfig: str | Path | None = None) -> list[dict]:
     """Apply a multi-document YAML state file to Kubernetes like `kubectl apply -f`."""
     file_path = Path(f).expanduser()
     kubeconfig_path = Path(
-        kubeconfig or env.ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH
+        kubeconfig or env.ENV_COMPUTE_KUBE_CONFIG_PATH
     ).expanduser()
 
     # Parse manifests first so callers can keep working with the exact applied state.

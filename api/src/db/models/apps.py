@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime, timezone
 from sqlmodel import Field
 from src.db.models.__base__ import Base
@@ -9,10 +8,8 @@ class App(Base, table=True):
 
     __tablename__ = 'apps'
 
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True, max_length=36)
+    name: str = Field(primary_key=True, max_length=100)
     url: str = Field(unique=True, max_length=255)
-    name: str = Field(max_length=100)
-    key: str = Field(unique=True, max_length=64)
     image: str = Field(max_length=255)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(

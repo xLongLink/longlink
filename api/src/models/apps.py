@@ -2,7 +2,7 @@ from pydantic import BaseModel, field_validator
 
 
 class AppCreate(BaseModel):
-    key: str
+    name: str
     image: str
 
     @field_validator("image", mode="before")
@@ -13,6 +13,5 @@ class AppCreate(BaseModel):
 
 
 class AppResponse(BaseModel):
-    id: str
     name: str
     url: str

@@ -37,25 +37,25 @@ async def raw(
 
 
 async def request(
-    uuid: str,
+    app_name: str,
     method: HttpMethod,
     url: str,
     params: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
 ) -> httpx.Response:
     """Make a request to an app through the shared ingress endpoint."""
-    app = await db.apps.get_by_uuid(uuid)
+    app = await db.apps.get(app_name)
     if app is None:
         raise ValueError("App not found")
 
-    client = _clients.get(uuid)
+    client = _clients.get(app_name)
     if client is None:
         async with _lock:
-            client = _clients.get(uuid)
+            client = _clients.get(app_name)
             if client is not None:
                 return await client.request(
                     method=method,
-                    url=_compute_url_path(app.key, url),
+                    url=_compute_url_path(app.name, url),
                     params=params,
                     json=json,
                 )
@@ -71,55 +71,55 @@ async def request(
                 ),
             )
 
-            _clients[uuid] = client
+            _clients[app_name] = client
 
     return await client.request(
         method=method,
-        url=_compute_url_path(app.key, url),
+        url=_compute_url_path(app.name, url),
         params=params,
         json=json,
     )
 
 
 # Convenience wrappers
-async def get(uuid: str, url: str, params: dict[str, str] | None = None):
+async def get(app_name: str, url: str, params: dict[str, str] | None = None):
     """Make a GET request to an app. Used to retrieve resources."""
-    return await request(uuid, "GET", url, params=params)
+    return await request(app_name, "GET", url, params=params)
 
 
 async def post(
-    uuid: str,
+    app_name: str,
     url: str,
     params: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
 ):
     """Make a POST request to an app. Used to create resources."""
-    return await request(uuid, "POST", url, params=params, json=json)
+    return await request(app_name, "POST", url, params=params, json=json)
 
 
 async def put(
-    uuid: str,
+    app_name: str,
     url: str,
     params: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
 ):
     """Make a PUT request to an app. Used to update/replace resources. (full replace)"""
-    return await request(uuid, "PUT", url, params=params, json=json)
+    return await request(app_name, "PUT", url, params=params, json=json)
 
 
 async def patch(
-    uuid: str,
+    app_name: str,
     url: str,
     params: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
 ):
     """Make a PATCH request to an app. Used to partially update resources. (partial replace)"""
-    return await request(uuid, "PATCH", url, params=params, json=json)
+    return await request(app_name, "PATCH", url, params=params, json=json)
 
 
-async def delete(uuid: str, url: str, params: dict[str, str] | None = None):
+async def delete(app_name: str, url: str, params: dict[str, str] | None = None):
     """Make a DELETE request to an app. Used to delete resources."""
-    return await request(uuid, "DELETE", url, params=params)
+    return await request(app_name, "DELETE", url, params=params)
 
 
 # async def head( uuid: str, url: str, params: dict[str, str] | None = None):

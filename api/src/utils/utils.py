@@ -5,7 +5,7 @@ import re
 from src.env import env
 from urllib.parse import urlparse
 
-COMPUTE_URL = env.ENV_PROVISION_COMPUTE_URL.rstrip("/")
+COMPUTE_URL = env.ENV_COMPUTE_URL.rstrip("/")
 
 
 def knames(value: str, label: str = "Value") -> str:

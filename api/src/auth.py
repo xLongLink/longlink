@@ -23,22 +23,3 @@ async def authuser(request: Request) -> db.User:
     if not user:
         raise HTTPException(401, "Not authenticated")
     return user
-
-
-async def authapp(request: Request) -> db.App:
-    """Authenticate an app using bearer token or x-app-token header."""
-    auth_header = request.headers.get("authorization")
-    token = request.headers.get("x-app-token")
-
-    # Extract token from Authorization header if present
-    if auth_header and auth_header.lower().startswith("bearer "):
-        token = auth_header[7:].strip()
-
-    if not token:
-        raise HTTPException(401, "Missing app token")
-
-    app = await db.apps.get_by_key(token)
-    if app is None:
-        raise HTTPException(401, "Invalid app token")
-
-    return app
