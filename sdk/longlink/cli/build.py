@@ -54,11 +54,11 @@ def render_dockerfile(workdir: str) -> str:
     return DOCKERFILE_TEMPLATE.format(workdir=workdir)
 
 
-def build_app(base_path: Path | None = None) -> tuple[Path, Path, str, str, Path]:
+def build_app(base_path: Path | None = None, tag: str | None = None) -> tuple[Path, Path, str, str, Path]:
     """Create Dockerfile and deployment manifest for current app."""
 
     root = (base_path or Path.cwd()).resolve()
-    version = create_version()
+    version = tag or create_version()
     metadata = load_metadata(root / "pyproject.toml")
     build_context, workdir = resolve_docker_paths(root)
 
@@ -111,11 +111,16 @@ def run_docker_push(image_tag: str) -> None:
     show_default=True,
     help="Docker registry used for image push (for k3d typically localhost:5000).",
 )
-def build_command(registry: str):
+@click.option(
+    "--tag",
+    default=None,
+    help="Docker image tag to use instead of a timestamp, for example dev.",
+)
+def build_command(registry: str, tag: str | None):
     """Create Dockerfile, build Docker image, and push image to registry."""
 
     try:
-        dockerfile_path, manifest_path, version, app_name, build_context = build_app()
+        dockerfile_path, manifest_path, version, app_name, build_context = build_app(tag=tag)
         image_tag = build_image_tag(app_name, version, registry)
 
         run_docker_build(dockerfile_path, build_context, image_tag)

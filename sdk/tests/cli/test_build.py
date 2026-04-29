@@ -9,7 +9,7 @@ def test_build_app_creates_dockerfile_and_manifest(tmp_path, monkeypatch):
     # Force metadata lookup to happen inside temp project directory.
     monkeypatch.chdir(tmp_path)
 
-    dockerfile_path, manifest_path, version = build_app(base_path=tmp_path)
+    dockerfile_path, manifest_path, version, _, _ = build_app(base_path=tmp_path)
 
     assert dockerfile_path.exists()
     assert manifest_path.exists()

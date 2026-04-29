@@ -35,6 +35,16 @@ From `sdk/sample`:
 longlink build
 ```
 
+### Build and push using a stable local development tag
+
+From `sdk/sample`:
+
+```bash
+longlink build --tag dev
+```
+
+This replaces `localhost:5000/sampleapp:dev` on each build instead of creating a new timestamped image tag.
+
 ### Build and push using a custom k3d registry endpoint
 
 From `sdk/sample`:
