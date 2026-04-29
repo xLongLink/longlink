@@ -46,45 +46,44 @@ export default withMermaid(defineConfig({
           { text: 'Routes', link: '/sdk/routes/' },
           { text: 'Storage', link: '/sdk/storage/' },
           { text: 'Database', link: '/sdk/database/' },
-          {
-            text: 'Pages',
-            collapsed: true,
-            items: [
-              { text: 'Introduction', link: '/sdk/pages/' },
-              { text: 'HTML Elements', link: '/sdk/pages/html-elements' },
-              {
-                text: 'Layout',
-                collapsed: true,
-                items: [
-                  { text: 'Hero', link: '/sdk/pages/layout/hero' },
-                  { text: 'Menu', link: '/sdk/pages/layout/menu' },
-                  { text: 'Card', link: '/sdk/pages/layout/card' },
-                  { text: 'Columns', link: '/sdk/pages/layout/columns' },
-                  { text: 'Tabs', link: '/sdk/pages/layout/tabs' },
-                  { text: 'Table', link: '/sdk/pages/layout/table' }
-                ]
-              },
-              {
-                text: 'Components',
-                collapsed: true,
-                items: [
-                  { text: 'Button', link: '/sdk/pages/components/button' },
-                  { text: 'Checkbox', link: '/sdk/pages/components/checkbox' },
-                  { text: 'Dialog', link: '/sdk/pages/components/dialog' },
-                  { text: 'Icon', link: '/sdk/pages/components/icon' },
-                  { text: 'Input', link: '/sdk/pages/components/input' },
-                  { text: 'Range', link: '/sdk/pages/components/range' },
-                  { text: 'Select', link: '/sdk/pages/components/select' },
-                  { text: 'Separator', link: '/sdk/pages/components/separator' },
-                  { text: 'Slider', link: '/sdk/pages/components/slider' },
-                  { text: 'Switch', link: '/sdk/pages/components/switch' },
-                  { text: 'Textarea', link: '/sdk/pages/components/textarea' }
-                ]
-              }
-            ]
-          },
           { text: 'Testing', link: '/sdk/testing/' },
           { text: 'Build & Publish', link: '/sdk/building/' },
+        ]
+      },
+      {
+        text: 'Pages',
+        items: [
+          { text: 'Introduction', link: '/pages/' },
+          { text: 'HTML Elements', link: '/pages/html-elements' },
+          {
+            text: 'Layout',
+            collapsed: true,
+            items: [
+              { text: 'Hero', link: '/pages/layout/hero' },
+              { text: 'Menu', link: '/pages/layout/menu' },
+              { text: 'Card', link: '/pages/layout/card' },
+              { text: 'Columns', link: '/pages/layout/columns' },
+              { text: 'Tabs', link: '/pages/layout/tabs' },
+              { text: 'Table', link: '/pages/layout/table' }
+            ]
+          },
+          {
+            text: 'Components',
+            collapsed: true,
+            items: [
+              { text: 'Button', link: '/pages/components/button' },
+              { text: 'Checkbox', link: '/pages/components/checkbox' },
+              { text: 'Dialog', link: '/pages/components/dialog' },
+              { text: 'Icon', link: '/pages/components/icon' },
+              { text: 'Input', link: '/pages/components/input' },
+              { text: 'Range', link: '/pages/components/range' },
+              { text: 'Select', link: '/pages/components/select' },
+              { text: 'Separator', link: '/pages/components/separator' },
+              { text: 'Slider', link: '/pages/components/slider' },
+              { text: 'Switch', link: '/pages/components/switch' },
+              { text: 'Textarea', link: '/pages/components/textarea' }
+            ]
+          }
         ]
       }
     ],

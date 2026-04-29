@@ -28,7 +28,6 @@ This creates a standardized project structure:
 ├── app/
 │   ├── api/          # API routes
 │   ├── models/       # Database models
-│   ├── pages/        # XML page definitions
 │   ├── types/        # Data schemas
 │   ├── utils/        # Shared utilities
 │   └── envs.py       # Configuration
