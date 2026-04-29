@@ -10,7 +10,7 @@ from src.utils.utils import knames
 from src.utils.templates import yaml as template_yaml
 from kubernetes.client.rest import ApiException
 
-TEMPLATES_PATH = ROOT / "templates" / "compute"
+TEMPLATES = ROOT / "templates" / "compute"
 
 
 class Compute:
@@ -119,7 +119,7 @@ class Compute:
 
     def _base_manifests(self) -> list[dict]:
         """Return the shared router manifests required for all application states."""
-        manifests = template_yaml(TEMPLATES_PATH / "router.yml", namespace=self.namespace)
+        manifests = template_yaml(TEMPLATES / "router.yml", namespace=self.namespace)
         return manifests if isinstance(manifests, list) else [manifests]
 
     def _application_manifests(self) -> list[dict]:
@@ -128,7 +128,7 @@ class Compute:
         for name, application in sorted(self.applications.items()):
             manifests.extend(
                 template_yaml(
-                    TEMPLATES_PATH / "application.yml",
+                    TEMPLATES / "application.yml",
                     image=application["image"],
                     name=name,
                     namespace=self.namespace,
@@ -140,7 +140,7 @@ class Compute:
         """Return the shared ingress manifest for all managed applications."""
         paths = self._ingress_paths()
         manifest = template_yaml(
-            TEMPLATES_PATH / "ingress.yml",
+            TEMPLATES / "ingress.yml",
             ingress_host=self.ingress_host,
             ingress_name=self.ingress_name,
             namespace=self.namespace,
@@ -262,15 +262,4 @@ class Compute:
         return self.manifests()
 
 
-
 compute = Compute(namespace=env.ENV_COMPUTE_NAMESPACE)
-
-
-if __name__ == "__main__":
-    compute.load()
-    compute.create("sample1", "tiangolo/uvicorn-gunicorn-fastapi:python3.11")
-    compute.create("sample2", "tiangolo/uvicorn-gunicorn-fastapi:python3.11")
-    print(compute.list())
-    compute.delete("sample2")
-    compute.delete("sample1")
-    print(compute.list())

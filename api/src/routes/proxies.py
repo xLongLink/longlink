@@ -2,8 +2,9 @@ import json
 import httpx
 import src.db as db
 from fastapi import Request, Response, APIRouter, HTTPException
+from src.env import env
 from src.models.apps import AppResponse
-from src.utils.utils import COMPUTE_URL, app_url, app_path
+from src.utils.utils import app_url, app_path
 from fastapi.responses import JSONResponse
 
 router = APIRouter()
@@ -28,7 +29,7 @@ async def _forward(path: str, request: Request) -> Response:
 
     upstream = await client_http.request(
         request.method,
-        f"{COMPUTE_URL}/{path}",
+        f"{env.ENV_COMPUTE_URL.rstrip('/')}/{path}",
         content=await request.body(),
         headers=headers,
         params=request.query_params,

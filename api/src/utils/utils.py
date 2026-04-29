@@ -1,11 +1,6 @@
-from __future__ import annotations
-
-import os
 import re
 from src.env import env
 from urllib.parse import urlparse
-
-COMPUTE_URL = env.ENV_COMPUTE_URL.rstrip("/")
 
 
 def knames(value: str, label: str = "Value") -> str:
@@ -50,4 +45,4 @@ def app_path(app_key: str, path: str = "") -> str:
 
 def app_url(app_key: str) -> str:
     """Return the public compute base URL for an app."""
-    return f"{COMPUTE_URL}/{app_path(app_key)}"
+    return f"{env.ENV_COMPUTE_URL.rstrip('/')}/{app_path(app_key)}"

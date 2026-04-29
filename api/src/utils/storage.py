@@ -1,14 +1,18 @@
 import boto3
+from typing import Protocol
 from src.env import env
 
 
-class StorageBucketAlreadyExistsError(ValueError):
-    """Raised when trying to create a bucket that already exists."""
+class S3Client(Protocol):
+    """Subset of the S3 client used by this helper."""
+
+    def create_bucket(self, *, Bucket: str) -> object:
+        """Create a bucket in the storage backend."""
 
 
 def create(bucket_name: str) -> None:
     """Create a bucket in the provisioned S3-compatible storage."""
-    client_kwargs: dict[str, str | None] = {
+    client_kwargs: dict[str, str] = {
         "endpoint_url": env.ENV_STORAGE_ENDPOINT_URL,
         "aws_access_key_id": env.ENV_STORAGE_ACCESS_KEY_ID,
         "aws_secret_access_key": env.ENV_STORAGE_SECRET_ACCESS_KEY,
@@ -16,15 +20,5 @@ def create(bucket_name: str) -> None:
     if env.ENV_STORAGE_REGION_NAME:
         client_kwargs["region_name"] = env.ENV_STORAGE_REGION_NAME
 
-    client = boto3.client("s3", **client_kwargs)
-
-    try:
-        client.create_bucket(Bucket=bucket_name)
-    except client.exceptions.BucketAlreadyExists as error:
-        raise StorageBucketAlreadyExistsError(
-            f"Bucket '{bucket_name}' already exists"
-        ) from error
-    except client.exceptions.BucketAlreadyOwnedByYou as error:
-        raise StorageBucketAlreadyExistsError(
-            f"Bucket '{bucket_name}' already exists"
-        ) from error
+    client: S3Client = boto3.client("s3", **client_kwargs)
+    client.create_bucket(Bucket=bucket_name)

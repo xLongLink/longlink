@@ -22,7 +22,7 @@ longlink/
 
 - When you enter `api/`, `sdk/`, `web/`, or `docs/`, read that folder's `CONTRIBUTING.md` for local rules.
 - Keep changes aligned with architecture boundaries.
-- Project in development mode: prefer current model over backward compatibility.
+- Project is in MVP mode: prefer the current model over backward compatibility.
 - Removing obsolete flows is acceptable when replacement works end to end.
 - Do not add tests for now.
 - Run `make format` from repo root when done.
