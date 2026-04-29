@@ -22,7 +22,7 @@ spec:
           image: hashicorp/http-echo:1.0.0
           args:
             - -listen=:5678
-            - -status=404
+            - -status-code=404
             - -text=application not found
           ports:
             - containerPort: 5678

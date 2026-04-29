@@ -1,20 +1,25 @@
-import os
 import httpx
 import src.db as db
 import asyncio
 from typing import Any, Literal
 from src.utils.compute import compute as compute_state
+from src.utils.compute_urls import CLUSTER_URL, app_path
 
 HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
-CLUSTER_URL = os.getenv("CLUSTER_URL", "http://localhost:8080").rstrip("/")
 _lock = asyncio.Lock()
 _clients: dict[str, httpx.AsyncClient] = {}
 
 
 async def close():
+    """Close cached app HTTP clients."""
     for client in _clients.values():
         await client.aclose()
     _clients.clear()
+
+
+def _compute_url_path(app_key: str, url: str) -> str:
+    """Return a compute ingress request path for an app-relative URL."""
+    return f"/{app_path(app_key, url)}"
 
 
 async def raw(
@@ -39,7 +44,10 @@ async def request(
     json: dict[str, Any] | None = None,
 ) -> httpx.Response:
     """Make a request to an app through the shared ingress endpoint."""
-    upstream_path = url.lstrip("/")
+    app = await db.apps.get_by_uuid(uuid)
+    if app is None:
+        raise ValueError("App not found")
+
     client = _clients.get(uuid)
     if client is None:
         async with _lock:
@@ -47,17 +55,13 @@ async def request(
             if client is not None:
                 return await client.request(
                     method=method,
-                    url=upstream_path,
+                    url=_compute_url_path(app.key, url),
                     params=params,
                     json=json,
                 )
 
-            app = await db.apps.get_by_uuid(uuid)
-            if app is None:
-                raise ValueError("App not found")
-
             client = httpx.AsyncClient(
-                base_url=f"{CLUSTER_URL}/{app.key}",
+                base_url=CLUSTER_URL,
                 headers={"Host": compute_state.ingress_host},
                 timeout=30.0,
                 limits=httpx.Limits(
@@ -71,7 +75,7 @@ async def request(
 
     return await client.request(
         method=method,
-        url=upstream_path,
+        url=_compute_url_path(app.key, url),
         params=params,
         json=json,
     )

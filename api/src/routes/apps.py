@@ -4,6 +4,7 @@ from src.env import env
 from src.utils import kubectl
 from src.models.apps import AppCreate, AppResponse
 from src.utils.compute import compute as compute_state
+from src.utils.compute_urls import app_url as compute_app_url
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ async def _sync_compute_state_from_api() -> None:
 async def create_app(payload: AppCreate) -> AppResponse:
     """Create a new app by provisioning its container and registering it."""
     app_key = payload.key.strip().lower()
-    app_url = f"/apps/{app_key}"
+    app_url = compute_app_url(app_key)
 
     existing_url = await db.apps.get_by_url(app_url)
     if existing_url is not None:
@@ -53,7 +54,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
             detail=f"Failed to apply compute manifests: {exc}",
         ) from exc
 
-    return AppResponse(id=app.id, name=app.name, url=app.url)
+    return AppResponse(id=app.id, name=app.name, url=compute_app_url(app.key))
 
 
 @router.delete("/apps/{app_id}", status_code=204)
