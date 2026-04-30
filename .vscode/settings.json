@@ -3,6 +3,5 @@
   "python.analysis.extraPaths": [
     "${workspaceFolder}/api/src",
     "${workspaceFolder}/sdk"
-  ],
-  "python.terminal.activateEnvironment": false
+  ]
 }
