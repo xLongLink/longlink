@@ -79,14 +79,6 @@ def build_app(base_path: Path | None = None, tag: str | None = None) -> tuple[Pa
     return dockerfile_path, manifest_path, version, metadata.name, build_context
 
 
-def build_image_tag(image_name: str, version: str, registry: str) -> str:
-    """Build a normalized tag for publishing the image to registry."""
-
-    normalized_name = image_name.strip().lower().replace(" ", "-").replace("_", "-")
-    normalized_registry = registry.strip().rstrip("/")
-    return f"{normalized_registry}/{normalized_name}:{version}"
-
-
 def run_docker_build(dockerfile_path: Path, build_context: Path, image_tag: str) -> None:
     """Build Docker image for the current application directory."""
 
@@ -97,56 +89,26 @@ def run_docker_build(dockerfile_path: Path, build_context: Path, image_tag: str)
     )
 
 
-def run_docker_tag(old_tag: str, new_tag: str) -> None:
-    """Retag a Docker image with a different registry/name."""
-
-    subprocess.run(["docker", "tag", old_tag, new_tag], check=True)
-
-
-def run_docker_push(image_tag: str) -> None:
-    """Push built Docker image to the configured registry."""
-
-    # Push image tag so k3d cluster workloads can pull it from shared registry.
-    subprocess.run(["docker", "push", image_tag], check=True)
-
-
 @click.command(name="build")
-@click.option(
-    "--registry",
-    default="localhost:5000",
-    show_default=True,
-    help="Docker registry address used for pushing from the host (e.g. localhost:5000).",
-)
-@click.option(
-    "--pull-registry",
-    default=None,
-    help="Docker registry address used in K8s manifests for pulling from inside the cluster (defaults to same as --registry). For k3d, use compute-registry:5000.",
-)
 @click.option(
     "--tag",
     default=None,
     help="Docker image tag to use instead of a timestamp, for example dev.",
 )
-def build_command(registry: str, pull_registry: str | None, tag: str | None):
-    """Create Dockerfile, build Docker image, and push image to registry."""
+def build_command(tag: str | None):
+    """Create Dockerfile and build the Docker image locally."""
 
     try:
         dockerfile_path, manifest_path, version, app_name, build_context = build_app(tag=tag)
-        push_tag = build_image_tag(app_name, version, registry)
-        k8s_image = build_image_tag(app_name, version, pull_registry or registry)
+        image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
+        image_tag = f"{image_name}:{version}"
 
-        run_docker_build(dockerfile_path, build_context, push_tag)
-        run_docker_push(push_tag)
-
-        # Re-tag locally so the manifest shows the correct K8s pull reference.
-        if registry != (pull_registry or registry):
-            run_docker_tag(push_tag, k8s_image)
+        run_docker_build(dockerfile_path, build_context, image_tag)
 
         click.echo(f"Build artifacts created for version {version}")
         click.echo(f"- Dockerfile: {dockerfile_path}")
         click.echo(f"- Manifest: {manifest_path}")
-        click.echo(f"- Pushed image: {push_tag}")
-        click.echo(f"- K8s image reference: {k8s_image}")
+        click.echo(f"- Built image: {image_tag}")
     except subprocess.CalledProcessError as error:
         raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
     except FileNotFoundError as error:

@@ -19,12 +19,12 @@ build:
 	bun run --cwd web build:api --logLevel warn
 	bun run --cwd web build:sdk --logLevel warn 
 	cd sdk && uv sync
-	cd sdk/sample && uv run longlink build --pull-registry compute-registry:5000
+	cd sdk/sample && uv run longlink build
 
 
 up:
 	docker compose -f dev/compose.yml up -d
-	k3d cluster create compute --api-port 0.0.0.0:8001 --registry-create compute-registry:0.0.0.0:5000 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer"
+	k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer"
 	k3d kubeconfig get compute > api/kubeconfig.yaml
 
 

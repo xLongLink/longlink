@@ -20,7 +20,7 @@
             label="Image reference"
             bind="createApp.image"
             value="{createApp.image}"
-            placeholder="compute-registry:5000/sampleapp:20260419_185022"
+            placeholder="sampleapp:20260419_185022"
           />
           <Button
             variant="default"
