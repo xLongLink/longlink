@@ -52,6 +52,7 @@ const apiRoutes = [
         children: [
             { index: true, element: <Navigate to="/applications" replace /> },
             { path: 'applications', element: <OrganizationPage page="applications" /> },
+            { path: 'settings', element: <OrganizationPage page="settings" /> },
             {
                 path: 'applications/:appId/*',
                 element: <Longlink />,

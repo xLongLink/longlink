@@ -16,16 +16,12 @@ class Compute:
 
     def __init__(
         self,
-        kubeconfig: str | Path | None = None,
         state_path: str | Path = "state.yaml",
         namespace: str = "default",
         ingress_name: str = "control-ingress",
         ingress_host: str = "localhost",
     ) -> None:
         """Initialize the compute state manager."""
-        self.kubeconfig_path = Path(
-            kubeconfig or env.ENV_COMPUTE_KUBE_CONFIG_PATH
-        ).expanduser()
         self.state_path = Path(state_path).expanduser()
         self.namespace = namespace
         self.ingress_name = ingress_name
@@ -34,7 +30,7 @@ class Compute:
 
     def _api_client(self) -> client.ApiClient:
         """Return a Kubernetes API client for the configured kubeconfig."""
-        config.load_kube_config(config_file=str(self.kubeconfig_path))
+        config.load_kube_config(config_file=str(Path(env.ENV_COMPUTE_KUBE_CONFIG_PATH).expanduser()))
         return client.ApiClient()
 
     def _manifest_key(self, manifest: dict) -> tuple[str, str, str]:
@@ -230,7 +226,7 @@ class Compute:
         """Apply the persisted desired state file to the Kubernetes cluster."""
         # Persist the currently loaded in-memory state before delegating to kubectl.
         target = self.save()
-        manifests = kubectl.apply(target, kubeconfig=self.kubeconfig_path)
+        manifests = kubectl.apply(target)
         desired_resources = {self._manifest_key(manifest) for manifest in manifests}
         api_client = self._api_client()
 

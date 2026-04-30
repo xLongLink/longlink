@@ -14,7 +14,7 @@ def _get_pod_logs(app_key: str) -> str:
     """Fetch the last logs from pods belonging to the app deployment."""
     from kubernetes import client, config
 
-    config.load_kube_config(config_file=str(compute.kubeconfig_path))
+    config.load_kube_config(config_file=str(env.ENV_COMPUTE_KUBE_CONFIG_PATH))
     core_api = client.CoreV1Api()
 
     try:
@@ -40,7 +40,7 @@ def _check_pod_failure(app_key: str) -> str | None:
     """Check if any pod for the app is in a failed state and return the reason."""
     from kubernetes import client, config
 
-    config.load_kube_config(config_file=str(compute.kubeconfig_path))
+    config.load_kube_config(config_file=str(env.ENV_COMPUTE_KUBE_CONFIG_PATH))
     core_api = client.CoreV1Api()
 
     try:
@@ -71,7 +71,7 @@ def _wait_for_deployment_ready(app_key: str, timeout: int = 30, interval: int = 
     """Wait until the app deployment reports ready, or raise with container logs on failure."""
     from kubernetes import client, config
 
-    config.load_kube_config(config_file=str(compute.kubeconfig_path))
+    config.load_kube_config(config_file=str(env.ENV_COMPUTE_KUBE_CONFIG_PATH))
     apps_api = client.AppsV1Api()
     deadline = time.time() + timeout
     last_conditions = ""

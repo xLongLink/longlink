@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from sqlmodel import Field
 from src.db.models.__base__ import Base
 
@@ -8,15 +7,6 @@ class App(Base, table=True):
 
     __tablename__ = 'apps'
 
-    name: str = Field(primary_key=True, max_length=100)
     url: str = Field(unique=True, max_length=255)
+    name: str = Field(primary_key=True, max_length=100)
     image: str = Field(max_length=255)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column_kwargs={'onupdate': lambda: datetime.now(timezone.utc)},
-    )
-    deleted_at: datetime | None = None
-    created_by: str | None = Field(default=None, max_length=255)
-    updated_by: str | None = Field(default=None, max_length=255)
-    deleted_by: str | None = Field(default=None, max_length=255)

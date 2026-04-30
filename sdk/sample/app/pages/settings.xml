@@ -1,42 +1,74 @@
 <Page name="Settings" icon="settings">
-  <Menu>
-    <MenuSection title="General" icon="settings">
-      <MenuSubSection title="" root="true">
-        <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." submit="Save" />
-      </MenuSubSection>
-    </MenuSection>
-    <MenuSection title="Identity" icon="user">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Access Control" icon="lock">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Applications" icon="app-window">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Infrastructure" icon="server">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Storage" icon="database">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Audit &amp; Compliance" icon="file-text">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Backups &amp; Recovery" icon="hard-drive">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Security" icon="shield">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Billing &amp; Plan" icon="credit-card">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="API &amp; Integrations" icon="zap">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-    <MenuSection title="Advanced / System" icon="sliders">
-      <MenuSubSection title="" root="true" />
-    </MenuSection>
-  </Menu>
+  <State id="connectCompute" server="" username="" password="" email="">
+    <Hero title="Compute" subtitle="Connect LongLink to your compute cluster." icon="cpu" action="Connect">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Connect compute</DialogTitle>
+          <DialogDescription>
+            Register the compute cluster connection used by LongLink.
+          </DialogDescription>
+        </DialogHeader>
+        <Stack gap="12">
+          <Input kind="text" label="Server" bind="connectCompute.server" value="{connectCompute.server}" placeholder="https://registry.example.com" />
+          <Input kind="text" label="Username" bind="connectCompute.username" value="{connectCompute.username}" placeholder="registry-user" />
+          <Input kind="password" label="Password" bind="connectCompute.password" value="{connectCompute.password}" placeholder="••••••••" />
+          <Input kind="text" label="Email" bind="connectCompute.email" value="{connectCompute.email}" placeholder="user@example.com" />
+          <Button variant="default" action="/compute/registry" method="POST" payload='{
+            "name": "compute",
+            "server": "{connectCompute.server}",
+            "username": "{connectCompute.username}",
+            "password": "{connectCompute.password}",
+            "email": "{connectCompute.email}"
+          }'>
+            Connect
+          </Button>
+        </Stack>
+      </DialogContent>
+    </Hero>
+    <Menu>
+      <MenuSection title="General" icon="settings">
+        <MenuSubSection title="" root="true">
+          <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." submit="Save" />
+        </MenuSubSection>
+      </MenuSection>
+      <MenuSection title="Identity" icon="user">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Access Control" icon="lock">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Applications" icon="app-window">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Infrastructure" icon="server">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Compute" icon="cpu">
+        <MenuSubSection title="" root="true">
+          <Button variant="default" action="connectCompute">Connect</Button>
+        </MenuSubSection>
+      </MenuSection>
+      <MenuSection title="Storage" icon="database">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Audit &amp; Compliance" icon="file-text">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Backups &amp; Recovery" icon="hard-drive">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Security" icon="shield">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Billing &amp; Plan" icon="credit-card">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="API &amp; Integrations" icon="zap">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+      <MenuSection title="Advanced / System" icon="sliders">
+        <MenuSubSection title="" root="true" />
+      </MenuSection>
+    </Menu>
+  </State>
 </Page>
