@@ -9,12 +9,6 @@ import { formatAppName } from '@/lib/navigation';
 import { useApiData } from '@/hooks/use-data';
 import { Link, useParams } from 'react-router';
 
-type SettingResponse = {
-    key: string;
-    value: string;
-    app_id: number | null;
-};
-
 type MetadataResponse = {
     organization_name?: string;
 };
