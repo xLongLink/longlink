@@ -56,7 +56,7 @@ class LongLink(FastAPI):
         for router in routes:
             self.include_router(router)
 
-        # Mount static files after API routes so `/pages` and other SDK endpoints stay reachable.
+        # Mount static files after API routes so metadata and app assets stay reachable.
         static_dir = Path(__file__).resolve().parent / ".static"
         if static_dir.exists():
             self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
