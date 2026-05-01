@@ -141,10 +141,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
 
     try:
         await _sync_compute_state_from_api()
-        kubectl.apply(
-            compute.save(),
-            kubeconfig=env.ENV_COMPUTE_KUBE_CONFIG_PATH,
-        )
+        kubectl.apply(compute.save())
         _wait_for_deployment_ready(app_name)
     except ValueError as exc:
         raise HTTPException(

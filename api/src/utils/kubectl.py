@@ -4,6 +4,7 @@ import yaml
 import subprocess
 from pathlib import Path
 from src.env import env
+from kubernetes import client, config
 
 
 # kubectl get pods
@@ -68,3 +69,25 @@ def registry(
         stderr = (exc.stderr or "").strip()
         detail = f": {stderr}" if stderr else ""
         raise ValueError(f"Failed to create secret {name}{detail}") from exc
+
+
+def logs(name: str, namespace: str) -> str:
+    """Return the logs for the first pod matching an app label."""
+    config.load_kube_config(config_file=str(Path(env.ENV_COMPUTE_KUBE_CONFIG_PATH).expanduser()))
+    core_api = client.CoreV1Api()
+
+    try:
+        pods = core_api.list_namespaced_pod(namespace, label_selector=f"app={name}")
+        for pod in pods.items:
+            try:
+                return core_api.read_namespaced_pod_log(
+                    pod.metadata.name,
+                    namespace,
+                    tail_lines=50,
+                )
+            except client.ApiException:
+                continue
+    except client.ApiException as exc:
+        raise ValueError(f"Failed to fetch logs for app {name}") from exc
+
+    raise ValueError(f"No pods found for app {name}")

@@ -1,6 +1,8 @@
 import src.db as db
-from fastapi import APIRouter
+from fastapi import Query, APIRouter
 from src.utils import kubectl
+from fastapi.responses import PlainTextResponse
+from src.utils.compute import compute
 from src.models.compute import DockerRegistryCreate
 
 router = APIRouter()
@@ -38,3 +40,9 @@ async def list_registries() -> list[dict[str, str]]:
         }
         for registry in registries
     ]
+
+
+@router.get("/compute/logs", response_class=PlainTextResponse)
+async def get_logs(name: str = Query(..., min_length=1)) -> str:
+    """Return logs for one pod in the compute namespace."""
+    return kubectl.logs(name=name, namespace=compute.namespace)
