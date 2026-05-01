@@ -40,6 +40,8 @@ api:
 web: 
 	bun i --cwd web --extra dev
 	bun run --cwd web dev --host 0.0.0.0 --port 5173
+
+
 docs:
 	bun i --cwd docs
 	bun run --cwd docs dev

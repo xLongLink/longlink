@@ -17,7 +17,7 @@ export default function SdkLonglink() {
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
     const { data: pagesResponse, isLoading: isAppMetadataLoading } = useApiData<AppMetadata | AppNavigationPage[]>(
-        normalizedRoutePath.length === 0 ? '/pages' : null
+        normalizedRoutePath.length === 0 ? '/metadata.json' : null
     );
 
     const availablePages = useMemo(() => getPagesFromResponse(pagesResponse), [pagesResponse]);

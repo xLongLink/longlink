@@ -1,69 +1,39 @@
 # Contributing to LongLink
 
-Thanks for contributing.
-
-This guide explains the essentials so you can move quickly without breaking the platform model.
-
-## Before you start
-
-- Read `AGENTS.md` in the folder you are changing.
-- Keep the current architecture direction.
-- Prefer the current development model over backward compatibility.
+<br />
 
 ## Architecture
 
 ```
 longlink/
-├── api/           # Control plane (auth, permissions, lifecycle, orchestration)
-├── sdk/           # Python SDK for application development
-├── web/           # Frontend runtime and control-plane UI integration
-├── xml/           # ReactXML runtime (XML to React rendering)
+├── api/           # Control plane
+├── dev/           # Development tools
 ├── docs/          # Platform and SDK documentation
-└── dev/          # Development tools
+├── sdk/           # Python SDK for application development
+└── web/           # Frontend runtime and control-plane UI integration
 ```
 
-## Project map
+<br />
 
-- `api/` → Control plane (auth, permissions, lifecycle, orchestration)
-- `sdk/` → Python SDK for application development
-- `web/` → Frontend runtime and control-plane UI integration
-- `xml/` → ReactXML runtime (XML to React rendering)
-- `docs/` → Platform and SDK documentation
-
-Each area has its own local `CONTRIBUTING.md` with focused rules.
-
-## Quick setup
+## Development
 
 ```bash
-uv venv
-source .venv/bin/activate
-uv pip install -e './api[dev]'
-uv pip install -e './sdk'
-bun --cwd=web install
+make install    # Install all the dependencies
+make format     # Format the code
+make build      # Build the web UI into .static folder for the sdk and the api
 ```
 
-## Working style
-
-- Keep changes small and clear.
-- Remove obsolete code when replacing old flows.
-- Keep responsibilities separated:
-  - Control plane handles governance/infrastructure concerns.
-  - Applications handle business logic.
-  - Web and XML layers render UI/runtime behavior.
-
-## Formatting
-
-When you are done:
+### Control plane
 
 ```bash
-make format
+make up     # Start the services, initialize the cluser
+make web    # Run the web app proxied to the api app
+make api    # Run the control plane
+make down   # Stop services and remove the cluster
 ```
 
-## Pull requests
+### Documentation
 
-A good PR should:
-
-- explain what changed
-- explain why it changed
-- mention any architectural impact
-- include validation steps you ran
+```bash
+make docs # Run the documentation site
+```

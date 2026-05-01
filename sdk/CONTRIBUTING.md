@@ -1,28 +1,29 @@
+# Contributing Guidelines
+
+SDK defines how applications are built on LongLink.
+
 ## Architecture
 
-```text
+```bash
 sdk/
 ├── longlink/           # Core SDK package
-│   ├── app.py          # FastAPI app factory
+│   ├── .static/        # Static file serving
 │   ├── cli/            # CLI commands (init, build, migrate)
 │   ├── context.py      # Application context
 │   ├── database/       # DB connection, session, models
 │   ├── pages/          # Page definitions
 │   ├── routes/         # API routes
-│   ├── static/         # Static file serving
 │   ├── storage/        # S3-compatible storage abstraction
 │   ├── types/          # Shared types
-│   └── utils/          # Utilities
-├── sample/             # Sample app demonstrating SDK usage
-│   └── app/            # App implementation (models, routes, pages)
+│   ├── utils/          # Utilities
+│   ├── app.py          # FastAPI app factory
+│   ├── constants.py    # FastAPI app factory
+│   └── context.py      # Request-scoped application context
+│
 └── tests/              # Unit tests
     ├── cli/            # CLI tests
     └── utils/          # Utils tests
 ```
-
-## What this folder owns
-
-SDK defines how applications are built on LongLink.
 
 ## Keep changes aligned
 
@@ -34,17 +35,3 @@ SDK defines how applications are built on LongLink.
 - Prefer simple, explicit APIs.
 - Remove obsolete code when replacing behavior.
 - Do not add tests right now (current project phase).
-
-## Useful commands
-
-Install SDK in editable mode:
-
-```bash
-pip install -e './sdk'
-```
-
-Format imports before PR:
-
-```bash
-python -m isort .
-```

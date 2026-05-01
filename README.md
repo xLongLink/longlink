@@ -2,10 +2,6 @@
 
 # LongLink
 
-[![PyPI version](https://img.shields.io/pypi/v/longlink)](https://pypi.org/project/longlink/)
-[![Python versions](https://img.shields.io/pypi/pyversions/longlink)](https://pypi.org/project/longlink/)
-[![License](https://img.shields.io/github/license/xLongLink/longlink)](https://github.com/xLongLink/longlink/blob/main/LICENSE)
-
 [Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://docs.longlink.dev) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 
 </div>
@@ -27,34 +23,3 @@ The goal is to provide a consistent platform where applications feel native, sta
 - Enable teams to move from idea to deployed app with a predictable developer workflow.
 
 <br />
-
-## Development
-
-```bash
-make format # Format the code
-```
-
-### Control plane
-
-```bash
-make up     # Start the services, initialize the cluser
-make web    # Run the web app proxied to the api app
-make api    # Run the control plane
-```
-
-```bash
-make down   # Stop services and remove the cluster
-```
-
-### Applications SDK
-
-```bash
-make sdk    # Run the web app proxied to the sample app
-make sample # Run the sample APP
-```
-
-### Documentation
-
-```bash
-make docs # Run the documentation site
-```

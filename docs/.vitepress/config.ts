@@ -55,35 +55,8 @@ export default withMermaid(defineConfig({
         items: [
           { text: 'Introduction', link: '/pages/' },
           { text: 'HTML Elements', link: '/pages/html-elements' },
-          {
-            text: 'Layout',
-            collapsed: true,
-            items: [
-              { text: 'Hero', link: '/pages/layout/hero' },
-              { text: 'Menu', link: '/pages/layout/menu' },
-              { text: 'Card', link: '/pages/layout/card' },
-              { text: 'Columns', link: '/pages/layout/columns' },
-              { text: 'Tabs', link: '/pages/layout/tabs' },
-              { text: 'Table', link: '/pages/layout/table' }
-            ]
-          },
-          {
-            text: 'Components',
-            collapsed: true,
-            items: [
-              { text: 'Button', link: '/pages/components/button' },
-              { text: 'Checkbox', link: '/pages/components/checkbox' },
-              { text: 'Dialog', link: '/pages/components/dialog' },
-              { text: 'Icon', link: '/pages/components/icon' },
-              { text: 'Input', link: '/pages/components/input' },
-              { text: 'Range', link: '/pages/components/range' },
-              { text: 'Select', link: '/pages/components/select' },
-              { text: 'Separator', link: '/pages/components/separator' },
-              { text: 'Slider', link: '/pages/components/slider' },
-              { text: 'Switch', link: '/pages/components/switch' },
-              { text: 'Textarea', link: '/pages/components/textarea' }
-            ]
-          }
+          { text: 'Layout', link: '/pages/layout' },
+          { text: 'Components', link: '/pages/components' }
         ]
       }
     ],

@@ -12,7 +12,7 @@ type AppMetadata = {
 export default function SdkLayout() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/pages');
+    const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/metadata.json');
     const pages = getPagesFromResponse(pagesResponse);
 
     const sdkBasePath = import.meta.env.MODE === 'sdk' ? '' : '/sdk';

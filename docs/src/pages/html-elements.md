@@ -40,5 +40,5 @@ These tags map directly to the current web renderer. Use them when the page need
 ## Notes
 
 - Use these tags for content, not for layout.
-- Wrap content blocks with layout elements such as `<Card>`, `<Stack>`, or `<Columns>`.
+- Wrap content blocks with layout elements such as `<Card>`, `<Columns>`, or `<Tabs>`.
 - The renderer currently supports the elements listed on this page.

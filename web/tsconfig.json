@@ -5,6 +5,6 @@
         "paths": {
             "@/*": ["./src/*"]
         },
-        "types": ["bun-types"]
+        "types": ["bun", "bun-types"]
     }
 }
