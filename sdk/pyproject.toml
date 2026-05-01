@@ -24,9 +24,9 @@ authors = [
 maintainers = []
 description = "Lovely Spam! Wonderful Spam!"
 readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
 license-files = ["LICENSE*"]
-keywords = ["egg", "bacon", "sausage", "tomatoes", "Lobster Thermidor"]
+keywords = ["longlink", "sdk", "fastapi", "sqlalchemy", "pydantic", "alembic"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python"
@@ -57,12 +57,18 @@ packages = ["longlink"]
 include = [
     "longlink/.static/**",
 ]
+exclude = [
+    "sample/**",
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "longlink",
     "longlink/.static/**",
     "README.md",
+]
+exclude = [
+    "sample/**",
 ]
 
 [tool.isort]

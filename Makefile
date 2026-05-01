@@ -1,4 +1,4 @@
-.PHONY: up down format build api web sample docs install
+.PHONY: up down format build api web docs install
 
 
 install:
@@ -19,8 +19,6 @@ format:
 build: 
 	bun run --cwd web build:api --logLevel warn
 	bun run --cwd web build:sdk --logLevel warn 
-	cd sdk && uv sync
-	cd sdk/sample && uv run longlink build
 
 
 up:
@@ -42,13 +40,6 @@ api:
 web: 
 	bun i --cwd web --extra dev
 	bun run --cwd web dev --host 0.0.0.0 --port 5173
-
-
-sample:
-	cd sdk && uv sync
-	cd sdk/sample && uv run longlink dev
-
-
 docs:
 	bun i --cwd docs
 	bun run --cwd docs dev
