@@ -76,6 +76,12 @@ jobs:
       - name: Install build tools
         run: python -m pip install --upgrade build
 
+      - name: Install web dependencies
+        run: bun install --cwd web --frozen-lockfile
+
+      - name: Build web assets for SDK
+        run: bun run --cwd web build:sdk --logLevel warn
+
       - name: Resolve SDK package version
         id: sdk_version
         run: |

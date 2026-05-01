@@ -52,6 +52,19 @@ Repository = "https://github.com/xLongLink/longlink.git"
 [project.scripts]
 longlink = "longlink.__main__:main"
 
+[tool.hatch.build.targets.wheel]
+packages = ["longlink"]
+include = [
+    "longlink/.static/**",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "longlink",
+    "longlink/.static/**",
+    "README.md",
+]
+
 [tool.isort]
 from_first = false
 no_sections = true
