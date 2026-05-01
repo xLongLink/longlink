@@ -15,16 +15,20 @@ type SettingResponse = {
     app_id: number | null;
 };
 
+type MetadataResponse = {
+    organization_name?: string;
+};
+
 /**
  * Render the top navigation breadcrumb for organization, app, and profile routes.
  */
 export function Breadcrumb() {
     const { appId } = useParams();
-    const { data: organizationNameData } = useApiData<SettingResponse>('/settings/ORG_NAME');
+    const { data: metadata } = useApiData<MetadataResponse>('/metadata.json');
     const { data: appMetadata } = useApiData<{ name?: string }>(appId ? `/apps/${appId}/metadata` : null);
 
     const appName = appId ? appMetadata?.name?.trim() || formatAppName(appId) : undefined;
-    const organizationName = organizationNameData?.value?.trim() || 'Organization';
+    const organizationName = metadata?.organization_name?.trim() || 'Organization';
 
     return (
         <UIBreadcrumb>

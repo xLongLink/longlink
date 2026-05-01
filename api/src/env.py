@@ -6,6 +6,7 @@ class Env(BaseSettings):
 
     DEV: bool = False
     KEY: str
+    ENV_ORGANIZATION_NAME: str
 
     # Control plane database URL
     ENV_DATABASE_URL: str

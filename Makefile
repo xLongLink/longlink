@@ -7,6 +7,7 @@ install:
 	cd api && uv sync --extra dev
 	cd sdk && uv sync --extra dev
 
+
 format:
 	cd api && uv sync --extra dev
 	cd sdk && uv sync --extra dev
@@ -31,6 +32,7 @@ up:
 down:
 	docker compose -f dev/compose.yml down
 	k3d cluster delete compute
+
 
 api: 
 	cd api && uv sync --extra dev
