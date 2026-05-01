@@ -1,72 +1,56 @@
 # Pages
 
-A page is the UI contract for one application view.
-Each page is defined in one XML file.
-LongLink renders this file in the web client.
+Unlike typical Python UI frameworks such as [Streamlit](https://streamlit.io/), [Dash](https://dash.plotly.com/), or [Reflex](https://reflex.dev/), LongLink enforces a strict separation between user interface and application logic.
 
-## How a page is structured
+Application logic is exposed through a dedicated RESTful API, making it directly accessible to external systems, including automation pipelines and AI tools.
 
-A page usually has three layers:
+To avoid maintaining a separate frontend codebase, pages are defined using an XML-based format that extends HTML with predefined components. These pages are interpreted at runtime and provide declarative data fetching, state management, and action execution over REST endpoints.
 
-1. **Page root**
-   The XML root contains layout and content elements.
-2. **Layout blocks**
-   Layout elements such as `<Hero>`, `<Card>`, `<Columns>`, `<Tabs>`, and `<Table>` organize screen structure. See [Layout components](./layout).
-3. **Content and interaction blocks**
-   HTML elements (`<h1>`, `<p>`, `<ul>`), UI components (`<Button>`, `<Input>`, `<Select>`), and special XML components such as `<If>`, `<For>`, and `<State>` provide text, control flow, and user actions. See [Components](./components).
+The resulting interface is consistent with the LongLink control plane and acts as an adapter over it, ensuring a uniform interaction model across applications. This keeps business logic centralized, reduces duplication, and improves maintainability over time.
 
-   Use `<If>` to show a block only when a condition is true:
+## Page
 
-   ```xml
-   <If condition="isReady">
-     <Button>Continue</Button>
-   </If>
-   ```
-
-   Use `<For>` to repeat content for each item in a list:
-
-   ```xml
-   <For each="order in orders">
-     <Card>{order.number}</Card>
-   </For>
-   ```
-
-   Use `<State>` to bind local page state:
-
-   ```xml
-   <State name="isOpen" value="false" />
-   ```
-
-This separation keeps each page explicit, composable, and easy to maintain.
-
-## Minimal example
+`Page` is the root element of every UI definition. It wraps the entire document and defines metadata such as the page name and icon, which are used in the navigation and tab system.
 
 ```xml
-<Hero title="Orders" subtitle="Track order status and actions">
-  <Card>
-    <CardHeader>
-      <CardTitle>Recent orders</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <p>Select an order to view details.</p>
-      <Button>Open order</Button>
-    </CardContent>
-  </Card>
-</Hero>
+<Page name="Settings" icon="settings">
+  <!-- Content -->
+</Page>
 ```
 
-## Recommended page flow
+## State
 
-Use this sequence when building a page:
+`State` defines a local, reactive state container. It holds variables that can be bound to components and updated through user interaction or actions.
 
-1. Define the main goal of the view.
-2. Pick layout components that match this goal.
-3. Add text using HTML elements for clear structure.
-4. Add interactive components for user input and actions.
-5. Split complex content into tabs or sections when needed.
+```xml
+<State id="user" username="" password="">
+  <Input kind="text" label="Username" bind="user.username" placeholder="Mario Rossi" />
+  <Input kind="password" label="Password" bind="user.password" placeholder="password" />
+<State />
+```
 
-## Related references
+## Query
 
-- [Layout components](./layout)
-- [Components](./components)
-- [HTML elements](./html-elements)
+`Query` declares a data-fetching operation against a REST endpoint. The response is automatically parsed and stored under the given id, making it available for rendering and logic.
+
+```xml
+<Query id="orders" path="/apps">
+```
+
+## For
+
+`For` iterates over a collection and renders its children for each item. The current element is exposed through the `as` variable.
+
+```xml
+<For each="orders" as="order">
+  <Card>{order.number}</Card>
+</For>
+```
+
+## If
+
+All components support an `if` attribute for conditional rendering. The component is rendered only if the expression evaluates to `true`.
+
+```xml
+<Card if="order.active" />
+```

@@ -171,3 +171,50 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  publish-github-release:
+    if: always() && needs.release.result == 'success'
+    needs: [release, publish-sdk, publish-api-image]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Generate release notes
+        env:
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          git fetch --tags --force
+
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)
+
+          {
+            echo "## Changes"
+            echo
+            if [ -n "$PREVIOUS_TAG" ]; then
+              git log --pretty=format:'- %s (%h)' "$PREVIOUS_TAG..$TAG"
+            else
+              git log --pretty=format:'- %s (%h)' "$TAG^"
+            fi
+            echo
+            echo
+            echo "## Contributors"
+            echo
+            if [ -n "$PREVIOUS_TAG" ]; then
+              git log --format='%an <%ae>' "$PREVIOUS_TAG..$TAG" | sort -u
+            else
+              git log --format='%an <%ae>' "$TAG^" | sort -u
+            fi
+          } > release-notes.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: gh release create "$TAG" --title "$TAG" --notes-file release-notes.md

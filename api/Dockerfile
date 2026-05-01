@@ -12,6 +12,10 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+LABEL org.opencontainers.image.title="longlink-api"
+LABEL org.opencontainers.image.description="LongLink backend API"
+LABEL org.opencontainers.image.source="https://github.com/xLongLink/longlink"
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y curl && \
@@ -20,7 +24,7 @@ RUN apt-get update && apt-get install -y curl && \
     rm kubectl && \
     apt-get clean
 
-COPY api /app
+COPY api/ /app/
 RUN pip install --no-cache-dir .
 COPY --from=web-builder /api/.static /app/.static
 
