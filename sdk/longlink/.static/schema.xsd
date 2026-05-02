@@ -1,14 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
-  <!-- Root -->
-  <xsd:element name="Page">
-    <xsd:complexType>
-      <xsd:sequence>
-        <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
-      </xsd:sequence>
-      <xsd:anyAttribute processContents="lax" />
-    </xsd:complexType>
-  </xsd:element>
+  <xsd:complexType name="AnyElementType">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+    </xsd:sequence>
+    <xsd:anyAttribute processContents="lax" />
+  </xsd:complexType>
+
+  <!-- Primitives and layout -->
+  <xsd:element name="Page" type="AnyElementType" />
+  <xsd:element name="PrimitivesPage" type="AnyElementType" />
+  <xsd:element name="Query" type="AnyElementType" />
+  <xsd:element name="State" type="AnyElementType" />
+  <xsd:element name="For" type="AnyElementType" />
+  <xsd:element name="Grid" type="AnyElementType" />
+  <xsd:element name="Columns" type="AnyElementType" />
+  <xsd:element name="Column" type="AnyElementType" />
+  <xsd:element name="Dialog" type="AnyElementType" />
+  <xsd:element name="DialogContent" type="AnyElementType" />
+  <xsd:element name="DialogDescription" type="AnyElementType" />
+  <xsd:element name="DialogFooter" type="AnyElementType" />
+  <xsd:element name="DialogHeader" type="AnyElementType" />
+  <xsd:element name="DialogTitle" type="AnyElementType" />
+  <xsd:element name="DialogTrigger" type="AnyElementType" />
+  <xsd:element name="Hero" type="AnyElementType" />
+  <xsd:element name="Menu" type="AnyElementType" />
+  <xsd:element name="MenuSection" type="AnyElementType" />
+  <xsd:element name="MenuSubSection" type="AnyElementType" />
+  <xsd:element name="Stack" type="AnyElementType" />
+  <xsd:element name="Tabs" type="AnyElementType" />
+  <xsd:element name="TabsList" type="AnyElementType" />
+  <xsd:element name="TabsTrigger" type="AnyElementType" />
+  <xsd:element name="TabsContent" type="AnyElementType" />
+
+  <!-- Components -->
+  <xsd:element name="Button" type="AnyElementType" />
+  <xsd:element name="Card" type="AnyElementType" />
+  <xsd:element name="CardAction" type="AnyElementType" />
+  <xsd:element name="CardContent" type="AnyElementType" />
+  <xsd:element name="CardDescription" type="AnyElementType" />
+  <xsd:element name="CardFooter" type="AnyElementType" />
+  <xsd:element name="CardHeader" type="AnyElementType" />
+  <xsd:element name="CardTitle" type="AnyElementType" />
+  <xsd:element name="Checkbox" type="AnyElementType" />
+  <xsd:element name="Icon" type="AnyElementType" />
+  <xsd:element name="Input" type="AnyElementType" />
+  <xsd:element name="Range" type="AnyElementType" />
+  <xsd:element name="Select" type="AnyElementType" />
+  <xsd:element name="Separator" type="AnyElementType" />
+  <xsd:element name="Slider" type="AnyElementType" />
+  <xsd:element name="Switch" type="AnyElementType" />
+  <xsd:element name="Table" type="AnyElementType" />
+  <xsd:element name="TableBody" type="AnyElementType" />
+  <xsd:element name="TableCell" type="AnyElementType" />
+  <xsd:element name="TableHead" type="AnyElementType" />
+  <xsd:element name="TableHeader" type="AnyElementType" />
+  <xsd:element name="TableRow" type="AnyElementType" />
+  <xsd:element name="Textarea" type="AnyElementType" />
+  <xsd:element name="Blockquote" type="AnyElementType" />
+  <xsd:element name="Code" type="AnyElementType" />
+  <xsd:element name="H1" type="AnyElementType" />
+  <xsd:element name="H2" type="AnyElementType" />
+  <xsd:element name="H3" type="AnyElementType" />
+  <xsd:element name="H4" type="AnyElementType" />
+  <xsd:element name="Li" type="AnyElementType" />
+  <xsd:element name="P" type="AnyElementType" />
+  <xsd:element name="Ul" type="AnyElementType" />
 
 </xsd:schema>

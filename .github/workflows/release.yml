@@ -235,7 +235,16 @@ jobs:
 
           git fetch --tags --force
 
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)
+          PREVIOUS_TAG=""
+          for CANDIDATE in $(git tag --list 'v*' --sort=-version:refname); do
+            if [ "$CANDIDATE" = "$TAG" ]; then
+              break
+            fi
+
+            PREVIOUS_TAG="$CANDIDATE"
+            break
+          done
+
           if [ -n "$PREVIOUS_TAG" ]; then
             RANGE="$PREVIOUS_TAG..$TAG"
           else
