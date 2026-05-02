@@ -4,12 +4,6 @@ on:
   push:
     tags:
       - "v*"
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Existing tag to release"
-        required: false
-        type: string
 
 permissions:
   contents: write
@@ -36,52 +30,11 @@ jobs:
 
           git fetch --tags --force
 
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            RAW_TAG="${{ github.event.inputs.tag }}"
-          else
-            RAW_TAG="${{ github.ref_name }}"
-          fi
+          RAW_TAG="${{ github.ref_name }}"
 
-          if [[ -z "$RAW_TAG" ]]; then
-            LATEST_TAG=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
-
-            if [[ -z "$LATEST_TAG" ]]; then
-              echo "Release tag is required when no existing tags are present."
-              exit 1
-            else
-              VERSION="${LATEST_TAG#v}"
-              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-              if [[ -z "$MAJOR" || -z "$MINOR" || -z "$PATCH" ]]; then
-                echo "Invalid latest release tag: $LATEST_TAG"
-                exit 1
-              fi
-
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              RAW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
-            fi
-          fi
-
-          TAG="${RAW_TAG#v}"
-
-          if [[ ! "$RAW_TAG" =~ ^v.+$ ]]; then
-            echo "Invalid release tag: $RAW_TAG. It must start with 'v'."
+          if [[ ! "$RAW_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release tag: $RAW_TAG. Expected format vMAJOR.MINOR.PATCH."
             exit 1
-          fi
-
-          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid release tag: $RAW_TAG"
-            exit 1
-          fi
-
-          if ! git rev-parse --verify --quiet "refs/tags/$RAW_TAG" >/dev/null; then
-            if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-              git tag -a "$RAW_TAG" -m "Release $RAW_TAG"
-            else
-              echo "Release tag does not exist: $RAW_TAG"
-              exit 1
-            fi
           fi
 
           if ! git rev-parse --verify --quiet "refs/tags/$RAW_TAG" >/dev/null; then

@@ -23,3 +23,16 @@ The goal is to provide a consistent platform where applications feel native, sta
 - Enable teams to move from idea to deployed app with a predictable developer workflow.
 
 <br />
+
+## Release
+
+Create a new release by pushing a version tag with the CLI:
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+The release workflow runs on `v*` tag pushes and publishes the release automatically.
+
+<br />
