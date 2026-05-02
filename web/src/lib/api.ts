@@ -9,9 +9,6 @@ const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
 /**
  * Detects SDK runtime context in development and SDK build modes.
  */
-/**
- * Detects SDK runtime context in development and SDK build modes.
- */
 const isSdkRuntime = () => {
     if (import.meta.env.MODE === 'sdk') {
         return true;
@@ -21,8 +18,7 @@ const isSdkRuntime = () => {
         return false;
     }
 
-    // SDK dev route lives under /sdk when running the unified development server.
-    return window.location.pathname.startsWith('/sdk');
+    return false;
 };
 
 /**

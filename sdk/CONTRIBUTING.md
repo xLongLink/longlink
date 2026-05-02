@@ -7,7 +7,7 @@ SDK defines how applications are built on LongLink.
 ```bash
 sdk/
 ├── longlink/           # Core SDK package
-│   ├── .static/        # Static file serving
+│   ├── .web/           # Static file serving
 │   ├── cli/            # CLI commands (init, build, migrate)
 │   ├── context.py      # Application context
 │   ├── database/       # DB connection, session, models
@@ -35,3 +35,10 @@ sdk/
 - Prefer simple, explicit APIs.
 - Remove obsolete code when replacing behavior.
 - Do not add tests right now (current project phase).
+
+
+## 
+
+```
+uv sync --extra dev
+```

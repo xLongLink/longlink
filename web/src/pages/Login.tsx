@@ -9,40 +9,16 @@ export default function Login() {
     const { data: user, isLoading } = useUser();
     const apiBaseUrl = getApiBaseUrl();
 
-    /**
-     * Derives a safe post-login redirect target from the referrer.
-     */
-    const getDefaultReturnTo = () => {
-        const referrer = document.referrer;
-        if (!referrer) {
-            return '/';
-        }
-
-        /* Reject cross-origin referrers and keep login redirects local. */
-        try {
-            const referrerUrl = new URL(referrer);
-            if (referrerUrl.origin !== window.location.origin) {
-                return '/';
-            }
-            const referrerPath = `${referrerUrl.pathname}${referrerUrl.search}${referrerUrl.hash}`;
-            return referrerPath.startsWith('/login') ? '/' : referrerPath;
-        } catch {
-            return '/';
-        }
-    };
-
-    const returnTo = getDefaultReturnTo();
-
     /* Redirect authenticated users or hand off to the identity provider. */
     useEffect(() => {
         if (!isLoading) {
             if (user) {
-                navigate(returnTo);
+                navigate('/');
             } else {
                 window.location.href = `${apiBaseUrl}/login/oidc`;
             }
         }
-    }, [isLoading, navigate, returnTo, user, apiBaseUrl]);
+    }, [isLoading, navigate, user, apiBaseUrl]);
 
     return (
         <div className="flex min-h-screen items-center justify-center px-6 py-12 text-white">

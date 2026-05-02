@@ -3,9 +3,9 @@ import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
 import { useIsFetching, useIsMutating } from '@tanstack/react-query';
 import { Toaster } from '@/ui/sonner';
 import Layout from './Layout';
-import Longlink from './pages/org/Longlink';
-import OrganizationPage from './pages/org/OrganizationPage';
-import Login from './pages/user/Login';
+import Longlink from './pages/Longlink';
+import OrganizationPage from './pages/OrganizationPage';
+import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import SdkLayout from './sdk/Layout';
 import SdkLonglink from './sdk/Longlink';
@@ -14,7 +14,6 @@ import { RequireAuth } from '@/components/Auth';
 const buildMode = import.meta.env.MODE;
 
 const isSdkBuild = buildMode === 'sdk';
-const isDevelopment = buildMode === 'development';
 
 /**
  * Renders a top-level loading indicator while React Query is busy.
@@ -78,19 +77,6 @@ function getRoutes() {
     // SDK bundle serves app from root without control-plane auth routes.
     if (isSdkBuild) {
         return sdkRoutes;
-    }
-
-    /* Development exposes both trees so control-plane and app runtime are reachable. */
-    // Dev bundle exposes both trees so SDK path and API path work together.
-    if (isDevelopment) {
-        return [
-            {
-                path: '/sdk',
-                element: <SdkLayout />,
-                children: [{ path: '*', element: <SdkLonglink /> }],
-            },
-            ...apiRoutes,
-        ];
     }
 
     return apiRoutes;

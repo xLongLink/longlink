@@ -73,6 +73,15 @@ jobs:
           fi
 
           if ! git rev-parse --verify --quiet "refs/tags/$RAW_TAG" >/dev/null; then
+            if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+              git tag -a "$RAW_TAG" -m "Release $RAW_TAG"
+            else
+              echo "Release tag does not exist: $RAW_TAG"
+              exit 1
+            fi
+          fi
+
+          if ! git rev-parse --verify --quiet "refs/tags/$RAW_TAG" >/dev/null; then
             echo "Release tag does not exist: $RAW_TAG"
             exit 1
           fi

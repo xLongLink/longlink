@@ -8,6 +8,7 @@ version = "0.0.0"
 dependencies = [
     "alembic",
     "click",
+    "lxml",
     "uvicorn",
     "pydantic",
     "pydantic-settings",
@@ -43,6 +44,13 @@ dev = [
   "isort==8.0.1"
 ]
 
+[dependency-groups]
+dev = [
+  "pytest==8.4.2",
+  "pytest-asyncio==0.24.0",
+  "isort==8.0.1"
+]
+
 [project.urls]
 Homepage = "https://www.longlink.dev"
 Documentation = "https://docs.longlink.dev"
@@ -56,6 +64,7 @@ longlink = "longlink.__main__:main"
 packages = ["longlink"]
 include = [
     "longlink/.static/**",
+    "longlink/.web/**",
 ]
 exclude = [
     "sample/**",
@@ -65,6 +74,7 @@ exclude = [
 include = [
     "longlink",
     "longlink/.static/**",
+    "longlink/.web/**",
     "README.md",
 ]
 exclude = [

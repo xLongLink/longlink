@@ -57,10 +57,10 @@ class LongLink(FastAPI):
             self.include_router(router)
 
         # Mount static files after API routes so metadata and app assets stay reachable.
-        static_dir = Path(__file__).resolve().parent / ".static"
+        static_dir = Path(__file__).resolve().parent / ".web"
         if static_dir.exists():
             self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
-            
+
         # Enable CORS in development for local frontend access to API routes
         if settings.DEV:
             self.add_middleware(

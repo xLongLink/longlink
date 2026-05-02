@@ -1,6 +1,8 @@
 import xmltodict
+from lxml import etree
 from typing import Any
 from pathlib import Path
+from importlib import resources
 
 
 class Page:
@@ -27,13 +29,25 @@ class Page:
                 self._content = handler.read()
         return self._content
 
+    def validate(self) -> None:
+        """Validate the XML document against the packaged XSD schema."""
+
+        schema_path = resources.files("longlink").joinpath(".static/schema.xsd")
+        schema_root = etree.XML(schema_path.read_bytes())
+        schema = etree.XMLSchema(schema_root)
+
+        xml_doc = etree.XML(self.content.encode("utf-8"))
+        if not schema.validate(xml_doc):
+            messages = [f"Line {error.line}: {error.message}" for error in schema.error_log]
+            raise ValueError("XML is invalid: " + "; ".join(messages))
+
     @property
     def schema(self) -> dict[str, Any]:
         """Return full page document as a dict for downstream processing."""
         if self._schema is None:
             self._schema = xmltodict.parse(self.content)
         return self._schema
-    
+
     @property
     def metadata(self) -> dict[str, str]:
         """Extract root metadata fields from XML page schema."""

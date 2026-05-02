@@ -11,5 +11,6 @@ async def get_page(name: str, ctx: Context) -> Response:
     normalized_name = name.strip().lower()
     for page in ctx.pages:
         if page.path.stem.strip().lower() == normalized_name:
+            page.validate()
             return Response(content=page.content, media_type="application/xml")
     return Response(content="", media_type="application/xml")

@@ -147,7 +147,7 @@ script.bat
 # Project-specific nested ignore rules consolidated at root
 /api/.static/
 
-/sdk/longlink/.static/
+/sdk/longlink/.web/
 
 /web/logs/
 /web/node_modules/
