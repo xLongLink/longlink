@@ -67,7 +67,7 @@ async def list_apps() -> list[AppResponse]:
 async def get_app_metadata(req: Request, app_name: str):
     """Return app metadata used by the control-plane web runtime."""
     app = await _get_app(app_name)
-    upstream = await _forward(app_path(app.name, "pages"), req)
+    upstream = await _forward(app_path(app.name, "metadata.json"), req)
 
     if not 200 <= upstream.status_code < 300:
         return upstream

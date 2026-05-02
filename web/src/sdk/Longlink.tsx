@@ -4,7 +4,7 @@ import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
 import { getApiBaseUrl } from '@/lib/api';
-import { getPagesFromResponse } from './pages';
+import { getPageContentFromResponse, getPagesFromResponse } from './pages';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
@@ -17,7 +17,7 @@ export default function SdkLonglink() {
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
     const { data: pagesResponse, isLoading: isAppMetadataLoading } = useApiData<AppMetadata | AppNavigationPage[]>(
-        normalizedRoutePath.length === 0 ? '/metadata.json' : null
+        '/metadata.json'
     );
 
     const availablePages = useMemo(() => getPagesFromResponse(pagesResponse), [pagesResponse]);
@@ -31,24 +31,18 @@ export default function SdkLonglink() {
     }, [availablePages]);
 
     const activePagePath = normalizedRoutePath || fallbackPagePath;
-    const pageEndpoint = activePagePath.length > 0 ? `/pages/${activePagePath}` : null;
+    const data = activePagePath.length > 0 ? getPageContentFromResponse(pagesResponse, activePagePath) : undefined;
 
-    const { data, isLoading, error } = useApiData<string>(pageEndpoint);
-
-    if (error) {
-        return <div>{error.message}</div>;
-    }
-
-    if (isAppMetadataLoading || isLoading) {
+    if (isAppMetadataLoading) {
         return <div>Loading...</div>;
     }
 
-    if (!pageEndpoint) {
+    if (!activePagePath) {
         return <div>No pages configured for this app.</div>;
     }
 
     if (!data) {
-        return <div>Unexpected response format for {pageEndpoint}</div>;
+        return <div>Unexpected response format for metadata pages</div>;
     }
 
     const ast = fromXml(data);

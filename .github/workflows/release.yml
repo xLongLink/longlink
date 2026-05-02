@@ -45,19 +45,19 @@ jobs:
             if [[ -z "$LATEST_TAG" ]]; then
               echo "Release tag is required when no existing tags are present."
               exit 1
+            else
+              VERSION="${LATEST_TAG#v}"
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+              if [[ -z "$MAJOR" || -z "$MINOR" || -z "$PATCH" ]]; then
+                echo "Invalid latest release tag: $LATEST_TAG"
+                exit 1
+              fi
+
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              RAW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
             fi
-
-            VERSION="${LATEST_TAG#v}"
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-            if [[ -z "$MAJOR" || -z "$MINOR" || -z "$PATCH" ]]; then
-              echo "Invalid latest release tag: $LATEST_TAG"
-              exit 1
-            fi
-
-            MINOR=$((MINOR + 1))
-            PATCH=0
-            RAW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
           fi
 
           TAG="${RAW_TAG#v}"
@@ -69,6 +69,11 @@ jobs:
 
           if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Invalid release tag: $RAW_TAG"
+            exit 1
+          fi
+
+          if ! git rev-parse --verify --quiet "refs/tags/$RAW_TAG" >/dev/null; then
+            echo "Release tag does not exist: $RAW_TAG"
             exit 1
           fi
 

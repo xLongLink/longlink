@@ -1,7 +1,7 @@
 import { type AppNavigationPage } from '@/lib/navigation';
 
 type AppMetadata = {
-    pages?: AppNavigationPage[];
+    pages?: Array<AppNavigationPage & { content?: string }>;
 };
 
 /**
@@ -32,4 +32,12 @@ export const getPagesFromResponse = (response: unknown): AppNavigationPage[] => 
     }
 
     return toPageList(response);
+};
+
+/**
+ * Returns the page payload for one route from a metadata response.
+ */
+export const getPageContentFromResponse = (response: unknown, pagePath: string): string | undefined => {
+    const pages = getPagesFromResponse(response) as Array<AppNavigationPage & { content?: string }>;
+    return pages.find((page) => page.path === pagePath)?.content;
 };

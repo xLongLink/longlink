@@ -21,6 +21,7 @@ async def get_metadata(ctx: Context) -> dict[str, object]:
                 "path": page.path.stem,
                 "name": page.name,
                 "icon": page.metadata.get("icon", "file-text"),
+                "content": page.content,
             }
             for page in ctx.pages
         ],

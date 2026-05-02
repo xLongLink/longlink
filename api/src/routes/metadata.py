@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from src.env import env
+from src.routes.pages import get_all_pages
 
 router = APIRouter()
 
@@ -9,8 +10,5 @@ def metadata() -> dict:
     """Return the API metadata document."""
     return {
         "organization_name": env.ENV_ORGANIZATION_NAME,
-        "pages": [
-            {"name": "Applications", "path": "applications", "icon": "blocks"},
-            {"name": "Settings", "path": "settings", "icon": "settings"},
-        ],
+        "pages": [page.model_dump() for page in get_all_pages()],
     }

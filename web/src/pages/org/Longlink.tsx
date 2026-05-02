@@ -3,9 +3,10 @@ import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
+import { getPageContentFromResponse } from '@/sdk/pages';
 
 type AppMetadata = {
-    pages?: AppNavigationPage[];
+    pages?: Array<AppNavigationPage & { content?: string }>;
 };
 
 /**
@@ -31,24 +32,18 @@ export default function Longlink() {
     }, [appMetadata?.pages]);
 
     const activePagePath = normalizedRoutePath || fallbackPagePath;
-    const pageEndpoint = appId ? (activePagePath.length > 0 ? `/apps/${appId}/pages/${activePagePath}` : null) : null;
+    const data = getPageContentFromResponse(appMetadata, activePagePath);
 
-    const { data, isLoading, error } = useApiData<string>(pageEndpoint);
-
-    if (error) {
-        return <div>{error.message}</div>;
-    }
-
-    if (isAppMetadataLoading || isLoading) {
+    if (isAppMetadataLoading) {
         return <div>Loading...</div>;
     }
 
-    if (!pageEndpoint) {
+    if (!activePagePath) {
         return <div>No pages configured for this app.</div>;
     }
 
     if (!data) {
-        return <div>Unexpected response format for {pageEndpoint}</div>;
+        return <div>Unexpected response format for metadata pages</div>;
     }
 
     const ast = fromXml(data);

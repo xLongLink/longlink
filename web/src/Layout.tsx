@@ -26,7 +26,7 @@ const toNavigationPages = (value: unknown): AppNavigationPage[] => {
 function OrgNavigation() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/pages');
+    const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/metadata.json');
 
     const pageList = toNavigationPages(pagesResponse);
 

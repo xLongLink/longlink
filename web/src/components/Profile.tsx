@@ -1,5 +1,5 @@
 import { LogOut } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,9 +17,14 @@ export function UserProfile() {
     const navigate = useNavigate();
     const { data: user } = useUser();
     const { mutateAsync: signOut } = useSignOut();
-    const username = user?.name ?? 'Guest';
-    const fullName = user?.email ?? 'Not signed in';
-    const avatarUrl = user?.avatar ?? '';
+
+    if (!user) {
+        return null;
+    }
+
+    const username = user.name;
+    const fullName = user.email;
+    const avatarUrl = user.avatar ?? '';
 
     /**
      * Signs the current user out and redirects to login.
@@ -51,18 +56,11 @@ export function UserProfile() {
                     </DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
-                <DropdownMenuItem className="text-red-300 focus:text-red-200 cursor-pointer transition-colors hover:bg-white/10 p-2">
-                    {user ? (
-                        <button type="button" className="flex w-full items-center" onClick={handleSignOut}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Sign out
-                        </button>
-                    ) : (
-                        <Link to="/login" className="flex w-full items-center">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Sign in
-                        </Link>
-                    )}
+                <DropdownMenuItem className="cursor-pointer p-2 text-red-300 transition-colors hover:bg-white/10 focus:text-red-200">
+                    <button type="button" className="flex w-full items-center" onClick={handleSignOut}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign out
+                    </button>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

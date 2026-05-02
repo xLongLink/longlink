@@ -1,13 +1,16 @@
-import { fromXml, renderNode, createContext, registry } from '@/xml';
+import { useMemo } from 'react';
 import { useApiData } from '@/hooks/use-data';
+import { fromXml, renderNode, createContext, registry } from '@/xml';
+import { getPageContentFromResponse } from '@/sdk/pages';
+import type { AppNavigationPage } from '@/lib/navigation';
 
 type OrganizationPageProps = {
     page: string;
 };
 
 export default function OrganizationPage({ page }: OrganizationPageProps) {
-    const endpoint = `/pages/${page}`;
-    const { data, isLoading, error } = useApiData<string>(endpoint);
+    const { data: metadata, isLoading, error } = useApiData<{ pages?: AppNavigationPage[] }>('/metadata.json');
+    const pageContent = useMemo(() => getPageContentFromResponse(metadata, page), [metadata, page]);
 
     if (error) {
         return <div>{error.message}</div>;
@@ -17,11 +20,11 @@ export default function OrganizationPage({ page }: OrganizationPageProps) {
         return <div>Loading...</div>;
     }
 
-    if (!data) {
-        return <div>Unexpected response format for {endpoint}</div>;
+    if (!pageContent) {
+        return <div>Unexpected response format for /metadata.json</div>;
     }
 
-    const ast = fromXml(data);
+    const ast = fromXml(pageContent);
     const ctx = createContext({ baseUrl: '/api' });
     return <>{renderNode(ast, registry, ctx)}</>;
 }
