@@ -180,8 +180,10 @@ jobs:
           fetch-depth: 0
 
       - name: Generate release notes
+        id: release_notes
         env:
           TAG: ${{ needs.release.outputs.tag }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -189,14 +191,19 @@ jobs:
           git fetch --tags --force
 
           PREVIOUS_TAG=""
+          FOUND_CURRENT=false
           for CANDIDATE in $(git tag --list 'v*' --sort=-version:refname); do
-            if [ "$CANDIDATE" = "$TAG" ]; then
+            if [ "$FOUND_CURRENT" = true ]; then
+              PREVIOUS_TAG="$CANDIDATE"
               break
             fi
 
-            PREVIOUS_TAG="$CANDIDATE"
-            break
+            if [ "$CANDIDATE" = "$TAG" ]; then
+              FOUND_CURRENT=true
+            fi
           done
+
+          echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
 
           if [ -n "$PREVIOUS_TAG" ]; then
             RANGE="$PREVIOUS_TAG..$TAG"
@@ -207,12 +214,27 @@ jobs:
           {
             echo "## Changes"
             echo
-            git log --pretty=format:'- %s (%h)' "$RANGE"
+            while IFS=$'\t' read -r SUBJECT SHORT_SHA FULL_SHA; do
+              echo "- $SUBJECT ([${SHORT_SHA}](https://github.com/${REPOSITORY}/commit/${FULL_SHA}))"
+            done < <(git log --pretty=format:'%s%x09%h%x09%H' "$RANGE")
             echo
             echo
             echo "## Contributors"
             echo
-            git log --format='%an <%ae>' "$RANGE" | sort -u
+            while IFS=$'\t' read -r NAME EMAIL; do
+              USERNAME=""
+              if [[ "$EMAIL" =~ ^[0-9]+\+([^@]+)@users\.noreply\.github\.com$ ]]; then
+                USERNAME="${BASH_REMATCH[1]}"
+              elif [[ "$EMAIL" =~ ^([^@]+)@users\.noreply\.github\.com$ ]]; then
+                USERNAME="${BASH_REMATCH[1]}"
+              fi
+
+              if [ -n "$USERNAME" ]; then
+                echo "<a href=\"https://github.com/${USERNAME}\"><img src=\"https://github.com/${USERNAME}.png?size=80\" width=\"40\" height=\"40\" alt=\"${USERNAME}\" title=\"${USERNAME}\" /></a>"
+              else
+                echo "- $NAME"
+              fi
+            done < <(git log --format='%an%x09%ae' "$RANGE" | sort -u)
           } > release-notes.md
 
       - name: Create GitHub release
