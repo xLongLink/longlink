@@ -1,11 +1,11 @@
 FROM oven/bun:1 AS web-builder
 
-WORKDIR /web
-COPY web/package.json web/bun.lock ./
+WORKDIR /repo
+COPY web/package.json web/bun.lock web/ ./web/
+COPY api/ ./api/
+WORKDIR /repo/web
 RUN bun install --frozen-lockfile
-WORKDIR /web
-COPY web/ ./
-RUN bun run build
+RUN bun run build:api
 
 FROM python:3.12-slim
 
@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y curl && \
 
 COPY api/ /app/
 RUN pip install --no-cache-dir .
-COPY --from=web-builder /api/.web /app/.web
+COPY --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 
 EXPOSE 8000
 
