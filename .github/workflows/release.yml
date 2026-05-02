@@ -236,24 +236,21 @@ jobs:
           git fetch --tags --force
 
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)
+          if [ -n "$PREVIOUS_TAG" ]; then
+            RANGE="$PREVIOUS_TAG..$TAG"
+          else
+            RANGE="$TAG"
+          fi
 
           {
             echo "## Changes"
             echo
-            if [ -n "$PREVIOUS_TAG" ]; then
-              git log --pretty=format:'- %s (%h)' "$PREVIOUS_TAG..$TAG"
-            else
-              git log --pretty=format:'- %s (%h)' "$TAG^"
-            fi
+            git log --pretty=format:'- %s (%h)' "$RANGE"
             echo
             echo
             echo "## Contributors"
             echo
-            if [ -n "$PREVIOUS_TAG" ]; then
-              git log --format='%an <%ae>' "$PREVIOUS_TAG..$TAG" | sort -u
-            else
-              git log --format='%an <%ae>' "$TAG^" | sort -u
-            fi
+            git log --format='%an <%ae>' "$RANGE" | sort -u
           } > release-notes.md
 
       - name: Create GitHub release

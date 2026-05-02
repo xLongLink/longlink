@@ -64,7 +64,7 @@ longlink = "longlink.__main__:main"
 packages = ["longlink"]
 include = [
     "longlink/.static/**",
-    "longlink/.web/**",
+    "longlink/.static/web/**",
 ]
 exclude = [
     "sample/**",
@@ -74,7 +74,7 @@ exclude = [
 include = [
     "longlink",
     "longlink/.static/**",
-    "longlink/.web/**",
+    "longlink/.static/web/**",
     "README.md",
 ]
 exclude = [

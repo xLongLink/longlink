@@ -12,6 +12,8 @@ api/
 │   ├── middleware/   # Middleware
 │   ├── models/       # Pydantic models
 │   ├── routes/       # API routes
+│   ├── .static/      # Packaged XSD assets
+│   │   └── web/       # Generated control-plane UI
 │   └── utils/        # Utilities
 ├── alembic/          # Database migrations
 ├── tests/            # Tests

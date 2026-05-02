@@ -4,7 +4,6 @@ import xmltodict
 from lxml import etree
 from typing import Any
 from pathlib import Path
-from importlib import resources
 from xml.parsers.expat import ExpatError
 
 
@@ -57,10 +56,9 @@ class Page:
 
     def validate(self) -> None:
         """Validate the XML document against the packaged XSD schema."""
-        schema_path = resources.files("longlink").joinpath(".static/schema.xsd")
+        schema_path = Path(__file__).resolve().parents[1] / ".static" / "schema.xsd"
         schema_root = etree.XML(schema_path.read_bytes())
         schema = etree.XMLSchema(schema_root)
-
         xml_doc = etree.XML(self.content.encode("utf-8"))
         if not schema.validate(xml_doc):
             messages = [f"Line {error.line}: {error.message}" for error in schema.error_log]

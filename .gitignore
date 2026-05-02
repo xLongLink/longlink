@@ -145,8 +145,8 @@ script.bat
 .codex
 
 # Project-specific nested ignore rules consolidated at root
-/api/.web/
-/sdk/longlink/.web/
+/api/src/.static/web/
+/sdk/longlink/.static/web/
 
 /web/logs/
 /web/node_modules/

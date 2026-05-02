@@ -20,7 +20,7 @@ longlink/
 ```bash
 make install    # Install all the dependencies
 make format     # Format the code
-make build      # Build the web UI into .web for the sdk and .static for the api
+ make build      # Build the web UI into .static/web for the sdk and api
 ```
 
 ### Control plane

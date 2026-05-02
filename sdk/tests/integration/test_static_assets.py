@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 def test_sdk_serves_static_index_and_spa_fallback(tmp_path, monkeypatch):
     """Ensure the SDK app serves built .web assets and falls back to index.html."""
 
-    static_dir = tmp_path / 'longlink' / '.web'
+    static_dir = tmp_path / 'longlink' / '.static' / 'web'
     static_dir.mkdir(parents=True)
     (static_dir / 'index.html').write_text('<html><body>sdk static</body></html>', encoding='utf-8')
 
