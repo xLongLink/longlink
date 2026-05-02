@@ -180,7 +180,6 @@ jobs:
           fetch-depth: 0
 
       - name: Generate release notes
-        id: release_notes
         env:
           TAG: ${{ needs.release.outputs.tag }}
           REPOSITORY: ${{ github.repository }}
@@ -202,8 +201,6 @@ jobs:
               FOUND_CURRENT=true
             fi
           done
-
-          echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
 
           if [ -n "$PREVIOUS_TAG" ]; then
             RANGE="$PREVIOUS_TAG..$TAG"
