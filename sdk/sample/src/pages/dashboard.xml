@@ -1,0 +1,4 @@
+<Page name="Dashboard" icon="layout-dashboard">
+  <Hero title="Dashboard" subtitle="Sample dashboard page loaded from XML." icon="layout-dashboard" />
+  <Button text="Refresh Data" variant="default" url="/sample" />
+</Page>

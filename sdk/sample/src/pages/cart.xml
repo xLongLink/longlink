@@ -1,0 +1,11 @@
+<Page name="Cart" icon="shopping-cart">
+  <Hero title="Cart" subtitle="Sample cart page loaded from XML." icon="shopping-cart" />
+  <Table
+    data='[{"sku":"SKU-001","name":"Starter Subscription","quantity":1,"price":49},{"sku":"SKU-002","name":"Priority Support","quantity":1,"price":19}]'
+  >
+    <Column key="sku" label="SKU" content="{sku}" />
+    <Column key="name" label="Item" content="{name}" />
+    <Column key="quantity" label="Qty" content="{quantity}" />
+    <Column key="price" label="Price" align="right" content="{price}" />
+  </Table>
+</Page>

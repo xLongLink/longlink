@@ -1,0 +1,42 @@
+<Page name="Settings" icon="settings">
+  <Menu>
+    <MenuSection title="General" icon="settings">
+      <MenuSubSection title="" root="true">
+        <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." submit="Save" />
+      </MenuSubSection>
+    </MenuSection>
+    <MenuSection title="Identity" icon="user">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Access Control" icon="lock">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Applications" icon="app-window">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Infrastructure" icon="server">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Storage" icon="database">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Audit &amp; Compliance" icon="file-text">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Backups &amp; Recovery" icon="hard-drive">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Security" icon="shield">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Billing &amp; Plan" icon="credit-card">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="API &amp; Integrations" icon="zap">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+    <MenuSection title="Advanced / System" icon="sliders">
+      <MenuSubSection title="" root="true" />
+    </MenuSection>
+  </Menu>
+</Page>
