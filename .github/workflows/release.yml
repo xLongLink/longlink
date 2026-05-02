@@ -4,12 +4,12 @@ on:
   push:
     tags:
       - "v*"
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Existing tag to release"
-        required: true
-        type: string
+workflow_dispatch:
+  inputs:
+    tag:
+      description: "Existing tag to release"
+      required: false
+      type: string
 
 permissions:
   contents: write
@@ -26,6 +26,8 @@ jobs:
       - name: Resolve release tag
         id: release_tag
         run: |
+          git fetch --tags --force
+
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             RAW_TAG="${{ github.event.inputs.tag }}"
           else
@@ -33,8 +35,24 @@ jobs:
           fi
 
           if [[ -z "$RAW_TAG" ]]; then
-            echo "Release tag is required."
-            exit 1
+            LATEST_TAG=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
+
+            if [[ -z "$LATEST_TAG" ]]; then
+              echo "Release tag is required when no existing tags are present."
+              exit 1
+            fi
+
+            VERSION="${LATEST_TAG#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+            if [[ -z "$MAJOR" || -z "$MINOR" || -z "$PATCH" ]]; then
+              echo "Invalid latest release tag: $LATEST_TAG"
+              exit 1
+            fi
+
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            RAW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
           fi
 
           TAG="${RAW_TAG#v}"
