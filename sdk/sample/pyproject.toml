@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi",
-  "longlink @ file:../",
+  "longlink",
   "uvicorn",
 ]
 
@@ -45,6 +45,9 @@ pythonpath = ["."]
 
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.uv.sources]
+longlink = { path = "../", editable = true }
 
 [tool.longlink]
 

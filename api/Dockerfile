@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y curl && \
 
 COPY api/ /app/
 RUN pip install --no-cache-dir .
-COPY --from=web-builder /api/.static /app/.static
+COPY --from=web-builder /api/.web /app/.web
 
 EXPOSE 8000
 

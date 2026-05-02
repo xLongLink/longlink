@@ -17,6 +17,7 @@ def get_all_pages() -> list[PageInfo]:
 
     for page_file in sorted(PAGES.glob("*.xml")):
         page = Page(page_file)
+        page.validate()
         pages.append(
             PageInfo(
                 name=page.metadata.get("name", page_file.stem.replace("-", " ").title()),
@@ -45,4 +46,5 @@ async def get_page(page_name: str) -> Response:
         raise HTTPException(status_code=404, detail="Page not found")
 
     page = Page(page_path)
+    page.validate()
     return Response(content=page.content, media_type="application/xml")

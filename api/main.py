@@ -49,7 +49,7 @@ app.add_middleware(
 for router in routers:
     app.include_router(router)
 
-static_dir = Path(__file__).resolve().parent / ".static"
+static_dir = Path(__file__).resolve().parent / ".web"
 if static_dir.exists():
     app.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
 

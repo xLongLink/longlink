@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     const isSdkBuild = mode === 'sdk';
     const buildOutDir = isSdkBuild
         ? path.resolve(__dirname, '../sdk/longlink/.web')
-        : path.resolve(__dirname, '../api/.static');
+        : path.resolve(__dirname, '../api/.web');
 
     const devServerPort = env.VITE_DEV_PORT ? parseInt(env.VITE_DEV_PORT) : 5173;
 

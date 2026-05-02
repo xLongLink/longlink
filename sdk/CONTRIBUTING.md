@@ -36,8 +36,7 @@ sdk/
 - Remove obsolete code when replacing behavior.
 - Do not add tests right now (current project phase).
 
-
-## 
+##
 
 ```
 uv sync --extra dev

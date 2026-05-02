@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import xmltodict
+from lxml import etree
 from typing import Any
 from pathlib import Path
+from importlib import resources
 from xml.parsers.expat import ExpatError
 
 
@@ -36,7 +38,7 @@ class Page:
     @property
     def metadata(self) -> dict[str, str]:
         """Extract normalized metadata from the root <Page> element."""
-        page_node = self.schema.get("Page")
+        page_node = self.schema.get("Page") or self.schema.get("iPage")
         if not isinstance(page_node, dict):
             return {}
 
@@ -52,3 +54,14 @@ class Page:
             metadata[key.removeprefix("@").lower()] = normalized_value
 
         return metadata
+
+    def validate(self) -> None:
+        """Validate the XML document against the packaged XSD schema."""
+        schema_path = resources.files("longlink").joinpath(".static/schema.xsd")
+        schema_root = etree.XML(schema_path.read_bytes())
+        schema = etree.XMLSchema(schema_root)
+
+        xml_doc = etree.XML(self.content.encode("utf-8"))
+        if not schema.validate(xml_doc):
+            messages = [f"Line {error.line}: {error.message}" for error in schema.error_log]
+            raise ValueError("XML is invalid: " + "; ".join(messages))
