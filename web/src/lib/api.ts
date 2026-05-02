@@ -1,8 +1,14 @@
 const controlPlaneApiBaseUrl = '/api';
 const sdkDevApiBaseUrl = '/sdk-api';
 
+/**
+ * Removes trailing slashes from a base URL.
+ */
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
 
+/**
+ * Detects SDK runtime context in development and SDK build modes.
+ */
 /**
  * Detects SDK runtime context in development and SDK build modes.
  */
@@ -42,8 +48,14 @@ export type ApiRequestOptions<TBody = unknown> = {
     credentials?: RequestCredentialsMode;
 };
 
+/**
+ * Trims slashes from both sides of a path segment.
+ */
 const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '');
 
+/**
+ * Normalizes an API path for the current app scope.
+ */
 const normalizePath = (path: string, appName?: string) => {
     if (path.startsWith('/apps/')) {
         return path;
@@ -63,8 +75,14 @@ const normalizePath = (path: string, appName?: string) => {
     return `/apps/${normalizedAppName}/${normalizedPath}`;
 };
 
+/**
+ * Builds a fully qualified API path for the current runtime.
+ */
 const buildApiUrl = (path: string, appName?: string) => `${getApiBaseUrl()}${normalizePath(path, appName)}`;
 
+/**
+ * Converts an API failure payload into a readable error message.
+ */
 const toApiErrorMessage = (status: number, responseData: unknown) => {
     const defaultMessage = `API request failed (${status})`;
 
@@ -80,6 +98,9 @@ const toApiErrorMessage = (status: number, responseData: unknown) => {
     return defaultMessage;
 };
 
+/**
+ * Builds a request URL with optional query parameters.
+ */
 const buildUrl = (path: string, query?: ApiQueryParams) => {
     const url = new URL(buildApiUrl(path), window.location.origin);
     if (query) {

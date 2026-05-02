@@ -60,3 +60,22 @@ jobs:
       - name: Run tests
         working-directory: sdk
         run: uv run pytest
+
+  # The web package uses Bun, so run its test suite separately.
+  web-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+
+      - name: Run tests
+        working-directory: web
+        run: bun test

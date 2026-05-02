@@ -21,6 +21,9 @@ export function UserProfile() {
     const fullName = user?.email ?? 'Not signed in';
     const avatarUrl = user?.avatar ?? '';
 
+    /**
+     * Signs the current user out and redirects to login.
+     */
     const handleSignOut = async () => {
         await signOut();
         navigate('/login');

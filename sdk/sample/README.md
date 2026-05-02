@@ -29,7 +29,7 @@ longlink build
 ## Setup with uv (preferred)
 
 ```bash
-uv sync 
+uv sync
 # To upgrade the packages
 # uv sync --upgrade
 ```

@@ -52,6 +52,7 @@ export function createContext(initial: Partial<ExecutionContext> = {}): Executio
     };
 }
 
+/* Build the built-in XML component registry once at module load. */
 const defaultRegistry = {
     Page,
     PrimitivesPage,
@@ -134,6 +135,9 @@ export function createRegistry<const TRegistry extends RegistryShape>(
  * Normalizes the `invalidate` prop into an array of query keys.
  * Accepts a string (comma-separated), an array, or an invalid value.
  */
+/**
+ * Normalizes invalidate targets into a list of query keys.
+ */
 function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
     if (Array.isArray(value)) {
         return value;
@@ -153,6 +157,9 @@ function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
  * Builds a RequestInit object from method and body.
  * Handles native body types (FormData, URLSearchParams, Blob, string) directly,
  * serializing all other values as JSON with a content-type header.
+ */
+/**
+ * Builds request options for XML actions.
  */
 function buildRequestInit(method: string, body: unknown): RequestInit {
     if (method === 'GET' || method === 'HEAD' || body === undefined) {
@@ -196,6 +203,9 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
 /**
  * Reads a submit response into a short toast message.
  */
+/**
+ * Reads a short status message from an action response.
+ */
 async function readResponseMessage(response: Response): Promise<string> {
     const contentType = response.headers.get('content-type') ?? '';
 
@@ -222,6 +232,9 @@ async function readResponseMessage(response: Response): Promise<string> {
  * - Strings containing embedded `{expression}` placeholders are interpolated.
  * - Arrays and plain objects are traversed recursively.
  * - Non-plain objects (FormData, Blob, Date, URLSearchParams, etc.) are preserved.
+ */
+/**
+ * Resolves templated payload values against the runtime context.
  */
 function resolveActionPayload(value: unknown, ctx: ExecutionContext): unknown {
     if (typeof value === 'string') {

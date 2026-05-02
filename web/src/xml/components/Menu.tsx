@@ -45,10 +45,16 @@ type NormalizedSection = {
     subSections: NormalizedSubSection[];
 };
 
+/**
+ * Renders a menu section icon through the XML icon resolver.
+ */
 const MenuSectionIcon = ({ iconName, ...props }: { iconName: string } & LucideProps) => (
     <Icon name={iconName} fallback="app-window" {...props} />
 );
 
+/**
+ * Creates icon components for menu sections.
+ */
 function makeIcon(iconName: string | undefined): LucideIcon {
     if (!iconName) return AppWindow;
 
@@ -59,6 +65,9 @@ function makeIcon(iconName: string | undefined): LucideIcon {
     return ResolvedIcon as LucideIcon;
 }
 
+/**
+ * Extracts menu sections and subsections from the XML AST.
+ */
 function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
     const sectionNodes = (menuNode.children ?? []).filter((n) => n.name === 'MenuSection');
 

@@ -53,6 +53,9 @@ export function xmlToAST(xml: string): ASTNode[] {
  * Attribute values are always strings; non-string values (e.g. booleans
  * produced by fast-xml-parser) are discarded.
  */
+/**
+ * Converts a single preserve-order parser entry into an AST node.
+ */
 function convertNode(entry: PreserveOrderNode): ASTNode | null {
     const nodeName = Object.keys(entry).find((key) => key !== ATTRIBUTES_NODE_NAME);
     if (!nodeName) return null;

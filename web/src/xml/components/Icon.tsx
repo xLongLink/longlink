@@ -9,6 +9,9 @@ type IconProps = LucideProps & {
 
 const lazyIcons: Record<string, React.LazyExoticComponent<LucideIcon>> = {};
 
+/**
+ * Resolves a lazily loaded Lucide icon by name.
+ */
 function resolveLazyIcon(name: string): React.LazyExoticComponent<LucideIcon> | undefined {
     if (lazyIcons[name]) {
         return lazyIcons[name];

@@ -16,6 +16,9 @@ const buildMode = import.meta.env.MODE;
 const isSdkBuild = buildMode === 'sdk';
 const isDevelopment = buildMode === 'development';
 
+/**
+ * Renders a top-level loading indicator while React Query is busy.
+ */
 function GlobalLoader() {
     const isFetching = useIsFetching();
     const isMutating = useIsMutating();
@@ -33,7 +36,7 @@ function GlobalLoader() {
 }
 
 /**
- * Wraps route element with auth guard.
+ * Wraps a route element with the auth guard.
  */
 const withAuth = (element: ReactElement) => <RequireAuth>{element}</RequireAuth>;
 
@@ -68,14 +71,16 @@ const apiRoutes = [
 ];
 
 /**
- * Builds route tree based on bundle mode.
+ * Builds the route tree for the current bundle mode.
  */
 function getRoutes() {
+    /* SDK bundle serves the app runtime without control-plane routes. */
     // SDK bundle serves app from root without control-plane auth routes.
     if (isSdkBuild) {
         return sdkRoutes;
     }
 
+    /* Development exposes both trees so control-plane and app runtime are reachable. */
     // Dev bundle exposes both trees so SDK path and API path work together.
     if (isDevelopment) {
         return [
@@ -94,7 +99,7 @@ function getRoutes() {
 const router = createBrowserRouter(getRoutes());
 
 /**
- * Renders app shell, router, global toaster.
+ * Renders the app shell, router, and global toaster.
  */
 export default function App() {
     return (

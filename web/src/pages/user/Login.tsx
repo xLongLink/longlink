@@ -9,12 +9,16 @@ export default function Login() {
     const { data: user, isLoading } = useUser();
     const apiBaseUrl = getApiBaseUrl();
 
+    /**
+     * Derives a safe post-login redirect target from the referrer.
+     */
     const getDefaultReturnTo = () => {
         const referrer = document.referrer;
         if (!referrer) {
             return '/';
         }
 
+        /* Reject cross-origin referrers and keep login redirects local. */
         try {
             const referrerUrl = new URL(referrer);
             if (referrerUrl.origin !== window.location.origin) {
@@ -29,6 +33,7 @@ export default function Login() {
 
     const returnTo = getDefaultReturnTo();
 
+    /* Redirect authenticated users or hand off to the identity provider. */
     useEffect(() => {
         if (!isLoading) {
             if (user) {

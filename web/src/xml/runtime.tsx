@@ -14,7 +14,7 @@ import type { ExecutionContext, RuntimeState } from './types';
  * Throws a SyntaxError if the expression string is not valid JavaScript.
  */
 export function evaluate(expr: string, ctx: ExecutionContext): any {
-    /* Build scope: state values, then queries, then local scope (highest priority) */
+    /* Build scope: state values, then queries, then local scope (highest priority). */
     const scope = {
         ...Object.fromEntries(Object.entries(ctx.state).map(([key, [value]]) => [key, value])),
         ...ctx.queries,
@@ -35,6 +35,7 @@ export function evaluate(expr: string, ctx: ExecutionContext): any {
  * Example: interpolate("Hello {name}!", ctx) → "Hello World!"
  */
 export function interpolate(str: string, ctx: ExecutionContext): string {
+    /* Replace embedded expressions while preserving invalid literal text. */
     return str.replace(/\{([^}]+)\}/g, (match, expr) => {
         try {
             return String(evaluate(expr, ctx));
@@ -63,6 +64,7 @@ export function interpolate(str: string, ctx: ExecutionContext): string {
  *   so it is parsed as an object literal instead.
  */
 export function resolveValue(value: string, ctx: ExecutionContext): unknown {
+    /* Treat plain text as a template and brace-wrapped text as an expression. */
     const trimmedValue = value.trim();
 
     if (!trimmedValue.startsWith('{') || !trimmedValue.endsWith('}')) {
@@ -94,6 +96,7 @@ export function resolveValue(value: string, ctx: ExecutionContext): unknown {
  * Example: resolveCondition("{count > 0}", ctx) → true when count is 5
  */
 export function resolveCondition(condition: string | undefined, ctx: ExecutionContext): boolean {
+    /* Normalize empty and expression-wrapped conditions before evaluation. */
     if (condition == null) return true;
 
     const trimmed = condition.trim();

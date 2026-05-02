@@ -21,7 +21,11 @@ export type AppNavigationPage = {
     icon?: string;
 };
 
+/**
+ * Resolves a page icon component for navigation tabs.
+ */
 const NavigationPageIcon = ({ name }: { name?: string }): ComponentType<LucideProps> => {
+    /* Wrap the XML icon renderer so tabs can reuse app icon names. */
     function ResolvedNavigationPageIcon(props: LucideProps) {
         return createElement(Icon, { name: name || 'file-text', fallback: 'file-text', ...props });
     }

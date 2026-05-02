@@ -29,6 +29,9 @@ export function useSignOut() {
                 method: 'GET',
                 credentials: 'include',
             }),
+        /**
+         * Clears the cached user after a successful sign-out.
+         */
         onSuccess: () => {
             queryClient.setQueryData(['user'], null);
         },

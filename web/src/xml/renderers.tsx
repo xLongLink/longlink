@@ -11,6 +11,9 @@ import type { ASTNode, ExecutionContext, RegistryShape, RenderableASTNode } from
  *   path when the element is clicked (see `resolveSet`).
  * - All remaining attributes are resolved via `resolveValue`.
  */
+/**
+ * Resolves XML attributes into React props for a rendered node.
+ */
 function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record<string, unknown> {
     if (!params) return {};
 

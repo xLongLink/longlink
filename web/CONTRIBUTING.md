@@ -1,43 +1,43 @@
 # Contributing in `web/`
 
-Thanks for contributing to web layer.
+Thanks for contributing to the web layer.
 
 ## Architecture
 
 ```text
 web/
 ├── src/
-│   ├── components/   # Shared UI components
-│   ├── hooks/        # Custom React hooks
-│   ├── libs/         # Utility libraries (API, logging)
-│   ├── longlink/     # LongLink integration
-│   ├── pages/        # Page definitions
-│   ├── ui/           # shadcn/ui components
-│   ├── xml/          # ReactXML runtime
-│   ├── layouts/      # Layout components
-│   ├── App.tsx       # Main app entry
-│   └── Layout.tsx    # Layout wrapper
-└── pages/            # Vite page routes
+│   ├── app entry        # `main.tsx`, `App.tsx`, `Layout.tsx`
+│   ├── components/      # Shared app components
+│   ├── lib/             # Shared utilities, API, navigation, query helpers
+│   ├── ui/              # shadcn/ui and shared primitives
+│   └── xml/             # XML compiler, runtime, layouts, primitives, components
+├── index.html
+├── vite.config.ts
+└── package.json
 ```
 
 ## What this folder owns
 
-Project renders LongLink UI and connects to platform APIs.
+The web package is the frontend runtime for LongLink.
+
+It owns the shared UI, XML runtime, and control-plane rendering path.
 
 ## How it works
 
-- In development, the app runs from the Vite dev server, so changes in `src/` update immediately without a full rebuild.
-- After `bun run build`, Vite compiles the web app into static production assets that are served from the build output.
-- Keep this split in mind when changing routing, assets, or runtime behavior: development favors fast iteration, while the build output is the production artifact.
+- `bun run dev` starts the Vite dev server for live preview.
+- `bun run build:api` builds the control-plane web bundle.
+- `bun run build:sdk` still builds the SDK-targeted bundle.
+- `bun run build` remains the default production build.
 
 ## Keep changes aligned
 
-- Use shadcn components for reusable UI elements.
-- Keep behavior and styles consistent.
-- For static content, write JSX elements explicitly inline (do not use `.map()`).
-- Prefer `src/lib/api.ts` utilities (`apiFetch`) over raw `fetch`, unless specific edge case.
-- Remove legacy rendering paths when replacing flows.
-- Development mode: backward compatibility is optional if current model works end to end.
+- Keep control-plane concerns in the API mode path.
+- Use shadcn/ui and the existing `src/ui/` primitives for reusable UI.
+- Keep XML runtime and compiler changes inside `src/xml/`.
+- Prefer `src/lib/api.ts` helpers over raw `fetch`.
+- Remove obsolete flows when replacing them end to end.
+- Favor the current MVP model over backward compatibility.
 
 ## Formatting
 

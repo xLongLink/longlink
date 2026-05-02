@@ -8,6 +8,9 @@ type AppMetadata = {
     pages?: AppNavigationPage[];
 };
 
+/**
+ * Removes leading and trailing slashes from a route path.
+ */
 const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '');
 
 export default function Longlink() {
@@ -18,6 +21,7 @@ export default function Longlink() {
         appId && normalizedRoutePath.length === 0 ? `/apps/${appId}/metadata` : null
     );
 
+    /* Use the first configured page when no nested path is provided. */
     const fallbackPagePath = useMemo(() => {
         if (!appMetadata?.pages || appMetadata.pages.length === 0) {
             return '';

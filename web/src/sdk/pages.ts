@@ -4,6 +4,9 @@ type AppMetadata = {
     pages?: AppNavigationPage[];
 };
 
+/**
+ * Normalizes a metadata payload into a page list.
+ */
 const toPageList = (value: unknown): AppNavigationPage[] => {
     if (Array.isArray(value)) {
         return value as AppNavigationPage[];
@@ -16,6 +19,9 @@ const toPageList = (value: unknown): AppNavigationPage[] => {
     return [];
 };
 
+/**
+ * Extracts pages from a raw metadata response.
+ */
 export const getPagesFromResponse = (response: unknown): AppNavigationPage[] => {
     if (typeof response === 'string') {
         try {

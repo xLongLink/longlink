@@ -28,6 +28,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
     const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(storageKey) as Theme) || defaultTheme);
 
+    /* Sync the document theme class with the selected theme. */
     useEffect(() => {
         const root = window.document.documentElement;
 
@@ -45,6 +46,9 @@ export function ThemeProvider({
 
     const value = {
         theme,
+        /**
+         * Persists the theme and updates the active document theme.
+         */
         setTheme: (theme: Theme) => {
             localStorage.setItem(storageKey, theme);
             setTheme(theme);
@@ -58,6 +62,9 @@ export function ThemeProvider({
     );
 }
 
+/**
+ * Reads the active theme context.
+ */
 export const useTheme = () => {
     const context = useContext(ThemeProviderContext);
 
