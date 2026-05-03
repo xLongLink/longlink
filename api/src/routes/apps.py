@@ -119,6 +119,11 @@ async def _sync_compute_state_from_api() -> None:
     )
 
 
+async def _rollback_app_registration(app_name: str) -> None:
+    """Remove a newly created app row after provisioning fails."""
+    await db.apps.delete(app_name)
+
+
 @router.post("/apps")
 async def create_app(payload: AppCreate) -> AppResponse:
     """Create a new app by provisioning its container and registering it."""
@@ -144,19 +149,28 @@ async def create_app(payload: AppCreate) -> AppResponse:
         kubectl.apply(compute.save())
         _wait_for_deployment_ready(app_name)
     except ValueError as exc:
+        await _rollback_app_registration(app_name)
         raise HTTPException(
             status_code=500,
             detail=f"Failed to apply compute manifests: {exc}",
         ) from exc
     except RuntimeError as exc:
+        await _rollback_app_registration(app_name)
         raise HTTPException(
             status_code=500,
             detail=str(exc),
         ) from exc
     except TimeoutError as exc:
+        await _rollback_app_registration(app_name)
         raise HTTPException(
             status_code=500,
             detail=str(exc),
+        ) from exc
+    except Exception as exc:
+        await _rollback_app_registration(app_name)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to provision app: {exc}",
         ) from exc
 
     return AppResponse(name=app.name, url=compute_app_url(app.name))

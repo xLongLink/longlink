@@ -23,4 +23,4 @@ async def create_file(ctx: Context):
 ## references
 
 - [fsspec Documentation](https://filesystem-spec.readthedocs.io/en/latest/)
-- [fsspec Github](https://github.com/fsspec/filesystem_spec)
+- [fsspec GitHub](https://github.com/fsspec/filesystem_spec)

@@ -18,11 +18,11 @@ uv pip install .[dev]
 
 ## Usage
 
-You can execute all tests or target a specific test file using the following commands. Use `tests/unit` for fast, isolated checks and `tests/integration` for end-to-end behavior across components:
+You can execute all tests or target a specific test file using the following commands. Use `sdk/tests` for SDK test files and keep file paths aligned with the repository layout:
 
 ```bash
 pytest
-pytest tests/unit/cli/test_init.py
+pytest sdk/tests/cli/test_init.py
 ```
 
 ## Example

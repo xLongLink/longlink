@@ -7,18 +7,18 @@ Thanks for helping improve control plane.
 ```text
 api/
 ├── src/
-│   ├── apps/         # Application models
-│   ├── db/           # Database models and services
-│   ├── middleware/   # Middleware
-│   ├── models/       # Pydantic models
+│   ├── __init__.py
+│   ├── auth.py       # Auth helpers
+│   ├── constants.py  # Shared constants
+│   ├── env.py        # Environment config
+│   ├── db/           # Database session, models, services
+│   ├── pages/        # XML page definitions
 │   ├── routes/       # API routes
-│   ├── .static/      # Packaged XSD assets
-│   │   └── web/       # Generated control-plane UI
-│   └── utils/        # Utilities
-├── alembic/          # Database migrations
-├── tests/            # Tests
+│   ├── templates/    # Kubernetes and infra templates
+│   └── .static/
+│       └── web/      # Packaged frontend assets
 ├── main.py           # FastAPI entry
-└── pages/            # Static pages for control-plane UI
+└── tests/            # Tests
 ```
 
 ## What this folder owns
