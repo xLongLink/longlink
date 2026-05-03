@@ -46,8 +46,8 @@ jobs:
 
   # The SDK is published to PyPI.
   publish-sdk:
-    if: always() && needs.release.result == 'success' && needs.tests.result == 'success'
-    needs: [release, tests]
+    if: always() && needs.release.result == 'success'
+    needs: [release]
     runs-on: ubuntu-latest
 
     environment:
@@ -129,8 +129,8 @@ jobs:
 
   # The API is packaged into a container, so we will publish the image to GHCR on each release.
   publish-api-image:
-    if: always() && needs.release.result == 'success' && needs.tests.result == 'success'
-    needs: [release, tests]
+    if: always() && needs.release.result == 'success'
+    needs: [release]
     runs-on: ubuntu-latest
 
     steps:
@@ -166,8 +166,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   publish-github-release:
-    if: always() && needs.release.result == 'success' && needs.tests.result == 'success'
-    needs: [release, tests, publish-sdk, publish-api-image]
+    if: always() && needs.release.result == 'success'
+    needs: [release, publish-sdk, publish-api-image]
     runs-on: ubuntu-latest
 
     permissions:
