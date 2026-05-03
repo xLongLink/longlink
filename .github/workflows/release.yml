@@ -44,7 +44,7 @@ jobs:
 
           echo "tag=$RAW_TAG" >> "$GITHUB_OUTPUT"
 
-  # The SDK is published to PyPI
+  # The SDK is published to PyPI.
   publish-sdk:
     if: always() && needs.release.result == 'success' && needs.tests.result == 'success'
     needs: [release, tests]
