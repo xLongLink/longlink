@@ -58,6 +58,7 @@ Repository = "https://github.com/xLongLink/longlink.git"
 "Bug Tracker" = "https://github.com/xLongLink/longlink/issues"
 
 [tool.setuptools_scm]
+root = ".."
 version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"
 
