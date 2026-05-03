@@ -1,10 +1,10 @@
 # Building
 
-- Applications can be build using docker
-- `longling build` generate the `Dockerfile` and the `manifest.json`
-- Once containerized can be placed in any registry-
-- Can be connected to the control panel and deployed
+- Applications can be built using Docker.
+- `longlink build` generates the `Dockerfile` and the `manifest.json`.
+- Once containerized, applications can be pushed to any registry.
+- Applications can be connected to the control plane and deployed.
 
 ```bash
-longling build
+longlink build
 ```
