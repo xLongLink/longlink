@@ -6,33 +6,14 @@
 
 </div>
 
-## Why
+LongLink is a platform for building applications that manage workflows, data, and validation processes. It provides a central control plane that handles authentication, permissions, organization management, and deployment, so applications can focus entirely on business logic.
 
-Longlink exists to make internal tools and product extensions faster to build, ship, and operate.
-It combines a control plane, a frontend shell, and an SDK so teams can focus on application logic instead of rebuilding auth, organization management, UI integration, and deployment workflows for every new app.
-The goal is to provide a consistent platform where applications feel native, stay manageable, and can evolve without each team maintaining its own stack.
+Applications are built with a Python SDK using proven technologies like FastAPI and SQLAlchemy, following a clear structure: data layer, API, and UI. The interface is defined declaratively and rendered directly inside the platform, ensuring a consistent, native experience without maintaining a separate frontend.
 
-<br />
+# Why
 
-## Goals
+Modern development, especially with AI, has made it easy to generate code, but it often leads to duplicated infrastructure, inconsistent patterns, and systems that are harder to maintain.
 
-- Provide a single platform for managing organizations, users, modules, and application data.
-- Make it easy to build new platform apps with a Python SDK.
-- Keep frontend integration consistent so apps render natively inside the web application.
-- Reduce repeated infrastructure work across authentication, permissions, publishing, and lifecycle management.
-- Enable teams to move from idea to deployed app with a predictable developer workflow.
+LongLink addresses this by providing a predefined architecture where common concerns are already solved. Instead of rebuilding authentication, permissions, and deployment logic for every application, developers and AI systems work on top of a consistent base.
 
-<br />
-
-## Release
-
-Create a new release by pushing a version tag with the CLI:
-
-```bash
-git tag v1.2.3
-git push origin v1.2.3
-```
-
-The release workflow runs on `v*` tag pushes and publishes the release automatically.
-
-<br />
+This reduces complexity, improves security, and enforces better structure by default. The result is a more efficient development process where applications are faster and cheaper to build, while remaining consistent and easier to evolve over time.

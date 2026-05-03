@@ -97,7 +97,7 @@
       </Table>
 
       <Columns>
-        <Column key="name" label="Name" content="{item.name}" align="left" />
+        <Column key="name" label="Name" content="Alpha" align="left" />
       </Columns>
 
       <Dialog>

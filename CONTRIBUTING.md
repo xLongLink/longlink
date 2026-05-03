@@ -20,7 +20,7 @@ longlink/
 ```bash
 make install    # Install all the dependencies
 make format     # Format the code
- make build      # Build the web UI into .static/web for the sdk and api
+make build      # Build the web UI into .static/web for the sdk and api
 ```
 
 ### Control plane
@@ -36,4 +36,13 @@ make down   # Stop services and remove the cluster
 
 ```bash
 make docs # Run the documentation site
+```
+
+## Release
+
+The release workflow runs on `v*` tag pushes and publishes the release automatically.
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```

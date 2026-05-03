@@ -65,6 +65,8 @@
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
 
+  <xsd:element name="Page" type="PageType" />
+
   <!-- <State />  -->
   <xsd:complexType name="StateType">
     <xsd:sequence>
@@ -405,9 +407,9 @@
       <xsd:enumeration value="icon-lg" />
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:complexType name="ButtonType">
+  <xsd:complexType name="ButtonType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="AnyElementType">
+      <xsd:extension base="ChildrenOnlyType">
         <xsd:attribute name="variant" type="ButtonVariantType" use="optional" />
         <xsd:attribute name="size" type="ButtonSizeType" use="optional" />
       </xsd:extension>

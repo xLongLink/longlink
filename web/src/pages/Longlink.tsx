@@ -9,13 +9,18 @@ type AppMetadata = {
     pages?: Array<AppNavigationPage & { content?: string }>;
 };
 
+type LonglinkProps = {
+    appId?: string;
+};
+
 /**
  * Removes leading and trailing slashes from a route path.
  */
 const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '');
 
-export default function Longlink() {
-    const { appId, '*': wildcardPath } = useParams();
+export default function Longlink({ appId: appIdOverride }: LonglinkProps) {
+    const { appId: routeAppId, '*': wildcardPath } = useParams();
+    const appId = appIdOverride ?? routeAppId;
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
     const { data: appMetadata, isLoading: isAppMetadataLoading } = useApiData<AppMetadata>(
