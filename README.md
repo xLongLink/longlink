@@ -9,7 +9,7 @@
 <br />
 <br />
 
-# Introduction 
+# Introduction
 
 A platform for building applications that manage workflows, data, and validation processes.
 
