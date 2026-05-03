@@ -9,6 +9,8 @@
 <br />
 <br />
 
+# Introduction 
+
 A platform for building applications that manage workflows, data, and validation processes.
 
 It provides a centralized control plane responsible for authentication, permissions, organization management, and deployment. This allows applications to focus entirely on business logic instead of infrastructure concerns.
@@ -18,7 +20,7 @@ Applications are built with a Python SDK using proven technologies like FastAPI 
 <br />
 <br />
 
-# Why
+## Why
 
 Modern AI development makes generating code fast and accessible. However, without clear guardrails and a well-defined foundation, codebases tend to become fragmented, inconsistent, and difficult to maintain.
 
