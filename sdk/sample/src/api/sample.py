@@ -1,35 +1,35 @@
 from uuid import uuid4
-from longlink import Router, Context
+from fastapi import Depends
+from longlink import Router, fs, get_session
 from sample.src.types import UserModel
-from sample.src.models.projects import Project, LinkedContact, ProjectStatus
+from sample.src.tables.projects import Project, LinkedContact, ProjectStatus
+from sample.src.services.projects import create_project
 
 router = Router()
 
 
 @router.get("/sample")
-async def sample_get_endpoint(ctx: Context):
+async def sample_get_endpoint():
     """Handle sample GET request."""
 
-    filesystem = ctx.fs()
+    filesystem = fs
     return {
         "message": "Sample GET endpoint received data",
         "filesystem_protocol": filesystem.protocol,
         "filesystem_type": type(filesystem).__name__,
-        "has_database_session": ctx.session is not None,
-        "has_engine": ctx.engine is not None,
     }
 
 
 @router.post("/sample")
-async def sample_post_endpoint(ctx: Context):
-    """Create sample records in filesystem and database using request context."""
+async def sample_post_endpoint(session_maker=Depends(get_session)):
+    """Create sample records in filesystem and database."""
 
     project_id = str(uuid4())
     filename = f"sample-projects/{project_id}.txt"
     file_contents = f"Created project {project_id} from sample context endpoint."
 
-    # Persist data with native fsspec APIs exposed by the request context.
-    filesystem = ctx.fs()
+    # Persist data with the shared filesystem instance.
+    filesystem = fs
     with filesystem.open(filename, "wb") as file_handle:
         file_handle.write(file_contents.encode("utf-8"))
 
@@ -46,9 +46,9 @@ async def sample_post_endpoint(ctx: Context):
         owner="sample-user",
     )
 
-    # Persist data to the configured database session abstraction.
-    ctx.session.add(project)
-    ctx.session.commit()
+    # Persist data through the configured async session factory.
+    async with session_maker() as session:
+        await create_project(session, project)
 
     return {
         "message": "Sample POST endpoint saved data to filesystem and database",

@@ -1,23 +1,15 @@
 # Storage
 
-LongLink SDK exposes a native `fsspec` filesystem through the request context.
-You can use the filesystem exactly like standard `fsspec` clients.
+LongLink SDK exposes a native `fs` object.
+You can use it like a standard `fsspec` filesystem.
 
 ## Usage
 
 ```python
-import fsspec
-from longlink import Router, Context
+from longlink import fs
 
-router = Router()
-
-@router.post("/files")
-async def create_file(ctx: Context):
-    fs = ctx.fs()
-    with fs.open("reports/example.txt", "wb") as f:
-        f.write(b"hello")
-
-    return {"success": True }
+with fs.open("reports/example.txt", "wb") as f:
+    f.write(b"hello")
 ```
 
 ## references

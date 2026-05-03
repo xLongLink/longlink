@@ -28,7 +28,10 @@ LongLink addresses this by building on top of production-proven technologies and
 
 This reduces complexity, enforces best practices by default, and results in applications that are faster to build, easier to maintain, and more reliable over time.
 
-## XSD Components TODO
+<br />
+<br />
+
+## Components TODO
 
 - [ ] Page
 - [ ] State
@@ -83,3 +86,18 @@ This reduces complexity, enforces best practices by default, and results in appl
 - [ ] TableHeader
 - [ ] TableRow
 - [ ] Textarea
+
+
+<br />
+<br />
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.ch)
+
+</div>
+
+---

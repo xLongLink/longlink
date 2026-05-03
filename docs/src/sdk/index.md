@@ -19,7 +19,7 @@ pip install longlink
 ```
 
 ```bash [uv]
-uv pip install longlink
+uv add longlink
 ```
 
 :::
@@ -61,7 +61,7 @@ pip install .[dev]
 ```
 
 ```bash [uv]
-uv pip install .[dev]
+uv add .[dev]
 ```
 
 :::
@@ -69,7 +69,7 @@ uv pip install .[dev]
 Run the application locally:
 
 ```bash
-longlink dev
+uv run longlink dev
 ```
 
 ## Additional Resources

@@ -1,17 +1,16 @@
-import fsspec
-from longlink.utils.settings import Environments
+from fsspec.spec import AbstractFileSystem
+from longlink.utils.settings import env
 
 
-def create_storage(env: Environments) -> fsspec.AbstractFileSystem:
-    """Create fsspec filesystem client from environment settings."""
+class Storage(AbstractFileSystem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    if env.storage_protocol == "file":
-        fs = fsspec.filesystem("file")
-    else:
-        fs = fsspec.filesystem(
-            env.storage_protocol,
-            key=env.storage_key,
-            secret=env.storage_secret,
-            client_kwargs={"endpoint_url": env.storage_endpoint},
-        )
+
+fs = Storage(env.STORAGE_PROTOCOL, endpoint_url=env.STORAGE_ENDPOINT_URL, key=env.STORAGE_ACCESS_KEY_ID, secret=env.STORAGE_SECRET_ACCESS_KEY)
+
+
+def get_fs() -> AbstractFileSystem:
+    """Return the configured filesystem instance."""
+
     return fs

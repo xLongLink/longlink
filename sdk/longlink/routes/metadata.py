@@ -1,12 +1,11 @@
-from fastapi import APIRouter
-from longlink.context import Context
+from fastapi import Request, APIRouter
 from longlink.utils.metadata import load_metadata
 
 router = APIRouter()
 
 
 @router.get("/metadata.json")
-async def get_metadata(ctx: Context) -> dict[str, object]:
+async def get_metadata(request: Request) -> dict[str, object]:
     """Return basic application metadata for the current SDK project."""
 
     metadata = load_metadata()
@@ -23,6 +22,6 @@ async def get_metadata(ctx: Context) -> dict[str, object]:
                 "icon": page.metadata.get("icon", "file-text"),
                 "content": page.content,
             }
-            for page in ctx.pages
+            for page in request.app.state.pages
         ],
     }

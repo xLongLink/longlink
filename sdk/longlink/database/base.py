@@ -3,7 +3,10 @@ from datetime import datetime
 from sqlmodel import Field, Session, SQLModel
 from sqlalchemy import create_engine as create_sqlalchemy_engine
 from sqlalchemy.engine import Engine
-from longlink.utils.settings import Environments
+from db.models.__base__ import Base
+from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
+                                    async_sessionmaker, create_async_engine)
+from longlink.utils.settings import env
 
 
 class Table(SQLModel):
@@ -13,13 +16,38 @@ class Table(SQLModel):
     updated_at: Optional[datetime] = Field(default=None, nullable=True)
 
 
-def create_engine(env: Environments) -> Engine:
-    """Create SQLAlchemy engine from database URL."""
-    return create_sqlalchemy_engine(env.DBURL)
+_engine: AsyncEngine | None = None
+Session: async_sessionmaker[AsyncSession] | None = None
 
 
-def get_session(engine: Engine) -> Iterator[Session]:
-    """Yield SQLModel session bound to engine."""
+async def get_session() -> async_sessionmaker[AsyncSession]:
+    """Return a SQLAlchemy sessionmaker instance."""
+    global Session, _engine
 
-    with Session(engine) as session:
-        yield session
+    if Session is not None:
+        return Session
+
+    dburl = env.DATABASE_URL
+
+    engine_kwargs = {
+        'pool_pre_ping': True,
+        'pool_recycle': 20,
+    }
+
+    if not dburl.startswith('sqlite+'):
+        engine_kwargs['pool_use_lifo'] = True
+
+    _engine = create_async_engine(dburl, **engine_kwargs)
+
+    # Verify connection once
+    async with _engine.connect():
+        pass
+
+    Session = async_sessionmaker(_engine, expire_on_commit=False)
+
+    # Auto-create tables for SQLite only
+    if dburl.startswith('sqlite+'):
+        async with _engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    return Session

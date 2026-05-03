@@ -3,13 +3,13 @@ from fastapi import FastAPI, Request
 from pathlib import Path
 from longlink.utils import Page, Environments
 from longlink.routes import routes
-from longlink.context import State, create_state
 from fastapi.responses import JSONResponse
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from longlink.utils.settings import Settings
 
 
 class SPAStaticFiles(StaticFiles):
@@ -43,15 +43,14 @@ class SPAStaticFiles(StaticFiles):
 
 class LongLink(FastAPI):
     """FastAPI app that owns SDK service creation and shared request state."""
-    context: State
 
     def __init__(self, env: BaseSettings | None = None, **kwargs):
         """Build app, initialize managed services, mount routes, and attach static files."""
         super().__init__(**kwargs)
 
-        settings = env if isinstance(env, Environments) else Environments()
-        self.context = create_state(settings)
-        self.state.context = self.context
+        environments = env if isinstance(env, Environments) else Environments()
+        settings = Settings(environments)
+        self.state.pages = []
 
         # Register API routes from the router module
         for router in routes:
@@ -127,4 +126,4 @@ class LongLink(FastAPI):
                 page_path = candidate
                 break
 
-        self.context.pages.append(Page(page_path))
+        self.state.pages.append(Page(page_path))

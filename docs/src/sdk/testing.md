@@ -11,7 +11,7 @@ pip install .[dev]
 ```
 
 ```bash [uv]
-uv pip install .[dev]
+uv add .[dev]
 ```
 
 :::
