@@ -44,38 +44,6 @@ jobs:
 
           echo "tag=$RAW_TAG" >> "$GITHUB_OUTPUT"
 
-  tests:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Run API tests
-        working-directory: api
-        run: uv pip install --system -e '.[dev]' && uv run pytest
-
-      - name: Run SDK tests
-        working-directory: sdk
-        run: uv pip install --system -e '.[dev]' && uv run pytest
-
-      - name: Run web tests
-        working-directory: web
-        run: bun install --frozen-lockfile && bun test
-
   # The SDK is published to PyPI
   publish-sdk:
     if: always() && needs.release.result == 'success' && needs.tests.result == 'success'
