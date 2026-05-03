@@ -25,7 +25,9 @@ export function For({ each, as, children }: { each?: string; as?: string; childr
 
     const runtime = useRuntime();
     const { ctx } = runtime;
-    const items = evaluate(each, ctx) ?? [];
+
+    /* Allow `each` to be written as either `items` or `{items}` in XML. */
+    const items = evaluate(normalizeEachExpression(each), ctx) ?? [];
 
     if (!Array.isArray(items)) {
         return null;
@@ -48,4 +50,17 @@ export function For({ each, as, children }: { each?: string; as?: string; childr
             </Fragment>
         );
     });
+}
+
+/**
+ * Normalizes a For `each` expression to the raw JavaScript expression.
+ */
+function normalizeEachExpression(each: string): string {
+    const trimmed = each.trim();
+
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        return trimmed.slice(1, -1).trim();
+    }
+
+    return trimmed;
 }
