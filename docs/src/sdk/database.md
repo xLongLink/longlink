@@ -15,12 +15,12 @@ The SDK handles:
 You create a database by defining the database URL in the application environment, then defining tables with the SDK `Table` base.
 
 ```python
-from longlink import Settings, Table
+from longlink import Environments, Table
 from pydantic import Field
 from sqlmodel import Session, create_engine
 
 
-class Env(Settings):
+class Env(Environments):
     DBURL: str
 
 

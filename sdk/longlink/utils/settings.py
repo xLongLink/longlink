@@ -2,7 +2,7 @@ from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class Environments(BaseSettings):
     """SDK environment model loaded from process variables or `.env`."""
 
     DEV: bool = False

@@ -1,8 +1,8 @@
 import fsspec
-from longlink.utils.settings import Settings
+from longlink.utils.settings import Environments
 
 
-def create_storage(env: Settings) -> fsspec.AbstractFileSystem:
+def create_storage(env: Environments) -> fsspec.AbstractFileSystem:
     """Create fsspec filesystem client from environment settings."""
 
     if env.storage_protocol == "file":

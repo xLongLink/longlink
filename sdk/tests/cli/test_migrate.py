@@ -10,6 +10,7 @@ def test_migrate_command_runs_generation_then_migration(monkeypatch):
     def fake_make_migrations():
         """Record migration-generation call in execution order."""
         call_order.append('make_migrations')
+        return True
 
     def fake_migrate():
         """Record migrate call in execution order."""

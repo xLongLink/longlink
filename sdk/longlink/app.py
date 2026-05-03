@@ -1,7 +1,7 @@
 import traceback
 from fastapi import FastAPI, Request
 from pathlib import Path
-from longlink.utils import Page, Settings
+from longlink.utils import Page, Environments
 from longlink.routes import routes
 from longlink.context import State, create_state
 from fastapi.responses import JSONResponse
@@ -49,7 +49,7 @@ class LongLink(FastAPI):
         """Build app, initialize managed services, mount routes, and attach static files."""
         super().__init__(**kwargs)
 
-        settings = env if isinstance(env, Settings) else Settings()
+        settings = env if isinstance(env, Environments) else Environments()
         self.context = create_state(settings)
         self.state.context = self.context
 

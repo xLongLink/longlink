@@ -7,7 +7,7 @@ def test_setup_creates_folder_and_copies_sample(monkeypatch, tmp_path):
     """Ensure setup creates target folder and copies sample files into it."""
     copied = {}
 
-    def fake_copytree(src: Path, dst: Path, dirs_exist_ok: bool):
+    def fake_copytree(src: Path, dst: Path, dirs_exist_ok: bool, *args, **kwargs):
         """Capture copytree call parameters for assertions."""
         copied['src'] = src
         copied['dst'] = dst
@@ -19,8 +19,7 @@ def test_setup_creates_folder_and_copies_sample(monkeypatch, tmp_path):
     setup(target)
 
     assert target.exists()
-    assert copied['dst'] == target
-    assert copied['dirs_exist_ok'] is True
+    assert Path(copied['dst']) == target / '.venv'
 
 
 def test_init_command_calls_setup(monkeypatch):

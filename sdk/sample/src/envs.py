@@ -1,8 +1,8 @@
-from longlink import Settings
+from longlink import Environments
 from pydantic import Field
 
 
-class Env(Settings):
+class Env(Environments):
     """Project-specific environment model."""
 
     KEY: str = Field(default="longlink", validation_alias="ENV_APP_KEY")

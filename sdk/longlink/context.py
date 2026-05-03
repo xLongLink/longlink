@@ -7,7 +7,7 @@ from longlink.storage import create_storage
 from sqlalchemy.engine import Engine
 from longlink.utils.xml import Page
 from longlink.database.base import create_engine
-from longlink.utils.settings import Settings
+from longlink.utils.settings import Environments
 
 
 @dataclass
@@ -24,7 +24,7 @@ class State:
         return self._fs
 
 
-def create_state(env: Settings) -> State:
+def create_state(env: Environments) -> State:
     """Create SDK state from app settings and managed service factories."""
 
     engine = create_engine(env)

@@ -1,2 +1,2 @@
 from .xml import Page, Element
-from .settings import Settings
+from .settings import Environments

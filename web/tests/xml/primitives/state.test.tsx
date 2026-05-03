@@ -45,11 +45,10 @@ describe('State', () => {
         const runtime: RuntimeState = { node: { name: 'root' }, ctx, registry: {} };
 
         const output = renderToStaticMarkup(
-            createElement(
-                RuntimeProvider,
-                { value: runtime },
-                createElement(State, { id: 'filter', value: 'day' }, createElement(StateProbe))
-            )
+            createElement(RuntimeProvider, {
+                value: runtime,
+                children: createElement(State, { id: 'filter', value: 'day' }, createElement(StateProbe)),
+            })
         );
 
         expect(output).toBe('<span>day</span>');
@@ -61,7 +60,12 @@ describe('State', () => {
         const runtime: RuntimeState = { node: { name: 'root' }, ctx, registry: {} };
 
         expect(() =>
-            renderToStaticMarkup(createElement(RuntimeProvider, { value: runtime }, createElement(State, null, 'x')))
+            renderToStaticMarkup(
+                createElement(RuntimeProvider, {
+                    value: runtime,
+                    children: createElement(State, null, 'x'),
+                })
+            )
         ).toThrow('State requires an "id" parameter');
     });
 });

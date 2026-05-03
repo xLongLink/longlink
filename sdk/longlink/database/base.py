@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlmodel import Field, Session, SQLModel
 from sqlalchemy import create_engine as create_sqlalchemy_engine
 from sqlalchemy.engine import Engine
-from longlink.utils.settings import Settings
+from longlink.utils.settings import Environments
 
 
 class Table(SQLModel):
@@ -13,7 +13,7 @@ class Table(SQLModel):
     updated_at: Optional[datetime] = Field(default=None, nullable=True)
 
 
-def create_engine(env: Settings) -> Engine:
+def create_engine(env: Environments) -> Engine:
     """Create SQLAlchemy engine from database URL."""
     return create_sqlalchemy_engine(env.DBURL)
 
