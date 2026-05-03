@@ -16,7 +16,6 @@
         <xsd:element name="For" type="ForType" />
         <xsd:element name="Query" type="QueryType" />
         <xsd:element name="blockquote" type="BlockquoteType" />
-        <xsd:element name="code" type="CodeType" />
         <xsd:element name="h1" type="H1Type" />
         <xsd:element name="h2" type="H2Type" />
         <xsd:element name="h3" type="H3Type" />
@@ -158,14 +157,6 @@
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="blockquote" type="BlockquoteType" />
-
-  <!-- <code>...</code> -->
-  <xsd:complexType name="CodeType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="ChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-  <xsd:element name="code" type="CodeType" />
 
   <!-- <h1>...</h1> -->
   <xsd:complexType name="H1Type" mixed="true">

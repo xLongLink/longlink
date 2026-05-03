@@ -71,12 +71,3 @@ export function Ul({ children, ...props }: ComponentPropsWithoutRef<'ul'> & Base
 export function Li({ children, ...props }: ComponentPropsWithoutRef<'li'> & BaseProps) {
     return <li {...props}>{children}</li>;
 }
-
-/** Renders an inline code element with standard styling. */
-export function Code({ children, ...props }: ComponentPropsWithoutRef<'code'> & BaseProps) {
-    return (
-        <code className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[0.85em] text-foreground" {...props}>
-            {children}
-        </code>
-    );
-}

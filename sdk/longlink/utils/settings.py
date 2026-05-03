@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     storage_key: str = "dev"
     storage_secret: str = "dev"
     storage_endpoint: str = "http://localhost:9000"
+    storage_protocol: str = "file"
 
     model_config = SettingsConfigDict(env_file=(".env", ".env.sample"),env_file_encoding="utf-8")
 
@@ -25,4 +26,3 @@ class Settings(BaseSettings):
         if self.DEV:
             self.DBURL = "sqlite:///./dev.db"
         return self
-

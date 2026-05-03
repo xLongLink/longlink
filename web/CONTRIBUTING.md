@@ -30,6 +30,14 @@ It owns the shared UI, XML runtime, and control-plane rendering path.
 - `bun run build:sdk` still builds the SDK-targeted bundle.
 - `bun run build` remains the default production build.
 
+## XML
+
+- XML pages are parsed by `src/xml/compiler.ts` into an AST.
+- The renderer in `src/xml/renderers.tsx` walks that AST and resolves each tag through the XML registry.
+- Component names must exist in `src/xml/registry.tsx`; unknown tags fail at render time.
+- Child content is rendered recursively, so nested XML components stay under the same runtime context.
+
+
 ## Keep changes aligned
 
 - Keep control-plane concerns in the API mode path.

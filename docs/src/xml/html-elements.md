@@ -1,7 +1,7 @@
 # HTML
 
 HTML elements are the text primitives for XML pages.
-They provide familiar tags for headings, paragraphs, lists, quotes, and inline code.
+They provide familiar tags for headings, paragraphs, lists, and quotes.
 Use them when page content should stay close to standard HTML structure.
 The sections below describe each supported element.
 
@@ -70,12 +70,4 @@ Use `<blockquote>` for quoted or highlighted content.
 
 ```xml
 <blockquote>Keep page text explicit and readable.</blockquote>
-```
-
-## code
-
-Use `<code>` for inline or short code snippets.
-
-```xml
-<code>&lt;h2&gt;Section title&lt;/h2&gt;</code>
 ```

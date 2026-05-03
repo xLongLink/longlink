@@ -20,7 +20,7 @@ import Slider from './components/Slider';
 import Switch from './components/Switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/Table';
 import Textarea from './components/Textarea';
-import { Blockquote, Code, H1, H2, H3, H4, Li, P, Ul } from './components/Typography';
+import { Blockquote, H1, H2, H3, H4, Li, P, Ul } from './components/Typography';
 
 import Columns, { Column } from './layout/Columns';
 import {
@@ -106,7 +106,6 @@ const defaultRegistry = {
     blockquote: Blockquote,
     ul: Ul,
     li: Li,
-    code: Code,
 } satisfies RegistryShape;
 
 export const registry = defaultRegistry;

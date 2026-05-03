@@ -35,7 +35,6 @@ This reduces complexity, enforces best practices by default, and results in appl
 - [ ] For
 - [ ] Query
 - [ ] blockquote
-- [ ] code
 - [ ] h1
 - [ ] h2
 - [ ] h3

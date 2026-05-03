@@ -4,7 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
-    DEV: bool = False
     KEY: str
     ORGANIZATION_NAME: str
 
@@ -29,7 +28,7 @@ class Env(BaseSettings):
     STORAGE_ENDPOINT_URL: str
     STORAGE_ACCESS_KEY_ID: str
     STORAGE_SECRET_ACCESS_KEY: str
-    STORAGE_REGION_NAME: str | None = None
+    STORAGE_PROTOCOL: str = "file"
 
     COMPUTE_URL: str
     COMPUTE_KUBE_CONFIG_PATH: str
