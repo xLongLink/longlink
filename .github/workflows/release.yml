@@ -49,7 +49,7 @@ jobs:
 
       - name: Build the distribution
         working-directory: sdk
-        run: uvx build
+        run: uvx --from build pyproject-build
 
       - name: Publish to PyPI (OIDC)
         uses: pypa/gh-action-pypi-publish@release/v1
