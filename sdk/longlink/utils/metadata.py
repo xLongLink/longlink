@@ -1,4 +1,3 @@
-import os
 import tomllib
 from typing import Any
 from pathlib import Path
@@ -28,49 +27,47 @@ class Metadata(BaseModel):
         defaults = {field: cls.model_fields[field].default for field in cls.model_fields}
         result = dict(defaults)
 
-        pyproject_path = Path("pyproject.toml")
-        if pyproject_path.exists():
-            with pyproject_path.open("rb") as file_handle:
-                toml_data = tomllib.load(file_handle)
-
-            # Read LongLink tool section first, then fall back to standard PEP 621 fields.
-            tool_data = toml_data.get("tool", {}).get("longlink", {})
-            project_data = toml_data.get("project", {})
-
-            result.update(
-                {
-                    "name": tool_data.get("name") or project_data.get("name") or result["name"],
-                    "title": tool_data.get("title") or result["title"],
-                    "summary": tool_data.get("summary") or result["summary"],
-                    "description": tool_data.get("description")
-                    or project_data.get("description")
-                    or result["description"],
-                    "version": tool_data.get("version") or project_data.get("version") or result["version"],
-                    "terms_of_service": tool_data.get("terms_of_service") or result["terms_of_service"],
-                    "contact": tool_data.get("contact") or result["contact"],
-                    "license_info": tool_data.get("license_info") or result["license_info"],
-                }
-            )
+        pyproject_data = data.pop("_pyproject_data", None)
+        if isinstance(pyproject_data, dict):
+            result.update(cls.metadata_from_pyproject(pyproject_data, result))
 
         # Let explicit constructor values win over file-derived values.
         result.update(data)
         return result
 
+    @staticmethod
+    def metadata_from_pyproject(
+        pyproject_data: dict[str, Any],
+        defaults: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Extract metadata fields from parsed pyproject payload."""
+
+        # Read LongLink tool section first, then fall back to standard PEP 621 fields.
+        tool_data = pyproject_data.get("tool", {}).get("longlink", {})
+        project_data = pyproject_data.get("project", {})
+        return {
+            "name": tool_data.get("name") or project_data.get("name") or defaults["name"],
+            "title": tool_data.get("title") or defaults["title"],
+            "summary": tool_data.get("summary") or defaults["summary"],
+            "description": tool_data.get("description")
+            or project_data.get("description")
+            or defaults["description"],
+            "version": tool_data.get("version") or project_data.get("version") or defaults["version"],
+            "terms_of_service": tool_data.get("terms_of_service") or defaults["terms_of_service"],
+            "contact": tool_data.get("contact") or defaults["contact"],
+            "license_info": tool_data.get("license_info") or defaults["license_info"],
+        }
+
 
 def load_metadata(pyproject_path: Path | None = None, **overrides: Any) -> Metadata:
     """Load metadata from pyproject location with optional explicit override values."""
 
-    if pyproject_path is None:
-        return Metadata(**overrides)
+    resolved_pyproject = (pyproject_path or Path("pyproject.toml")).resolve()
+    parsed_pyproject: dict[str, Any] | None = None
 
-    cwd = Path.cwd()
-    target_path = pyproject_path.resolve()
+    # Resolve a file path once and parse TOML from that location without changing cwd.
+    if resolved_pyproject.exists():
+        with resolved_pyproject.open("rb") as file_handle:
+            parsed_pyproject = tomllib.load(file_handle)
 
-    # Pick root dir that contains pyproject file and load metadata from that context.
-    project_root = target_path.parent if target_path.is_file() else target_path
-
-    os.chdir(project_root)
-    try:
-        return Metadata(**overrides)
-    finally:
-        os.chdir(cwd)
+    return Metadata(_pyproject_data=parsed_pyproject, **overrides)
