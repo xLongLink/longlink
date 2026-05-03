@@ -12,7 +12,6 @@ This ensures that configuration errors are detected early, before the applicatio
 ```python
 from longlink import App, Enviroments
 
-
 class Env(Enviroments):
     """Project-specific environment model."""
 

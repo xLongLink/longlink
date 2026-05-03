@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { For } from './primitives/For';
 import { Grid } from './primitives/Grid';
-import { Page as PrimitivesPage } from './primitives/Page';
 import { Query } from './primitives/Query';
 import { State } from './primitives/State';
 import type { ActionHandler, ActionProps, ActionComponentProps, ExecutionContext, RegistryShape } from './types';
@@ -55,7 +54,6 @@ export function createContext(initial: Partial<ExecutionContext> = {}): Executio
 /* Build the built-in XML component registry once at module load. */
 const defaultRegistry = {
     Page,
-    PrimitivesPage,
     Query,
     State,
     For,

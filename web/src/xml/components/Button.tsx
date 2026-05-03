@@ -1,5 +1,4 @@
 import { Button as UIButton, buttonVariants } from '@/ui/button';
-import { cn } from '@/lib/utils';
 import type { AnchorHTMLAttributes } from 'react';
 import { Link } from 'react-router';
 
@@ -19,7 +18,6 @@ function Button({
     href,
     onClick,
     disabled,
-    className,
     variant,
     size,
     children,
@@ -41,7 +39,7 @@ function Button({
                 <Link
                     {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}
                     to={href}
-                    className={cn(buttonVariants({ variant, size }), className)}
+                    className={buttonVariants({ variant, size })}
                     aria-disabled={Boolean(disabled) || pending}
                 >
                     {children}
@@ -53,7 +51,7 @@ function Button({
             <a
                 {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}
                 href={href}
-                className={cn(buttonVariants({ variant, size }), className)}
+                className={buttonVariants({ variant, size })}
                 aria-disabled={Boolean(disabled) || pending}
             >
                 {children}
@@ -64,7 +62,6 @@ function Button({
     return (
         <UIButton
             {...props}
-            className={className}
             variant={variant}
             size={size}
             onClick={handleClick}

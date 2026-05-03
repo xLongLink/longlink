@@ -5,7 +5,7 @@ import {
     BreadcrumbList,
     BreadcrumbSeparator,
 } from '@/ui/breadcrumb';
-import { formatAppName } from '@/lib/navigation';
+import { formatOrganizationName } from '@/lib/navigation';
 import { useApiData } from '@/hooks/use-data';
 import { Link, useParams } from 'react-router';
 
@@ -21,7 +21,7 @@ export function Breadcrumb() {
     const { data: metadata } = useApiData<MetadataResponse>('/metadata.json');
     const { data: appMetadata } = useApiData<{ name?: string }>(appId ? `/apps/${appId}/metadata` : null);
 
-    const appName = appId ? appMetadata?.name?.trim() || formatAppName(appId) : undefined;
+    const appName = appId ? appMetadata?.name?.trim() || formatOrganizationName(appId) : undefined;
     const organizationName = metadata?.organization_name?.trim() || 'Organization';
 
     return (

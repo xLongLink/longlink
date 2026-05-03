@@ -1,11 +1,11 @@
-# HTML Elements
+# HTML
 
 HTML elements are the text primitives for XML pages.
 They provide familiar tags for headings, paragraphs, lists, quotes, and inline code.
 Use them when page content should stay close to standard HTML structure.
 The sections below describe each supported element.
 
-## H1
+## h1
 
 Use `<h1>` for the main heading inside a section.
 
@@ -13,7 +13,7 @@ Use `<h1>` for the main heading inside a section.
 <h1>Issue details</h1>
 ```
 
-## H2
+## h2
 
 Use `<h2>` for section headings.
 
@@ -21,7 +21,7 @@ Use `<h2>` for section headings.
 <h2>Overview</h2>
 ```
 
-## H3
+## h3
 
 Use `<h3>` for subsection headings.
 
@@ -29,7 +29,7 @@ Use `<h3>` for subsection headings.
 <h3>Status</h3>
 ```
 
-## H4
+## h4
 
 Use `<h4>` for field or block headings.
 
@@ -37,7 +37,7 @@ Use `<h4>` for field or block headings.
 <h4>Owner</h4>
 ```
 
-## P
+## p
 
 Use `<p>` for paragraphs.
 
@@ -45,7 +45,7 @@ Use `<p>` for paragraphs.
 <p>Use explicit HTML-style text elements.</p>
 ```
 
-## UL
+## ul
 
 Use `<ul>` for unordered lists.
 
@@ -56,7 +56,7 @@ Use `<ul>` for unordered lists.
 </ul>
 ```
 
-## LI
+## li
 
 Use `<li>` for list items.
 
@@ -64,7 +64,7 @@ Use `<li>` for list items.
 <li>List item</li>
 ```
 
-## Blockquote
+## blockquote
 
 Use `<blockquote>` for quoted or highlighted content.
 
@@ -72,7 +72,7 @@ Use `<blockquote>` for quoted or highlighted content.
 <blockquote>Keep page text explicit and readable.</blockquote>
 ```
 
-## Code
+## code
 
 Use `<code>` for inline or short code snippets.
 

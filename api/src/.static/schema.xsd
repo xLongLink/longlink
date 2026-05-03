@@ -10,7 +10,62 @@
 
   <xsd:complexType name="ChildrenOnlyType" mixed="true">
     <xsd:sequence>
-      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:element name="Page" type="PageType" />
+        <xsd:element name="State" type="StateType" />
+        <xsd:element name="For" type="ForType" />
+        <xsd:element name="Query" type="QueryType" />
+        <xsd:element name="blockquote" type="BlockquoteType" />
+        <xsd:element name="code" type="CodeType" />
+        <xsd:element name="h1" type="H1Type" />
+        <xsd:element name="h2" type="H2Type" />
+        <xsd:element name="h3" type="H3Type" />
+        <xsd:element name="h4" type="H4Type" />
+        <xsd:element name="li" type="LiType" />
+        <xsd:element name="p" type="PType" />
+        <xsd:element name="ul" type="UlType" />
+        <xsd:element name="Card" type="CardType" />
+        <xsd:element name="CardAction" type="CardActionType" />
+        <xsd:element name="CardContent" type="CardContentType" />
+        <xsd:element name="CardDescription" type="CardDescriptionType" />
+        <xsd:element name="CardFooter" type="CardFooterType" />
+        <xsd:element name="CardHeader" type="CardHeaderType" />
+        <xsd:element name="CardTitle" type="CardTitleType" />
+        <xsd:element name="Column" type="ColumnType" />
+        <xsd:element name="Columns" type="ColumnsType" />
+        <xsd:element name="Dialog" type="DialogType" />
+        <xsd:element name="DialogContent" type="DialogContentType" />
+        <xsd:element name="DialogDescription" type="DialogDescriptionType" />
+        <xsd:element name="DialogFooter" type="DialogFooterType" />
+        <xsd:element name="DialogHeader" type="DialogHeaderType" />
+        <xsd:element name="DialogTitle" type="DialogTitleType" />
+        <xsd:element name="DialogTrigger" type="DialogTriggerType" />
+        <xsd:element name="Hero" type="HeroType" />
+        <xsd:element name="Menu" type="MenuType" />
+        <xsd:element name="MenuSection" type="MenuSectionType" />
+        <xsd:element name="MenuSubSection" type="MenuSubSectionType" />
+        <xsd:element name="Stack" type="StackType" />
+        <xsd:element name="Tabs" type="TabsType" />
+        <xsd:element name="TabsContent" type="TabsContentType" />
+        <xsd:element name="TabsList" type="TabsListType" />
+        <xsd:element name="TabsTrigger" type="TabsTriggerType" />
+        <xsd:element name="Button" type="ButtonType" />
+        <xsd:element name="Checkbox" type="CheckboxType" />
+        <xsd:element name="Icon" type="IconType" />
+        <xsd:element name="Input" type="InputType" />
+        <xsd:element name="Range" type="RangeType" />
+        <xsd:element name="Select" type="SelectType" />
+        <xsd:element name="Separator" type="SeparatorType" />
+        <xsd:element name="Slider" type="SliderType" />
+        <xsd:element name="Switch" type="SwitchType" />
+        <xsd:element name="Table" type="TableType" />
+        <xsd:element name="TableBody" type="TableBodyType" />
+        <xsd:element name="TableCell" type="TableCellType" />
+        <xsd:element name="TableHead" type="TableHeadType" />
+        <xsd:element name="TableHeader" type="TableHeaderType" />
+        <xsd:element name="TableRow" type="TableRowType" />
+        <xsd:element name="Textarea" type="TextareaType" />
+      </xsd:choice>
     </xsd:sequence>
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>

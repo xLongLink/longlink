@@ -85,16 +85,3 @@ export function formatOrganizationName(value: string) {
         .map((segment) => (segment.length > 0 ? segment[0].toUpperCase() + segment.slice(1) : segment))
         .join(' ');
 }
-
-/**
- * Formats an application name into a display label.
- * Known apps use their branding, others are formatted via formatOrganizationName.
- */
-export function formatAppName(value: string) {
-    const appNames: Record<string, string> = {
-        longlink: 'Longlink',
-        atlas: 'Atlas',
-        pulse: 'Pulse',
-    };
-    return appNames[value] ?? formatOrganizationName(value);
-}

@@ -9,33 +9,16 @@ You can use the filesystem exactly like standard `fsspec` clients.
 import fsspec
 from longlink import Router, Context
 
-
 router = Router()
-
 
 @router.post("/files")
 async def create_file(ctx: Context):
     fs = ctx.fs()
-    with fs.open("reports/example.txt", "wb") as file_handle:
-        file_handle.write(b"hello")
+    with fs.open("reports/example.txt", "wb") as f:
+        f.write(b"hello")
 
-    return {"path": "reports/example.txt"}
+    return {"success": True }
 ```
-
-## Configure S3 credentials
-
-```python
-import fsspec
-
-fs = fsspec.filesystem(
-    "s3",
-    key="YOUR_KEY",
-    secret="YOUR_SECRET",
-)
-```
-
-LongLink builds the same kind of filesystem object internally from app settings,
-then provides it in each request via `ctx.fs()`.
 
 ## references
 

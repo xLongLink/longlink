@@ -1,112 +1,101 @@
 <Page name="Example" icon="layout-grid">
-  <State id="exampleState" username="Ada" enabled="true" volume="35" notes="" status="active" size="md">
-    <Query id="exampleData" path="/example">
-      <Hero title="XML Components" subtitle="A schema-backed example page." icon="layout-grid" action="Open dialog">
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Dialog title</DialogTitle>
-            <DialogDescription>Dialog description showing the dialog family.</DialogDescription>
-          </DialogHeader>
+  <Query id="example" path="/example">
+    <Hero title="XML component showcase" subtitle="A guided example page for the built-in XML runtime." icon="layout-grid" action="Open dialog">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>XML showcase dialog</DialogTitle>
+          <DialogDescription>Quick reference for the page layout and available sections.</DialogDescription>
+        </DialogHeader>
+        <Stack gap="12">
+          <p>The example page highlights the hero, menu, HTML, table, and layout sections.</p>
+          <Button variant="default">Close</Button>
+        </Stack>
+      </DialogContent>
+    </Hero>
+
+    <Menu>
+      <MenuSection title="HTML" icon="code">
+        <MenuSubSection title="Element showcase" root="true">
+          <h1>Heading one</h1>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor.</p>
+          <h2>Heading two</h2>
+          <p>Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi. Proin porttitor, orci nec nonummy molestie.</p>
+          <h3>Heading three</h3>
+          <p>Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna.</p>
+          <h4>Heading four</h4>
+          <p>Paragraph content explains how standard HTML elements render in XML pages.</p>
+          <blockquote>Blockquote content highlights longer quoted text.</blockquote>
+          <ul>
+            <li>Unordered list item one</li>
+            <li>Unordered list item two</li>
+          </ul>
+          <code>inline-code</code>
+        </MenuSubSection>
+      </MenuSection>
+
+      <MenuSection title="Table" icon="table">
+        <MenuSubSection title="Data showcase" root="true">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Unit price</TableHead>
+                <TableHead>Total</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>XML showcase page</TableCell>
+                <TableCell>1</TableCell>
+                <TableCell>$120.00</TableCell>
+                <TableCell>$120.00</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Layout composition</TableCell>
+                <TableCell>2</TableCell>
+                <TableCell>$45.00</TableCell>
+                <TableCell>$90.00</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Documentation polish</TableCell>
+                <TableCell>1</TableCell>
+                <TableCell>$80.00</TableCell>
+                <TableCell>$80.00</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
+                <TableCell>Total</TableCell>
+                <TableCell>$290.00</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </MenuSubSection>
+      </MenuSection>
+
+      <MenuSection title="Form" icon="file-text">
+        <MenuSubSection title="Form controls" root="true">
+          <p>This section showcases the inputs commonly used to build forms in XML pages.</p>
           <Stack gap="12">
-            <Input kind="text" label="Name" bind="exampleState.username" value="{exampleState.username}" placeholder="Ada Lovelace" />
-            <Textarea name="notes" label="Notes" value="{exampleState.notes}" placeholder="Add notes" />
-            <Checkbox label="Enabled" checked="true" />
-            <Switch label="Toggle" active="true" />
-            <Select kind="select" label="Status" value="{exampleState.status}" />
-            <Range label="Range" min="0" max="100" step="10" value="35" />
-            <Slider min="0" max="100" step="5" value="25" orientation="horizontal" />
-            <Button variant="default">Primary</Button>
-            <Button variant="outline">Outline</Button>
-            <Button variant="secondary">Secondary</Button>
-            <Button variant="ghost">Ghost</Button>
-            <Button variant="destructive">Destructive</Button>
-            <Button variant="link">Link</Button>
+            <Input kind="text" label="Full name" placeholder="Ada Lovelace" />
+            <Input kind="email" label="Email address" placeholder="ada@example.com" />
+            <Textarea label="Notes" placeholder="Add a short note" />
+            <Checkbox label="Subscribe to updates" checked="true" />
+            <Switch label="Enable notifications" active="true" />
+            <Button variant="default">Submit form</Button>
           </Stack>
-          <DialogFooter>
-            <Button variant="default">Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Hero>
+        </MenuSubSection>
+      </MenuSection>
 
-      <h1>Headings</h1>
-      <h2>Second level</h2>
-      <h3>Third level</h3>
-      <h4>Fourth level</h4>
-      <p>Paragraph text for the example page.</p>
-      <blockquote>Blockquote text.</blockquote>
-      <code>inline code</code>
-
-      <Separator />
-
-      <Menu>
-        <MenuSection title="Main" icon="folder">
-          <MenuSubSection title="Overview" root="true">
-            <p>Menu subsection content.</p>
-          </MenuSubSection>
-        </MenuSection>
-      </Menu>
-
-      <Tabs>
-        <TabsList>
-          <TabsTrigger>Tab one</TabsTrigger>
-          <TabsTrigger>Tab two</TabsTrigger>
-        </TabsList>
-        <TabsContent>
-          <Card>
-            <CardHeader>
-              <CardTitle>Card title</CardTitle>
-              <CardDescription>Card description.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CardAction action="submit" method="post" url="/cards" payload="{&quot;id&quot;:1}">Card action</CardAction>
-              <CardFooter>Card footer</CardFooter>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <ul>
-        <li>List item one</li>
-        <li>List item two</li>
-      </ul>
-
-      <For each="[{ name: 'Alpha', url: '/alpha' }, { name: 'Beta', url: '/beta' }]" as="item">
-        <Card>
-          <CardHeader>
-            <CardTitle>{item.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{item.url}</p>
-          </CardContent>
-        </Card>
-      </For>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>URL</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell>Alpha</TableCell>
-            <TableCell>/alpha</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-
-      <Columns>
-        <Column key="name" label="Name" content="Alpha" align="left" />
-      </Columns>
-
-      <Dialog>
-        <DialogTrigger>
-          <Button variant="outline">Open dialog</Button>
-        </DialogTrigger>
-      </Dialog>
-
-      <Icon name="sparkles" fallback="*" />
-    </Query>
-  </State>
+      <MenuSection title="Layout" icon="columns-2">
+        <MenuSubSection title="Composition" root="true">
+          <Columns>
+            <Column key="left" label="Left" content="Sectioned content" align="left" />
+            <Column key="right" label="Right" content="Structured presentation" align="left" />
+          </Columns>
+        </MenuSubSection>
+      </MenuSection>
+    </Menu>
+  </Query>
 </Page>

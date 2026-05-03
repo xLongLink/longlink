@@ -9,9 +9,7 @@ You define endpoint handlers on the wrapped FastAPI app.
 from longlink import App, Router, Context
 from pydantic import BaseModel
 
-
 router = Router()
-
 
 # Sample response model
 class SampleResponse(BaseModel):
@@ -21,11 +19,6 @@ class SampleResponse(BaseModel):
 
 @router.get("/sample", response_model=SampleResponse)
 async def sample(ctx: Context) -> SampleResponse:
-    # Access the native fsspec filesystem from request context
-    fs = ctx.fs()
-    with fs.open("sample.txt", "wb") as file_handle:
-        file_handle.write(b"hello from route")
-
     return SampleResponse(id=1, name="apple")
 
 
