@@ -37,7 +37,6 @@ It owns the shared UI, XML runtime, and control-plane rendering path.
 - Component names must exist in `src/xml/registry.tsx`; unknown tags fail at render time.
 - Child content is rendered recursively, so nested XML components stay under the same runtime context.
 
-
 ## Keep changes aligned
 
 - Keep control-plane concerns in the API mode path.

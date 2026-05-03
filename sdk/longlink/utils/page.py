@@ -32,7 +32,7 @@ class Page:
     def validate(self) -> None:
         """Validate the XML document against the packaged XSD schema."""
 
-        schema_path = resources.files("longlink").joinpath(".static/schema.xsd")
+        schema_path = resources.files("longlink").joinpath(".static/xsd/schema.xsd")
         schema_root = etree.XML(schema_path.read_bytes())
         schema = etree.XMLSchema(schema_root)
 

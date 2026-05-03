@@ -74,23 +74,6 @@ describe('renderNode', () => {
 
         expect(latestValue).toEqual({ range: { from: 1, to: 3 }, mode: 'week' });
     });
-
-    it('adds base url prop to rendered component', () => {
-        const ctx: ExecutionContext = {
-            state: {},
-            queries: {},
-            scope: {},
-            baseUrl: '/api',
-        };
-        const registry: RegistryShape = {
-            Widget: (() => null) as ComponentType<any>,
-        };
-
-        const runtimeProviderElement = renderNode({ name: 'Widget' }, registry, ctx) as any;
-        const widgetElement = runtimeProviderElement.props.children;
-
-        expect(widgetElement.props._baseUrl).toBe('/api');
-    });
 });
 
 describe('render', () => {

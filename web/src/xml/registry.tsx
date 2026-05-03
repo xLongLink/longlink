@@ -20,7 +20,14 @@ import Slider from './components/Slider';
 import Switch from './components/Switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/Table';
 import Textarea from './components/Textarea';
-import { Blockquote, H1, H2, H3, H4, Li, P, Ul } from './components/Typography';
+import { Blockquote } from './html/Blockquote';
+import { H1 } from './html/H1';
+import { H2 } from './html/H2';
+import { H3 } from './html/H3';
+import { H4 } from './html/H4';
+import { Li } from './html/Li';
+import { P } from './html/P';
+import { Ul } from './html/Ul';
 
 import Columns, { Column } from './layout/Columns';
 import {

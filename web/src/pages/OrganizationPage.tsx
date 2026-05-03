@@ -1,30 +1,24 @@
-import { useMemo } from 'react';
 import { useApiData } from '@/hooks/use-data';
-import { fromXml, renderNode, createContext, registry } from '@/xml';
-import { getPageContentFromResponse } from '@/sdk/pages';
-import type { AppNavigationPage } from '@/lib/navigation';
+import View from './View';
 
 type OrganizationPageProps = {
     page: string;
 };
 
+/**
+ * Renders an organization-level XML page.
+ */
 export default function OrganizationPage({ page }: OrganizationPageProps) {
-    const { data: metadata, isLoading, error } = useApiData<{ pages?: AppNavigationPage[] }>('/metadata.json');
-    const pageContent = useMemo(() => getPageContentFromResponse(metadata, page), [metadata, page]);
+    const { data: metadata, isLoading, error } = useApiData('/metadata.json');
 
-    if (error) {
-        return <div>{error.message}</div>;
-    }
-
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-
-    if (!pageContent) {
-        return <div>Unexpected response format for /metadata.json</div>;
-    }
-
-    const ast = fromXml(pageContent);
-    const ctx = createContext({ baseUrl: '/api' });
-    return <>{renderNode(ast, registry, ctx)}</>;
+    return (
+        <View
+            metadata={metadata}
+            page={page}
+            isLoading={isLoading}
+            error={error}
+            emptyMessage="Unexpected response format for /metadata.json"
+            unexpectedMessage="Unexpected response format for /metadata.json"
+        />
+    );
 }

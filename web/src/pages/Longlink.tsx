@@ -1,9 +1,8 @@
-import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { useApiData } from '@/hooks/use-data';
 import { type AppNavigationPage } from '@/lib/navigation';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
-import { getPageContentFromResponse } from '@/sdk/pages';
+import View from './View';
 
 type AppMetadata = {
     pages?: Array<AppNavigationPage & { content?: string }>;
@@ -37,21 +36,13 @@ export default function Longlink({ appId: appIdOverride }: LonglinkProps) {
     }, [appMetadata?.pages]);
 
     const activePagePath = normalizedRoutePath || fallbackPagePath;
-    const data = getPageContentFromResponse(appMetadata, activePagePath);
-
-    if (isAppMetadataLoading) {
-        return <div>Loading...</div>;
-    }
-
-    if (!activePagePath) {
-        return <div>No pages configured for this app.</div>;
-    }
-
-    if (!data) {
-        return <div>Unexpected response format for metadata pages</div>;
-    }
-
-    const ast = fromXml(data);
-    const ctx = createContext({ baseUrl: '/api' });
-    return <>{renderNode(ast, registry, ctx)}</>;
+    return (
+        <View
+            metadata={appMetadata}
+            page={activePagePath}
+            isLoading={isAppMetadataLoading}
+            emptyMessage="No pages configured for this app."
+            unexpectedMessage="Unexpected response format for metadata pages"
+        />
+    );
 }
