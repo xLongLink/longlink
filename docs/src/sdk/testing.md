@@ -4,9 +4,17 @@ Applications built with the LongLink SDK can be tested using standard [pytest](h
 
 To install the development dependencies, run:
 
-```bash
+::: code-group
+
+```bash [pip]
 pip install .[dev]
 ```
+
+```bash [uv]
+uv pip install .[dev]
+```
+
+:::
 
 ## Usage
 

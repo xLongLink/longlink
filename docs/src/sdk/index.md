@@ -12,9 +12,17 @@ Applications follow a simple model:
 
 ### Install
 
-```bash
+::: code-group
+
+```bash [pip]
 pip install longlink
 ```
+
+```bash [uv]
+uv pip install longlink
+```
+
+:::
 
 ### Initialize a Project
 
@@ -46,9 +54,17 @@ This creates a standardized project structure:
 
 Install development dependencies:
 
-```bash
+::: code-group
+
+```bash [pip]
 pip install .[dev]
 ```
+
+```bash [uv]
+uv pip install .[dev]
+```
+
+:::
 
 Run the application locally:
 

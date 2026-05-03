@@ -52,6 +52,13 @@ export function resolveValue(value: string, ctx: ExecutionContext): unknown {
 }
 
 /**
+ * Interpolates a template string against the current execution context.
+ */
+export function interpolate(value: string, ctx: ExecutionContext): unknown {
+    return resolveValue(value, ctx);
+}
+
+/**
  * Resolves a condition string to a boolean for use in `if` attributes.
  *
  * - If condition is null or undefined, the element is always rendered (returns true).
