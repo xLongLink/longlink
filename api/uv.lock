@@ -590,7 +590,6 @@ wheels = [
 
 [[package]]
 name = "longlink"
-version = "0.0.0"
 source = { directory = "../sdk" }
 dependencies = [
     { name = "alembic" },
@@ -636,7 +635,6 @@ dev = [
 
 [[package]]
 name = "longlink-api"
-version = "0.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },

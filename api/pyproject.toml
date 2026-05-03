@@ -1,10 +1,10 @@
 [build-system]
-requires = ['setuptools>=69']
+requires = ['setuptools>=69', 'setuptools_scm[toml]>=8']
 build-backend = 'setuptools.build_meta'
 
 [project]
 name = 'longlink-api'
-version = '0.0.0'
+dynamic = ['version']
 description = 'LongLink backend API'
 readme = 'README.md'
 requires-python = '>=3.12'
@@ -47,6 +47,11 @@ dev = [
 
 [tool.uv.sources]
 longlink = { path = "../sdk" }
+
+[tool.setuptools_scm]
+version_scheme = 'no-guess-dev'
+local_scheme = 'no-local-version'
+fallback_version = '0.0.0'
 
 [tool.setuptools]
 py-modules = ['main']

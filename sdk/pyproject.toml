@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "longlink"
-version = "0.0.0"
+dynamic = ["version"]
 dependencies = [
     "alembic",
     "click",
@@ -56,6 +56,11 @@ Homepage = "https://www.longlink.dev"
 Documentation = "https://docs.longlink.dev"
 Repository = "https://github.com/xLongLink/longlink.git"
 "Bug Tracker" = "https://github.com/xLongLink/longlink/issues"
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { local_scheme = "no-local-version" }
+fallback-version = "0.0.0"
 
 [project.scripts]
 longlink = "longlink.__main__:main"
