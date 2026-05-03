@@ -11,43 +11,9 @@ permissions:
   id-token: write
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.release_tag.outputs.tag }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Resolve release tag
-        id: release_tag
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          git fetch --tags --force
-
-          RAW_TAG="${{ github.ref_name }}"
-
-          if [[ ! "$RAW_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid release tag: $RAW_TAG. Expected format vMAJOR.MINOR.PATCH."
-            exit 1
-          fi
-
-          if ! git rev-parse --verify --quiet "refs/tags/$RAW_TAG" >/dev/null; then
-            echo "Release tag does not exist: $RAW_TAG"
-            exit 1
-          fi
-
-          echo "tag=$RAW_TAG" >> "$GITHUB_OUTPUT"
-
   # The SDK is published to PyPI.
   publish-sdk:
-    if: always() && needs.release.result == 'success'
-    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
 
     environment:
@@ -60,6 +26,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -78,46 +46,6 @@ jobs:
       - name: Build web assets for SDK
         run: bun run --cwd web build:sdk --logLevel warn
 
-      - name: Resolve SDK package version
-        id: sdk_version
-        run: |
-          RAW_VERSION="${{ needs.release.outputs.tag }}"
-          SDK_VERSION="${RAW_VERSION#v}"
-
-          if [[ ! "$SDK_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid SDK version: $SDK_VERSION"
-            exit 1
-          fi
-
-          echo "value=$SDK_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Set SDK version
-        working-directory: sdk
-        env:
-          SDK_VERSION: ${{ steps.sdk_version.outputs.value }}
-        run: |
-          python - <<'PYTHON'
-          from pathlib import Path
-          import os
-          import tomllib
-
-          version = os.environ["SDK_VERSION"]
-          pyproject_path = Path("pyproject.toml")
-          data = tomllib.loads(pyproject_path.read_text())
-          old_version = data["project"]["version"]
-
-          if old_version == version:
-              raise SystemExit("SDK version is already set.")
-
-          pyproject_path.write_text(
-              pyproject_path.read_text().replace(
-                  f'version = "{old_version}"',
-                  f'version = "{version}"',
-                  1,
-              )
-          )
-          PYTHON
-
       - name: Build the distribution
         working-directory: sdk
         run: python -m build
@@ -129,8 +57,7 @@ jobs:
 
   # The API is packaged into a container, so we will publish the image to GHCR on each release.
   publish-api-image:
-    if: always() && needs.release.result == 'success'
-    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
 
     steps:
@@ -154,7 +81,7 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/longlink
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ needs.release.outputs.tag }}
+            type=raw,value=${{ github.ref_name }}
 
       - name: Build and push API image
         uses: docker/build-push-action@v6
@@ -166,8 +93,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   publish-github-release:
-    if: always() && needs.release.result == 'success'
-    needs: [release, publish-sdk, publish-api-image]
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [publish-sdk, publish-api-image]
     runs-on: ubuntu-latest
 
     permissions:
@@ -181,7 +108,7 @@ jobs:
 
       - name: Generate release notes
         env:
-          TAG: ${{ needs.release.outputs.tag }}
+          TAG: ${{ github.ref_name }}
           REPOSITORY: ${{ github.repository }}
         run: |
           git config --global user.name "github-actions[bot]"
@@ -237,5 +164,5 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.release.outputs.tag }}
+          TAG: ${{ github.ref_name }}
         run: gh release create "$TAG" --title "$TAG" --notes-file release-notes.md

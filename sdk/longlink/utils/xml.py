@@ -39,22 +39,28 @@ class Element:
     def validate(self) -> None:
         """Validate the XML document against the configured XSD schema."""
 
-        schema = etree.XMLSchema(etree.XML(self._load_schema_bytes()))
+        schema_doc = etree.parse(str(self._schema_file_path()))
+        schema = etree.XMLSchema(schema_doc)
         xml_doc = etree.XML(self.content.encode("utf-8"))
         if not schema.validate(xml_doc):
             messages = [f"Line {error.line}: {error.message}" for error in schema.error_log]
             raise ValueError("XML is invalid: " + "; ".join(messages))
 
-    def _load_schema_bytes(self) -> bytes:
-        """Load schema bytes from the configured path or package resources."""
+    def _schema_file_path(self) -> Path:
+        """Resolve the XSD file path for validation."""
 
         if self.schema_path is None:
             raise ValueError("No XSD schema path configured")
 
         if self.schema_path.exists():
-            return self.schema_path.read_bytes()
+            return self.schema_path
 
-        return resources.files("longlink").joinpath(self.schema_path.as_posix()).read_bytes()
+        return resources.files("longlink").joinpath(self.schema_path.as_posix())
+
+    def _load_schema_bytes(self) -> bytes:
+        """Load schema bytes from the configured path or package resources."""
+
+        return self._schema_file_path().read_bytes()
 
 
 class Page(Element):
