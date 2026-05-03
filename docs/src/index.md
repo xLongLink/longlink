@@ -6,10 +6,9 @@ The architecture is divided into two primary components:
 
 - [Control Plane](/api/), which manages infrastructure concerns such as authentication, authorization, request routing, data provisioning, and observability.
 
-- [Applications](/pages/) are developed as full-code services using a Python SDK built on top of established technologies such as FastAPI for the API layer and SQLAlchemy for data access. Each application exposes a well-defined REST interface and operates on its own isolated data store and storage layer.
+- [Applications](/xml/) are developed as full-code services using a Python SDK built on top of established technologies such as FastAPI for the API layer and SQLAlchemy for data access. Each application exposes a well-defined REST interface and operates on its own isolated data store and storage layer.
 
 The user interface is defined declaratively using an XML-based format, which is interpreted at runtime and interacts directly with application APIs. This removes the need for separate frontend implementations while maintaining a strict separation between presentation and business logic.
-
 
 ## Why
 

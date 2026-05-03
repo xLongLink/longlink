@@ -5,6 +5,7 @@ docs/
 ├── src/
 │   ├── api/           # Control plane API documentation
 │   ├── sdk/           # Application SDK documentation
+│   ├── xml/           # XML page documentation
 │   ├── public/        # Public assets
 │   └── index.md       # Documentation entry
 └── .vitepress/        # VitePress configuration

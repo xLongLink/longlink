@@ -15,7 +15,6 @@ It provides a centralized control plane responsible for authentication, permissi
 
 Applications are built with a Python SDK using proven technologies like FastAPI and SQLAlchemy, following a clear structure: data layer, API, and UI. The interface is defined declaratively and rendered directly inside the platform, ensuring a consistent, native experience without maintaining a separate frontend.
 
-
 <br />
 <br />
 

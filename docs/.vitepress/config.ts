@@ -50,13 +50,13 @@ export default withMermaid(defineConfig({
         ]
       },
       {
-        text: 'Pages',
+        text: 'XML',
         items: [
-          { text: 'Introduction', link: '/pages/' },
-          { text: 'Primitives', link: '/pages/primitives' },
-          { text: 'HTML Elements', link: '/pages/html-elements' },
-          { text: 'Layout', link: '/pages/layout' },
-          { text: 'Components', link: '/pages/components' }
+          { text: 'Introduction', link: '/xml/' },
+          { text: 'Primitives', link: '/xml/primitives' },
+          { text: 'HTML Elements', link: '/xml/html-elements' },
+          { text: 'Layout', link: '/xml/layout' },
+          { text: 'Components', link: '/xml/components' }
         ]
       }
     ],
