@@ -29,6 +29,11 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
             continue;
         }
 
+        if (key === 'class') {
+            resolved.className = resolveValue(value, ctx);
+            continue;
+        }
+
         resolved[key] = resolveValue(value, ctx);
     }
 

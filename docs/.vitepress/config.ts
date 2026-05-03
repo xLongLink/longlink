@@ -54,6 +54,7 @@ export default withMermaid(defineConfig({
         text: 'Pages',
         items: [
           { text: 'Introduction', link: '/pages/' },
+          { text: 'Primitives', link: '/pages/primitives' },
           { text: 'HTML Elements', link: '/pages/html-elements' },
           { text: 'Layout', link: '/pages/layout' },
           { text: 'Components', link: '/pages/components' }

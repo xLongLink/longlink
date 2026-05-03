@@ -13,7 +13,7 @@ def get_all_pages() -> list[PageInfo]:
     if not PAGES.is_dir():
         return pages
 
-    page_order = ["applications", "settings"]
+    page_order = ["applications", "settings", "examle"]
 
     for page_file in sorted(PAGES.glob("*.xml")):
         page = Page(page_file)

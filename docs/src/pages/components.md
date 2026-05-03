@@ -1,6 +1,9 @@
 # Components
 
-Use components for form controls, dialogs, icons, and other interactive page elements.
+Components are the interactive building blocks of XML pages.
+They cover inputs, actions, dialogs, icons, and other user-facing controls.
+Use them when the page needs direct user interaction.
+The sections below describe each component and how it is used.
 
 ## Button
 
@@ -25,33 +28,6 @@ Use `<Checkbox>` for boolean input with a label.
   checked="true"
 />
 ```
-
-## Dialog
-
-Use `<Dialog>` to render modal content.
-
-```xml
-<Dialog id="issue-dialog">
-  <DialogTrigger>
-    Open details
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Issue details</DialogTitle>
-      <DialogDescription>Review the current issue state.</DialogDescription>
-    </DialogHeader>
-    <p>Dialog content goes here.</p>
-  </DialogContent>
-</Dialog>
-```
-
-- `<Dialog>`
-- `<DialogTrigger>`
-- `<DialogContent>`
-- `<DialogHeader>`
-- `<DialogTitle>`
-- `<DialogDescription>`
-- `<DialogFooter>`
 
 ## Icon
 
@@ -169,4 +145,40 @@ Use `<Textarea>` for multiline text input.
   placeholder="Write the issue details"
   description="Use multiple lines when needed."
 />
+```
+
+## Table
+
+Use `<Table>` to present structured data in rows and columns. Use explicit markup when the page controls every cell directly, and use `<Column>` definitions when table rows come from the `data` prop.
+
+```xml
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+      <TableHead>Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Projects</TableCell>
+      <TableCell>Active</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+```
+
+```xml
+<Table data='[{"name":"Projects","status":"Active"}]'>
+  <Column key="name" label="Name" content="{name}" />
+  <Column key="status" label="Status" content="{status}" />
+</Table>
+```
+
+## DataTable
+
+Use `<DataTable>` when the page needs sorting, filtering, pagination, or row selection. It follows the TanStack Table pattern from shadcn and takes column definitions plus row data, while `<Table>` renders the visible cells.
+
+```xml
+<DataTable data="payments" columns="paymentColumns" />
 ```

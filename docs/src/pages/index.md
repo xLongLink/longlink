@@ -18,39 +18,6 @@ The resulting interface is consistent with the LongLink control plane and acts a
 </Page>
 ```
 
-## State
+## Primitives
 
-`State` defines a local, reactive state container. It holds variables that can be bound to components and updated through user interaction or actions.
-
-```xml
-<State id="user" username="" password="">
-  <Input kind="text" label="Username" bind="user.username" placeholder="Mario Rossi" />
-  <Input kind="password" label="Password" bind="user.password" placeholder="password" />
-<State />
-```
-
-## Query
-
-`Query` declares a data-fetching operation against a REST endpoint. The response is automatically parsed and stored under the given id, making it available for rendering and logic.
-
-```xml
-<Query id="orders" path="/apps">
-```
-
-## For
-
-`For` iterates over a collection and renders its children for each item. The current element is exposed through the `as` variable.
-
-```xml
-<For each="orders" as="order">
-  <Card>{order.number}</Card>
-</For>
-```
-
-## If
-
-All components support an `if` attribute for conditional rendering. The component is rendered only if the expression evaluates to `true`.
-
-```xml
-<Card if="order.active" />
-```
+The [primitives reference](/pages/primitives) covers the core building blocks used in XML pages: `State`, `Query`, `For`, and `If`.

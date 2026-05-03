@@ -1,15 +1,16 @@
 import { useId } from 'react';
 import { Label } from '@/ui/label';
 import { Switch as UISwitch } from '@/ui/switch';
+import type { ComponentProps } from 'react';
 
-type SwitchProps = {
+type SwitchProps = ComponentProps<typeof UISwitch> & {
     label?: string;
     description?: string;
     active?: boolean;
 };
 
 /** Renders a toggle switch with label and description. */
-export function Switch({ label, description, active = false }: SwitchProps) {
+export function Switch({ label, description, active = false, ...props }: SwitchProps) {
     const id = useId();
 
     return (
@@ -19,7 +20,7 @@ export function Switch({ label, description, active = false }: SwitchProps) {
                 {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
             </div>
 
-            <UISwitch id={id} defaultChecked={active} />
+            <UISwitch id={id} defaultChecked={active} {...props} />
         </div>
     );
 }

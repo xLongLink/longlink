@@ -55,7 +55,7 @@
             <TableRow>
               <TableCell>{application.name}</TableCell>
               <TableCell>{application.url}</TableCell>
-              <TableCell className="flex gap-2">
+              <TableCell class="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"

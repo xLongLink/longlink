@@ -8,7 +8,6 @@ import type { ActionComponentProps } from '../types';
 type XMLButtonProps = Omit<Parameters<typeof UIButton>[0], keyof ActionComponentProps> &
     Partial<ActionComponentProps> & {
         href?: string;
-        _baseUrl?: string;
     };
 
 /**
@@ -18,7 +17,6 @@ function Button({
     action,
     pending = false,
     href,
-    _baseUrl: _unusedBaseUrl,
     onClick,
     disabled,
     className,

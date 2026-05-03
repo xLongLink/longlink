@@ -2,8 +2,9 @@
 
 import { Label } from '@/ui/label';
 import { Slider } from '@/ui/slider';
+import type { ComponentProps } from 'react';
 
-type RangeProps = {
+type RangeProps = ComponentProps<typeof Slider> & {
     label?: string;
     description?: string;
     min?: number;
@@ -13,7 +14,7 @@ type RangeProps = {
 };
 
 /** Renders a range slider with two handles for min/max selection. */
-export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max] }: RangeProps) {
+export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max], ...props }: RangeProps) {
     const normalizedValue = value.length === 2 ? value : [value[0] ?? min, value[1] ?? max];
 
     return (
@@ -25,7 +26,7 @@ export function Range({ label, description, min = 0, max = 100, step = 1, value 
                 </div>
             )}
 
-            <Slider value={normalizedValue} min={min} max={max} step={step} />
+            <Slider value={normalizedValue} min={min} max={max} step={step} {...props} />
 
             {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>

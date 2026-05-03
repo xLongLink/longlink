@@ -227,7 +227,7 @@ jobs:
               fi
 
               if [ -n "$USERNAME" ]; then
-                echo "<a href=\"https://github.com/${USERNAME}\"><img src=\"https://github.com/${USERNAME}.png?size=80\" width=\"40\" height=\"40\" alt=\"${USERNAME}\" title=\"${USERNAME}\" /></a>"
+                echo "<a href=\"https://github.com/${USERNAME}\"><img src=\"https://github.com/${USERNAME}.png?size=80\" width=\"40\" height=\"40\" alt=\"${USERNAME}\" title=\"${USERNAME}\" style=\"border-radius: 50%;\" /></a>"
               else
                 echo "- $NAME"
               fi

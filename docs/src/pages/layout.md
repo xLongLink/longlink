@@ -1,10 +1,13 @@
 # Layout
 
-Use layout components to structure a page into sections, navigation blocks, containers, and data views.
+Layout components organize a page into visible sections and containers.
+They control how content is grouped, positioned, and navigated.
+Use them to shape the page structure before adding forms or data.
+The sections below describe the main layout primitives.
 
 ## Hero
 
-Use `<Hero>` to define the top section of a page.
+Use `<Hero>` to define the top section of a page. Place it near the top, use `title` and `subtitle` to describe the page clearly, and put actions such as `<Button>` inside the hero body.
 
 ```xml
 <Page name="Issues" icon="bug">
@@ -18,13 +21,9 @@ Use `<Hero>` to define the top section of a page.
 </Page>
 ```
 
-- Place `<Hero>` near the top of the page.
-- Use `title` and `subtitle` to describe the page clearly.
-- Place actions such as `<Button>` inside the hero body.
-
 ## Menu
 
-Use `<Menu>` to organize page content into navigable sections.
+Use `<Menu>` to organize page content into navigable sections. Use `<MenuSection>` for top-level navigation entries, use `<MenuSubSection>` for the content inside a section, and set `root="true"` when a subsection should render as the section root.
 
 ```xml
 <Menu>
@@ -50,13 +49,9 @@ Use `<Menu>` to organize page content into navigable sections.
 </Menu>
 ```
 
-- Use `<MenuSection>` for top-level navigation entries.
-- Use `<MenuSubSection>` for the content shown within a section.
-- Set `root="true"` when a subsection should render as the section root.
-
 ## Card
 
-Use cards to group related content into clear sections.
+Use cards to group related content into clear sections. Use `<CardHeader>` for metadata and actions, `<CardContent>` for the main body, and `<CardFooter>` for secondary details.
 
 ```xml
 <Card>
@@ -76,13 +71,9 @@ Use cards to group related content into clear sections.
 </Card>
 ```
 
-- Use `<CardHeader>` for metadata and actions.
-- Use `<CardContent>` for the main body.
-- Use `<CardFooter>` for secondary details.
-
 ## Columns
 
-Use `<Columns>` and `<Column>` to create multi-column layouts.
+Use `<Columns>` and `<Column>` to create multi-column layouts. Use `gap` on `<Columns>` to control spacing, use `span` for the current layout model, and keep in mind that legacy `widths` and `width` values are still supported by the renderer.
 
 ```xml
 <Columns gap="16">
@@ -104,13 +95,28 @@ Use `<Columns>` and `<Column>` to create multi-column layouts.
 </Columns>
 ```
 
-- Use `gap` on `<Columns>` to control spacing.
-- Use `span` for the current layout model.
-- Legacy `widths` and `width` values are still supported by the renderer.
+## Dialog
+
+Use `<Dialog>` to present modal content without leaving the page. Place the trigger outside the modal body, keep the header focused on the title and description, and use the footer for final actions.
+
+```xml
+<Dialog id="issue-dialog">
+  <DialogTrigger>
+    Open details
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Issue details</DialogTitle>
+      <DialogDescription>Review the current issue state.</DialogDescription>
+    </DialogHeader>
+    <p>Dialog content goes here.</p>
+  </DialogContent>
+</Dialog>
+```
 
 ## Tabs
 
-Use tabs when the page needs multiple related views in the same section.
+Use tabs when the page needs multiple related views in the same section. `value` must match between `<TabsTrigger>` and `<TabsContent>`, and `defaultValue` selects the initially visible tab.
 
 ```xml
 <Tabs defaultValue="details">
@@ -136,37 +142,3 @@ Use tabs when the page needs multiple related views in the same section.
   </TabsContent>
 </Tabs>
 ```
-
-- `value` must match between `<TabsTrigger>` and `<TabsContent>`.
-- `defaultValue` selects the initially visible tab.
-
-## Table
-
-Use tables to present structured data in rows and columns.
-
-```xml
-<Table>
-  <TableHeader>
-    <TableRow>
-      <TableHead>Name</TableHead>
-      <TableHead>Status</TableHead>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-    <TableRow>
-      <TableCell>Projects</TableCell>
-      <TableCell>Active</TableCell>
-    </TableRow>
-  </TableBody>
-</Table>
-```
-
-```xml
-<Table data='[{"name":"Projects","status":"Active"}]'>
-  <Column key="name" label="Name" content="{name}" />
-  <Column key="status" label="Status" content="{status}" />
-</Table>
-```
-
-- Use explicit markup when the page controls every cell directly.
-- Use `<Column>` definitions when table rows come from the `data` prop.

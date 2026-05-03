@@ -1,44 +1,81 @@
 # HTML Elements
 
-Use HTML-style tags for text content inside XML pages.
+HTML elements are the text primitives for XML pages.
+They provide familiar tags for headings, paragraphs, lists, quotes, and inline code.
+Use them when page content should stay close to standard HTML structure.
+The sections below describe each supported element.
 
-These tags map directly to the current web renderer. Use them when the page needs headings, paragraphs, lists, quoted text, or inline code samples.
+## H1
 
-## Supported elements
-
-- `<h1>` for the main heading inside a section
-- `<h2>` for section headings
-- `<h3>` for subsection headings
-- `<h4>` for field or block headings
-- `<p>` for paragraphs
-- `<ul>` for unordered lists
-- `<li>` for list items
-- `<blockquote>` for quoted or highlighted content
-- `<code>` for inline or short code snippets
-
-## Example
+Use `<h1>` for the main heading inside a section.
 
 ```xml
-<Card>
-  <CardHeader>
-    <CardTitle>HTML elements</CardTitle>
-  </CardHeader>
-  <CardContent>
-    <h1>Issue details</h1>
-    <p>Use explicit HTML-style tags instead of a generic text wrapper.</p>
-    <ul>
-      <li>Headings define structure</li>
-      <li>Paragraphs explain content</li>
-      <li>Lists group related points</li>
-    </ul>
-    <blockquote>Keep page text explicit and readable.</blockquote>
-    <code>&lt;h2&gt;Section title&lt;/h2&gt;</code>
-  </CardContent>
-</Card>
+<h1>Issue details</h1>
 ```
 
-## Notes
+## H2
 
-- Use these tags for content, not for layout.
-- Wrap content blocks with layout elements such as `<Card>`, `<Columns>`, or `<Tabs>`.
-- The renderer currently supports the elements listed on this page.
+Use `<h2>` for section headings.
+
+```xml
+<h2>Overview</h2>
+```
+
+## H3
+
+Use `<h3>` for subsection headings.
+
+```xml
+<h3>Status</h3>
+```
+
+## H4
+
+Use `<h4>` for field or block headings.
+
+```xml
+<h4>Owner</h4>
+```
+
+## P
+
+Use `<p>` for paragraphs.
+
+```xml
+<p>Use explicit HTML-style text elements.</p>
+```
+
+## UL
+
+Use `<ul>` for unordered lists.
+
+```xml
+<ul>
+  <li>First item</li>
+  <li>Second item</li>
+</ul>
+```
+
+## LI
+
+Use `<li>` for list items.
+
+```xml
+<li>List item</li>
+```
+
+## Blockquote
+
+Use `<blockquote>` for quoted or highlighted content.
+
+```xml
+<blockquote>Keep page text explicit and readable.</blockquote>
+```
+
+## Code
+
+Use `<code>` for inline or short code snippets.
+
+```xml
+<code>&lt;h2&gt;Section title&lt;/h2&gt;</code>
+```

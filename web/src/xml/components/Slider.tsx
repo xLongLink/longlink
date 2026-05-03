@@ -1,9 +1,10 @@
 import { Label } from '@/ui/label';
 import { Slider as UISlider } from '@/ui/slider';
+import type { ComponentProps } from 'react';
 
 type SliderValue = number | number[];
 
-type SliderProps = {
+type SliderProps = ComponentProps<typeof UISlider> & {
     label?: string;
     description?: string;
     min?: number;
@@ -36,6 +37,7 @@ export function Slider({
     value,
     orientation = 'horizontal',
     disabled = false,
+    ...props
 }: SliderProps) {
     const normalizedValue = normalizeValue(value, min, max);
 
@@ -55,6 +57,7 @@ export function Slider({
                 step={step}
                 orientation={orientation}
                 disabled={disabled}
+                {...props}
             />
 
             {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}

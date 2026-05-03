@@ -1,0 +1,112 @@
+<Page name="Example" icon="layout-grid">
+  <State id="exampleState" username="Ada" enabled="true" volume="35" notes="" status="active" size="md">
+    <Query id="exampleData" path="/example">
+      <Hero title="XML Components" subtitle="A schema-backed example page." icon="layout-grid" action="Open dialog">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dialog title</DialogTitle>
+            <DialogDescription>Dialog description showing the dialog family.</DialogDescription>
+          </DialogHeader>
+          <Stack gap="12">
+            <Input kind="text" label="Name" bind="exampleState.username" value="{exampleState.username}" placeholder="Ada Lovelace" />
+            <Textarea name="notes" label="Notes" value="{exampleState.notes}" placeholder="Add notes" />
+            <Checkbox label="Enabled" checked="true" />
+            <Switch label="Toggle" active="true" />
+            <Select kind="select" label="Status" value="{exampleState.status}" />
+            <Range label="Range" min="0" max="100" step="10" value="35" />
+            <Slider min="0" max="100" step="5" value="25" orientation="horizontal" />
+            <Button variant="default">Primary</Button>
+            <Button variant="outline">Outline</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="ghost">Ghost</Button>
+            <Button variant="destructive">Destructive</Button>
+            <Button variant="link">Link</Button>
+          </Stack>
+          <DialogFooter>
+            <Button variant="default">Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Hero>
+
+      <h1>Headings</h1>
+      <h2>Second level</h2>
+      <h3>Third level</h3>
+      <h4>Fourth level</h4>
+      <p>Paragraph text for the example page.</p>
+      <blockquote>Blockquote text.</blockquote>
+      <code>inline code</code>
+
+      <Separator />
+
+      <Menu>
+        <MenuSection title="Main" icon="folder">
+          <MenuSubSection title="Overview" root="true">
+            <p>Menu subsection content.</p>
+          </MenuSubSection>
+        </MenuSection>
+      </Menu>
+
+      <Tabs>
+        <TabsList>
+          <TabsTrigger>Tab one</TabsTrigger>
+          <TabsTrigger>Tab two</TabsTrigger>
+        </TabsList>
+        <TabsContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Card title</CardTitle>
+              <CardDescription>Card description.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CardAction action="submit" method="post" url="/cards" payload="{&quot;id&quot;:1}">Card action</CardAction>
+              <CardFooter>Card footer</CardFooter>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <ul>
+        <li>List item one</li>
+        <li>List item two</li>
+      </ul>
+
+      <For each="[{ name: 'Alpha', url: '/alpha' }, { name: 'Beta', url: '/beta' }]" as="item">
+        <Card>
+          <CardHeader>
+            <CardTitle>{item.name}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{item.url}</p>
+          </CardContent>
+        </Card>
+      </For>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>URL</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>Alpha</TableCell>
+            <TableCell>/alpha</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+
+      <Columns>
+        <Column key="name" label="Name" content="{item.name}" align="left" />
+      </Columns>
+
+      <Dialog>
+        <DialogTrigger>
+          <Button variant="outline">Open dialog</Button>
+        </DialogTrigger>
+      </Dialog>
+
+      <Icon name="sparkles" fallback="*" />
+    </Query>
+  </State>
+</Page>
