@@ -12,8 +12,8 @@ class Env(Settings):
         validation_alias="ENV_STORAGE_ENDPOINT",
     )
     storage_secret: str = Field(default="dev", validation_alias="ENV_STORAGE_TOKEN")
-    FEATURE_FLAG: bool
-    EXTERNAL_API: str
+    FEATURE_FLAG: bool = False
+    EXTERNAL_API: str = "https://example.test"
 
 
 env = Env()

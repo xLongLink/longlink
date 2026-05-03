@@ -6,12 +6,21 @@ import { renderNode } from '@/xml/renderers';
 import { registry } from '@/xml/registry';
 import type { ExecutionContext } from '@/xml/types';
 
-describe('p', () => {
-    /*
-     * This integration test proves that raw XML containing `<p>` is parsed,
-     * resolved through the runtime registry, and emitted as the expected
-     * styled HTML paragraph.
-     */
+describe('P', () => {
+    /* The compiler should preserve paragraph text and attributes. */
+    it('compiles p xml into a paragraph ast node', () => {
+        expect(xmlToAST('<p data-kind="intro">Paragraph text</p>')).toEqual([
+            {
+                name: 'p',
+                params: {
+                    'data-kind': 'intro',
+                },
+                children: [{ name: 'text', value: 'Paragraph text' }],
+            },
+        ]);
+    });
+
+    /* The runtime should render paragraph XML into the expected HTML output. */
     it('renders raw xml paragraph content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<p>Paragraph text</p>');

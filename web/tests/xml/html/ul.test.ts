@@ -6,12 +6,24 @@ import { renderNode } from '@/xml/renderers';
 import { registry } from '@/xml/registry';
 import type { ExecutionContext } from '@/xml/types';
 
-describe('ul', () => {
-    /*
-     * This integration test proves that raw XML containing `<ul>` is parsed,
-     * resolved through the runtime registry, and emitted as the expected
-     * styled HTML unordered list.
-     */
+describe('Ul', () => {
+    /* The compiler should preserve list items under an unordered list. */
+    it('compiles ul xml into an unordered list ast node', () => {
+        expect(xmlToAST('<ul role="list"><li>One</li><li>Two</li></ul>')).toEqual([
+            {
+                name: 'ul',
+                params: {
+                    role: 'list',
+                },
+                children: [
+                    { name: 'li', children: [{ name: 'text', value: 'One' }] },
+                    { name: 'li', children: [{ name: 'text', value: 'Two' }] },
+                ],
+            },
+        ]);
+    });
+
+    /* The runtime should render unordered list XML into the expected HTML output. */
     it('renders raw xml unordered list content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<ul><li>Item one</li></ul>');

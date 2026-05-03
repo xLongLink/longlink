@@ -117,20 +117,6 @@ const defaultRegistry = {
 
 export const registry = defaultRegistry;
 
-/**
- * Creates a component registry by merging the built-in primitives with the
- * provided custom components. Custom components override primitives with the
- * same name.
- */
-export function createRegistry<const TRegistry extends RegistryShape>(
-    customRegistry: TRegistry
-): typeof defaultRegistry & TRegistry {
-    return {
-        ...defaultRegistry,
-        ...customRegistry,
-    };
-}
-
 // ---------------------------------------------------------------------------
 // action
 // ---------------------------------------------------------------------------

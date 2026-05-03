@@ -6,12 +6,21 @@ import { renderNode } from '@/xml/renderers';
 import { registry } from '@/xml/registry';
 import type { ExecutionContext } from '@/xml/types';
 
-describe('blockquote', () => {
-    /*
-     * This integration test proves that raw XML containing `<blockquote>` is
-     * parsed, resolved through the runtime registry, and emitted as the
-     * expected styled HTML blockquote.
-     */
+describe('Blockquote', () => {
+    /* The compiler should preserve blockquote content and attributes. */
+    it('compiles blockquote xml into a blockquote ast node', () => {
+        expect(xmlToAST('<blockquote cite="source">Quote</blockquote>')).toEqual([
+            {
+                name: 'blockquote',
+                params: {
+                    cite: 'source',
+                },
+                children: [{ name: 'text', value: 'Quote' }],
+            },
+        ]);
+    });
+
+    /* The runtime should render blockquote XML into the expected HTML output. */
     it('renders raw xml blockquote content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<blockquote>Quoted text</blockquote>');

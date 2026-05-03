@@ -6,14 +6,21 @@ import { renderNode } from '@/xml/renderers';
 import { registry } from '@/xml/registry';
 import type { ExecutionContext } from '@/xml/types';
 
-describe('h1', () => {
-    /*
-     * Integration test: it starts from raw XML, compiles that
-     * XML into the AST, renders the AST through the XML runtime, and finally
-     * asserts the exact HTML markup produced by React server rendering. The
-     * goal is to prove that a plain `<h1>` element in XML becomes a styled
-     * heading in the rendered output with the expected text content.
-     */
+describe('H1', () => {
+    /* The compiler should preserve H1 text content and attributes. */
+    it('compiles h1 xml into an h1 ast node', () => {
+        expect(xmlToAST('<h1 id="title">Heading</h1>')).toEqual([
+            {
+                name: 'h1',
+                params: {
+                    id: 'title',
+                },
+                children: [{ name: 'text', value: 'Heading' }],
+            },
+        ]);
+    });
+
+    /* The runtime should render h1 XML into the expected HTML output. */
     it('renders raw xml h1 content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<h1>Heading one</h1>');

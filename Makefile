@@ -1,4 +1,4 @@
-.PHONY: up down format build api web docs install
+.PHONY: up down format build api web docs install tests
 
 
 install:
@@ -14,6 +14,14 @@ format:
 	cd api && uv run isort .
 	cd sdk && uv run isort .
 	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
+
+
+tests:
+	cd api && uv sync --extra dev
+	cd api && sh -c 'if [ -n "$$(find tests -type f \( -name "test*.py" -o -name "test_*.py" \) -print -quit)" ]; then uv run pytest; fi'
+	cd sdk && uv sync --extra dev
+	cd sdk && uv run pytest
+	bun test --cwd web
 
 
 build: 

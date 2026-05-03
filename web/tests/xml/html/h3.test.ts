@@ -6,12 +6,21 @@ import { renderNode } from '@/xml/renderers';
 import { registry } from '@/xml/registry';
 import type { ExecutionContext } from '@/xml/types';
 
-describe('h3', () => {
-    /*
-     * This integration test proves that raw XML containing `<h3>` is parsed,
-     * resolved through the runtime registry, and emitted as the expected
-     * styled HTML heading.
-     */
+describe('H3', () => {
+    /* The compiler should preserve H3 text content and attributes. */
+    it('compiles h3 xml into an h3 ast node', () => {
+        expect(xmlToAST('<h3 data-level="3">Subsection</h3>')).toEqual([
+            {
+                name: 'h3',
+                params: {
+                    'data-level': '3',
+                },
+                children: [{ name: 'text', value: 'Subsection' }],
+            },
+        ]);
+    });
+
+    /* The runtime should render h3 XML into the expected HTML output. */
     it('renders raw xml h3 content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<h3>Heading three</h3>');

@@ -1,7 +1,7 @@
 from uuid import uuid4
 from longlink import Router, Context
-from src.types import UserModel
-from src.models.projects import Project, LinkedContact, ProjectStatus
+from sample.src.types import UserModel
+from sample.src.models.projects import Project, LinkedContact, ProjectStatus
 
 router = Router()
 

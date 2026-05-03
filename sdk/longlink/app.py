@@ -6,6 +6,7 @@ from longlink.routes import routes
 from longlink.context import State, create_state
 from fastapi.responses import JSONResponse
 from pydantic_settings import BaseSettings
+from longlink.constants import ROOT
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -57,7 +58,7 @@ class LongLink(FastAPI):
             self.include_router(router)
 
         # Mount static files after API routes so metadata and app assets stay reachable.
-        static_dir = Path(__file__).resolve().parent / ".static" / "web"
+        static_dir = ROOT / ".static" / "web"
         if static_dir.exists():
             self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
 

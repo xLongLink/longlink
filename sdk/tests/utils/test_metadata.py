@@ -5,12 +5,13 @@ from __future__ import annotations
 import sys
 import importlib.util
 from pathlib import Path
+from longlink.constants import ROOT
 
 
 def load_metadata_module():
     """Load metadata module directly from source file without importing package root."""
 
-    module_path = Path(__file__).resolve().parents[2] / "longlink" / "utils" / "metadata.py"
+    module_path = ROOT / "utils" / "metadata.py"
 
     # Load module by file path because package root currently imports unrelated subsystems.
     spec = importlib.util.spec_from_file_location("sdk_metadata_module", module_path)

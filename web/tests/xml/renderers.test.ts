@@ -4,12 +4,14 @@ import { render, renderNode } from '../../src/xml/renderers';
 import type { ASTNode, ExecutionContext, RegistryShape } from '../../src/xml/types';
 
 describe('renderNode', () => {
+    /* Null input should short-circuit before any registry lookup. */
     it('returns null for missing node input', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
 
         expect(renderNode(null, {}, ctx)).toBeNull();
     });
 
+    /* Text nodes should evaluate expressions against the current runtime context. */
     it('resolves text nodes from full expressions', () => {
         const ctx: ExecutionContext = {
             state: { count: [7, () => {}] },
@@ -20,6 +22,7 @@ describe('renderNode', () => {
         expect(renderNode({ name: 'text', value: '{`Count ${count}`}' }, {}, ctx)).toBe('Count 7');
     });
 
+    /* Conditional nodes should disappear when the condition resolves to false. */
     it('skips nodes when if condition is false', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const node: ASTNode = { name: 'Widget', params: { if: '{false}' } };
@@ -27,12 +30,14 @@ describe('renderNode', () => {
         expect(renderNode(node, { Widget: (() => null) as ComponentType<any> }, ctx)).toBeNull();
     });
 
+    /* Unknown tags should fail loudly so missing registry entries are obvious. */
     it('throws on unknown component', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
 
         expect(() => renderNode({ name: 'Unknown' }, {}, ctx)).toThrow('Unknown component "Unknown"');
     });
 
+    /* Prop expressions and set: handlers should both flow through the rendered component. */
     it('resolves props and composes multiple set handlers into one onClick', () => {
         let latestValue: unknown;
         let currentValue = { range: { from: 1, to: 2 }, mode: 'day' };
@@ -77,6 +82,7 @@ describe('renderNode', () => {
 });
 
 describe('render', () => {
+    /* Multiple root nodes should render independently in order. */
     it('renders each root node wrapped as fragments', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const registry: RegistryShape = {

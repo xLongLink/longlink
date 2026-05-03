@@ -5,7 +5,7 @@ from sqlmodel import Session
 from dataclasses import field, dataclass
 from longlink.storage import create_storage
 from sqlalchemy.engine import Engine
-from longlink.utils.page import Page
+from longlink.utils.xml import Page
 from longlink.database.base import create_engine
 from longlink.utils.settings import Settings
 
