@@ -1,62 +1,55 @@
 # Control Plane
 
-The **Control Plane** is the central system that manages and governs all applications in LongLink. It provides the infrastructure, security, and coordination needed to run applications in a consistent and controlled environment.
+The Control Plane is the central system that manages and governs all applications in LongLink. It acts as the single entry point between users and application services, handling authentication, authorization, request routing, and observability.
 
-Applications do not handle these concerns themselves—the control plane ensures they operate reliably within the platform.
+Applications do not interact directly with external clients. Every request flows through the control plane, ensuring that access is controlled, behavior is consistent, and all operations are traceable.
 
-## Features
+## Infrastructure
 
-The Control Plane delivers a cohesive set of platform capabilities that standardize how applications are deployed, accessed, and operated:
+The control plane manages and connects to the core infrastructure required to run applications:
 
-- **Application Management**
-  Centralized registration, updates, and removal of applications, including storage of metadata and configuration.
+- Database (isolated per application)
+- Object Storage (S3-compatible)
+- Compute (Docker images running on Kubernetes)
+- Identity Provider (OIDC-compatible)
 
-- **Access & Identity Control**
-  Integration with identity providers (OIDC), management of user sessions, and enforcement of permissions and workspace isolation.
+<br />
 
-- **Request Routing & Gateway**
-  Acts as the unified entry point for all incoming traffic, handling authentication, routing, and proxying to the appropriate application while standardizing communication.
-
-- **Data & Infrastructure Management**
-  Provisioning and management of databases and storage, with logical separation per application or workspace, abstracted from application code.
-
-- **Observability & Governance**
-  Comprehensive monitoring, audit logging, and traceability to ensure visibility, compliance, and operational control.
-
-## Role in the Architecture
-
-All interactions with applications go through the control plane:
-
-1. Applications are registered in the control plane
-2. Users access applications through the platform
-3. Requests are authenticated and routed by the control plane
-4. Applications handle business logic and return responses
-
-This ensures consistency, security, and centralized control across the system.
-
-## Control Plane and Application Data Flow
+<div align="center">
 
 ```mermaid
-flowchart LR
-    user[User]
-    control_plane[LongLink Control Plane]
-    app[Application Service]
-    app_db[(Application Database)]
-    app_storage[(Application Storage)]
-    audit[(Audit Logs and Observability)]
+flowchart TB
+    CP[Control Plane]
 
-    user -->|Authenticated request| control_plane
-    control_plane -->|Permission check and routing| app
-    app -->|Read and write business data| app_db
-    app -->|Read and write files| app_storage
-    app -->|Application response| control_plane
-    control_plane -->|Standardized response| user
-    control_plane -->|Governance events| audit
+    CP --> IDP[(Identity Provider)]
+    CP --> DB[(Database)]
+    CP --> ST[(Object Storage)]
+    CP --> C[(Compute)]
 ```
 
-Flow summary:
+</div>
 
-1. The user sends a request to LongLink through the control plane.
-2. The control plane authenticates the user, checks permissions, and routes the request.
-3. The application executes business logic and accesses its isolated database and storage.
-4. The application response returns through the control plane, which also records governance and observability events.
+## Request Flow & Permissioning
+
+All interactions with applications are proxied through the control plane. It enforces authentication and permissions before routing requests and returning responses.
+
+<br />
+
+<div align="center">
+
+```mermaid
+flowchart TB
+    CP[Control Plane]
+
+    UI[Client]
+    A1[Application 1]
+    A2[Application 2]
+    A3[Application 3]
+
+    UI <--> CP
+    CP <--> A1
+    CP <--> A2
+    CP <--> A3
+```
+
+</div>

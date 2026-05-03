@@ -17,7 +17,3 @@ The resulting interface is consistent with the LongLink control plane and acts a
   <!-- Content -->
 </Page>
 ```
-
-## Primitives
-
-The [primitives reference](/pages/primitives) covers the core building blocks used in XML pages: `State`, `Query`, `For`, and `If`.

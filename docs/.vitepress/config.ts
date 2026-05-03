@@ -34,20 +34,20 @@ export default withMermaid(defineConfig({
         text: 'Control Plane',
         items: [
           { text: 'Overview', link: '/api/' },
-          { text: 'Applications', link: '/api/applications/' },
-          { text: 'Self Hosted', link: '/api/self-hosted/' },
+          { text: 'Applications', link: '/api/applications' },
+          { text: 'Self Hosted', link: '/api/self-hosted' },
         ]
       },
       {
         text: 'Applications SDK',
         items: [
           { text: 'Overview', link: '/sdk/' },
-          { text: 'Environments', link: '/sdk/environments/' },
-          { text: 'Routes', link: '/sdk/routes/' },
-          { text: 'Storage', link: '/sdk/storage/' },
-          { text: 'Database', link: '/sdk/database/' },
-          { text: 'Testing', link: '/sdk/testing/' },
-          { text: 'Build & Publish', link: '/sdk/building/' },
+          { text: 'Environments', link: '/sdk/environments' },
+          { text: 'Routes', link: '/sdk/routes' },
+          { text: 'Storage', link: '/sdk/storage' },
+          { text: 'Database', link: '/sdk/database' },
+          { text: 'Testing', link: '/sdk/testing' },
+          { text: 'Build & Publish', link: '/sdk/building' },
         ]
       },
       {
