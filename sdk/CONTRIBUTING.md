@@ -12,8 +12,8 @@ sdk/
 │   ├── cli/            # CLI commands (init, build, migrate)
 │   ├── context.py      # Application context
 │   ├── database/       # DB connection, session, models
-│   ├── pages/          # Page definitions
 │   ├── routes/         # API routes
+│   │   └── pages.py    # XML page route handler
 │   ├── storage/        # S3-compatible storage abstraction
 │   ├── types/          # Shared types
 │   ├── utils/          # Utilities

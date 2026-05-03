@@ -175,10 +175,25 @@ Use `<Table>` to present structured data in rows and columns. Use explicit marku
 </Table>
 ```
 
-## DataTable
+## Table data
 
-Use `<DataTable>` when the page needs sorting, filtering, pagination, or row selection. It follows the TanStack Table pattern from shadcn and takes column definitions plus row data, while `<Table>` renders the visible cells.
+Use `<Table>` for structured rows and columns. The runtime also supports a `data` prop that renders one row per item and injects the current item into scope.
 
 ```xml
-<DataTable data="payments" columns="paymentColumns" />
+<Table data='[{"name":"Projects","status":"Active"}]'>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+      <TableHead>Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>{name}</TableCell>
+      <TableCell>{status}</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
 ```
+
+The current runtime registry does not expose a separate `<DataTable>` component.

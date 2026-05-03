@@ -22,6 +22,20 @@ export type AppNavigationPage = {
 };
 
 /**
+ * Joins path segments without introducing duplicate slashes.
+ */
+function joinPaths(basePath: string, tabPath: string): string {
+    const normalizedBasePath = basePath.replace(/\/+$/, '');
+    const normalizedTabPath = tabPath.replace(/^\/+/, '');
+
+    if (!normalizedBasePath) {
+        return `/${normalizedTabPath}`;
+    }
+
+    return `${normalizedBasePath}/${normalizedTabPath}`;
+}
+
+/**
  * Resolves a page icon component for navigation tabs.
  */
 const NavigationPageIcon = ({ name }: { name?: string }): ComponentType<LucideProps> => {
@@ -62,9 +76,9 @@ export function getActiveTabConfig({
     const matchedTab = tabs.find((tab) => {
         const tabPath = tab.path ?? '';
         if (tabPath === '') {
-            return locationPath === (basePath || '/');
+            return locationPath === (basePath.replace(/\/+$/, '') || '/');
         }
-        const tabFullPath = basePath ? `${basePath}/${tabPath}` : `/${tabPath}`;
+        const tabFullPath = joinPaths(basePath, tabPath);
         return locationPath.startsWith(tabFullPath);
     });
 

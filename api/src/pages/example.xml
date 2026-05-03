@@ -88,6 +88,75 @@
         </MenuSubSection>
       </MenuSection>
 
+      <MenuSection title="Cards" icon="layers-3">
+        <MenuSubSection title="GPU models" root="true">
+          <p>This section combines search and cards to present a compact catalog of GPU models.</p>
+          <Input kind="text" label="Search GPUs" placeholder="Search by model name" />
+          <Columns>
+            <Column key="col-1" label="Column 1" content="" align="left">
+              <Card>
+                <CardHeader>
+                  <CardTitle>NVIDIA RTX 4090</CardTitle>
+                  <CardDescription>Flagship card for high-end rendering and AI workloads.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>24 GB GDDR6X, best suited for demanding workstation tasks.</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>NVIDIA RTX 4070 Ti</CardTitle>
+                  <CardDescription>Efficient upper-midrange option for creators.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>12 GB GDDR6X, good fit for balanced performance targets.</p>
+                </CardContent>
+              </Card>
+            </Column>
+            <Column key="col-2" label="Column 2" content="" align="left">
+              <Card>
+                <CardHeader>
+                  <CardTitle>NVIDIA RTX 4080</CardTitle>
+                  <CardDescription>Strong performance for premium creative workflows.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>16 GB GDDR6X, balanced for gaming and content creation.</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>AMD Radeon RX 7800 XT</CardTitle>
+                  <CardDescription>Mainstream card for high-refresh 1440p.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>16 GB GDDR6, practical value-oriented GPU choice.</p>
+                </CardContent>
+              </Card>
+            </Column>
+            <Column key="col-3" label="Column 3" content="" align="left">
+              <Card>
+                <CardHeader>
+                  <CardTitle>AMD Radeon RX 7900 XTX</CardTitle>
+                  <CardDescription>High-memory GPU for broad 4K and compute usage.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>24 GB GDDR6, competitive in rasterized workloads.</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>NVIDIA RTX 4060</CardTitle>
+                  <CardDescription>Entry-level card with modern encoder support.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>8 GB GDDR6, compact option for smaller builds.</p>
+                </CardContent>
+              </Card>
+            </Column>
+          </Columns>
+        </MenuSubSection>
+      </MenuSection>
+
       <MenuSection title="Layout" icon="columns-2">
         <MenuSubSection title="Composition" root="true">
           <Columns>

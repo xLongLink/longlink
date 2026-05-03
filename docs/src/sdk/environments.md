@@ -10,9 +10,9 @@ This ensures that configuration errors are detected early, before the applicatio
 ## Usage
 
 ```python
-from longlink import App, Enviroments
+from longlink import Environments, LongLink
 
-class Env(Enviroments):
+class Env(Environments):
     """Project-specific environment model."""
 
     FEATURE_FLAG: bool
@@ -20,7 +20,7 @@ class Env(Enviroments):
 
 
 env = Env()
-app = App(env=env)
+app = LongLink(env=env)
 ```
 
 ## References

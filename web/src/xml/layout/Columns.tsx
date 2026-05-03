@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { Children, isValidElement, type ReactNode } from 'react';
 
 type ColumnsProps = {
     gap?: number | string;
@@ -12,6 +12,7 @@ type ColumnProps = {
     children?: ReactNode;
 };
 
+/** Converts numeric layout values to CSS pixel values. */
 function px(value: number | string | undefined, fallback: number) {
     if (typeof value === 'number') {
         return `${value}px`;
@@ -24,6 +25,7 @@ function px(value: number | string | undefined, fallback: number) {
     return `${fallback}px`;
 }
 
+/** Converts relative column widths into CSS grid tracks. */
 function toGridTemplate(widths: number[]) {
     const total = widths.reduce((sum, width) => sum + width, 0);
 
@@ -34,11 +36,25 @@ function toGridTemplate(widths: number[]) {
     return widths.map((width) => `minmax(0, ${(width / total) * 100}%)`).join(' ');
 }
 
+/** Checks whether any child column asks for explicit 12-column placement. */
+function hasExplicitColumnPlacement(children: ReactNode) {
+    return Children.toArray(children).some((child) => {
+        if (!isValidElement<ColumnProps>(child)) {
+            return false;
+        }
+
+        return child.props.span !== undefined || child.props.width !== undefined;
+    });
+}
+
+/** Renders a responsive grid for XML column layouts. */
 export function Columns({ gap = 16, widths, children }: ColumnsProps) {
     const style =
         Array.isArray(widths) && widths.length > 0
             ? { gridTemplateColumns: toGridTemplate(widths) }
-            : { gridTemplateColumns: 'repeat(12, minmax(0, 1fr))' };
+            : hasExplicitColumnPlacement(children)
+              ? { gridTemplateColumns: 'repeat(12, minmax(0, 1fr))' }
+              : { gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 16rem), 1fr))' };
 
     return (
         <div className="grid" style={{ ...style, gap: px(gap, 16) }}>
@@ -47,11 +63,16 @@ export function Columns({ gap = 16, widths, children }: ColumnsProps) {
     );
 }
 
+/** Renders a single XML layout column. */
 export function Column({ children, span, width }: ColumnProps) {
-    const safeSpan = Math.max(1, Math.min(12, Number(span ?? width ?? 1)));
+    const explicitSpan = span ?? width;
+    const safeSpan = explicitSpan === undefined ? undefined : Math.max(1, Math.min(12, Number(explicitSpan)));
 
     return (
-        <div className="space-y-4" style={{ gridColumn: `span ${safeSpan} / span ${safeSpan}` }}>
+        <div
+            className="space-y-4"
+            style={safeSpan === undefined ? undefined : { gridColumn: `span ${safeSpan} / span ${safeSpan}` }}
+        >
             {children}
         </div>
     );

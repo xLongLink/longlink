@@ -26,7 +26,7 @@ make build      # Build the web UI into .static/web for the sdk and api
 ### Control plane
 
 ```bash
-make up     # Start the services, initialize the cluser
+make up     # Start the services, initialize the cluster
 make web    # Run the web app proxied to the api app
 make api    # Run the control plane
 make down   # Stop services and remove the cluster
