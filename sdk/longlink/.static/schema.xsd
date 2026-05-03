@@ -279,15 +279,10 @@
   </xsd:complexType>
   <xsd:element name="CardTitle" type="CardTitleType" />
 
-  <!-- <Column key="name" label="Name" content="{name}" align="left">...</Column> -->
+  <!-- <Column>...</Column> -->
   <xsd:complexType name="ColumnType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="ChildrenOnlyType">
-        <xsd:attribute name="key" type="xsd:string" use="required" />
-        <xsd:attribute name="label" type="xsd:string" use="required" />
-        <xsd:attribute name="content" type="xsd:string" use="required" />
-        <xsd:attribute name="align" type="xsd:string" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="ChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Column" type="ColumnType" />
@@ -356,15 +351,10 @@
   </xsd:complexType>
   <xsd:element name="DialogTrigger" type="DialogTriggerType" />
 
-  <!-- <Hero title="Welcome" subtitle="Get started" icon="sparkles" action="open">...</Hero> -->
+  <!-- <Hero>...</Hero> -->
   <xsd:complexType name="HeroType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="ChildrenOnlyType">
-        <xsd:attribute name="title" type="xsd:string" use="optional" />
-        <xsd:attribute name="subtitle" type="xsd:string" use="optional" />
-        <xsd:attribute name="icon" type="xsd:string" use="optional" />
-        <xsd:attribute name="action" type="xsd:string" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="ChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Hero" type="HeroType" />
@@ -377,24 +367,18 @@
   </xsd:complexType>
   <xsd:element name="Menu" type="MenuType" />
 
-  <!-- <MenuSection title="Main" icon="folder">...</MenuSection> -->
+  <!-- <MenuSection>...</MenuSection> -->
   <xsd:complexType name="MenuSectionType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="ChildrenOnlyType">
-        <xsd:attribute name="title" type="xsd:string" use="required" />
-        <xsd:attribute name="icon" type="xsd:string" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="ChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="MenuSection" type="MenuSectionType" />
 
-  <!-- <MenuSubSection title="Settings" root="true">...</MenuSubSection> -->
+  <!-- <MenuSubSection>...</MenuSubSection> -->
   <xsd:complexType name="MenuSubSectionType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="ChildrenOnlyType">
-        <xsd:attribute name="title" type="xsd:string" use="required" />
-        <xsd:attribute name="root" type="xsd:boolean" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="ChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="MenuSubSection" type="MenuSubSectionType" />
@@ -439,61 +423,31 @@
   </xsd:complexType>
   <xsd:element name="TabsTrigger" type="TabsTriggerType" />
 
-  <!-- <Button variant="default" size="default">...</Button> -->
-  <xsd:simpleType name="ButtonVariantType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="default" />
-      <xsd:enumeration value="outline" />
-      <xsd:enumeration value="secondary" />
-      <xsd:enumeration value="ghost" />
-      <xsd:enumeration value="destructive" />
-      <xsd:enumeration value="link" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="ButtonSizeType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="default" />
-      <xsd:enumeration value="xs" />
-      <xsd:enumeration value="sm" />
-      <xsd:enumeration value="lg" />
-      <xsd:enumeration value="icon" />
-      <xsd:enumeration value="icon-xs" />
-      <xsd:enumeration value="icon-sm" />
-      <xsd:enumeration value="icon-lg" />
-    </xsd:restriction>
-  </xsd:simpleType>
+  <!-- <Button>...</Button> -->
   <xsd:complexType name="ButtonType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="ChildrenOnlyType">
-        <xsd:attribute name="variant" type="ButtonVariantType" use="optional" />
-        <xsd:attribute name="size" type="ButtonSizeType" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="ActionableType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Button" type="ButtonType" />
 
-  <!-- <Checkbox checked="true" label="Accept terms">...</Checkbox> -->
+  <!-- <Checkbox>...</Checkbox> -->
   <xsd:complexType name="CheckboxType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="LabeledContentType">
-        <xsd:attribute name="checked" type="xsd:boolean" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="ActionableType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Checkbox" type="CheckboxType" />
 
-  <!-- <Icon name="chevron-right" fallback=">">...</Icon> -->
+  <!-- <Icon>...</Icon> -->
   <xsd:complexType name="IconType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="ChildrenOnlyType">
-        <xsd:attribute name="name" type="xsd:string" use="required" />
-        <xsd:attribute name="fallback" type="xsd:string" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="ChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Icon" type="IconType" />
 
-  <!-- <Input name="email" kind="email" placeholder="you@example.com">...</Input> -->
+  <!-- <Input>...</Input> -->
   <xsd:complexType name="InputType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="TextInputType" />
@@ -501,20 +455,15 @@
   </xsd:complexType>
   <xsd:element name="Input" type="InputType" />
 
-  <!-- <Range min="0" max="100" step="1" value="50" label="Volume">...</Range> -->
+  <!-- <Range>...</Range> -->
   <xsd:complexType name="RangeType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="LabeledContentType">
-        <xsd:attribute name="min" type="xsd:decimal" use="optional" />
-        <xsd:attribute name="max" type="xsd:decimal" use="optional" />
-        <xsd:attribute name="step" type="xsd:decimal" use="optional" />
-        <xsd:attribute name="value" type="xsd:string" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="TextInputType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Range" type="RangeType" />
 
-  <!-- <Select name="status" kind="select" value="active">...</Select> -->
+  <!-- <Select>...</Select> -->
   <xsd:complexType name="SelectType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="TextInputType" />
@@ -522,7 +471,7 @@
   </xsd:complexType>
   <xsd:element name="Select" type="SelectType" />
 
-  <!-- <Separator /> -->
+  <!-- <Separator>...</Separator> -->
   <xsd:complexType name="SeparatorType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ChildrenOnlyType" />
@@ -530,23 +479,18 @@
   </xsd:complexType>
   <xsd:element name="Separator" type="SeparatorType" />
 
-  <!-- <Slider min="0" max="100" step="5" value="25" orientation="horizontal">...</Slider> -->
+  <!-- <Slider>...</Slider> -->
   <xsd:complexType name="SliderType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="RangeType">
-        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
-        <xsd:attribute name="disabled" type="xsd:boolean" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="TextInputType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Slider" type="SliderType" />
 
-  <!-- <Switch active="true" label="Enable notifications">...</Switch> -->
+  <!-- <Switch>...</Switch> -->
   <xsd:complexType name="SwitchType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="LabeledContentType">
-        <xsd:attribute name="active" type="xsd:boolean" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="ActionableType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Switch" type="SwitchType" />
@@ -599,16 +543,10 @@
   </xsd:complexType>
   <xsd:element name="TableRow" type="TableRowType" />
 
-  <!-- <Textarea name="notes" placeholder="Add notes">...</Textarea> -->
+  <!-- <Textarea>...</Textarea> -->
   <xsd:complexType name="TextareaType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="LabeledContentType">
-        <xsd:attribute name="name" type="xsd:string" use="optional" />
-        <xsd:attribute name="value" type="xsd:string" use="optional" />
-        <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
-        <xsd:attribute name="required" type="xsd:boolean" use="optional" />
-        <xsd:attribute name="disabled" type="xsd:boolean" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="TextInputType" />
     </xsd:complexContent>
   </xsd:complexType>
   <xsd:element name="Textarea" type="TextareaType" />

@@ -53,24 +53,6 @@ Use `<Input>` for single-line text input.
 />
 ```
 
-## Range
-
-`<Range>` is the legacy slider component.
-
-```xml
-<Range
-  label="Budget range"
-  description="Legacy range control."
-  min="0"
-  max="100"
-  step="10"
-  value="[20,80]"
-/>
-```
-
-- Use it only when the page still depends on the older prop model.
-- Use `<Slider>` for the current runtime slider element.
-
 ## Select
 
 Use `<Select>` to choose one option from a list.
@@ -95,7 +77,7 @@ Use `<Separator>` to add visual separation between blocks.
 
 ## Slider
 
-Use `<Slider>` for the current runtime slider component.
+Use `<Slider>` for the current runtime slider component. It replaces the legacy `<Range>` XML component.
 
 ```xml
 <Slider
@@ -149,7 +131,9 @@ Use `<Textarea>` for multiline text input.
 
 ## Table
 
-Use `<Table>` to present structured data in rows and columns. Use explicit markup when the page controls every cell directly, and use `<Column>` definitions when table rows come from the `data` prop.
+Use `<Table>` to present structured data in rows and columns.
+Use explicit markup when the page controls every cell directly.
+Use the `data` prop with `<Column>` definitions when rows come from structured data.
 
 ```xml
 <Table>
@@ -175,25 +159,4 @@ Use `<Table>` to present structured data in rows and columns. Use explicit marku
 </Table>
 ```
 
-## Table data
-
-Use `<Table>` for structured rows and columns. The runtime also supports a `data` prop that renders one row per item and injects the current item into scope.
-
-```xml
-<Table data='[{"name":"Projects","status":"Active"}]'>
-  <TableHeader>
-    <TableRow>
-      <TableHead>Name</TableHead>
-      <TableHead>Status</TableHead>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-    <TableRow>
-      <TableCell>{name}</TableCell>
-      <TableCell>{status}</TableCell>
-    </TableRow>
-  </TableBody>
-</Table>
-```
-
-The current runtime registry does not expose a separate `<DataTable>` component.
+The runtime does not expose a separate `<DataTable>` component.

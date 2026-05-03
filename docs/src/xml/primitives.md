@@ -20,8 +20,10 @@ The sections below describe each primitive and how it is used.
 
 `Query` declares a data-fetching operation against a REST endpoint. The response is automatically parsed and stored under the given id, making it available for rendering and logic.
 
+Use a full `{...}` expression for dynamic paths.
+
 ```xml
-<Query id="orders" path="/apps">
+<Query id="orders" path="{'/apps'}" />
 ```
 
 ## For
@@ -36,8 +38,8 @@ The sections below describe each primitive and how it is used.
 
 ## If
 
-All components support an `if` attribute for conditional rendering. The component is rendered only if the expression evaluates to `true`.
+All components support an `if` attribute for conditional rendering. Wrap the full condition in `{...}`.
 
 ```xml
-<Card if="order.active" />
+<Card if="{order.active}" />
 ```

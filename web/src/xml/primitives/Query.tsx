@@ -1,14 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { interpolate, RuntimeProvider, useRuntime } from '../runtime';
+import { resolveValue, RuntimeProvider, useRuntime } from '../runtime';
 
 /**
  * Fetches data via TanStack Query and exposes the result to descendants.
  *
  * - `id`   — key under which the fetched data is available in scope.
- * - `path` — URL template; `{expr}` placeholders are interpolated against
- *            the current context before the request is made, so the query
- *            automatically re-fetches when its interpolated path changes.
+ * - `path` — URL expression; wrap the full value in `{...}` to compute the
+ *            request path from the current context.
  *
  * The fetched value is stored in `ctx.queries[id]` and re-exposed as a
  * child scope variable, making it available to nested expressions.
@@ -24,7 +23,7 @@ export function Query({ id, path: pathTemplate, children }: { id?: string; path?
 
     const runtime = useRuntime();
     const { ctx } = runtime;
-    const path = interpolate(pathTemplate, ctx);
+    const path = String(resolveValue(pathTemplate, ctx));
     const baseUrl = ctx.baseUrl ?? '';
     const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
 

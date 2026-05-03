@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { evaluate, interpolate, resolveCondition, resolveSet, resolveValue } from '../../src/xml/runtime';
+import { evaluate, resolveCondition, resolveSet, resolveValue } from '../../src/xml/runtime';
 import type { ExecutionContext } from '../../src/xml/types';
 
 describe('evaluate', () => {
@@ -23,27 +23,15 @@ describe('evaluate', () => {
     });
 });
 
-describe('interpolate', () => {
-    it('injects evaluated expression values into templates', () => {
-        const ctx: ExecutionContext = {
-            state: { count: [3, () => {}] },
-            queries: {},
-            scope: { label: 'items' },
-        };
-
-        expect(interpolate('Total {count} {label}', ctx)).toBe('Total 3 items');
-    });
-});
-
 describe('resolveValue', () => {
-    it('interpolates non-braced values as templates', () => {
+    it('returns literal text when not wrapped in braces', () => {
         const ctx: ExecutionContext = {
             state: { count: [4, () => {}] },
             queries: {},
             scope: {},
         };
 
-        expect(resolveValue('Count: {count}', ctx)).toBe('Count: 4');
+        expect(resolveValue('Count: {count}', ctx)).toBe('Count: {count}');
     });
 
     it('returns typed value for single expression', () => {
@@ -75,7 +63,7 @@ describe('resolveCondition', () => {
         expect(resolveCondition('   ', ctx)).toBe(false);
     });
 
-    it('evaluates braced and plain conditions', () => {
+    it('evaluates braced conditions and rejects plain text', () => {
         const ctx: ExecutionContext = {
             state: { count: [2, () => {}] },
             queries: {},

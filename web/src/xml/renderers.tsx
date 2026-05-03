@@ -1,5 +1,5 @@
 import { Fragment, createElement, type ReactNode } from 'react';
-import { interpolate, resolveCondition, resolveSet, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
+import { resolveCondition, resolveSet, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RegistryShape, RenderableASTNode } from './types';
 
 /**
@@ -45,7 +45,7 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
 /**
  * Renders a single ASTNode (or array/null) into React elements.
  *
- * - Text nodes are interpolated and returned as strings.
+ * - Text nodes are resolved through the same `{expression}` rule and returned as strings.
  * - Nodes whose `if` param evaluates to false are skipped.
  * - Component lookup is performed against the registry; unknown tags throw.
  * - Each rendered element is wrapped in a RuntimeProvider so child primitives
@@ -64,7 +64,7 @@ export function renderNode(
     }
 
     if (node.name === 'text') {
-        return node.value ? interpolate(node.value, ctx) : null;
+        return node.value ? String(resolveValue(node.value, ctx)) : null;
     }
 
     if (!resolveCondition(node.params?.if, ctx)) {

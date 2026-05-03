@@ -35,7 +35,7 @@
 
       <MenuSection title="Table" icon="table">
         <MenuSubSection title="Data showcase" root="true">
-          <Table>
+          <Table data='[{"item":"XML showcase page","quantity":1,"unitPrice":"$120.00","total":"$120.00"},{"item":"Layout composition","quantity":2,"unitPrice":"$45.00","total":"$90.00"},{"item":"Documentation polish","quantity":1,"unitPrice":"$80.00","total":"$80.00"}]'>
             <TableHeader>
               <TableRow>
                 <TableHead>Item</TableHead>
@@ -46,28 +46,10 @@
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell>XML showcase page</TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>$120.00</TableCell>
-                <TableCell>$120.00</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Layout composition</TableCell>
-                <TableCell>2</TableCell>
-                <TableCell>$45.00</TableCell>
-                <TableCell>$90.00</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Documentation polish</TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>$80.00</TableCell>
-                <TableCell>$80.00</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>$290.00</TableCell>
+                <TableCell>{item}</TableCell>
+                <TableCell>{quantity}</TableCell>
+                <TableCell>{unitPrice}</TableCell>
+                <TableCell>{total}</TableCell>
               </TableRow>
             </TableBody>
           </Table>

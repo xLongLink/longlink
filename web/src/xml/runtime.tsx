@@ -25,50 +25,16 @@ export function evaluate(expr: string, ctx: ExecutionContext): any {
 }
 
 /**
- * Replaces all `{expression}` placeholders in a string with their evaluated values.
- *
- * Each `{...}` block is evaluated as a JavaScript expression against the current context.
- * The result is coerced to a string and substituted in place.
- *
- * Throws if any embedded expression is invalid or references an unknown variable.
- *
- * Example: interpolate("Hello {name}!", ctx) → "Hello World!"
- */
-export function interpolate(str: string, ctx: ExecutionContext): string {
-    /* Replace embedded expressions while preserving invalid literal text. */
-    return str.replace(/\{([^}]+)\}/g, (match, expr) => {
-        try {
-            return String(evaluate(expr, ctx));
-        } catch (error) {
-            if (error instanceof SyntaxError) {
-                /* Leave literal brace text untouched when it is not a valid expression. */
-                return match;
-            }
-
-            throw error;
-        }
-    });
-}
-
-/**
  * Resolves an attribute value string against the current execution context.
  *
- * - If the value is NOT wrapped in `{...}`, it is treated as a template string and all
- *   `{expr}` placeholders within it are interpolated (see interpolate).
- *
- * - If the value IS a single `{expression}` block, the inner expression is evaluated directly.
- *   This is the primary path for passing non-string values (numbers, booleans, arrays, objects).
- *
- * - If the direct evaluation throws a SyntaxError (e.g. `{key: value}` is ambiguous as a
- *   labeled statement), the value is re-evaluated wrapped in parentheses `({key: value})`
- *   so it is parsed as an object literal instead.
+ * Only a single canonical form is executable: a full `{expression}` block.
+ * Everything else is treated as literal text.
  */
 export function resolveValue(value: string, ctx: ExecutionContext): unknown {
-    /* Treat plain text as a template and brace-wrapped text as an expression. */
     const trimmedValue = value.trim();
 
     if (!trimmedValue.startsWith('{') || !trimmedValue.endsWith('}')) {
-        return interpolate(value, ctx);
+        return value;
     }
 
     const expression = trimmedValue.slice(1, -1).trim();
@@ -90,13 +56,12 @@ export function resolveValue(value: string, ctx: ExecutionContext): unknown {
  *
  * - If condition is null or undefined, the element is always rendered (returns true).
  * - If condition is an empty or whitespace-only string, returns false.
- * - If condition is a `{expression}` block, it is resolved via resolveValue and coerced to boolean.
- * - Otherwise the string is evaluated directly as a JS expression.
+ * - If condition is a `{expression}` block, it is evaluated and coerced to boolean.
+ * - Otherwise the string is treated as literal text and returns false.
  *
  * Example: resolveCondition("{count > 0}", ctx) → true when count is 5
  */
 export function resolveCondition(condition: string | undefined, ctx: ExecutionContext): boolean {
-    /* Normalize empty and expression-wrapped conditions before evaluation. */
     if (condition == null) return true;
 
     const trimmed = condition.trim();
@@ -107,7 +72,7 @@ export function resolveCondition(condition: string | undefined, ctx: ExecutionCo
         return Boolean(resolveValue(trimmed, ctx));
     }
 
-    return Boolean(evaluate(trimmed, ctx));
+    return false;
 }
 
 /**

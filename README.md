@@ -25,3 +25,60 @@ Modern AI development makes generating code fast and accessible. However, withou
 LongLink addresses this by building on top of production-proven technologies and introducing both a control plane and a predefined application structure. This creates a consistent structure that applications must adhere to, giving both developers and AI a clear system context and well-defined boundaries, which leads to higher-quality output.
 
 This reduces complexity, enforces best practices by default, and results in applications that are faster to build, easier to maintain, and more reliable over time.
+
+## XSD Components TODO
+
+- [ ] Page
+- [ ] State
+- [ ] For
+- [ ] Query
+- [ ] blockquote
+- [ ] code
+- [ ] h1
+- [ ] h2
+- [ ] h3
+- [ ] h4
+- [ ] li
+- [ ] p
+- [ ] ul
+- [ ] Card
+- [ ] CardAction
+- [ ] CardContent
+- [ ] CardDescription
+- [ ] CardFooter
+- [ ] CardHeader
+- [ ] CardTitle
+- [ ] Column
+- [ ] Columns
+- [ ] Dialog
+- [ ] DialogContent
+- [ ] DialogDescription
+- [ ] DialogFooter
+- [ ] DialogHeader
+- [ ] DialogTitle
+- [ ] DialogTrigger
+- [ ] Hero
+- [ ] Menu
+- [ ] MenuSection
+- [ ] MenuSubSection
+- [ ] Stack
+- [ ] Tabs
+- [ ] TabsContent
+- [ ] TabsList
+- [ ] TabsTrigger
+- [ ] Button
+- [ ] Checkbox
+- [ ] Icon
+- [ ] Input
+- [ ] Range
+- [ ] Select
+- [ ] Separator
+- [ ] Slider
+- [ ] Switch
+- [ ] Table
+- [ ] TableBody
+- [ ] TableCell
+- [ ] TableHead
+- [ ] TableHeader
+- [ ] TableRow
+- [ ] Textarea

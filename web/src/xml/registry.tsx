@@ -14,7 +14,6 @@ import Checkbox from './components/Checkbox';
 import { Icon } from './components/Icon';
 import Input from './components/Input';
 import Menu, { MenuSection, MenuSubSection } from './components/Menu';
-import Range from './components/Range';
 import Select from './components/Select';
 import Separator from './components/Separator';
 import Slider from './components/Slider';
@@ -83,7 +82,6 @@ const defaultRegistry = {
     Menu,
     MenuSection,
     MenuSubSection,
-    Range,
     Select,
     Separator,
     Slider,
@@ -226,10 +224,9 @@ async function readResponseMessage(response: Response): Promise<string> {
 }
 
 /**
- * Resolves template expressions in action payload values using runtime context.
+ * Resolves action payload values using runtime context.
  *
  * - Strings wrapped as `{expression}` are evaluated and can return non-string values.
- * - Strings containing embedded `{expression}` placeholders are interpolated.
  * - Arrays and plain objects are traversed recursively.
  * - Non-plain objects (FormData, Blob, Date, URLSearchParams, etc.) are preserved.
  */

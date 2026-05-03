@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from src.models import PageInfo
 from src.constants import PAGES
-from src.utils.page import Page
 from fastapi.responses import Response
+from longlink.utils.page import Page
 
 router = APIRouter()
 
@@ -29,12 +29,6 @@ def get_all_pages() -> list[PageInfo]:
 
     pages.sort(key=lambda p: page_order.index(p.path) if p.path in page_order else 999)
     return pages
-
-
-@router.get("/pages")
-async def list_pages() -> list[PageInfo]:
-    """Return list of all available pages."""
-    return get_all_pages()
 
 
 @router.get("/pages/{page_name}")

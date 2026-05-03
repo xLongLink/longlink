@@ -10,14 +10,14 @@ describe('renderNode', () => {
         expect(renderNode(null, {}, ctx)).toBeNull();
     });
 
-    it('interpolates text nodes', () => {
+    it('resolves text nodes from full expressions', () => {
         const ctx: ExecutionContext = {
             state: { count: [7, () => {}] },
             queries: {},
             scope: {},
         };
 
-        expect(renderNode({ name: 'text', value: 'Count {count}' }, {}, ctx)).toBe('Count 7');
+        expect(renderNode({ name: 'text', value: '{`Count ${count}`}' }, {}, ctx)).toBe('Count 7');
     });
 
     it('skips nodes when if condition is false', () => {
@@ -59,7 +59,7 @@ describe('renderNode', () => {
         const node: ASTNode = {
             name: 'Widget',
             params: {
-                label: 'Count: {count}',
+                label: '{`Count: ${count}`}',
                 'set:filter.range.to': '3',
                 'set:filter.mode': "'week'",
             },

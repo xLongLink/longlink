@@ -589,6 +589,52 @@ wheels = [
 ]
 
 [[package]]
+name = "longlink"
+version = "0.0.0"
+source = { directory = "../sdk" }
+dependencies = [
+    { name = "alembic" },
+    { name = "click" },
+    { name = "fastapi" },
+    { name = "fsspec" },
+    { name = "httpx" },
+    { name = "lxml" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "sqlmodel" },
+    { name = "uvicorn" },
+    { name = "xmltodict" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic" },
+    { name = "click" },
+    { name = "click", marker = "extra == 'cli'" },
+    { name = "fastapi" },
+    { name = "fsspec" },
+    { name = "httpx" },
+    { name = "isort", marker = "extra == 'dev'", specifier = "==8.0.1" },
+    { name = "lxml" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = "==8.4.2" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==0.24.0" },
+    { name = "rich", marker = "extra == 'cli'" },
+    { name = "sqlmodel" },
+    { name = "uvicorn" },
+    { name = "xmltodict" },
+]
+provides-extras = ["cli", "dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "isort", specifier = "==8.0.1" },
+    { name = "pytest", specifier = "==8.4.2" },
+    { name = "pytest-asyncio", specifier = "==0.24.0" },
+]
+
+[[package]]
 name = "longlink-api"
 version = "0.0.0"
 source = { editable = "." }
@@ -605,6 +651,7 @@ dependencies = [
     { name = "jinja2" },
     { name = "kr8s" },
     { name = "kubernetes" },
+    { name = "longlink" },
     { name = "lxml" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pydantic" },
@@ -643,6 +690,7 @@ requires-dist = [
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "kr8s", specifier = "==0.20.4" },
     { name = "kubernetes", specifier = ">=35.0.0" },
+    { name = "longlink" },
     { name = "lxml", specifier = ">=6.1.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.18.2" },
     { name = "psycopg", extras = ["binary", "pool"] },
