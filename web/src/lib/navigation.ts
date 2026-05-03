@@ -38,10 +38,6 @@ const NavigationPageIcon = ({ name }: { name?: string }): ComponentType<LucidePr
  * Each page becomes a tab with its name as label and icon.
  */
 export function getAppTabsFromPages(pages: AppNavigationPage[]): NavigationTab[] {
-    if (pages.length === 0) {
-        return [];
-    }
-
     return pages.map((page) => ({
         value: page.path,
         label: page.name,
@@ -73,15 +69,4 @@ export function getActiveTabConfig({
     });
 
     return matchedTab ?? tabs[0];
-}
-
-/**
- * Formats an organization slug into a title-case display name.
- * Splits on hyphens and capitalizes each segment.
- */
-export function formatOrganizationName(value: string) {
-    return value
-        .split('-')
-        .map((segment) => (segment.length > 0 ? segment[0].toUpperCase() + segment.slice(1) : segment))
-        .join(' ');
 }
