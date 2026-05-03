@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=68", "setuptools-scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "longlink"
@@ -57,34 +57,22 @@ Documentation = "https://docs.longlink.dev"
 Repository = "https://github.com/xLongLink/longlink.git"
 "Bug Tracker" = "https://github.com/xLongLink/longlink/issues"
 
-[tool.hatch.version]
-source = "vcs"
-raw-options = { local_scheme = "no-local-version" }
-fallback-version = "0.0.0"
+[tool.setuptools_scm]
+version_scheme = "no-guess-dev"
+local_scheme = "no-local-version"
 
 [project.scripts]
 longlink = "longlink.__main__:main"
 
-[tool.hatch.build.targets.wheel]
-packages = ["longlink"]
-include = [
-    "longlink/.static/**",
-    "longlink/.static/web/**",
-]
-exclude = [
-    "sample/**",
-]
+[tool.setuptools]
+include-package-data = true
 
-[tool.hatch.build.targets.sdist]
-include = [
-    "longlink",
-    "longlink/.static/**",
-    "longlink/.static/web/**",
-    "README.md",
-]
-exclude = [
-    "sample/**",
-]
+[tool.setuptools.packages.find]
+include = ["longlink*"]
+exclude = ["sample*"]
+
+[tool.setuptools.package-data]
+longlink = [".static/**"]
 
 [tool.isort]
 from_first = false
