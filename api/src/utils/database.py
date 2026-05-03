@@ -6,14 +6,14 @@ from src.env import env
 async def create(database_name: str) -> None:
     """Create a database in the provisioned PostgreSQL cluster."""
     kwargs: dict[str, str | int] = {
-        "host": env.ENV_DATABASE_HOST,
-        "port": env.ENV_DATABASE_PORT,
-        "user": env.ENV_DATABASE_USERNAME,
-        "password": env.ENV_DATABASE_PASSWORD,
-        "dbname": env.ENV_DATABASE_MAINTENANCE_DATABASE,
+        "host": env.DATABASE_HOST,
+        "port": env.DATABASE_PORT,
+        "user": env.DATABASE_USERNAME,
+        "password": env.DATABASE_PASSWORD,
+        "dbname": env.DATABASE_MAINTENANCE_DATABASE,
     }
-    if env.ENV_DATABASE_SSLMODE:
-        kwargs["sslmode"] = env.ENV_DATABASE_SSLMODE
+    if env.DATABASE_SSLMODE:
+        kwargs["sslmode"] = env.DATABASE_SSLMODE
 
     async with await psycopg.AsyncConnection.connect(**kwargs) as conn:
         conn.autocommit = True

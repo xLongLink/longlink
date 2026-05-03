@@ -14,7 +14,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if Session is not None:
         return Session
 
-    dburl = env.ENV_DATABASE_URL
+    dburl = env.DATABASE_URL
 
     engine_kwargs = {
         'pool_pre_ping': True,

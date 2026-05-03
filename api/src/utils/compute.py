@@ -30,7 +30,7 @@ class Compute:
 
     def _api_client(self) -> client.ApiClient:
         """Return a Kubernetes API client for the configured kubeconfig."""
-        config.load_kube_config(config_file=str(Path(env.ENV_COMPUTE_KUBE_CONFIG_PATH).expanduser()))
+        config.load_kube_config(config_file=str(Path(env.COMPUTE_KUBE_CONFIG_PATH).expanduser()))
         return client.ApiClient()
 
     def _manifest_key(self, manifest: dict) -> tuple[str, str, str]:
@@ -256,4 +256,4 @@ class Compute:
         return self.manifests()
 
 
-compute = Compute(namespace=env.ENV_COMPUTE_NAMESPACE)
+compute = Compute(namespace=env.COMPUTE_NAMESPACE)

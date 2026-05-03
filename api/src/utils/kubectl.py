@@ -11,7 +11,7 @@ from kubernetes import client, config
 def apply(f: str | Path) -> list[dict]:
     """Apply a multi-document YAML state file to Kubernetes like `kubectl apply -f`."""
     file_path = Path(f).expanduser()
-    kpath = Path(env.ENV_COMPUTE_KUBE_CONFIG_PATH).expanduser()
+    kpath = Path(env.COMPUTE_KUBE_CONFIG_PATH).expanduser()
 
     # Parse manifests first so callers can keep working with the exact applied state.
     manifests = [
@@ -43,7 +43,7 @@ def registry(
     email: str,
 ) -> None:
     """Create a Docker registry pull secret like `kubectl create secret docker-registry`."""
-    kpath = Path(env.ENV_COMPUTE_KUBE_CONFIG_PATH).expanduser()
+    kpath = Path(env.COMPUTE_KUBE_CONFIG_PATH).expanduser()
 
     # Use the kubectl CLI so the generated secret matches cluster-native behavior.
     try:
@@ -73,7 +73,7 @@ def registry(
 
 def logs(name: str, namespace: str) -> str:
     """Return the logs for the first pod matching an app label."""
-    config.load_kube_config(config_file=str(Path(env.ENV_COMPUTE_KUBE_CONFIG_PATH).expanduser()))
+    config.load_kube_config(config_file=str(Path(env.COMPUTE_KUBE_CONFIG_PATH).expanduser()))
     core_api = client.CoreV1Api()
 
     try:

@@ -19,14 +19,14 @@ async def login_oidc(request: Request):
     try:
         return await oidc.authorize_redirect(
             request,
-            redirect_uri=env.ENV_OIDC_REDIRECT_URI,
+            redirect_uri=env.OIDC_REDIRECT_URI,
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=502,
             detail=(
                 "OIDC provider metadata is unavailable. "
-                "Check ENV_OIDC_ISSUER and provider realm configuration."
+                "Check OIDC_ISSUER and provider realm configuration."
             ),
         ) from exc
 

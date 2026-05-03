@@ -48,7 +48,7 @@ def app_path(app_key: str, path: str = "") -> str:
 
 def app_url(app_key: str) -> str:
     """Return the public compute base URL for an app."""
-    return f"{env.ENV_COMPUTE_URL.rstrip('/')}/{app_path(app_key)}"
+    return f"{env.COMPUTE_URL.rstrip('/')}/{app_path(app_key)}"
 
 
 def yaml(template_path: str | Path, **context: str) -> dict | list[dict]:

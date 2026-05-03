@@ -29,7 +29,7 @@ async def _forward(path: str, request: Request) -> Response:
 
     upstream = await client_http.request(
         request.method,
-        f"{env.ENV_COMPUTE_URL.rstrip('/')}/{path}",
+        f"{env.COMPUTE_URL.rstrip('/')}/{path}",
         content=await request.body(),
         headers=headers,
         params=request.query_params,

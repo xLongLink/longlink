@@ -9,6 +9,6 @@ router = APIRouter()
 def metadata() -> dict:
     """Return the API metadata document."""
     return {
-        "organization_name": env.ENV_ORGANIZATION_NAME,
+        "organization_name": env.ORGANIZATION_NAME,
         "pages": [page.model_dump() for page in get_all_pages()],
     }
