@@ -18,16 +18,16 @@ uv pip install .[dev]
 
 ## Usage
 
-You can execute all tests or target a specific test file using the following commands:
+You can execute all tests or target a specific test file using the following commands. Use `tests/unit` for fast, isolated checks and `tests/integration` for end-to-end behavior across components:
 
 ```bash
 pytest
-pytest tests/test_app.py
+pytest tests/unit/cli/test_init.py
 ```
 
 ## Example
 
-Asynchronous Testing with `pytest`
+Illustrative snippet: asynchronous testing with `pytest`
 
 ```py
 import pytest
@@ -39,7 +39,7 @@ async def test_healthcheck(client):
     assert response.status_code == 200
 ```
 
-Testing with FastAPI [`TestClient`](https://fastapi.tiangolo.com/tutorial/testing/)
+Illustrative snippet: testing with FastAPI [`TestClient`](https://fastapi.tiangolo.com/tutorial/testing/)
 
 ```py
 from app import app
