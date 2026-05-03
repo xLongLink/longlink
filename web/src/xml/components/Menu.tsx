@@ -137,7 +137,7 @@ export function Menu(_props: MenuProps) {
     if (!sections.length) return null;
 
     return (
-        <BaseMenu value={activeValue} onValueChange={setActiveValue} ariaLabel="Longlink menu">
+        <BaseMenu value={activeValue} onValueChange={setActiveValue} ariaLabel="LongLink menu">
             <aside className="w-64">
                 <MenuList>
                     {sections.map((section) => (
