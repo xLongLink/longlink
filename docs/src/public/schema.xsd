@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:complexType name="AnyElementType">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+    </xsd:sequence>
+    <xsd:anyAttribute processContents="lax" />
+  </xsd:complexType>
+
+  <xsd:complexType name="ChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:anyAttribute processContents="lax" />
+  </xsd:complexType>
+
+  <xsd:complexType name="ActionableType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="ChildrenOnlyType">
+        <xsd:attribute name="action" type="xsd:string" use="optional" />
+        <xsd:attribute name="method" type="xsd:string" use="optional" />
+        <xsd:attribute name="url" type="xsd:string" use="optional" />
+        <xsd:attribute name="payload" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+
+  <xsd:complexType name="PageType">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="required" />
+    <xsd:attribute name="icon" type="xsd:string" use="optional" />
+    <xsd:anyAttribute processContents="lax" />
+  </xsd:complexType>
+
+  <xsd:element name="Page" type="PageType" />
+  
+
+  <xsd:complexType name="StateType">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:string" use="required" />
+    <xsd:anyAttribute processContents="lax" />
+  </xsd:complexType>
+
+  <xsd:element name="State" type="StateType" />
+  
+
+  <xsd:complexType name="ForType">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+    </xsd:sequence>
+    <xsd:attribute name="each" type="xsd:string" use="required" />
+    <xsd:attribute name="as" type="xsd:string" use="required" />
+    <xsd:anyAttribute processContents="lax" />
+  </xsd:complexType>
+
+  <xsd:element name="For" type="ForType" />
+  
+
+  <xsd:complexType name="QueryType">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:string" use="required" />
+    <xsd:attribute name="path" type="xsd:string" use="required" />
+    <xsd:anyAttribute processContents="lax" />
+  </xsd:complexType>
+
+  <xsd:element name="Query" type="QueryType" />
+  
+  <xsd:complexType name="BlockquoteType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="blockquote" type="BlockquoteType" />
+  
+  <xsd:complexType name="H1Type" mixed="true">
+    <xsd:choice minOccurs="0" maxOccurs="unbounded">
+      <xsd:any processContents="lax" />
+    </xsd:choice>
+  </xsd:complexType>
+  <xsd:element name="h1" type="H1Type" />
+  
+  <xsd:complexType name="H2Type" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="h2" type="H2Type" />
+  
+  <xsd:complexType name="H3Type" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="h3" type="H3Type" />
+  
+  <xsd:complexType name="H4Type" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="h4" type="H4Type" />
+  
+  <xsd:complexType name="LiType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="li" type="LiType" />
+  
+  <xsd:complexType name="PType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="p" type="PType" />
+  
+  <xsd:complexType name="UlType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="ul" type="UlType" />
+  
+  <xsd:complexType name="CardType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Card" type="CardType" />
+  
+  <xsd:complexType name="CardActionType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardAction" type="CardActionType" />
+  
+  <xsd:complexType name="CardContentType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardContent" type="CardContentType" />
+  
+  <xsd:complexType name="CardDescriptionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardDescription" type="CardDescriptionType" />
+  
+  <xsd:complexType name="CardFooterType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardFooter" type="CardFooterType" />
+  
+  <xsd:complexType name="CardHeaderType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardHeader" type="CardHeaderType" />
+  
+  <xsd:complexType name="CardTitleType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardTitle" type="CardTitleType" />
+  
+  <xsd:complexType name="ColumnType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Column" type="ColumnType" />
+  
+  <xsd:complexType name="ColumnsType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Columns" type="ColumnsType" />
+  
+  <xsd:complexType name="GridType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Grid" type="GridType" />
+  
+  <xsd:complexType name="DialogType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Dialog" type="DialogType" />
+  
+  <xsd:complexType name="DialogContentType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="DialogContent" type="DialogContentType" />
+  
+  <xsd:complexType name="DialogDescriptionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="DialogDescription" type="DialogDescriptionType" />
+  
+  <xsd:complexType name="DialogFooterType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="DialogFooter" type="DialogFooterType" />
+  
+  <xsd:complexType name="DialogHeaderType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="DialogHeader" type="DialogHeaderType" />
+  
+  <xsd:complexType name="DialogTitleType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="DialogTitle" type="DialogTitleType" />
+  
+  <xsd:complexType name="DialogTriggerType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="DialogTrigger" type="DialogTriggerType" />
+  
+  <xsd:complexType name="HeroType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="title" type="xsd:string" use="required" />
+    <xsd:attribute name="subtitle" type="xsd:string" use="optional" />
+    <xsd:attribute name="icon" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:element name="Hero" type="HeroType" />
+  
+  <xsd:complexType name="MenuType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Menu" type="MenuType" />
+  
+  <xsd:complexType name="MenuSectionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="MenuSection" type="MenuSectionType" />
+  
+  <xsd:complexType name="MenuSubSectionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="MenuSubSection" type="MenuSubSectionType" />
+  
+  <xsd:complexType name="StackType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Stack" type="StackType" />
+  
+  <xsd:complexType name="TabsType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Tabs" type="TabsType" />
+  
+  <xsd:complexType name="TabsContentType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="TabsContent" type="TabsContentType" />
+  
+  <xsd:complexType name="TabsListType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="TabsList" type="TabsListType" />
+  
+  <xsd:complexType name="TabsTriggerType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="TabsTrigger" type="TabsTriggerType" />
+  
+  <xsd:complexType name="ButtonType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Button" type="ButtonType" />
+  
+  <xsd:complexType name="CheckboxType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Checkbox" type="CheckboxType" />
+  
+  <xsd:complexType name="IconType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Icon" type="IconType" />
+  
+  <xsd:complexType name="InputType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Input" type="InputType" />
+  
+  <xsd:complexType name="RangeType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Range" type="RangeType" />
+  
+  <xsd:complexType name="SelectType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Select" type="SelectType" />
+  
+  <xsd:complexType name="SeparatorType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Separator" type="SeparatorType" />
+  
+  <xsd:complexType name="SliderType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Slider" type="SliderType" />
+  
+  <xsd:complexType name="SwitchType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Switch" type="SwitchType" />
+  
+  <xsd:complexType name="TextareaType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Textarea" type="TextareaType" />
+  
+  <xsd:complexType name="TableType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Table" type="TableType" />
+  
+  <xsd:complexType name="TableBodyType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="TableBody" type="TableBodyType" />
+  
+  <xsd:complexType name="TableCellType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="TableCell" type="TableCellType" />
+  
+  <xsd:complexType name="TableHeadType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="TableHead" type="TableHeadType" />
+  
+  <xsd:complexType name="TableHeaderType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="TableHeader" type="TableHeaderType" />
+  
+  <xsd:complexType name="TableRowType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="TableRow" type="TableRowType" />
+</xsd:schema>
