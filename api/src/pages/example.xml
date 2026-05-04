@@ -163,8 +163,26 @@
       <MenuSection title="Layout" icon="columns-2">
         <MenuSubSection title="Composition" root="true">
           <Columns>
-            <Column key="left" label="Left" content="Sectioned content" align="left" />
-            <Column key="right" label="Right" content="Structured presentation" align="left" />
+            <Column>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Left</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>Sectioned content</p>
+                </CardContent>
+              </Card>
+            </Column>
+            <Column>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Right</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>Structured presentation</p>
+                </CardContent>
+              </Card>
+            </Column>
           </Columns>
         </MenuSubSection>
         <MenuSubSection title="Nested subsection example">

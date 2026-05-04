@@ -16,14 +16,53 @@
           <CardDescription>Browse approved hardware for your workspace.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table
-            data='[{"sku":"HW-MSE-101","name":"Ergo Mouse","category":"Mouse","stock":"18","price":39},{"sku":"HW-MSE-204","name":"Wireless Mouse Pro","category":"Mouse","stock":"7","price":59},{"sku":"HW-KBD-110","name":"Compact Mechanical Keyboard","category":"Keyboard","stock":"12","price":89},{"sku":"HW-KBD-330","name":"Ergo Split Keyboard","category":"Keyboard","stock":"3","price":129},{"sku":"HW-ACC-032","name":"USB-C Dock","category":"Accessory","stock":"5","price":129}]'
-          >
-            <Column key="sku" label="SKU" content="{sku}" />
-            <Column key="name" label="Item" content="{name}" />
-            <Column key="category" label="Category" content="{category}" />
-            <Column key="stock" label="Stock" content="{stock}" />
-            <Column key="price" label="Price" align="right" content="{price}" />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>SKU</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead class="text-right">Price</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>HW-MSE-101</TableCell>
+                <TableCell>Ergo Mouse</TableCell>
+                <TableCell>Mouse</TableCell>
+                <TableCell>18</TableCell>
+                <TableCell class="text-right">$39</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>HW-MSE-204</TableCell>
+                <TableCell>Wireless Mouse Pro</TableCell>
+                <TableCell>Mouse</TableCell>
+                <TableCell>7</TableCell>
+                <TableCell class="text-right">$59</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>HW-KBD-110</TableCell>
+                <TableCell>Compact Mechanical Keyboard</TableCell>
+                <TableCell>Keyboard</TableCell>
+                <TableCell>12</TableCell>
+                <TableCell class="text-right">$89</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>HW-KBD-330</TableCell>
+                <TableCell>Ergo Split Keyboard</TableCell>
+                <TableCell>Keyboard</TableCell>
+                <TableCell>3</TableCell>
+                <TableCell class="text-right">$129</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>HW-ACC-032</TableCell>
+                <TableCell>USB-C Dock</TableCell>
+                <TableCell>Accessory</TableCell>
+                <TableCell>5</TableCell>
+                <TableCell class="text-right">$129</TableCell>
+              </TableRow>
+            </TableBody>
           </Table>
         </CardContent>
       </Card>
@@ -36,13 +75,35 @@
           <CardDescription>Items queued for approval and checkout.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table
-            data='[{"sku":"HW-MSE-204","name":"Wireless Mouse Pro","quantity":1,"status":"Ready"},{"sku":"HW-KBD-110","name":"Compact Mechanical Keyboard","quantity":1,"status":"Ready"},{"sku":"HW-ACC-032","name":"USB-C Dock","quantity":1,"status":"Backorder"}]'
-          >
-            <Column key="sku" label="SKU" content="{sku}" />
-            <Column key="name" label="Item" content="{name}" />
-            <Column key="quantity" label="Qty" content="{quantity}" />
-            <Column key="status" label="Status" content="{status}" />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>SKU</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>HW-MSE-204</TableCell>
+                <TableCell>Wireless Mouse Pro</TableCell>
+                <TableCell>1</TableCell>
+                <TableCell>Ready</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>HW-KBD-110</TableCell>
+                <TableCell>Compact Mechanical Keyboard</TableCell>
+                <TableCell>1</TableCell>
+                <TableCell>Ready</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>HW-ACC-032</TableCell>
+                <TableCell>USB-C Dock</TableCell>
+                <TableCell>1</TableCell>
+                <TableCell>Backorder</TableCell>
+              </TableRow>
+            </TableBody>
           </Table>
         </CardContent>
         <CardFooter>

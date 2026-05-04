@@ -43,7 +43,7 @@ Use cards to group related content into clear sections. Use `<CardHeader>` for m
     <CardTitle>Deployment status</CardTitle>
     <CardDescription>Current state of the application.</CardDescription>
     <CardAction>
-      <Button url="/deployments" variant="outline">Refresh</Button>
+      <Button href="/deployments" variant="outline">Refresh</Button>
     </CardAction>
   </CardHeader>
   <CardContent>

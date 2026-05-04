@@ -16,7 +16,7 @@ Use `<Hero>` for the top section of a page. Place it near the top, use `title` a
     subtitle="Track and manage open work."
     icon="bug"
   >
-    <Button url="/issues/new">Create issue</Button>
+    <Button href="/issues/new">Create issue</Button>
   </Hero>
 </Page>
 ```
@@ -26,7 +26,7 @@ Use `<Hero>` for the top section of a page. Place it near the top, use `title` a
 Use `<Button>` for actions and navigation targets.
 
 ```xml
-<Button url="/issues/new" variant="default">Create issue</Button>
+<Button href="/issues/new" variant="default">Create issue</Button>
 ```
 
 ## Checkbox
@@ -105,13 +105,21 @@ Use `<Textarea>` for multiline text input.
 
 ## Table
 
-Use `<Table>` to render tabular data.
+Use `<Table>` together with `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableHead>`, and `<TableCell>` to render explicit tables.
 
 ```xml
-<Table data='[{"name":"Projects","status":"Active"}]'>
-  <Column key="name" label="Name" content="{name}" />
-  <Column key="status" label="Status" content="{status}" />
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+      <TableHead>Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Projects</TableCell>
+      <TableCell>Active</TableCell>
+    </TableRow>
+  </TableBody>
 </Table>
 ```
-
-Use `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableHead>`, and `<TableCell>` together to build fully explicit table markup when needed.
