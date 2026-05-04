@@ -57,11 +57,11 @@ Use cards to group related content into clear sections. Use `<CardHeader>` for m
 
 ## Columns
 
-Use `<Columns>` and `<Column>` to create multi-column layouts. Use `gap` on `<Columns>` to control spacing, use `span` for the current layout model, and keep in mind that legacy `widths` and `width` values are still supported by the renderer.
+Use `<Columns>` and `<Column>` to create multi-column layouts.
 
 ```xml
-<Columns gap="16">
-  <Column span="8">
+<Columns>
+  <Column>
     <Card>
       <CardContent>
         <p>Main content</p>
@@ -69,7 +69,7 @@ Use `<Columns>` and `<Column>` to create multi-column layouts. Use `gap` on `<Co
     </Card>
   </Column>
 
-  <Column span="4">
+  <Column>
     <Card>
       <CardContent>
         <p>Secondary content</p>
@@ -81,10 +81,10 @@ Use `<Columns>` and `<Column>` to create multi-column layouts. Use `gap` on `<Co
 
 ## Grid
 
-Use `<Grid>` for generic CSS grid containers. Use `gap`, `columns`, `align`, and `justify` to map directly to grid styles, and pass `style` for additional inline overrides.
+Use `<Grid>` for generic CSS grid containers.
 
 ```xml
-<Grid gap="16" columns="1fr 2fr" align="center" justify="stretch">
+<Grid>
   <Card>
     <CardContent>
       <p>Main content</p>
@@ -146,3 +146,5 @@ Use tabs when the page needs multiple related views in the same section. `value`
   </TabsContent>
 </Tabs>
 ```
+
+Use `<TabsList>`, `<TabsTrigger>`, and `<TabsContent>` together for tab navigation and panels.

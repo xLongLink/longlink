@@ -13,3 +13,13 @@ The resulting interface is consistent with the LongLink control plane and acts a
 `Page` is the root element of every UI definition. It wraps the full document and sets page metadata such as the name and icon.
 
 The schema declares the `bind` prefix, but XML pages that use `bind:*` attributes still need `xmlns:bind="https://longlink.dev/xml/bind"` on the root element.
+
+## Reference
+
+The XML schema is split across primitives, layout, components, and HTML text elements.
+Use the dedicated reference pages for the full element list.
+
+- [Primitives](./primitives)
+- [Layout](./layout)
+- [Components](./components)
+- [HTML](./html)
