@@ -1,4 +1,4 @@
-<Page name="Settings" icon="settings">
+<Page name="Settings" icon="settings" xmlns:bind="https://longlink.dev/xml/bind">
   <State id="connectCompute" server="" username="" password="" email="">
     <Menu>
       <MenuSection title="General" icon="settings">
@@ -19,10 +19,10 @@
                   </DialogDescription>
                 </DialogHeader>
                 <Stack gap="12">
-                  <Input kind="text" label="Server" bind="connectCompute.server" value="{connectCompute.server}" placeholder="https://registry.example.com" />
-                  <Input kind="text" label="Username" bind="connectCompute.username" value="{connectCompute.username}" placeholder="registry-user" />
-                  <Input kind="password" label="Password" bind="connectCompute.password" value="{connectCompute.password}" placeholder="••••••••" />
-                  <Input kind="text" label="Email" bind="connectCompute.email" value="{connectCompute.email}" placeholder="user@example.com" />
+                  <Input kind="text" label="Server" bind:value="connectCompute.server" placeholder="https://registry.example.com" />
+                  <Input kind="text" label="Username" bind:value="connectCompute.username" placeholder="registry-user" />
+                  <Input kind="password" label="Password" bind:value="connectCompute.password" placeholder="••••••••" />
+                  <Input kind="text" label="Email" bind:value="connectCompute.email" placeholder="user@example.com" />
                   <Button variant="default" action="/compute/registry" method="POST" payload='{
                     "name": "compute",
                     "server": "{connectCompute.server}",

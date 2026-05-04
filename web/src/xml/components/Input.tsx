@@ -9,11 +9,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/ui/popover';
 import { Textarea } from '@/ui/textarea';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api';
-import { useRuntime } from '../runtime';
 
 type InputProps = {
     name?: string;
-    bind?: string;
     kind?: 'text' | 'number' | 'password' | 'textarea' | 'date' | 'datetime';
     label?: string;
     value?: string | number | boolean;
@@ -22,25 +20,11 @@ type InputProps = {
     required?: boolean;
     disabled?: boolean;
     submit?: string;
+    onValueChange?: (value: string) => void;
 };
 
 const DATE_FORMAT = 'yyyy-MM-dd';
 const DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm";
-
-/** Recursively clones nested state while replacing the value at `path`. */
-const setDeep = (obj: unknown, path: string[], value: unknown): unknown => {
-    if (path.length === 0) {
-        return value;
-    }
-
-    const [head, ...tail] = path;
-    const source = typeof obj === 'object' && obj !== null ? (obj as Record<string, unknown>) : {};
-
-    return {
-        ...source,
-        [head as string]: setDeep(source[head as string], tail, value),
-    };
-};
 
 const parseDateValue = (rawValue: string): Date | undefined => {
     if (!rawValue) {
@@ -72,7 +56,6 @@ const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => 
 /** Renders a flexible input control with support for text, number, password, textarea, date, and datetime types. */
 export function Input({
     name,
-    bind,
     kind = 'text',
     label,
     value,
@@ -81,9 +64,9 @@ export function Input({
     required,
     disabled,
     submit,
+    onValueChange,
 }: InputProps) {
     const { appId } = useParams();
-    const runtime = useRuntime();
     const defaultFieldValue = useMemo(() => {
         if (typeof value === 'string' || typeof value === 'number') {
             return String(value);
@@ -140,27 +123,8 @@ export function Input({
         });
     };
 
-    const handleBindChange = (nextValue: string) => {
-        if (!bind) {
-            return;
-        }
-
-        const [stateKey, ...path] = bind.split('.');
-        const stateEntry = runtime.ctx.state[stateKey];
-
-        if (!stateEntry) {
-            throw new Error(`Input bind: unknown state "${stateKey}"`);
-        }
-
-        const [, setter] = stateEntry;
-
-        if (path.length === 0) {
-            setter(nextValue);
-            return;
-        }
-
-        /* Use a functional setter to avoid race conditions across rapid input updates. */
-        setter((previous: unknown) => setDeep(previous, path, nextValue));
+    const handleValueChange = (nextValue: string) => {
+        onValueChange?.(nextValue);
     };
 
     const renderControl = () => {
@@ -175,7 +139,7 @@ export function Input({
                     onChange={(event) => {
                         const nextValue = event.currentTarget.value;
                         setTextValue(nextValue);
-                        handleBindChange(nextValue);
+                        handleValueChange(nextValue);
                     }}
                     onBlur={(event) => {
                         void handleBlur(event.currentTarget.value);
@@ -202,8 +166,11 @@ export function Input({
                             mode="single"
                             selected={selectedDate}
                             onSelect={(nextDate) => {
+                                const nextValue = nextDate ? format(nextDate, DATE_FORMAT) : '';
+
                                 setSelectedDate(nextDate);
-                                void handleBlur(nextDate ? format(nextDate, DATE_FORMAT) : '');
+                                handleValueChange(nextValue);
+                                void handleBlur(nextValue);
                             }}
                         />
                     </PopoverContent>
@@ -245,6 +212,14 @@ export function Input({
                                     };
 
                                     setSelectedDateTime(nextValue);
+                                    handleValueChange(
+                                        nextDate
+                                            ? format(
+                                                  new Date(`${format(nextDate, DATE_FORMAT)}T${nextValue.time}`),
+                                                  DATETIME_FORMAT
+                                              )
+                                            : ''
+                                    );
                                     void handleBlur(
                                         nextDate
                                             ? format(
@@ -283,6 +258,12 @@ export function Input({
                                     DATETIME_FORMAT
                                 )
                             );
+                            handleValueChange(
+                                format(
+                                    new Date(`${format(datetimeValue.date, DATE_FORMAT)}T${event.currentTarget.value}`),
+                                    DATETIME_FORMAT
+                                )
+                            );
                         }}
                     />
                 </div>
@@ -300,7 +281,7 @@ export function Input({
                 onChange={(event) => {
                     const nextValue = event.currentTarget.value;
                     setTextValue(nextValue);
-                    handleBindChange(nextValue);
+                    handleValueChange(nextValue);
                 }}
                 onBlur={(event) => {
                     void handleBlur(event.currentTarget.value);

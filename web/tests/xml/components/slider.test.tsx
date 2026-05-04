@@ -10,15 +10,22 @@ import type { ExecutionContext } from '@/xml/types';
 describe('Slider', () => {
     /* The compiler should preserve slider attributes. */
     it('compiles slider xml into a slider ast node', () => {
-        expect(xmlToAST('<Slider label="Volume" value="50" />')).toEqual([
-            { name: 'Slider', params: { label: 'Volume', value: '50' } },
+        expect(xmlToAST('<Slider label="Volume" min="0" max="100" step="5" bind:value="settings.volume" />')).toEqual([
+            {
+                name: 'Slider',
+                params: { label: 'Volume', min: '0', max: '100', step: '5', 'bind:value': 'settings.volume' },
+            },
         ]);
     });
 
     /* The runtime should render slider XML into the expected markup. */
     it('renders raw xml slider content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-        const ast = xmlToAST('<Slider label="Volume" value="50" description="Set level" />');
+        const ctx: ExecutionContext = {
+            state: { settings: [{ volume: 50 }, () => {}] },
+            queries: {},
+            scope: {},
+        };
+        const ast = xmlToAST('<Slider label="Volume" bind:value="settings.volume" description="Set level" />');
         const renderedTree = renderNode(ast, registry, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('50');
@@ -27,5 +34,10 @@ describe('Slider', () => {
     /* The adapter should display the normalized value directly. */
     it('renders a labeled slider directly', () => {
         expect(renderToStaticMarkup(createElement(Slider, { label: 'Volume', value: 50 }))).toContain('50');
+    });
+
+    /* XML numeric strings should still render as numeric slider values. */
+    it('normalizes numeric strings from xml attributes', () => {
+        expect(renderToStaticMarkup(createElement(Slider, { label: 'Volume', value: '50' as never }))).toContain('50');
     });
 });

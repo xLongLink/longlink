@@ -1,4 +1,4 @@
-<Page name="Applications" icon="blocks">
+<Page name="Applications" icon="blocks" xmlns:bind="https://longlink.dev/xml/bind">
   <State id="createApp" appKey="" image="">
     <Hero
       title="Applications"
@@ -15,12 +15,11 @@
             </DialogDescription>
           </DialogHeader>
           <Stack gap="12">
-            <Input kind="text" label="App key" bind="createApp.appKey" value="{createApp.appKey}" placeholder="sampleapp" />
+            <Input kind="text" label="App key" bind:value="createApp.appKey" placeholder="sampleapp" />
             <Input
               kind="text"
               label="Image reference"
-              bind="createApp.image"
-              value="{createApp.image}"
+              bind:value="createApp.image"
               placeholder="sampleapp:20260419_185022"
             />
             <Button

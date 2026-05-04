@@ -1,11 +1,12 @@
 import { Fragment, createElement, type ReactNode } from 'react';
-import { resolveCondition, resolveSet, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
+import { resolveBind, resolveCondition, resolveSet, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RegistryShape, RenderableASTNode } from './types';
 
 /**
  * Converts raw ASTNode params into resolved React props.
  *
  * - `if` is stripped (consumed by the caller for conditional rendering).
+ * - `bind:<prop>` attributes connect props to state and add matching change handlers.
  * - `set:<target>` attributes are collected into a single `onClick` handler.
  *   Each handler evaluates its value expression and writes to the named state
  *   path when the element is clicked (see `resolveSet`).
@@ -24,6 +25,19 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
     for (const [key, value] of Object.entries(params)) {
         if (key === 'if') continue;
 
+        if (key.startsWith('bind:')) {
+            const propName = key.slice(5);
+
+            if (!propName) {
+                throw new Error('bind: missing prop name');
+            }
+
+            const binding = resolveBind(value, ctx);
+            resolved[propName] = binding.value;
+            resolved[toChangeHandlerName(propName)] = binding.setValue;
+            continue;
+        }
+
         if (key.startsWith('set:')) {
             setHandlers.push(resolveSet(key.slice(4), value, ctx));
             continue;
@@ -40,6 +54,11 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
     }
 
     return resolved;
+}
+
+/** Converts a bound prop name into the React-style change callback name. */
+function toChangeHandlerName(propName: string): string {
+    return `on${propName.charAt(0).toUpperCase()}${propName.slice(1)}Change`;
 }
 
 /**

@@ -42,3 +42,9 @@ async def get_page(page_name: str) -> Response:
     page = Page(page_path)
     page.validate()
     return Response(content=page.content, media_type="application/xml")
+
+
+@router.post("/example")
+async def submit_example(payload: dict) -> dict[str, str]:
+    """Accept the example page form submission."""
+    return {"message": "Example form submitted"}

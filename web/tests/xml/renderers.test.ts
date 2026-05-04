@@ -79,6 +79,47 @@ describe('renderNode', () => {
 
         expect(latestValue).toEqual({ range: { from: 1, to: 3 }, mode: 'week' });
     });
+
+    /* bind:<prop> should provide the bound value and a matching prop change callback. */
+    it('resolves bind props into values and change handlers', () => {
+        let latestValue: unknown;
+        const currentValue = { value: 'Ada', placeholder: 'Enter name' };
+        const ctx: ExecutionContext = {
+            state: {
+                form: [
+                    currentValue,
+                    (value: unknown) => {
+                        latestValue =
+                            typeof value === 'function' ? (value as (prev: unknown) => unknown)(currentValue) : value;
+                    },
+                ],
+            },
+            queries: {},
+            scope: {},
+        };
+
+        const registry: RegistryShape = {
+            Widget: (() => null) as ComponentType<any>,
+        };
+
+        const node: ASTNode = {
+            name: 'Widget',
+            params: {
+                'bind:value': 'form.value',
+                'bind:placeholder': 'form.placeholder',
+            },
+        };
+
+        const runtimeProviderElement = renderNode(node, registry, ctx) as any;
+        const widgetElement = runtimeProviderElement.props.children;
+
+        expect(widgetElement.props.value).toBe('Ada');
+        expect(widgetElement.props.placeholder).toBe('Enter name');
+
+        widgetElement.props.onValueChange('Grace');
+
+        expect(latestValue).toEqual({ value: 'Grace', placeholder: 'Enter name' });
+    });
 });
 
 describe('render', () => {

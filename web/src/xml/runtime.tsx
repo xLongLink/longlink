@@ -126,6 +126,43 @@ export function resolveSet(target: string, valueExpr: string, ctx: ExecutionCont
 }
 
 /**
+ * Resolves a `bind:<prop>` target into a current value and setter.
+ *
+ * The target uses the same dot-separated state path as `set:`. The first
+ * segment identifies the state container and the remaining segments identify
+ * the value inside that state object.
+ */
+export function resolveBind(
+    target: string,
+    ctx: ExecutionContext
+): { value: unknown; setValue: (value: unknown) => void } {
+    const dotIndex = target.indexOf('.');
+    const stateKey = dotIndex === -1 ? target : target.slice(0, dotIndex);
+    const propPath = dotIndex === -1 ? [] : target.slice(dotIndex + 1).split('.');
+
+    const stateEntry = ctx.state[stateKey];
+
+    if (!stateEntry) {
+        throw new Error(`bind: unknown state "${stateKey}"`);
+    }
+
+    const [stateValue, setter] = stateEntry;
+
+    return {
+        value: getDeep(stateValue, propPath),
+        setValue: (newValue: unknown) => {
+            if (propPath.length === 0) {
+                setter(newValue);
+                return;
+            }
+
+            /* Use a functional setter so rapid bound updates compose safely. */
+            setter((previous: unknown) => setDeep(previous, propPath, newValue));
+        },
+    };
+}
+
+/**
  * Recursively sets a nested property on an object following a path array.
  * Returns a new object with the deep property updated, preserving immutability.
  */
@@ -134,6 +171,21 @@ function setDeep(obj: any, path: string[], value: any): any {
     const head: string = path[0]!;
     const tail = path.slice(1);
     return { ...obj, [head]: setDeep(obj?.[head], tail, value) };
+}
+
+/** Reads a nested property from an object following a path array. */
+function getDeep(obj: unknown, path: string[]): unknown {
+    let current = obj;
+
+    for (const segment of path) {
+        if (current == null || typeof current !== 'object') {
+            return undefined;
+        }
+
+        current = (current as Record<string, unknown>)[segment];
+    }
+
+    return current;
 }
 
 // ---------------------------------------------------------------------------

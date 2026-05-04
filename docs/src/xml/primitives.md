@@ -18,12 +18,23 @@ The sections below describe each primitive and how it is used.
 ## State
 
 `State` defines a local, reactive state container. It holds variables that can be bound to components and updated through user interaction or actions.
+Use `bind:<prop>` to connect a component prop to a state path.
+For editable props, LongLink also sends changes back to the same state path.
 
 ```xml
 <State id="user" username="" password="">
-  <Input kind="text" label="Username" bind="user.username" placeholder="Mario Rossi" />
-  <Input kind="password" label="Password" bind="user.password" placeholder="password" />
-<State />
+  <Input kind="text" label="Username" bind:value="user.username" placeholder="Mario Rossi" />
+  <Input kind="password" label="Password" bind:value="user.password" placeholder="password" />
+</State>
+```
+
+Bind any supported prop by placing the prop name after `bind:`.
+
+```xml
+<State id="example" value="50" hint="Current progress value.">
+  <Input label="Progress" bind:value="example.value" bind:placeholder="example.hint" />
+  <Slider label="Progress" description="Current progress value." min="0" max="100" step="5" bind:value="example.value" />
+</State>
 ```
 
 ## Query
