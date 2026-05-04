@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Optional
-from longlink import Table
+from longlink import db
 from sqlmodel import Field, SQLModel
 
 
@@ -16,7 +16,7 @@ class LinkedContact(SQLModel):
     email: Optional[str] = None
 
 
-class Project(Table):
+class Project(db.Table):
     id: str = Field(description="Unique project identifier")
     name: str = Field(description="Project name")
     linked_contact: LinkedContact = Field(description="Associated contact")

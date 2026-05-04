@@ -12,11 +12,13 @@ def _set_dev_env_defaults() -> None:
     os.environ["DEV"] = "True"
 
     # Provide local-first defaults so sample apps boot without external secrets.
-    os.environ.setdefault("KEY", "longlink")
-    os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
-    os.environ.setdefault("storage_key", "dev")
-    os.environ.setdefault("storage_secret", "dev")
-    os.environ.setdefault("storage_endpoint", "http://localhost:9000")
+    os.environ.setdefault("ENV_APP_KEY", "1234")
+    os.environ.setdefault("ENV_DATABASE_URL", "sqlite:///./dev.db")
+    os.environ.setdefault("ENV_STORAGE_PROTOCOL", "file")
+    os.environ.setdefault("ENV_STORAGE_ENDPOINT", "")
+    os.environ.setdefault("ENV_STORAGE_TOKEN", "")
+    os.environ.setdefault("FEATURE_FLAG", "true")
+    os.environ.setdefault("EXTERNAL_API", "https://example.test")
 
 
 def load_app():

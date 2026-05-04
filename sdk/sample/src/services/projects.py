@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from collections.abc import Sequence
+from src.tables.projects import Project
 from sqlalchemy.ext.asyncio import AsyncSession
-from sample.src.tables.projects import Project
 
 
 async def create_project(session: AsyncSession, project: Project) -> Project:

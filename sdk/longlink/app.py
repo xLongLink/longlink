@@ -9,7 +9,6 @@ from longlink.constants import ROOT
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from longlink.utils.settings import Settings
 
 
 class SPAStaticFiles(StaticFiles):
@@ -49,7 +48,6 @@ class LongLink(FastAPI):
         super().__init__(**kwargs)
 
         environments = env if isinstance(env, Environments) else Environments()
-        settings = Settings(environments)
         self.state.page_roots = []
 
         # Register API routes from the router module
@@ -62,7 +60,7 @@ class LongLink(FastAPI):
             self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
 
         # Enable CORS in development for local frontend access to API routes
-        if settings.DEV:
+        if environments.ENV == "development":
             self.add_middleware(
                 CORSMiddleware,
                 allow_origins=[

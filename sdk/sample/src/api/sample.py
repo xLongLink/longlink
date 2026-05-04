@@ -1,7 +1,7 @@
 from uuid import uuid4
 from fastapi import Depends
 from ..types import UserModel
-from longlink import Router, fs, get_session
+from longlink import Router, db, fs
 from ..tables.projects import Project, LinkedContact, ProjectStatus
 from ..services.projects import create_project
 
@@ -21,7 +21,7 @@ async def sample_get_endpoint():
 
 
 @router.post("/sample")
-async def sample_post_endpoint(session_maker=Depends(get_session)):
+async def sample_post_endpoint(session_maker=Depends(db.get_session)):
     """Create sample records in filesystem and database."""
 
     project_id = str(uuid4())

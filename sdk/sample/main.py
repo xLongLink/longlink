@@ -1,7 +1,7 @@
 from pathlib import Path
+from src.api import routers
 from longlink import LongLink
-from sample.src.api import routers
-from sample.src.envs import env
+from src.envs import env
 
 app = LongLink(env=env)
 pages_dir = Path(__file__).resolve().parent / "src" / "pages"

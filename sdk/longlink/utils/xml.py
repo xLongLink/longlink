@@ -52,7 +52,10 @@ class Element:
         if self.schema_path is None:
             raise ValueError("No XSD schema path configured")
 
-        return self.schema_path
+        if self.schema_path.is_absolute():
+            return self.schema_path
+
+        return ROOT / self.schema_path
 
     def _load_schema_bytes(self) -> bytes:
         """Load schema bytes from the configured path or package resources."""
@@ -68,7 +71,7 @@ class Page(Element):
     def __init__(self, path: str | Path, schema: str | Path | None = None) -> None:
         """Store XML file path and page schema for later parsing operations."""
 
-        default_schema = schema or ".static/xsd/schema.xsd"
+        default_schema = schema or ROOT / ".static" / "xsd" / "schema.xsd"
         super().__init__(path=path, schema=default_schema)
         self._schema: dict[str, Any] | None = None
 

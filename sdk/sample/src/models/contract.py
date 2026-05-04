@@ -1,5 +1,5 @@
 from enum import Enum
-from longlink import Table
+from longlink import db
 
 
 class StatusEnum(str, Enum):
@@ -8,7 +8,7 @@ class StatusEnum(str, Enum):
     ARCHIVED = "Archived"
 
 
-class Contract(Table):
+class Contract(db.Table):
     name: str
     company: str
     email: str
