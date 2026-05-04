@@ -155,6 +155,31 @@
             <Column key="right" label="Right" content="Structured presentation" align="left" />
           </Columns>
         </MenuSubSection>
+        <MenuSubSection title="Nested subsection example">
+          <Stack gap="12">
+            <p>This subsection shows how menu sections can expose more than one tab.</p>
+            <Grid columns="repeat(2, minmax(0, 1fr))" gap="1rem">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Primary pane</CardTitle>
+                  <CardDescription>Content for a non-root subsection.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>Use this pattern when a section needs multiple views.</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Secondary pane</CardTitle>
+                  <CardDescription>Another tab in the same menu section.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>Each MenuSubSection becomes a separate menu entry.</p>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Stack>
+        </MenuSubSection>
       </MenuSection>
 
       <MenuSection title="Tabs" icon="square-stack">
