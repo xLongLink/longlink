@@ -36,25 +36,29 @@ function toGridTemplate(widths: number[]) {
     return widths.map((width) => `minmax(0, ${(width / total) * 100}%)`).join(' ');
 }
 
-/** Checks whether any child column asks for explicit 12-column placement. */
-function hasExplicitColumnPlacement(children: ReactNode) {
-    return Children.toArray(children).some((child) => {
-        if (!isValidElement<ColumnProps>(child)) {
-            return false;
-        }
+/** Reads the span assigned to a rendered column element. */
+function getColumnSpan(child: ReactNode) {
+    if (!isValidElement<ColumnProps>(child)) {
+        return 0;
+    }
 
-        return child.props.span !== undefined || child.props.width !== undefined;
-    });
+    const explicitSpan = child.props.span ?? child.props.width;
+    const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, Number(explicitSpan)));
+
+    return Number.isFinite(safeSpan) ? safeSpan : 1;
 }
 
 /** Renders a responsive grid for XML column layouts. */
 export function Columns({ gap = 16, widths, children }: ColumnsProps) {
+    const columnSpans = Children.toArray(children)
+        .map(getColumnSpan)
+        .filter((span) => span > 0);
+    const totalColumns = columnSpans.reduce((sum, span) => sum + span, 0) || 12;
+
     const style =
         Array.isArray(widths) && widths.length > 0
             ? { gridTemplateColumns: toGridTemplate(widths) }
-            : hasExplicitColumnPlacement(children)
-              ? { gridTemplateColumns: 'repeat(12, minmax(0, 1fr))' }
-              : { gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 16rem), 1fr))' };
+            : { gridTemplateColumns: `repeat(${totalColumns}, minmax(0, 1fr))` };
 
     return (
         <div className="grid" style={{ ...style, gap: px(gap, 16) }}>
@@ -66,13 +70,10 @@ export function Columns({ gap = 16, widths, children }: ColumnsProps) {
 /** Renders a single XML layout column. */
 export function Column({ children, span, width }: ColumnProps) {
     const explicitSpan = span ?? width;
-    const safeSpan = explicitSpan === undefined ? undefined : Math.max(1, Math.min(12, Number(explicitSpan)));
+    const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, Number(explicitSpan)));
 
     return (
-        <div
-            className="space-y-4"
-            style={safeSpan === undefined ? undefined : { gridColumn: `span ${safeSpan} / span ${safeSpan}` }}
-        >
+        <div className="space-y-4" style={{ gridColumn: `span ${safeSpan}` }}>
             {children}
         </div>
     );

@@ -9,7 +9,7 @@
   </Hero>
 
   <Columns>
-    <Column width="70%">
+    <Column span="5">
       <Card>
         <CardHeader>
           <CardTitle>Shop Catalog</CardTitle>
@@ -68,7 +68,7 @@
       </Card>
     </Column>
 
-    <Column width="30%">
+    <Column span="5">
       <Card>
         <CardHeader>
           <CardTitle>Cart</CardTitle>

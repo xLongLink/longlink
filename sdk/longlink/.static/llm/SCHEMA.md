@@ -85,6 +85,7 @@ The combined schema is assembled in `sdk/longlink/.static/xsd/schema.xsd` from:
 - `Query` is the data-loading primitive.
 - `For` handles repetition over collections.
 - Components provide reusable UI structure and controls.
+- `<Columns>` lays out child `<Column>` blocks horizontally, fills the full row width, and uses the sum of child `span` values to proportion the split; for example, `7` / `5` produces a 70/30 layout.
 - HTML tags provide plain rich text structure.
 - Action-capable components may use `action`, `path`, or `url` for the target, `method` for the HTTP verb, `payload` or `body` for data, `invalidate` to refresh query keys, and `onSuccess` for follow-up behavior.
 - `Input` and `Select` also support `submit` for inline submission flows.

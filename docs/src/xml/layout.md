@@ -57,11 +57,11 @@ Use cards to group related content into clear sections. Use `<CardHeader>` for m
 
 ## Columns
 
-Use `<Columns>` and `<Column>` to create multi-column layouts.
+Use `<Columns>` and `<Column>` to create multi-column layouts. Each row uses the full available width, and the split is determined by the sum of the child `<Column>` spans. For example, `7` and `5` produce a 70/30 view.
 
 ```xml
 <Columns>
-  <Column>
+  <Column span="7">
     <Card>
       <CardContent>
         <p>Main content</p>
@@ -69,7 +69,7 @@ Use `<Columns>` and `<Column>` to create multi-column layouts.
     </Card>
   </Column>
 
-  <Column>
+  <Column span="5">
     <Card>
       <CardContent>
         <p>Secondary content</p>
@@ -97,6 +97,38 @@ Use `<Grid>` for generic CSS grid containers.
     </CardContent>
   </Card>
 </Grid>
+```
+
+## Table
+
+Use the table primitives when the page needs tabular data. Put header rows in `<TableHeader>`, body rows in `<TableBody>`, and use a final body row for footer-style totals.
+
+```xml
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Item</TableHead>
+      <TableHead>Count</TableHead>
+    </TableRow>
+  </TableHeader>
+
+  <TableBody>
+    <TableRow>
+      <TableCell>Projects</TableCell>
+      <TableCell>8</TableCell>
+    </TableRow>
+
+    <TableRow>
+      <TableCell>Archived</TableCell>
+      <TableCell>2</TableCell>
+    </TableRow>
+
+    <TableRow>
+      <TableCell>Total</TableCell>
+      <TableCell>10</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
 ```
 
 ## Dialog

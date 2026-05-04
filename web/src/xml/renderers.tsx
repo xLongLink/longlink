@@ -1,5 +1,5 @@
 import { Fragment, createElement, type ReactNode } from 'react';
-import { resolveBind, resolveCondition, resolveSet, resolveValue, RuntimeChildren, RuntimeProvider } from './runtime';
+import { resolveBind, resolveCondition, resolveSet, resolveValue, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RegistryShape, RenderableASTNode } from './types';
 
 /**
@@ -101,7 +101,7 @@ export function renderNode(
             {createElement(
                 component,
                 { ...resolveParams(node.params, ctx) },
-                node.children ? <RuntimeChildren /> : undefined
+                node.children ? render(node.children, registry, ctx) : undefined
             )}
         </RuntimeProvider>
     );

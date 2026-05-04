@@ -121,7 +121,7 @@ Use `<Textarea>` for multiline text input.
 
 ## Table
 
-Use `<Table>` together with `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableHead>`, and `<TableCell>` to render explicit tables.
+Use `<Table>` together with `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableHead>`, and `<TableCell>` to render explicit tables. Use a final summary row in `<TableBody>` when you need footer-style totals.
 
 ```xml
 <Table>
@@ -135,6 +135,10 @@ Use `<Table>` together with `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<Tabl
     <TableRow>
       <TableCell>Projects</TableCell>
       <TableCell>Active</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Total</TableCell>
+      <TableCell>1</TableCell>
     </TableRow>
   </TableBody>
 </Table>
