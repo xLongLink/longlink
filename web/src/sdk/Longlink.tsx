@@ -12,7 +12,7 @@ type AppMetadata = {
 
 const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '');
 
-export default function SdkLonglink() {
+export default function SdkLongLink() {
     const { '*': wildcardPath } = useParams();
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
 
