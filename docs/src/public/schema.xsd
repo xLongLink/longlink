@@ -170,10 +170,10 @@
   <xsd:complexType name="MenuType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
   <xsd:element name="Menu" type="MenuType" />
   
-  <xsd:complexType name="MenuSectionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="MenuSectionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType"><xsd:attribute name="title" type="xsd:string" use="optional" /><xsd:attribute name="icon" type="xsd:string" use="optional" /></xsd:extension></xsd:complexContent></xsd:complexType>
   <xsd:element name="MenuSection" type="MenuSectionType" />
   
-  <xsd:complexType name="MenuSubSectionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="MenuSubSectionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType"><xsd:attribute name="title" type="xsd:string" use="optional" /><xsd:attribute name="root" type="xsd:boolean" use="optional" /></xsd:extension></xsd:complexContent></xsd:complexType>
   <xsd:element name="MenuSubSection" type="MenuSubSectionType" />
   
   <xsd:complexType name="StackType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>

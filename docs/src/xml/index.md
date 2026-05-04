@@ -10,7 +10,7 @@ The resulting interface is consistent with the LongLink control plane and acts a
 
 ## Pages
 
-Each tab in the user interface,
+Each XML page maps to a tab in the user interface.
 
 ```python
 from longlink import LongLink
@@ -28,4 +28,4 @@ app.include_page("/pages")
 </Page>
 ```
 
-> Note: `xmlns:bind="*"` doesn't do anything, is just there to make the editor happy
+> Note: `xmlns:bind="*"` exists only to keep XML editors happy.

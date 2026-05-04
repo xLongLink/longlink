@@ -15,6 +15,7 @@ import { Icon } from './components/Icon';
 import Input from './components/Input';
 import Menu, { MenuSection, MenuSubSection } from './components/Menu';
 import Select from './components/Select';
+import Range from './components/Range';
 import Separator from './components/Separator';
 import Slider from './components/Slider';
 import Switch from './components/Switch';
@@ -90,6 +91,7 @@ const defaultRegistry = {
     MenuSection,
     MenuSubSection,
     Select,
+    Range,
     Separator,
     Slider,
     Stack,

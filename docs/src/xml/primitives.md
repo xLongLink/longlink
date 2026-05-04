@@ -35,6 +35,24 @@ Use a full `{...}` expression for dynamic paths.
 <Query id="orders" path="{'/apps'}" />
 ```
 
+## Action
+
+Action props define how an XML page submits data back to an endpoint.
+
+Use `action`, `path`, or `url` to name the target. Use `method` to choose the HTTP verb. Use `body` or `payload` to send data. Use `invalidate` to refresh query keys after success. Use `onSuccess` for follow-up work after the request completes.
+
+```xml
+<Button
+  text="Save"
+  action="/issues"
+  method="POST"
+  payload='{"title":"{issue.title}"}'
+  invalidate="issues"
+/>
+```
+
+These props are available on action-capable components such as `<Button>`, `<Checkbox>`, `<Input>`, `<Range>`, `<Select>`, `<Slider>`, `<Switch>`, and `<Textarea>`.
+
 ## If
 
 Use `if` for conditional rendering on any element.

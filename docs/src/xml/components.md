@@ -29,8 +29,6 @@ Use `<Button>` for actions and navigation targets.
 <Button text="Create issue" url="/issues/new" variant="default" />
 ```
 
-Actionable elements accept `action`, `method`, `url`, and `payload`.
-
 ## Checkbox
 
 Use `<Checkbox>` for boolean input.
@@ -63,8 +61,6 @@ Use `<Select>` to choose one option from a list.
 <Select label="Status" options='[{"label":"Draft","value":"draft"}]' />
 ```
 
-Actionable elements accept `action`, `method`, `url`, and `payload`.
-
 ## Separator
 
 Use `<Separator>` to divide blocks.
@@ -83,18 +79,13 @@ Use `<Slider>` for numeric input with one or two thumbs.
 <Slider label="Progress" min="0" max="100" step="5" value="35" />
 ```
 
-Actionable elements accept `action`, `method`, `url`, and `payload`.
-
 ## Range
 
-Use `<Range>` only for legacy pages that still rely on the older range element.
-Prefer `<Slider>` for new pages.
+Use `<Range>` for two-handle numeric selection.
 
 ```xml
 <Range label="Budget" min="0" max="100" step="10" value="[20,80]" />
 ```
-
-Actionable elements accept `action`, `method`, `url`, and `payload`.
 
 ## Switch
 
@@ -104,8 +95,6 @@ Use `<Switch>` for a compact boolean toggle.
 <Switch label="Enable notifications" active="true" />
 ```
 
-Actionable elements accept `action`, `method`, `url`, and `payload`.
-
 ## Textarea
 
 Use `<Textarea>` for multiline text input.
@@ -113,8 +102,6 @@ Use `<Textarea>` for multiline text input.
 ```xml
 <Textarea label="Description" placeholder="Write the issue details" />
 ```
-
-Actionable elements accept `action`, `method`, `url`, and `payload`.
 
 ## Table
 
