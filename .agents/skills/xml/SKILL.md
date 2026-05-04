@@ -1,132 +1,141 @@
 ---
 name: xml
 description: Guide LongLink XML component creation and maintenance across SDK, web runtime, tests, and docs
-license: MIT
-compatibility: opencode
-metadata:
-  audience: contributors
-  workflow: fullstack
 ---
 
-## What I do
+## Structure
 
-- Give a concrete, end-to-end maintenance map for LongLink XML components across **SDK + Web + Docs**.
-- Tell agents exactly **where to implement a new component** and **where to update existing components**.
-- Define the minimum update checklist for implementation, test coverage, and documentation.
-- Keep XML work aligned with LongLink architecture boundaries and current MVP development model.
+```text
+longlink/
+├── sdk/
+│   ├── longlink/
+│   │   ├── .static/xsd/         # XML schema definitions
+│   │   │   ├── base.xsd         # Shared schema base
+│   │   │   ├── components/      # Component contracts
+│   │   │   │   ├── Card.xsd     # Card contract
+│   │   │   │   ├── Columns.xsd  # Columns contract
+│   │   │   │   ├── Dialog.xsd   # Dialog contract
+│   │   │   │   ├── Hero.xsd     # Hero contract
+│   │   │   │   ├── Menu.xsd     # Menu contract
+│   │   │   │   ├── Range.xsd    # Range contract
+│   │   │   │   ├── Select.xsd   # Select contract
+│   │   │   │   ├── Separator.xsd # Separator contract
+│   │   │   │   ├── Slider.xsd   # Slider contract
+│   │   │   │   ├── Switch.xsd   # Switch contract
+│   │   │   │   ├── Tabs.xsd     # Tabs contract
+│   │   │   │   └── Textarea.xsd  # Textarea contract
+│   │   │   ├── layout/          # Layout contracts
+│   │   │   │   ├── For.xsd      # Loop contract
+│   │   │   │   ├── Page.xsd     # Page contract
+│   │   │   │   ├── Query.xsd    # Query contract
+│   │   │   │   └── State.xsd    # State contract
+│   │   │   ├── html/            # HTML bridge contracts
+│   │   │   │   ├── h1.xsd       # Heading 1 contract
+│   │   │   │   ├── h2.xsd       # Heading 2 contract
+│   │   │   │   ├── h3.xsd       # Heading 3 contract
+│   │   │   │   ├── h4.xsd       # Heading 4 contract
+│   │   │   │   ├── blockquote.xsd # Blockquote contract
+│   │   │   │   ├── li.xsd       # List item contract
+│   │   │   │   ├── p.xsd        # Paragraph contract
+│   │   │   │   └── ul.xsd       # Unordered list contract
+│   │   │   └── tables/          # Table-related contracts
+│   │   │       ├── Table.xsd    # Table contract
+│   │   │       ├── TableBody.xsd # Table body contract
+│   │   │       ├── TableCell.xsd # Table cell contract
+│   │   │       ├── TableHead.xsd # Table head contract
+│   │   │       ├── TableHeader.xsd # Table header contract
+│   │   │       └── TableRow.xsd  # Table row contract
+│   │   ├── routes/              # XML page metadata and page routes
+│   │   │   ├── metadata.py      # Metadata route helpers
+│   │   │   └── pages.py         # Page route helpers
+│   │   ├── utils/               # XML helpers and page utilities
+│   │   │   ├── xml.py           # XML utility helpers
+│   │   │   ├── metadata.py      # Metadata utilities
+│   │   │   └── page.py          # Page utilities
+│   │   ├── app.py               # SDK app entrypoint
+│   │   ├── router.py            # SDK router wiring
+│   │   └── constants.py         # Shared SDK constants
+│   └── tests/xml/               # SDK XML tests
+│       ├── components/          # Component behavior tests
+│       │   ├── test_button.py   # Button coverage
+│       │   ├── test_card.py     # Card coverage
+│       │   ├── test_checkbox.py # Checkbox coverage
+│       │   ├── test_column.py   # Column coverage
+│       │   ├── test_columns.py  # Columns coverage
+│       │   ├── test_dialog.py   # Dialog coverage
+│       │   ├── test_dialog_content.py # Dialog content coverage
+│       │   ├── test_dialog_description.py # Dialog description coverage
+│       │   ├── test_dialog_footer.py # Dialog footer coverage
+│       │   ├── test_dialog_header.py # Dialog header coverage
+│       │   ├── test_dialog_title.py # Dialog title coverage
+│       │   ├── test_dialog_trigger.py # Dialog trigger coverage
+│       │   ├── test_grid.py     # Grid coverage
+│       │   ├── test_hero.py     # Hero coverage
+│       │   ├── test_icon.py     # Icon coverage
+│       │   ├── test_input.py    # Input coverage
+│       │   ├── test_menu.py     # Menu coverage
+│       │   ├── test_menu_section.py # Menu section coverage
+│       │   ├── test_menu_sub_section.py # Menu subsection coverage
+│       │   ├── test_range.py    # Range coverage
+│       │   ├── test_select.py   # Select coverage
+│       │   ├── test_separator.py # Separator coverage
+│       │   ├── test_slider.py   # Slider coverage
+│       │   ├── test_stack.py    # Stack coverage
+│       │   ├── test_switch.py   # Switch coverage
+│       │   ├── test_tabs.py     # Tabs coverage
+│       │   ├── test_tabs_content.py # Tabs content coverage
+│       │   ├── test_tabs_list.py # Tabs list coverage
+│       │   ├── test_tabs_trigger.py # Tabs trigger coverage
+│       │   └── test_textarea.py # Textarea coverage
+│       ├── layout/              # Layout behavior tests
+│       │   ├── test_for.py      # For behavior coverage
+│       │   ├── test_grid.py     # Grid behavior coverage
+│       │   ├── test_page.py     # Page behavior coverage
+│       │   ├── test_query.py    # Query behavior coverage
+│       │   └── test_state.py    # State behavior coverage
+│       └── html/                # HTML bridge behavior tests
+│           ├── h1.py            # h1 bridge coverage
+│           ├── h2.py            # h2 bridge coverage
+│           ├── h3.py            # h3 bridge coverage
+│           ├── h4.py            # h4 bridge coverage
+│           ├── blockquote.py    # blockquote bridge coverage
+│           ├── li.py            # li bridge coverage
+│           ├── p.py             # p bridge coverage
+│           └── ul.py            # ul bridge coverage
+├── web/
+│   ├── src/xml/                # XML runtime parser/renderer and domain groupings
+│   │   ├── components/         # XML components
+│   │   ├── layout/             # XML layout primitives
+│   │   ├── primitives/         # Low-level XML primitives
+│   │   └── html/               # HTML/XML bridge tags
+│   ├── src/components/         # Shared UI logic and primitives
+│   └── tests/xml/              # Web XML runtime and component rendering behavior
+│       ├── components/         # XML component tests
+│       ├── layout/             # XML layout tests
+│       ├── primitives/         # XML primitive tests
+│       └── html/               # HTML/XML bridge tests
+├── api/
+│   └── src/pages/              # XML pages used by control-plane views
+├── sdk/sample/src/pages/       # Sample XML pages and fixtures
+│   ├── cart.xml                # Cart sample page
+│   ├── dashboard.xml           # Dashboard sample page
+│   ├── dashboard/overview.xml  # Dashboard overview sample
+│   └── settings.xml            # Settings sample page
+└── docs/
+    └── src/xml/                # XML documentation pages
+        ├── index.md            # XML docs entry
+        ├── components.md       # XML components docs
+        ├── layout.md           # XML layout docs
+        ├── primitives.md       # XML primitives docs
+        └── html.md             # XML HTML bridge docs
+```
 
-## When to use me
+## Responsibilities
 
-Use this skill whenever the task involves any of the following:
-
-- Adding a new XML tag or attribute.
-- Changing behavior of an existing XML component.
-- Updating XML parsing, rendering, binding, or schema constraints.
-- Fixing XML runtime regressions.
-- Auditing whether XML changes were fully propagated across code, tests, and docs.
-
-## Source-of-truth map for XML work
-
-### 1) SDK side (definition + packaging + SDK tests)
-
-Primary areas:
-
-- `sdk/longlink/.static/xsd/` → XML schema definition (component/tag/attribute contract).
-- `sdk/longlink/` → SDK runtime or helper logic tied to XML integration.
-- `sdk/tests/xml/` → SDK-side XML behavior and validation tests.
-- `sdk/sample/src/pages/` → example XML pages used as practical references/fixtures.
-
-What to maintain:
-
-- Schema additions/changes for new tags and attributes.
-- Any SDK code paths that consume, validate, transform, or expose XML behavior.
-- Tests that prove SDK XML behavior is correct and backward assumptions are removed when obsolete.
-- Sample pages when they are the canonical example for new behavior.
-
-### 2) Web side (renderer + component implementation + web tests)
-
-Primary areas:
-
-- `web/src/xml/` → XML runtime parser/renderer and domain groupings:
-  - `web/src/xml/components/`
-  - `web/src/xml/layout/`
-  - `web/src/xml/primitives/`
-  - `web/src/xml/html/`
-- `web/src/components/` and related UI primitives where shared UI logic is hosted.
-- `web/tests/xml/` → web XML runtime and component rendering behavior:
-  - `web/tests/xml/components/`
-  - `web/tests/xml/layout/`
-  - `web/tests/xml/primitives/`
-  - `web/tests/xml/html/`
-
-What to maintain:
-
-- Tag-to-component mapping and rendering behavior.
-- Attribute parsing, defaults, and error handling.
-- Stateful/binding behavior (`State`, `Query`, `bind:*`) as interpreted by the runtime.
-- Tests for new and changed behavior, including edge cases and failure modes.
-
-### 3) API pages and usage examples
-
-Primary areas:
-
-- `api/src/pages/` → XML pages used by control-plane views.
-- `sdk/sample/src/pages/` → SDK sample app pages.
-
-What to maintain:
-
-- Update pages that use changed tags/attributes.
-- Add or adjust examples when introducing new XML capabilities.
-- Remove outdated usage patterns when replacement flow is complete.
-
-### 4) Documentation
-
-Primary areas:
-
-- `docs/` → public/internal explanation of XML usage.
-- `sdk/CONTRIBUTING.md`, `web/CONTRIBUTING.md`, and root guidance when workflow expectations change.
-
-What to maintain:
-
-- XML component contract and usage examples.
-- Migration notes when behavior changes.
-- Any cross-repo maintenance checklist that contributors rely on.
-
-## Required end-to-end workflow for XML component changes
-
-For every XML feature/change, execute this flow in order:
-
-1. **Define contract**
-   - Update schema and expected semantics first (what the tag/attribute means).
-2. **Implement SDK-side impacts**
-   - Update SDK codepaths and sample fixtures that represent canonical usage.
-3. **Implement web runtime/component behavior**
-   - Add/update rendering and parsing logic in `web/src/xml/**`.
-4. **Update tests in both layers**
-   - SDK XML tests + web XML tests must reflect the new contract.
-5. **Update real XML page usages**
-   - Adjust `api/src/pages/*.xml` and/or sample pages when needed.
-6. **Update docs**
-   - Ensure docs explain usage and constraints clearly.
-7. **Final quality pass**
-   - Verify no stale examples, no orphan behavior, and no schema/runtime mismatch.
-
-## Change checklist (must pass before considering XML work done)
-
-- [ ] Schema and runtime behavior are consistent.
-- [ ] SDK-side XML tests updated where behavior changed.
-- [ ] Web-side XML tests updated where behavior changed.
-- [ ] Existing XML pages continue to work or are intentionally migrated.
-- [ ] Documentation reflects final behavior, not intermediate implementation.
-- [ ] Obsolete XML flow removed if replacement is complete (MVP model preference).
-
-## Guardrails for agents
-
-- Do not treat only one folder as sufficient for XML work; XML is cross-cutting by design.
-- If adding a component, check **all four surfaces**: schema, SDK, web runtime, docs.
-- If fixing a bug, find the contract mismatch first (schema vs runtime vs page usage).
-- Prefer explicit, minimal changes that preserve architecture boundaries:
-  - Control-plane pages live in `api/src/pages/`.
-  - SDK owns packaged schema and SDK-level behavior.
-  - Web owns rendering/runtime behavior.
-- Do not leave “placeholder” updates; provide concrete file-level updates or clearly call out missing required surfaces.
+- Keep schema, runtime, pages, and docs aligned.
+- Verify XML tags and attributes mean the same thing across SDK, web, and docs.
+- Check that component placement matches ownership boundaries.
+- Check that renderer behavior matches schema contract and page usage.
+- Check that sample pages and API pages reflect the final XML shape.
+- Check that documentation describes the final behavior, not an intermediate state.
+- Remove obsolete XML flow when replacement is complete.
