@@ -4,7 +4,6 @@ import xmltodict
 from lxml import etree
 from typing import Any
 from pathlib import Path
-
 from longlink.constants import ROOT
 
 

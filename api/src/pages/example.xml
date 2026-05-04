@@ -60,13 +60,14 @@
 
       <MenuSection title="Form" icon="file-text">
         <MenuSubSection title="Form controls" root="true">
-          <p>This section showcases the inputs commonly used to build forms in XML pages.</p>
+          <p>This section showcases the form components used in XML pages: Input, Textarea, Checkbox, Switch, Slider, and Button.</p>
           <Stack gap="12">
             <Input kind="text" label="Full name" placeholder="Ada Lovelace" />
             <Input kind="email" label="Email address" placeholder="ada@example.com" />
             <Textarea label="Notes" placeholder="Add a short note" />
             <Checkbox label="Subscribe to updates" checked="true" />
             <Switch label="Enable notifications" active="true" />
+            <Slider label="Progress" description="Current progress value." min="0" max="100" step="5" value="35" />
             <Button variant="default">Submit form</Button>
           </Stack>
         </MenuSubSection>
@@ -147,6 +148,34 @@
             <Column key="left" label="Left" content="Sectioned content" align="left" />
             <Column key="right" label="Right" content="Structured presentation" align="left" />
           </Columns>
+        </MenuSubSection>
+      </MenuSection>
+
+      <MenuSection title="Tabs" icon="square-stack">
+        <MenuSubSection title="Tabbed content" root="true">
+          <p>This section demonstrates switching between related views with tabs.</p>
+          <Tabs defaultValue="details">
+            <TabsList>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="activity">Activity</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details">
+              <Card>
+                <CardContent>
+                  <p>Details content appears in the default tab.</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="activity">
+              <Card>
+                <CardContent>
+                  <p>Activity content shows an alternate view in the same section.</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </MenuSubSection>
       </MenuSection>
     </Menu>

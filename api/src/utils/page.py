@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import xmltodict
 from lxml import etree
-from src.constants import ROOT
 from pathlib import Path
+from src.constants import ROOT
 
 
 class Page:
