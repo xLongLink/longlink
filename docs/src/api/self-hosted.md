@@ -1,46 +1,55 @@
-# Self Hosted
+# Self-hosted Control Plane
 
 Use self-hosted mode when you run the LongLink control plane in your own infrastructure.
 
-## Required infrastructure
+## Infrastructure
 
-You must provide:
+Provide these systems before you deploy LongLink:
 
-- a Kubernetes cluster for control plane and application workloads
-- a PostgreSQL server for database provisioning
+- A Kubernetes cluster for the control plane and application workloads
+- A PostgreSQL server for database provisioning
 - S3-compatible object storage for files and artifacts
 
-## Required environment variables
+## Required Environment Variables
 
 Configure the API container with these variables:
 
+### Session
+
+- `SESSION_KEY`
+
 ### Compute
 
-- `ENV_PROVISION_COMPUTE_URL`
-- `ENV_PROVISION_COMPUTE_KUBE_CONFIG_PATH`
-- `ENV_PROVISION_COMPUTE_NAMESPACE`
+- `COMPUTE_URL`
+- `COMPUTE_KUBE_CONFIG_PATH`
+- `COMPUTE_NAMESPACE`
 
 ### Database
 
-- `ENV_PROVISION_DATABASE_HOST`
-- `ENV_PROVISION_DATABASE_PORT`
-- `ENV_PROVISION_DATABASE_USERNAME`
-- `ENV_PROVISION_DATABASE_PASSWORD`
-- `ENV_PROVISION_DATABASE_MAINTENANCE_DATABASE`
-- `ENV_PROVISION_DATABASE_SSLMODE` (optional)
+- `DATABASE_HOST`
+- `DATABASE_PORT`
+- `DATABASE_USERNAME`
+- `DATABASE_PASSWORD`
+- `DATABASE_MAINTENANCE_DATABASE`
+
+### Optional
+
+- `DATABASE_SSLMODE`
 
 Use database administrator credentials for `ENV_PROVISION_DATABASE_USERNAME` and `ENV_PROVISION_DATABASE_PASSWORD`.
 The account must be able to create databases on the maintenance database.
 
 ### Storage
 
-- `ENV_PROVISION_STORAGE_ENDPOINT_URL`
-- `ENV_PROVISION_STORAGE_ACCESS_KEY_ID`
-- `ENV_PROVISION_STORAGE_SECRET_ACCESS_KEY`
-- `ENV_PROVISION_STORAGE_REGION_NAME` (optional)
+- `STORAGE_PROTOCOL`
+- `STORAGE_ENDPOINT_URL`
+- `STORAGE_ACCESS_KEY_ID`
+- `STORAGE_SECRET_ACCESS_KEY`
 
-## Deployment model
+### Optional
 
-Deploy the control plane container and application containers into the same Kubernetes cluster.
+## Deployment Model
+
+Deploy the control plane container and application containers in the same Kubernetes cluster.
 
 This keeps control-plane traffic inside the cluster boundary and avoids public ingress for application routing.

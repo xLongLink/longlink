@@ -10,10 +10,4 @@ The resulting interface is consistent with the LongLink control plane and acts a
 
 ## Page
 
-`Page` is the root element of every UI definition. It wraps the entire document and defines metadata such as the page name and icon, which are used in the navigation and tab system.
-
-```xml
-<Page name="Settings" icon="settings">
-  <!-- Content -->
-</Page>
-```
+`Page` is the root element of every UI definition. It wraps the full document and sets page metadata such as the name and icon.

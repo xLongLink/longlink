@@ -5,22 +5,6 @@ They control how content is grouped, positioned, and navigated.
 Use them to shape the page structure before adding forms or data.
 The sections below describe the main layout primitives.
 
-## Hero
-
-Use `<Hero>` to define the top section of a page. Place it near the top, use `title` and `subtitle` to describe the page clearly, and put actions such as `<Button>` inside the hero body.
-
-```xml
-<Page name="Issues" icon="bug">
-  <Hero
-    title="Issues"
-    subtitle="Track and manage open work."
-    icon="bug"
-  >
-    <Button text="Create issue" url="/issues/new" />
-  </Hero>
-</Page>
-```
-
 ## Menu
 
 Use `<Menu>` to organize page content into navigable sections. Use `<MenuSection>` for top-level navigation entries, use `<MenuSubSection>` for the content inside a section, and set `root="true"` when a subsection should render as the section root.

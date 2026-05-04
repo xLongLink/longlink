@@ -26,9 +26,19 @@ uv add longlink
 
 ### Initialize a Project
 
-```bash
+::: code-group
+
+```bash [pip]
+pip install longlink
 longlink init
 ```
+
+```bash [uv]
+uv add longlink
+uv run longlink init
+```
+
+:::
 
 This creates a standardized project structure:
 
@@ -58,19 +68,15 @@ Install development dependencies:
 
 ```bash [pip]
 pip install .[dev]
+longlink dev
 ```
 
 ```bash [uv]
 uv add .[dev]
+uv run longlink dev
 ```
 
 :::
-
-Run the application locally:
-
-```bash
-uv run longlink dev
-```
 
 ## Additional Resources
 

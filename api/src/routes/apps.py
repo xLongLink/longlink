@@ -179,6 +179,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
 @router.delete("/apps/{app_name}", status_code=204)
 async def delete_app(app_name: str) -> Response:
     """Delete an app by removing its compute resources and registry row."""
+    app_name = app_name.strip().lower()
     app = await db.apps.get(app_name)
     if app is None:
         raise HTTPException(status_code=404, detail="App not found")

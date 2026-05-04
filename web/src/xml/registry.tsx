@@ -11,6 +11,7 @@ import { resolveValue, useRuntime } from './runtime';
 import { Button } from './components/Button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/Card';
 import Checkbox from './components/Checkbox';
+import Hero from './components/Hero';
 import { Icon } from './components/Icon';
 import Input from './components/Input';
 import Menu, { MenuSection, MenuSubSection } from './components/Menu';
@@ -41,7 +42,6 @@ import {
 } from './layout/Dialog';
 import Stack from './layout/Stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './layout/Tabs';
-import Hero from './primitives/Hero';
 import Page from './primitives/Page';
 
 /**

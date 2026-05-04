@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
-    KEY: str
+    SESSION_KEY: str
     ORGANIZATION_NAME: str
 
     # Control plane database URL

@@ -5,6 +5,22 @@ They cover inputs, actions, dialogs, icons, and other user-facing controls.
 Use them when the page needs direct user interaction.
 The sections below describe each component and how it is used.
 
+## Hero
+
+Use `<Hero>` for the top section of a page. Place it near the top, use `title` and `subtitle` to describe the page clearly, and put actions such as `<Button>` inside the hero body.
+
+```xml
+<Page name="Issues" icon="bug">
+  <Hero
+    title="Issues"
+    subtitle="Track and manage open work."
+    icon="bug"
+  >
+    <Button text="Create issue" url="/issues/new" />
+  </Hero>
+</Page>
+```
+
 ## Button
 
 Use `<Button>` for page actions.

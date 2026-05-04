@@ -39,7 +39,7 @@ app.add_middleware(
 )
 app.add_middleware(
     SessionMiddleware,
-    secret_key=env.KEY,
+    secret_key=env.SESSION_KEY,
     same_site="lax",
     https_only=False,
 )
