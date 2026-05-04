@@ -2,7 +2,9 @@
   <Query id="example" path="/example">
     <Hero title="XML component showcase" subtitle="A guided example page for the built-in XML runtime." icon="layout-grid">
       <Dialog>
-        <DialogTrigger>Open dialog</DialogTrigger>
+        <DialogTrigger>
+          <Button variant="default">Open dialog</Button>
+        </DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>XML showcase dialog</DialogTitle>
@@ -37,7 +39,7 @@
 
       <MenuSection title="Table" icon="table">
         <MenuSubSection title="Data showcase" root="true">
-          <Table data='[{"item":"XML showcase page","quantity":1,"unitPrice":"$120.00","total":"$120.00"},{"item":"Layout composition","quantity":2,"unitPrice":"$45.00","total":"$90.00"},{"item":"Documentation polish","quantity":1,"unitPrice":"$80.00","total":"$80.00"}]'>
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Item</TableHead>
@@ -48,10 +50,22 @@
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell>{item}</TableCell>
-                <TableCell>{quantity}</TableCell>
-                <TableCell>{unitPrice}</TableCell>
-                <TableCell>{total}</TableCell>
+                <TableCell>XML showcase page</TableCell>
+                <TableCell>1</TableCell>
+                <TableCell>$120.00</TableCell>
+                <TableCell>$120.00</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Layout composition</TableCell>
+                <TableCell>2</TableCell>
+                <TableCell>$45.00</TableCell>
+                <TableCell>$90.00</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Documentation polish</TableCell>
+                <TableCell>1</TableCell>
+                <TableCell>$80.00</TableCell>
+                <TableCell>$80.00</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -60,7 +74,6 @@
 
       <MenuSection title="Form" icon="file-text">
         <MenuSubSection title="Form controls" root="true">
-          <p>This section showcases the form components used in XML pages: Input, Textarea, Checkbox, Switch, Slider, and Button.</p>
           <Stack gap="12">
             <Input kind="text" label="Full name" placeholder="Ada Lovelace" />
             <Input kind="email" label="Email address" placeholder="ada@example.com" />
@@ -75,70 +88,63 @@
 
       <MenuSection title="Cards" icon="layers-3">
         <MenuSubSection title="GPU models" root="true">
-          <p>This section combines search and cards to present a compact catalog of GPU models.</p>
           <Input kind="text" label="Search GPUs" placeholder="Search by model name" />
-          <Columns>
-            <Column key="col-1" label="Column 1" content="" align="left">
-              <Card>
-                <CardHeader>
-                  <CardTitle>NVIDIA RTX 4090</CardTitle>
-                  <CardDescription>Flagship card for high-end rendering and AI workloads.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>24 GB GDDR6X, best suited for demanding workstation tasks.</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>NVIDIA RTX 4070 Ti</CardTitle>
-                  <CardDescription>Efficient upper-midrange option for creators.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>12 GB GDDR6X, good fit for balanced performance targets.</p>
-                </CardContent>
-              </Card>
-            </Column>
-            <Column key="col-2" label="Column 2" content="" align="left">
-              <Card>
-                <CardHeader>
-                  <CardTitle>NVIDIA RTX 4080</CardTitle>
-                  <CardDescription>Strong performance for premium creative workflows.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>16 GB GDDR6X, balanced for gaming and content creation.</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>AMD Radeon RX 7800 XT</CardTitle>
-                  <CardDescription>Mainstream card for high-refresh 1440p.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>16 GB GDDR6, practical value-oriented GPU choice.</p>
-                </CardContent>
-              </Card>
-            </Column>
-            <Column key="col-3" label="Column 3" content="" align="left">
-              <Card>
-                <CardHeader>
-                  <CardTitle>AMD Radeon RX 7900 XTX</CardTitle>
-                  <CardDescription>High-memory GPU for broad 4K and compute usage.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>24 GB GDDR6, competitive in rasterized workloads.</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>NVIDIA RTX 4060</CardTitle>
-                  <CardDescription>Entry-level card with modern encoder support.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>8 GB GDDR6, compact option for smaller builds.</p>
-                </CardContent>
-              </Card>
-            </Column>
-          </Columns>
+          <Grid columns="repeat(auto-fit, minmax(min(100%, 16rem), 1fr))" gap="1rem">
+            <Card>
+              <CardHeader>
+                <CardTitle>NVIDIA RTX 4090</CardTitle>
+                <CardDescription>Flagship card for high-end rendering and AI workloads.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>24 GB GDDR6X, best suited for demanding workstation tasks.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>NVIDIA RTX 4070 Ti</CardTitle>
+                <CardDescription>Efficient upper-midrange option for creators.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>12 GB GDDR6X, good fit for balanced performance targets.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>NVIDIA RTX 4080</CardTitle>
+                <CardDescription>Strong performance for premium creative workflows.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>16 GB GDDR6X, balanced for gaming and content creation.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>AMD Radeon RX 7800 XT</CardTitle>
+                <CardDescription>Mainstream card for high-refresh 1440p.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>16 GB GDDR6, practical value-oriented GPU choice.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>AMD Radeon RX 7900 XTX</CardTitle>
+                <CardDescription>High-memory GPU for broad 4K and compute usage.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>24 GB GDDR6, competitive in rasterized workloads.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>NVIDIA RTX 4060</CardTitle>
+                <CardDescription>Entry-level card with modern encoder support.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>8 GB GDDR6, compact option for smaller builds.</p>
+              </CardContent>
+            </Card>
+          </Grid>
         </MenuSubSection>
       </MenuSection>
 
@@ -153,7 +159,6 @@
 
       <MenuSection title="Tabs" icon="square-stack">
         <MenuSubSection title="Tabbed content" root="true">
-          <p>This section demonstrates switching between related views with tabs.</p>
           <Tabs defaultValue="details">
             <TabsList>
               <TabsTrigger value="details">Details</TabsTrigger>
@@ -161,19 +166,11 @@
             </TabsList>
 
             <TabsContent value="details">
-              <Card>
-                <CardContent>
-                  <p>Details content appears in the default tab.</p>
-                </CardContent>
-              </Card>
+              <p>Details content appears in the default tab.</p>
             </TabsContent>
 
             <TabsContent value="activity">
-              <Card>
-                <CardContent>
-                  <p>Activity content shows an alternate view in the same section.</p>
-                </CardContent>
-              </Card>
+              <p>Activity content shows an alternate view in the same section.</p>
             </TabsContent>
           </Tabs>
         </MenuSubSection>

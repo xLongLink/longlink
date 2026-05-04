@@ -5,12 +5,15 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * Renders the root tabs container with orientation-aware layout.
+ */
 function Tabs({ className, orientation = 'horizontal', ...props }: TabsPrimitive.Root.Props) {
     return (
         <TabsPrimitive.Root
             data-slot="tabs"
             data-orientation={orientation}
-            className={cn('group/tabs flex gap-2 data-[orientation=vertical]:flex-col', className)}
+            className={cn('group/tabs flex flex-col gap-2 data-[orientation=vertical]:flex-row', className)}
             {...props}
         />
     );
@@ -31,6 +34,9 @@ const tabsListVariants = cva(
     }
 );
 
+/**
+ * Renders the tabs trigger list with the selected visual variant.
+ */
 function TabsList({
     className,
     variant = 'default',
@@ -46,6 +52,9 @@ function TabsList({
     );
 }
 
+/**
+ * Renders a selectable tab trigger.
+ */
 function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     return (
         <TabsPrimitive.Tab
@@ -62,6 +71,9 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     );
 }
 
+/**
+ * Renders the active tab panel.
+ */
 function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
     return (
         <TabsPrimitive.Panel
