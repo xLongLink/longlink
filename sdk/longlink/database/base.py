@@ -17,27 +17,20 @@ _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
 
 
-def _resolve_database_url(env: Environments) -> str:
-    """Return the database URL for the current environment."""
-
-    if env.ENV == "testing":
-        return "sqlite+aiosqlite:///:memory:"
-
-    if env.ENV == "development":
-        return "sqlite+aiosqlite:///./dev.db"
-
-    return env.DATABASE_URL
-
 
 def create_engine(env: Environments) -> AsyncEngine:
     """Create and cache the async SQLAlchemy engine for the current environment."""
-
     global _engine
 
     if _engine is not None:
         return _engine
 
-    dburl = _resolve_database_url(env)
+    if env.ENV == "testing":
+        dburl = "sqlite+aiosqlite:///:memory:"
+    elif env.ENV == "development":
+        dburl = "sqlite+aiosqlite:///./dev.db"
+    else:
+        dburl = env.DATABASE_URL
 
     engine_kwargs = {
         "pool_pre_ping": True,
@@ -50,11 +43,6 @@ def create_engine(env: Environments) -> AsyncEngine:
     _engine = create_async_engine(dburl, **engine_kwargs)
     return _engine
 
-
-def initialize_database(env: Environments) -> AsyncEngine:
-    """Create the engine eagerly during package import."""
-
-    return create_engine(env)
 
 
 async def get_session() -> async_sessionmaker[AsyncSession]:

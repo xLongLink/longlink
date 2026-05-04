@@ -1,5 +1,4 @@
-from .base import Table, get_session, initialize_database
-from sqlmodel import SQLModel
+from .base import Table, get_session, create_engine
 from longlink.utils.settings import Environments
 
 
@@ -15,12 +14,8 @@ class Database:
         return await get_session()
 
 
-Base = SQLModel
+def create_db(env: Environments):
+    """Create the database facade for the current environment."""
 
-# Initialize database engine at import time so apps get a ready-to-use DB facade.
-_env = Environments()
-_engine = initialize_database(_env)
-db = Database()
-
-
-__all__ = ["Base", "Database", "Table", "db", "get_session"]
+    create_engine(env)
+    return Database()
