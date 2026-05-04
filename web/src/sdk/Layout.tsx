@@ -1,9 +1,10 @@
 import { Loader2 } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { useApiData } from '@/hooks/use-data';
 import { getActiveTabConfig, getAppTabsFromPages, type AppNavigationPage } from '@/lib/navigation';
-import { getPagesFromResponse } from './pages';
+import { getRootPagesFromResponse } from './pages';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
@@ -13,7 +14,7 @@ export default function SdkLayout() {
     const location = useLocation();
     const navigate = useNavigate();
     const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/metadata.json');
-    const pages = getPagesFromResponse(pagesResponse);
+    const pages = getRootPagesFromResponse(pagesResponse);
 
     const tabs = isLoading
         ? [
@@ -39,6 +40,14 @@ export default function SdkLayout() {
             {tabs.length > 0 ? (
                 <header className="border-b border-white/10">
                     <div className="mx-auto w-full px-6 pb-2 pt-4">
+                        <div className="flex items-center justify-between gap-4 text-white/80">
+                            <div className="flex items-center gap-4">
+                                <Breadcrumb />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mx-auto w-full px-6 pb-2">
                         <Tabs
                             value={activeTab}
                             onValueChange={(value) => {

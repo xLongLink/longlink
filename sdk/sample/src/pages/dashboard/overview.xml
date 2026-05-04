@@ -1,0 +1,6 @@
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<Page name="Dashboard Overview" icon="layout-dashboard">
+  <Hero title="Nested Dashboard Page" subtitle="This page lives inside the dashboard folder." icon="layout-dashboard">
+    <Button href="/pages/dashboard.xml" variant="default">Back to Dashboard</Button>
+  </Hero>
+</Page>

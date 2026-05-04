@@ -2,5 +2,6 @@
 <Page name="Dashboard" icon="layout-dashboard">
   <Hero title="Dashboard" subtitle="Sample dashboard page loaded from XML." icon="layout-dashboard">
     <Button href="/sample" variant="default">Refresh Data</Button>
+    <Button href="/pages/dashboard/overview.xml" variant="secondary">Open Nested Page</Button>
   </Hero>
 </Page>

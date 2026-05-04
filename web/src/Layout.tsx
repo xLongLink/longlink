@@ -5,7 +5,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { useApiData } from '@/hooks/use-data';
 import { getActiveTabConfig, getAppTabsFromPages, type AppNavigationPage } from '@/lib/navigation';
-import { getPagesFromResponse } from '@/sdk/pages';
+import { getRootPagesFromResponse } from '@/sdk/pages';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];
@@ -16,7 +16,7 @@ type AppMetadata = {
  * Supports both array and wrapped response shapes.
  */
 const toNavigationPages = (value: unknown): AppNavigationPage[] => {
-    return getPagesFromResponse(value).map((page) => ({
+    return getRootPagesFromResponse(value).map((page) => ({
         path: page.path,
         name: page.name,
         icon: page.icon ?? 'file-text',
@@ -128,7 +128,7 @@ function AppLayout() {
               },
           ]
         : getAppTabsFromPages(
-              (appMetadata?.pages ?? []).map((page) => ({
+              getRootPagesFromResponse(appMetadata).map((page) => ({
                   path: page.path,
                   name: page.name,
                   icon: page.icon ?? 'file-text',
