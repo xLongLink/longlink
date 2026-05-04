@@ -1,4 +1,4 @@
-<?xml-model href="https://docs.longlink.dev/xsd/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Dashboard" icon="layout-dashboard">
   <Hero title="Dashboard" subtitle="Sample dashboard page loaded from XML." icon="layout-dashboard">
     <Button text="Refresh Data" variant="default" url="/sample" />

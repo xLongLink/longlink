@@ -1,4 +1,4 @@
-<?xml-model href="https://docs.longlink.dev/xsd/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Settings" icon="settings" xmlns:bind="https://longlink.dev/xml/bind">
   <State id="connectCompute" server="" username="" password="" email="">
     <Menu>

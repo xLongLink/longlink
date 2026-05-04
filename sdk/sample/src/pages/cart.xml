@@ -1,4 +1,4 @@
-<?xml-model href="https://docs.longlink.dev/xsd/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Cart" icon="shopping-cart">
   <Hero title="Cart" subtitle="Sample cart page loaded from XML." icon="shopping-cart" />
   <Table

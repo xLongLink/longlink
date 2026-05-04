@@ -1,9 +1,9 @@
 from alembic import context
 from sqlmodel import SQLModel
 from longlink.database.base import create_engine
-from longlink.utils.settings import Settings
+from longlink.utils.settings import Environments
 
-settings = Settings()
+settings = Environments()
 engine = create_engine(settings)
 target_metadata = SQLModel.metadata
 

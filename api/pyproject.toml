@@ -68,3 +68,6 @@ markers = [
     "unit: marks unit tests",
 ]
 asyncio_mode = "auto"
+env = [
+    "ENV=testing",
+]
