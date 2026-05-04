@@ -1,9 +1,9 @@
 from uuid import uuid4
 from fastapi import Depends
 from longlink import Router, fs, get_session
-from sample.src.types import UserModel
-from sample.src.tables.projects import Project, LinkedContact, ProjectStatus
-from sample.src.services.projects import create_project
+from ..types import UserModel
+from ..tables.projects import Project, LinkedContact, ProjectStatus
+from ..services.projects import create_project
 
 router = Router()
 

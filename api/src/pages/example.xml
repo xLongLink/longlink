@@ -1,3 +1,4 @@
+<?xml-model href="https://docs.longlink.dev/xsd/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Example" icon="layout-grid" xmlns:bind="https://longlink.dev/xml/bind">
   <Query id="example" path="/example">
     <Hero title="XML component showcase" subtitle="A guided example page for the built-in XML runtime." icon="layout-grid">

@@ -166,6 +166,7 @@ script.bat
 /docs/out/
 /docs/dist/
 /docs/cache/
+/docs/src/public/xsd/
 /docs/.vitepress/cache/
 /docs/.vitepress/dist/
 /docs/*.tgz

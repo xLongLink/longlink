@@ -1,3 +1,4 @@
+<?xml-model href="https://docs.longlink.dev/xsd/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Applications" icon="blocks" xmlns:bind="https://longlink.dev/xml/bind">
   <State id="createApp" appKey="" image="">
     <Hero
