@@ -10,10 +10,10 @@ import type { ExecutionContext } from '@/xml/types';
 describe('Switch', () => {
     /* The compiler should preserve switch tags and metadata. */
     it('compiles switch xml into a switch ast node', () => {
-        expect(xmlToAST('<Switch label="Enabled" active="true" />')).toEqual([
+        expect(xmlToAST('<Switch label="Enabled" checked="true" />')).toEqual([
             {
                 name: 'Switch',
-                params: { label: 'Enabled', active: 'true' },
+                params: { label: 'Enabled', checked: 'true' },
             },
         ]);
     });
@@ -21,7 +21,7 @@ describe('Switch', () => {
     /* The runtime should render switch XML into the expected markup. */
     it('renders raw xml switch content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-        const ast = xmlToAST('<Switch label="Enabled" description="Feature toggle" active="true" />');
+        const ast = xmlToAST('<Switch label="Enabled" description="Feature toggle" checked="true" />');
         const renderedTree = renderNode(ast, registry, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Feature toggle');

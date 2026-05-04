@@ -3,12 +3,12 @@
   <State id="connectCompute" server="" username="" password="" email="">
     <Menu>
       <MenuSection title="General" icon="settings">
-        <MenuSubSection title="" root="true">
+        <MenuSubSection root="true">
           <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." submit="Save" />
         </MenuSubSection>
       </MenuSection>
       <MenuSection title="Compute" icon="cpu">
-        <MenuSubSection title="" root="true">
+        <MenuSubSection root="true">
           <Hero title="Compute" subtitle="Connect LongLink to your compute cluster." icon="cpu">
             <Dialog>
               <DialogTrigger>Connect</DialogTrigger>

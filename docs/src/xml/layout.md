@@ -7,12 +7,12 @@ The sections below describe the main layout primitives.
 
 ## Menu
 
-Use `<Menu>` to organize page content into navigable sections. Use `<MenuSection>` for top-level navigation entries, use `<MenuSubSection>` for the content inside a section, and set `root="true"` when a subsection should render as the section root.
+Use `<Menu>` to organize page content into navigable sections. Use `<MenuSection>` for top-level navigation entries, use `<MenuSubSection>` for the content inside a section, and set `root="true"` when a subsection should render as the section root. Root subsections can omit their title when the section label already provides the navigation entry.
 
 ```xml
 <Menu>
   <MenuSection title="Overview" icon="layout-dashboard">
-    <MenuSubSection title="" root="true">
+    <MenuSubSection root="true">
       <Card>
         <CardContent>
           <p>Overview content</p>
