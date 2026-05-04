@@ -28,4 +28,4 @@ app.include_page("/pages")
 </Page>
 ```
 
-> Note: `xmlns:bind="https://longlink.dev/xml/bind"` keeps XML editors happy.
+> Note: `xmlns:bind="https://longlink.dev/xml/bind"` is required for bound attributes such as `bind:value`.

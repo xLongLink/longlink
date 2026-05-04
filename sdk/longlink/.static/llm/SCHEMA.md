@@ -6,6 +6,7 @@ This document describes the packaged XML schema used by the LongLink SDK and run
 
 - Root documents use `<Page>`.
 - `bind:` is the only supported namespace prefix and is reserved for schema-backed bindings.
+- Declare it as `xmlns:bind="https://longlink.dev/xml/bind"` on the root `<Page>` element when using bound attributes.
 - Keep element names, attribute names, and nesting exactly as defined by the packaged XSD.
 - Treat `sdk/longlink/.static/xsd/schema.xsd` as the source of truth.
 
@@ -85,11 +86,13 @@ The combined schema is assembled in `sdk/longlink/.static/xsd/schema.xsd` from:
 - `For` handles repetition over collections.
 - Components provide reusable UI structure and controls.
 - HTML tags provide plain rich text structure.
+- Action-capable components may use `action`, `path`, or `url` for the target, `method` for the HTTP verb, `payload` or `body` for data, `invalidate` to refresh query keys, and `onSuccess` for follow-up behavior.
+- `Input` and `Select` also support `submit` for inline submission flows.
 
 ## Example
 
 ```xml
-<Page name="dashboard" icon="layout-dashboard">
+<Page name="dashboard" icon="layout-dashboard" xmlns:bind="https://longlink.dev/xml/bind">
   <State id="filters">
     <Query id="orders" path="/orders" />
   </State>

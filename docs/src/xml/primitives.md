@@ -52,6 +52,8 @@ Use `action`, `path`, or `url` to name the target. Use `method` to choose the HT
 
 These props are available on action-capable components such as `<Button>`, `<Checkbox>`, `<Input>`, `<Range>`, `<Select>`, `<Slider>`, `<Switch>`, and `<Textarea>`.
 
+`<Input>` and `<Select>` also support `submit` for inline write-back flows.
+
 ## If
 
 Use `if` for conditional rendering on any element.
