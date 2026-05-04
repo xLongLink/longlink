@@ -39,10 +39,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from './layout/Dialog';
-import Hero from './layout/Hero';
-import Page from './layout/Page';
 import Stack from './layout/Stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './layout/Tabs';
+import Hero from './primitives/Hero';
+import Page from './primitives/Page';
 
 /**
  * Creates a minimal ExecutionContext with empty state, queries, and scope.

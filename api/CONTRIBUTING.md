@@ -12,11 +12,11 @@ api/
 │   ├── constants.py  # Shared constants
 │   ├── env.py        # Environment config
 │   ├── db/           # Database session, models, services
+│   ├── models/       # Domain models
 │   ├── pages/        # XML page definitions
 │   ├── routes/       # API routes
 │   ├── templates/    # Kubernetes and infra templates
-│   └── .static/
-│       └── web/      # Packaged frontend assets
+│   └── utils/        # Shared helpers
 ├── main.py           # FastAPI entry
 └── tests/            # Tests
 ```

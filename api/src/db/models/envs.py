@@ -10,7 +10,7 @@ class Env(Base, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
 
-    # Propriety
+    # Property
     key: str = Field(max_length=128)
     value: str
     appname: str = Field(foreign_key='apps.name')

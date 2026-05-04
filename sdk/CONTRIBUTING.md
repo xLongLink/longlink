@@ -7,23 +7,23 @@ SDK defines how applications are built on LongLink.
 ```bash
 sdk/
 ├── longlink/           # Core SDK package
-│   ├── .static/
-│   │   └── web/       # Static file serving
-│   ├── cli/            # CLI commands (init, build, migrate)
-│   ├── context.py      # Application context
-│   ├── database/       # DB connection, session, models
-│   ├── routes/         # API routes
-│   │   └── pages.py    # XML page route handler
-│   ├── storage/        # S3-compatible storage abstraction
-│   ├── types/          # Shared types
-│   ├── utils/          # Utilities
+│   ├── __init__.py
+│   ├── __main__.py     # Module entry point
 │   ├── app.py          # FastAPI app factory
-│   ├── constants.py    # FastAPI app factory
-│   └── context.py      # Request-scoped application context
-│
+│   ├── constants.py    # Shared constants
+│   ├── cli/            # CLI commands
+│   ├── database/       # DB helpers and migrations
+│   ├── routes/         # API routes
+│   ├── storage/        # Storage abstraction
+│   ├── types/          # Shared types
+│   ├── utils/          # Helpers and settings
+│   └── .static/        # Packaged assets and XML schema files
+│       ├── web/        # Built frontend assets
+│       └── xsd/        # XML schema definitions
 └── tests/              # Unit tests
     ├── cli/            # CLI tests
-    └── utils/          # Utils tests
+    ├── utils/          # Utility tests
+    └── xml/            # XML runtime and component tests
 ```
 
 ## Keep changes aligned

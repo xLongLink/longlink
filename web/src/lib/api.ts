@@ -7,7 +7,7 @@ const sdkDevApiBaseUrl = '/sdk-api';
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
 
 /**
- * Detects SDK runtime context in development and SDK build modes.
+ * Detects SDK runtime context.
  */
 const isSdkRuntime = () => {
     if (import.meta.env.MODE === 'sdk') {

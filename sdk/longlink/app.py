@@ -50,7 +50,7 @@ class LongLink(FastAPI):
 
         environments = env if isinstance(env, Environments) else Environments()
         settings = Settings(environments)
-        self.state.pages = []
+        self.state.page_roots = []
 
         # Register API routes from the router module
         for router in routes:
@@ -105,7 +105,8 @@ class LongLink(FastAPI):
         )
 
     def include_page(self, page: str | Path) -> None:
-        """Register XML page file for discovery endpoint."""
+        """Register a page folder so nested XML pages are discovered by path."""
+
         page_path = Path(page)
         candidate_paths: list[Path] = []
 
@@ -126,4 +127,5 @@ class LongLink(FastAPI):
                 page_path = candidate
                 break
 
-        self.state.pages.append(Page(page_path))
+        page_root = page_path.parent if page_path.is_file() else page_path
+        self.state.page_roots.append(page_root.resolve())
