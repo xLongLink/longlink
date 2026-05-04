@@ -43,12 +43,11 @@ Use `action`, `path`, or `url` to name the target. Use `method` to choose the HT
 
 ```xml
 <Button
-  text="Save"
   action="/issues"
   method="POST"
   payload='{"title":"{issue.title}"}'
   invalidate="issues"
-/>
+>Save</Button>
 ```
 
 These props are available on action-capable components such as `<Button>`, `<Checkbox>`, `<Input>`, `<Range>`, `<Select>`, `<Slider>`, `<Switch>`, and `<Textarea>`.

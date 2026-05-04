@@ -23,9 +23,9 @@ app.include_page("/pages")
 
 ```xml
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
-<Page name="Tab Name" icon="settings" xmlns:bind="*">
+<Page name="Tab Name" icon="settings" xmlns:bind="https://longlink.dev/xml/bind">
     <!-- Content -->
 </Page>
 ```
 
-> Note: `xmlns:bind="*"` exists only to keep XML editors happy.
+> Note: `xmlns:bind="https://longlink.dev/xml/bind"` keeps XML editors happy.

@@ -16,7 +16,7 @@ Use `<Hero>` for the top section of a page. Place it near the top, use `title` a
     subtitle="Track and manage open work."
     icon="bug"
   >
-    <Button text="Create issue" url="/issues/new" />
+    <Button url="/issues/new">Create issue</Button>
   </Hero>
 </Page>
 ```
@@ -26,7 +26,7 @@ Use `<Hero>` for the top section of a page. Place it near the top, use `title` a
 Use `<Button>` for actions and navigation targets.
 
 ```xml
-<Button text="Create issue" url="/issues/new" variant="default" />
+<Button url="/issues/new" variant="default">Create issue</Button>
 ```
 
 ## Checkbox

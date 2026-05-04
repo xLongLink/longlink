@@ -43,7 +43,7 @@ Use cards to group related content into clear sections. Use `<CardHeader>` for m
     <CardTitle>Deployment status</CardTitle>
     <CardDescription>Current state of the application.</CardDescription>
     <CardAction>
-      <Button text="Refresh" url="/deployments" variant="outline" />
+      <Button url="/deployments" variant="outline">Refresh</Button>
     </CardAction>
   </CardHeader>
   <CardContent>
@@ -101,7 +101,7 @@ Use `<Grid>` for generic CSS grid containers.
 
 ## Dialog
 
-Use `<Dialog>` to present modal content without leaving the page . Place the trigger outside the modal body, keep the header focused on the title and description, and use the footer for final actions.
+Use `<Dialog>` to present modal content without leaving the page. Place the trigger outside the modal body, keep the header focused on the title and description, and use the footer for final actions.
 
 ```xml
 <Dialog id="issue-dialog">
