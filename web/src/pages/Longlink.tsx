@@ -8,7 +8,7 @@ type AppMetadata = {
     pages?: Array<AppNavigationPage & { content?: string }>;
 };
 
-type LonglinkProps = {
+type LongLinkProps = {
     appId?: string;
 };
 
@@ -17,7 +17,7 @@ type LonglinkProps = {
  */
 const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '');
 
-export default function Longlink({ appId: appIdOverride }: LonglinkProps) {
+export default function LongLink({ appId: appIdOverride }: LongLinkProps) {
     const { appId: routeAppId, '*': wildcardPath } = useParams();
     const appId = appIdOverride ?? routeAppId;
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');

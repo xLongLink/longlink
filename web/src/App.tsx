@@ -3,12 +3,12 @@ import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
 import { useIsFetching, useIsMutating } from '@tanstack/react-query';
 import { Toaster } from '@/ui/sonner';
 import Layout from './Layout';
-import Longlink from './pages/Longlink';
+import LongLink from './pages/Longlink';
 import OrganizationPage from './pages/OrganizationPage';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import SdkLayout from './sdk/Layout';
-import SdkLonglink from './sdk/Longlink';
+import SdkLongLink from './sdk/Longlink';
 import { RequireAuth } from '@/components/Auth';
 
 const buildMode = import.meta.env.MODE;
@@ -43,7 +43,7 @@ const sdkRoutes = [
     {
         path: '/',
         element: <SdkLayout />,
-        children: [{ path: '*', element: <SdkLonglink /> }],
+        children: [{ path: '*', element: <SdkLongLink /> }],
     },
 ];
 
@@ -58,7 +58,7 @@ const apiRoutes = [
             { path: 'example', element: <OrganizationPage page="example" /> },
             {
                 path: 'applications/:appId/*',
-                element: <Longlink />,
+                element: <LongLink />,
             },
         ],
     },
