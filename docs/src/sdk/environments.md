@@ -23,6 +23,6 @@ env = Env()
 app = LongLink(env=env)
 ```
 
-## References
+## Resouces
 
 - [Pydantic Settings](https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/)

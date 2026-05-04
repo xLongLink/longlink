@@ -12,7 +12,7 @@ with fs.open("reports/example.txt", "wb") as f:
     f.write(b"hello")
 ```
 
-## references
+## Resouces
 
 - [fsspec Documentation](https://filesystem-spec.readthedocs.io/en/latest/)
 - [fsspec GitHub](https://github.com/fsspec/filesystem_spec)

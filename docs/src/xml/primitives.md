@@ -5,16 +5,6 @@ They let you manage local state, load data, and control rendering flow.
 You can combine them to build dynamic pages without writing frontend code.
 The sections below describe each primitive and how it is used.
 
-## Page
-
-`Page` is the root element of every UI definition. It wraps the full document and sets page metadata such as the name and icon.
-
-```xml
-<Page name="Settings" icon="settings">
-  <!-- Content -->
-</Page>
-```
-
 ## State
 
 `State` defines local reactive values for an XML page. Bind component props to state paths with `bind:*`.

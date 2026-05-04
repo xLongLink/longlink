@@ -5,7 +5,7 @@ You use `db.Table` to define tables and `await db.get_session()` to open a sessi
 
 The SDK keeps the database API small and explicit.
 
-## Basic usage
+## Usage
 
 ```python
 from longlink import db
@@ -26,13 +26,21 @@ async def create_project() -> None:
 
 After you add or change models, run migrations to keep the database schema aligned:
 
-```bash
+::: code-group
+
+```bash [pip]
 longlink migrate
 ```
 
+```bash [uv]
+uv run longlink migrate
+```
+
+:::
+
 This keeps schema changes synchronized with application code.
 
-## References
+## Resouces
 
 - [SQLModel GitHub](https://github.com/fastapi/sqlmodel)
 - [SQLModel Documentation](https://sqlmodel.tiangolo.com/)

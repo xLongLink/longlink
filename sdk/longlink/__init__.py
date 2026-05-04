@@ -1,6 +1,6 @@
-from fastapi import APIRouter as Router
 from longlink.app import LongLink
 from longlink.utils import *
+from longlink.router import Router
 from longlink.storage import create_fs
 from longlink.database import create_db
 

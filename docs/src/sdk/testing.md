@@ -54,7 +54,7 @@ def test_healthcheck():
     assert response.json() == {"status": "ok"}
 ```
 
-## Additional Resources
+## Resouces
 
 - [FastAPI TestClient](https://fastapi.tiangolo.com/tutorial/testing/)
 - [pytest Documentation](https://docs.pytest.org/)

@@ -1,9 +1,10 @@
+from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Environments(BaseSettings):
     """SDK environment model loaded from process variables or `.env`."""
-    ENV: str = "development"
+    ENV: Literal["development", "testing", "production"] = "development"
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./dev.db"
 

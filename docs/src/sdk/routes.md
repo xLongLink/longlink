@@ -3,7 +3,7 @@
 LongLink SDK wraps FastAPI.
 You define endpoint handlers on the wrapped FastAPI app.
 
-## Basic endpoint example
+## Usage
 
 ```python
 from longlink import App, Router, Context
@@ -26,7 +26,7 @@ app = App()
 app.register(router)
 ```
 
-## references
+## Resouces
 
 - [FastAPI tutorial](https://fastapi.tiangolo.com/tutorial/)
 - [Path operation decorators](https://fastapi.tiangolo.com/tutorial/path-operation-configuration/)

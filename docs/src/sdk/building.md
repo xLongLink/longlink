@@ -5,6 +5,14 @@
 - Once containerized, applications can be pushed to any registry.
 - Applications can be connected to the control plane and deployed.
 
-```bash
+::: code-group
+
+```bash [pip]
 longlink build
 ```
+
+```bash [uv]
+uv run longlink build
+```
+
+:::

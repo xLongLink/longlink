@@ -8,18 +8,24 @@ To avoid maintaining a separate frontend codebase, pages are defined using an XM
 
 The resulting interface is consistent with the LongLink control plane and acts as an adapter over it, ensuring a uniform interaction model across applications. This keeps business logic centralized, reduces duplication, and improves maintainability over time.
 
-## Page
+## Pages
+
+Each tab in the user interface,
+
+```python
+from longlink import LongLink
+
+app = LongLink(env=env)
+app.include_page("/pages")
+```
 
 `Page` is the root element of every UI definition. It wraps the full document and sets page metadata such as the name and icon.
 
-The schema declares the `bind` prefix, but XML pages that use `bind:*` attributes still need `xmlns:bind="https://longlink.dev/xml/bind"` on the root element.
+```xml
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
+<Page name="Tab Name" icon="settings" xmlns:bind="*">
+    <!-- Content -->
+</Page>
+```
 
-## Reference
-
-The XML schema is split across primitives, layout, components, and HTML text elements.
-Use the dedicated reference pages for the full element list.
-
-- [Primitives](./primitives)
-- [Layout](./layout)
-- [Components](./components)
-- [HTML](./html)
+> Note: `xmlns:bind="*"` doesn't do anything, is just there to make the editor happy

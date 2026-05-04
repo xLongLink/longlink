@@ -78,6 +78,6 @@ uv run longlink dev
 
 :::
 
-## Additional Resources
+## Resouces
 
 - [Official FastAPI Backend Template](https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend)
