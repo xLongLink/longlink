@@ -6,11 +6,10 @@
 
 ```
 longlink/
-├── api/           # Control plane
-├── dev/           # Development tools
-├── docs/          # Platform and SDK documentation
+├── api/           # Control plane API and XML page sources
+├── docs/          # Platform, API, SDK, and XML documentation
 ├── sdk/           # Python SDK for application development
-└── web/           # Frontend runtime and control-plane UI integration
+└── web/           # Frontend runtime and shared XML renderer
 ```
 
 <br />
@@ -20,7 +19,7 @@ longlink/
 ```bash
 make install    # Install all the dependencies
 make format     # Format the code
-make build      # Build the web UI into .static/web for the sdk and api
+make build      # Build the web UI into the packaged .static/web assets
 ```
 
 ### Control plane
@@ -31,6 +30,12 @@ make web    # Run the web app proxied to the api app
 make api    # Run the control plane
 make down   # Stop services and remove the cluster
 ```
+
+The control plane owns authentication, authorization, orchestration, storage, and application routing.
+
+The web package owns the shared frontend runtime and the XML rendering path used by both the control plane and SDK bundles.
+
+The SDK owns application-facing Python helpers, CLI commands, database helpers, and packaged XML schema assets.
 
 ### Documentation
 

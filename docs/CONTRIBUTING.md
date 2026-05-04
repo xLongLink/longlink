@@ -3,10 +3,27 @@
 ```text
 docs/
 ├── src/
-│   ├── api/           # Control plane API documentation
-│   ├── sdk/           # Application SDK documentation
+│   ├── api/           # Control plane documentation
+│   │   ├── index.md
+│   │   └── self-hosted.md
+│   ├── sdk/           # SDK documentation
+│   │   ├── index.md
+│   │   ├── building.md
+│   │   ├── database.md
+│   │   ├── environments.md
+│   │   ├── routes.md
+│   │   ├── storage.md
+│   │   └── testing.md
 │   ├── xml/           # XML page documentation
+│   │   ├── index.md
+│   │   ├── components.md
+│   │   ├── html.md
+│   │   ├── layout.md
+│   │   └── primitives.md
 │   ├── public/        # Public assets
+│   │   ├── favicon.ico
+│   │   ├── image.png
+│   │   └── schema.xsd
 │   └── index.md       # Documentation entry
 └── .vitepress/        # VitePress configuration
 ```

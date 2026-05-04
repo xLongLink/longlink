@@ -4,7 +4,7 @@ SDK defines how applications are built on LongLink.
 
 ## Architecture
 
-```bash
+```text
 sdk/
 ├── longlink/           # Core SDK package
 │   ├── __init__.py
@@ -37,8 +37,10 @@ sdk/
 - Remove obsolete code when replacing behavior.
 - Do not add tests right now (current project phase).
 
-##
+## Formatting
 
-```
+Before PR:
+
+```bash
 uv sync --extra dev
 ```

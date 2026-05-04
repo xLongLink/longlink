@@ -7,9 +7,14 @@ Thanks for contributing to the web layer.
 ```text
 web/
 ├── src/
-│   ├── app entry        # `main.tsx`, `App.tsx`, `Layout.tsx`
+│   ├── App.tsx
+│   ├── Layout.tsx
+│   ├── main.tsx
 │   ├── components/      # Shared app components
+│   ├── hooks/           # Shared React hooks
 │   ├── lib/             # Shared utilities, API, navigation, query helpers
+│   ├── pages/           # Route-level pages
+│   ├── sdk/             # SDK-specific app shell and page wiring
 │   ├── ui/              # shadcn/ui and shared primitives
 │   └── xml/             # XML compiler, runtime, layouts, primitives, components
 ├── index.html
@@ -29,6 +34,7 @@ It owns the shared UI, XML runtime, and control-plane rendering path.
 - `bun run build:api` builds the control-plane web bundle.
 - `bun run build:sdk` still builds the SDK-targeted bundle.
 - `bun run build` remains the default production build.
+- `src/sdk/` contains the SDK-specific entrypoints that compose the shared runtime differently from the control-plane path.
 
 ## XML
 
