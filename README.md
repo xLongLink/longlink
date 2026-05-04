@@ -1,6 +1,8 @@
 <div align="center">
 
-# LongLink
+<span style="font-size: 32px;">LongLink</span>
+
+An unified platform for business workflows, data, and validation
 
 [Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://docs.longlink.dev) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 
