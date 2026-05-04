@@ -32,7 +32,6 @@ dependencies = [
     'kubernetes',
     'jinja2',
     'lxml',
-    "longlink",
 ]
 
 [project.optional-dependencies]
@@ -44,9 +43,6 @@ dev = [
     'isort==8.0.1',
     'testcontainers==4.13.2',
 ]
-
-[tool.uv.sources]
-longlink = { path = "../sdk" }
 
 [tool.setuptools_scm]
 version_scheme = 'no-guess-dev'

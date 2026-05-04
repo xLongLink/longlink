@@ -4,7 +4,8 @@ import xmltodict
 from lxml import etree
 from typing import Any
 from pathlib import Path
-from importlib import resources
+
+from longlink.constants import ROOT
 
 
 class Element:
@@ -14,7 +15,7 @@ class Element:
         """Store file paths and defer parsing until needed."""
 
         self.path = Path(path)
-        self.schema_path = Path(schema) if schema is not None else None
+        self.schema_path = Path(schema) if schema is not None else ROOT / ".static" / "xsd" / "schema.xsd"
         self._content: str | None = None
 
     @classmethod
@@ -52,10 +53,7 @@ class Element:
         if self.schema_path is None:
             raise ValueError("No XSD schema path configured")
 
-        if self.schema_path.exists():
-            return self.schema_path
-
-        return resources.files("longlink").joinpath(self.schema_path.as_posix())
+        return self.schema_path
 
     def _load_schema_bytes(self) -> bytes:
         """Load schema bytes from the configured path or package resources."""

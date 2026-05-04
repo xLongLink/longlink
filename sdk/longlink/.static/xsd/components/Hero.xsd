@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../base.xsd" />
-  <xsd:complexType name="HeroType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="HeroType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="title" type="xsd:string" use="required" />
+    <xsd:attribute name="subtitle" type="xsd:string" use="optional" />
+    <xsd:attribute name="icon" type="xsd:string" use="optional" />
+  </xsd:complexType>
   <xsd:element name="Hero" type="HeroType" />
 </xsd:schema>

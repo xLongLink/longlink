@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from src.models import PageInfo
 from src.constants import PAGES
+from src.utils.page import Page
 from fastapi.responses import Response
-from longlink.utils.page import Page
 
 router = APIRouter()
 

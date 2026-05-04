@@ -7,7 +7,7 @@ The sections below describe each component and how it is used.
 
 ## Hero
 
-Use `<Hero>` for the top section of a page. Place it near the top, use `title` and `subtitle` to describe the page clearly, and put actions such as `<Button>` inside the hero body.
+Use `<Hero>` for the top section of a page. Place it near the top, use `title` and `subtitle` to describe the page clearly, and place right-side actions as children.
 
 ```xml
 <Page name="Issues" icon="bug">

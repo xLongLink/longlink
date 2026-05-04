@@ -101,7 +101,7 @@ Use `<Grid>` for generic CSS grid containers. Use `gap`, `columns`, `align`, and
 
 ## Dialog
 
-Use `<Dialog>` to present modal content without leaving the page. Place the trigger outside the modal body, keep the header focused on the title and description, and use the footer for final actions.
+Use `<Dialog>` to present modal content without leaving the page . Place the trigger outside the modal body, keep the header focused on the title and description, and use the footer for final actions.
 
 ```xml
 <Dialog id="issue-dialog">

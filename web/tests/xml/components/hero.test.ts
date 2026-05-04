@@ -35,13 +35,14 @@ describe('Hero', () => {
         );
     });
 
-    it('renders an action button when action is provided', () => {
+    it('renders right-side children content', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-        const ast = xmlToAST('<Hero title="Overview" action="Create" />');
+        const ast = xmlToAST('<Hero title="Overview"><Button variant="outline">Create</Button></Hero>');
         const renderedTree = renderNode(ast, registry, ctx);
         const markup = renderToStaticMarkup(createElement(Fragment, null, renderedTree));
 
         expect(markup).toContain('<h2 class="text-lg font-semibold text-white">Overview</h2>');
         expect(markup).toContain('Create');
+        expect(markup).toContain('shrink-0');
     });
 });

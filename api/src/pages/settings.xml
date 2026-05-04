@@ -8,30 +8,33 @@
       </MenuSection>
       <MenuSection title="Compute" icon="cpu">
         <MenuSubSection title="" root="true">
-          <Hero title="Compute" subtitle="Connect LongLink to your compute cluster." icon="cpu" action="Connect">
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Connect compute</DialogTitle>
-                <DialogDescription>
-                  Register the compute cluster connection used by LongLink.
-                </DialogDescription>
-              </DialogHeader>
-              <Stack gap="12">
-                <Input kind="text" label="Server" bind="connectCompute.server" value="{connectCompute.server}" placeholder="https://registry.example.com" />
-                <Input kind="text" label="Username" bind="connectCompute.username" value="{connectCompute.username}" placeholder="registry-user" />
-                <Input kind="password" label="Password" bind="connectCompute.password" value="{connectCompute.password}" placeholder="••••••••" />
-                <Input kind="text" label="Email" bind="connectCompute.email" value="{connectCompute.email}" placeholder="user@example.com" />
-                <Button variant="default" action="/compute/registry" method="POST" payload='{
-                  "name": "compute",
-                  "server": "{connectCompute.server}",
-                  "username": "{connectCompute.username}",
-                  "password": "{connectCompute.password}",
-                  "email": "{connectCompute.email}"
-                }'>
-                  Connect
-                </Button>
-              </Stack>
-            </DialogContent>
+          <Hero title="Compute" subtitle="Connect LongLink to your compute cluster." icon="cpu">
+            <Dialog>
+              <DialogTrigger>Connect</DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Connect compute</DialogTitle>
+                  <DialogDescription>
+                    Register the compute cluster connection used by LongLink.
+                  </DialogDescription>
+                </DialogHeader>
+                <Stack gap="12">
+                  <Input kind="text" label="Server" bind="connectCompute.server" value="{connectCompute.server}" placeholder="https://registry.example.com" />
+                  <Input kind="text" label="Username" bind="connectCompute.username" value="{connectCompute.username}" placeholder="registry-user" />
+                  <Input kind="password" label="Password" bind="connectCompute.password" value="{connectCompute.password}" placeholder="••••••••" />
+                  <Input kind="text" label="Email" bind="connectCompute.email" value="{connectCompute.email}" placeholder="user@example.com" />
+                  <Button variant="default" action="/compute/registry" method="POST" payload='{
+                    "name": "compute",
+                    "server": "{connectCompute.server}",
+                    "username": "{connectCompute.username}",
+                    "password": "{connectCompute.password}",
+                    "email": "{connectCompute.email}"
+                  }'>
+                    Connect
+                  </Button>
+                </Stack>
+              </DialogContent>
+            </Dialog>
           </Hero>
         </MenuSubSection>
       </MenuSection>

@@ -1,17 +1,14 @@
 import type { ReactNode } from 'react';
 import { Icon } from '@/xml/components/Icon';
-import { Button } from '@/ui/button';
-import { Dialog, DialogTrigger } from '@/ui/dialog';
 
 type HeroProps = {
     icon?: string | null;
     title: string;
     subtitle?: string | null;
-    action?: string | null;
     children?: ReactNode;
 };
 
-export function Hero({ title, subtitle, icon, action, children }: HeroProps) {
+export function Hero({ title, subtitle, icon, children }: HeroProps) {
     return (
         <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -27,20 +24,7 @@ export function Hero({ title, subtitle, icon, action, children }: HeroProps) {
                 </div>
             </div>
 
-            {action ? (
-                children ? (
-                    <Dialog>
-                        <DialogTrigger render={<Button variant="outline" className="cursor-pointer" />}>
-                            {action}
-                        </DialogTrigger>
-                        {children}
-                    </Dialog>
-                ) : (
-                    <Button variant="outline">{action}</Button>
-                )
-            ) : children ? (
-                <div className="shrink-0">{children}</div>
-            ) : null}
+            {children ? <div className="shrink-0">{children}</div> : null}
         </div>
     );
 }

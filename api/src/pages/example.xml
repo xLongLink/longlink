@@ -1,16 +1,19 @@
 <Page name="Example" icon="layout-grid">
   <Query id="example" path="/example">
-    <Hero title="XML component showcase" subtitle="A guided example page for the built-in XML runtime." icon="layout-grid" action="Open dialog">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>XML showcase dialog</DialogTitle>
-          <DialogDescription>Quick reference for the page layout and available sections.</DialogDescription>
-        </DialogHeader>
-        <Stack gap="12">
-          <p>The example page highlights the hero, menu, HTML, table, and layout sections.</p>
-          <Button variant="default">Close</Button>
-        </Stack>
-      </DialogContent>
+    <Hero title="XML component showcase" subtitle="A guided example page for the built-in XML runtime." icon="layout-grid">
+      <Dialog>
+        <DialogTrigger>Open dialog</DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>XML showcase dialog</DialogTitle>
+            <DialogDescription>Quick reference for the page layout and available sections.</DialogDescription>
+          </DialogHeader>
+          <Stack gap="12">
+            <p>The example page highlights the hero, menu, HTML, table, and layout sections.</p>
+            <Button variant="default">Close</Button>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </Hero>
 
     <Menu>
