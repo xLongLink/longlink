@@ -42,6 +42,18 @@ function normalizeValue(value: SliderValue | string | undefined, min: number, ma
     }
 
     if (typeof value === 'string' && value.trim() !== '') {
+        if (value.trim().startsWith('[')) {
+            try {
+                const parsed = JSON.parse(value);
+
+                if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === 'number')) {
+                    return parsed;
+                }
+            } catch {
+                /* Fall through to numeric parsing when JSON decoding fails. */
+            }
+        }
+
         const parsed = Number(value);
 
         if (Number.isFinite(parsed)) {

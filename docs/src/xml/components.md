@@ -89,7 +89,7 @@ Use `<Range>` for two-handle numeric selection.
 
 ## Switch
 
-Use `<Switch>` for a compact boolean toggle. Use `checked` for the current value.
+Use `<Switch>` for a compact boolean toggle. Use `checked` for the current value, or `active` when you are matching older XML pages.
 
 ```xml
 <Switch label="Enable notifications" checked="true" />

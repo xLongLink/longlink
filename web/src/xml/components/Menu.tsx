@@ -25,7 +25,7 @@ type MenuSectionProps = {
 };
 
 type MenuSubSectionProps = {
-    title: string;
+    title?: string;
     root?: boolean;
     children?: React.ReactNode;
 };

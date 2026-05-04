@@ -8,13 +8,32 @@ type SelectOption = {
     value: string;
 };
 
+/** Normalizes XML option values from arrays or JSON strings. */
+function normalizeOptions(options: SelectProps['options']): SelectOption[] {
+    if (Array.isArray(options)) {
+        return options;
+    }
+
+    if (typeof options === 'string' && options.trim()) {
+        try {
+            const parsed = JSON.parse(options);
+
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return [];
+        }
+    }
+
+    return [];
+}
+
 type SelectProps = {
     name?: string;
     label?: string;
     value?: string;
     placeholder?: string;
     description?: string;
-    options?: SelectOption[];
+    options?: SelectOption[] | string;
     required?: boolean;
     disabled?: boolean;
     submit?: string;
@@ -22,13 +41,15 @@ type SelectProps = {
 
 /** Renders a select dropdown with options and optional submit button. */
 export function Select({ name, label, value, placeholder, description, options, disabled, submit }: SelectProps) {
+    const normalizedOptions = normalizeOptions(options);
+
     const renderControl = () => (
         <UISelect name={name} disabled={disabled} defaultValue={String(value ?? '')}>
             <SelectTrigger className="w-full">
                 <SelectValue placeholder={placeholder ?? 'Select an option'} />
             </SelectTrigger>
             <SelectContent>
-                {(options ?? []).map((option) => (
+                {normalizedOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                         {option.label}
                     </SelectItem>

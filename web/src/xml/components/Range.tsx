@@ -10,12 +10,26 @@ type RangeProps = ComponentProps<typeof Slider> & {
     min?: number;
     max?: number;
     step?: number;
-    value?: number[];
+    value?: number[] | string;
 };
 
 /** Renders a range slider with two handles for min/max selection. */
 export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max], ...props }: RangeProps) {
-    const normalizedValue = value.length === 2 ? value : [value[0] ?? min, value[1] ?? max];
+    const normalizedValue = (() => {
+        if (typeof value === 'string' && value.trim()) {
+            try {
+                const parsed = JSON.parse(value);
+
+                if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === 'number')) {
+                    return parsed.length === 2 ? parsed : [parsed[0] ?? min, parsed[1] ?? max];
+                }
+            } catch {
+                /* Fall back to the default tuple shape when the XML string is not JSON. */
+            }
+        }
+
+        return value.length === 2 ? value : [value[0] ?? min, value[1] ?? max];
+    })();
 
     return (
         <div className="space-y-2">

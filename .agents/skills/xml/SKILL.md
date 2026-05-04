@@ -15,6 +15,7 @@ longlink/
 │   │   │   ├── layout/          # Layout contracts
 │   │   │   ├── html/            # HTML bridge contracts
 │   │   │   └── tables/          # Table-related contracts
+│   │   │   └── llm/SCHEMA.md    # Human-readable schema guide
 │   │   ├── routes/              # XML page metadata and page routes
 │   │   │   ├── metadata.py      # Metadata route helpers
 │   │   │   └── pages.py         # Page route helpers
@@ -55,6 +56,7 @@ longlink/
 
 ## Responsibilities
 
+- Use `sdk/longlink/.static/llm/SCHEMA.md` as the primary XML schema guide.
 - Keep schema, runtime, pages, and docs aligned.
 - Verify XML tags and attributes mean the same thing across SDK, web, and docs.
 - Check that component placement matches ownership boundaries.
@@ -62,3 +64,4 @@ longlink/
 - Check that sample pages and API pages reflect the final XML shape.
 - Check that documentation describes the final behavior, not an intermediate state.
 - Remove obsolete XML flow when replacement is complete.
+- Keep SCHEMA.md up to date. Using the content of the markdown file, one shall be able to create a valid XML page without needing to reference the SDK code.

@@ -1,25 +1,24 @@
 # LongLink XML Schema
 
-This document explains how to write XML that the LongLink SDK accepts.
+This document describes the packaged XML schema used by the LongLink SDK and runtime.
 
-## How To Use
+## Usage
 
-- Root documents use the `<Page>` element.
-- Validate files with the SDK XML runtime before shipping them.
-- Keep element and attribute names exactly as defined by the schema.
-- Use the `bind:` namespace only for schema-defined bindings.
+- Root documents use `<Page>`.
+- `bind:` is the only supported namespace prefix and is reserved for schema-backed bindings.
+- Keep element names, attribute names, and nesting exactly as defined by the packaged XSD.
+- Treat `sdk/longlink/.static/xsd/schema.xsd` as the source of truth.
 
-## Schema Composition
+## Schema Source
 
-Source: `longlink/.static/xsd/schema.xsd`
-
-The schema is assembled from these files:
+The combined schema is assembled in `sdk/longlink/.static/xsd/schema.xsd` from:
 
 - `base.xsd`
 - `layout/Page.xsd`
 - `layout/State.xsd`
 - `layout/For.xsd`
 - `layout/Query.xsd`
+- `layout/Grid.xsd`
 - `html/blockquote.xsd`
 - `html/h1.xsd`
 - `html/h2.xsd`
@@ -37,7 +36,6 @@ The schema is assembled from these files:
 - `components/CardTitle.xsd`
 - `components/Column.xsd`
 - `components/Columns.xsd`
-- `layout/Grid.xsd`
 - `components/Dialog.xsd`
 - `components/DialogContent.xsd`
 - `components/DialogDescription.xsd`
@@ -73,74 +71,27 @@ The schema is assembled from these files:
 
 ## Element Families
 
-- `base`
-- `Page`
-- `State`
-- `For`
-- `Query`
-- `blockquote`
-- `h1`
-- `h2`
-- `h3`
-- `h4`
-- `li`
-- `p`
-- `ul`
-- `Card`
-- `CardAction`
-- `CardContent`
-- `CardDescription`
-- `CardFooter`
-- `CardHeader`
-- `CardTitle`
-- `Column`
-- `Columns`
-- `Grid`
-- `Dialog`
-- `DialogContent`
-- `DialogDescription`
-- `DialogFooter`
-- `DialogHeader`
-- `DialogTitle`
-- `DialogTrigger`
-- `Hero`
-- `Menu`
-- `MenuSection`
-- `MenuSubSection`
-- `Stack`
-- `Tabs`
-- `TabsContent`
-- `TabsList`
-- `TabsTrigger`
-- `Button`
-- `Checkbox`
-- `Icon`
-- `Input`
-- `Range`
-- `Select`
-- `Separator`
-- `Slider`
-- `Switch`
-- `Textarea`
-- `Table`
-- `TableBody`
-- `TableCell`
-- `TableHead`
-- `TableHeader`
-- `TableRow`
+- Layout: `Page`, `State`, `For`, `Query`, `Grid`
+- HTML: `blockquote`, `h1`, `h2`, `h3`, `h4`, `li`, `p`, `ul`
+- Components: `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `Column`, `Columns`, `Dialog`, `DialogContent`, `DialogDescription`, `DialogFooter`, `DialogHeader`, `DialogTitle`, `DialogTrigger`, `Hero`, `Menu`, `MenuSection`, `MenuSubSection`, `Stack`, `Tabs`, `TabsContent`, `TabsList`, `TabsTrigger`, `Button`, `Checkbox`, `Icon`, `Input`, `Range`, `Select`, `Separator`, `Slider`, `Switch`, `Textarea`
+- Tables: `Table`, `TableBody`, `TableCell`, `TableHead`, `TableHeader`, `TableRow`
 
-## Authoring Notes
+## Core Rules
 
-- `Page` is the top-level document container.
-- Layout elements describe structure and data flow.
-- Component elements represent reusable UI primitives.
-- HTML elements provide basic rich-text content.
-- Table elements are used for tabular data layouts.
+- `<Page>` requires `name` and accepts optional `icon` and any schema-lax attributes.
+- `<Page>` can contain any allowed child element from the packaged schema.
+- `<State>` requires `id` and can contain any nested page content.
+- `Query` is the data-loading primitive.
+- `For` handles repetition over collections.
+- Components provide reusable UI structure and controls.
+- HTML tags provide plain rich text structure.
 
 ## Example
 
 ```xml
-<Page name="dashboard">
-  <State id="filters" />
+<Page name="dashboard" icon="layout-dashboard">
+  <State id="filters">
+    <Query id="orders" path="/orders" />
+  </State>
 </Page>
 ```
