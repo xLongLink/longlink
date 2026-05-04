@@ -79,6 +79,26 @@ Use `<Columns>` and `<Column>` to create multi-column layouts. Use `gap` on `<Co
 </Columns>
 ```
 
+## Grid
+
+Use `<Grid>` for generic CSS grid containers. Use `gap`, `columns`, `align`, and `justify` to map directly to grid styles, and pass `style` for additional inline overrides.
+
+```xml
+<Grid gap="16" columns="1fr 2fr" align="center" justify="stretch">
+  <Card>
+    <CardContent>
+      <p>Main content</p>
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardContent>
+      <p>Secondary content</p>
+    </CardContent>
+  </Card>
+</Grid>
+```
+
 ## Dialog
 
 Use `<Dialog>` to present modal content without leaving the page. Place the trigger outside the modal body, keep the header focused on the title and description, and use the footer for final actions.

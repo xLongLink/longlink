@@ -22,6 +22,7 @@
   <xsd:include schemaLocation="components/CardTitle.xsd" />
   <xsd:include schemaLocation="components/Column.xsd" />
   <xsd:include schemaLocation="components/Columns.xsd" />
+  <xsd:include schemaLocation="layout/Grid.xsd" />
   <xsd:include schemaLocation="components/Dialog.xsd" />
   <xsd:include schemaLocation="components/DialogContent.xsd" />
   <xsd:include schemaLocation="components/DialogDescription.xsd" />

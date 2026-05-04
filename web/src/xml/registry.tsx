@@ -2,7 +2,6 @@ import { createElement, useState, type ComponentProps, type ComponentType } from
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { For } from './primitives/For';
-import { Grid } from './primitives/Grid';
 import { Query } from './primitives/Query';
 import { State } from './primitives/State';
 import type { ActionHandler, ActionProps, ActionComponentProps, ExecutionContext, RegistryShape } from './types';
@@ -31,6 +30,7 @@ import { P } from './html/P';
 import { Ul } from './html/Ul';
 
 import Columns, { Column } from './layout/Columns';
+import { Grid } from './layout/Grid';
 import {
     Dialog,
     DialogContent,

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { xmlToAST } from '@/xml/compiler';
-import { Grid } from '@/xml/primitives/Grid';
 import { renderNode } from '@/xml/renderers';
 import { registry } from '@/xml/registry';
+import { Grid } from '@/xml/layout/Grid';
 import type { ExecutionContext } from '@/xml/types';
 
 describe('Grid', () => {
@@ -48,6 +48,17 @@ describe('Grid', () => {
 
         expect(output).toBe(
             '<div style="display:grid;gap:4rem;grid-template-columns:1fr 2fr;align-items:center;justify-items:end">Content</div>'
+        );
+    });
+
+    /* Grid should still render through the XML registry end to end. */
+    it('renders raw xml grid content end to end', () => {
+        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ast = xmlToAST('<Grid gap="2rem" columns="1fr 2fr">Content</Grid>');
+        const renderedTree = renderNode(ast, registry, ctx);
+
+        expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toBe(
+            '<div><div style="display:grid;gap:2rem;grid-template-columns:1fr 2fr">Content</div></div>'
         );
     });
 });
