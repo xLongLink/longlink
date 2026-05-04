@@ -1,7 +1,7 @@
 <div align="center">
 
- <h2>LongLink</h2>
- 
+# LongLink
+
 An unified platform for business workflows, data, and validation
 
 [Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://docs.longlink.dev) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
@@ -11,7 +11,7 @@ An unified platform for business workflows, data, and validation
 <br />
 <br />
 
-# Introduction
+## Introduction
 
 A platform for building applications that manage workflows, data, and validation processes.
 
