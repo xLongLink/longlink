@@ -1,7 +1,7 @@
 from uuid import uuid4
 from fastapi import Depends
-from longlink import Router, fs, get_session
 from ..types import UserModel
+from longlink import Router, fs, get_session
 from ..tables.projects import Project, LinkedContact, ProjectStatus
 from ..services.projects import create_project
 
