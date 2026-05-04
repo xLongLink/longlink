@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react';
+import { BookOpen, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import {
     DropdownMenu,
@@ -54,6 +54,20 @@ export function UserProfile() {
                             <p className="text-xs text-white/60">{fullName}</p>
                         </div>
                     </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuGroup>
+                    <DropdownMenuItem className="cursor-pointer p-2 text-white/80 transition-colors hover:bg-white/10 focus:text-white">
+                        <a
+                            href="https://docs.longlink.dev"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex w-full items-center"
+                        >
+                            <BookOpen className="mr-2 h-4 w-4" />
+                            Documentation
+                        </a>
+                    </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem className="cursor-pointer p-2 text-red-300 transition-colors hover:bg-white/10 focus:text-red-200">
