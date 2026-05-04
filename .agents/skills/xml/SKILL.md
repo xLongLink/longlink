@@ -1,5 +1,5 @@
 ---
-name: xml-components
+name: xml
 description: Explain LongLink XML component structure, testing, and documentation conventions
 license: MIT
 compatibility: opencode
