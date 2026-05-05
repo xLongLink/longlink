@@ -1,7 +1,8 @@
+import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import { createElement, useEffect, type ReactNode } from 'react';
+import { createElement, useEffect } from 'react';
 
-type PageProps = { title?: string; name?: string; children?: ReactNode };
+type PageProps = { title?: string; name?: string; children?: RenderableASTNode };
 
 /** Renders the page shell and updates the document title. */
 export function Page({ title, name, children }: PageProps) {
@@ -12,7 +13,5 @@ export function Page({ title, name, children }: PageProps) {
         if (typeof documentTitle === 'string' && documentTitle.trim()) document.title = documentTitle;
     }, [documentTitle]);
 
-    return createElement('div', { className: 'space-y-6' }, renderNode(children as any, registry, ctx));
+    return createElement('div', { className: 'space-y-6' }, renderNode(children, registry, ctx));
 }
-
-export default Page;

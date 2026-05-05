@@ -7,38 +7,42 @@ import {
     DialogTitle as UIDialogTitle,
     DialogTrigger as UIDialogTrigger,
 } from '@/ui/dialog';
+import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import type { ComponentProps, ReactNode } from 'react';
 
-type BaseProps = { children?: ReactNode };
+type BaseProps = { children?: RenderableASTNode };
 
-export function Dialog({ children, ...props }: BaseProps & ComponentProps<typeof UIDialog>) {
+export function Dialog({ children }: BaseProps) {
     const { registry, ctx } = useRuntime();
-    return <UIDialog {...props}>{renderNode(children as any, registry, ctx)}</UIDialog>;
-}
-export function DialogContent({ children, ...props }: BaseProps & ComponentProps<typeof UIDialogContent>) {
-    const { registry, ctx } = useRuntime();
-    return <UIDialogContent {...props}>{renderNode(children as any, registry, ctx)}</UIDialogContent>;
-}
-export function DialogHeader({ children, ...props }: BaseProps & ComponentProps<typeof UIDialogHeader>) {
-    const { registry, ctx } = useRuntime();
-    return <UIDialogHeader {...props}>{renderNode(children as any, registry, ctx)}</UIDialogHeader>;
-}
-export function DialogTitle({ children, ...props }: BaseProps & ComponentProps<typeof UIDialogTitle>) {
-    const { registry, ctx } = useRuntime();
-    return <UIDialogTitle {...props}>{renderNode(children as any, registry, ctx)}</UIDialogTitle>;
-}
-export function DialogDescription({ children, ...props }: BaseProps & ComponentProps<typeof UIDialogDescription>) {
-    const { registry, ctx } = useRuntime();
-    return <UIDialogDescription {...props}>{renderNode(children as any, registry, ctx)}</UIDialogDescription>;
-}
-export function DialogFooter({ children, ...props }: BaseProps & ComponentProps<typeof UIDialogFooter>) {
-    const { registry, ctx } = useRuntime();
-    return <UIDialogFooter {...props}>{renderNode(children as any, registry, ctx)}</UIDialogFooter>;
-}
-export function DialogTrigger({ children, ...props }: BaseProps & ComponentProps<typeof UIDialogTrigger>) {
-    const { registry, ctx } = useRuntime();
-    return <UIDialogTrigger {...props}>{renderNode(children as any, registry, ctx)}</UIDialogTrigger>;
+    return <UIDialog>{renderNode(children, registry, ctx)}</UIDialog>;
 }
 
-export default Dialog;
+export function DialogContent({ children }: BaseProps) {
+    const { registry, ctx } = useRuntime();
+    return <UIDialogContent>{renderNode(children, registry, ctx)}</UIDialogContent>;
+}
+
+export function DialogHeader({ children }: BaseProps) {
+    const { registry, ctx } = useRuntime();
+    return <UIDialogHeader>{renderNode(children, registry, ctx)}</UIDialogHeader>;
+}
+
+export function DialogTitle({ children }: BaseProps) {
+    const { registry, ctx } = useRuntime();
+    return <UIDialogTitle>{renderNode(children, registry, ctx)}</UIDialogTitle>;
+}
+
+export function DialogDescription({ children }: BaseProps) {
+    const { registry, ctx } = useRuntime();
+    return <UIDialogDescription>{renderNode(children, registry, ctx)}</UIDialogDescription>;
+}
+
+export function DialogFooter({ children }: BaseProps) {
+    const { registry, ctx } = useRuntime();
+    return <UIDialogFooter>{renderNode(children, registry, ctx)}</UIDialogFooter>;
+}
+
+export function DialogTrigger({ children }: BaseProps) {
+    const { registry, ctx } = useRuntime();
+    return <UIDialogTrigger>{renderNode(children, registry, ctx)}</UIDialogTrigger>;
+}

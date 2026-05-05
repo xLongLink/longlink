@@ -54,9 +54,7 @@ export function Select({ name, label, value, placeholder, description, options, 
             {submit ? (
                 <ButtonGroup className="w-full">
                     {renderControl()}
-                    <Button type="button" className="cursor-pointer" disabled={disabled}>
-                        {submit}
-                    </Button>
+                    <Button disabled={disabled}>{submit}</Button>
                 </ButtonGroup>
             ) : (
                 renderControl()
@@ -65,5 +63,3 @@ export function Select({ name, label, value, placeholder, description, options, 
         </div>
     );
 }
-
-export default Select;

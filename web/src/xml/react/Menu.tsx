@@ -5,27 +5,27 @@ import {
     MenuContent,
     MenuList,
 } from '@/ui/menu';
-import type { ASTNode } from '@/xml';
+import type { ASTNode, RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import type { LucideIcon, LucideProps } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { AppWindow } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from './Icon';
 
 type MenuProps = {
-    children?: React.ReactNode;
+    children?: RenderableASTNode;
 };
 
 type MenuSectionProps = {
     title: string;
     icon?: string | null;
-    children?: React.ReactNode;
+    children?: RenderableASTNode;
 };
 
 type MenuSubSectionProps = {
     title?: string;
     root?: boolean;
-    children?: React.ReactNode;
+    children?: RenderableASTNode;
 };
 
 type NormalizedSubSection = {
@@ -42,16 +42,12 @@ type NormalizedSection = {
     subSections: NormalizedSubSection[];
 };
 
-const MenuSectionIcon = ({ iconName, ...props }: { iconName: string } & LucideProps) => (
-    <Icon name={iconName} fallback="app-window" {...props} />
-);
-
 function makeIcon(iconName: string | undefined): LucideIcon {
     if (!iconName) return AppWindow;
     const name = iconName;
 
-    function ResolvedIcon(props: LucideProps) {
-        return <MenuSectionIcon iconName={name} {...props} />;
+    function ResolvedIcon() {
+        return <Icon name={name} fallback="app-window" />;
     }
 
     return ResolvedIcon as LucideIcon;
@@ -80,12 +76,12 @@ function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
 
 export function MenuSection({ children }: MenuSectionProps) {
     const { registry, ctx } = useRuntime();
-    return <>{renderNode(children as any, registry, ctx)}</>;
+    return <>{renderNode(children, registry, ctx)}</>;
 }
 
 export function MenuSubSection({ children }: MenuSubSectionProps) {
     const { registry, ctx } = useRuntime();
-    return <>{renderNode(children as any, registry, ctx)}</>;
+    return <>{renderNode(children, registry, ctx)}</>;
 }
 
 export function Menu(_props: MenuProps) {
@@ -146,5 +142,3 @@ export function Menu(_props: MenuProps) {
         </BaseMenu>
     );
 }
-
-export default Menu;

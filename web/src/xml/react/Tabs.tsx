@@ -4,24 +4,30 @@ import {
     TabsList as UITabsList,
     TabsTrigger as UITabsTrigger,
 } from '@/ui/tabs';
+import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import type { ComponentProps, ReactNode } from 'react';
 
-type BaseProps = { children?: ReactNode };
-export function Tabs({ children, ...props }: BaseProps & ComponentProps<typeof UITabs>) {
+type BaseProps = { children?: RenderableASTNode };
+
+export function Tabs({ children }: BaseProps) {
     const { registry, ctx } = useRuntime();
-    return <UITabs {...props}>{renderNode(children as any, registry, ctx)}</UITabs>;
+    return <UITabs>{renderNode(children, registry, ctx)}</UITabs>;
 }
-export function TabsList({ children, ...props }: BaseProps & ComponentProps<typeof UITabsList>) {
+
+
+export function TabsList({ children }: BaseProps) {
     const { registry, ctx } = useRuntime();
-    return <UITabsList {...props}>{renderNode(children as any, registry, ctx)}</UITabsList>;
+    return <UITabsList>{renderNode(children, registry, ctx)}</UITabsList>;
 }
-export function TabsTrigger({ children, ...props }: BaseProps & ComponentProps<typeof UITabsTrigger>) {
+
+
+export function TabsTrigger({ children }: BaseProps) {
     const { registry, ctx } = useRuntime();
-    return <UITabsTrigger {...props}>{renderNode(children as any, registry, ctx)}</UITabsTrigger>;
+    return <UITabsTrigger>{renderNode(children, registry, ctx)}</UITabsTrigger>;
 }
-export function TabsContent({ children, ...props }: BaseProps & ComponentProps<typeof UITabsContent>) {
+
+
+export function TabsContent({ children }: BaseProps) {
     const { registry, ctx } = useRuntime();
-    return <UITabsContent {...props}>{renderNode(children as any, registry, ctx)}</UITabsContent>;
+    return <UITabsContent>{renderNode(children, registry, ctx)}</UITabsContent>;
 }
-export default Tabs;

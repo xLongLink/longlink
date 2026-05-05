@@ -1,8 +1,9 @@
+import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 
 type BaseProps = {
-    children?: ReactNode;
+    children?: RenderableASTNode;
 };
 
 /** Renders a blockquote with standard styling. */
@@ -11,7 +12,7 @@ export function Blockquote({ children, ...props }: ComponentPropsWithoutRef<'blo
 
     return (
         <blockquote className="mt-6 border-l-2 pl-6 italic" {...props}>
-            {renderNode(children as any, registry, ctx)}
+            {renderNode(children, registry, ctx)}
         </blockquote>
     );
 }

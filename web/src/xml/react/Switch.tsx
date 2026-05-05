@@ -1,9 +1,8 @@
 import { Label } from '@/ui/label';
 import { Switch as UISwitch } from '@/ui/switch';
-import type { ComponentProps } from 'react';
 import { useId } from 'react';
 
-type SwitchProps = ComponentProps<typeof UISwitch> & {
+type SwitchProps = {
     label?: string;
     description?: string;
     active?: boolean | string;
@@ -14,7 +13,7 @@ function toBoolean(value: boolean | string): boolean {
     return typeof value === 'string' ? value === 'true' : value;
 }
 
-export function Switch({ label, description, active = false, checked, ...props }: SwitchProps) {
+export function Switch({ label, description, active = false, checked }: SwitchProps) {
     const id = useId();
     const resolvedChecked = toBoolean(checked ?? active);
     return (
@@ -23,9 +22,7 @@ export function Switch({ label, description, active = false, checked, ...props }
                 {label ? <Label htmlFor={id}>{label}</Label> : null}
                 {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
             </div>
-            <UISwitch id={id} checked={resolvedChecked} {...props} />
+            <UISwitch id={id} checked={resolvedChecked} />
         </div>
     );
 }
-
-export default Switch;

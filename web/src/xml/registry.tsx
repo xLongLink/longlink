@@ -27,7 +27,7 @@ import { Page } from './primitives/Page';
 import { Query } from './primitives/Query';
 import { State } from './primitives/State';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './react/Card';
-import Columns, { Column } from './react/Columns';
+import { Column, Columns } from './react/Columns';
 import {
     Dialog,
     DialogContent,

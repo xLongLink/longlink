@@ -1,8 +1,9 @@
+import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 
 type BaseProps = {
-    children?: ReactNode;
+    children?: RenderableASTNode;
 };
 
 /** Renders a level 1 heading with standard styling. */
@@ -11,7 +12,7 @@ export function H1({ children, ...props }: ComponentPropsWithoutRef<'h1'> & Base
 
     return (
         <h1 className="text-4xl font-semibold tracking-tight [&:not(:first-child)]:mt-8" {...props}>
-            {renderNode(children as any, registry, ctx)}
+            {renderNode(children, registry, ctx)}
         </h1>
     );
 }

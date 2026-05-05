@@ -1,9 +1,17 @@
+import type { RenderableASTNode } from '@/xml';
 import { RuntimeProvider, renderNode, useRuntime } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
 
 /** Fetches JSON data into a reusable query slot for descendants. */
-export function Query({ id, path: pathTemplate, children }: { id?: string; path?: string; children?: ReactNode }) {
+export function Query({
+    id,
+    path: pathTemplate,
+    children,
+}: {
+    id?: string;
+    path?: string;
+    children?: RenderableASTNode;
+}) {
     if (!id) throw new Error('Query requires an "id" parameter');
     if (!pathTemplate) throw new Error('Query requires a "path" parameter');
 
@@ -24,7 +32,7 @@ export function Query({ id, path: pathTemplate, children }: { id?: string; path?
 
     return (
         <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
-            {renderNode(children as any, registry, childCtx)}
+            {renderNode(children, registry, childCtx)}
         </RuntimeProvider>
     );
 }

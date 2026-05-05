@@ -20,17 +20,18 @@ type InputProps = {
     required?: boolean;
     disabled?: boolean;
     submit?: string;
-    onValueChange?: (value: string) => void;
 };
 
 const DATE_FORMAT = 'yyyy-MM-dd';
 const DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm";
+
 
 const parseDateValue = (rawValue: string): Date | undefined => {
     if (!rawValue) return undefined;
     const parsed = parse(rawValue.slice(0, 10), DATE_FORMAT, new Date());
     return isValid(parsed) ? parsed : undefined;
 };
+
 
 const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => {
     if (!rawValue) return { date: undefined, time: '00:00' };
@@ -49,7 +50,6 @@ export function Input({
     required,
     disabled,
     submit,
-    onValueChange,
 }: InputProps) {
     const { appId } = useParams();
     const defaultFieldValue = useMemo(
@@ -89,9 +89,6 @@ export function Input({
         previousValueRef.current = nextValue;
         await apiFetch(submitPath, { method: 'POST', body: { ...(name ? { name } : {}), value: nextValue } });
     };
-    const handleValueChange = (nextValue: string) => {
-        onValueChange?.(nextValue);
-    };
     const renderControl = () => {
         if (kind === 'textarea')
             return (
@@ -104,7 +101,6 @@ export function Input({
                     onChange={(event) => {
                         const nextValue = event.currentTarget.value;
                         setTextValue(nextValue);
-                        handleValueChange(nextValue);
                     }}
                     onBlur={(event) => {
                         void handleBlur(event.currentTarget.value);
@@ -131,7 +127,6 @@ export function Input({
                             onSelect={(nextDate) => {
                                 const nextValue = nextDate ? format(nextDate, DATE_FORMAT) : '';
                                 setSelectedDate(nextDate);
-                                handleValueChange(nextValue);
                                 void handleBlur(nextValue);
                             }}
                         />
@@ -164,14 +159,6 @@ export function Input({
                                 onSelect={(nextDate) => {
                                     const nextValue = { ...datetimeValue, date: nextDate };
                                     setSelectedDateTime(nextValue);
-                                    handleValueChange(
-                                        nextDate
-                                            ? format(
-                                                  new Date(`${format(nextDate, DATE_FORMAT)}T${nextValue.time}`),
-                                                  DATETIME_FORMAT
-                                              )
-                                            : ''
-                                    );
                                     void handleBlur(
                                         nextDate
                                             ? format(
@@ -203,12 +190,6 @@ export function Input({
                                     DATETIME_FORMAT
                                 )
                             );
-                            handleValueChange(
-                                format(
-                                    new Date(`${format(datetimeValue.date, DATE_FORMAT)}T${event.currentTarget.value}`),
-                                    DATETIME_FORMAT
-                                )
-                            );
                         }}
                     />
                 </div>
@@ -225,7 +206,6 @@ export function Input({
                 onChange={(event) => {
                     const nextValue = event.currentTarget.value;
                     setTextValue(nextValue);
-                    handleValueChange(nextValue);
                 }}
                 onBlur={(event) => {
                     void handleBlur(event.currentTarget.value);
@@ -241,5 +221,3 @@ export function Input({
         </div>
     );
 }
-
-export default Input;

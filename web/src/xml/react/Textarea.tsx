@@ -1,27 +1,22 @@
 import { Label } from '@/ui/label';
 import { Textarea as UITextarea } from '@/ui/textarea';
-import type { ComponentProps } from 'react';
 
-type TextareaProps = ComponentProps<typeof UITextarea> & {
+type TextareaProps = {
     label?: string;
     description?: string;
-    onValueChange?: (value: string) => void;
+    name?: string;
+    value?: string;
+    placeholder?: string;
+    required?: boolean;
+    disabled?: boolean;
 };
 
-export function Textarea({ label, description, onValueChange, ...props }: TextareaProps) {
+export function Textarea({ label, description, ...props }: TextareaProps) {
     return (
         <div className="space-y-2">
             {label ? <Label>{label}</Label> : null}
-            <UITextarea
-                {...props}
-                onChange={(event) => {
-                    props.onChange?.(event);
-                    onValueChange?.(event.currentTarget.value);
-                }}
-            />
+            <UITextarea {...props} />
             {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
     );
 }
-
-export default Textarea;

@@ -1,19 +1,22 @@
-import { Button as UIButton, buttonVariants } from '@/ui/button';
+import { Button as UIButton } from '@/ui/button';
+import type { RenderableASTNode } from '@/xml';
 import { renderNode, resolveValue, useRuntime } from '@/xml';
 import { useQueryClient } from '@tanstack/react-query';
-import type { AnchorHTMLAttributes } from 'react';
-import { Link } from 'react-router';
 import { toast } from 'sonner';
 
-import type { ActionProps } from '../types';
-
-type XMLButtonProps = Omit<Parameters<typeof UIButton>[0], keyof ActionProps> &
-    ActionProps & {
-        href?: string;
-    };
+type ButtonProps = {
+    action?: string;
+    method?: string;
+    payload?: unknown;
+    invalidate?: string | string[];
+    disabled?: boolean;
+    variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' | 'link';
+    size?: 'default' | 'xs' | 'sm' | 'lg' | 'icon' | 'icon-xs' | 'icon-sm' | 'icon-lg';
+    children?: RenderableASTNode;
+};
 
 /** Normalizes invalidate targets into a list of query keys. */
-function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
+function normalizeInvalidate(value: ButtonProps['invalidate']): string[] {
     if (Array.isArray(value)) return value;
     if (typeof value !== 'string') return [];
 
@@ -22,6 +25,7 @@ function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
         .map((entry) => entry.trim())
         .filter(Boolean);
 }
+
 
 /** Builds request options for XML button actions. */
 function buildRequestInit(method: string, body: unknown): RequestInit {
@@ -50,6 +54,7 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
     return { method, body: JSON.stringify(body), headers: { 'content-type': 'application/json' } };
 }
 
+
 /** Reads a concise response message for toast feedback. */
 async function readResponseMessage(response: Response): Promise<string> {
     const contentType = response.headers.get('content-type') ?? '';
@@ -68,36 +73,28 @@ async function readResponseMessage(response: Response): Promise<string> {
     return message || 'Request completed';
 }
 
+
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
 export function Button({
     action,
-    href,
-    onClick,
     disabled,
     variant,
     size,
     method = 'POST',
-    body,
     payload,
     invalidate,
     children,
-    ...props
-}: XMLButtonProps) {
+}: ButtonProps) {
     const queryClient = useQueryClient();
     const { registry, ctx } = useRuntime();
-    const handleClick = async (event: Parameters<NonNullable<typeof onClick>>[0]) => {
-        onClick?.(event);
-
-        if (event.defaultPrevented || !action) return;
-
-        event.preventDefault();
-
+    const handleClick = async () => {
+        if (!action) return;
         const baseUrl = ctx.baseUrl ?? '';
         const resolvedRequestPath = String(resolveValue(action, ctx));
         const requestUrl = resolvedRequestPath.startsWith('http')
             ? resolvedRequestPath
             : `${baseUrl}${resolvedRequestPath}`;
-        const requestBody = resolveValue((body ?? payload) as any, ctx);
+        const requestBody = resolveValue(payload as any, ctx);
         const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), requestBody));
         const responseMessage = await readResponseMessage(response);
 
@@ -113,36 +110,9 @@ export function Button({
         }
     };
 
-    if (href) {
-        if (href.startsWith('/')) {
-            return (
-                <Link
-                    {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}
-                    to={href}
-                    className={buttonVariants({ variant, size })}
-                    aria-disabled={Boolean(disabled)}
-                >
-                    {renderNode(children as any, registry, ctx)}
-                </Link>
-            );
-        }
-        return (
-            <a
-                {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}
-                href={href}
-                className={buttonVariants({ variant, size })}
-                aria-disabled={Boolean(disabled)}
-            >
-                {renderNode(children as any, registry, ctx)}
-            </a>
-        );
-    }
-
     return (
-        <UIButton {...props} variant={variant} size={size} onClick={handleClick} disabled={Boolean(disabled)}>
-            {renderNode(children as any, registry, ctx)}
+        <UIButton variant={variant} size={size} onClick={() => void handleClick()} disabled={Boolean(disabled)}>
+            {renderNode(children, registry, ctx)}
         </UIButton>
     );
 }
-
-export default Button;

@@ -1,5 +1,6 @@
+import type { RenderableASTNode } from '@/xml';
 import { RuntimeProvider, renderNode, useRuntime } from '@/xml';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 
 /** Creates a local reactive state slot for descendant XML nodes. */
 export function State({
@@ -8,7 +9,7 @@ export function State({
     ...initialState
 }: {
     id?: string;
-    children?: ReactNode;
+    children?: RenderableASTNode;
     [key: string]: unknown;
 }) {
     if (!id) throw new Error('State requires an "id" parameter');
@@ -20,7 +21,7 @@ export function State({
 
     return (
         <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
-            {renderNode(children as any, registry, childCtx)}
+            {renderNode(children, registry, childCtx)}
         </RuntimeProvider>
     );
 }

@@ -1,8 +1,9 @@
+import type { RenderableASTNode } from '@/xml';
 import { evaluate, renderNode, RuntimeProvider, useRuntime } from '@/xml';
-import { Fragment, type ReactNode } from 'react';
+import { Fragment } from 'react';
 
 /** Iterates over an array and renders children in a scoped context. */
-export function For({ each, as, children }: { each?: string; as?: string; children?: ReactNode }) {
+export function For({ each, as, children }: { each?: string; as?: string; children?: RenderableASTNode }) {
     if (!each) throw new Error('For requires an "each" parameter');
     if (!as) throw new Error('For requires an "as" parameter');
 
@@ -18,7 +19,7 @@ export function For({ each, as, children }: { each?: string; as?: string; childr
         return (
             <Fragment key={index}>
                 <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
-                    {renderNode(children as any, registry, childCtx)}
+                    {renderNode(children, registry, childCtx)}
                 </RuntimeProvider>
             </Fragment>
         );

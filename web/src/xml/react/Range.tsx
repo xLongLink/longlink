@@ -1,8 +1,7 @@
 import { Label } from '@/ui/label';
 import { Slider } from '@/ui/slider';
-import type { ComponentProps } from 'react';
 
-type RangeProps = ComponentProps<typeof Slider> & {
+type RangeProps = {
     label?: string;
     description?: string;
     min?: number;
@@ -11,7 +10,8 @@ type RangeProps = ComponentProps<typeof Slider> & {
     value?: number[] | string;
 };
 
-export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max], ...props }: RangeProps) {
+
+export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max] }: RangeProps) {
     const normalizedValue = (() => {
         if (typeof value === 'string' && value.trim()) {
             try {
@@ -31,10 +31,8 @@ export function Range({ label, description, min = 0, max = 100, step = 1, value 
                     <span className="text-muted-foreground text-sm">{normalizedValue.join(', ')}</span>
                 </div>
             )}
-            <Slider value={normalizedValue} min={min} max={max} step={step} {...props} />
+            <Slider value={normalizedValue} min={min} max={max} step={step} />
             {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
     );
 }
-
-export default Range;

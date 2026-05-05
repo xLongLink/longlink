@@ -1,7 +1,9 @@
+import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import { createElement, type ReactNode } from 'react';
+import { createElement } from 'react';
 const ALIGN_ITEMS = { center: 'center', end: 'flex-end', start: 'flex-start', stretch: 'stretch' } as const;
 const JUSTIFY_CONTENT = { between: 'space-between', center: 'center', end: 'flex-end', start: 'flex-start' } as const;
+
 function px(value: unknown, fallback: number) {
     if (typeof value === 'number') return `${value}px`;
     if (typeof value === 'string') {
@@ -11,7 +13,14 @@ function px(value: unknown, fallback: number) {
     return `${fallback}px`;
 }
 
-type StackProps = { align?: string; children?: ReactNode; direction?: string; gap?: number | string; justify?: string };
+
+type StackProps = {
+    align?: string;
+    children?: RenderableASTNode;
+    direction?: string;
+    gap?: number | string;
+    justify?: string;
+};
 
 export function Stack({ align = 'stretch', children, direction = 'column', gap = 16, justify = 'start' }: StackProps) {
     const { registry, ctx } = useRuntime();
@@ -25,7 +34,6 @@ export function Stack({ align = 'stretch', children, direction = 'column', gap =
                 alignItems: ALIGN_ITEMS[align as keyof typeof ALIGN_ITEMS] ?? ALIGN_ITEMS.stretch,
             },
         },
-        renderNode(children as any, registry, ctx)
+        renderNode(children, registry, ctx)
     );
 }
-export default Stack;

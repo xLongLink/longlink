@@ -7,50 +7,57 @@ import {
     CardHeader as UICardHeader,
     CardTitle as UICardTitle,
 } from '@/ui/card';
+import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import type { ComponentProps, ReactNode } from 'react';
 
 type BaseProps = {
-    children?: ReactNode;
+    children?: RenderableASTNode;
 };
 
-export function Card({ children, ...props }: BaseProps & { className?: string; size?: 'default' | 'sm' }) {
+type CardProps = BaseProps & { size?: 'default' | 'sm' };
+type ChildrenProps = BaseProps;
+
+export function Card({ children, size = 'default' }: CardProps) {
     const { registry, ctx } = useRuntime();
 
-    return <UICard {...props}>{renderNode(children as any, registry, ctx)}</UICard>;
+    return <UICard size={size}>{renderNode(children, registry, ctx)}</UICard>;
 }
 
-export function CardHeader({ children, ...props }: BaseProps & ComponentProps<typeof UICardHeader>) {
+
+export function CardHeader({ children }: ChildrenProps) {
     const { registry, ctx } = useRuntime();
 
-    return <UICardHeader {...props}>{renderNode(children as any, registry, ctx)}</UICardHeader>;
+    return <UICardHeader>{renderNode(children, registry, ctx)}</UICardHeader>;
 }
 
-export function CardTitle({ children, ...props }: BaseProps & ComponentProps<typeof UICardTitle>) {
+
+export function CardTitle({ children }: ChildrenProps) {
     const { registry, ctx } = useRuntime();
 
-    return <UICardTitle {...props}>{renderNode(children as any, registry, ctx)}</UICardTitle>;
+    return <UICardTitle>{renderNode(children, registry, ctx)}</UICardTitle>;
 }
 
-export function CardDescription({ children, ...props }: BaseProps & ComponentProps<typeof UICardDescription>) {
+
+export function CardDescription({ children }: ChildrenProps) {
     const { registry, ctx } = useRuntime();
 
-    return <UICardDescription {...props}>{renderNode(children as any, registry, ctx)}</UICardDescription>;
+    return <UICardDescription>{renderNode(children, registry, ctx)}</UICardDescription>;
 }
 
-export function CardAction({ children, ...props }: BaseProps & ComponentProps<typeof UICardAction>) {
+
+export function CardAction({ children }: ChildrenProps) {
     const { registry, ctx } = useRuntime();
-    return <UICardAction {...props}>{renderNode(children as any, registry, ctx)}</UICardAction>;
+    return <UICardAction>{renderNode(children, registry, ctx)}</UICardAction>;
 }
 
-export function CardContent({ children, ...props }: BaseProps & ComponentProps<typeof UICardContent>) {
+
+export function CardContent({ children }: ChildrenProps) {
     const { registry, ctx } = useRuntime();
-    return <UICardContent {...props}>{renderNode(children as any, registry, ctx)}</UICardContent>;
+    return <UICardContent>{renderNode(children, registry, ctx)}</UICardContent>;
 }
 
-export function CardFooter({ children, ...props }: BaseProps & ComponentProps<typeof UICardFooter>) {
+
+export function CardFooter({ children }: ChildrenProps) {
     const { registry, ctx } = useRuntime();
-    return <UICardFooter {...props}>{renderNode(children as any, registry, ctx)}</UICardFooter>;
+    return <UICardFooter>{renderNode(children, registry, ctx)}</UICardFooter>;
 }
-
-export default Card;

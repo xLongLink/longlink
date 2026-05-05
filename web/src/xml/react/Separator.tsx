@@ -1,10 +1,7 @@
 import { Separator as UISeparator } from '@/ui/separator';
-import type { ComponentProps } from 'react';
 
-type SeparatorProps = ComponentProps<typeof UISeparator>;
+type SeparatorProps = Record<string, never>;
 
-export function Separator(props: SeparatorProps) {
-    return <UISeparator orientation="horizontal" {...props} />;
+export function Separator(_props: SeparatorProps) {
+    return <UISeparator orientation="horizontal" />;
 }
-
-export default Separator;

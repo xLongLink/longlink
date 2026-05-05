@@ -1,7 +1,7 @@
-import type { LucideIcon, LucideProps } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import dynamicIconImports from 'lucide-react/dynamicIconImports';
 import React, { Suspense } from 'react';
-type IconProps = LucideProps & { name: string; fallback?: string };
+type IconProps = { name: string; fallback?: string };
 const lazyIcons: Record<string, React.LazyExoticComponent<LucideIcon>> = {};
 function resolveLazyIcon(name: string): React.LazyExoticComponent<LucideIcon> | undefined {
     if (lazyIcons[name]) return lazyIcons[name];
@@ -11,12 +11,12 @@ function resolveLazyIcon(name: string): React.LazyExoticComponent<LucideIcon> | 
     lazyIcons[name] = lazyIcon;
     return lazyIcon;
 }
-export function Icon({ name, fallback = 'box', ...props }: IconProps) {
+export function Icon({ name, fallback = 'box' }: IconProps) {
     const Component = resolveLazyIcon(name) ?? resolveLazyIcon(fallback);
     if (!Component) return null;
     return (
         <Suspense fallback={null}>
-            <Component {...props} />
+            <Component />
         </Suspense>
     );
 }

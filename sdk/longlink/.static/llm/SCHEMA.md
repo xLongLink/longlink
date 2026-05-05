@@ -305,7 +305,6 @@ Attributes:
 - `required` optional.
 - `disabled` optional.
 - `submit` optional. POST destination used on blur or picker changes.
-- `onValueChange` optional.
 
 ### `<Select>`
 
@@ -380,7 +379,6 @@ Attributes:
 
 - `label` optional.
 - `description` optional.
-- `onValueChange` optional.
 
 ## Tables
 
