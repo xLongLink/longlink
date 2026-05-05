@@ -1,5 +1,5 @@
 import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 
@@ -36,7 +36,7 @@ describe('Dialog', () => {
         const ast = xmlToAST(
             '<Dialog><DialogHeader><DialogTitle>Title</DialogTitle><DialogDescription>Description</DialogDescription></DialogHeader><DialogFooter /></Dialog>'
         );
-        const renderedTree = renderNode(ast, ctx) as any[];
+        const renderedTree = render(ast, ctx) as any[];
 
         expect(renderedTree[0].props.children.props.children.type).toBe(registry.Dialog);
         expect(renderedTree[0].props.children.props.children.props.children.type.name).toBe('RuntimeChildren');

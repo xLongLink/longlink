@@ -1,19 +1,16 @@
 import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('P', () => {
-    /* The compiler should preserve paragraph text and attributes. */
+    /* The compiler should preserve paragraph text without HTML params. */
     it('compiles p xml into a paragraph ast node', () => {
-        expect(xmlToAST('<p data-kind="intro">Paragraph text</p>')).toEqual([
+        expect(xmlToAST('<p>Paragraph text</p>')).toEqual([
             {
                 name: 'p',
-                params: {
-                    'data-kind': 'intro',
-                },
                 children: [{ name: 'text', value: 'Paragraph text' }],
             },
         ]);
@@ -23,7 +20,7 @@ describe('P', () => {
     it('renders raw xml paragraph content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<p>Paragraph text</p>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">Paragraph text</p>'

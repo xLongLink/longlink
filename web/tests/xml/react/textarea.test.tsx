@@ -1,6 +1,6 @@
 import { xmlToAST } from '@/xml/compiler';
 import { Textarea } from '@/xml/react/Textarea';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -16,7 +16,7 @@ describe('Textarea', () => {
     it('renders raw xml textarea content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Textarea label="Notes" description="Add details" />');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Add details');
     });

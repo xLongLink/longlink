@@ -1,6 +1,6 @@
 import { xmlToAST } from '@/xml/compiler';
 import { For } from '@/xml/react/For';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -31,7 +31,7 @@ describe('For', () => {
             children: [{ name: 'text', value: 'ignored' }],
         };
 
-        const output = renderToStaticMarkup(createElement(Fragment, null, renderNode(node, ctx)));
+        const output = renderToStaticMarkup(createElement(Fragment, null, render([node], ctx)));
 
         expect(output).toBe('');
     });

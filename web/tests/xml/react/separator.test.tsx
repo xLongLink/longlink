@@ -1,6 +1,6 @@
 import { xmlToAST } from '@/xml/compiler';
 import { Separator } from '@/xml/react/Separator';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -16,7 +16,7 @@ describe('Separator', () => {
     it('renders raw xml separator content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Separator />');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('role="separator"');
     });

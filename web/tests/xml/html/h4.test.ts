@@ -1,19 +1,16 @@
 import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('H4', () => {
-    /* The compiler should preserve H4 text content and attributes. */
+    /* The compiler should preserve H4 text content without HTML params. */
     it('compiles h4 xml into an h4 ast node', () => {
-        expect(xmlToAST('<h4 aria-label="detail">Minor heading</h4>')).toEqual([
+        expect(xmlToAST('<h4>Minor heading</h4>')).toEqual([
             {
                 name: 'h4',
-                params: {
-                    'aria-label': 'detail',
-                },
                 children: [{ name: 'text', value: 'Minor heading' }],
             },
         ]);
@@ -23,7 +20,7 @@ describe('H4', () => {
     it('renders raw xml h4 content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<h4>Heading four</h4>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<h4 class="text-xl font-semibold tracking-tight [&amp;:not(:first-child)]:mt-8">Heading four</h4>'

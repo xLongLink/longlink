@@ -1,6 +1,6 @@
 import { xmlToAST } from '@/xml/compiler';
 import { Button } from '@/xml/react/Button';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -33,7 +33,7 @@ describe('Button', () => {
     it('applies the requested variant', () => {
         const ast = xmlToAST('<Button variant="destructive">Delete</Button>');
         const output = renderToStaticMarkup(
-            createElement('div', null, renderNode(ast, { state: {}, queries: {}, scope: {} }))
+            createElement('div', null, render(ast, { state: {}, queries: {}, scope: {} }))
         );
 
         expect(output).toContain('bg-destructive/10');
@@ -44,7 +44,7 @@ describe('Button', () => {
     it('applies the requested size', () => {
         const ast = xmlToAST('<Button size="lg">Save</Button>');
         const output = renderToStaticMarkup(
-            createElement('div', null, renderNode(ast, { state: {}, queries: {}, scope: {} }))
+            createElement('div', null, render(ast, { state: {}, queries: {}, scope: {} }))
         );
 
         expect(output).toContain('h-9');
@@ -55,7 +55,7 @@ describe('Button', () => {
     it('disables normal buttons when disabled is set', () => {
         const ast = xmlToAST('<Button disabled="true">Submit</Button>');
         const output = renderToStaticMarkup(
-            createElement('div', null, renderNode(ast, { state: {}, queries: {}, scope: {} }))
+            createElement('div', null, render(ast, { state: {}, queries: {}, scope: {} }))
         );
 
         expect(output).toContain('<button');
@@ -67,7 +67,7 @@ describe('Button', () => {
     it('disables action buttons when disabled is set', () => {
         const ast = xmlToAST('<Button action="/issues" disabled="true">Submit</Button>');
         const output = renderToStaticMarkup(
-            createElement('div', null, renderNode(ast, { state: {}, queries: {}, scope: {} }))
+            createElement('div', null, render(ast, { state: {}, queries: {}, scope: {} }))
         );
 
         expect(output).toContain('<button');
@@ -101,7 +101,7 @@ describe('Button', () => {
     it('skips a button when if resolves false', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Button if="{false}">Hidden</Button>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toBe('<div></div>');
     });

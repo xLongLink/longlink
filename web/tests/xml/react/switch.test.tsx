@@ -1,6 +1,6 @@
 import { xmlToAST } from '@/xml/compiler';
 import { Switch } from '@/xml/react/Switch';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -21,7 +21,7 @@ describe('Switch', () => {
     it('renders raw xml switch content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Switch label="Enabled" description="Feature toggle" checked="true" />');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Feature toggle');
     });

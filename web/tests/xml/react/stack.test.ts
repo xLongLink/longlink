@@ -1,5 +1,5 @@
 import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -30,7 +30,7 @@ describe('Stack', () => {
     it('renders a row stack with spacing and alignment', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Stack direction="row" gap="12" align="center" justify="between">Content</Stack>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<div class="flex flex-row" style="gap:12px;justify-content:space-between;align-items:center">Content</div>'
@@ -40,7 +40,7 @@ describe('Stack', () => {
     it('falls back to column layout and default gap', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Stack>Content</Stack>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<div class="flex flex-col" style="gap:16px;justify-content:flex-start;align-items:stretch">Content</div>'

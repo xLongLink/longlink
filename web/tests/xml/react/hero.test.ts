@@ -1,5 +1,5 @@
 import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -27,7 +27,7 @@ describe('Hero', () => {
     it('renders title and subtitle content', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Hero title="Overview" subtitle="Status at a glance" />');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<div class="flex items-start justify-between gap-4"><div class="flex items-center gap-3"><div><h2 class="text-lg font-semibold text-white">Overview</h2><p class="text-sm text-white/60">Status at a glance</p></div></div></div>'
@@ -37,7 +37,7 @@ describe('Hero', () => {
     it('renders right-side children content', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Hero title="Overview"><Button variant="outline">Create</Button></Hero>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
         const markup = renderToStaticMarkup(createElement(Fragment, null, renderedTree));
 
         expect(markup).toContain('<h2 class="text-lg font-semibold text-white">Overview</h2>');

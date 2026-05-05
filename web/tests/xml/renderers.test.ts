@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'bun:test';
-import { render, renderNode } from '../../src/xml/renderers';
+import { render, renderXml } from '../../src/xml/renderers';
 import type { ASTNode, ExecutionContext } from '../../src/xml/types';
 
-describe('renderNode', () => {
+describe('renderXml', () => {
     /* Null input should short-circuit before any registry lookup. */
     it('returns null for missing node input', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-
-        expect(renderNode(null, ctx)).toBeNull();
+        expect(renderXml(null)).toBeNull();
     });
 
     /* Text nodes should evaluate expressions against the current runtime context. */
@@ -18,7 +16,7 @@ describe('renderNode', () => {
             scope: {},
         };
 
-        expect(renderNode({ name: 'text', value: '{`Count ${count}`}' }, ctx)).toBe('Count 7');
+        expect(render([{ name: 'text', value: '{`Count ${count}`}' }], ctx)).toBe('Count 7');
     });
 
     /* Conditional nodes should disappear when the condition resolves to false. */
@@ -26,14 +24,14 @@ describe('renderNode', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const node: ASTNode = { name: 'Widget', params: { if: '{false}' } };
 
-        expect(renderNode(node, ctx)).toBeNull();
+        expect(render([node], ctx)).toBeNull();
     });
 
     /* Unknown tags should fail loudly so missing registry entries are obvious. */
     it('throws on unknown component', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
 
-        expect(() => renderNode({ name: 'Unknown' }, ctx)).toThrow('Unknown component "Unknown"');
+        expect(() => render([{ name: 'Unknown' }], ctx)).toThrow('Unknown component "Unknown"');
     });
 
     /* Prop expressions should flow through the rendered component. */
@@ -51,7 +49,7 @@ describe('renderNode', () => {
             },
         };
 
-        const runtimeProviderElement = renderNode(node, ctx) as any;
+        const runtimeProviderElement = render([node], ctx) as any;
         const widgetElement = runtimeProviderElement.props.children;
 
         expect(widgetElement.props.label).toBe('Count: 2');
@@ -83,7 +81,7 @@ describe('renderNode', () => {
             },
         };
 
-        const runtimeProviderElement = renderNode(node, ctx) as any;
+        const runtimeProviderElement = render([node], ctx) as any;
         const widgetElement = runtimeProviderElement.props.children;
 
         expect(widgetElement.props.value).toBe('Ada');

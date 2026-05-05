@@ -1,5 +1,5 @@
 import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 
@@ -43,7 +43,7 @@ describe('Tabs', () => {
         const ast = xmlToAST(
             '<Tabs><TabsList><TabsTrigger value="one">One</TabsTrigger></TabsList><TabsContent value="one">Panel</TabsContent></Tabs>'
         );
-        const renderedTree = renderNode(ast, ctx) as any[];
+        const renderedTree = render(ast, ctx) as any[];
 
         expect(renderedTree[0].props.children.props.children.type).toBe(registry.Tabs);
         expect(renderedTree[0].props.children.props.children.props.children.type.name).toBe('RuntimeChildren');

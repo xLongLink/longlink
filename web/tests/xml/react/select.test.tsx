@@ -1,6 +1,6 @@
 import { xmlToAST } from '@/xml/compiler';
 import { Select } from '@/xml/react/Select';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -16,7 +16,7 @@ describe('Select', () => {
     it('renders raw xml select content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Select label="Mode" options=\'[{"label":"Open","value":"open"}]\' />');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Mode');
     });

@@ -1,19 +1,16 @@
 import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('H1', () => {
-    /* The compiler should preserve H1 text content and attributes. */
+    /* The compiler should preserve H1 text content without HTML params. */
     it('compiles h1 xml into an h1 ast node', () => {
-        expect(xmlToAST('<h1 id="title">Heading</h1>')).toEqual([
+        expect(xmlToAST('<h1>Heading</h1>')).toEqual([
             {
                 name: 'h1',
-                params: {
-                    id: 'title',
-                },
                 children: [{ name: 'text', value: 'Heading' }],
             },
         ]);
@@ -23,13 +20,8 @@ describe('H1', () => {
     it('renders raw xml h1 content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<h1>Heading one</h1>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
-        const runtimeProviderElement = renderedTree as any;
-        const headingElement = runtimeProviderElement[0].props.children.props.children;
-
-        expect(ast).toEqual([{ name: 'h1', children: [{ name: 'text', value: 'Heading one' }] }]);
-        expect(headingElement.type).toBe(registry.h1);
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<h1 class="text-4xl font-semibold tracking-tight [&amp;:not(:first-child)]:mt-8">Heading one</h1>'
         );

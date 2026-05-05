@@ -1,6 +1,6 @@
 import { xmlToAST } from '@/xml/compiler';
 import { Grid } from '@/xml/react/Grid';
-import { renderNode } from '@/xml/renderers';
+import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -22,7 +22,7 @@ describe('Grid', () => {
     it('renders raw xml grid content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Grid gap="2rem">Content</Grid>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toBe(
             '<div><div style="display:grid;gap:2rem">Content</div></div>'
@@ -54,7 +54,7 @@ describe('Grid', () => {
     it('renders raw xml grid content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<Grid gap="2rem" columns="1fr 2fr">Content</Grid>');
-        const renderedTree = renderNode(ast, ctx);
+        const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toBe(
             '<div><div style="display:grid;gap:2rem;grid-template-columns:1fr 2fr">Content</div></div>'
