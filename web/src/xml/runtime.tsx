@@ -1,8 +1,8 @@
 import { createContext, useContext as useReactContext, type ReactNode } from 'react';
-import type { ExecutionContext, RuntimeOptions, RuntimeState, SetterContext } from './types';
+import type { ExecutionContext, RuntimeState, SetterContext } from './types';
 
 const ValueContext = createContext<ExecutionContext>({});
-const OptionsContext = createContext<RuntimeOptions>({});
+export const BaseUrlContext = createContext<string>('');
 const SetterContextValue = createContext<SetterContext>({});
 export const RuntimeContext = createContext<RuntimeState | null>(null);
 
@@ -97,61 +97,34 @@ export function resolveBinding(
 
 /** Provides XML value and setter contexts to a rendered subtree. */
 export function RuntimeProvider({ value, children }: { value: RuntimeState; children: ReactNode }) {
-    const parentOptions = useReactContext(OptionsContext);
+    const parentBaseUrl = useReactContext(BaseUrlContext);
     const parentSetters = useReactContext(SetterContextValue);
-    const options = value.options ?? parentOptions;
+    const baseUrl = value.baseUrl ?? parentBaseUrl;
     const setters = value.setters ?? parentSetters;
 
     return (
         <ValueContext.Provider value={value.ctx}>
-            <OptionsContext.Provider value={options}>
+            <BaseUrlContext.Provider value={baseUrl}>
                 <SetterContextValue.Provider value={setters}>
-                    <RuntimeContext.Provider value={{ ...value, options, setters }}>{children}</RuntimeContext.Provider>
+                    <RuntimeContext.Provider value={{ ...value, baseUrl, setters }}>{children}</RuntimeContext.Provider>
                 </SetterContextValue.Provider>
-            </OptionsContext.Provider>
+            </BaseUrlContext.Provider>
         </ValueContext.Provider>
     );
 }
 
 /** Returns the active XML runtime state. */
-export function useContext(): RuntimeState {
+export function useContext(): RuntimeState & { ctx: ExecutionContext; baseUrl: string; setters: SetterContext } {
     const runtime = useReactContext(RuntimeContext);
     const ctx = useReactContext(ValueContext);
-    const options = useReactContext(OptionsContext);
+    const baseUrl = useReactContext(BaseUrlContext);
     const setters = useReactContext(SetterContextValue);
 
     if (!runtime) {
         throw new Error('useContext must be used inside a rendered XML component');
     }
 
-    return { ...runtime, ctx, options, setters };
-}
-
-/** Resolves raw XML attributes from inside the component that owns them. */
-export function useProps(rawProps: Record<string, string> = {}): Record<string, unknown> {
-    const { ctx, setters } = useContext();
-    const resolved: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(rawProps)) {
-        if (key === 'if') continue;
-
-        if (value.startsWith('$')) {
-            try {
-                const binding = resolveBinding(value.slice(1), ctx, setters ?? {});
-                resolved[key] = binding.value;
-                if (key === 'value' || key === 'checked') {
-                    resolved['onChange'] = binding.setValue;
-                }
-            } catch {
-                resolved[key] = evaluate(value, ctx);
-            }
-            continue;
-        }
-
-        resolved[key] = evaluate(value, ctx);
-    }
-
-    return resolved;
+    return { ...runtime, ctx, baseUrl, setters };
 }
 
 /** Runs an expression with XML values exposed as local variables. */

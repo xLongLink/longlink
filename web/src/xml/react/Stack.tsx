@@ -1,5 +1,5 @@
 import type { XmlComponentProps } from '@/xml';
-import { renderXml, useProps } from '@/xml';
+import { evaluate, renderXml, useContext } from '@/xml';
 const ALIGN_ITEMS = { center: 'center', end: 'flex-end', start: 'flex-start', stretch: 'stretch' } as const;
 const JUSTIFY_CONTENT = { between: 'space-between', center: 'center', end: 'flex-end', start: 'flex-start' } as const;
 
@@ -14,11 +14,11 @@ function px(value: unknown, fallback: number) {
 
 /** Renders XML children in a configurable stack. */
 export function Stack({ props: rawProps, children }: XmlComponentProps) {
-    const props = useProps(rawProps as Record<string, string>);
-    const align = String(props.align ?? 'stretch');
-    const direction = String(props.direction ?? 'column');
-    const gap = props.gap ?? 16;
-    const justify = String(props.justify ?? 'start');
+    const { ctx } = useContext();
+    const align = String(evaluate(rawProps.align ?? '', ctx) ?? 'stretch');
+    const direction = String(evaluate(rawProps.direction ?? '', ctx) ?? 'column');
+    const gap = evaluate(rawProps.gap ?? '', ctx) ?? 16;
+    const justify = String(evaluate(rawProps.justify ?? '', ctx) ?? 'start');
     return (
         <div
             className={`flex ${direction === 'row' ? 'flex-row' : 'flex-col'}`}

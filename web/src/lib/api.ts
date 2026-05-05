@@ -2,34 +2,13 @@ const controlPlaneApiBaseUrl = '/api';
 const sdkDevApiBaseUrl = '/sdk-api';
 
 /**
- * Removes trailing slashes from a base URL.
- */
-const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
-
-/**
- * Detects SDK runtime context.
- */
-const isSdkRuntime = () => {
-    if (import.meta.env.MODE === 'sdk') {
-        return true;
-    }
-
-    if (!import.meta.env.DEV) {
-        return false;
-    }
-
-    return false;
-};
-
-/**
  * Resolves API base URL for current runtime mode.
  */
 export const getApiBaseUrl = () => {
-    if (isSdkRuntime()) {
-        return normalizeBaseUrl(import.meta.env.DEV ? sdkDevApiBaseUrl : '');
+    if (import.meta.env.MODE === 'sdk') {
+        return import.meta.env.DEV ? sdkDevApiBaseUrl.replace(/\/+$/, '') : '';
     }
-
-    return normalizeBaseUrl(controlPlaneApiBaseUrl);
+    return controlPlaneApiBaseUrl.replace(/\/+$/, '');
 };
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -45,11 +24,6 @@ export type ApiRequestOptions<TBody = unknown> = {
 };
 
 /**
- * Trims slashes from both sides of a path segment.
- */
-const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '');
-
-/**
  * Normalizes an API path for the current app scope.
  */
 const normalizePath = (path: string, appName?: string) => {
@@ -61,8 +35,8 @@ const normalizePath = (path: string, appName?: string) => {
         return path;
     }
 
-    const normalizedAppName = trimSlashes(appName);
-    const normalizedPath = trimSlashes(path);
+    const normalizedAppName = appName.replace(/^\/+|\/+$/g, '');
+    const normalizedPath = path.replace(/^\/+|\/+$/g, '');
 
     if (normalizedPath.length === 0) {
         return `/apps/${normalizedAppName}`;
@@ -98,15 +72,17 @@ const toApiErrorMessage = (status: number, responseData: unknown) => {
  * Builds a request URL with optional query parameters.
  */
 const buildUrl = (path: string, query?: ApiQueryParams) => {
-    const url = new URL(buildApiUrl(path), window.location.origin);
-    if (query) {
-        for (const [key, value] of Object.entries(query)) {
-            if (value != null) {
-                url.searchParams.set(key, String(value));
-            }
+    const baseUrl = buildApiUrl(path);
+    if (!query) return baseUrl;
+
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+        if (value != null) {
+            params.set(key, String(value));
         }
     }
-    return url.toString().replace(window.location.origin, '');
+    const queryString = params.toString();
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 };
 
 /**
@@ -116,44 +92,31 @@ const buildUrl = (path: string, query?: ApiQueryParams) => {
  */
 export async function apiFetch<TResponse>(path: string, options: ApiRequestOptions = {}): Promise<TResponse> {
     const { method, query, body, credentials } = options;
-    const withCredentials = credentials === 'include';
 
     const url = buildUrl(path, query);
+    const headers: Record<string, string> = { Accept: 'application/json' };
 
-    const headers: Record<string, string> = {
-        Accept: 'application/json',
-    };
+    const isRawBody =
+        body instanceof FormData || body instanceof URLSearchParams || body instanceof Blob || typeof body === 'string';
 
-    let fetchOptions: RequestInit = {
-        credentials: withCredentials ? 'include' : 'same-origin',
-    };
-
-    if (body !== undefined) {
-        if (
-            body instanceof FormData ||
-            body instanceof URLSearchParams ||
-            body instanceof Blob ||
-            typeof body === 'string'
-        ) {
-            fetchOptions = { ...fetchOptions, method: method || 'POST', body };
-        } else {
-            headers['Content-Type'] = 'application/json';
-            fetchOptions = { ...fetchOptions, method: method || 'POST', body: JSON.stringify(body) };
-        }
-    } else if (method) {
-        fetchOptions.method = method;
+    if (!isRawBody && body !== undefined) {
+        headers['Content-Type'] = 'application/json';
     }
 
-    fetchOptions.headers = headers;
+    const fetchOptions: RequestInit = {
+        method: method || (body !== undefined ? 'POST' : undefined),
+        credentials: credentials === 'include' ? 'include' : 'same-origin',
+        headers,
+        ...(body !== undefined && { body: isRawBody ? body : JSON.stringify(body) }),
+    };
 
     const response = await fetch(url, fetchOptions);
 
-    if (response.status === 204) {
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
         return undefined as TResponse;
     }
 
     const text = await response.text();
-
     if (text.length === 0) {
         return undefined as TResponse;
     }
@@ -168,12 +131,7 @@ export async function apiFetch<TResponse>(path: string, options: ApiRequestOptio
         throw new Error(toApiErrorMessage(response.status, data));
     }
 
-    const contentType = response.headers.get('content-type');
-    if (contentType?.includes('application/json')) {
-        return JSON.parse(text) as TResponse;
-    }
-
-    return text as unknown as TResponse;
+    return response.headers.get('content-type')?.includes('application/json')
+        ? (JSON.parse(text) as TResponse)
+        : (text as unknown as TResponse);
 }
-
-export const buildAppApiPath = (path: string, appName?: string) => buildApiUrl(path, appName);

@@ -1,7 +1,7 @@
 import { Component, Fragment, useContext as useReactContext, type ComponentType, type ReactNode } from 'react';
 import { registry } from './registry';
 import { resolveCondition, RuntimeContext, RuntimeProvider } from './runtime';
-import type { ASTNode, ExecutionContext, RenderableASTNode, RuntimeOptions } from './types';
+import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
 
 type XmlErrorBoundaryProps = {
     children: ReactNode;
@@ -89,10 +89,10 @@ function RenderedNode({ node }: { node: RenderableASTNode }): ReactNode {
  * Renders a top-level ASTNode array into a React node.
  * Wraps each root node in a Fragment with a stable index key.
  */
-export function render(ast: ASTNode[], ctx: ExecutionContext, options?: RuntimeOptions): ReactNode {
+export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl?: string): ReactNode {
     return (
         <XmlErrorBoundary resetKey={ast}>
-            <RuntimeProvider value={{ ctx, options, props: {}, children: ast }}>{renderXml(ast)}</RuntimeProvider>
+            <RuntimeProvider value={{ ctx, baseUrl, props: {}, children: ast }}>{renderXml(ast)}</RuntimeProvider>
         </XmlErrorBoundary>
     );
 }

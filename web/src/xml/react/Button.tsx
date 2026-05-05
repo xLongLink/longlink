@@ -1,6 +1,6 @@
 import { Button as UIButton } from '@/ui/button';
 import type { RenderableASTNode, XmlComponentProps } from '@/xml';
-import { renderXml, useContext, useProps } from '@/xml';
+import { evaluate, renderXml, useContext } from '@/xml';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -84,18 +84,17 @@ async function readResponseMessage(response: Response): Promise<string> {
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
 export function Button({ props: rawProps, children }: XmlComponentProps) {
-    const { options } = useContext();
-    const props = useProps(rawProps as Record<string, string>);
-    const href = String(props.href ?? '');
-    const target = String(props.target ?? '');
-    const rel = String(props.rel ?? '');
-    const action = String(props.action ?? '');
-    const disabled = Boolean(props.disabled ?? false);
-    const variant = String(props.variant ?? '') as ButtonProps['variant'];
-    const size = String(props.size ?? '') as ButtonProps['size'];
-    const method = String(props.method ?? 'POST');
-    const payload = props.payload;
-    const invalidate = props.invalidate as ButtonProps['invalidate'];
+    const { baseUrl, ctx } = useContext();
+    const href = String(evaluate(rawProps.href ?? '', ctx) ?? '');
+    const target = String(evaluate(rawProps.target ?? '', ctx) ?? '');
+    const rel = String(evaluate(rawProps.rel ?? '', ctx) ?? '');
+    const action = String(evaluate(rawProps.action ?? '', ctx) ?? '');
+    const disabled = Boolean(evaluate(rawProps.disabled ?? '', ctx) ?? false);
+    const variant = String(evaluate(rawProps.variant ?? '', ctx) ?? '') as ButtonProps['variant'];
+    const size = String(evaluate(rawProps.size ?? '', ctx) ?? '') as ButtonProps['size'];
+    const method = String(evaluate(rawProps.method ?? '', ctx) ?? 'POST');
+    const payload = evaluate(rawProps.payload ?? '', ctx);
+    const invalidate = evaluate(rawProps.invalidate ?? '', ctx) as ButtonProps['invalidate'];
     const content = renderXml(children);
 
     if (href) {
@@ -115,7 +114,7 @@ export function Button({ props: rawProps, children }: XmlComponentProps) {
             disabled={disabled}
             variant={variant}
             size={size}
-            baseUrl={String(options?.baseUrl ?? '')}
+            baseUrl={baseUrl}
         >
             {content}
         </ActionButton>

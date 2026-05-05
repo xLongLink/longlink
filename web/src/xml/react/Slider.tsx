@@ -1,7 +1,7 @@
 import { Label } from '@/ui/label';
 import { Slider as UISlider } from '@/ui/slider';
 import type { XmlComponentProps } from '@/xml';
-import { useProps } from '@/xml';
+import { evaluate, resolveBinding, useContext } from '@/xml';
 
 type SliderValue = number | readonly number[] | string;
 type SliderProps = {
@@ -18,21 +18,33 @@ type SliderProps = {
 
 /** Renders an XML slider control from evaluated XML props. */
 export function Slider({ props: rawProps }: XmlComponentProps) {
-    const props = useProps(rawProps as Record<string, string>);
-    const {
-        label,
-        description,
-        min = 0,
-        max = 100,
-        step = 1,
-        value,
-        onChange,
-        orientation = 'horizontal',
-        disabled = false,
-    } = props as SliderProps;
-    const normalizedMin = typeof min === 'number' && Number.isFinite(min) ? min : 0;
-    const normalizedMax = typeof max === 'number' && Number.isFinite(max) ? max : 100;
-    const normalizedStep = typeof step === 'number' && Number.isFinite(step) ? step : 1;
+    const { ctx, setters } = useContext();
+    const label = String(evaluate(rawProps.label ?? '', ctx) ?? '');
+    const description = String(evaluate(rawProps.description ?? '', ctx) ?? '');
+    const min = Number(evaluate(rawProps.min ?? '', ctx) ?? 0);
+    const max = Number(evaluate(rawProps.max ?? '', ctx) ?? 100);
+    const step = Number(evaluate(rawProps.step ?? '', ctx) ?? 1);
+    const orientation = String(evaluate(rawProps.orientation ?? '', ctx) ?? 'horizontal') as 'horizontal' | 'vertical';
+    const disabled = Boolean(evaluate(rawProps.disabled ?? '', ctx) ?? false);
+
+    /* Resolve value binding for two-way data sync */
+    const valueProp = rawProps.value ?? '';
+    let value: unknown = evaluate(valueProp, ctx);
+    let onChange: ((value: SliderValue) => void) | undefined;
+    if (valueProp.startsWith('$')) {
+        try {
+            const binding = resolveBinding(valueProp.slice(1), ctx, setters ?? {});
+            value = binding.value;
+            onChange = binding.setValue as (value: SliderValue) => void;
+        } catch {
+            // Use evaluated value if binding fails
+        }
+    }
+
+    const normalizedMin = Number.isFinite(min) ? min : 0;
+    const normalizedMax = Number.isFinite(max) ? max : 100;
+    const normalizedStep = Number.isFinite(step) ? step : 1;
+
     const normalizedValue = Array.isArray(value)
         ? value.length > 0
             ? value

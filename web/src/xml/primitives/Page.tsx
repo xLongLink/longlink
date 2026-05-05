@@ -1,12 +1,11 @@
 import type { XmlComponentProps } from '@/xml';
-import { renderXml, useProps } from '@/xml';
+import { evaluate, renderXml } from '@/xml';
 import { useEffect } from 'react';
 
 /** Renders the page shell and updates the document title. */
 export function Page({ props: rawProps, children }: XmlComponentProps) {
-    const props = useProps(rawProps as Record<string, string>);
-    const title = String(props.title ?? '');
-    const name = String(props.name ?? '');
+    const title = String(evaluate(rawProps.title ?? '', {}) ?? '');
+    const name = String(evaluate(rawProps.name ?? '', {}) ?? '');
     const documentTitle = title || name;
 
     useEffect(() => {

@@ -5,7 +5,7 @@ import {
     TabsTrigger as UITabsTrigger,
 } from '@/ui/tabs';
 import type { XmlComponentProps } from '@/xml';
-import { renderXml, useProps } from '@/xml';
+import { evaluate, renderXml, useContext } from '@/xml';
 
 export function Tabs({ props: _props, children }: XmlComponentProps) {
     return <UITabs>{renderXml(children)}</UITabs>;
@@ -16,15 +16,15 @@ export function TabsList({ props: _props, children }: XmlComponentProps) {
 }
 
 export function TabsTrigger({ props: rawProps, children }: XmlComponentProps) {
-    const props = useProps(rawProps as Record<string, string>);
-    const value = String(props.value ?? '');
+    const { ctx } = useContext();
+    const value = String(evaluate(rawProps.value ?? '', ctx) ?? '');
     if (!value) throw new Error('TabsTrigger requires a "value" parameter');
     return <UITabsTrigger value={value}>{renderXml(children)}</UITabsTrigger>;
 }
 
 export function TabsContent({ props: rawProps, children }: XmlComponentProps) {
-    const props = useProps(rawProps as Record<string, string>);
-    const value = String(props.value ?? '');
+    const { ctx } = useContext();
+    const value = String(evaluate(rawProps.value ?? '', ctx) ?? '');
     if (!value) throw new Error('TabsContent requires a "value" parameter');
     return <UITabsContent value={value}>{renderXml(children)}</UITabsContent>;
 }

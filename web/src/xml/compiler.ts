@@ -53,11 +53,13 @@ function toNodes(input: unknown, tagName?: string): ASTNode[] {
             }
         }
 
-        return [{
-            name: tagName,
-            ...(Object.keys(params).length > 0 && { params }),
-            ...(children.length > 0 && { children }),
-        }];
+        return [
+            {
+                name: tagName,
+                ...(Object.keys(params).length > 0 && { params }),
+                ...(children.length > 0 && { children }),
+            },
+        ];
     }
 
     if (!input) return [];

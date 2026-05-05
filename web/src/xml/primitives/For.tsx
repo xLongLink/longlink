@@ -1,18 +1,16 @@
 import type { XmlComponentProps } from '@/xml';
-import { evaluate, renderXml, RuntimeProvider, useContext, useProps } from '@/xml';
+import { evaluate, renderXml, RuntimeProvider, useContext } from '@/xml';
 import { Fragment } from 'react';
 
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ props: rawProps, children }: XmlComponentProps) {
-    const { ctx, props: contextProps, children } = useContext();
-    const props = useProps(rawProps as Record<string, string>);
-    const eachExpression = props.each;
-    const as = String(props.as ?? '');
+    const { ctx, baseUrl, setters, props: contextProps, children } = useContext();
+    const eachExpression = evaluate(rawProps.each ?? '', ctx);
+    const as = String(evaluate(rawProps.as ?? '', ctx) ?? '');
     if (!eachExpression) throw new Error('For requires an "each" parameter');
     if (!as) throw new Error('For requires an "as" parameter');
 
-    const items =
-        typeof eachExpression === 'string' ? (evaluate(eachExpression, ctx) ?? []) : (eachExpression ?? []);
+    const items = Array.isArray(eachExpression) ? eachExpression : [];
 
     if (!Array.isArray(items)) return null;
 
@@ -21,7 +19,9 @@ export function For({ props: rawProps, children }: XmlComponentProps) {
 
         return (
             <Fragment key={index}>
-                <RuntimeProvider value={{ ctx: childCtx, props, children }}>
+                <RuntimeProvider
+                    value={{ ctx: childCtx, baseUrl, setters, props: { each: eachExpression, as }, children }}
+                >
                     {renderXml(children)}
                 </RuntimeProvider>
             </Fragment>

@@ -5,7 +5,7 @@ import { Label } from '@/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/popover';
 import { Textarea } from '@/ui/textarea';
 import type { XmlComponentProps } from '@/xml';
-import { useProps } from '@/xml';
+import { evaluate, resolveBinding, useContext } from '@/xml';
 import { format, isValid, parse } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -40,18 +40,29 @@ const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => 
 
 /** Renders an XML input control from evaluated XML props. */
 export function Input({ props: rawProps }: XmlComponentProps) {
-    const props = useProps(rawProps as Record<string, string>);
-    const {
-        name,
-        kind = 'text',
-        label,
-        value,
-        onChange,
-        placeholder,
-        description,
-        required,
-        disabled,
-    } = props as InputProps;
+    const { ctx, setters } = useContext();
+    const name = String(evaluate(rawProps.name ?? '', ctx) ?? '');
+    const kind = String(evaluate(rawProps.kind ?? '', ctx) ?? 'text') as InputProps['kind'];
+    const label = String(evaluate(rawProps.label ?? '', ctx) ?? '');
+    const placeholder = String(evaluate(rawProps.placeholder ?? '', ctx) ?? '');
+    const description = String(evaluate(rawProps.description ?? '', ctx) ?? '');
+    const required = Boolean(evaluate(rawProps.required ?? '', ctx) ?? false);
+    const disabled = Boolean(evaluate(rawProps.disabled ?? '', ctx) ?? false);
+
+    /* Resolve value binding for two-way data sync */
+    const valueProp = rawProps.value ?? '';
+    let value: unknown = evaluate(valueProp, ctx);
+    let onChange: ((value: string) => void) | undefined;
+    if (valueProp.startsWith('$')) {
+        try {
+            const binding = resolveBinding(valueProp.slice(1), ctx, setters ?? {});
+            value = binding.value;
+            onChange = binding.setValue as (value: string) => void;
+        } catch {
+            // Use evaluated value if binding fails
+        }
+    }
+
     const defaultFieldValue = useMemo(
         () => (typeof value === 'string' || typeof value === 'number' ? String(value) : ''),
         [value]

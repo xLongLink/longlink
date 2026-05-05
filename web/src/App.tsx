@@ -1,6 +1,5 @@
 import { RequireAuth } from '@/components/Auth';
 import { Toaster } from '@/ui/sonner';
-import { useIsFetching, useIsMutating } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from './Layout';
@@ -14,25 +13,6 @@ import SdkLongLink from './sdk/Longlink';
 const buildMode = import.meta.env.MODE;
 
 const isSdkBuild = buildMode === 'sdk';
-
-/**
- * Renders a top-level loading indicator while React Query is busy.
- */
-function GlobalLoader() {
-    const isFetching = useIsFetching();
-    const isMutating = useIsMutating();
-    const isLoading = isFetching > 0 || isMutating > 0;
-
-    if (!isLoading) {
-        return null;
-    }
-
-    return (
-        <div className="fixed left-0 top-0 z-50 h-1 w-full overflow-hidden bg-transparent">
-            <div className="h-full w-full animate-pulse bg-blue-500/80" />
-        </div>
-    );
-}
 
 /**
  * Wraps a route element with the auth guard.
@@ -87,7 +67,6 @@ const router = createBrowserRouter(getRoutes());
 export default function App() {
     return (
         <>
-            <GlobalLoader />
             <RouterProvider router={router} />
             <Toaster position="bottom-right" />
         </>
