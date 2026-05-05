@@ -26,7 +26,38 @@ function toNodes(input: unknown, tagName?: string): ASTNode[] {
     }
 
     if (tagName) {
-        return [buildElement(tagName, input)];
+        const params: Record<string, string> = {};
+        const children: ASTNode[] = [];
+
+        if (input && typeof input === 'object' && !Array.isArray(input)) {
+            const attributes = (input as Record<string, unknown>)[':@'];
+
+            /* Parser-grouped attributes keep string children distinct from string params. */
+            if (attributes && typeof attributes === 'object' && !Array.isArray(attributes)) {
+                for (const [key, entry] of Object.entries(attributes)) {
+                    if (typeof entry === 'string') {
+                        params[key.replace(/^@_/, '')] = entry;
+                    }
+                }
+            }
+
+            /* Element body entries become text nodes or nested XML elements. */
+            for (const [key, entry] of Object.entries(input as Record<string, unknown>)) {
+                if (key === ':@') {
+                    continue;
+                } else if (key === '#text') {
+                    children.push(...toNodes(entry));
+                } else {
+                    children.push(...toNodes(entry, key));
+                }
+            }
+        }
+
+        return [{
+            name: tagName,
+            ...(Object.keys(params).length > 0 && { params }),
+            ...(children.length > 0 && { children }),
+        }];
     }
 
     if (!input) return [];
@@ -48,53 +79,4 @@ function toNodes(input: unknown, tagName?: string): ASTNode[] {
 
         return toNodes(value, key);
     });
-}
-
-/** Builds one AST element from a parsed XML object. */
-function buildElement(tagName: string, value: unknown): ASTNode {
-    const params: Record<string, string> = {};
-    const children = toChildNodes(value);
-
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-        const attributes = (value as Record<string, unknown>)[':@'];
-
-        /* Parser-grouped attributes keep string children distinct from string params. */
-        if (attributes && typeof attributes === 'object' && !Array.isArray(attributes)) {
-            for (const [key, entry] of Object.entries(attributes)) {
-                if (typeof entry === 'string') {
-                    params[key.replace(/^@_/, '')] = entry;
-                }
-            }
-        }
-    }
-
-    return {
-        name: tagName,
-        ...(Object.keys(params).length > 0 && { params }),
-        ...(children.length > 0 && { children }),
-    };
-}
-
-/** Converts an element body into child AST nodes. */
-function toChildNodes(value: unknown): ASTNode[] {
-    if (typeof value === 'string') {
-        return value.trim() ? [{ name: 'Text', params: { text: value } }] : [];
-    }
-
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
-
-    const children: ASTNode[] = [];
-
-    /* Element body entries become text nodes or nested XML elements. */
-    for (const [key, entry] of Object.entries(value)) {
-        if (key === ':@') {
-            continue;
-        } else if (key === '#text') {
-            children.push(...toNodes(entry));
-        } else {
-            children.push(...toNodes(entry, key));
-        }
-    }
-
-    return children;
 }

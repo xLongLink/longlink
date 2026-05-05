@@ -129,7 +129,7 @@ export function useContext(): RuntimeState {
 
 /** Resolves raw XML attributes from inside the component that owns them. */
 export function useProps(rawProps: Record<string, string> = {}): Record<string, unknown> {
-    const context = useContext();
+    const { ctx, setters } = useContext();
     const resolved: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(rawProps)) {
@@ -137,26 +137,21 @@ export function useProps(rawProps: Record<string, string> = {}): Record<string, 
 
         if (value.startsWith('$')) {
             try {
-                const binding = resolveBinding(value.slice(1), context.ctx, context.setters ?? {});
+                const binding = resolveBinding(value.slice(1), ctx, setters ?? {});
                 resolved[key] = binding.value;
-                resolved[toChangeHandlerName(key)] = binding.setValue;
+                if (key === 'value' || key === 'checked') {
+                    resolved['onChange'] = binding.setValue;
+                }
             } catch {
-                resolved[key] = evaluate(value, context.ctx);
+                resolved[key] = evaluate(value, ctx);
             }
             continue;
         }
 
-        resolved[key] = evaluate(value, context.ctx);
+        resolved[key] = evaluate(value, ctx);
     }
 
     return resolved;
-}
-
-/** Converts a bound prop name into the React-style change callback name. */
-function toChangeHandlerName(propName: string): string {
-    if (propName === 'value' || propName === 'checked') return 'onChange';
-
-    return `on${propName.charAt(0).toUpperCase()}${propName.slice(1)}Change`;
 }
 
 /** Runs an expression with XML values exposed as local variables. */

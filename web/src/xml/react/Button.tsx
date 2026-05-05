@@ -84,7 +84,7 @@ async function readResponseMessage(response: Response): Promise<string> {
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
 export function Button({ props: rawProps, children }: XmlComponentProps) {
-    const context = useContext();
+    const { options } = useContext();
     const props = useProps(rawProps as Record<string, string>);
     const href = String(props.href ?? '');
     const target = String(props.target ?? '');
@@ -115,7 +115,7 @@ export function Button({ props: rawProps, children }: XmlComponentProps) {
             disabled={disabled}
             variant={variant}
             size={size}
-            baseUrl={String(context.options?.baseUrl ?? '')}
+            baseUrl={String(options?.baseUrl ?? '')}
         >
             {content}
         </ActionButton>

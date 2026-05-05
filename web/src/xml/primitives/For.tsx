@@ -4,7 +4,7 @@ import { Fragment } from 'react';
 
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ props: rawProps, children }: XmlComponentProps) {
-    const context = useContext();
+    const { ctx, props: contextProps, children } = useContext();
     const props = useProps(rawProps as Record<string, string>);
     const eachExpression = props.each;
     const as = String(props.as ?? '');
@@ -12,16 +12,16 @@ export function For({ props: rawProps, children }: XmlComponentProps) {
     if (!as) throw new Error('For requires an "as" parameter');
 
     const items =
-        typeof eachExpression === 'string' ? (evaluate(eachExpression, context.ctx) ?? []) : (eachExpression ?? []);
+        typeof eachExpression === 'string' ? (evaluate(eachExpression, ctx) ?? []) : (eachExpression ?? []);
 
     if (!Array.isArray(items)) return null;
 
     return items.map((item, index) => {
-        const childCtx = { ...context.ctx, [as]: item, $index: index };
+        const childCtx = { ...ctx, [as]: item, $index: index };
 
         return (
             <Fragment key={index}>
-                <RuntimeProvider value={{ ...context, ctx: childCtx, props, children }}>
+                <RuntimeProvider value={{ ctx: childCtx, props, children }}>
                     {renderXml(children)}
                 </RuntimeProvider>
             </Fragment>

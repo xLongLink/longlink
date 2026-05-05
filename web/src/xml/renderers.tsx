@@ -1,6 +1,6 @@
 import { Component, Fragment, useContext as useReactContext, type ComponentType, type ReactNode } from 'react';
 import { registry } from './registry';
-import { evaluate, resolveCondition, RuntimeContext, RuntimeProvider } from './runtime';
+import { resolveCondition, RuntimeContext, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RenderableASTNode, RuntimeOptions } from './types';
 
 type XmlErrorBoundaryProps = {
@@ -95,16 +95,4 @@ export function render(ast: ASTNode[], ctx: ExecutionContext, options?: RuntimeO
             <RuntimeProvider value={{ ctx, options, props: {}, children: ast }}>{renderXml(ast)}</RuntimeProvider>
         </XmlErrorBoundary>
     );
-}
-
-/** Returns true when a raw XML string value is safe for React to render. */
-function isRenderableValue(value: unknown): value is ReactNode {
-    return value == null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
-}
-
-/** Describes a value that cannot be rendered directly. */
-function describeValue(value: unknown): string {
-    if (Array.isArray(value)) return 'an array';
-    if (value === null) return 'null';
-    return typeof value === 'object' ? 'an object' : typeof value;
 }

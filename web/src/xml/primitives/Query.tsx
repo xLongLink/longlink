@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 /** Fetches JSON data into a reusable query slot for descendants. */
 export function Query({ props: rawProps, children }: XmlComponentProps) {
-    const context = useContext();
+    const { ctx, options, setters, props: contextProps, children } = useContext();
     const props = useProps(rawProps as Record<string, string>);
     const id = String(props.id ?? '');
     const pathTemplate = String(props.path ?? '');
@@ -14,7 +14,7 @@ export function Query({ props: rawProps, children }: XmlComponentProps) {
     if (!pathTemplate) throw new Error('Query requires a "path" parameter');
 
     const path = pathTemplate;
-    const baseUrl = String(context.options?.baseUrl ?? '');
+    const baseUrl = String(options?.baseUrl ?? '');
     const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
     const { data, error } = useQuery({
         queryKey: [id, url],
@@ -31,9 +31,9 @@ export function Query({ props: rawProps, children }: XmlComponentProps) {
         if (error) toast.error(error instanceof Error ? error.message : 'Failed to load query data');
     }, [error]);
 
-    const childCtx = useMemo(() => ({ ...context.ctx, [id]: data ?? {} }), [context.ctx, id, data]);
+    const childCtx = useMemo(() => ({ ...ctx, [id]: data ?? {} }), [ctx, id, data]);
 
     return (
-        <RuntimeProvider value={{ ...context, ctx: childCtx, props, children }}>{renderXml(children)}</RuntimeProvider>
+        <RuntimeProvider value={{ ctx: childCtx, options, setters, props, children }}>{renderXml(children)}</RuntimeProvider>
     );
 }
