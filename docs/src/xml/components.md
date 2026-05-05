@@ -53,28 +53,12 @@ Use `<Input>` for single-line text entry.
 <Input name="title" label="Title" placeholder="Issue title" />
 ```
 
-Use `submit` when the field should POST its value on blur or commit.
-
-```xml
-<Input name="title" label="Title" submit="/issues" />
-```
-
 ## Select
 
 Use `<Select>` to choose one option from a list.
 
 ```xml
 <Select label="Status" options='[{"label":"Draft","value":"draft"}]' />
-```
-
-Use `submit` to pair the dropdown with an inline submit button.
-
-```xml
-<Select
-  label="Status"
-  options='[{"label":"Draft","value":"draft"}]'
-  submit="Save"
-/>
 ```
 
 ## Separator

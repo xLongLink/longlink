@@ -1,14 +1,13 @@
-import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/ui/calendar';
 import { Input as UIInput } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/popover';
 import { Textarea } from '@/ui/textarea';
+import type { XmlComponentProps } from '@/xml';
 import { format, isValid, parse } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router';
+import { useEffect, useMemo, useState } from 'react';
 
 type InputProps = {
     name?: string;
@@ -20,7 +19,6 @@ type InputProps = {
     description?: string;
     required?: boolean;
     disabled?: boolean;
-    submit?: string;
 };
 
 const DATE_FORMAT = 'yyyy-MM-dd';
@@ -39,24 +37,23 @@ const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => 
     return { date: parseDateValue(rawValue), time: rawValue.slice(11, 16) || '00:00' };
 };
 
-export function Input({
-    name,
-    kind = 'text',
-    label,
-    value,
-    onChange,
-    placeholder,
-    description,
-    required,
-    disabled,
-    submit,
-}: InputProps) {
-    const { appId } = useParams();
+/** Renders an XML input control from evaluated XML props. */
+export function Input({ props }: XmlComponentProps) {
+    const {
+        name,
+        kind = 'text',
+        label,
+        value,
+        onChange,
+        placeholder,
+        description,
+        required,
+        disabled,
+    } = props as InputProps;
     const defaultFieldValue = useMemo(
         () => (typeof value === 'string' || typeof value === 'number' ? String(value) : ''),
         [value]
     );
-    const previousValueRef = useRef(defaultFieldValue);
     const [textValue, setTextValue] = useState(defaultFieldValue);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(() =>
         kind === 'date' ? parseDateValue(defaultFieldValue) : undefined
@@ -64,16 +61,7 @@ export function Input({
     const [selectedDateTime, setSelectedDateTime] = useState<{ date?: Date; time: string } | undefined>(() =>
         kind === 'datetime' ? parseDatetimeValue(defaultFieldValue) : undefined
     );
-    const normalizedSubmitPath = (submit ?? '').replace(/^\/+|\/+$/g, '');
-    const submitPath = submit?.startsWith('/')
-        ? submit
-        : normalizedSubmitPath
-          ? appId
-              ? `/${appId}/${normalizedSubmitPath}`
-              : `/${normalizedSubmitPath}`
-          : '';
     useEffect(() => {
-        previousValueRef.current = defaultFieldValue;
         if (kind === 'date') {
             setSelectedDate(parseDateValue(defaultFieldValue));
             return;
@@ -84,11 +72,6 @@ export function Input({
         }
         setTextValue(defaultFieldValue);
     }, [defaultFieldValue, kind]);
-    const handleBlur = async (nextValue: string) => {
-        if (!submitPath || nextValue === previousValueRef.current) return;
-        previousValueRef.current = nextValue;
-        await apiFetch(submitPath, { method: 'POST', body: { ...(name ? { name } : {}), value: nextValue } });
-    };
     const renderControl = () => {
         if (kind === 'textarea')
             return (
@@ -102,9 +85,6 @@ export function Input({
                         const nextValue = event.currentTarget.value;
                         setTextValue(nextValue);
                         onChange?.(nextValue);
-                    }}
-                    onBlur={(event) => {
-                        void handleBlur(event.currentTarget.value);
                     }}
                 />
             );
@@ -128,7 +108,7 @@ export function Input({
                             onSelect={(nextDate) => {
                                 const nextValue = nextDate ? format(nextDate, DATE_FORMAT) : '';
                                 setSelectedDate(nextDate);
-                                void handleBlur(nextValue);
+                                onChange?.(nextValue);
                             }}
                         />
                     </PopoverContent>
@@ -159,15 +139,15 @@ export function Input({
                                 selected={datetimeValue.date}
                                 onSelect={(nextDate) => {
                                     const nextValue = { ...datetimeValue, date: nextDate };
+                                    const formattedValue = nextDate
+                                        ? format(
+                                              new Date(`${format(nextDate, DATE_FORMAT)}T${nextValue.time}`),
+                                              DATETIME_FORMAT
+                                          )
+                                        : '';
+
                                     setSelectedDateTime(nextValue);
-                                    void handleBlur(
-                                        nextDate
-                                            ? format(
-                                                  new Date(`${format(nextDate, DATE_FORMAT)}T${nextValue.time}`),
-                                                  DATETIME_FORMAT
-                                              )
-                                            : ''
-                                    );
+                                    onChange?.(formattedValue);
                                 }}
                             />
                         </PopoverContent>
@@ -186,7 +166,7 @@ export function Input({
                         }}
                         onBlur={(event) => {
                             if (!datetimeValue.date) return;
-                            void handleBlur(
+                            onChange?.(
                                 format(
                                     new Date(`${format(datetimeValue.date, DATE_FORMAT)}T${event.currentTarget.value}`),
                                     DATETIME_FORMAT
@@ -209,9 +189,6 @@ export function Input({
                     const nextValue = event.currentTarget.value;
                     setTextValue(nextValue);
                     onChange?.(nextValue);
-                }}
-                onBlur={(event) => {
-                    void handleBlur(event.currentTarget.value);
                 }}
             />
         );

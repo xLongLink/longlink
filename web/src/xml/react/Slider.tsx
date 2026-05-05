@@ -1,5 +1,6 @@
 import { Label } from '@/ui/label';
 import { Slider as UISlider } from '@/ui/slider';
+import type { XmlComponentProps } from '@/xml';
 
 type SliderValue = number | readonly number[] | string;
 type SliderProps = {
@@ -14,17 +15,19 @@ type SliderProps = {
     disabled?: boolean;
 };
 
-export function Slider({
-    label,
-    description,
-    min = 0,
-    max = 100,
-    step = 1,
-    value,
-    onChange,
-    orientation = 'horizontal',
-    disabled = false,
-}: SliderProps) {
+/** Renders an XML slider control from evaluated XML props. */
+export function Slider({ props }: XmlComponentProps) {
+    const {
+        label,
+        description,
+        min = 0,
+        max = 100,
+        step = 1,
+        value,
+        onChange,
+        orientation = 'horizontal',
+        disabled = false,
+    } = props as SliderProps;
     const normalizedMin = typeof min === 'number' && Number.isFinite(min) ? min : 0;
     const normalizedMax = typeof max === 'number' && Number.isFinite(max) ? max : 100;
     const normalizedStep = typeof step === 'number' && Number.isFinite(step) ? step : 1;

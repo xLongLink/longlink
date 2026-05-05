@@ -299,7 +299,7 @@ Example: `<Button action="/issues" method="POST" payload='{"title":"{issue.title
 
 ### `<Input>`
 
-Input field with optional label, description, and submit endpoint.
+Input field with optional label and description.
 
 Attributes:
 
@@ -311,7 +311,6 @@ Attributes:
 - `description` optional.
 - `required` optional.
 - `disabled` optional.
-- `submit` optional. POST destination used on blur or picker changes.
 
 ### `<Select>`
 
@@ -327,7 +326,6 @@ Attributes:
 - `options` optional. Array of `{ label, value }` objects or a JSON string.
 - `required` optional.
 - `disabled` optional.
-- `submit` optional. Shows a submit button next to the select.
 
 ### `<Checkbox>`
 

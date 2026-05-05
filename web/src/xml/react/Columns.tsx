@@ -1,5 +1,5 @@
-import type { RenderableASTNode } from '@/xml';
-import { evaluate, renderNode, useContext } from '@/xml';
+import type { RenderableASTNode, XmlComponentProps } from '@/xml';
+import { renderNode, useContext } from '@/xml';
 import { Children, isValidElement, type ReactNode } from 'react';
 
 type ColumnProps = {
@@ -27,10 +27,11 @@ function getColumnSpan(child: ReactNode) {
     return Number.isFinite(safeSpan) ? safeSpan : 1;
 }
 
-export function Columns({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+/** Renders XML children in a column grid. */
+export function Columns({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const gap = evaluate(props.gap ?? '16', context);
-    const widths = evaluate(props.widths ?? '', context) as number[] | undefined;
+    const gap = props.gap ?? 16;
+    const widths = props.widths as number[] | undefined;
     const columnSpans = Children.toArray(children as any)
         .map(getColumnSpan)
         .filter((span) => span > 0);
@@ -46,10 +47,11 @@ export function Columns({ props, children }: { props: Record<string, string>; ch
     );
 }
 
-export function Column({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+/** Renders a single XML column. */
+export function Column({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const span = evaluate(props.span ?? '', context);
-    const width = evaluate(props.width ?? '', context);
+    const span = props.span;
+    const width = props.width;
     const explicitSpan = (span as number | undefined) ?? (width as number | undefined);
     const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, explicitSpan));
     return (

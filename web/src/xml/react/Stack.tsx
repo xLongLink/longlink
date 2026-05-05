@@ -1,5 +1,5 @@
-import type { RenderableASTNode } from '@/xml';
-import { evaluate, renderNode, useContext } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
+import { renderNode, useContext } from '@/xml';
 const ALIGN_ITEMS = { center: 'center', end: 'flex-end', start: 'flex-start', stretch: 'stretch' } as const;
 const JUSTIFY_CONTENT = { between: 'space-between', center: 'center', end: 'flex-end', start: 'flex-start' } as const;
 
@@ -12,12 +12,13 @@ function px(value: unknown, fallback: number) {
     return `${fallback}px`;
 }
 
-export function Stack({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+/** Renders XML children in a configurable stack. */
+export function Stack({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const align = evaluate(props.align ?? 'stretch', context, 'string');
-    const direction = evaluate(props.direction ?? 'column', context, 'string');
-    const gap = evaluate(props.gap ?? '16', context);
-    const justify = evaluate(props.justify ?? 'start', context, 'string');
+    const align = String(props.align ?? 'stretch');
+    const direction = String(props.direction ?? 'column');
+    const gap = props.gap ?? 16;
+    const justify = String(props.justify ?? 'start');
     return (
         <div
             className={`flex ${direction === 'row' ? 'flex-row' : 'flex-col'}`}

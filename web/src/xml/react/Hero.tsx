@@ -1,12 +1,12 @@
-import type { RenderableASTNode } from '@/xml';
-import { evaluate, renderNode, useContext } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
+import { renderNode, useContext } from '@/xml';
 import { Icon } from './Icon';
 
-export function Hero({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function Hero({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const title = evaluate(props.title ?? '', context, 'string');
-    const subtitle = evaluate(props.subtitle ?? '', context, 'string');
-    const icon = evaluate(props.icon ?? '', context, 'string');
+    const title = String(props.title ?? '');
+    const subtitle = String(props.subtitle ?? '');
+    const icon = String(props.icon ?? '');
     return (
         <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">

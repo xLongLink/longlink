@@ -1,7 +1,6 @@
-import { Button } from '@/ui/button';
-import { ButtonGroup } from '@/ui/button-group';
 import { Label } from '@/ui/label';
 import { SelectContent, SelectItem, SelectTrigger, SelectValue, Select as UISelect } from '@/ui/select';
+import type { XmlComponentProps } from '@/xml';
 
 type SelectOption = {
     label: string;
@@ -17,7 +16,6 @@ type SelectProps = {
     options?: SelectOption[] | string;
     required?: boolean;
     disabled?: boolean;
-    submit?: string;
 };
 
 function normalizeOptions(options: SelectProps['options']): SelectOption[] {
@@ -33,48 +31,31 @@ function normalizeOptions(options: SelectProps['options']): SelectOption[] {
     return [];
 }
 
-export function Select({
-    name,
-    label,
-    value,
-    onChange,
-    placeholder,
-    description,
-    options,
-    disabled,
-    submit,
-}: SelectProps) {
+/** Renders an XML select control from evaluated XML props. */
+export function Select({ props }: XmlComponentProps) {
+    const { name, label, value, onChange, placeholder, description, options, disabled } = props as SelectProps;
     const normalizedOptions = normalizeOptions(options);
-    const renderControl = () => (
-        <UISelect
-            name={name}
-            disabled={disabled}
-            value={String(value ?? '')}
-            onValueChange={(nextValue) => onChange?.(nextValue ?? '')}
-        >
-            <SelectTrigger className="w-full">
-                <SelectValue placeholder={placeholder ?? 'Select an option'} />
-            </SelectTrigger>
-            <SelectContent>
-                {normalizedOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                    </SelectItem>
-                ))}
-            </SelectContent>
-        </UISelect>
-    );
+
     return (
         <div className="space-y-2">
             {label && <Label>{label}</Label>}
-            {submit ? (
-                <ButtonGroup className="w-full">
-                    {renderControl()}
-                    <Button disabled={disabled}>{submit}</Button>
-                </ButtonGroup>
-            ) : (
-                renderControl()
-            )}
+            <UISelect
+                name={name}
+                disabled={disabled}
+                value={String(value ?? '')}
+                onValueChange={(nextValue) => onChange?.(nextValue ?? '')}
+            >
+                <SelectTrigger className="w-full">
+                    <SelectValue placeholder={placeholder ?? 'Select an option'} />
+                </SelectTrigger>
+                <SelectContent>
+                    {normalizedOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </UISelect>
             {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
     );

@@ -64,7 +64,6 @@
                   label="Status"
                   value="$exampleForm.status"
                   options='[{"label":"Open","value":"open"},{"label":"Closed","value":"closed"}]'
-                  submit="Apply"
                 />
                 <Range label="Priority span" min="1" max="5" value="$exampleForm.priority" />
                 <Separator />

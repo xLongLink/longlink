@@ -7,40 +7,40 @@ import {
     DialogTitle as UIDialogTitle,
     DialogTrigger as UIDialogTrigger,
 } from '@/ui/dialog';
-import type { RenderableASTNode } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
 import { renderNode, useContext } from '@/xml';
 
-export function Dialog({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function Dialog({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <UIDialog>{renderNode(children, context.ctx)}</UIDialog>;
 }
 
-export function DialogContent({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function DialogContent({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <UIDialogContent>{renderNode(children, context.ctx)}</UIDialogContent>;
 }
 
-export function DialogHeader({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function DialogHeader({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <UIDialogHeader>{renderNode(children, context.ctx)}</UIDialogHeader>;
 }
 
-export function DialogTitle({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function DialogTitle({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <UIDialogTitle>{renderNode(children, context.ctx)}</UIDialogTitle>;
 }
 
-export function DialogDescription({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function DialogDescription({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <UIDialogDescription>{renderNode(children, context.ctx)}</UIDialogDescription>;
 }
 
-export function DialogFooter({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function DialogFooter({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <UIDialogFooter>{renderNode(children, context.ctx)}</UIDialogFooter>;
 }
 
-export function DialogTrigger({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function DialogTrigger({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <UIDialogTrigger>{renderNode(children, context.ctx)}</UIDialogTrigger>;
 }

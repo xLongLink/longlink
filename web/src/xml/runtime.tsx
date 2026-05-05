@@ -167,6 +167,12 @@ function looksLikeObjectLiteral(expression: string): boolean {
 /** Parses JSON XML attributes after resolving any `{expression}` placeholders. */
 function parseJsonAttribute(value: string, values: ExecutionContext): unknown {
     try {
+        return JSON.parse(value);
+    } catch {
+        // JSON attributes may contain string placeholders such as "{issue.title}".
+    }
+
+    try {
         return JSON.parse(interpolate(value, values));
     } catch {
         return undefined;

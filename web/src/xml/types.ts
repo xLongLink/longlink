@@ -24,22 +24,13 @@ export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 export type RuntimeState = {
     ctx: ExecutionContext;
     setters?: SetterContext;
-    props: Record<string, string>;
+    props: Record<string, unknown>;
     children?: RenderableASTNode;
-};
-
-/** Props accepted by XML buttons for actions and navigation. */
-export type ActionProps = {
-    action?: string;
-    method?: string;
-    body?: unknown;
-    payload?: unknown;
-    invalidate?: string | string[];
 };
 
 /** Standard XML component contract used by the runtime. */
 export type XmlComponentProps = {
-    props: Record<string, string>;
+    props: Record<string, unknown>;
     children?: RenderableASTNode;
 };
 

@@ -15,14 +15,14 @@ describe('Select', () => {
     /* The runtime should render select XML into the expected markup. */
     it('renders raw xml select content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-        const ast = xmlToAST('<Select label="Mode" submit="Save" />');
+        const ast = xmlToAST('<Select label="Mode" options=\'[{"label":"Open","value":"open"}]\' />');
         const renderedTree = renderNode(ast, ctx);
 
-        expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Save');
+        expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Mode');
     });
 
-    /* The adapter should preserve the submit button when rendered directly. */
-    it('renders a submit button directly', () => {
-        expect(renderToStaticMarkup(createElement(Select, { submit: 'Save' }))).toContain('Save');
+    /* The adapter should render evaluated XML props directly. */
+    it('renders label text directly', () => {
+        expect(renderToStaticMarkup(createElement(Select, { props: { label: 'Mode' } }))).toContain('Mode');
     });
 });

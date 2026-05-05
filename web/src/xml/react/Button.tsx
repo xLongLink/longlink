@@ -1,7 +1,7 @@
 import { Button as UIButton } from '@/ui/button';
-import type { RenderableASTNode } from '@/xml';
-import { evaluate, renderNode, useContext } from '@/xml';
-import { useQueryClient } from '@tanstack/react-query';
+import type { RenderableASTNode, XmlComponentProps } from '@/xml';
+import { renderNode, useContext } from '@/xml';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 type ButtonProps = {
@@ -16,6 +16,14 @@ type ButtonProps = {
     variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' | 'link';
     size?: 'default' | 'xs' | 'sm' | 'lg' | 'icon' | 'icon-xs' | 'icon-sm' | 'icon-lg';
     children?: RenderableASTNode;
+};
+
+type ActionButtonProps = Pick<
+    ButtonProps,
+    'action' | 'method' | 'payload' | 'invalidate' | 'disabled' | 'variant' | 'size'
+> & {
+    baseUrl: string;
+    children: ReturnType<typeof renderNode>;
 };
 
 /** Normalizes invalidate targets into a list of query keys. */
@@ -75,42 +83,18 @@ async function readResponseMessage(response: Response): Promise<string> {
 }
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
-export function Button({ props, children }: ButtonProps & { props: Record<string, string> }) {
-    const queryClient = useQueryClient();
+export function Button({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const href = evaluate(props.href ?? '', context, 'string');
-    const target = evaluate(props.target ?? '', context, 'string');
-    const rel = evaluate(props.rel ?? '', context, 'string');
-    const action = evaluate(props.action ?? '', context, 'string');
-    const disabled = evaluate(props.disabled ?? 'false', context, 'boolean');
-    const variant = evaluate(props.variant ?? '', context, 'string') as ButtonProps['variant'];
-    const size = evaluate(props.size ?? '', context, 'string') as ButtonProps['size'];
-    const method = evaluate(props.method ?? 'POST', context, 'string');
+    const href = String(props.href ?? '');
+    const target = String(props.target ?? '');
+    const rel = String(props.rel ?? '');
+    const action = String(props.action ?? '');
+    const disabled = Boolean(props.disabled ?? false);
+    const variant = String(props.variant ?? '') as ButtonProps['variant'];
+    const size = String(props.size ?? '') as ButtonProps['size'];
+    const method = String(props.method ?? 'POST');
     const payload = props.payload;
-    const invalidate = props.invalidate;
-    const handleClick = async () => {
-        if (!action) return;
-        const baseUrl = context.ctx.baseUrl ?? '';
-        const resolvedRequestPath = action;
-        const requestUrl = resolvedRequestPath.startsWith('http')
-            ? resolvedRequestPath
-            : `${baseUrl}${resolvedRequestPath}`;
-        const requestBody = typeof payload === 'string' ? evaluate(payload, context.ctx) : payload;
-        const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), requestBody));
-        const responseMessage = await readResponseMessage(response);
-
-        if (!response.ok) {
-            toast.error(responseMessage || `Request failed with status ${response.status}`);
-            return;
-        }
-
-        toast.success(responseMessage);
-
-        for (const queryKey of normalizeInvalidate(invalidate)) {
-            await queryClient.invalidateQueries({ queryKey: [queryKey] });
-        }
-    };
-
+    const invalidate = props.invalidate as ButtonProps['invalidate'];
     const content = renderNode(children, context.ctx);
 
     if (href) {
@@ -122,8 +106,68 @@ export function Button({ props, children }: ButtonProps & { props: Record<string
     }
 
     return (
-        <UIButton variant={variant} size={size} onClick={() => void handleClick()} disabled={disabled}>
+        <ActionButton
+            action={action}
+            method={method}
+            payload={payload}
+            invalidate={invalidate}
+            disabled={disabled}
+            variant={variant}
+            size={size}
+            baseUrl={String(context.ctx.baseUrl ?? '')}
+        >
             {content}
+        </ActionButton>
+    );
+}
+
+/** Renders an XML button action through React Query mutation state. */
+function ActionButton({
+    action = '',
+    method = 'POST',
+    payload,
+    invalidate,
+    disabled,
+    variant,
+    size,
+    baseUrl,
+    children,
+}: ActionButtonProps) {
+    const queryClient = useQueryClient();
+    const mutation = useMutation({
+        mutationFn: async () => {
+            if (!action) return 'Request completed';
+
+            const requestUrl = action.startsWith('http') ? action : `${baseUrl}${action}`;
+            const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), payload));
+            const responseMessage = await readResponseMessage(response);
+
+            if (!response.ok) {
+                throw new Error(responseMessage || `Request failed with status ${response.status}`);
+            }
+
+            return responseMessage;
+        },
+        onSuccess: async (responseMessage) => {
+            toast.success(responseMessage);
+
+            for (const queryKey of normalizeInvalidate(invalidate)) {
+                await queryClient.invalidateQueries({ queryKey: [queryKey] });
+            }
+        },
+        onError: (error) => {
+            toast.error(error instanceof Error ? error.message : 'Request failed');
+        },
+    });
+
+    return (
+        <UIButton
+            variant={variant}
+            size={size}
+            onClick={() => mutation.mutate()}
+            disabled={disabled || mutation.isPending}
+        >
+            {children}
         </UIButton>
     );
 }

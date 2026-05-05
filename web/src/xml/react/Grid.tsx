@@ -1,11 +1,13 @@
-import type { RenderableASTNode } from '@/xml';
-import { evaluate, renderNode, useContext } from '@/xml';
-export function Grid({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+import type { XmlComponentProps } from '@/xml';
+import { renderNode, useContext } from '@/xml';
+
+/** Renders XML children in a CSS grid. */
+export function Grid({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const gap = evaluate(props.gap ?? '1rem', context, 'string');
-    const columns = evaluate(props.columns ?? '', context, 'string');
-    const align = evaluate(props.align ?? '', context, 'string');
-    const justify = evaluate(props.justify ?? '', context, 'string');
+    const gap = String(props.gap ?? '1rem');
+    const columns = String(props.columns ?? '');
+    const align = String(props.align ?? '');
+    const justify = String(props.justify ?? '');
     return (
         <div
             style={{

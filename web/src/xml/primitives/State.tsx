@@ -1,18 +1,18 @@
-import type { RenderableASTNode } from '@/xml';
-import { RuntimeProvider, evaluate, renderNode, useContext } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
+import { RuntimeProvider, renderNode, useContext } from '@/xml';
 import { useMemo, useState } from 'react';
 
 /** Creates a local reactive state slot for descendant XML nodes. */
-export function State({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function State({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const id = evaluate(props.id ?? '', context, 'string');
+    const id = String(props.id ?? '');
     if (!id) throw new Error('State requires an "id" parameter');
 
     const initialState = useMemo(() => {
-        if ('value' in props) return evaluate(props.value ?? '', context);
+        if ('value' in props) return props.value;
 
         return Object.fromEntries(Object.entries(props).filter(([key]) => key !== 'id'));
-    }, [context, props]);
+    }, [props]);
     const [value, setValue] = useState(initialState);
     const childSetters = useMemo(() => ({ ...(context.setters ?? {}), [id]: setValue }), [context.setters, id]);
     const childCtx = useMemo(

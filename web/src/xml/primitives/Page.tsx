@@ -1,12 +1,12 @@
-import type { RenderableASTNode } from '@/xml';
-import { evaluate, renderNode, useContext } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
+import { renderNode, useContext } from '@/xml';
 import { useEffect } from 'react';
 
 /** Renders the page shell and updates the document title. */
-export function Page({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function Page({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const title = evaluate(props.title ?? '', context, 'string');
-    const name = evaluate(props.name ?? '', context, 'string');
+    const title = String(props.title ?? '');
+    const name = String(props.name ?? '');
     const documentTitle = title || name;
 
     useEffect(() => {

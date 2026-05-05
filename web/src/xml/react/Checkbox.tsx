@@ -1,15 +1,18 @@
 import { Checkbox as UICheckbox } from '@/ui/checkbox';
 import { Label } from '@/ui/label';
+import type { XmlComponentProps } from '@/xml';
 import { useId } from 'react';
 
 type CheckboxProps = {
     label?: string;
     description?: string;
-    checked?: boolean;
+    checked?: boolean | string;
     onChange?: (checked: boolean) => void;
 };
 
-export function Checkbox({ label, description, checked = false, onChange }: CheckboxProps) {
+/** Renders an XML checkbox control from evaluated XML props. */
+export function Checkbox({ props }: XmlComponentProps) {
+    const { label, description, checked = false, onChange } = props as CheckboxProps;
     const id = useId();
     const resolvedChecked = typeof checked === 'string' ? checked === 'true' : checked;
     return (

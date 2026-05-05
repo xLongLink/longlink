@@ -5,7 +5,7 @@ import {
     MenuContent,
     MenuList,
 } from '@/ui/menu';
-import type { ASTNode, RenderableASTNode } from '@/xml';
+import type { ASTNode, XmlComponentProps } from '@/xml';
 import { renderNode, useContext } from '@/xml';
 import type { LucideIcon } from 'lucide-react';
 import { AppWindow } from 'lucide-react';
@@ -58,17 +58,17 @@ function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
     });
 }
 
-export function MenuSection({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function MenuSection({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <>{renderNode(children, context.ctx)}</>;
 }
 
-export function MenuSubSection({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function MenuSubSection({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     return <>{renderNode(children, context.ctx)}</>;
 }
 
-export function Menu({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function Menu({ props: _props, children }: XmlComponentProps) {
     const context = useContext();
     const sections = useMemo(() => parseSectionsFromAST({ name: 'Menu', children: children as any }), [children]);
     const [activeValue, setActiveValue] = useState<string | undefined>(() => {

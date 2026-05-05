@@ -1,20 +1,17 @@
-import type { RenderableASTNode } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
 import { evaluate, renderNode, RuntimeProvider, useContext } from '@/xml';
 import { Fragment } from 'react';
 
 /** Iterates over an array and renders children in a scoped context. */
-export function For({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function For({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const eachExpression = props.each ?? '';
-    const as = evaluate(props.as ?? '', context, 'string');
+    const eachExpression = props.each;
+    const as = String(props.as ?? '');
     if (!eachExpression) throw new Error('For requires an "each" parameter');
     if (!as) throw new Error('For requires an "as" parameter');
 
     const items =
-        evaluate(
-            eachExpression.startsWith('$') || eachExpression.includes('{') ? eachExpression : `$${eachExpression}`,
-            context
-        ) ?? [];
+        typeof eachExpression === 'string' ? (evaluate(eachExpression, context) ?? []) : (eachExpression ?? []);
 
     if (!Array.isArray(items)) return null;
 

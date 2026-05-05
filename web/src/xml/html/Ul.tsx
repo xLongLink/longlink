@@ -1,21 +1,13 @@
-import type { RenderableASTNode } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
 import { renderNode, useContext } from '@/xml';
 import type { ComponentPropsWithoutRef } from 'react';
 
-type BaseProps = {
-    children?: RenderableASTNode;
-};
-
 /** Renders an unordered list with standard styling. */
-export function Ul({
-    children,
-    props: _xmlProps,
-    ...props
-}: ComponentPropsWithoutRef<'ul'> & BaseProps & { props: Record<string, string> }) {
+export function Ul({ props, children }: XmlComponentProps) {
     const context = useContext();
 
     return (
-        <ul className="my-6 ml-6 list-disc [&>li]:mt-2" {...props}>
+        <ul className="my-6 ml-6 list-disc [&>li]:mt-2" {...(props as ComponentPropsWithoutRef<'ul'>)}>
             {renderNode(children, context.ctx)}
         </ul>
     );

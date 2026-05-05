@@ -139,8 +139,8 @@ function RenderedNode({ node, ctx }: { node: RenderableASTNode; ctx: ExecutionCo
     const resolvedProps = resolveParams(node.params, ctx);
 
     return (
-        <RuntimeProvider value={{ ctx, props: node.params ?? {}, children: node.children }}>
-            <Component {...resolvedProps} props={node.params ?? {}} children={node.children} />
+        <RuntimeProvider value={{ ctx, props: resolvedProps, children: node.children }}>
+            <Component props={resolvedProps} children={node.children} />
         </RuntimeProvider>
     );
 }

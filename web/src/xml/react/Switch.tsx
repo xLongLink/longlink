@@ -1,5 +1,6 @@
 import { Label } from '@/ui/label';
 import { Switch as UISwitch } from '@/ui/switch';
+import type { XmlComponentProps } from '@/xml';
 import { useId } from 'react';
 
 type SwitchProps = {
@@ -10,7 +11,9 @@ type SwitchProps = {
     onChange?: (checked: boolean) => void;
 };
 
-export function Switch({ label, description, active = false, checked, onChange }: SwitchProps) {
+/** Renders an XML switch control from evaluated XML props. */
+export function Switch({ props }: XmlComponentProps) {
+    const { label, description, active = false, checked, onChange } = props as SwitchProps;
     const id = useId();
     const rawChecked = checked ?? active;
     const resolvedChecked = typeof rawChecked === 'string' ? rawChecked === 'true' : rawChecked;

@@ -3,7 +3,7 @@
   <Menu>
     <MenuSection title="General" icon="settings">
       <MenuSubSection root="true">
-        <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." submit="Save" />
+        <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." />
       </MenuSubSection>
     </MenuSection>
     <MenuSection title="Identity" icon="user">

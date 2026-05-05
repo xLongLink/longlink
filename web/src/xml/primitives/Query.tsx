@@ -1,14 +1,14 @@
-import type { RenderableASTNode } from '@/xml';
-import { RuntimeProvider, evaluate, renderNode, useContext } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
+import { RuntimeProvider, renderNode, useContext } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
 /** Fetches JSON data into a reusable query slot for descendants. */
-export function Query({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+export function Query({ props, children }: XmlComponentProps) {
     const context = useContext();
-    const id = evaluate(props.id ?? '', context, 'string');
-    const pathTemplate = evaluate(props.path ?? '', context, 'string');
+    const id = String(props.id ?? '');
+    const pathTemplate = String(props.path ?? '');
     if (!id) throw new Error('Query requires an "id" parameter');
     if (!pathTemplate) throw new Error('Query requires a "path" parameter');
 

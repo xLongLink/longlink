@@ -1,5 +1,6 @@
 import { Label } from '@/ui/label';
 import { Slider } from '@/ui/slider';
+import type { XmlComponentProps } from '@/xml';
 
 type RangeProps = {
     label?: string;
@@ -11,7 +12,9 @@ type RangeProps = {
     onChange?: (value: number[]) => void;
 };
 
-export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max], onChange }: RangeProps) {
+/** Renders an XML range control from evaluated XML props. */
+export function Range({ props }: XmlComponentProps) {
+    const { label, description, min = 0, max = 100, step = 1, value = [min, max], onChange } = props as RangeProps;
     const resolvedMin = typeof min === 'number' && Number.isFinite(min) ? min : 0;
     const resolvedMax = typeof max === 'number' && Number.isFinite(max) ? max : 100;
     const resolvedStep = typeof step === 'number' && Number.isFinite(step) ? step : 1;
