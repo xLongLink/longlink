@@ -258,12 +258,8 @@ Attributes:
 
 - `action` optional. API path to call.
 - `method` optional. HTTP method. Default `POST`.
-- `url` optional. Alternate action path.
-- `path` optional. Alternate action path.
 - `payload` optional. Request body value or JSON string.
 - `invalidate` optional. Comma-separated query keys or an array.
-- `onSuccess` optional. Function callback or script string.
-- `href` optional. If set, renders as a link.
 - `disabled` optional.
 - `variant` optional.
 - `size` optional.
@@ -290,9 +286,7 @@ Button sizes:
 
 Behavior:
 
-- If `href` starts with `/`, the button renders as a router link.
-- If `href` is external, it renders as a normal anchor.
-- Otherwise it performs the configured action request.
+- Performs the configured action request.
 
 Example: `<Button action="/issues" method="POST" payload='{"title":"{issue.title}"}' invalidate="issues">Save</Button>`
 

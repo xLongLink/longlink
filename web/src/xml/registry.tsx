@@ -1,4 +1,4 @@
-import { createElement, useState, type ComponentProps, type ComponentType } from 'react';
+import { createElement, type ComponentProps, type ComponentType } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { For } from './primitives/For';
@@ -45,10 +45,7 @@ import Stack from './layout/Stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './layout/Tabs';
 import Page from './primitives/Page';
 
-/**
- * Creates a minimal ExecutionContext with empty state, queries, and scope.
- * Accepts optional partial overrides for any of the three fields.
- */
+/** Creates a minimal ExecutionContext with empty state, queries, and scope. */
 export function createContext(initial: Partial<ExecutionContext> = {}): ExecutionContext {
     return {
         state: initial.state ?? {},
@@ -123,13 +120,7 @@ export const registry = defaultRegistry;
 // action
 // ---------------------------------------------------------------------------
 
-/**
- * Normalizes the `invalidate` prop into an array of query keys.
- * Accepts a string (comma-separated), an array, or an invalid value.
- */
-/**
- * Normalizes invalidate targets into a list of query keys.
- */
+/** Normalizes invalidate targets into a list of query keys. */
 function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
     if (Array.isArray(value)) {
         return value;
@@ -145,14 +136,7 @@ function normalizeInvalidate(value: ActionProps['invalidate']): string[] {
         .filter(Boolean);
 }
 
-/**
- * Builds a RequestInit object from method and body.
- * Handles native body types (FormData, URLSearchParams, Blob, string) directly,
- * serializing all other values as JSON with a content-type header.
- */
-/**
- * Builds request options for XML actions.
- */
+/** Builds request options for XML actions. */
 function buildRequestInit(method: string, body: unknown): RequestInit {
     if (method === 'GET' || method === 'HEAD' || body === undefined) {
         return { method };
@@ -192,12 +176,7 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
     };
 }
 
-/**
- * Reads a submit response into a short toast message.
- */
-/**
- * Reads a short status message from an action response.
- */
+/** Reads a short status message from an action response. */
 async function readResponseMessage(response: Response): Promise<string> {
     const contentType = response.headers.get('content-type') ?? '';
 
@@ -217,16 +196,7 @@ async function readResponseMessage(response: Response): Promise<string> {
     return message || 'Request completed';
 }
 
-/**
- * Resolves action payload values using runtime context.
- *
- * - Strings wrapped as `{expression}` are evaluated and can return non-string values.
- * - Arrays and plain objects are traversed recursively.
- * - Non-plain objects (FormData, Blob, Date, URLSearchParams, etc.) are preserved.
- */
-/**
- * Resolves templated payload values against the runtime context.
- */
+/** Resolves templated payload values against the runtime context. */
 function resolveActionPayload(value: unknown, ctx: ExecutionContext): unknown {
     if (typeof value === 'string') {
         return resolveValue(value, ctx);
@@ -247,53 +217,24 @@ function resolveActionPayload(value: unknown, ctx: ExecutionContext): unknown {
 }
 
 /**
- * Higher-order component that injects `action` and `pending` props into the
- * wrapped component. The `action` handler calls `path` with `method` and `body`,
+ * Higher-order component that injects `action` props into the
+ * wrapped component. The `action` handler calls `action` with `method` and `body`,
  * then invalidates the listed query keys on success.
  */
 export function action<TComponent extends ComponentType<any>>(Component: TComponent) {
     type Props = Omit<ComponentProps<TComponent>, keyof ActionComponentProps> & ActionProps;
 
-    /**
-     * Evaluates a successful action callback.
-     * Supports either a function callback or a script string with `refetch(...)` and `set(...)`.
-     */
-    async function executeOnSuccess(
-        onSuccess: ActionProps['onSuccess'],
-        helpers: { refetch: (key: string) => Promise<void>; set: (target: string, value: unknown) => void }
-    ): Promise<void> {
-        if (!onSuccess) {
-            return;
-        }
-
-        if (typeof onSuccess === 'function') {
-            await onSuccess();
-            return;
-        }
-
-        /* Execute XML script snippets with explicit helper bindings. */
-        const runScript = new Function('refetch', 'set', onSuccess) as (
-            refetch: (key: string) => Promise<void>,
-            set: (target: string, value: unknown) => void
-        ) => unknown;
-        await runScript(helpers.refetch, helpers.set);
-    }
-
     function ActionComponent({
-        path,
         action: actionPath,
-        url,
         method = 'POST',
         body,
         payload,
         invalidate,
-        onSuccess,
         ...props
     }: Props) {
         const queryClient = useQueryClient();
-        const [pending, setPending] = useState(false);
         const runtime = useRuntime();
-        const resolvedPath = path ?? actionPath ?? url;
+        const resolvedPath = actionPath;
 
         const { _baseUrl: _unusedBaseUrl, ...restProps } = props as ComponentProps<TComponent> & { _baseUrl?: string };
 
@@ -301,54 +242,34 @@ export function action<TComponent extends ComponentType<any>>(Component: TCompon
         const handleAction: ActionHandler = async (event) => {
             event.preventDefault();
 
-            if (!resolvedPath || pending) return;
+            if (!resolvedPath) return;
 
-            setPending(true);
+            const baseUrl = runtime.ctx.baseUrl ?? '';
+            const resolvedRequestPath = String(resolveValue(resolvedPath, runtime.ctx));
+            const requestUrl = resolvedRequestPath.startsWith('http')
+                ? resolvedRequestPath
+                : `${baseUrl}${resolvedRequestPath}`;
+            const requestBody = resolveActionPayload(body ?? payload, runtime.ctx);
+            const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), requestBody));
+            const responseMessage = await readResponseMessage(response);
 
-            try {
-                const baseUrl = runtime.ctx.baseUrl ?? '';
-                const resolvedRequestPath = String(resolveValue(resolvedPath, runtime.ctx));
-                const requestUrl = resolvedRequestPath.startsWith('http')
-                    ? resolvedRequestPath
-                    : `${baseUrl}${resolvedRequestPath}`;
-                const requestBody = resolveActionPayload(body ?? payload, runtime.ctx);
-                const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), requestBody));
-                const responseMessage = await readResponseMessage(response);
-
-                if (!response.ok) {
-                    toast.error(responseMessage || `Request failed with status ${response.status}`);
-                    return;
-                }
-
-                toast.success(responseMessage);
-
-                for (const queryKey of normalizeInvalidate(invalidate)) {
-                    await queryClient.invalidateQueries({ queryKey: [queryKey] });
-                }
-
-                await executeOnSuccess(onSuccess, {
-                    refetch: async (key) => queryClient.invalidateQueries({ queryKey: [key] }),
-                    set: (target, value) => {
-                        const stateEntry = runtime.ctx.state[target];
-
-                        if (!stateEntry) {
-                            throw new Error(`set: unknown state "${target}"`);
-                        }
-
-                        const [, setter] = stateEntry;
-                        setter(value);
-                    },
-                });
-            } finally {
-                setPending(false);
+            if (!response.ok) {
+                toast.error(responseMessage || `Request failed with status ${response.status}`);
+                return;
             }
+
+            toast.success(responseMessage);
+
+            for (const queryKey of normalizeInvalidate(invalidate)) {
+                await queryClient.invalidateQueries({ queryKey: [queryKey] });
+            }
+
         };
 
-        /* Inject action handler and pending state into wrapped component */
+        /* Inject action handler into wrapped component */
         return createElement(Component as ComponentType<any>, {
             ...restProps,
             action: handleAction,
-            pending,
         });
     }
 

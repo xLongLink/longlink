@@ -12,17 +12,7 @@ type XMLButtonProps = Omit<Parameters<typeof UIButton>[0], keyof ActionComponent
 /**
  * XML button adapter that maps action-layer props to DOM-safe button props.
  */
-function Button({
-    action,
-    pending = false,
-    href,
-    onClick,
-    disabled,
-    variant,
-    size,
-    children,
-    ...props
-}: XMLButtonProps) {
+function Button({ action, href, onClick, disabled, variant, size, children, ...props }: XMLButtonProps) {
     const handleClick = (event: Parameters<NonNullable<typeof onClick>>[0]) => {
         onClick?.(event);
 
@@ -40,7 +30,7 @@ function Button({
                     {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}
                     to={href}
                     className={buttonVariants({ variant, size })}
-                    aria-disabled={Boolean(disabled) || pending}
+                    aria-disabled={Boolean(disabled)}
                 >
                     {children}
                 </Link>
@@ -52,7 +42,7 @@ function Button({
                 {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}
                 href={href}
                 className={buttonVariants({ variant, size })}
-                aria-disabled={Boolean(disabled) || pending}
+                aria-disabled={Boolean(disabled)}
             >
                 {children}
             </a>
@@ -60,13 +50,7 @@ function Button({
     }
 
     return (
-        <UIButton
-            {...props}
-            variant={variant}
-            size={size}
-            onClick={handleClick}
-            disabled={Boolean(disabled) || pending}
-        >
+        <UIButton {...props} variant={variant} size={size} onClick={handleClick} disabled={Boolean(disabled)}>
             {children}
         </UIButton>
     );

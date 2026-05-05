@@ -22,12 +22,7 @@ const parser = new XMLParser({
     ignoreDeclaration: true,
 });
 
-/**
- * Parses an XML string into an array of ASTNodes.
- *
- * The returned array represents the top-level children of the document.
- * Whitespace-only text nodes and XML declarations are silently dropped.
- */
+/** Parses an XML string into an array of ASTNodes. */
 export function xmlToAST(xml: string): ASTNode[] {
     const parsed = parser.parse(xml) as PreserveOrderNode[];
 
@@ -42,20 +37,7 @@ export function xmlToAST(xml: string): ASTNode[] {
     return children;
 }
 
-/**
- * Converts a single preserve-order parser entry into an ASTNode.
- *
- * Returns null for:
- *   - Entries with no recognisable tag name
- *   - Processing instructions (`?...`) and DOCTYPE declarations (`!...`)
- *   - Text nodes that are empty or contain only whitespace
- *
- * Attribute values are always strings; non-string values (e.g. booleans
- * produced by fast-xml-parser) are discarded.
- */
-/**
- * Converts a single preserve-order parser entry into an AST node.
- */
+/** Converts a single preserve-order parser entry into an AST node. */
 function convertNode(entry: PreserveOrderNode): ASTNode | null {
     const nodeName = Object.keys(entry).find((key) => key !== ATTRIBUTES_NODE_NAME);
     if (!nodeName) return null;
