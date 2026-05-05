@@ -12,14 +12,6 @@ function px(value: unknown, fallback: number) {
     return `${fallback}px`;
 }
 
-type StackProps = {
-    align?: string;
-    children?: RenderableASTNode;
-    direction?: string;
-    gap?: number | string;
-    justify?: string;
-};
-
 export function Stack({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
     const context = useContext();
     const align = evaluate(props.align ?? 'stretch', context, 'string');

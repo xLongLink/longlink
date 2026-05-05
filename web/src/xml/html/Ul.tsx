@@ -7,7 +7,11 @@ type BaseProps = {
 };
 
 /** Renders an unordered list with standard styling. */
-export function Ul({ children, ...props }: ComponentPropsWithoutRef<'ul'> & BaseProps) {
+export function Ul({
+    children,
+    props: _xmlProps,
+    ...props
+}: ComponentPropsWithoutRef<'ul'> & BaseProps & { props: Record<string, string> }) {
     const context = useContext();
 
     return (

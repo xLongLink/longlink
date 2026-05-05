@@ -57,8 +57,8 @@ describe('renderNode', () => {
         expect(widgetElement.props.label).toBe('Count: 2');
     });
 
-    /* bind:<prop> should provide the bound value and a matching prop change callback. */
-    it('resolves bind props into values and change handlers', () => {
+    /* $-bound props should provide the bound value and a matching prop change callback. */
+    it('resolves $ props into values and change handlers', () => {
         let latestValue: unknown;
         const currentValue = { value: 'Ada', placeholder: 'Enter name' };
         const ctx: ExecutionContext = {
@@ -78,8 +78,8 @@ describe('renderNode', () => {
         const node: ASTNode = {
             name: 'Input',
             params: {
-                'bind:value': 'form.value',
-                'bind:placeholder': 'form.placeholder',
+                value: '$form.value',
+                placeholder: '$form.placeholder',
             },
         };
 

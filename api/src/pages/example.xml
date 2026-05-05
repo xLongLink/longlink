@@ -1,7 +1,7 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Example" icon="layout-grid">
-  <State id="exampleForm" fullName="" email="" notes="" subscribed="true" notifications="false" progress="35">
-    <Query id="example" path="/example" />
+  <State id="exampleForm" fullName="" email="" notes="" subscribed="true" notifications="false" progress="35" status="open" priority='[2,4]'>
+    <Query id="example" path="/example">
 
   <Hero title="XML component showcase" subtitle="A single page that demonstrates the supported XML surface." icon="layout-grid">
     <Stack direction="row" gap="8" align="center">
@@ -36,10 +36,11 @@
               <CardDescription>Text, textarea, checkbox, switch, and slider</CardDescription>
             </CardHeader>
             <CardContent>
-              <Stack gap="12">
-                <Input kind="text" label="Full name" value="$exampleForm.fullName" placeholder="Ada Lovelace" />
-                <Input kind="date" label="Due date" value="2026-05-05" />
-                <Textarea label="Notes" value="$exampleForm.notes" description="Optional context" />
+                <Stack gap="12">
+                  <Input kind="text" label="Full name" value="$exampleForm.fullName" placeholder="Ada Lovelace" />
+                  <Input kind="email" label="Email" value="$exampleForm.email" placeholder="ada@example.com" />
+                  <Input kind="date" label="Due date" value="2026-05-05" />
+                  <Textarea label="Notes" value="$exampleForm.notes" description="Optional context" />
                 <Checkbox label="Subscribe to updates" checked="$exampleForm.subscribed" />
                 <Switch label="Enable notifications" checked="$exampleForm.notifications" description="Receive page updates" />
                 <Slider label="Progress" min="0" max="100" step="5" value="$exampleForm.progress" />
@@ -61,11 +62,11 @@
               <Stack gap="12">
                 <Select
                   label="Status"
-                  value="open"
+                  value="$exampleForm.status"
                   options='[{"label":"Open","value":"open"},{"label":"Closed","value":"closed"}]'
                   submit="Apply"
                 />
-                <Range label="Priority span" min="1" max="5" value='[2,4]' />
+                <Range label="Priority span" min="1" max="5" value="$exampleForm.priority" />
                 <Separator />
                 <Icon name="sparkles" fallback="box" />
               </Stack>
@@ -153,5 +154,6 @@
       </MenuSubSection>
     </MenuSection>
     </Menu>
+    </Query>
   </State>
 </Page>

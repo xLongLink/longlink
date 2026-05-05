@@ -7,7 +7,11 @@ type BaseProps = {
 };
 
 /** Renders a level 4 heading with standard styling. */
-export function H4({ children, ...props }: ComponentPropsWithoutRef<'h4'> & BaseProps) {
+export function H4({
+    children,
+    props: _xmlProps,
+    ...props
+}: ComponentPropsWithoutRef<'h4'> & BaseProps & { props: Record<string, string> }) {
     const context = useContext();
 
     return (

@@ -8,27 +8,14 @@ export type ASTNode = {
     value?: string;
 };
 
-/**
- * Runtime context threaded through the render tree.
- *
- * - `state`   — reactive state variables keyed by id; each entry is a
- *               `[currentValue, setter]` tuple (mirrors React's useState).
- * - `queries` — data fetched by `<Query>` nodes, keyed by id.
- * - `scope`   — locally scoped variables introduced by `<For>` and similar
- *               primitives; highest-priority during expression evaluation.
- */
-export type ExecutionContext = {
-    state: Record<string, [any, Function]>;
-    queries: Record<string, any>;
-    scope: Record<string, any>;
-    baseUrl?: string;
-};
+/** Flat XML value context used for attribute evaluation. */
+export type ExecutionContext = Record<string, unknown> & { baseUrl?: string };
+
+/** Setter context used by $-bound XML attributes and state primitives. */
+export type SetterContext = Record<string, (value: unknown) => void>;
 
 /** A React component that can be registered and rendered from XML. */
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
-
-/** Raw output shape from fast-xml-parser when preserveOrder is enabled. */
-export type PreserveOrderNode = Record<string, any>;
 
 /** A node or array of nodes that can be rendered by renderNode. */
 export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
@@ -36,8 +23,9 @@ export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 /** State provided by RuntimeProvider to the render tree. */
 export type RuntimeState = {
     ctx: ExecutionContext;
+    setters?: SetterContext;
     props: Record<string, string>;
-    children?: ASTNode[];
+    children?: RenderableASTNode;
 };
 
 /** Props accepted by XML buttons for actions and navigation. */
@@ -52,7 +40,7 @@ export type ActionProps = {
 /** Standard XML component contract used by the runtime. */
 export type XmlComponentProps = {
     props: Record<string, string>;
-    children?: ASTNode[];
+    children?: RenderableASTNode;
 };
 
 /** XML component type with the runtime contract. */

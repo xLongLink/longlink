@@ -2,12 +2,6 @@ import type { RenderableASTNode } from '@/xml';
 import { evaluate, renderNode, useContext } from '@/xml';
 import { Children, isValidElement, type ReactNode } from 'react';
 
-type ColumnsProps = {
-    gap?: number | string;
-    widths?: number[];
-    children?: RenderableASTNode;
-};
-
 type ColumnProps = {
     span?: number;
     width?: number;
@@ -46,7 +40,7 @@ export function Columns({ props, children }: { props: Record<string, string>; ch
             ? { gridTemplateColumns: toGridTemplate(widths) }
             : { gridTemplateColumns: `repeat(${totalColumns}, minmax(0, 1fr))` };
     return (
-        <div className="grid" style={{ ...style, gap: px(gap, 16) }}>
+        <div className="grid" style={{ ...style, gap: px(gap as number | string | undefined, 16) }}>
             {renderNode(children as any, context.ctx) as unknown as ReactNode}
         </div>
     );

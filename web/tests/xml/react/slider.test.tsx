@@ -9,10 +9,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('Slider', () => {
     /* The compiler should preserve slider attributes. */
     it('compiles slider xml into a slider ast node', () => {
-        expect(xmlToAST('<Slider label="Volume" min="0" max="100" step="5" bind:value="settings.volume" />')).toEqual([
+        expect(xmlToAST('<Slider label="Volume" min="0" max="100" step="5" value="$settings.volume" />')).toEqual([
             {
                 name: 'Slider',
-                params: { label: 'Volume', min: '0', max: '100', step: '5', 'bind:value': 'settings.volume' },
+                params: { label: 'Volume', min: '0', max: '100', step: '5', value: '$settings.volume' },
             },
         ]);
     });
@@ -24,7 +24,7 @@ describe('Slider', () => {
             queries: {},
             scope: {},
         };
-        const ast = xmlToAST('<Slider label="Volume" bind:value="settings.volume" description="Set level" />');
+        const ast = xmlToAST('<Slider label="Volume" value="$settings.volume" description="Set level" />');
         const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('50');

@@ -5,15 +5,15 @@ import { useId } from 'react';
 type SwitchProps = {
     label?: string;
     description?: string;
-    active?: boolean;
-    checked?: boolean;
+    active?: boolean | string;
+    checked?: boolean | string;
     onChange?: (checked: boolean) => void;
 };
 
 export function Switch({ label, description, active = false, checked, onChange }: SwitchProps) {
     const id = useId();
-    const resolvedChecked =
-        typeof (checked ?? active) === 'string' ? (checked ?? active) === 'true' : (checked ?? active);
+    const rawChecked = checked ?? active;
+    const resolvedChecked = typeof rawChecked === 'string' ? rawChecked === 'true' : rawChecked;
     return (
         <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
             <div className="space-y-1">

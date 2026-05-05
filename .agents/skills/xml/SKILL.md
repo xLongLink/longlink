@@ -90,8 +90,8 @@ Curly braces evaluate JavaScript-like expressions using state: `Hello, {user.nam
 - On `<State>` → resets to initial value
 - On `<Query>` → triggers refetch
 
-**Two-way Binding (`bind:`)**: \
-Syncs component props with state: `<Input bind:value="user.name" />` Updates flow both ways (UI ↔ state)
+**Two-way Binding (`$`)**: \
+Syncs component props with state by setting the prop value to a `$` path: `<Input value="$user.name" />` Updates flow both ways (UI ↔ state)
 
 **Iteration (`<For>`)**: \
 Loop over arrays: `<For each="orders" as="order"> ... </For>`

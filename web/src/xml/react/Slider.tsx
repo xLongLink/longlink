@@ -1,7 +1,7 @@
 import { Label } from '@/ui/label';
 import { Slider as UISlider } from '@/ui/slider';
 
-type SliderValue = number | number[];
+type SliderValue = number | readonly number[] | string;
 type SliderProps = {
     label?: string;
     description?: string;
@@ -64,7 +64,7 @@ export function Slider({
                 orientation={orientation}
                 disabled={disabled}
                 onValueChange={(nextValue) => {
-                    onChange?.(nextValue);
+                    onChange?.(Array.isArray(nextValue) ? [...nextValue] : nextValue);
                 }}
             />
             {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}

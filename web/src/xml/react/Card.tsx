@@ -10,13 +10,6 @@ import {
 import type { RenderableASTNode } from '@/xml';
 import { renderNode, useContext } from '@/xml';
 
-type BaseProps = {
-    children?: RenderableASTNode;
-};
-
-type CardProps = BaseProps & { size?: 'default' | 'sm' };
-type ChildrenProps = BaseProps;
-
 export function Card({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
     const context = useContext();
     return <UICard size={(props.size as 'default' | 'sm') ?? 'default'}>{renderNode(children, context.ctx)}</UICard>;

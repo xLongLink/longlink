@@ -8,10 +8,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('Input', () => {
     /* The compiler should preserve input attributes. */
     it('compiles input xml into an input ast node', () => {
-        expect(xmlToAST('<Input label="Name" bind:value="user.name" bind:placeholder="user.placeholder" />')).toEqual([
+        expect(xmlToAST('<Input label="Name" value="$user.name" placeholder="$user.placeholder" />')).toEqual([
             {
                 name: 'Input',
-                params: { label: 'Name', 'bind:value': 'user.name', 'bind:placeholder': 'user.placeholder' },
+                params: { label: 'Name', value: '$user.name', placeholder: '$user.placeholder' },
             },
         ]);
     });
@@ -23,7 +23,7 @@ describe('Input', () => {
             queries: {},
             scope: {},
         };
-        const ast = xmlToAST('<Input label="Name" bind:value="user.name" />');
+        const ast = xmlToAST('<Input label="Name" value="$user.name" />');
         const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Ada');

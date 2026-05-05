@@ -7,7 +7,11 @@ type BaseProps = {
 };
 
 /** Renders a blockquote with standard styling. */
-export function Blockquote({ children, ...props }: ComponentPropsWithoutRef<'blockquote'> & BaseProps) {
+export function Blockquote({
+    children,
+    props: _xmlProps,
+    ...props
+}: ComponentPropsWithoutRef<'blockquote'> & BaseProps & { props: Record<string, string> }) {
     const context = useContext();
 
     return (

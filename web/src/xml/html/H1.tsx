@@ -9,6 +9,7 @@ type BaseProps = {
 /** Renders a level 1 heading with standard styling. */
 export function H1({
     children,
+    props: _xmlProps,
     ...props
 }: ComponentPropsWithoutRef<'h1'> & BaseProps & { props: Record<string, string> }) {
     const context = useContext();

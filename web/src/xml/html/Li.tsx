@@ -7,7 +7,11 @@ type BaseProps = {
 };
 
 /** Renders a list item. */
-export function Li({ children, ...props }: ComponentPropsWithoutRef<'li'> & BaseProps) {
+export function Li({
+    children,
+    props: _xmlProps,
+    ...props
+}: ComponentPropsWithoutRef<'li'> & BaseProps & { props: Record<string, string> }) {
     const context = useContext();
 
     return <li {...props}>{renderNode(children, context.ctx)}</li>;

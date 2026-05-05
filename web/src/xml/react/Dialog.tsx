@@ -10,8 +10,6 @@ import {
 import type { RenderableASTNode } from '@/xml';
 import { renderNode, useContext } from '@/xml';
 
-type BaseProps = { children?: RenderableASTNode };
-
 export function Dialog({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
     const context = useContext();
     return <UIDialog>{renderNode(children, context.ctx)}</UIDialog>;

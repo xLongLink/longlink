@@ -12,22 +12,6 @@ import { AppWindow } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from './Icon';
 
-type MenuProps = {
-    children?: RenderableASTNode;
-};
-
-type MenuSectionProps = {
-    title: string;
-    icon?: string | null;
-    children?: RenderableASTNode;
-};
-
-type MenuSubSectionProps = {
-    title?: string;
-    root?: boolean;
-    children?: RenderableASTNode;
-};
-
 type NormalizedSubSection = {
     id: string;
     title: string;

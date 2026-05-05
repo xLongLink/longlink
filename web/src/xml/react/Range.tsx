@@ -8,9 +8,10 @@ type RangeProps = {
     max?: number;
     step?: number;
     value?: number[] | string;
+    onChange?: (value: number[]) => void;
 };
 
-export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max] }: RangeProps) {
+export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max], onChange }: RangeProps) {
     const resolvedMin = typeof min === 'number' && Number.isFinite(min) ? min : 0;
     const resolvedMax = typeof max === 'number' && Number.isFinite(max) ? max : 100;
     const resolvedStep = typeof step === 'number' && Number.isFinite(step) ? step : 1;
@@ -39,7 +40,13 @@ export function Range({ label, description, min = 0, max = 100, step = 1, value 
                     <span className="text-muted-foreground text-sm">{normalizedValue.join(', ')}</span>
                 </div>
             )}
-            <Slider value={normalizedValue} min={resolvedMin} max={resolvedMax} step={resolvedStep} />
+            <Slider
+                value={normalizedValue}
+                min={resolvedMin}
+                max={resolvedMax}
+                step={resolvedStep}
+                onValueChange={(nextValue) => onChange?.(Array.isArray(nextValue) ? [...nextValue] : [nextValue])}
+            />
             {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
     );

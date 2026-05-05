@@ -5,17 +5,21 @@ import { Fragment } from 'react';
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
     const context = useContext();
-    const each = evaluate(props.each ?? '', context, 'string');
+    const eachExpression = props.each ?? '';
     const as = evaluate(props.as ?? '', context, 'string');
-    if (!each) throw new Error('For requires an "each" parameter');
+    if (!eachExpression) throw new Error('For requires an "each" parameter');
     if (!as) throw new Error('For requires an "as" parameter');
 
-    const items = evaluate(each, context.ctx) ?? [];
+    const items =
+        evaluate(
+            eachExpression.startsWith('$') || eachExpression.includes('{') ? eachExpression : `$${eachExpression}`,
+            context
+        ) ?? [];
 
     if (!Array.isArray(items)) return null;
 
     return items.map((item, index) => {
-        const childCtx = { ...context.ctx, scope: { ...context.ctx.scope, [as]: item, $index: index } };
+        const childCtx = { ...context.ctx, [as]: item, $index: index };
 
         return (
             <Fragment key={index}>

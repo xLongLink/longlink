@@ -2,13 +2,6 @@ import type { RenderableASTNode } from '@/xml';
 import { evaluate, renderNode, useContext } from '@/xml';
 import { Icon } from './Icon';
 
-type HeroProps = {
-    icon?: string | null;
-    title: string;
-    subtitle?: string | null;
-    children?: RenderableASTNode;
-};
-
 export function Hero({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
     const context = useContext();
     const title = evaluate(props.title ?? '', context, 'string');

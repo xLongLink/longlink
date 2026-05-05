@@ -33,12 +33,14 @@ If the expression is false, the element is not rendered.
 
 ### Two-way Binding
 
-Any supported input-like component may use `$<prop>`.
+Any supported input-like component may bind a prop by setting its value to a `$` state path.
 
 For common controlled props like `value`, `checked`, and `active`, LongLink
 passes the current prop value and wires a normal `onChange` handler back to
 state. Other bound props use a matching `on<Prop>Change` callback when the
 component supports it.
+
+Use `$` binding for all two-way state wiring.
 
 Example:
 

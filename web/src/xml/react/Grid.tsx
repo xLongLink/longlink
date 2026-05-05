@@ -1,16 +1,5 @@
 import type { RenderableASTNode } from '@/xml';
 import { evaluate, renderNode, useContext } from '@/xml';
-import type { CSSProperties } from 'react';
-
-type GridProps = {
-    children?: RenderableASTNode;
-    gap?: CSSProperties['gap'];
-    columns?: CSSProperties['gridTemplateColumns'];
-    align?: CSSProperties['alignItems'];
-    justify?: CSSProperties['justifyItems'];
-    style?: CSSProperties;
-};
-
 export function Grid({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
     const context = useContext();
     const gap = evaluate(props.gap ?? '1rem', context, 'string');

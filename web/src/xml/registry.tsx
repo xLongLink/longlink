@@ -41,14 +41,9 @@ import { Grid } from '@/xml/react/Grid';
 import { Stack } from '@/xml/react/Stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/xml/react/Tabs';
 
-/** Creates a minimal ExecutionContext with empty state, queries, and scope. */
+/** Creates a flat XML execution context with an optional base URL. */
 export function createContext(initial: Partial<ExecutionContext> = {}): ExecutionContext {
-    return {
-        state: initial.state ?? {},
-        queries: initial.queries ?? {},
-        scope: initial.scope ?? {},
-        baseUrl: initial.baseUrl ?? '',
-    };
+    return { ...initial, baseUrl: initial.baseUrl ?? '' };
 }
 
 /* Build the built-in XML component registry once at module load. */

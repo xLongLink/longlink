@@ -7,8 +7,6 @@ import {
 import type { RenderableASTNode } from '@/xml';
 import { evaluate, renderNode, useContext } from '@/xml';
 
-type BaseProps = { children?: RenderableASTNode };
-
 export function Tabs({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
     const context = useContext();
     return <UITabs>{renderNode(children, context.ctx)}</UITabs>;

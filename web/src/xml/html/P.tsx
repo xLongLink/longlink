@@ -7,7 +7,11 @@ type BaseProps = {
 };
 
 /** Renders a paragraph with standard styling. */
-export function P({ children, ...props }: ComponentPropsWithoutRef<'p'> & BaseProps) {
+export function P({
+    children,
+    props: _xmlProps,
+    ...props
+}: ComponentPropsWithoutRef<'p'> & BaseProps & { props: Record<string, string> }) {
     const context = useContext();
 
     return (

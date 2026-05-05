@@ -11,6 +11,7 @@ type SelectProps = {
     name?: string;
     label?: string;
     value?: string;
+    onChange?: (value: string) => void;
     placeholder?: string;
     description?: string;
     options?: SelectOption[] | string;
@@ -32,10 +33,25 @@ function normalizeOptions(options: SelectProps['options']): SelectOption[] {
     return [];
 }
 
-export function Select({ name, label, value, placeholder, description, options, disabled, submit }: SelectProps) {
+export function Select({
+    name,
+    label,
+    value,
+    onChange,
+    placeholder,
+    description,
+    options,
+    disabled,
+    submit,
+}: SelectProps) {
     const normalizedOptions = normalizeOptions(options);
     const renderControl = () => (
-        <UISelect name={name} disabled={disabled} defaultValue={String(value ?? '')}>
+        <UISelect
+            name={name}
+            disabled={disabled}
+            value={String(value ?? '')}
+            onValueChange={(nextValue) => onChange?.(nextValue ?? '')}
+        >
             <SelectTrigger className="w-full">
                 <SelectValue placeholder={placeholder ?? 'Select an option'} />
             </SelectTrigger>
