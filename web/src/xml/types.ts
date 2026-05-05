@@ -4,8 +4,7 @@ import type { ComponentType } from 'react';
 export type ASTNode = {
     name: string;
     params?: Record<string, string>;
-    children?: ASTNode[];
-    value?: string;
+    children?: RenderableASTNode;
 };
 
 /** Flat XML value context used for attribute evaluation. */
@@ -23,7 +22,7 @@ export type SetterContext = Record<string, (value: unknown) => void>;
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
 
 /** A node or array of nodes that can be rendered by renderXml. */
-export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
+export type RenderableASTNode = ASTNode | ASTNode[] | string | null | undefined;
 
 /** State provided by RuntimeProvider to the render tree. */
 export type RuntimeState = {

@@ -93,6 +93,8 @@ function toChangeHandlerName(propName: string): string {
 export function renderXml(node: RenderableASTNode): ReactNode {
     if (!node) return null;
 
+    if (typeof node === 'string') return node;
+
     return (
         <XmlErrorBoundary resetKey={node}>
             <RenderedNode node={node} />
@@ -111,14 +113,18 @@ function RenderedNode({ node }: { node: RenderableASTNode }): ReactNode {
         return node.map((child, index) => <Fragment key={index}>{renderXml(child)}</Fragment>);
     }
 
-    if (node.name === 'text') {
-        if (!node.value) return null;
+    if (node.name === 'Text') {
+        if (typeof node.children === 'string') {
+            const value = evaluate(node.children, activeCtx);
 
-        const value = evaluate(node.value, activeCtx);
+            if (isRenderableValue(value)) return value;
 
-        if (isRenderableValue(value)) return value;
+            throw new Error(
+                `XML text expression resolved to ${describeValue(value)}, which cannot be rendered as text`
+            );
+        }
 
-        throw new Error(`XML text expression resolved to ${describeValue(value)}, which cannot be rendered as text`);
+        return renderXml(node.children);
     }
 
     if (!resolveCondition(node.params?.if, activeCtx)) {

@@ -8,16 +8,11 @@ const SetterContextValue = createContext<SetterContext>({});
 export const RuntimeContext = createContext<RuntimeState | null>(null);
 
 /** Evaluates an XML attribute value against the current flat XML context. */
-export function evaluate(expr: string, ctx: ExecutionContext | RuntimeState): unknown;
-export function evaluate(expr: string, ctx: ExecutionContext | RuntimeState, type: 'string'): string;
-export function evaluate(expr: string, ctx: ExecutionContext | RuntimeState, type: 'number'): number;
-export function evaluate(expr: string, ctx: ExecutionContext | RuntimeState, type: 'boolean'): boolean;
-export function evaluate(
-    expr: string,
-    ctx: ExecutionContext | RuntimeState,
-    type?: 'string' | 'number' | 'boolean'
-): unknown {
-    const values = getValues(ctx);
+export function evaluate(expr: string, ctx: ExecutionContext): unknown;
+export function evaluate(expr: string, ctx: ExecutionContext, type: 'string'): string;
+export function evaluate(expr: string, ctx: ExecutionContext, type: 'number'): number;
+export function evaluate(expr: string, ctx: ExecutionContext, type: 'boolean'): boolean;
+export function evaluate(expr: string, values: ExecutionContext, type?: 'string' | 'number' | 'boolean'): unknown {
     const input = expr.trim();
 
     if (input === '') return coerceValue('', type);
@@ -26,15 +21,29 @@ export function evaluate(
         return coerceValue(readPath(values, input.slice(1).trim()), type);
     }
 
-    if (looksLikeJson(input)) {
-        const parsed = parseJsonAttribute(input, values);
-        if (parsed !== undefined) return coerceValue(parsed, type);
+    if (input.startsWith('[') || input.startsWith('{"')) {
+        try {
+            return coerceValue(JSON.parse(input), type);
+        } catch {
+            // JSON attributes may contain string placeholders such as "{issue.title}".
+        }
+
+        try {
+            const interpolated = input.replace(/\{([^{}]+)\}/g, (_match, expression: string) =>
+                String(runExpression(expression, values) ?? '')
+            );
+
+            return coerceValue(JSON.parse(interpolated), type);
+        } catch {
+            // Fall through so malformed JSON can still be handled as a literal string.
+        }
     }
 
     if (input.startsWith('{') && input.endsWith('}')) {
         const expression = input.slice(1, -1).trim();
+        const expressionValue = /^[A-Za-z_$][\w$]*\s*:/.test(expression) ? input : expression;
 
-        return coerceValue(runExpression(looksLikeObjectLiteral(expression) ? input : expression, values), type);
+        return coerceValue(runExpression(expressionValue, values), type);
     }
 
     if (input.includes('{')) {
@@ -124,13 +133,6 @@ export function RuntimeChildren() {
     return renderXml(children);
 }
 
-/** Returns the flat values for either runtime or execution context input. */
-function getValues(ctx: ExecutionContext | RuntimeState): ExecutionContext {
-    if ('ctx' in ctx && ctx.ctx && typeof ctx.ctx === 'object') return ctx.ctx as ExecutionContext;
-
-    return ctx as ExecutionContext;
-}
-
 /** Runs an expression with XML values exposed as local variables. */
 function runExpression(expression: string, values: ExecutionContext): unknown {
     return new Function('ctx', `with (ctx) { return (${expression}); }`)(values);
@@ -158,38 +160,6 @@ function inferLiteral(value: string): unknown {
     }
 
     return value;
-}
-
-/** Returns true when an attribute is intended as JSON, not a single expression. */
-function looksLikeJson(value: string): boolean {
-    return value.startsWith('[') || value.startsWith('{"');
-}
-
-/** Returns true when a braced expression should keep braces as an object literal. */
-function looksLikeObjectLiteral(expression: string): boolean {
-    return /^[A-Za-z_$][\w$]*\s*:/.test(expression);
-}
-
-/** Parses JSON XML attributes after resolving any `{expression}` placeholders. */
-function parseJsonAttribute(value: string, values: ExecutionContext): unknown {
-    try {
-        return JSON.parse(value);
-    } catch {
-        // JSON attributes may contain string placeholders such as "{issue.title}".
-    }
-
-    try {
-        return JSON.parse(interpolate(value, values));
-    } catch {
-        return undefined;
-    }
-}
-
-/** Resolves expression placeholders inside a string attribute. */
-function interpolate(value: string, values: ExecutionContext): string {
-    return value.replace(/\{([^{}]+)\}/g, (_match, expression: string) =>
-        String(runExpression(expression, values) ?? '')
-    );
 }
 
 /** Coerces any resolved value into the requested primitive type. */

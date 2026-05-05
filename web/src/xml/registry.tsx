@@ -26,6 +26,7 @@ import { For } from '@/xml/primitives/For';
 import { Page } from '@/xml/primitives/Page';
 import { Query } from '@/xml/primitives/Query';
 import { State } from '@/xml/primitives/State';
+import { Text } from '@/xml/primitives/Text';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/xml/react/Card';
 import { Column, Columns } from '@/xml/react/Columns';
 import {
@@ -55,6 +56,7 @@ export const registry = {
     Page,
     Query,
     State,
+    Text,
     For,
     Grid,
     Button,
