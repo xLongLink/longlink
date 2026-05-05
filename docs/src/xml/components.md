@@ -1,8 +1,8 @@
 # Components
 
 Components are the interactive building blocks of XML pages.
-They cover inputs, actions, dialogs, icons, and other user-facing controls.
-Use them when the page needs direct user interaction.
+They cover inputs, actions, dialogs, icons, tables, and other user-facing controls.
+Use them when the page needs direct user interaction or data display.
 The sections below describe each component and how it is used.
 
 ## Hero
@@ -121,7 +121,7 @@ Use `<Textarea>` for multiline text input.
 
 ## Table
 
-Use `<Table>` together with `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableHead>`, and `<TableCell>` to render explicit tables. Use a final summary row in `<TableBody>` when you need footer-style totals.
+Use `<Table>` together with `<TableHeader>`, `<TableBody>`, `<TableFooter>`, `<TableRow>`, `<TableHead>`, and `<TableCell>` to render tabular data. Use `<TableFooter>` for footer rows and `<TableBody>` for the main data rows.
 
 ```xml
 <Table>
@@ -136,10 +136,12 @@ Use `<Table>` together with `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<Tabl
       <TableCell>Projects</TableCell>
       <TableCell>Active</TableCell>
     </TableRow>
+  </TableBody>
+  <TableFooter>
     <TableRow>
       <TableCell>Total</TableCell>
       <TableCell>1</TableCell>
     </TableRow>
-  </TableBody>
+  </TableFooter>
 </Table>
 ```

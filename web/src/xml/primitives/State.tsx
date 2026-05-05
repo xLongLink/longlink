@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { RuntimeProvider, useRuntime } from '../runtime';
+import { renderNode } from '../renderers';
 
 /**
  * Declares a scoped reactive state variable identified by `id`.
@@ -12,10 +13,12 @@ import { RuntimeProvider, useRuntime } from '../runtime';
  */
 export function State({
     id,
+    __xmlChildren,
     children,
     ...initialState
 }: {
     id?: string;
+    __xmlChildren?: unknown;
     children?: ReactNode;
     [key: string]: unknown;
 }) {
@@ -36,5 +39,9 @@ export function State({
         },
     };
 
-    return <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{children}</RuntimeProvider>;
+    return (
+        <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
+            {__xmlChildren ? renderNode(__xmlChildren as any, runtime.registry, childCtx) : children}
+        </RuntimeProvider>
+    );
 }

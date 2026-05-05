@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { RuntimeProvider, useRuntime } from '../runtime';
+import { renderNode } from '../renderers';
 
 /**
  * Fetches data via TanStack Query and exposes the result to descendants.
@@ -11,7 +12,17 @@ import { RuntimeProvider, useRuntime } from '../runtime';
  * The fetched value is stored in `ctx.queries[id]` and re-exposed as a
  * child scope variable, making it available to nested expressions.
  */
-export function Query({ id, path: pathTemplate, children }: { id?: string; path?: string; children?: ReactNode }) {
+export function Query({
+    id,
+    path: pathTemplate,
+    __xmlChildren,
+    children,
+}: {
+    id?: string;
+    path?: string;
+    __xmlChildren?: unknown;
+    children?: ReactNode;
+}) {
     if (!id) {
         throw new Error('Query requires an "id" parameter');
     }
@@ -44,5 +55,9 @@ export function Query({ id, path: pathTemplate, children }: { id?: string; path?
         },
     };
 
-    return <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{children}</RuntimeProvider>;
+    return (
+        <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
+            {__xmlChildren ? renderNode(__xmlChildren as any, runtime.registry, childCtx) : children}
+        </RuntimeProvider>
+    );
 }

@@ -35,10 +35,10 @@ Use `<Menu>` to organize page content into navigable sections. Use `<MenuSection
 
 ## Card
 
-Use cards to group related content into clear sections. Use `<CardHeader>` for metadata and actions, `<CardContent>` for the main body, and `<CardFooter>` for secondary details.
+Use cards to group related content into clear sections. Use `<CardHeader>` for metadata and actions, `<CardContent>` for the main body, and `<CardFooter>` for secondary details. Set `size="sm"` for the compact card variant.
 
 ```xml
-<Card>
+<Card size="sm">
   <CardHeader>
     <CardTitle>Deployment status</CardTitle>
     <CardDescription>Current state of the application.</CardDescription>
@@ -97,38 +97,6 @@ Use `<Grid>` for generic CSS grid containers.
     </CardContent>
   </Card>
 </Grid>
-```
-
-## Table
-
-Use the table primitives when the page needs tabular data. Put header rows in `<TableHeader>`, body rows in `<TableBody>`, and use a final body row for footer-style totals.
-
-```xml
-<Table>
-  <TableHeader>
-    <TableRow>
-      <TableHead>Item</TableHead>
-      <TableHead>Count</TableHead>
-    </TableRow>
-  </TableHeader>
-
-  <TableBody>
-    <TableRow>
-      <TableCell>Projects</TableCell>
-      <TableCell>8</TableCell>
-    </TableRow>
-
-    <TableRow>
-      <TableCell>Archived</TableCell>
-      <TableCell>2</TableCell>
-    </TableRow>
-
-    <TableRow>
-      <TableCell>Total</TableCell>
-      <TableCell>10</TableCell>
-    </TableRow>
-  </TableBody>
-</Table>
 ```
 
 ## Dialog

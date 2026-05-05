@@ -52,6 +52,7 @@
   <xsd:include schemaLocation="tables/Table.xsd" />
   <xsd:include schemaLocation="tables/TableBody.xsd" />
   <xsd:include schemaLocation="tables/TableCell.xsd" />
+  <xsd:include schemaLocation="tables/TableFooter.xsd" />
   <xsd:include schemaLocation="tables/TableHead.xsd" />
   <xsd:include schemaLocation="tables/TableHeader.xsd" />
   <xsd:include schemaLocation="tables/TableRow.xsd" />

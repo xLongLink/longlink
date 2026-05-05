@@ -100,7 +100,7 @@ export function renderNode(
         <RuntimeProvider value={{ node, registry, ctx }}>
             {createElement(
                 component,
-                { ...resolveParams(node.params, ctx) },
+                { ...resolveParams(node.params, ctx), __xmlChildren: node.children },
                 node.children ? render(node.children, registry, ctx) : undefined
             )}
         </RuntimeProvider>

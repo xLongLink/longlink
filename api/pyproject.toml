@@ -32,6 +32,7 @@ dependencies = [
     'kubernetes',
     'jinja2',
     'lxml',
+    'longlink',
 ]
 
 [project.optional-dependencies]
@@ -54,6 +55,9 @@ py-modules = ['main']
 
 [tool.setuptools.packages.find]
 include = ['src*']
+
+[tool.uv.sources]
+longlink = { path = '../sdk' }
 
 
 [tool.isort]

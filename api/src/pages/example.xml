@@ -1,235 +1,156 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Example" icon="layout-grid" xmlns:bind="https://longlink.dev/xml/bind">
-  <Query id="example" path="/example">
-    <Hero title="XML component showcase" subtitle="A guided example page for the built-in XML runtime." icon="layout-grid">
-      <Dialog>
-        <DialogTrigger>
-          <Button variant="default">Open dialog</Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>XML showcase dialog</DialogTitle>
-            <DialogDescription>Quick reference for the page layout and available sections.</DialogDescription>
-          </DialogHeader>
-          <Stack gap="12">
-            <p>The example page highlights the hero, menu, HTML, table, and layout sections.</p>
-            <Button variant="default">Close</Button>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-    </Hero>
+  <State id="exampleForm" fullName="" email="" notes="" subscribed="true" notifications="false" progress="35" />
+  <Query id="example" path="/example" />
 
-    <Menu>
-      <MenuSection title="HTML" icon="code">
-        <MenuSubSection title="Element showcase" root="true">
-          <h1>Heading one</h1>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor.</p>
-          <h2>Heading two</h2>
-          <p>Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi. Proin porttitor, orci nec nonummy molestie.</p>
-          <h3>Heading three</h3>
-          <p>Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna.</p>
-          <h4>Heading four</h4>
-          <p>Paragraph content explains how standard HTML elements render in XML pages.</p>
-          <blockquote>Blockquote content highlights longer quoted text.</blockquote>
-          <ul>
-            <li>Unordered list item one</li>
-            <li>Unordered list item two</li>
-          </ul>
-        </MenuSubSection>
-      </MenuSection>
+  <Hero title="XML component showcase" subtitle="A single page that demonstrates the supported XML surface." icon="layout-grid">
+    <Stack direction="row" gap="8" align="center">
+      <Button variant="default" size="default">Default</Button>
+      <Button variant="secondary" size="sm">Secondary</Button>
+      <Button variant="outline" size="xs">Outline</Button>
+      <Button variant="ghost" size="lg">Ghost</Button>
+      <Button variant="destructive" size="icon" aria-label="Delete">X</Button>
+      <Button variant="link" size="icon-sm" href="/settings">Link</Button>
+    </Stack>
+  </Hero>
 
-      <MenuSection title="Table" icon="table">
-        <MenuSubSection title="Data showcase" root="true">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Unit price</TableHead>
-                <TableHead>Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>XML showcase page</TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>$120.00</TableCell>
-                <TableCell>$120.00</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Layout composition</TableCell>
-                <TableCell>2</TableCell>
-                <TableCell>$45.00</TableCell>
-                <TableCell>$90.00</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Documentation polish</TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>$80.00</TableCell>
-                <TableCell>$80.00</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </MenuSubSection>
-      </MenuSection>
+  <Menu>
+    <MenuSection title="Overview" icon="layout-grid">
+      <MenuSubSection title="Query and state" root="true">
+        <Stack gap="12">
+          <p>Fetched title: {example.title}</p>
+          <p>Subscribed: {exampleForm.subscribed}</p>
+          <Button action="/example" method="POST" payload='{"title":"{exampleForm.fullName}"}' invalidate="example" variant="default" size="sm">
+            Refetch example
+          </Button>
+        </Stack>
+      </MenuSubSection>
+    </MenuSection>
 
-      <MenuSection title="Form" icon="file-text">
-        <MenuSubSection title="Form controls" root="true">
-          <State id="exampleForm" fullName="" email="" notes="" subscribed="{true}" notifications="{true}" progress="{35}">
-            <Stack gap="12">
-              <Input kind="text" label="Full name" bind:value="exampleForm.fullName" placeholder="Ada Lovelace" />
-              <Input kind="text" label="Email address" bind:value="exampleForm.email" placeholder="ada@example.com" />
-              <Textarea label="Notes" bind:value="exampleForm.notes" placeholder="Add a short note" />
-              <Checkbox label="Subscribe to updates" bind:checked="exampleForm.subscribed" />
-              <Switch label="Enable notifications" bind:checked="exampleForm.notifications" />
-              <Slider label="Progress" description="Current progress value." min="0" max="100" step="5" bind:value="exampleForm.progress" />
-              <Button variant="default" action="/example" method="POST" payload='{
-                "fullName": "{exampleForm.fullName}",
-                "email": "{exampleForm.email}",
-                "notes": "{exampleForm.notes}",
-                "subscribed": "{exampleForm.subscribed}",
-                "notifications": "{exampleForm.notifications}",
-                "progress": "{exampleForm.progress}"
-              }'>
-                Submit example
+    <MenuSection title="Forms" icon="file-text">
+      <MenuSubSection title="Inputs" root="true">
+        <Grid columns="1fr 1fr" gap="1rem">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bound fields</CardTitle>
+              <CardDescription>Text, textarea, checkbox, switch, and slider</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Stack gap="12">
+                <Input kind="text" label="Full name" bind:value="exampleForm.fullName" placeholder="Ada Lovelace" />
+                <Input kind="date" label="Due date" value="2026-05-05" />
+                <Textarea label="Notes" bind:value="exampleForm.notes" description="Optional context" />
+                <Checkbox label="Subscribe to updates" bind:checked="exampleForm.subscribed" />
+                <Switch label="Enable notifications" bind:checked="exampleForm.notifications" description="Receive page updates" />
+                <Slider label="Progress" min="0" max="100" step="5" bind:value="exampleForm.progress" />
+              </Stack>
+            </CardContent>
+            <CardFooter>
+              <Button action="/example" method="POST" payload='{"fullName":"{exampleForm.fullName}","email":"{exampleForm.email}","notes":"{exampleForm.notes}"}' variant="outline" size="sm">
+                Save draft
               </Button>
-            </Stack>
-          </State>
-        </MenuSubSection>
-      </MenuSection>
+            </CardFooter>
+          </Card>
 
-      <MenuSection title="Cards" icon="layers-3">
-        <MenuSubSection title="GPU models" root="true">
-          <Input kind="text" label="Search GPUs" placeholder="Search by model name" />
-          <Grid columns="repeat(auto-fit, minmax(min(100%, 16rem), 1fr))" gap="1rem">
-            <Card>
-              <CardHeader>
-                <CardTitle>NVIDIA RTX 4090</CardTitle>
-                <CardDescription>Flagship card for high-end rendering and AI workloads.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>24 GB GDDR6X, best suited for demanding workstation tasks.</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>NVIDIA RTX 4070 Ti</CardTitle>
-                <CardDescription>Efficient upper-midrange option for creators.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>12 GB GDDR6X, good fit for balanced performance targets.</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>NVIDIA RTX 4080</CardTitle>
-                <CardDescription>Strong performance for premium creative workflows.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>16 GB GDDR6X, balanced for gaming and content creation.</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>AMD Radeon RX 7800 XT</CardTitle>
-                <CardDescription>Mainstream card for high-refresh 1440p.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>16 GB GDDR6, practical value-oriented GPU choice.</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>AMD Radeon RX 7900 XTX</CardTitle>
-                <CardDescription>High-memory GPU for broad 4K and compute usage.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>24 GB GDDR6, competitive in rasterized workloads.</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>NVIDIA RTX 4060</CardTitle>
-                <CardDescription>Entry-level card with modern encoder support.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>8 GB GDDR6, compact option for smaller builds.</p>
-              </CardContent>
-            </Card>
-          </Grid>
-        </MenuSubSection>
-      </MenuSection>
+          <Card>
+            <CardHeader>
+              <CardTitle>Selectors</CardTitle>
+              <CardDescription>Select, range, separator, and icon</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Stack gap="12">
+                <Select
+                  label="Status"
+                  value="open"
+                  options='[{"label":"Open","value":"open"},{"label":"Closed","value":"closed"}]'
+                  submit="Apply"
+                />
+                <Range label="Priority span" min="1" max="5" value='[2,4]' />
+                <Separator />
+                <Icon name="sparkles" fallback="box" />
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+      </MenuSubSection>
+    </MenuSection>
 
-      <MenuSection title="Layout" icon="columns-2">
-        <MenuSubSection title="Composition" root="true">
-          <Columns>
-            <Column>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Left</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Sectioned content</p>
-                </CardContent>
-              </Card>
-            </Column>
-            <Column>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Right</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Structured presentation</p>
-                </CardContent>
-              </Card>
-            </Column>
-          </Columns>
-        </MenuSubSection>
-        <MenuSubSection title="Nested subsection example">
-          <Stack gap="12">
-            <p>This subsection shows how menu sections can expose more than one tab.</p>
-            <Grid columns="repeat(2, minmax(0, 1fr))" gap="1rem">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Primary pane</CardTitle>
-                  <CardDescription>Content for a non-root subsection.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>Use this pattern when a section needs multiple views.</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Secondary pane</CardTitle>
-                  <CardDescription>Another tab in the same menu section.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>Each MenuSubSection becomes a separate menu entry.</p>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Stack>
-        </MenuSubSection>
-      </MenuSection>
+    <MenuSection title="Layout" icon="columns-2">
+      <MenuSubSection title="Cards and columns" root="true">
+        <Columns gap="16">
+          <Column span="8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Card header</CardTitle>
+                <CardDescription>Header, content, footer, and action</CardDescription>
+                <CardAction>
+                  <Button variant="outline" size="xs">Action</Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <p>Cards can hold any nested content, including HTML bridge tags.</p>
+                <blockquote>Quoted content renders as expected.</blockquote>
+              </CardContent>
+              <CardFooter>
+                <Button variant="ghost" size="sm">Archive</Button>
+              </CardFooter>
+            </Card>
+          </Column>
+          <Column span="4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Prop</TableHead>
+                  <TableHead>Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>variant</TableCell>
+                  <TableCell>default</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>size</TableCell>
+                  <TableCell>sm</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </Column>
+        </Columns>
+      </MenuSubSection>
+    </MenuSection>
 
-      <MenuSection title="Tabs" icon="square-stack">
-        <MenuSubSection title="Tabbed content" root="true">
-          <Tabs defaultValue="details">
-            <TabsList>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-            </TabsList>
+    <MenuSection title="Tabs" icon="square-stack">
+      <MenuSubSection title="Tabbed content" root="true">
+        <Tabs defaultValue="details">
+          <TabsList>
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="details">
-              <p>Details content appears in the default tab.</p>
-            </TabsContent>
+          <TabsContent value="details">
+            <p>Details content appears in the default tab.</p>
+          </TabsContent>
 
-            <TabsContent value="activity">
-              <p>Activity content shows an alternate view in the same section.</p>
-            </TabsContent>
-          </Tabs>
-        </MenuSubSection>
-      </MenuSection>
-    </Menu>
-  </Query>
+          <TabsContent value="activity">
+            <p>Activity content shows an alternate view in the same section.</p>
+          </TabsContent>
+        </Tabs>
+      </MenuSubSection>
+    </MenuSection>
+
+    <MenuSection title="HTML" icon="code">
+      <MenuSubSection title="Element showcase" root="true">
+        <h1>Heading one</h1>
+        <h2>Heading two</h2>
+        <h3>Heading three</h3>
+        <h4>Heading four</h4>
+        <p>Paragraph content explains how standard HTML elements render in XML pages.</p>
+        <ul>
+          <li>Unordered list item one</li>
+          <li>Unordered list item two</li>
+        </ul>
+      </MenuSubSection>
+    </MenuSection>
+  </Menu>
 </Page>

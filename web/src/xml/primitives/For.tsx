@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
 import { evaluate, RuntimeProvider, useRuntime } from '../runtime';
+import { renderNode } from '../renderers';
 
 // ---------------------------------------------------------------------------
 // For
@@ -14,7 +15,17 @@ import { evaluate, RuntimeProvider, useRuntime } from '../runtime';
  * Each iteration also injects `$index` into scope.
  * Non-array results are silently ignored (renders nothing).
  */
-export function For({ each, as, children }: { each?: string; as?: string; children?: ReactNode }) {
+export function For({
+    each,
+    as,
+    __xmlChildren,
+    children,
+}: {
+    each?: string;
+    as?: string;
+    __xmlChildren?: unknown;
+    children?: ReactNode;
+}) {
     if (!each) {
         throw new Error('For requires an "each" parameter');
     }
@@ -46,7 +57,9 @@ export function For({ each, as, children }: { each?: string; as?: string; childr
 
         return (
             <Fragment key={index}>
-                <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{children}</RuntimeProvider>
+                <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
+                    {__xmlChildren ? renderNode(__xmlChildren as any, runtime.registry, childCtx) : children}
+                </RuntimeProvider>
             </Fragment>
         );
     });
