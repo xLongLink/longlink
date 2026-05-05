@@ -57,11 +57,50 @@ longlink/
 ## Responsibilities
 
 - Use `sdk/longlink/.static/llm/SCHEMA.md` as the primary XML schema guide.
-- Keep schema, runtime, pages, and docs aligned.
+- Keep schema (`xsd`), runtime, pages, and docs aligned. Especially for the attributes.
 - Verify XML tags and attributes mean the same thing across SDK, web, and docs.
 - Check that component placement matches ownership boundaries.
 - Check that renderer behavior matches schema contract and page usage.
 - Check that sample pages and API pages reflect the final XML shape.
 - Check that documentation describes the final behavior, not an intermediate state.
 - Remove obsolete XML flow when replacement is complete.
-- Keep SCHEMA.md up to date. Using the content of the markdown file, one shall be able to create a valid XML page without needing to reference the SDK code.
+- Keep llm/SCHEMA.md up to date. Using the content of the markdown file, one shall be able to create a valid XML page without needing to reference the SDK code.
+
+## How it works
+
+**Tags → Components**: \
+Each XML tag maps directly to a React component that controls rendering and behavior.
+
+**Attributes → Props**: \
+XML attributes become component props, defining configuration and data inputs.
+
+**State and Data (`<State>`, `<Query>`)**: \
+Both use an `id` to define a reusable state slot:
+- `<State id="user" value="John Doe" />` \
+Creates local state → `user.value === "John Doe"`
+- `<Query id="user" path="/endpoint" />` \
+Fetches data into state → e.g. `{ name: "John Doe" }` → `user.name`
+
+**Conditional Rendering (`if`)**: \
+Any tag can include `if="condition"`, If false, the element is not rendered.
+
+**Expressions (`{}`)**: \
+Curly braces evaluate JavaScript-like expressions using state: `Hello, {user.name}` → `Hello, John Doe`
+
+**State Reset / Refetch (`reset`)**:
+- On `<State>` → resets to initial value
+- On `<Query>` → triggers refetch
+
+**Two-way Binding (`bind:`)**: \
+Syncs component props with state: `<Input bind:value="user.name" />` Updates flow both ways (UI ↔ state)
+
+**Iteration (`<For>`)**: \
+Loop over arrays: `<For each="orders" as="order"> ... </For>`
+
+**Actions (`<Button>` and similar)**: \
+Trigger API calls, Sends request on click, `invalidate` causes related queries to refetch afterward
+```xml
+<Button action="/issues" method="POST"  payload='{"title":"{issue.title}"}' invalidate="issues">
+    Save
+</Button>
+```
