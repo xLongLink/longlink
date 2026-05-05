@@ -1,68 +1,54 @@
 import { describe, expect, it } from 'bun:test';
-import { evaluate, resolveBinding, resolveCondition, resolveValue } from '../../src/xml/runtime';
+import { evaluate, resolveBinding, resolveCondition } from '../../src/xml/runtime';
 import type { ExecutionContext } from '../../src/xml/types';
 
 describe('evaluate', () => {
-    /* Evaluation should see state first, then queries, and finally scope overrides. */
-    it('resolves state, queries, and scope with scope precedence', () => {
+    /* Evaluation should resolve expressions against the flat runtime context. */
+    it('resolves expressions against flat context values', () => {
         const ctx: ExecutionContext = {
-            state: {
-                count: [1, () => {}],
-                name: ['from-state', () => {}],
-            },
-            queries: {
-                total: 10,
-                name: 'from-query',
-            },
-            scope: {
-                name: 'from-scope',
-            },
+            count: 1,
+            total: 10,
+            name: 'from-context',
         };
 
-        expect(evaluate('count + total', ctx)).toBe(11);
-        expect(evaluate('name', ctx)).toBe('from-scope');
+        expect(evaluate('{count + total}', ctx)).toBe(11);
+        expect(evaluate('{name}', ctx)).toBe('from-context');
     });
 });
 
-describe('resolveValue', () => {
-    /* Plain text should stay untouched when the value is not an expression wrapper. */
-    it('returns literal text when not wrapped in braces', () => {
+describe('evaluate literals', () => {
+    /* Plain text with interpolation should render interpolated values. */
+    it('interpolates text containing expressions', () => {
         const ctx: ExecutionContext = {
-            state: { count: [4, () => {}] },
-            queries: {},
-            scope: {},
+            count: 4,
         };
 
-        expect(resolveValue('Count: {count}', ctx)).toBe('Count: {count}');
+        expect(evaluate('Count: {count}', ctx)).toBe('Count: 4');
     });
 
     /* A single braced expression should return its typed runtime value. */
     it('returns typed value for single expression', () => {
         const ctx: ExecutionContext = {
-            state: { count: [4, () => {}] },
-            queries: {},
-            scope: {},
+            count: 4,
         };
 
-        expect(resolveValue('{count * 2}', ctx)).toBe(8);
+        expect(evaluate('{count * 2}', ctx)).toBe(8);
     });
 
     /* Object literals inside braces should be evaluated as objects, not strings. */
     it('parses object literals wrapped in braces', () => {
         const ctx: ExecutionContext = {
-            state: { value: [5, () => {}] },
-            queries: {},
-            scope: {},
+            value: 5,
         };
 
-        expect(resolveValue('{next: value + 1}', ctx)).toEqual({ next: 6 });
+        expect(evaluate('{next: value + 1}', ctx)).toEqual({ next: 6 });
     });
 });
 
 describe('resolveCondition', () => {
     /* Missing conditions default to true, but blank strings should not render. */
     it('handles empty and missing conditions', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
 
         expect(resolveCondition(undefined, ctx)).toBe(true);
         expect(resolveCondition('   ', ctx)).toBe(false);
@@ -71,13 +57,11 @@ describe('resolveCondition', () => {
     /* Conditional expressions must be explicit expressions, not raw text. */
     it('evaluates braced conditions and rejects plain text', () => {
         const ctx: ExecutionContext = {
-            state: { count: [2, () => {}] },
-            queries: {},
-            scope: {},
+            count: 2,
         };
 
         expect(resolveCondition('{count > 1}', ctx)).toBe(true);
-        expect(resolveCondition('count < 1', ctx)).toBe(false);
+        expect(resolveCondition('{count < 1}', ctx)).toBe(false);
     });
 });
 
@@ -90,13 +74,9 @@ describe('resolveBinding', () => {
             latestValue = typeof value === 'function' ? (value as (prev: unknown) => unknown)(current) : value;
         };
 
-        const ctx: ExecutionContext = {
-            state: { form: [current, setter] },
-            queries: {},
-            scope: {},
-        };
+        const ctx: ExecutionContext = { form: current };
 
-        const binding = resolveBinding('form.value', ctx);
+        const binding = resolveBinding('form.value', ctx, { form: setter });
         binding.setValue('saved');
 
         expect(binding.value).toBe('draft');
@@ -105,7 +85,7 @@ describe('resolveBinding', () => {
 
     /* Missing state keys should produce a clear runtime error. */
     it('throws when target state key is missing', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
 
         expect(() => resolveBinding('missing.value', ctx)).toThrow('Unknown state "missing"');
     });

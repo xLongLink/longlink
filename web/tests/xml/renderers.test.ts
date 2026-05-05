@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'bun:test';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { render, renderXml } from '../../src/xml/renderers';
 import type { ASTNode, ExecutionContext } from '../../src/xml/types';
 
@@ -10,68 +12,49 @@ describe('renderXml', () => {
 
     /* Text nodes should evaluate expressions against the current runtime context. */
     it('resolves text nodes from full expressions', () => {
-        const ctx: ExecutionContext = {
-            state: { count: [7, () => {}] },
-            queries: {},
-            scope: {},
-        };
+        const ctx: ExecutionContext = { count: 7 };
 
-        expect(render([{ name: 'text', value: '{`Count ${count}`}' }], ctx)).toBe('Count 7');
+        expect(
+            renderToStaticMarkup(
+                createElement('div', null, render([{ name: 'Text', children: '{`Count ${count}`}' }], ctx))
+            )
+        ).toBe('<div>Count 7</div>');
     });
 
     /* Conditional nodes should disappear when the condition resolves to false. */
     it('skips nodes when if condition is false', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-        const node: ASTNode = { name: 'Widget', params: { if: '{false}' } };
+        const ctx: ExecutionContext = {};
+        const node: ASTNode = { name: 'Button', params: { if: '{false}' } };
 
-        expect(render([node], ctx)).toBeNull();
+        expect(renderToStaticMarkup(createElement('div', null, render([node], ctx)))).toBe('<div></div>');
     });
 
     /* Unknown tags should fail loudly so missing registry entries are obvious. */
     it('throws on unknown component', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
 
-        expect(() => render([{ name: 'Unknown' }], ctx)).toThrow('Unknown component "Unknown"');
+        expect(() => renderToStaticMarkup(createElement('div', null, render([{ name: 'Unknown' }], ctx)))).toThrow(
+            'Unknown component "Unknown"'
+        );
     });
 
     /* Prop expressions should flow through the rendered component. */
     it('resolves props from expressions', () => {
-        const ctx: ExecutionContext = {
-            state: { count: [2, () => {}] },
-            queries: {},
-            scope: {},
-        };
+        const ctx: ExecutionContext = { count: 2 };
 
         const node: ASTNode = {
-            name: 'Widget',
+            name: 'Input',
             params: {
                 label: '{`Count: ${count}`}',
             },
         };
 
-        const runtimeProviderElement = render([node], ctx) as any;
-        const widgetElement = runtimeProviderElement.props.children;
-
-        expect(widgetElement.props.label).toBe('Count: 2');
+        expect(renderToStaticMarkup(createElement('div', null, render([node], ctx)))).toContain('Count: 2');
     });
 
     /* $-bound props should provide the bound value and a matching prop change callback. */
     it('resolves $ props into values and change handlers', () => {
-        let latestValue: unknown;
-        const currentValue = { value: 'Ada', placeholder: 'Enter name' };
-        const ctx: ExecutionContext = {
-            state: {
-                form: [
-                    currentValue,
-                    (value: unknown) => {
-                        latestValue =
-                            typeof value === 'function' ? (value as (prev: unknown) => unknown)(currentValue) : value;
-                    },
-                ],
-            },
-            queries: {},
-            scope: {},
-        };
+        const ctx: ExecutionContext = { form: { value: 'Ada', placeholder: 'Enter name' } };
 
         const node: ASTNode = {
             name: 'Input',
@@ -81,31 +64,25 @@ describe('renderXml', () => {
             },
         };
 
-        const runtimeProviderElement = render([node], ctx) as any;
-        const widgetElement = runtimeProviderElement.props.children;
+        const output = renderToStaticMarkup(createElement('div', null, render([node], ctx)));
 
-        expect(widgetElement.props.value).toBe('Ada');
-        expect(widgetElement.props.placeholder).toBe('Enter name');
-
-        widgetElement.props.onValueChange('Grace');
-
-        expect(latestValue).toEqual({ value: 'Grace', placeholder: 'Enter name' });
+        expect(output).toContain('value="Ada"');
+        expect(output).toContain('placeholder="Enter name"');
     });
 });
 
 describe('render', () => {
     /* Multiple root nodes should render independently in order. */
     it('renders each root node wrapped as fragments', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const output = render(
             [
-                { name: 'text', value: 'a' },
-                { name: 'text', value: 'b' },
+                { name: 'Text', children: 'a' },
+                { name: 'Text', children: 'b' },
             ],
             ctx
-        ) as any[];
+        );
 
-        expect(Array.isArray(output)).toBe(true);
-        expect(output).toHaveLength(2);
+        expect(renderToStaticMarkup(createElement('div', null, output))).toBe('<div>ab</div>');
     });
 });

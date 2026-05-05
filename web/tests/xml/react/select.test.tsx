@@ -1,10 +1,10 @@
 import { xmlToAST } from '@/xml/compiler';
-import { Select } from '@/xml/react/Select';
 import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { renderXmlToMarkup } from '../helpers';
 
 describe('Select', () => {
     /* The compiler should preserve select attributes and option structure. */
@@ -14,7 +14,7 @@ describe('Select', () => {
 
     /* The runtime should render select XML into the expected markup. */
     it('renders raw xml select content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Select label="Mode" options=\'[{"label":"Open","value":"open"}]\' />');
         const renderedTree = render(ast, ctx);
 
@@ -23,6 +23,6 @@ describe('Select', () => {
 
     /* The adapter should render evaluated XML props directly. */
     it('renders label text directly', () => {
-        expect(renderToStaticMarkup(createElement(Select, { props: { label: 'Mode' } }))).toContain('Mode');
+        expect(renderXmlToMarkup(xmlToAST('<Select label="Mode" />'))).toContain('Mode');
     });
 });

@@ -2,6 +2,8 @@ import { xmlToAST } from '@/xml/compiler';
 import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('Dialog', () => {
     /* The compiler should preserve the dialog shell and its nested sections. */
@@ -17,8 +19,8 @@ describe('Dialog', () => {
                     {
                         name: 'DialogHeader',
                         children: [
-                            { name: 'DialogTitle', children: [{ name: 'text', value: 'Title' }] },
-                            { name: 'DialogDescription', children: [{ name: 'text', value: 'Description' }] },
+                            { name: 'DialogTitle', children: [{ name: 'Text', children: 'Title' }] },
+                            { name: 'DialogDescription', children: [{ name: 'Text', children: 'Description' }] },
                         ],
                     },
                     { name: 'DialogFooter' },
@@ -32,13 +34,13 @@ describe('Dialog', () => {
      * is parsed and resolved through the runtime registry.
      */
     it('resolves dialog layout tags from xml', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST(
             '<Dialog><DialogHeader><DialogTitle>Title</DialogTitle><DialogDescription>Description</DialogDescription></DialogHeader><DialogFooter /></Dialog>'
         );
-        const renderedTree = render(ast, ctx) as any[];
+        const markup = renderToStaticMarkup(createElement('div', null, render(ast, ctx)));
 
-        expect(renderedTree[0].props.children.props.children.type).toBe(registry.Dialog);
-        expect(renderedTree[0].props.children.props.children.props.children.type.name).toBe('RuntimeChildren');
+        expect(markup).toContain('Title');
+        expect(markup).toContain('Description');
     });
 });

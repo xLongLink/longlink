@@ -13,13 +13,14 @@ def test_setup_creates_folder_and_copies_sample(monkeypatch, tmp_path):
         copied['dst'] = dst
         copied['dirs_exist_ok'] = dirs_exist_ok
 
-    monkeypatch.setattr('shutil.copytree', fake_copytree)
+    monkeypatch.setattr('longlink.cli.init.copytree', fake_copytree)
 
     target = tmp_path / 'my-app'
     setup(target)
 
     assert target.exists()
-    assert Path(copied['dst']) == target / '.venv'
+    assert Path(copied['dst']) == target
+    assert copied['dirs_exist_ok'] is True
 
 
 def test_init_command_calls_setup(monkeypatch):

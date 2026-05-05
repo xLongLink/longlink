@@ -11,14 +11,14 @@ describe('Li', () => {
         expect(xmlToAST('<li>Item</li>')).toEqual([
             {
                 name: 'li',
-                children: [{ name: 'text', value: 'Item' }],
+                children: [{ name: 'Text', children: 'Item' }],
             },
         ]);
     });
 
     /* The runtime should render list item XML into the expected HTML output. */
     it('renders raw xml list item content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<li>Item one</li>');
         const renderedTree = render(ast, ctx);
 

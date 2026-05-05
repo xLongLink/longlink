@@ -1,5 +1,4 @@
 import { xmlToAST } from '@/xml/compiler';
-import { For } from '@/xml/react/For';
 import { render } from '@/xml/renderers';
 import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -13,22 +12,18 @@ describe('For', () => {
             {
                 name: 'For',
                 params: { each: 'items', as: 'item' },
-                children: [{ name: 'p', children: [{ name: 'text', value: '{item}' }] }],
+                children: [{ name: 'p', children: [{ name: 'Text', children: '{item}' }] }],
             },
         ]);
     });
 
     /* Non-array results should render nothing instead of crashing. */
     it('returns null when each resolves to a non-array value', () => {
-        const ctx: ExecutionContext = {
-            state: { items: ["'not-an-array'", () => {}] },
-            queries: {},
-            scope: {},
-        };
+        const ctx: ExecutionContext = { items: 'not-an-array' };
         const node: ASTNode = {
             name: 'For',
             params: { each: 'items', as: 'item' },
-            children: [{ name: 'text', value: 'ignored' }],
+            children: [{ name: 'Text', children: 'ignored' }],
         };
 
         const output = renderToStaticMarkup(createElement(Fragment, null, render([node], ctx)));
@@ -38,12 +33,12 @@ describe('For', () => {
 
     /* Missing loop parameters should be rejected immediately. */
     it('throws when each or as is missing', () => {
-        expect(() => renderToStaticMarkup(createElement('div', null, createElement(For, { as: 'item' }, 'x')))).toThrow(
-            'For requires an "each" parameter'
-        );
+        expect(() =>
+            renderToStaticMarkup(createElement('div', null, render([{ name: 'For', params: { as: 'item' } }], {})))
+        ).toThrow('For requires an "each" parameter');
 
-        expect(() => renderToStaticMarkup(createElement('div', null, createElement(For, { each: '[]' }, 'x')))).toThrow(
-            'For requires an "as" parameter'
-        );
+        expect(() =>
+            renderToStaticMarkup(createElement('div', null, render([{ name: 'For', params: { each: '[]' } }], {})))
+        ).toThrow('For requires an "as" parameter');
     });
 });

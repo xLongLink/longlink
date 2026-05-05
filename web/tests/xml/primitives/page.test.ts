@@ -24,7 +24,7 @@ describe('Page', () => {
      * container markup.
      */
     it('renders raw xml page content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Page title="Dashboard" />');
         const renderedTree = render(ast, ctx);
 

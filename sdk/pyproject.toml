@@ -81,8 +81,3 @@ from_first = false
 no_sections = true
 lines_between_types = 0
 length_sort = true
-
-[tool.pytest.ini_options]
-env = [
-  "ENV=testing",
-]

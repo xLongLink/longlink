@@ -11,14 +11,14 @@ describe('P', () => {
         expect(xmlToAST('<p>Paragraph text</p>')).toEqual([
             {
                 name: 'p',
-                children: [{ name: 'text', value: 'Paragraph text' }],
+                children: [{ name: 'Text', children: 'Paragraph text' }],
             },
         ]);
     });
 
     /* The runtime should render paragraph XML into the expected HTML output. */
     it('renders raw xml paragraph content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<p>Paragraph text</p>');
         const renderedTree = render(ast, ctx);
 

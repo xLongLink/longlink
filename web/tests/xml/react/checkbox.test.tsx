@@ -1,13 +1,12 @@
-import { Checkbox } from '@/xml/react/Checkbox';
+import { xmlToAST } from '@/xml/compiler';
 import { describe, expect, it } from 'bun:test';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderXmlToMarkup } from '../helpers';
 
 describe('Checkbox', () => {
     /* Checkbox should render its label, description, and checked state together. */
     it('renders labeled checkbox content', () => {
-        const output = renderToStaticMarkup(
-            createElement(Checkbox, { label: 'Receive updates', description: 'Email me product news', checked: true })
+        const output = renderXmlToMarkup(
+            xmlToAST('<Checkbox label="Receive updates" description="Email me product news" checked="true" />')
         );
 
         expect(output).toContain('Receive updates');

@@ -17,7 +17,7 @@ describe('Stack', () => {
                     align: 'center',
                     justify: 'between',
                 },
-                children: [{ name: 'text', value: 'Content' }],
+                children: [{ name: 'Text', children: 'Content' }],
             },
         ]);
     });
@@ -28,7 +28,7 @@ describe('Stack', () => {
      * layout styles.
      */
     it('renders a row stack with spacing and alignment', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Stack direction="row" gap="12" align="center" justify="between">Content</Stack>');
         const renderedTree = render(ast, ctx);
 
@@ -38,7 +38,7 @@ describe('Stack', () => {
     });
 
     it('falls back to column layout and default gap', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Stack>Content</Stack>');
         const renderedTree = render(ast, ctx);
 

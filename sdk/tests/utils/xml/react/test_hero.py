@@ -11,5 +11,5 @@ SCHEMA = ROOT / ".static" / "xsd" / "react" / "Hero.xsd"
 def test_hero_validation() -> None:
     """Validate a minimal `Hero` fragment."""
 
-    element = Element.from_content('<Hero><h1>Headline</h1></Hero>', schema=SCHEMA)
+    element = Element.from_content('<Hero title="Headline"><h1>Headline</h1></Hero>', schema=SCHEMA)
     element.validate()

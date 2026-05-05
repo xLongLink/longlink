@@ -11,14 +11,14 @@ describe('Blockquote', () => {
         expect(xmlToAST('<blockquote>Quote</blockquote>')).toEqual([
             {
                 name: 'blockquote',
-                children: [{ name: 'text', value: 'Quote' }],
+                children: [{ name: 'Text', children: 'Quote' }],
             },
         ]);
     });
 
     /* The runtime should render blockquote XML into the expected HTML output. */
     it('renders raw xml blockquote content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<blockquote>Quoted text</blockquote>');
         const renderedTree = render(ast, ctx);
 

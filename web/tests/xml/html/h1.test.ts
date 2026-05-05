@@ -11,14 +11,14 @@ describe('H1', () => {
         expect(xmlToAST('<h1>Heading</h1>')).toEqual([
             {
                 name: 'h1',
-                children: [{ name: 'text', value: 'Heading' }],
+                children: [{ name: 'Text', children: 'Heading' }],
             },
         ]);
     });
 
     /* The runtime should render h1 XML into the expected HTML output. */
     it('renders raw xml h1 content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<h1>Heading one</h1>');
         const renderedTree = render(ast, ctx);
 

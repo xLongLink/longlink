@@ -14,7 +14,7 @@ describe('Separator', () => {
 
     /* The runtime should render separator XML into the expected horizontal rule. */
     it('renders raw xml separator content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Separator />');
         const renderedTree = render(ast, ctx);
 

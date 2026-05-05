@@ -18,11 +18,7 @@ describe('Input', () => {
 
     /* The runtime should render input XML into the expected markup. */
     it('renders raw xml input content end to end', () => {
-        const ctx: ExecutionContext = {
-            state: { user: [{ name: 'Ada' }, () => {}] },
-            queries: {},
-            scope: {},
-        };
+        const ctx: ExecutionContext = { user: { name: 'Ada' } };
         const ast = xmlToAST('<Input label="Name" value="$user.name" />');
         const renderedTree = render(ast, ctx);
 

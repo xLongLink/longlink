@@ -42,9 +42,6 @@ include = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-env = [
-  "ENV=testing",
-]
 
 [tool.uv]
 default-groups = ["dev"]

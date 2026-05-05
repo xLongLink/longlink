@@ -1,16 +1,16 @@
 import { xmlToAST } from '@/xml/compiler';
-import { Button } from '@/xml/react/Button';
 import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { renderXmlToMarkup } from '../helpers';
 
 describe('Button', () => {
     /* External href buttons should render as anchors. */
     it('renders an anchor when href is external', () => {
-        const output = renderToStaticMarkup(
-            createElement(Button, { href: 'https://example.com', variant: 'default' }, 'Open')
+        const output = renderXmlToMarkup(
+            xmlToAST('<Button href="https://example.com" variant="default">Open</Button>')
         );
 
         expect(output).toContain('<a');
@@ -24,7 +24,7 @@ describe('Button', () => {
             {
                 name: 'Button',
                 params: { href: '/issues' },
-                children: [{ name: 'text', value: 'Open issues' }],
+                children: [{ name: 'Text', children: 'Open issues' }],
             },
         ]);
     });
@@ -32,9 +32,7 @@ describe('Button', () => {
     /* Variant should flow into the shared button class recipe. */
     it('applies the requested variant', () => {
         const ast = xmlToAST('<Button variant="destructive">Delete</Button>');
-        const output = renderToStaticMarkup(
-            createElement('div', null, render(ast, { state: {}, queries: {}, scope: {} }))
-        );
+        const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('bg-destructive/10');
         expect(output).toContain('Delete');
@@ -43,9 +41,7 @@ describe('Button', () => {
     /* Size should flow into the shared button class recipe. */
     it('applies the requested size', () => {
         const ast = xmlToAST('<Button size="lg">Save</Button>');
-        const output = renderToStaticMarkup(
-            createElement('div', null, render(ast, { state: {}, queries: {}, scope: {} }))
-        );
+        const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('h-9');
         expect(output).toContain('Save');
@@ -54,9 +50,7 @@ describe('Button', () => {
     /* Disabled should mark the rendered button as inactive. */
     it('disables normal buttons when disabled is set', () => {
         const ast = xmlToAST('<Button disabled="true">Submit</Button>');
-        const output = renderToStaticMarkup(
-            createElement('div', null, render(ast, { state: {}, queries: {}, scope: {} }))
-        );
+        const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
         expect(output).toContain('disabled');
@@ -66,9 +60,7 @@ describe('Button', () => {
     /* Action buttons should still render as disabled when requested. */
     it('disables action buttons when disabled is set', () => {
         const ast = xmlToAST('<Button action="/issues" disabled="true">Submit</Button>');
-        const output = renderToStaticMarkup(
-            createElement('div', null, render(ast, { state: {}, queries: {}, scope: {} }))
-        );
+        const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
         expect(output).toContain('disabled');
@@ -92,14 +84,14 @@ describe('Button', () => {
                     payload: '{"title":"{issue.title}"}',
                     invalidate: 'issues',
                 },
-                children: [{ name: 'text', value: 'Save' }],
+                children: [{ name: 'Text', children: 'Save' }],
             },
         ]);
     });
 
     /* The runtime should honor conditional rendering on button nodes. */
     it('skips a button when if resolves false', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Button if="{false}">Hidden</Button>');
         const renderedTree = render(ast, ctx);
 
@@ -112,7 +104,7 @@ describe('Button', () => {
             {
                 name: 'Button',
                 params: { if: '{true}' },
-                children: [{ name: 'text', value: 'Visible' }],
+                children: [{ name: 'Text', children: 'Visible' }],
             },
         ]);
     });

@@ -12,8 +12,8 @@ describe('Ul', () => {
             {
                 name: 'ul',
                 children: [
-                    { name: 'li', children: [{ name: 'text', value: 'One' }] },
-                    { name: 'li', children: [{ name: 'text', value: 'Two' }] },
+                    { name: 'li', children: [{ name: 'Text', children: 'One' }] },
+                    { name: 'li', children: [{ name: 'Text', children: 'Two' }] },
                 ],
             },
         ]);
@@ -21,7 +21,7 @@ describe('Ul', () => {
 
     /* The runtime should render unordered list XML into the expected HTML output. */
     it('renders raw xml unordered list content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<ul><li>Item one</li></ul>');
         const renderedTree = render(ast, ctx);
 

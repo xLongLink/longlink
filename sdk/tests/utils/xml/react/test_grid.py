@@ -5,7 +5,7 @@ from __future__ import annotations
 from lxml import etree
 from pathlib import Path
 
-SCHEMA = Path(__file__).resolve().parents[4] / "longlink" / ".static" / "xsd" / "react" / "Grid.xsd"
+SCHEMA = Path(__file__).resolve().parents[4] / "longlink" / ".static" / "xsd" / "primitives" / "Grid.xsd"
 
 
 def test_grid_validation() -> None:

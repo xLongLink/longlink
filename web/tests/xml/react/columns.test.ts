@@ -1,8 +1,6 @@
 import { xmlToAST } from '@/xml/compiler';
-import { Column, Columns } from '@/xml/react/Columns';
 import { describe, expect, it } from 'bun:test';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderXmlToMarkup } from '../helpers';
 
 describe('Columns', () => {
     /* The compiler should keep Columns and nested Column nodes in the AST. */
@@ -14,12 +12,12 @@ describe('Columns', () => {
                     {
                         name: 'Column',
                         params: { width: '1' },
-                        children: [{ name: 'text', value: 'One' }],
+                        children: [{ name: 'Text', children: 'One' }],
                     },
                     {
                         name: 'Column',
                         params: { width: '2' },
-                        children: [{ name: 'text', value: 'Two' }],
+                        children: [{ name: 'Text', children: 'Two' }],
                     },
                 ],
             },
@@ -33,31 +31,21 @@ describe('Columns', () => {
      */
     it('renders explicit column widths', () => {
         expect(
-            renderToStaticMarkup(
-                createElement(
-                    Columns,
-                    { widths: [1, 2], gap: 16 },
-                    createElement(Column, null, 'One'),
-                    createElement(Column, null, 'Two')
-                )
+            renderXmlToMarkup(
+                xmlToAST('<Columns widths="[1,2]" gap="16"><Column>One</Column><Column>Two</Column></Columns>')
             )
         ).toBe(
-            '<div class="grid" style="grid-template-columns:minmax(0, 33.33333333333333%) minmax(0, 66.66666666666666%);gap:16px"><div class="space-y-4">One</div><div class="space-y-4">Two</div></div>'
+            '<div><div class="grid" style="grid-template-columns:minmax(0, 33.33333333333333%) minmax(0, 66.66666666666666%);gap:16px"><div class="space-y-4" style="grid-column:span 1">One</div><div class="space-y-4" style="grid-column:span 1">Two</div></div></div>'
         );
     });
 
     it('renders explicit 12-column placement from spans', () => {
         expect(
-            renderToStaticMarkup(
-                createElement(
-                    Columns,
-                    null,
-                    createElement(Column, { span: 3 }, 'Left'),
-                    createElement(Column, { width: 20 }, 'Right')
-                )
+            renderXmlToMarkup(
+                xmlToAST('<Columns><Column span="3">Left</Column><Column width="20">Right</Column></Columns>')
             )
         ).toBe(
-            '<div class="grid" style="grid-template-columns:repeat(12, minmax(0, 1fr));gap:16px"><div class="space-y-4" style="grid-column:span 3 / span 3">Left</div><div class="space-y-4" style="grid-column:span 12 / span 12">Right</div></div>'
+            '<div><div class="grid" style="grid-template-columns:repeat(15, minmax(0, 1fr));gap:16px"><div class="space-y-4" style="grid-column:span 3">Left</div><div class="space-y-4" style="grid-column:span 12">Right</div></div></div>'
         );
     });
 });

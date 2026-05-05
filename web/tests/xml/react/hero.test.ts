@@ -4,6 +4,7 @@ import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { renderXmlToMarkup } from '../helpers';
 
 describe('Hero', () => {
     /* The compiler should preserve Hero props so the runtime can build the header layout. */
@@ -25,7 +26,7 @@ describe('Hero', () => {
      * layout structure.
      */
     it('renders title and subtitle content', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Hero title="Overview" subtitle="Status at a glance" />');
         const renderedTree = render(ast, ctx);
 
@@ -35,10 +36,9 @@ describe('Hero', () => {
     });
 
     it('renders right-side children content', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
+        const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Hero title="Overview"><Button variant="outline">Create</Button></Hero>');
-        const renderedTree = render(ast, ctx);
-        const markup = renderToStaticMarkup(createElement(Fragment, null, renderedTree));
+        const markup = renderXmlToMarkup(ast, ctx);
 
         expect(markup).toContain('<h2 class="text-lg font-semibold text-white">Overview</h2>');
         expect(markup).toContain('Create');

@@ -1,19 +1,11 @@
 import { xmlToAST } from '@/xml/compiler';
-import { State } from '@/xml/react/State';
+import { State } from '@/xml/primitives/State';
 import { render } from '@/xml/renderers';
-import { RuntimeProvider, useRuntime } from '@/xml/runtime';
+import { RuntimeProvider } from '@/xml/runtime';
 import type { ExecutionContext, RuntimeState } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-
-function StateProbe() {
-    /* Read the current runtime state so the test can assert registration. */
-    const { ctx } = useRuntime();
-    const [value] = ctx.state.filter;
-
-    return createElement('span', null, String(value.value));
-}
 
 describe('State', () => {
     /* The compiler should preserve state attributes and child content. */
@@ -22,15 +14,15 @@ describe('State', () => {
             {
                 name: 'State',
                 params: { id: 'filter', value: 'day' },
-                children: [{ name: 'p', children: [{ name: 'text', value: 'Ready' }] }],
+                children: [{ name: 'p', children: [{ name: 'Text', children: 'Ready' }] }],
             },
         ]);
     });
 
     /* The runtime should render state XML into the expected HTML output. */
     it('renders raw xml state content end to end', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-        const ast = xmlToAST('<State id="filter" value="day"><p>{filter.value}</p></State>');
+        const ctx: ExecutionContext = {};
+        const ast = xmlToAST('<State id="filter" value="day"><p>{filter}</p></State>');
         const renderedTree = render(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
@@ -40,29 +32,32 @@ describe('State', () => {
 
     /* State should register a scoped tuple and preserve its initial object shape. */
     it('exposes initial state to descendants', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-        const runtime: RuntimeState = { node: { name: 'root' }, ctx, registry: {} };
+        const ctx: ExecutionContext = {};
+        const runtime: RuntimeState = { ctx, props: {}, children: null };
 
         const output = renderToStaticMarkup(
             createElement(RuntimeProvider, {
                 value: runtime,
-                children: createElement(State, { id: 'filter', value: 'day' }, createElement(StateProbe)),
+                children: createElement(State, {
+                    props: { id: 'filter', value: 'day' },
+                    children: { name: 'Text', children: '{filter}' },
+                }),
             })
         );
 
-        expect(output).toBe('<span>day</span>');
+        expect(output).toBe('day');
     });
 
     /* Missing ids should fail fast so XML authors get a clear runtime error. */
     it('throws when id is missing', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-        const runtime: RuntimeState = { node: { name: 'root' }, ctx, registry: {} };
+        const ctx: ExecutionContext = {};
+        const runtime: RuntimeState = { ctx, props: {}, children: null };
 
         expect(() =>
             renderToStaticMarkup(
                 createElement(RuntimeProvider, {
                     value: runtime,
-                    children: createElement(State, null, 'x'),
+                    children: createElement(State, { props: {}, children: 'x' }),
                 })
             )
         ).toThrow('State requires an "id" parameter');

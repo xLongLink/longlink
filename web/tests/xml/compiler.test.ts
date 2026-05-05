@@ -45,7 +45,7 @@ describe('xmlToAST', () => {
                         children: [
                             {
                                 name: 'Button',
-                                children: [{ name: 'text', value: 'Save' }],
+                                children: [{ name: 'Text', children: 'Save' }],
                             },
                         ],
                     },
@@ -72,7 +72,7 @@ describe('xmlToAST', () => {
         expect(xmlToAST('<Page>  Hello, {user.name}  </Page>')).toEqual([
             {
                 name: 'Page',
-                children: [{ name: 'text', value: '  Hello, {user.name}  ' }],
+                children: [{ name: 'Text', children: '  Hello, {user.name}  ' }],
             },
         ]);
     });
@@ -82,7 +82,7 @@ describe('xmlToAST', () => {
         expect(xmlToAST('<?xml version="1.0"?><Page><!-- hidden --><Button>Save</Button></Page>')).toEqual([
             {
                 name: 'Page',
-                children: [{ name: 'Button', children: [{ name: 'text', value: 'Save' }] }],
+                children: [{ name: 'Button', children: [{ name: 'Text', children: 'Save' }] }],
             },
         ]);
     });
