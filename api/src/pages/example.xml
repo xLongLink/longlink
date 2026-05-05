@@ -1,7 +1,7 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Example" icon="layout-grid" xmlns:bind="https://longlink.dev/xml/bind">
-  <State id="exampleForm" fullName="" email="" notes="" subscribed="true" notifications="false" progress="35" />
-  <Query id="example" path="/example" />
+  <State id="exampleForm" fullName="" email="" notes="" subscribed="true" notifications="false" progress="35">
+    <Query id="example" path="/example" />
 
   <Hero title="XML component showcase" subtitle="A single page that demonstrates the supported XML surface." icon="layout-grid">
     <Stack direction="row" gap="8" align="center">
@@ -14,7 +14,7 @@
     </Stack>
   </Hero>
 
-  <Menu>
+    <Menu>
     <MenuSection title="Overview" icon="layout-grid">
       <MenuSubSection title="Query and state" root="true">
         <Stack gap="12">
@@ -152,5 +152,6 @@
         </ul>
       </MenuSubSection>
     </MenuSection>
-  </Menu>
+    </Menu>
+  </State>
 </Page>

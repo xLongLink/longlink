@@ -96,12 +96,14 @@ export function renderNode(
         throw new Error(`Unknown component "${node.name}"`);
     }
 
+    const preserveChildren = node.name === 'State' || node.name === 'Query' || node.name === 'For';
+
     return (
         <RuntimeProvider value={{ node, registry, ctx }}>
             {createElement(
                 component,
                 { ...resolveParams(node.params, ctx), __xmlChildren: node.children },
-                node.children ? render(node.children, registry, ctx) : undefined
+                !preserveChildren && node.children ? render(node.children, registry, ctx) : undefined
             )}
         </RuntimeProvider>
     );

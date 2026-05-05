@@ -1,13 +1,14 @@
 # Primitives
 
-Primitives are the basic building blocks of XML pages.
-They let you manage local state, load data, and control rendering flow.
-You can combine them to build dynamic pages without writing frontend code.
-The sections below describe each primitive and how it is used.
+Primitives are the base building blocks of XML pages.
+They handle local state, data loading, conditional rendering, and iteration.
+
+Use them to build dynamic pages without writing frontend code.
 
 ## State
 
-`State` defines local reactive values for an XML page. Bind component props to state paths with `bind:*`.
+`State` defines a local state slot identified by `id`.
+Its children render with that state in scope.
 
 ```xml
 <State id="user" username="" password="">
@@ -16,7 +17,7 @@ The sections below describe each primitive and how it is used.
 </State>
 ```
 
-Bind any supported prop by placing the prop name after `bind:`.
+Use `bind:<prop>` on supported input-like props to sync UI and state.
 
 ```xml
 <State id="example" value="50" hint="Current progress value.">
@@ -25,38 +26,24 @@ Bind any supported prop by placing the prop name after `bind:`.
 </State>
 ```
 
+`reset` on a `State` element restores its initial value.
+
 ## Query
 
-`Query` declares a data-fetching operation against a REST endpoint. The response is automatically parsed and stored under the given id, making it available for rendering and logic.
+`Query` fetches JSON from a path and stores the result in `queries[id]`.
+Its children render with the fetched data in scope.
 
-Use a full `{...}` expression for dynamic paths.
-
-```xml
-<Query id="orders" path="{'/apps'}" />
-```
-
-## Action
-
-Action props define how an XML page submits data back to an endpoint.
-
-Use `action`, `path`, or `url` to name the target. Use `method` to choose the HTTP verb. Use `body` or `payload` to send data. Use `invalidate` to refresh query keys after success. Use `onSuccess` for follow-up work after the request completes.
+Use a full expression for dynamic paths.
 
 ```xml
-<Button
-  action="/issues"
-  method="POST"
-  payload='{"title":"{issue.title}"}'
-  invalidate="issues"
->Save</Button>
+<Query id="orders" path="/apps/orders" />
 ```
 
-These props are available on action-capable components such as `<Button>`, `<Checkbox>`, `<Input>`, `<Range>`, `<Select>`, `<Slider>`, `<Switch>`, and `<Textarea>`.
-
-`<Input>` and `<Select>` also support `submit` for inline write-back flows.
+`reset` on a `Query` element refetches the data.
 
 ## If
 
-Use `if` for conditional rendering on any element.
+Use `if` on any element to conditionally render it.
 
 ```xml
 <Card if="{order.active}" />
@@ -64,10 +51,18 @@ Use `if` for conditional rendering on any element.
 
 ## For
 
-`For` iterates over a collection and renders its children for each item. The current element is exposed through the `as` variable.
+`For` iterates over an array and exposes each item through `as`.
 
 ```xml
 <For each="orders" as="order">
   <Card>{order.number}</Card>
 </For>
+```
+
+## Expressions
+
+Use `{...}` in text nodes and attribute values to read from `state`, `queries`, or `scope`.
+
+```xml
+<p>Hello, {user.name}</p>
 ```
