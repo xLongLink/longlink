@@ -8,7 +8,7 @@ import {
     CardTitle as UICardTitle,
 } from '@/ui/card';
 import type { RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { renderNode, useContext } from '@/xml';
 
 type BaseProps = {
     children?: RenderableASTNode;
@@ -17,41 +17,37 @@ type BaseProps = {
 type CardProps = BaseProps & { size?: 'default' | 'sm' };
 type ChildrenProps = BaseProps;
 
-export function Card({ children, size = 'default' }: CardProps) {
-    const { ctx } = useRuntime();
-
-    return <UICard size={size}>{renderNode(children, ctx)}</UICard>;
+export function Card({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UICard size={(props.size as 'default' | 'sm') ?? 'default'}>{renderNode(children, context.ctx)}</UICard>;
 }
 
-export function CardHeader({ children }: ChildrenProps) {
-    const { ctx } = useRuntime();
-
-    return <UICardHeader>{renderNode(children, ctx)}</UICardHeader>;
+export function CardHeader({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UICardHeader>{renderNode(children, context.ctx)}</UICardHeader>;
 }
 
-export function CardTitle({ children }: ChildrenProps) {
-    const { ctx } = useRuntime();
-
-    return <UICardTitle>{renderNode(children, ctx)}</UICardTitle>;
+export function CardTitle({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UICardTitle>{renderNode(children, context.ctx)}</UICardTitle>;
 }
 
-export function CardDescription({ children }: ChildrenProps) {
-    const { ctx } = useRuntime();
-
-    return <UICardDescription>{renderNode(children, ctx)}</UICardDescription>;
+export function CardDescription({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UICardDescription>{renderNode(children, context.ctx)}</UICardDescription>;
 }
 
-export function CardAction({ children }: ChildrenProps) {
-    const { ctx } = useRuntime();
-    return <UICardAction>{renderNode(children, ctx)}</UICardAction>;
+export function CardAction({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UICardAction>{renderNode(children, context.ctx)}</UICardAction>;
 }
 
-export function CardContent({ children }: ChildrenProps) {
-    const { ctx } = useRuntime();
-    return <UICardContent>{renderNode(children, ctx)}</UICardContent>;
+export function CardContent({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UICardContent>{renderNode(children, context.ctx)}</UICardContent>;
 }
 
-export function CardFooter({ children }: ChildrenProps) {
-    const { ctx } = useRuntime();
-    return <UICardFooter>{renderNode(children, ctx)}</UICardFooter>;
+export function CardFooter({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UICardFooter>{renderNode(children, context.ctx)}</UICardFooter>;
 }

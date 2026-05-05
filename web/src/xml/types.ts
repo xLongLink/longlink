@@ -35,8 +35,9 @@ export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 
 /** State provided by RuntimeProvider to the render tree. */
 export type RuntimeState = {
-    node: ASTNode;
     ctx: ExecutionContext;
+    props: Record<string, string>;
+    children?: ASTNode[];
 };
 
 /** Props accepted by XML buttons for actions and navigation. */
@@ -47,3 +48,12 @@ export type ActionProps = {
     payload?: unknown;
     invalidate?: string | string[];
 };
+
+/** Standard XML component contract used by the runtime. */
+export type XmlComponentProps = {
+    props: Record<string, string>;
+    children?: ASTNode[];
+};
+
+/** XML component type with the runtime contract. */
+export type XmlRegistryComponent<Props = Record<string, unknown>> = ComponentType<Props & XmlComponentProps>;

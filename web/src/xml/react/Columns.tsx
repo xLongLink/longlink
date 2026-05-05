@@ -1,5 +1,5 @@
 import type { RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { evaluate, renderNode, useContext } from '@/xml';
 import { Children, isValidElement, type ReactNode } from 'react';
 
 type ColumnsProps = {
@@ -29,12 +29,14 @@ function toGridTemplate(widths: number[]) {
 function getColumnSpan(child: ReactNode) {
     if (!isValidElement<ColumnProps>(child)) return 0;
     const explicitSpan = child.props.span ?? child.props.width;
-    const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, Number(explicitSpan)));
+    const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, explicitSpan));
     return Number.isFinite(safeSpan) ? safeSpan : 1;
 }
 
-export function Columns({ gap = 16, widths, children }: ColumnsProps) {
-    const { ctx } = useRuntime();
+export function Columns({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const gap = evaluate(props.gap ?? '16', context);
+    const widths = evaluate(props.widths ?? '', context) as number[] | undefined;
     const columnSpans = Children.toArray(children as any)
         .map(getColumnSpan)
         .filter((span) => span > 0);
@@ -45,18 +47,20 @@ export function Columns({ gap = 16, widths, children }: ColumnsProps) {
             : { gridTemplateColumns: `repeat(${totalColumns}, minmax(0, 1fr))` };
     return (
         <div className="grid" style={{ ...style, gap: px(gap, 16) }}>
-            {renderNode(children as any, ctx) as unknown as ReactNode}
+            {renderNode(children as any, context.ctx) as unknown as ReactNode}
         </div>
     );
 }
 
-export function Column({ children, span, width }: ColumnProps) {
-    const { ctx } = useRuntime();
-    const explicitSpan = span ?? width;
-    const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, Number(explicitSpan)));
+export function Column({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const span = evaluate(props.span ?? '', context);
+    const width = evaluate(props.width ?? '', context);
+    const explicitSpan = (span as number | undefined) ?? (width as number | undefined);
+    const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, explicitSpan));
     return (
         <div className="space-y-4" style={{ gridColumn: `span ${safeSpan}` }}>
-            {renderNode(children, ctx)}
+            {renderNode(children, context.ctx)}
         </div>
     );
 }

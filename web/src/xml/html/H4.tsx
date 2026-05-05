@@ -1,5 +1,5 @@
 import type { RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { renderNode, useContext } from '@/xml';
 import type { ComponentPropsWithoutRef } from 'react';
 
 type BaseProps = {
@@ -8,11 +8,11 @@ type BaseProps = {
 
 /** Renders a level 4 heading with standard styling. */
 export function H4({ children, ...props }: ComponentPropsWithoutRef<'h4'> & BaseProps) {
-    const { ctx } = useRuntime();
+    const context = useContext();
 
     return (
         <h4 className="text-xl font-semibold tracking-tight [&:not(:first-child)]:mt-8" {...props}>
-            {renderNode(children, ctx)}
+            {renderNode(children, context.ctx)}
         </h4>
     );
 }

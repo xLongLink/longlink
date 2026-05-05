@@ -1,5 +1,5 @@
 import type { RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { evaluate, renderNode, useContext } from '@/xml';
 import type { CSSProperties } from 'react';
 
 type GridProps = {
@@ -11,8 +11,12 @@ type GridProps = {
     style?: CSSProperties;
 };
 
-export function Grid({ children, gap = '1rem', columns, align, justify, style }: GridProps) {
-    const { ctx } = useRuntime();
+export function Grid({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const gap = evaluate(props.gap ?? '1rem', context, 'string');
+    const columns = evaluate(props.columns ?? '', context, 'string');
+    const align = evaluate(props.align ?? '', context, 'string');
+    const justify = evaluate(props.justify ?? '', context, 'string');
     return (
         <div
             style={{
@@ -21,10 +25,9 @@ export function Grid({ children, gap = '1rem', columns, align, justify, style }:
                 gridTemplateColumns: columns,
                 alignItems: align,
                 justifyItems: justify,
-                ...style,
             }}
         >
-            {renderNode(children, ctx)}
+            {renderNode(children, context.ctx)}
         </div>
     );
 }

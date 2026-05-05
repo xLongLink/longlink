@@ -1,5 +1,5 @@
 import type { RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { renderNode, useContext } from '@/xml';
 import type { ComponentPropsWithoutRef } from 'react';
 
 type BaseProps = {
@@ -8,7 +8,7 @@ type BaseProps = {
 
 /** Renders a list item. */
 export function Li({ children, ...props }: ComponentPropsWithoutRef<'li'> & BaseProps) {
-    const { ctx } = useRuntime();
+    const context = useContext();
 
-    return <li {...props}>{renderNode(children, ctx)}</li>;
+    return <li {...props}>{renderNode(children, context.ctx)}</li>;
 }

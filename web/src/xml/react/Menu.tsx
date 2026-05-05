@@ -6,7 +6,7 @@ import {
     MenuList,
 } from '@/ui/menu';
 import type { ASTNode, RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { renderNode, useContext } from '@/xml';
 import type { LucideIcon } from 'lucide-react';
 import { AppWindow } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -74,19 +74,19 @@ function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
     });
 }
 
-export function MenuSection({ children }: MenuSectionProps) {
-    const { ctx } = useRuntime();
-    return <>{renderNode(children, ctx)}</>;
+export function MenuSection({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <>{renderNode(children, context.ctx)}</>;
 }
 
-export function MenuSubSection({ children }: MenuSubSectionProps) {
-    const { ctx } = useRuntime();
-    return <>{renderNode(children, ctx)}</>;
+export function MenuSubSection({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <>{renderNode(children, context.ctx)}</>;
 }
 
-export function Menu(_props: MenuProps) {
-    const { node, ctx } = useRuntime();
-    const sections = useMemo(() => parseSectionsFromAST(node), [node]);
+export function Menu({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const sections = useMemo(() => parseSectionsFromAST({ name: 'Menu', children: children as any }), [children]);
     const [activeValue, setActiveValue] = useState<string | undefined>(() => {
         const first = sections[0];
         if (!first) return undefined;
@@ -128,12 +128,12 @@ export function Menu(_props: MenuProps) {
                     <div key={`${section.id}-content`}>
                         {section.rootSubSection ? (
                             <MenuContent value={section.id}>
-                                {renderNode(section.rootSubSection.node.children, ctx)}
+                                {renderNode(section.rootSubSection.node.children, context.ctx)}
                             </MenuContent>
                         ) : null}
                         {section.subSections.map((sub) => (
                             <MenuContent key={sub.id} value={sub.id}>
-                                {renderNode(sub.node.children, ctx)}
+                                {renderNode(sub.node.children, context.ctx)}
                             </MenuContent>
                         ))}
                     </div>

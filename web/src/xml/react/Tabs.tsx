@@ -5,28 +5,30 @@ import {
     TabsTrigger as UITabsTrigger,
 } from '@/ui/tabs';
 import type { RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { evaluate, renderNode, useContext } from '@/xml';
 
 type BaseProps = { children?: RenderableASTNode };
 
-export function Tabs({ children }: BaseProps) {
-    const { ctx } = useRuntime();
-    return <UITabs>{renderNode(children, ctx)}</UITabs>;
+export function Tabs({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UITabs>{renderNode(children, context.ctx)}</UITabs>;
 }
 
-export function TabsList({ children }: BaseProps) {
-    const { ctx } = useRuntime();
-    return <UITabsList>{renderNode(children, ctx)}</UITabsList>;
+export function TabsList({ children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    return <UITabsList>{renderNode(children, context.ctx)}</UITabsList>;
 }
 
-export function TabsTrigger({ value, children }: BaseProps & { value?: string }) {
-    const { ctx } = useRuntime();
+export function TabsTrigger({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const value = evaluate(props.value ?? '', context, 'string');
     if (!value) throw new Error('TabsTrigger requires a "value" parameter');
-    return <UITabsTrigger value={value}>{renderNode(children, ctx)}</UITabsTrigger>;
+    return <UITabsTrigger value={value}>{renderNode(children, context.ctx)}</UITabsTrigger>;
 }
 
-export function TabsContent({ value, children }: BaseProps & { value?: string }) {
-    const { ctx } = useRuntime();
+export function TabsContent({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const value = evaluate(props.value ?? '', context, 'string');
     if (!value) throw new Error('TabsContent requires a "value" parameter');
-    return <UITabsContent value={value}>{renderNode(children, ctx)}</UITabsContent>;
+    return <UITabsContent value={value}>{renderNode(children, context.ctx)}</UITabsContent>;
 }

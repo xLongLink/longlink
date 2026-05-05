@@ -1,24 +1,17 @@
 import type { RenderableASTNode } from '@/xml';
-import { RuntimeProvider, renderNode, useRuntime } from '@/xml';
+import { RuntimeProvider, evaluate, renderNode, useContext } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
 
 /** Fetches JSON data into a reusable query slot for descendants. */
-export function Query({
-    id,
-    path: pathTemplate,
-    children,
-}: {
-    id?: string;
-    path?: string;
-    children?: RenderableASTNode;
-}) {
+export function Query({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const id = evaluate(props.id ?? '', context, 'string');
+    const pathTemplate = evaluate(props.path ?? '', context, 'string');
     if (!id) throw new Error('Query requires an "id" parameter');
     if (!pathTemplate) throw new Error('Query requires a "path" parameter');
 
-    const runtime = useRuntime();
-    const { ctx } = runtime;
     const path = pathTemplate;
-    const baseUrl = ctx.baseUrl ?? '';
+    const baseUrl = context.ctx.baseUrl ?? '';
     const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
     const { data } = useQuery({
         queryKey: [id, url],
@@ -28,7 +21,11 @@ export function Query({
         },
     });
 
-    const childCtx = { ...ctx, queries: { ...ctx.queries, [id]: data } };
+    const childCtx = { ...context.ctx, queries: { ...context.ctx.queries, [id]: data } };
 
-    return <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{renderNode(children, childCtx)}</RuntimeProvider>;
+    return (
+        <RuntimeProvider value={{ ...context, ctx: childCtx, props, children }}>
+            {renderNode(children, childCtx)}
+        </RuntimeProvider>
+    );
 }

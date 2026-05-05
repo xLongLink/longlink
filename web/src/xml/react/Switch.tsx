@@ -5,24 +5,22 @@ import { useId } from 'react';
 type SwitchProps = {
     label?: string;
     description?: string;
-    active?: boolean | string;
-    checked?: boolean | string;
+    active?: boolean;
+    checked?: boolean;
+    onChange?: (checked: boolean) => void;
 };
 
-function toBoolean(value: boolean | string): boolean {
-    return typeof value === 'string' ? value === 'true' : value;
-}
-
-export function Switch({ label, description, active = false, checked }: SwitchProps) {
+export function Switch({ label, description, active = false, checked, onChange }: SwitchProps) {
     const id = useId();
-    const resolvedChecked = toBoolean(checked ?? active);
+    const resolvedChecked =
+        typeof (checked ?? active) === 'string' ? (checked ?? active) === 'true' : (checked ?? active);
     return (
         <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
             <div className="space-y-1">
                 {label ? <Label htmlFor={id}>{label}</Label> : null}
                 {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
             </div>
-            <UISwitch id={id} checked={resolvedChecked} />
+            <UISwitch id={id} checked={resolvedChecked} onCheckedChange={onChange} />
         </div>
     );
 }

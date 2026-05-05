@@ -33,12 +33,17 @@ If the expression is false, the element is not rendered.
 
 ### Two-way Binding
 
-Any supported input-like component may use `bind:<prop>`.
+Any supported input-like component may use `$<prop>`.
+
+For common controlled props like `value`, `checked`, and `active`, LongLink
+passes the current prop value and wires a normal `onChange` handler back to
+state. Other bound props use a matching `on<Prop>Change` callback when the
+component supports it.
 
 Example:
 
 ```xml
-<Input bind:value="user.name" />
+<Input value="$user.name" />
 ```
 
 ### Reusable State Slots

@@ -15,6 +15,7 @@ type InputProps = {
     kind?: 'text' | 'number' | 'password' | 'textarea' | 'date' | 'datetime';
     label?: string;
     value?: string | number | boolean;
+    onChange?: (value: string) => void;
     placeholder?: string;
     description?: string;
     required?: boolean;
@@ -43,6 +44,7 @@ export function Input({
     kind = 'text',
     label,
     value,
+    onChange,
     placeholder,
     description,
     required,
@@ -99,6 +101,7 @@ export function Input({
                     onChange={(event) => {
                         const nextValue = event.currentTarget.value;
                         setTextValue(nextValue);
+                        onChange?.(nextValue);
                     }}
                     onBlur={(event) => {
                         void handleBlur(event.currentTarget.value);
@@ -179,6 +182,7 @@ export function Input({
                         onChange={(event) => {
                             const nextTime = event.currentTarget.value;
                             setSelectedDateTime({ ...datetimeValue, time: nextTime });
+                            onChange?.(nextTime);
                         }}
                         onBlur={(event) => {
                             if (!datetimeValue.date) return;
@@ -204,6 +208,7 @@ export function Input({
                 onChange={(event) => {
                     const nextValue = event.currentTarget.value;
                     setTextValue(nextValue);
+                    onChange?.(nextValue);
                 }}
                 onBlur={(event) => {
                     void handleBlur(event.currentTarget.value);

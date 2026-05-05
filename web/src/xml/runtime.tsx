@@ -1,89 +1,125 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext as useReactContext, type ReactNode } from 'react';
 import { renderNode } from './renderers';
 import type { ExecutionContext, RuntimeState } from './types';
 
 /**
- * Evaluates a JavaScript expression string against the current execution context.
+ * Evaluates a string against the current execution context.
  *
- * The scope exposed to the expression is built by merging (in priority order):
+ * The scope exposed to expressions is built by merging (in priority order):
  *   1. state  — current values of all reactive state variables (first element of each [value, setter] tuple)
  *   2. queries — results of data queries
  *   3. scope  — locally scoped variables (e.g. loop iteration variables); highest priority
  *
+ * Plain literals are returned as strings, numbers, booleans, null, or
+ * JSON values when they can be parsed safely.
+ * Full `{expression}` blocks are evaluated and returned.
  * Throws a ReferenceError if the expression references an unknown variable.
  * Throws a SyntaxError if the expression string is not valid JavaScript.
  */
-export function evaluate(expr: string, ctx: ExecutionContext): any {
-    /* Build scope: state values, then queries, then local scope (highest priority). */
-    const scope = {
-        ...Object.fromEntries(Object.entries(ctx.state).map(([key, [value]]) => [key, value])),
-        ...ctx.queries,
-        ...ctx.scope,
-    };
+export function evaluate(expr: string, ctx: ExecutionContext): unknown;
+export function evaluate(expr: string, ctx: ExecutionContext, type: 'string'): string;
+export function evaluate(expr: string, ctx: ExecutionContext, type: 'number'): number;
+export function evaluate(expr: string, ctx: ExecutionContext, type: 'boolean'): boolean;
+export function evaluate(expr: string, ctx: ExecutionContext, type?: 'string' | 'number' | 'boolean'): unknown {
+    const trimmedExpr = expr.trim();
+    const scope = buildScope(ctx);
 
-    return new Function(...Object.keys(scope), `return ${expr}`)(...Object.values(scope));
-}
-
-/**
- * Resolves an attribute value string against the current execution context.
- *
- * Only a single canonical form is executable: a full `{expression}` block.
- * Everything else is treated as literal text.
- */
-export function resolveValue(value: string, ctx: ExecutionContext): unknown {
-    const trimmedValue = value.trim();
-
-    if (!trimmedValue.startsWith('{') || !trimmedValue.endsWith('}')) {
-        return value;
+    if (!trimmedExpr.startsWith('{') || !trimmedExpr.endsWith('}')) {
+        return coerceLiteral(expr, type);
     }
 
-    const expression = trimmedValue.slice(1, -1).trim();
+    const expression = trimmedExpr.slice(1, -1).trim();
+
+    if (!expression) {
+        return coerceValue('', type);
+    }
 
     try {
-        return evaluate(expression, ctx);
+        return coerceValue(new Function(...Object.keys(scope), `return ${expression}`)(...Object.values(scope)), type);
     } catch (error) {
         if (!(error instanceof SyntaxError)) {
             throw error;
         }
     }
 
-    // Re-wrap in parens so `{key: value}` is parsed as an object literal, not a labeled statement.
-    return evaluate(`(${trimmedValue})`, ctx);
+    /* Re-wrap in parens so `{key: value}` is parsed as an object literal, not a labeled statement. */
+    return coerceValue(new Function(...Object.keys(scope), `return (${expression})`)(...Object.values(scope)), type);
 }
 
-/**
- * Interpolates a template string against the current execution context.
- */
-export function interpolate(value: string, ctx: ExecutionContext): unknown {
-    return resolveValue(value, ctx);
+/** Builds the execution scope from state, queries, and local variables. */
+function buildScope(ctx: ExecutionContext): Record<string, unknown> {
+    return {
+        ...Object.fromEntries(Object.entries(ctx.state).map(([key, [value]]) => [key, value])),
+        ...ctx.queries,
+        ...ctx.scope,
+    };
+}
+
+/** Coerces a literal string into the requested type or inferred runtime value. */
+function coerceLiteral(value: string, type?: 'string' | 'number' | 'boolean'): unknown {
+    if (type == null) {
+        return inferLiteral(value);
+    }
+
+    if (type === 'number') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : value;
+    }
+
+    if (type === 'boolean') {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === 'true') return true;
+        if (normalized === 'false') return false;
+    }
+
+    return value;
+}
+
+/** Infers the most useful runtime value from a raw XML attribute string. */
+function inferLiteral(value: string): unknown {
+    const trimmed = value.trim();
+
+    if (trimmed === '') return '';
+    if (trimmed === 'null') return null;
+    if (trimmed === 'undefined') return undefined;
+    if (trimmed === 'true') return true;
+    if (trimmed === 'false') return false;
+
+    const numericValue = Number(trimmed);
+    if (Number.isFinite(numericValue)) return numericValue;
+
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+            return JSON.parse(trimmed);
+        } catch {
+            return value;
+        }
+    }
+
+    return value;
+}
+
+/** Coerces an evaluated value into the requested type. */
+function coerceValue(value: unknown, type?: 'string' | 'number' | 'boolean'): unknown {
+    if (type === 'string') return String(value);
+    if (type === 'number') return typeof value === 'number' ? value : Number(value);
+    if (type === 'boolean') return Boolean(value);
+    return value;
 }
 
 /**
  * Resolves a condition string to a boolean for use in `if` attributes.
  *
- * - If condition is null or undefined, the element is always rendered (returns true).
- * - If condition is an empty or whitespace-only string, returns false.
- * - If condition is a `{expression}` block, it is evaluated and coerced to boolean.
- * - Otherwise the string is treated as literal text and returns false.
- *
- * Example: resolveCondition("{count > 0}", ctx) → true when count is 5
+ * If condition is null or undefined, the element is always rendered (returns true).
  */
 export function resolveCondition(condition: string | undefined, ctx: ExecutionContext): boolean {
     if (condition == null) return true;
 
-    const trimmed = condition.trim();
-
-    if (!trimmed) return false;
-
-    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-        return Boolean(resolveValue(trimmed, ctx));
-    }
-
-    return false;
+    return Boolean(evaluate(condition, ctx, 'boolean'));
 }
 
 /**
- * Resolves a `bind:<prop>` target into a current value and setter.
+ * Resolves a `$` target into a current value and setter.
  *
  * The target uses a dot-separated state path. The first segment identifies
  * the state container and the remaining segments identify the value inside
@@ -100,7 +136,7 @@ export function resolveBind(
     const stateEntry = ctx.state[stateKey];
 
     if (!stateEntry) {
-        throw new Error(`bind: unknown state "${stateKey}"`);
+        throw new Error(`$ unknown state "${stateKey}"`);
     }
 
     const [stateValue, setter] = stateEntry;
@@ -145,14 +181,14 @@ function getDeep(obj: unknown, path: string[]): unknown {
     return current;
 }
 
-const RuntimeContext = createContext<RuntimeState | null>(null);
+export const RuntimeContext = createContext<RuntimeState | null>(null);
 
 export function RuntimeProvider({ value, children }: { value: RuntimeState; children: ReactNode }) {
     return <RuntimeContext.Provider value={value}>{children}</RuntimeContext.Provider>;
 }
 
-export function useRuntime(): RuntimeState {
-    const runtime = useContext(RuntimeContext);
+export function useContext(): RuntimeState {
+    const runtime = useReactContext(RuntimeContext);
 
     if (!runtime) {
         throw new Error('useRuntime must be used inside a rendered ReactXML component');
@@ -162,7 +198,7 @@ export function useRuntime(): RuntimeState {
 }
 
 export function RuntimeChildren() {
-    const { node, ctx } = useRuntime();
+    const { ctx, children } = useContext();
 
-    return renderNode(node.children, ctx);
+    return renderNode(children, ctx);
 }

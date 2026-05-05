@@ -1,5 +1,5 @@
 import type { RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { evaluate, renderNode, useContext } from '@/xml';
 const ALIGN_ITEMS = { center: 'center', end: 'flex-end', start: 'flex-start', stretch: 'stretch' } as const;
 const JUSTIFY_CONTENT = { between: 'space-between', center: 'center', end: 'flex-end', start: 'flex-start' } as const;
 
@@ -20,8 +20,12 @@ type StackProps = {
     justify?: string;
 };
 
-export function Stack({ align = 'stretch', children, direction = 'column', gap = 16, justify = 'start' }: StackProps) {
-    const { ctx } = useRuntime();
+export function Stack({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const align = evaluate(props.align ?? 'stretch', context, 'string');
+    const direction = evaluate(props.direction ?? 'column', context, 'string');
+    const gap = evaluate(props.gap ?? '16', context);
+    const justify = evaluate(props.justify ?? 'start', context, 'string');
     return (
         <div
             className={`flex ${direction === 'row' ? 'flex-row' : 'flex-col'}`}
@@ -31,7 +35,7 @@ export function Stack({ align = 'stretch', children, direction = 'column', gap =
                 alignItems: ALIGN_ITEMS[align as keyof typeof ALIGN_ITEMS] ?? ALIGN_ITEMS.stretch,
             }}
         >
-            {renderNode(children, ctx)}
+            {renderNode(children, context.ctx)}
         </div>
     );
 }

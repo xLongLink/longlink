@@ -23,9 +23,10 @@ app.include_page("/pages")
 
 ```xml
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
-<Page name="Tab Name" icon="settings" xmlns:bind="https://longlink.dev/xml/bind">
+<Page name="Tab Name" icon="settings">
     <!-- Content -->
 </Page>
 ```
 
-> Note: `xmlns:bind="https://longlink.dev/xml/bind"` is required for bound attributes such as `bind:value`.
+> Note: bound attributes use `$`, such as `value="$user.name"`.
+> `$value` and `$checked` compile to standard controlled React props and `onChange` handlers.

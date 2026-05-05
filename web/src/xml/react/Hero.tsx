@@ -1,5 +1,5 @@
 import type { RenderableASTNode } from '@/xml';
-import { renderNode, useRuntime } from '@/xml';
+import { evaluate, renderNode, useContext } from '@/xml';
 import { Icon } from './Icon';
 
 type HeroProps = {
@@ -9,8 +9,11 @@ type HeroProps = {
     children?: RenderableASTNode;
 };
 
-export function Hero({ title, subtitle, icon, children }: HeroProps) {
-    const { ctx } = useRuntime();
+export function Hero({ props, children }: { props: Record<string, string>; children?: RenderableASTNode }) {
+    const context = useContext();
+    const title = evaluate(props.title ?? '', context, 'string');
+    const subtitle = evaluate(props.subtitle ?? '', context, 'string');
+    const icon = evaluate(props.icon ?? '', context, 'string');
     return (
         <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -24,7 +27,7 @@ export function Hero({ title, subtitle, icon, children }: HeroProps) {
                     {subtitle ? <p className="text-sm text-white/60">{subtitle}</p> : null}
                 </div>
             </div>
-            {children ? <div className="shrink-0">{renderNode(children, ctx)}</div> : null}
+            {children ? <div className="shrink-0">{renderNode(children, context.ctx)}</div> : null}
         </div>
     );
 }

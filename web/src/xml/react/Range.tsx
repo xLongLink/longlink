@@ -11,18 +11,25 @@ type RangeProps = {
 };
 
 export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max] }: RangeProps) {
+    const resolvedMin = typeof min === 'number' && Number.isFinite(min) ? min : 0;
+    const resolvedMax = typeof max === 'number' && Number.isFinite(max) ? max : 100;
+    const resolvedStep = typeof step === 'number' && Number.isFinite(step) ? step : 1;
     const normalizedValue = (() => {
         if (typeof value === 'string' && value.trim()) {
             try {
                 const parsed = JSON.parse(value);
                 if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === 'number')) {
-                    return parsed.length === 2 ? parsed : [parsed[0] ?? min, parsed[1] ?? max];
+                    return parsed.length === 2 ? parsed : [parsed[0] ?? resolvedMin, parsed[1] ?? resolvedMax];
                 }
             } catch {
-                return [min, max];
+                return [resolvedMin, resolvedMax];
             }
         }
-        return Array.isArray(value) ? (value.length === 2 ? value : [value[0] ?? min, value[1] ?? max]) : [min, max];
+        return Array.isArray(value)
+            ? value.length === 2
+                ? value
+                : [value[0] ?? resolvedMin, value[1] ?? resolvedMax]
+            : [resolvedMin, resolvedMax];
     })();
     return (
         <div className="space-y-2">
@@ -32,7 +39,7 @@ export function Range({ label, description, min = 0, max = 100, step = 1, value 
                     <span className="text-muted-foreground text-sm">{normalizedValue.join(', ')}</span>
                 </div>
             )}
-            <Slider value={normalizedValue} min={min} max={max} step={step} />
+            <Slider value={normalizedValue} min={resolvedMin} max={resolvedMax} step={resolvedStep} />
             {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
     );
