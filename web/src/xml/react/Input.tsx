@@ -5,6 +5,7 @@ import { Label } from '@/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/popover';
 import { Textarea } from '@/ui/textarea';
 import type { XmlComponentProps } from '@/xml';
+import { useProps } from '@/xml';
 import { format, isValid, parse } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -38,7 +39,8 @@ const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => 
 };
 
 /** Renders an XML input control from evaluated XML props. */
-export function Input({ props }: XmlComponentProps) {
+export function Input({ props: rawProps }: XmlComponentProps) {
+    const props = useProps(rawProps as Record<string, string>);
     const {
         name,
         kind = 'text',

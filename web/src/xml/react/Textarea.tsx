@@ -1,6 +1,7 @@
 import { Label } from '@/ui/label';
 import { Textarea as UITextarea } from '@/ui/textarea';
 import type { XmlComponentProps } from '@/xml';
+import { useProps } from '@/xml';
 
 type TextareaProps = {
     label?: string;
@@ -14,7 +15,8 @@ type TextareaProps = {
 };
 
 /** Renders an XML textarea control from evaluated XML props. */
-export function Textarea({ props }: XmlComponentProps) {
+export function Textarea({ props: rawProps }: XmlComponentProps) {
+    const props = useProps(rawProps as Record<string, string>);
     const { label, description, ...textareaProps } = props as TextareaProps;
     return (
         <div className="space-y-2">

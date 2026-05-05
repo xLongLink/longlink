@@ -1,7 +1,7 @@
 import { Component, Fragment, useContext as useReactContext, type ComponentType, type ReactNode } from 'react';
 import { registry } from './registry';
-import { evaluate, resolveBinding, resolveCondition, RuntimeContext, RuntimeProvider } from './runtime';
-import type { ASTNode, ExecutionContext, RenderableASTNode, RuntimeOptions, SetterContext } from './types';
+import { evaluate, resolveCondition, RuntimeContext, RuntimeProvider } from './runtime';
+import type { ASTNode, ExecutionContext, RenderableASTNode, RuntimeOptions } from './types';
 
 type XmlErrorBoundaryProps = {
     children: ReactNode;
@@ -43,49 +43,8 @@ class XmlErrorBoundary extends Component<XmlErrorBoundaryProps, XmlErrorBoundary
 }
 
 /**
- * Resolves XML attributes into React props for a rendered node.
- */
-function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record<string, unknown> {
-    if (!params) return {};
-
-    const resolved: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(params)) {
-        if (key === 'if') continue;
-
-        if (typeof value === 'string' && value.startsWith('$')) {
-            try {
-                const binding = resolveBinding(
-                    value.slice(1),
-                    ctx,
-                    (ctx.__xmlSetters as SetterContext | undefined) ?? {}
-                );
-                resolved[key] = binding.value;
-                resolved[toChangeHandlerName(key)] = binding.setValue;
-            } catch {
-                resolved[key] = evaluate(value, ctx);
-            }
-            continue;
-        }
-
-        resolved[key] = evaluate(value, ctx);
-    }
-
-    return resolved;
-}
-
-/** Converts a bound prop name into the React-style change callback name. */
-function toChangeHandlerName(propName: string): string {
-    if (propName === 'value' || propName === 'checked' || propName === 'active') {
-        return 'onChange';
-    }
-
-    return `on${propName.charAt(0).toUpperCase()}${propName.slice(1)}Change`;
-}
-
-/**
  * Renders XML AST nodes with the current runtime context.
  *
- * - Text nodes are resolved through the same `{expression}` rule and returned as strings.
  * - Nodes whose `if` param evaluates to false are skipped.
  * - Component lookup is performed against the registry; unknown tags throw.
  * - Context is read from the nearest RuntimeProvider.
@@ -113,18 +72,12 @@ function RenderedNode({ node }: { node: RenderableASTNode }): ReactNode {
         return node.map((child, index) => <Fragment key={index}>{renderXml(child)}</Fragment>);
     }
 
-    if (node.name === 'Text') {
-        if (typeof node.children === 'string') {
-            const value = evaluate(node.children, activeCtx);
+    if (typeof node === 'string') {
+        const value = evaluate(node, activeCtx);
 
-            if (isRenderableValue(value)) return value;
+        if (isRenderableValue(value)) return value;
 
-            throw new Error(
-                `XML text expression resolved to ${describeValue(value)}, which cannot be rendered as text`
-            );
-        }
-
-        return renderXml(node.children);
+        throw new Error(`XML text expression resolved to ${describeValue(value)}, which cannot be rendered as text`);
     }
 
     if (!resolveCondition(node.params?.if, activeCtx)) {
@@ -138,9 +91,8 @@ function RenderedNode({ node }: { node: RenderableASTNode }): ReactNode {
     }
 
     const Component = component;
-    const resolvedProps = resolveParams(node.params, activeCtx);
 
-    return <Component props={resolvedProps} children={node.children} />;
+    return <Component props={node.params ?? {}} children={node.children} />;
 }
 
 /**
@@ -155,7 +107,7 @@ export function render(ast: ASTNode[], ctx: ExecutionContext, options?: RuntimeO
     );
 }
 
-/** Returns true when an evaluated XML text value is safe for React to render. */
+/** Returns true when a raw XML string value is safe for React to render. */
 function isRenderableValue(value: unknown): value is ReactNode {
     return value == null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
 }

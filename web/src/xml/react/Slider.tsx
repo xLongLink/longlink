@@ -1,6 +1,7 @@
 import { Label } from '@/ui/label';
 import { Slider as UISlider } from '@/ui/slider';
 import type { XmlComponentProps } from '@/xml';
+import { useProps } from '@/xml';
 
 type SliderValue = number | readonly number[] | string;
 type SliderProps = {
@@ -16,7 +17,8 @@ type SliderProps = {
 };
 
 /** Renders an XML slider control from evaluated XML props. */
-export function Slider({ props }: XmlComponentProps) {
+export function Slider({ props: rawProps }: XmlComponentProps) {
+    const props = useProps(rawProps as Record<string, string>);
     const {
         label,
         description,

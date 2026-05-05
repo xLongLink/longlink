@@ -38,9 +38,11 @@ function makeIcon(iconName: string | undefined): LucideIcon {
 }
 
 function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
-    const sectionNodes = (menuNode.children ?? []).filter((n) => n.name === 'MenuSection');
+    const children = Array.isArray(menuNode.children) ? menuNode.children : [];
+    const sectionNodes = children.filter((node): node is ASTNode => node.name === 'MenuSection');
     return sectionNodes.map((sectionNode, sectionIndex) => {
-        const subSectionNodes = (sectionNode.children ?? []).filter((n) => n.name === 'MenuSubSection');
+        const sectionChildren = Array.isArray(sectionNode.children) ? sectionNode.children : [];
+        const subSectionNodes = sectionChildren.filter((node): node is ASTNode => node.name === 'MenuSubSection');
         const normalizedSubSections: NormalizedSubSection[] = subSectionNodes.map((subNode, subIndex) => ({
             id: `section-${sectionIndex}-sub-${subIndex}`,
             title: subNode.params?.title ?? '',

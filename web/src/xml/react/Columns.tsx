@@ -1,5 +1,5 @@
 import type { RenderableASTNode, XmlComponentProps } from '@/xml';
-import { renderXml } from '@/xml';
+import { renderXml, useProps } from '@/xml';
 import { Children, isValidElement, type ReactNode } from 'react';
 
 type ColumnProps = {
@@ -28,7 +28,8 @@ function getColumnSpan(child: ReactNode) {
 }
 
 /** Renders XML children in a column grid. */
-export function Columns({ props, children }: XmlComponentProps) {
+export function Columns({ props: rawProps, children }: XmlComponentProps) {
+    const props = useProps(rawProps as Record<string, string>);
     const gap = props.gap ?? 16;
     const widths = props.widths as number[] | undefined;
     const columnSpans = Children.toArray(children as any)
@@ -47,7 +48,8 @@ export function Columns({ props, children }: XmlComponentProps) {
 }
 
 /** Renders a single XML column. */
-export function Column({ props, children }: XmlComponentProps) {
+export function Column({ props: rawProps, children }: XmlComponentProps) {
+    const props = useProps(rawProps as Record<string, string>);
     const span = props.span;
     const width = props.width;
     const explicitSpan = (span as number | undefined) ?? (width as number | undefined);

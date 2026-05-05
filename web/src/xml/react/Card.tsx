@@ -8,9 +8,10 @@ import {
     CardTitle as UICardTitle,
 } from '@/ui/card';
 import type { XmlComponentProps } from '@/xml';
-import { renderXml } from '@/xml';
+import { renderXml, useProps } from '@/xml';
 
-export function Card({ props, children }: XmlComponentProps) {
+export function Card({ props: rawProps, children }: XmlComponentProps) {
+    const props = useProps(rawProps as Record<string, string>);
     return <UICard size={(props.size as 'default' | 'sm') ?? 'default'}>{renderXml(children)}</UICard>;
 }
 

@@ -1,6 +1,6 @@
 import { Button as UIButton } from '@/ui/button';
 import type { RenderableASTNode, XmlComponentProps } from '@/xml';
-import { renderXml, useContext } from '@/xml';
+import { renderXml, useContext, useProps } from '@/xml';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -83,8 +83,9 @@ async function readResponseMessage(response: Response): Promise<string> {
 }
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
-export function Button({ props, children }: XmlComponentProps) {
+export function Button({ props: rawProps, children }: XmlComponentProps) {
     const context = useContext();
+    const props = useProps(rawProps as Record<string, string>);
     const href = String(props.href ?? '');
     const target = String(props.target ?? '');
     const rel = String(props.rel ?? '');

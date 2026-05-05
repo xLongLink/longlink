@@ -1,8 +1,9 @@
 import type { XmlComponentProps } from '@/xml';
-import { renderXml } from '@/xml';
+import { renderXml, useProps } from '@/xml';
 import { Icon } from './Icon';
 
-export function Hero({ props, children }: XmlComponentProps) {
+export function Hero({ props: rawProps, children }: XmlComponentProps) {
+    const props = useProps(rawProps as Record<string, string>);
     const title = String(props.title ?? '');
     const subtitle = String(props.subtitle ?? '');
     const icon = String(props.icon ?? '');

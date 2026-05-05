@@ -1,5 +1,4 @@
 import { createContext, useContext as useReactContext, type ReactNode } from 'react';
-import { renderXml } from './renderers';
 import type { ExecutionContext, RuntimeOptions, RuntimeState, SetterContext } from './types';
 
 const ValueContext = createContext<ExecutionContext>({});
@@ -8,22 +7,27 @@ const SetterContextValue = createContext<SetterContext>({});
 export const RuntimeContext = createContext<RuntimeState | null>(null);
 
 /** Evaluates an XML attribute value against the current flat XML context. */
-export function evaluate(expr: string, ctx: ExecutionContext): unknown;
-export function evaluate(expr: string, ctx: ExecutionContext, type: 'string'): string;
-export function evaluate(expr: string, ctx: ExecutionContext, type: 'number'): number;
-export function evaluate(expr: string, ctx: ExecutionContext, type: 'boolean'): boolean;
-export function evaluate(expr: string, values: ExecutionContext, type?: 'string' | 'number' | 'boolean'): unknown {
+export function evaluate(expr: string, values: ExecutionContext): unknown {
     const input = expr.trim();
 
-    if (input === '') return coerceValue('', type);
+    if (input === '') return '';
 
     if (input.startsWith('$')) {
-        return coerceValue(readPath(values, input.slice(1).trim()), type);
+        return readPath(values, input.slice(1).trim());
     }
 
     if (input.startsWith('[') || input.startsWith('{"')) {
         try {
-            return coerceValue(JSON.parse(input), type);
+            return JSON.parse(input, (_key, value: unknown) => {
+                if (typeof value !== 'string') return value;
+
+                const expressionMatch = value.match(/^\{([^{}]+)\}$/);
+                if (expressionMatch) return runExpression(expressionMatch[1]!, values);
+
+                return value.replace(/\{([^{}]+)\}/g, (_match, expression: string) =>
+                    String(runExpression(expression, values) ?? '')
+                );
+            });
         } catch {
             // JSON attributes may contain string placeholders such as "{issue.title}".
         }
@@ -33,7 +37,7 @@ export function evaluate(expr: string, values: ExecutionContext, type?: 'string'
                 String(runExpression(expression, values) ?? '')
             );
 
-            return coerceValue(JSON.parse(interpolated), type);
+            return JSON.parse(interpolated);
         } catch {
             // Fall through so malformed JSON can still be handled as a literal string.
         }
@@ -43,26 +47,23 @@ export function evaluate(expr: string, values: ExecutionContext, type?: 'string'
         const expression = input.slice(1, -1).trim();
         const expressionValue = /^[A-Za-z_$][\w$]*\s*:/.test(expression) ? input : expression;
 
-        return coerceValue(runExpression(expressionValue, values), type);
+        return runExpression(expressionValue, values);
     }
 
     if (input.includes('{')) {
-        return coerceValue(
-            expr.replace(/\{([^}]+)\}/g, (_match, expression: string) =>
-                String(runExpression(expression, values) ?? '')
-            ),
-            type
+        return expr.replace(/\{([^}]+)\}/g, (_match, expression: string) =>
+            String(runExpression(expression, values) ?? '')
         );
     }
 
-    return coerceValue(inferLiteral(expr), type);
+    return inferLiteral(expr);
 }
 
 /** Resolves an XML `if` attribute to a render decision. */
 export function resolveCondition(condition: string | undefined, ctx: ExecutionContext): boolean {
     if (condition == null) return true;
 
-    return Boolean(evaluate(condition, ctx, 'boolean'));
+    return Boolean(evaluate(condition, ctx));
 }
 
 /** Resolves a $ target into its current value and setter. */
@@ -126,11 +127,36 @@ export function useContext(): RuntimeState {
     return { ...runtime, ctx, options, setters };
 }
 
-/** Renders the current runtime node children. */
-export function RuntimeChildren() {
-    const { children } = useContext();
+/** Resolves raw XML attributes from inside the component that owns them. */
+export function useProps(rawProps: Record<string, string> = {}): Record<string, unknown> {
+    const context = useContext();
+    const resolved: Record<string, unknown> = {};
 
-    return renderXml(children);
+    for (const [key, value] of Object.entries(rawProps)) {
+        if (key === 'if') continue;
+
+        if (value.startsWith('$')) {
+            try {
+                const binding = resolveBinding(value.slice(1), context.ctx, context.setters ?? {});
+                resolved[key] = binding.value;
+                resolved[toChangeHandlerName(key)] = binding.setValue;
+            } catch {
+                resolved[key] = evaluate(value, context.ctx);
+            }
+            continue;
+        }
+
+        resolved[key] = evaluate(value, context.ctx);
+    }
+
+    return resolved;
+}
+
+/** Converts a bound prop name into the React-style change callback name. */
+function toChangeHandlerName(propName: string): string {
+    if (propName === 'value' || propName === 'checked' || propName === 'active') return 'onChange';
+
+    return `on${propName.charAt(0).toUpperCase()}${propName.slice(1)}Change`;
 }
 
 /** Runs an expression with XML values exposed as local variables. */
@@ -158,15 +184,6 @@ function inferLiteral(value: string): unknown {
             return value;
         }
     }
-
-    return value;
-}
-
-/** Coerces any resolved value into the requested primitive type. */
-function coerceValue(value: unknown, type?: 'string' | 'number' | 'boolean'): unknown {
-    if (type === 'string') return String(value ?? '');
-    if (type === 'number') return typeof value === 'number' ? value : Number(value);
-    if (type === 'boolean') return Boolean(value);
 
     return value;
 }

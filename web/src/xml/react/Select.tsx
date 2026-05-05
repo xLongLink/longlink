@@ -1,6 +1,7 @@
 import { Label } from '@/ui/label';
 import { SelectContent, SelectItem, SelectTrigger, SelectValue, Select as UISelect } from '@/ui/select';
 import type { XmlComponentProps } from '@/xml';
+import { useProps } from '@/xml';
 
 type SelectOption = {
     label: string;
@@ -32,7 +33,8 @@ function normalizeOptions(options: SelectProps['options']): SelectOption[] {
 }
 
 /** Renders an XML select control from evaluated XML props. */
-export function Select({ props }: XmlComponentProps) {
+export function Select({ props: rawProps }: XmlComponentProps) {
+    const props = useProps(rawProps as Record<string, string>);
     const { name, label, value, onChange, placeholder, description, options, disabled } = props as SelectProps;
     const normalizedOptions = normalizeOptions(options);
 
