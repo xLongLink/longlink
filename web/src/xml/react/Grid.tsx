@@ -2,7 +2,6 @@ import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
 import type { CSSProperties } from 'react';
 
-
 type GridProps = {
     children?: RenderableASTNode;
     gap?: CSSProperties['gap'];
@@ -12,9 +11,8 @@ type GridProps = {
     style?: CSSProperties;
 };
 
-
 export function Grid({ children, gap = '1rem', columns, align, justify, style }: GridProps) {
-    const { registry, ctx } = useRuntime();
+    const { ctx } = useRuntime();
     return (
         <div
             style={{
@@ -26,7 +24,7 @@ export function Grid({ children, gap = '1rem', columns, align, justify, style }:
                 ...style,
             }}
         >
-            {renderNode(children, registry, ctx)}
+            {renderNode(children, ctx)}
         </div>
     );
 }

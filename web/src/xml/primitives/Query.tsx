@@ -16,7 +16,7 @@ export function Query({
     if (!pathTemplate) throw new Error('Query requires a "path" parameter');
 
     const runtime = useRuntime();
-    const { registry, ctx } = runtime;
+    const { ctx } = runtime;
     const path = pathTemplate;
     const baseUrl = ctx.baseUrl ?? '';
     const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
@@ -30,9 +30,5 @@ export function Query({
 
     const childCtx = { ...ctx, queries: { ...ctx.queries, [id]: data } };
 
-    return (
-        <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
-            {renderNode(children, registry, childCtx)}
-        </RuntimeProvider>
-    );
+    return <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{renderNode(children, childCtx)}</RuntimeProvider>;
 }

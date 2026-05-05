@@ -1,6 +1,5 @@
 import { xmlToAST } from '@/xml/compiler';
 import { State } from '@/xml/react/State';
-import { registry } from '@/xml/registry';
 import { renderNode } from '@/xml/renderers';
 import { RuntimeProvider, useRuntime } from '@/xml/runtime';
 import type { ExecutionContext, RuntimeState } from '@/xml/types';
@@ -32,7 +31,7 @@ describe('State', () => {
     it('renders raw xml state content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<State id="filter" value="day"><p>{filter.value}</p></State>');
-        const renderedTree = renderNode(ast, registry, ctx);
+        const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">day</p>'

@@ -8,7 +8,7 @@ type BaseProps = {
 
 /** Renders a list item. */
 export function Li({ children, ...props }: ComponentPropsWithoutRef<'li'> & BaseProps) {
-    const { registry, ctx } = useRuntime();
+    const { ctx } = useRuntime();
 
-    return <li {...props}>{renderNode(children, registry, ctx)}</li>;
+    return <li {...props}>{renderNode(children, ctx)}</li>;
 }

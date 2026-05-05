@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { evaluate, resolveBind, resolveCondition, resolveSet, resolveValue } from '../../src/xml/runtime';
+import { evaluate, resolveBind, resolveCondition, resolveValue } from '../../src/xml/runtime';
 import type { ExecutionContext } from '../../src/xml/types';
 
 describe('evaluate', () => {
@@ -78,55 +78,6 @@ describe('resolveCondition', () => {
 
         expect(resolveCondition('{count > 1}', ctx)).toBe(true);
         expect(resolveCondition('count < 1', ctx)).toBe(false);
-    });
-});
-
-describe('resolveSet', () => {
-    /* A set target without a path should replace the whole state value. */
-    it('sets whole state when target has no path', () => {
-        let latestValue: unknown;
-        const setter = (value: unknown) => {
-            latestValue = value;
-        };
-
-        const ctx: ExecutionContext = {
-            state: { filter: ['day', setter] },
-            queries: {},
-            scope: {},
-        };
-
-        const handler = resolveSet('filter', "'week'", ctx);
-        handler();
-
-        expect(latestValue).toBe('week');
-    });
-
-    /* Nested set paths should update immutably and keep untouched branches stable. */
-    it('sets nested value immutably when target has deep path', () => {
-        let latestValue: unknown;
-        const current = { range: { from: 1, to: 2 }, untouched: true };
-        const setter = (value: unknown) => {
-            latestValue = typeof value === 'function' ? (value as (prev: unknown) => unknown)(current) : value;
-        };
-
-        const ctx: ExecutionContext = {
-            state: { filter: [current, setter] },
-            queries: {},
-            scope: {},
-        };
-
-        const handler = resolveSet('filter.range.to', '3', ctx);
-        handler();
-
-        expect(latestValue).toEqual({ range: { from: 1, to: 3 }, untouched: true });
-        expect(current).toEqual({ range: { from: 1, to: 2 }, untouched: true });
-    });
-
-    /* Missing state keys should produce a clear runtime error. */
-    it('throws when target state key is missing', () => {
-        const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
-
-        expect(() => resolveSet('missing.value', '1', ctx)).toThrow('set: unknown state "missing"');
     });
 });
 

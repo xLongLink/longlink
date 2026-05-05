@@ -8,11 +8,11 @@ type BaseProps = {
 
 /** Renders a paragraph with standard styling. */
 export function P({ children, ...props }: ComponentPropsWithoutRef<'p'> & BaseProps) {
-    const { registry, ctx } = useRuntime();
+    const { ctx } = useRuntime();
 
     return (
         <p className="leading-7 [&:not(:first-child)]:mt-6" {...props}>
-            {renderNode(children, registry, ctx)}
+            {renderNode(children, ctx)}
         </p>
     );
 }

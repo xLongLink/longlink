@@ -1,6 +1,6 @@
 import { Icon } from '@/xml/react/Icon';
 import type { LucideProps } from 'lucide-react';
-import { createElement, type ComponentType } from 'react';
+import { type ComponentType } from 'react';
 
 export type NavigationTab = {
     value: string;
@@ -41,7 +41,7 @@ function joinPaths(basePath: string, tabPath: string): string {
 const NavigationPageIcon = ({ name }: { name?: string }): ComponentType<LucideProps> => {
     /* Wrap the XML icon renderer so tabs can reuse app icon names. */
     function ResolvedNavigationPageIcon(props: LucideProps) {
-        return createElement(Icon, { name: name || 'file-text', fallback: 'file-text', ...props });
+        return <Icon name={name || 'file-text'} fallback="file-text" {...props} />;
     }
 
     return ResolvedNavigationPageIcon;

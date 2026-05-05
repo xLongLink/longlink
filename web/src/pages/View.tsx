@@ -1,5 +1,5 @@
 import { getPageContentFromResponse } from '@/sdk/pages';
-import { createContext, fromXml, registry, renderNode } from '@/xml';
+import { createContext, fromXml, renderNode } from '@/xml';
 import { useMemo } from 'react';
 
 type ViewProps = {
@@ -31,5 +31,5 @@ export default function View({ metadata, page, isLoading, error, emptyMessage, u
 
     const ast = fromXml(pageContent);
     const ctx = createContext({ baseUrl: '/api' });
-    return <div className="space-y-6">{renderNode(ast, registry, ctx)}</div>;
+    return <div className="space-y-6">{renderNode(ast, ctx)}</div>;
 }

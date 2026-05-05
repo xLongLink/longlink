@@ -1,7 +1,7 @@
 import { xmlToAST } from '@/xml/compiler';
 import { For } from '@/xml/react/For';
 import { renderNode } from '@/xml/renderers';
-import type { ASTNode, ExecutionContext, RegistryShape } from '@/xml/types';
+import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -25,14 +25,13 @@ describe('For', () => {
             queries: {},
             scope: {},
         };
-        const registry: RegistryShape = { For };
         const node: ASTNode = {
             name: 'For',
             params: { each: 'items', as: 'item' },
             children: [{ name: 'text', value: 'ignored' }],
         };
 
-        const output = renderToStaticMarkup(createElement(Fragment, null, renderNode(node, registry, ctx)));
+        const output = renderToStaticMarkup(createElement(Fragment, null, renderNode(node, ctx)));
 
         expect(output).toBe('');
     });

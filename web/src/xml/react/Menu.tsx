@@ -50,7 +50,7 @@ function makeIcon(iconName: string | undefined): LucideIcon {
         return <Icon name={name} fallback="app-window" />;
     }
 
-    return ResolvedIcon as LucideIcon;
+    return ResolvedIcon as unknown as LucideIcon;
 }
 
 function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
@@ -75,17 +75,17 @@ function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
 }
 
 export function MenuSection({ children }: MenuSectionProps) {
-    const { registry, ctx } = useRuntime();
-    return <>{renderNode(children, registry, ctx)}</>;
+    const { ctx } = useRuntime();
+    return <>{renderNode(children, ctx)}</>;
 }
 
 export function MenuSubSection({ children }: MenuSubSectionProps) {
-    const { registry, ctx } = useRuntime();
-    return <>{renderNode(children, registry, ctx)}</>;
+    const { ctx } = useRuntime();
+    return <>{renderNode(children, ctx)}</>;
 }
 
 export function Menu(_props: MenuProps) {
-    const { node, registry, ctx } = useRuntime();
+    const { node, ctx } = useRuntime();
     const sections = useMemo(() => parseSectionsFromAST(node), [node]);
     const [activeValue, setActiveValue] = useState<string | undefined>(() => {
         const first = sections[0];
@@ -128,12 +128,12 @@ export function Menu(_props: MenuProps) {
                     <div key={`${section.id}-content`}>
                         {section.rootSubSection ? (
                             <MenuContent value={section.id}>
-                                {renderNode(section.rootSubSection.node.children, registry, ctx)}
+                                {renderNode(section.rootSubSection.node.children, ctx)}
                             </MenuContent>
                         ) : null}
                         {section.subSections.map((sub) => (
                             <MenuContent key={sub.id} value={sub.id}>
-                                {renderNode(sub.node.children, registry, ctx)}
+                                {renderNode(sub.node.children, ctx)}
                             </MenuContent>
                         ))}
                     </div>

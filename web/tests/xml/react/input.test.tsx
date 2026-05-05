@@ -1,5 +1,4 @@
 import { xmlToAST } from '@/xml/compiler';
-import { registry } from '@/xml/registry';
 import { renderNode } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -25,7 +24,7 @@ describe('Input', () => {
             scope: {},
         };
         const ast = xmlToAST('<Input label="Name" bind:value="user.name" />');
-        const renderedTree = renderNode(ast, registry, ctx);
+        const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Ada');
     });

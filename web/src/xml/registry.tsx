@@ -1,33 +1,33 @@
-import type { ExecutionContext, RegistryShape } from './types';
+import type { ExecutionContext } from '@/xml/types';
 
-import { Blockquote } from './html/Blockquote';
-import { H1 } from './html/H1';
-import { H2 } from './html/H2';
-import { H3 } from './html/H3';
-import { H4 } from './html/H4';
-import { Li } from './html/Li';
-import { P } from './html/P';
-import { Ul } from './html/Ul';
-import { Button } from './react/Button';
-import { Checkbox } from './react/Checkbox';
-import { Hero } from './react/Hero';
-import { Icon } from './react/Icon';
-import { Input } from './react/Input';
-import { Menu, MenuSection, MenuSubSection } from './react/Menu';
-import { Range } from './react/Range';
-import { Select } from './react/Select';
-import { Separator } from './react/Separator';
-import { Slider } from './react/Slider';
-import { Switch } from './react/Switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './react/Table';
-import { Textarea } from './react/Textarea';
+import { Blockquote } from '@/xml/html/Blockquote';
+import { H1 } from '@/xml/html/H1';
+import { H2 } from '@/xml/html/H2';
+import { H3 } from '@/xml/html/H3';
+import { H4 } from '@/xml/html/H4';
+import { Li } from '@/xml/html/Li';
+import { P } from '@/xml/html/P';
+import { Ul } from '@/xml/html/Ul';
+import { Button } from '@/xml/react/Button';
+import { Checkbox } from '@/xml/react/Checkbox';
+import { Hero } from '@/xml/react/Hero';
+import { Icon } from '@/xml/react/Icon';
+import { Input } from '@/xml/react/Input';
+import { Menu, MenuSection, MenuSubSection } from '@/xml/react/Menu';
+import { Range } from '@/xml/react/Range';
+import { Select } from '@/xml/react/Select';
+import { Separator } from '@/xml/react/Separator';
+import { Slider } from '@/xml/react/Slider';
+import { Switch } from '@/xml/react/Switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/xml/react/Table';
+import { Textarea } from '@/xml/react/Textarea';
 
-import { For } from './primitives/For';
-import { Page } from './primitives/Page';
-import { Query } from './primitives/Query';
-import { State } from './primitives/State';
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './react/Card';
-import { Column, Columns } from './react/Columns';
+import { For } from '@/xml/primitives/For';
+import { Page } from '@/xml/primitives/Page';
+import { Query } from '@/xml/primitives/Query';
+import { State } from '@/xml/primitives/State';
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/xml/react/Card';
+import { Column, Columns } from '@/xml/react/Columns';
 import {
     Dialog,
     DialogContent,
@@ -36,10 +36,10 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from './react/Dialog';
-import { Grid } from './react/Grid';
-import { Stack } from './react/Stack';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';
+} from '@/xml/react/Dialog';
+import { Grid } from '@/xml/react/Grid';
+import { Stack } from '@/xml/react/Stack';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/xml/react/Tabs';
 
 /** Creates a minimal ExecutionContext with empty state, queries, and scope. */
 export function createContext(initial: Partial<ExecutionContext> = {}): ExecutionContext {
@@ -52,7 +52,7 @@ export function createContext(initial: Partial<ExecutionContext> = {}): Executio
 }
 
 /* Build the built-in XML component registry once at module load. */
-const defaultRegistry = {
+export const registry = {
     Page,
     Query,
     State,
@@ -108,6 +108,4 @@ const defaultRegistry = {
     blockquote: Blockquote,
     ul: Ul,
     li: Li,
-} satisfies RegistryShape;
-
-export const registry = defaultRegistry;
+} as const;

@@ -1,5 +1,4 @@
 import { xmlToAST } from '@/xml/compiler';
-import { registry } from '@/xml/registry';
 import { renderNode } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -24,7 +23,7 @@ describe('P', () => {
     it('renders raw xml paragraph content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<p>Paragraph text</p>');
-        const renderedTree = renderNode(ast, registry, ctx);
+        const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">Paragraph text</p>'

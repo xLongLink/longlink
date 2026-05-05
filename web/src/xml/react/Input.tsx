@@ -25,13 +25,11 @@ type InputProps = {
 const DATE_FORMAT = 'yyyy-MM-dd';
 const DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm";
 
-
 const parseDateValue = (rawValue: string): Date | undefined => {
     if (!rawValue) return undefined;
     const parsed = parse(rawValue.slice(0, 10), DATE_FORMAT, new Date());
     return isValid(parsed) ? parsed : undefined;
 };
-
 
 const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => {
     if (!rawValue) return { date: undefined, time: '00:00' };

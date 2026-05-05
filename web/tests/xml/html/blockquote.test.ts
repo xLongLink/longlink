@@ -1,5 +1,4 @@
 import { xmlToAST } from '@/xml/compiler';
-import { registry } from '@/xml/registry';
 import { renderNode } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -24,7 +23,7 @@ describe('Blockquote', () => {
     it('renders raw xml blockquote content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<blockquote>Quoted text</blockquote>');
-        const renderedTree = renderNode(ast, registry, ctx);
+        const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<blockquote class="mt-6 border-l-2 pl-6 italic">Quoted text</blockquote>'

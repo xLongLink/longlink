@@ -1,5 +1,4 @@
 import { xmlToAST } from '@/xml/compiler';
-import { registry } from '@/xml/registry';
 import { renderNode } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -24,7 +23,7 @@ describe('H3', () => {
     it('renders raw xml h3 content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<h3>Heading three</h3>');
-        const renderedTree = renderNode(ast, registry, ctx);
+        const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<h3 class="text-2xl font-semibold tracking-tight [&amp;:not(:first-child)]:mt-8">Heading three</h3>'

@@ -1,5 +1,4 @@
 import { xmlToAST } from '@/xml/compiler';
-import { registry } from '@/xml/registry';
 import { renderNode } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -27,7 +26,7 @@ describe('Ul', () => {
     it('renders raw xml unordered list content end to end', () => {
         const ctx: ExecutionContext = { state: {}, queries: {}, scope: {} };
         const ast = xmlToAST('<ul><li>Item one</li></ul>');
-        const renderedTree = renderNode(ast, registry, ctx);
+        const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<ul class="my-6 ml-6 list-disc [&amp;&gt;li]:mt-2"><li>Item one</li></ul>'

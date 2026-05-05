@@ -13,7 +13,6 @@ type SliderProps = {
     disabled?: boolean;
 };
 
-
 function toNumber(value: number | string | undefined, fallback: number): number {
     if (typeof value === 'number') return value;
     if (typeof value === 'string' && value.trim() !== '') {
@@ -22,7 +21,6 @@ function toNumber(value: number | string | undefined, fallback: number): number 
     }
     return fallback;
 }
-
 
 function normalizeValue(value: SliderValue | string | undefined, min: number, max: number) {
     if (Array.isArray(value)) return value.length > 0 ? value : [min, max];

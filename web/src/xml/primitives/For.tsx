@@ -8,7 +8,7 @@ export function For({ each, as, children }: { each?: string; as?: string; childr
     if (!as) throw new Error('For requires an "as" parameter');
 
     const runtime = useRuntime();
-    const { registry, ctx } = runtime;
+    const { ctx } = runtime;
     const items = evaluate(normalizeEachExpression(each), ctx) ?? [];
 
     if (!Array.isArray(items)) return null;
@@ -19,7 +19,7 @@ export function For({ each, as, children }: { each?: string; as?: string; childr
         return (
             <Fragment key={index}>
                 <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
-                    {renderNode(children, registry, childCtx)}
+                    {renderNode(children, childCtx)}
                 </RuntimeProvider>
             </Fragment>
         );

@@ -10,7 +10,6 @@ type RangeProps = {
     value?: number[] | string;
 };
 
-
 export function Range({ label, description, min = 0, max = 100, step = 1, value = [min, max] }: RangeProps) {
     const normalizedValue = (() => {
         if (typeof value === 'string' && value.trim()) {
@@ -19,9 +18,11 @@ export function Range({ label, description, min = 0, max = 100, step = 1, value 
                 if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === 'number')) {
                     return parsed.length === 2 ? parsed : [parsed[0] ?? min, parsed[1] ?? max];
                 }
-            } catch {}
+            } catch {
+                return [min, max];
+            }
         }
-        return value.length === 2 ? value : [value[0] ?? min, value[1] ?? max];
+        return Array.isArray(value) ? (value.length === 2 ? value : [value[0] ?? min, value[1] ?? max]) : [min, max];
     })();
     return (
         <div className="space-y-2">

@@ -1,6 +1,5 @@
 import type { RenderableASTNode } from '@/xml';
 import { renderNode, useRuntime } from '@/xml';
-import { createElement } from 'react';
 const ALIGN_ITEMS = { center: 'center', end: 'flex-end', start: 'flex-start', stretch: 'stretch' } as const;
 const JUSTIFY_CONTENT = { between: 'space-between', center: 'center', end: 'flex-end', start: 'flex-start' } as const;
 
@@ -13,7 +12,6 @@ function px(value: unknown, fallback: number) {
     return `${fallback}px`;
 }
 
-
 type StackProps = {
     align?: string;
     children?: RenderableASTNode;
@@ -23,17 +21,17 @@ type StackProps = {
 };
 
 export function Stack({ align = 'stretch', children, direction = 'column', gap = 16, justify = 'start' }: StackProps) {
-    const { registry, ctx } = useRuntime();
-    return createElement(
-        'div',
-        {
-            className: `flex ${direction === 'row' ? 'flex-row' : 'flex-col'}`,
-            style: {
+    const { ctx } = useRuntime();
+    return (
+        <div
+            className={`flex ${direction === 'row' ? 'flex-row' : 'flex-col'}`}
+            style={{
                 gap: px(gap, 16),
                 justifyContent: JUSTIFY_CONTENT[justify as keyof typeof JUSTIFY_CONTENT] ?? JUSTIFY_CONTENT.start,
                 alignItems: ALIGN_ITEMS[align as keyof typeof ALIGN_ITEMS] ?? ALIGN_ITEMS.stretch,
-            },
-        },
-        renderNode(children, registry, ctx)
+            }}
+        >
+            {renderNode(children, ctx)}
+        </div>
     );
 }

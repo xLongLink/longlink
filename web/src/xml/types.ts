@@ -27,9 +27,6 @@ export type ExecutionContext = {
 /** A React component that can be registered and rendered from XML. */
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
 
-/** A map of component name → RegistryComponent used to resolve XML tags. */
-export type RegistryShape = Record<string, RegistryComponent<any>>;
-
 /** Raw output shape from fast-xml-parser when preserveOrder is enabled. */
 export type PreserveOrderNode = Record<string, any>;
 
@@ -40,7 +37,6 @@ export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 export type RuntimeState = {
     node: ASTNode;
     ctx: ExecutionContext;
-    registry: RegistryShape;
 };
 
 /** Props accepted by XML buttons for actions and navigation. */

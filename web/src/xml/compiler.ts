@@ -7,9 +7,9 @@ const ATTRIBUTES_NODE_NAME = ':@';
 /**
  * Shared parser instance configured to produce a preserve-order array of nodes.
  * Attribute names are kept verbatim (no prefix), values are never auto-cast, and
- * XML declarations are dropped. The `set:target` namespace-like syntax is handled
- * transparently because fast-xml-parser does not normalise namespace prefixes in
- * attribute names with this configuration.
+ * XML declarations are dropped. Bind-style attributes are preserved verbatim;
+ * fast-xml-parser does not normalise namespace prefixes in attribute names with
+ * this configuration.
  */
 const parser = new XMLParser({
     preserveOrder: true,

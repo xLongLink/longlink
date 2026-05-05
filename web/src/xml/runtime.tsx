@@ -83,54 +83,11 @@ export function resolveCondition(condition: string | undefined, ctx: ExecutionCo
 }
 
 /**
- * Produces a click handler for a `set:<target>` attribute.
- *
- * The `target` is a dot-separated path where the first segment identifies a
- * reactive state variable and the remaining segments describe a property path
- * within that state's value object.
- *
- * Examples:
- *   resolveSet("filter.value", "'week'", ctx)
- *     → calls ctx.state["filter"][1]({ ...current, value: "week" })
- *
- *   resolveSet("filter", "'week'", ctx)
- *     → calls ctx.state["filter"][1]("week")  (replaces the whole value)
- *
- * Throws if the first segment does not match a known state key.
- */
-export function resolveSet(target: string, valueExpr: string, ctx: ExecutionContext): () => void {
-    /* Parse dot-separated target into state key and property path */
-    const dotIndex = target.indexOf('.');
-    const stateKey = dotIndex === -1 ? target : target.slice(0, dotIndex);
-    const propPath = dotIndex === -1 ? [] : target.slice(dotIndex + 1).split('.');
-
-    const stateEntry = ctx.state[stateKey];
-
-    if (!stateEntry) {
-        throw new Error(`set: unknown state "${stateKey}"`);
-    }
-
-    /* Return a closure that evaluates the expression and writes to state */
-    return () => {
-        const [, setter] = stateEntry;
-        const newValue = evaluate(valueExpr, ctx);
-
-        if (propPath.length === 0) {
-            setter(newValue);
-            return;
-        }
-
-        // Use functional setter update so multiple set: handlers in one click compose safely.
-        setter((previous: unknown) => setDeep(previous, propPath, newValue));
-    };
-}
-
-/**
  * Resolves a `bind:<prop>` target into a current value and setter.
  *
- * The target uses the same dot-separated state path as `set:`. The first
- * segment identifies the state container and the remaining segments identify
- * the value inside that state object.
+ * The target uses a dot-separated state path. The first segment identifies
+ * the state container and the remaining segments identify the value inside
+ * that state object.
  */
 export function resolveBind(
     target: string,
@@ -188,10 +145,6 @@ function getDeep(obj: unknown, path: string[]): unknown {
     return current;
 }
 
-// ---------------------------------------------------------------------------
-// useRuntime / RuntimeProvider / RuntimeChildren
-// ---------------------------------------------------------------------------
-
 const RuntimeContext = createContext<RuntimeState | null>(null);
 
 export function RuntimeProvider({ value, children }: { value: RuntimeState; children: ReactNode }) {
@@ -209,7 +162,7 @@ export function useRuntime(): RuntimeState {
 }
 
 export function RuntimeChildren() {
-    const { node, registry, ctx } = useRuntime();
+    const { node, ctx } = useRuntime();
 
-    return renderNode(node.children, registry, ctx);
+    return renderNode(node.children, ctx);
 }

@@ -1,6 +1,5 @@
 import { xmlToAST } from '@/xml/compiler';
 import { Slider } from '@/xml/react/Slider';
-import { registry } from '@/xml/registry';
 import { renderNode } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -26,7 +25,7 @@ describe('Slider', () => {
             scope: {},
         };
         const ast = xmlToAST('<Slider label="Volume" bind:value="settings.volume" description="Set level" />');
-        const renderedTree = renderNode(ast, registry, ctx);
+        const renderedTree = renderNode(ast, ctx);
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('50');
     });

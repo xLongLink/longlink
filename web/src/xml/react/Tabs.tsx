@@ -10,24 +10,23 @@ import { renderNode, useRuntime } from '@/xml';
 type BaseProps = { children?: RenderableASTNode };
 
 export function Tabs({ children }: BaseProps) {
-    const { registry, ctx } = useRuntime();
-    return <UITabs>{renderNode(children, registry, ctx)}</UITabs>;
+    const { ctx } = useRuntime();
+    return <UITabs>{renderNode(children, ctx)}</UITabs>;
 }
-
 
 export function TabsList({ children }: BaseProps) {
-    const { registry, ctx } = useRuntime();
-    return <UITabsList>{renderNode(children, registry, ctx)}</UITabsList>;
+    const { ctx } = useRuntime();
+    return <UITabsList>{renderNode(children, ctx)}</UITabsList>;
 }
 
-
-export function TabsTrigger({ children }: BaseProps) {
-    const { registry, ctx } = useRuntime();
-    return <UITabsTrigger>{renderNode(children, registry, ctx)}</UITabsTrigger>;
+export function TabsTrigger({ value, children }: BaseProps & { value?: string }) {
+    const { ctx } = useRuntime();
+    if (!value) throw new Error('TabsTrigger requires a "value" parameter');
+    return <UITabsTrigger value={value}>{renderNode(children, ctx)}</UITabsTrigger>;
 }
 
-
-export function TabsContent({ children }: BaseProps) {
-    const { registry, ctx } = useRuntime();
-    return <UITabsContent>{renderNode(children, registry, ctx)}</UITabsContent>;
+export function TabsContent({ value, children }: BaseProps & { value?: string }) {
+    const { ctx } = useRuntime();
+    if (!value) throw new Error('TabsContent requires a "value" parameter');
+    return <UITabsContent value={value}>{renderNode(children, ctx)}</UITabsContent>;
 }

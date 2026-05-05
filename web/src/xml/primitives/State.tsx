@@ -15,13 +15,9 @@ export function State({
     if (!id) throw new Error('State requires an "id" parameter');
 
     const runtime = useRuntime();
-    const { registry, ctx } = runtime;
+    const { ctx } = runtime;
     const [value, setValue] = useState(initialState);
     const childCtx = { ...ctx, state: { ...ctx.state, [id]: [value, setValue] as [any, Function] } };
 
-    return (
-        <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
-            {renderNode(children, registry, childCtx)}
-        </RuntimeProvider>
-    );
+    return <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>{renderNode(children, childCtx)}</RuntimeProvider>;
 }

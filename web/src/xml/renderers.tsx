@@ -1,15 +1,13 @@
-import { createElement, Fragment, type ReactNode } from 'react';
-import { resolveBind, resolveCondition, resolveSet, resolveValue, RuntimeProvider } from './runtime';
-import type { ASTNode, ExecutionContext, RegistryShape, RenderableASTNode } from './types';
+import { Fragment, type ReactNode } from 'react';
+import { registry } from './registry';
+import { resolveBind, resolveCondition, resolveValue, RuntimeProvider } from './runtime';
+import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
 
 /**
  * Converts raw ASTNode params into resolved React props.
  *
  * - `if` is stripped (consumed by the caller for conditional rendering).
  * - `bind:<prop>` attributes connect props to state and add matching change handlers.
- * - `set:<target>` attributes are collected into a single `onClick` handler.
- *   Each handler evaluates its value expression and writes to the named state
- *   path when the element is clicked (see `resolveSet`).
  * - All remaining attributes are resolved via `resolveValue`.
  */
 /**
@@ -19,9 +17,7 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
     if (!params) return {};
 
     const resolved: Record<string, unknown> = {};
-    const setHandlers: Array<() => void> = [];
-
-    /* Resolve each attribute: if/else for conditionals, set: for state writes, rest via resolveValue */
+    /* Resolve each attribute: if/else for conditionals, bind: for state reads/writes, rest via resolveValue */
     for (const [key, value] of Object.entries(params)) {
         if (key === 'if') continue;
 
@@ -38,19 +34,7 @@ function resolveParams(params: ASTNode['params'], ctx: ExecutionContext): Record
             continue;
         }
 
-        if (key.startsWith('set:')) {
-            setHandlers.push(resolveSet(key.slice(4), value, ctx));
-            continue;
-        }
-
         resolved[key] = resolveValue(value, ctx);
-    }
-
-    /* Collapse multiple set: handlers into a single onClick */
-    if (setHandlers.length > 0) {
-        resolved.onClick = () => {
-            for (const handler of setHandlers) handler();
-        };
     }
 
     return resolved;
@@ -70,11 +54,11 @@ function toChangeHandlerName(propName: string): string {
  * - Each rendered element is wrapped in a RuntimeProvider so child primitives
  *   and `<RuntimeChildren />` can access the current node, registry, and context.
  */
-export function renderNode(node: RenderableASTNode, registry: RegistryShape, ctx: ExecutionContext): ReactNode {
+export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): ReactNode {
     if (!node) return null;
 
     if (Array.isArray(node)) {
-        return node.map((child, index) => <Fragment key={index}>{renderNode(child, registry, ctx)}</Fragment>);
+        return node.map((child, index) => <Fragment key={index}>{renderNode(child, ctx)}</Fragment>);
     }
 
     if (node.name === 'text') {
@@ -91,9 +75,11 @@ export function renderNode(node: RenderableASTNode, registry: RegistryShape, ctx
         throw new Error(`Unknown component "${node.name}"`);
     }
 
+    const Component = component;
+
     return (
-        <RuntimeProvider value={{ node, registry, ctx }}>
-            {createElement(component, { ...resolveParams(node.params, ctx), children: node.children })}
+        <RuntimeProvider value={{ node, ctx }}>
+            <Component {...resolveParams(node.params, ctx)} children={node.children} />
         </RuntimeProvider>
     );
 }
@@ -102,6 +88,6 @@ export function renderNode(node: RenderableASTNode, registry: RegistryShape, ctx
  * Renders a top-level ASTNode array into a React node.
  * Wraps each root node in a Fragment with a stable index key.
  */
-export function render(ast: ASTNode[], registry: RegistryShape, ctx: ExecutionContext): ReactNode {
-    return ast.map((node, index) => <Fragment key={index}>{renderNode(node, registry, ctx)}</Fragment>);
+export function render(ast: ASTNode[], ctx: ExecutionContext): ReactNode {
+    return ast.map((node, index) => <Fragment key={index}>{renderNode(node, ctx)}</Fragment>);
 }

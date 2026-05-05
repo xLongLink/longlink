@@ -5,6 +5,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 type ButtonProps = {
+    href?: string;
+    target?: string;
+    rel?: string;
     action?: string;
     method?: string;
     payload?: unknown;
@@ -25,7 +28,6 @@ function normalizeInvalidate(value: ButtonProps['invalidate']): string[] {
         .map((entry) => entry.trim())
         .filter(Boolean);
 }
-
 
 /** Builds request options for XML button actions. */
 function buildRequestInit(method: string, body: unknown): RequestInit {
@@ -54,7 +56,6 @@ function buildRequestInit(method: string, body: unknown): RequestInit {
     return { method, body: JSON.stringify(body), headers: { 'content-type': 'application/json' } };
 }
 
-
 /** Reads a concise response message for toast feedback. */
 async function readResponseMessage(response: Response): Promise<string> {
     const contentType = response.headers.get('content-type') ?? '';
@@ -73,9 +74,11 @@ async function readResponseMessage(response: Response): Promise<string> {
     return message || 'Request completed';
 }
 
-
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
 export function Button({
+    href,
+    target,
+    rel,
     action,
     disabled,
     variant,
@@ -86,7 +89,7 @@ export function Button({
     children,
 }: ButtonProps) {
     const queryClient = useQueryClient();
-    const { registry, ctx } = useRuntime();
+    const { ctx } = useRuntime();
     const handleClick = async () => {
         if (!action) return;
         const baseUrl = ctx.baseUrl ?? '';
@@ -110,9 +113,19 @@ export function Button({
         }
     };
 
+    const content = renderNode(children, ctx);
+
+    if (href) {
+        return (
+            <a href={href} target={target} rel={rel} className="inline-flex">
+                {content}
+            </a>
+        );
+    }
+
     return (
         <UIButton variant={variant} size={size} onClick={() => void handleClick()} disabled={Boolean(disabled)}>
-            {renderNode(children, registry, ctx)}
+            {content}
         </UIButton>
     );
 }
