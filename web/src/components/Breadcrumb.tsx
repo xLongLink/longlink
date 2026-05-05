@@ -1,13 +1,13 @@
+import { useApiData } from '@/hooks/use-data';
 import {
-    Breadcrumb as UIBreadcrumb,
     BreadcrumbItem,
     BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbSeparator,
+    Breadcrumb as UIBreadcrumb,
 } from '@/ui/breadcrumb';
-import { useApiData } from '@/hooks/use-data';
-import { Link, useParams } from 'react-router';
 import startCase from 'lodash/startCase';
+import { Link, useParams } from 'react-router';
 
 type MetadataResponse = {
     organization_name?: string;

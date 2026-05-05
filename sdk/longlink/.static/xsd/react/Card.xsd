@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="../base.xsd" />
+  <xsd:complexType name="CardType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType"><xsd:attribute name="size" use="optional"><xsd:simpleType><xsd:restriction base="xsd:string"><xsd:enumeration value="sm" /><xsd:enumeration value="default" /></xsd:restriction></xsd:simpleType></xsd:attribute></xsd:extension></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Card" type="CardType" />
+  <xsd:complexType name="CardActionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardAction" type="CardActionType" />
+  <xsd:complexType name="CardContentType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardContent" type="CardContentType" />
+  <xsd:complexType name="CardDescriptionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardDescription" type="CardDescriptionType" />
+  <xsd:complexType name="CardFooterType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardFooter" type="CardFooterType" />
+  <xsd:complexType name="CardHeaderType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardHeader" type="CardHeaderType" />
+  <xsd:complexType name="CardTitleType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="CardTitle" type="CardTitleType" />
+</xsd:schema>

@@ -1,10 +1,10 @@
+import { xmlToAST } from '@/xml/compiler';
+import { registry } from '@/xml/registry';
+import { renderNode } from '@/xml/renderers';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
-import { registry } from '@/xml/registry';
-import type { ExecutionContext } from '@/xml/types';
 
 describe('Ul', () => {
     /* The compiler should preserve list items under an unordered list. */

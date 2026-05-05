@@ -1,43 +1,17 @@
+import { RuntimeProvider, renderNode, useRuntime } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { RuntimeProvider, useRuntime } from '../runtime';
-import { renderNode } from '../renderers';
 
-/**
- * Fetches data via TanStack Query and exposes the result to descendants.
- *
- * - `id`   — key under which the fetched data is available in scope.
- * - `path` — literal request path such as `/apps`.
- *
- * The fetched value is stored in `ctx.queries[id]` and re-exposed as a
- * child scope variable, making it available to nested expressions.
- */
-export function Query({
-    id,
-    path: pathTemplate,
-    __xmlChildren,
-    children,
-}: {
-    id?: string;
-    path?: string;
-    __xmlChildren?: unknown;
-    children?: ReactNode;
-}) {
-    if (!id) {
-        throw new Error('Query requires an "id" parameter');
-    }
-
-    if (!pathTemplate) {
-        throw new Error('Query requires a "path" parameter');
-    }
+/** Fetches JSON data into a reusable query slot for descendants. */
+export function Query({ id, path: pathTemplate, children }: { id?: string; path?: string; children?: ReactNode }) {
+    if (!id) throw new Error('Query requires an "id" parameter');
+    if (!pathTemplate) throw new Error('Query requires a "path" parameter');
 
     const runtime = useRuntime();
-    const { ctx } = runtime;
+    const { registry, ctx } = runtime;
     const path = pathTemplate;
     const baseUrl = ctx.baseUrl ?? '';
     const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
-
-    /* Fetch and cache query results via TanStack Query */
     const { data } = useQuery({
         queryKey: [id, url],
         queryFn: async () => {
@@ -46,18 +20,11 @@ export function Query({
         },
     });
 
-    /* Expose fetched data to descendants under the given id */
-    const childCtx = {
-        ...ctx,
-        queries: {
-            ...ctx.queries,
-            [id]: data,
-        },
-    };
+    const childCtx = { ...ctx, queries: { ...ctx.queries, [id]: data } };
 
     return (
         <RuntimeProvider value={{ ...runtime, ctx: childCtx }}>
-            {__xmlChildren ? renderNode(__xmlChildren as any, runtime.registry, childCtx) : children}
+            {renderNode(children as any, registry, childCtx)}
         </RuntimeProvider>
     );
 }

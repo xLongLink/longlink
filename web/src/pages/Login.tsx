@@ -1,8 +1,8 @@
+import { useUser } from '@/hooks/use-user';
+import { getApiBaseUrl } from '@/lib/api';
 import { Layers } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { getApiBaseUrl } from '@/lib/api';
-import { useUser } from '@/hooks/use-user';
 
 export default function Login() {
     const navigate = useNavigate();

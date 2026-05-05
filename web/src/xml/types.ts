@@ -1,4 +1,4 @@
-import type { ComponentType, MouseEvent } from 'react';
+import type { ComponentType } from 'react';
 
 /** A single node in the XML abstract syntax tree produced by the compiler. */
 export type ASTNode = {
@@ -43,19 +43,11 @@ export type RuntimeState = {
     registry: RegistryShape;
 };
 
-/** Handler for action component clicks. */
-export type ActionHandler = (event: MouseEvent<any>) => Promise<void>;
-
-/** Props accepted by the action HOC. */
+/** Props accepted by XML buttons for actions and navigation. */
 export type ActionProps = {
     action?: string;
     method?: string;
     body?: unknown;
     payload?: unknown;
     invalidate?: string | string[];
-};
-
-/** Props injected by the action HOC into the wrapped component. */
-export type ActionComponentProps = {
-    action: ActionHandler;
 };

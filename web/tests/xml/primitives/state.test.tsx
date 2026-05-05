@@ -1,12 +1,12 @@
+import { xmlToAST } from '@/xml/compiler';
+import { State } from '@/xml/react/State';
+import { registry } from '@/xml/registry';
+import { renderNode } from '@/xml/renderers';
+import { RuntimeProvider, useRuntime } from '@/xml/runtime';
+import type { ExecutionContext, RuntimeState } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { xmlToAST } from '@/xml/compiler';
-import { State } from '@/xml/primitives/State';
-import { renderNode } from '@/xml/renderers';
-import { registry } from '@/xml/registry';
-import { RuntimeProvider, useRuntime } from '@/xml/runtime';
-import type { ExecutionContext, RuntimeState } from '@/xml/types';
 
 function StateProbe() {
     /* Read the current runtime state so the test can assert registration. */

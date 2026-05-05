@@ -1,9 +1,9 @@
+import { useApiData } from '@/hooks/use-data';
+import { getApiBaseUrl } from '@/lib/api';
+import { type AppNavigationPage } from '@/lib/navigation';
+import { createContext, fromXml, registry, renderNode } from '@/xml';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
-import { fromXml, renderNode, createContext, registry } from '@/xml';
-import { useApiData } from '@/hooks/use-data';
-import { type AppNavigationPage } from '@/lib/navigation';
-import { getApiBaseUrl } from '@/lib/api';
 import { getPageContentFromResponse, getPagesFromResponse } from './pages';
 
 type AppMetadata = {

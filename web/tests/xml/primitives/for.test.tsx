@@ -1,10 +1,10 @@
+import { xmlToAST } from '@/xml/compiler';
+import { For } from '@/xml/react/For';
+import { renderNode } from '@/xml/renderers';
+import type { ASTNode, ExecutionContext, RegistryShape } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { xmlToAST } from '@/xml/compiler';
-import { For } from '@/xml/primitives/For';
-import { renderNode } from '@/xml/renderers';
-import type { ASTNode, ExecutionContext, RegistryShape } from '@/xml/types';
 
 describe('For', () => {
     /* The compiler should preserve loop attributes and nested content. */

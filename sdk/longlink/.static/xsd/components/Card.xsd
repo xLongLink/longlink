@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../base.xsd" />
-  <xsd:complexType name="CardType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType"><xsd:attribute name="size" use="optional"><xsd:simpleType><xsd:restriction base="xsd:string"><xsd:enumeration value="sm" /><xsd:enumeration value="default" /></xsd:restriction></xsd:simpleType></xsd:attribute></xsd:extension></xsd:complexContent></xsd:complexType>
-  <xsd:element name="Card" type="CardType" />
-</xsd:schema>

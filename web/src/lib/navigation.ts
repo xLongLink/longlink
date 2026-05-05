@@ -1,6 +1,6 @@
-import { createElement, type ComponentType } from 'react';
+import { Icon } from '@/xml/react/Icon';
 import type { LucideProps } from 'lucide-react';
-import { Icon } from '@/xml/components/Icon';
+import { createElement, type ComponentType } from 'react';
 
 export type NavigationTab = {
     value: string;

@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { fromXml, renderNode, createContext, registry } from '@/xml';
 import { getPageContentFromResponse } from '@/sdk/pages';
+import { createContext, fromXml, registry, renderNode } from '@/xml';
+import { useMemo } from 'react';
 
 type ViewProps = {
     metadata: unknown;

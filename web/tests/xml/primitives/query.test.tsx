@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test';
 import { xmlToAST } from '@/xml/compiler';
-import { Query } from '@/xml/primitives/Query';
+import { Query } from '@/xml/react/Query';
+import { describe, expect, it } from 'bun:test';
 
 describe('Query', () => {
     /* The compiler should preserve query attributes and nested content. */

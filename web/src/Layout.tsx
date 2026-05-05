@@ -1,11 +1,11 @@
-import { Loader2 } from 'lucide-react';
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
-import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { useApiData } from '@/hooks/use-data';
 import { getActiveTabConfig, getAppTabsFromPages, type AppNavigationPage } from '@/lib/navigation';
 import { getRootPagesFromResponse } from '@/sdk/pages';
+import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
+import { Loader2 } from 'lucide-react';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
 
 type AppMetadata = {
     pages?: AppNavigationPage[];

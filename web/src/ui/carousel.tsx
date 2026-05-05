@@ -1,5 +1,5 @@
-import * as React from 'react';
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
+import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/ui/button';
@@ -218,4 +218,4 @@ function CarouselNext({
     );
 }
 
-export { type CarouselApi, Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, useCarousel };
+export { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, useCarousel, type CarouselApi };

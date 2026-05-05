@@ -1,10 +1,10 @@
+import { xmlToAST } from '@/xml/compiler';
+import { registry } from '@/xml/registry';
+import { renderNode } from '@/xml/renderers';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { xmlToAST } from '@/xml/compiler';
-import { renderNode } from '@/xml/renderers';
-import { registry } from '@/xml/registry';
-import type { ExecutionContext } from '@/xml/types';
 
 describe('H1', () => {
     /* The compiler should preserve H1 text content and attributes. */

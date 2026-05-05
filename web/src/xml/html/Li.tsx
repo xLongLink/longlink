@@ -1,3 +1,4 @@
+import { renderNode, useRuntime } from '@/xml';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 type BaseProps = {
@@ -6,5 +7,7 @@ type BaseProps = {
 
 /** Renders a list item. */
 export function Li({ children, ...props }: ComponentPropsWithoutRef<'li'> & BaseProps) {
-    return <li {...props}>{children}</li>;
+    const { registry, ctx } = useRuntime();
+
+    return <li {...props}>{renderNode(children as any, registry, ctx)}</li>;
 }

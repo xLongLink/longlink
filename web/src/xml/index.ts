@@ -1,7 +1,7 @@
 export { xmlToAST as fromXml } from './compiler';
-export { renderNode, render } from './renderers';
-export { createContext, action, registry } from './registry';
-export { evaluate, interpolate, resolveSet, useRuntime } from './runtime';
+export { createContext, registry } from './registry';
+export { render, renderNode } from './renderers';
+export { RuntimeProvider, evaluate, interpolate, resolveSet, useRuntime } from './runtime';
 export type {
     ASTNode,
     ExecutionContext,
@@ -9,7 +9,4 @@ export type {
     RegistryShape,
     RenderableASTNode,
     RuntimeState,
-    ActionHandler,
-    ActionProps,
-    ActionComponentProps,
 } from './types';

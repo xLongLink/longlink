@@ -1,5 +1,5 @@
-import { BookOpen, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useSignOut, useUser } from '@/hooks/use-user';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,8 +9,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
-import { useSignOut, useUser } from '@/hooks/use-user';
+import { BookOpen, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 /** Renders a user profile dropdown with authentication actions. */
 export function UserProfile() {

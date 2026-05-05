@@ -1,15 +1,15 @@
+import { RequireAuth } from '@/components/Auth';
+import { Toaster } from '@/ui/sonner';
+import { useIsFetching, useIsMutating } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
-import { useIsFetching, useIsMutating } from '@tanstack/react-query';
-import { Toaster } from '@/ui/sonner';
 import Layout from './Layout';
-import LongLink from './pages/Longlink';
-import OrganizationPage from './pages/OrganizationPage';
 import Login from './pages/Login';
+import LongLink from './pages/Longlink';
 import NotFound from './pages/NotFound';
+import OrganizationPage from './pages/OrganizationPage';
 import SdkLayout from './sdk/Layout';
 import SdkLongLink from './sdk/Longlink';
-import { RequireAuth } from '@/components/Auth';
 
 const buildMode = import.meta.env.MODE;
 

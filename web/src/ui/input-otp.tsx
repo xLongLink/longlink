@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { OTPInput, OTPInputContext } from 'input-otp';
+import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 import { MinusIcon } from 'lucide-react';
@@ -78,4 +78,4 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<'div'>) {
     );
 }
 
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator };
+export { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot };

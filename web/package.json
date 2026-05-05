@@ -61,11 +61,15 @@
         "eslint-plugin-react-refresh": "^0.4.26",
         "globals": "^16.5.0",
         "prettier": "3.8.1",
+        "prettier-plugin-organize-imports": "^4.1.0",
         "typescript": "~5.9.3",
         "typescript-eslint": "^8.58.2",
         "vite": "^7.3.2"
     },
     "prettier": {
+        "plugins": [
+            "prettier-plugin-organize-imports"
+        ],
         "semi": true,
         "singleQuote": true,
         "printWidth": 120,

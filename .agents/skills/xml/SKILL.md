@@ -11,10 +11,9 @@ longlink/
 │   ├── longlink/
 │   │   ├── .static/xsd/         # XML schema definitions
 │   │   │   ├── base.xsd         # Shared schema base
-│   │   │   ├── components/      # Component contracts
-│   │   │   ├── layout/          # Layout contracts
+│   │   │   ├── react/           # React-backed component contracts
+│   │   │   ├── primitives/      # Page/state/query/iteration contracts
 │   │   │   ├── html/            # HTML bridge contracts
-│   │   │   └── tables/          # Table-related contracts
 │   │   │   └── llm/SCHEMA.md    # Human-readable schema guide
 │   │   ├── routes/              # XML page metadata and page routes
 │   │   │   ├── metadata.py      # Metadata route helpers
@@ -27,19 +26,17 @@ longlink/
 │   │   ├── router.py            # SDK router wiring
 │   │   └── constants.py         # Shared SDK constants
 │   └── tests/xml/               # SDK XML tests
-│       ├── components/          # Component behavior tests
-│       ├── layout/              # Layout behavior tests
+│       ├── react/               # React-backed component behavior tests
+│       ├── primitives/          # Primitive behavior tests
 │       └── html/                # HTML bridge behavior tests
 ├── web/
 │   ├── src/xml/                # XML runtime parser/renderer and domain groupings
-│   │   ├── components/         # XML components
-│   │   ├── layout/             # XML layout primitives
+│   │   ├── react/              # XML React-backed components and layout widgets
 │   │   ├── primitives/         # Low-level XML primitives
 │   │   └── html/               # HTML/XML bridge tags
 │   ├── src/components/         # Shared UI logic and primitives
 │   └── tests/xml/              # Web XML runtime and component rendering behavior
-│       ├── components/         # XML component tests
-│       ├── layout/             # XML layout tests
+│       ├── react/              # XML React-backed component tests
 │       ├── primitives/         # XML primitive tests
 │       └── html/               # HTML/XML bridge tests
 ├── api/
@@ -48,7 +45,7 @@ longlink/
 └── docs/
     └── src/xml/                # XML documentation pages
         ├── index.md            # XML docs entry
-        ├── components.md       # XML components docs
+        ├── components.md       # XML react docs
         ├── layout.md           # XML layout docs
         ├── primitives.md       # XML primitives docs
         └── html.md             # XML HTML bridge docs

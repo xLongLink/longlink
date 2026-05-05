@@ -1,7 +1,7 @@
 'use client';
 
-import * as React from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
+import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/ui/button';

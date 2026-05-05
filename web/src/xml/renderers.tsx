@@ -1,4 +1,4 @@
-import { Fragment, createElement, type ReactNode } from 'react';
+import { createElement, Fragment, type ReactNode } from 'react';
 import { resolveBind, resolveCondition, resolveSet, resolveValue, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RegistryShape, RenderableASTNode } from './types';
 
@@ -70,12 +70,7 @@ function toChangeHandlerName(propName: string): string {
  * - Each rendered element is wrapped in a RuntimeProvider so child primitives
  *   and `<RuntimeChildren />` can access the current node, registry, and context.
  */
-export function renderNode(
-    node: RenderableASTNode,
-    registry: RegistryShape,
-    ctx: ExecutionContext,
-    _runtime?: unknown
-): ReactNode {
+export function renderNode(node: RenderableASTNode, registry: RegistryShape, ctx: ExecutionContext): ReactNode {
     if (!node) return null;
 
     if (Array.isArray(node)) {
@@ -96,15 +91,9 @@ export function renderNode(
         throw new Error(`Unknown component "${node.name}"`);
     }
 
-    const preserveChildren = node.name === 'State' || node.name === 'Query' || node.name === 'For';
-
     return (
         <RuntimeProvider value={{ node, registry, ctx }}>
-            {createElement(
-                component,
-                { ...resolveParams(node.params, ctx), __xmlChildren: node.children },
-                !preserveChildren && node.children ? render(node.children, registry, ctx) : undefined
-            )}
+            {createElement(component, { ...resolveParams(node.params, ctx), children: node.children })}
         </RuntimeProvider>
     );
 }
