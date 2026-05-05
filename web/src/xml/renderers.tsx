@@ -1,7 +1,7 @@
 import { Component, Fragment, type ComponentType, type ReactNode } from 'react';
 import { registry } from './registry';
 import { evaluate, resolveBinding, resolveCondition, RuntimeProvider } from './runtime';
-import type { ASTNode, ExecutionContext, RenderableASTNode, SetterContext } from './types';
+import type { ASTNode, ExecutionContext, RenderableASTNode, RuntimeOptions, SetterContext } from './types';
 
 type XmlErrorBoundaryProps = {
     children: ReactNode;
@@ -97,22 +97,30 @@ function toChangeHandlerName(propName: string): string {
  * - Each rendered element is wrapped in a RuntimeProvider so child primitives
  *   and `<RuntimeChildren />` can access the current node, registry, and context.
  */
-export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): ReactNode {
+export function renderNode(node: RenderableASTNode, ctx: ExecutionContext, options?: RuntimeOptions): ReactNode {
     if (!node) return null;
 
     return (
         <XmlErrorBoundary resetKey={node} source={node}>
-            <RenderedNode node={node} ctx={ctx} />
+            <RenderedNode node={node} ctx={ctx} options={options} />
         </XmlErrorBoundary>
     );
 }
 
 /** Renders a node after the XML error boundary is already mounted. */
-function RenderedNode({ node, ctx }: { node: RenderableASTNode; ctx: ExecutionContext }): ReactNode {
+function RenderedNode({
+    node,
+    ctx,
+    options,
+}: {
+    node: RenderableASTNode;
+    ctx: ExecutionContext;
+    options?: RuntimeOptions;
+}): ReactNode {
     if (!node) return null;
 
     if (Array.isArray(node)) {
-        return node.map((child, index) => <Fragment key={index}>{renderNode(child, ctx)}</Fragment>);
+        return node.map((child, index) => <Fragment key={index}>{renderNode(child, ctx, options)}</Fragment>);
     }
 
     if (node.name === 'text') {
@@ -139,7 +147,7 @@ function RenderedNode({ node, ctx }: { node: RenderableASTNode; ctx: ExecutionCo
     const resolvedProps = resolveParams(node.params, ctx);
 
     return (
-        <RuntimeProvider value={{ ctx, props: resolvedProps, children: node.children }}>
+        <RuntimeProvider value={{ ctx, options, props: resolvedProps, children: node.children }}>
             <Component props={resolvedProps} children={node.children} />
         </RuntimeProvider>
     );
@@ -149,11 +157,11 @@ function RenderedNode({ node, ctx }: { node: RenderableASTNode; ctx: ExecutionCo
  * Renders a top-level ASTNode array into a React node.
  * Wraps each root node in a Fragment with a stable index key.
  */
-export function render(ast: ASTNode[], ctx: ExecutionContext): ReactNode {
+export function render(ast: ASTNode[], ctx: ExecutionContext, options?: RuntimeOptions): ReactNode {
     return (
         <XmlErrorBoundary resetKey={ast} source={ast}>
             {ast.map((node, index) => (
-                <Fragment key={index}>{renderNode(node, ctx)}</Fragment>
+                <Fragment key={index}>{renderNode(node, ctx, options)}</Fragment>
             ))}
         </XmlErrorBoundary>
     );

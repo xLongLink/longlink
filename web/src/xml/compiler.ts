@@ -20,8 +20,6 @@ export function xmlToAST(xml: string): ASTNode[] {
 
 /** Converts parser output into XML AST nodes. */
 function toNodes(input: unknown, tagName?: string): ASTNode[] {
-    if (!input) return [];
-
     /* Arrays are flattened so repeated sibling tags become sibling AST nodes. */
     if (Array.isArray(input)) {
         return input.flatMap((item) => toNodes(item, tagName));
@@ -30,6 +28,8 @@ function toNodes(input: unknown, tagName?: string): ASTNode[] {
     if (tagName) {
         return [buildElement(tagName, input)];
     }
+
+    if (!input) return [];
 
     /* Primitive parser values become text nodes when they contain visible content. */
     if (typeof input === 'string') {

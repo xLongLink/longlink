@@ -114,7 +114,7 @@ export function Button({ props, children }: XmlComponentProps) {
             disabled={disabled}
             variant={variant}
             size={size}
-            baseUrl={String(context.ctx.baseUrl ?? '')}
+            baseUrl={String(context.options?.baseUrl ?? '')}
         >
             {content}
         </ActionButton>

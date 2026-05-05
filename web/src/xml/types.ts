@@ -9,7 +9,12 @@ export type ASTNode = {
 };
 
 /** Flat XML value context used for attribute evaluation. */
-export type ExecutionContext = Record<string, unknown> & { baseUrl?: string };
+export type ExecutionContext = Record<string, unknown>;
+
+/** Runtime options that configure XML rendering without entering expression state. */
+export type RuntimeOptions = {
+    baseUrl?: string;
+};
 
 /** Setter context used by $-bound XML attributes and state primitives. */
 export type SetterContext = Record<string, (value: unknown) => void>;
@@ -23,6 +28,7 @@ export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 /** State provided by RuntimeProvider to the render tree. */
 export type RuntimeState = {
     ctx: ExecutionContext;
+    options?: RuntimeOptions;
     setters?: SetterContext;
     props: Record<string, unknown>;
     children?: RenderableASTNode;

@@ -1,8 +1,9 @@
 import { createContext, useContext as useReactContext, type ReactNode } from 'react';
 import { renderNode } from './renderers';
-import type { ExecutionContext, RuntimeState, SetterContext } from './types';
+import type { ExecutionContext, RuntimeOptions, RuntimeState, SetterContext } from './types';
 
 const ValueContext = createContext<ExecutionContext>({});
+const OptionsContext = createContext<RuntimeOptions>({});
 const SetterContextValue = createContext<SetterContext>({});
 export const RuntimeContext = createContext<RuntimeState | null>(null);
 
@@ -86,14 +87,18 @@ export function resolveBinding(
 
 /** Provides XML value and setter contexts to a rendered subtree. */
 export function RuntimeProvider({ value, children }: { value: RuntimeState; children: ReactNode }) {
+    const parentOptions = useReactContext(OptionsContext);
     const parentSetters = useReactContext(SetterContextValue);
+    const options = value.options ?? parentOptions;
     const setters = value.setters ?? parentSetters;
 
     return (
         <ValueContext.Provider value={value.ctx}>
-            <SetterContextValue.Provider value={setters}>
-                <RuntimeContext.Provider value={{ ...value, setters }}>{children}</RuntimeContext.Provider>
-            </SetterContextValue.Provider>
+            <OptionsContext.Provider value={options}>
+                <SetterContextValue.Provider value={setters}>
+                    <RuntimeContext.Provider value={{ ...value, options, setters }}>{children}</RuntimeContext.Provider>
+                </SetterContextValue.Provider>
+            </OptionsContext.Provider>
         </ValueContext.Provider>
     );
 }
@@ -102,13 +107,14 @@ export function RuntimeProvider({ value, children }: { value: RuntimeState; chil
 export function useContext(): RuntimeState {
     const runtime = useReactContext(RuntimeContext);
     const ctx = useReactContext(ValueContext);
+    const options = useReactContext(OptionsContext);
     const setters = useReactContext(SetterContextValue);
 
     if (!runtime) {
         throw new Error('useContext must be used inside a rendered XML component');
     }
 
-    return { ...runtime, ctx, setters };
+    return { ...runtime, ctx, options, setters };
 }
 
 /** Renders the current runtime node children. */

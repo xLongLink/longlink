@@ -13,7 +13,7 @@ export function Query({ props, children }: XmlComponentProps) {
     if (!pathTemplate) throw new Error('Query requires a "path" parameter');
 
     const path = pathTemplate;
-    const baseUrl = String(context.ctx.baseUrl ?? '');
+    const baseUrl = String(context.options?.baseUrl ?? '');
     const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
     const { data, error } = useQuery({
         queryKey: [id, url],

@@ -30,6 +30,6 @@ export default function View({ metadata, page, isLoading, error, emptyMessage, u
     }
 
     const ast = fromXml(pageContent);
-    const ctx = createContext({ baseUrl: '/api' });
-    return <div className="space-y-6">{renderNode(ast, ctx)}</div>;
+    const ctx = createContext();
+    return <div className="space-y-6">{renderNode(ast, ctx, { baseUrl: '/api' })}</div>;
 }

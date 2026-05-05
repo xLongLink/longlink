@@ -7,6 +7,7 @@ export type {
     ExecutionContext,
     RegistryComponent,
     RenderableASTNode,
+    RuntimeOptions,
     RuntimeState,
     XmlComponentProps,
     XmlRegistryComponent,
