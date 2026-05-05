@@ -1,12 +1,29 @@
+import { useQuery } from '@tanstack/react-query';
 import React from 'react';
 
+/*
+ * XML-new is a compact XML runtime for this web layer.
+ * It parses XML nodes into React elements, evaluates attributes against a flat
+ * local context, and lets primitives like <State>, <Query>, and <For> extend
+ * that context by cloning and adding new keys.
+ *
+ * Evaluation works in two stages: literals and `$name` values are resolved
+ * directly, while `{...}` expressions are executed against the current context.
+ * The entire runtime stays in one file so the component model, evaluation rules,
+ * and renderer behavior stay aligned.
+ */
 export type XmlNode = {
     tagName: string;
     attributes: Record<string, string>;
     children?: XmlNode[];
 };
 
-export type XmlContext = Record<string, unknown>;
+export type StateCell<T = unknown> = {
+    value: T;
+    set: (next: T) => void;
+};
+
+export type XmlContext = Record<string, StateCell>;
 
 export type XmlComponentProps = {
     props: Record<string, string>;
@@ -16,8 +33,15 @@ export type XmlComponentProps = {
 const XmlContextValue = React.createContext<XmlContext | null>(null);
 const SIMPLE_EXPR_REGEX = /^[a-zA-Z0-9_.$\s+\-/*%!=<>|&(),?:'"\[\]]+$/;
 
-function run(expr: string, ctx: Record<string, unknown>): unknown {
-    return new Function('ctx', `with (ctx) { return (${expr}); }`)(ctx);
+function run(expr: string, ctx: XmlContext): unknown {
+    const proxy = new Proxy(ctx, {
+        get(target, prop: string) {
+            const cell = target[prop];
+            return cell ? cell.value : undefined;
+        },
+    });
+
+    return new Function('ctx', `with (ctx) { return (${expr}); }`)(proxy);
 }
 
 function evaluate(value: string, context: XmlContext): unknown {
@@ -26,7 +50,8 @@ function evaluate(value: string, context: XmlContext): unknown {
 
     if (input.startsWith('$')) {
         const key = input.slice(1).trim();
-        return key ? context[key] : '';
+        const cell = key ? context[key] : undefined;
+        return cell ? cell.value : '';
     }
 
     const ctx = context;
@@ -39,7 +64,7 @@ function evaluate(value: string, context: XmlContext): unknown {
         const result = input.replace(/\{([^}]+)\}/g, (_, expr) => {
             try {
                 const evaluated = run(expr, ctx);
-                return evaluated ?? '';
+                return String(evaluated ?? '');
             } catch {
                 return '';
             }
@@ -65,7 +90,7 @@ function evaluate(value: string, context: XmlContext): unknown {
 
 /** Provides the root XML context for a page. */
 function StoreProvider({ children }: { children: React.ReactNode }) {
-    const context: XmlContext = {};
+    const context = React.useMemo<XmlContext>(() => ({}), []);
 
     return <XmlContextValue.Provider value={context}>{children}</XmlContextValue.Provider>;
 }
@@ -117,7 +142,16 @@ function State({ props, children }: XmlComponentProps) {
         value[key] = evaluate(raw, parent);
     }
 
-    const nextContext: XmlContext = { ...parent, [id]: value };
+    const [cellValue, setCellValue] = React.useState<Record<string, unknown>>(value);
+    const nextContext: XmlContext = {
+        ...parent,
+        [id]: {
+            value: cellValue,
+            set: (next: unknown) => {
+                setCellValue(next as Record<string, unknown>);
+            },
+        },
+    };
 
     return <Context value={nextContext}>{renderXml(children ?? [])}</Context>;
 }
@@ -125,23 +159,27 @@ function State({ props, children }: XmlComponentProps) {
 /** Fetches JSON into a state slot. */
 function Query({ props, children }: XmlComponentProps) {
     const parent = useContext();
-    const [data, setData] = React.useState<unknown>(null);
     const id = String(evaluate(props.id ?? '', parent) ?? '');
     const path = String(evaluate(props.path ?? '', parent) ?? '');
 
-    React.useEffect(() => {
-        if (!id || !path) return;
-
-        async function load() {
+    const { data } = useQuery({
+        queryKey: [id, path],
+        queryFn: async () => {
             const response = await fetch(path);
-            const result: unknown = await response.json();
-            setData(result && typeof result === 'object' ? result : { value: result });
-        }
+            return response.json() as Promise<unknown>;
+        },
+        enabled: Boolean(id && path),
+    });
 
-        void load();
-    }, [id, path]);
-
-    const nextContext: XmlContext = { ...parent, [id]: data };
+    const nextContext: XmlContext = {
+        ...parent,
+        [id]: {
+            value: data,
+            set: () => {
+                throw new Error('Query state is read-only');
+            },
+        },
+    };
 
     return <Context value={nextContext}>{renderXml(children ?? [])}</Context>;
 }
@@ -149,7 +187,23 @@ function Query({ props, children }: XmlComponentProps) {
 /** Renders a controlled input bound to state. */
 function Input({ props }: XmlComponentProps) {
     const context = useContext();
-    const evaluatedValue = evaluate(props.value ?? '', context);
+    const rawValue = props.value ?? '';
+
+    if (rawValue.trim().startsWith('$')) {
+        const key = rawValue.trim().slice(1).trim();
+        const cell = key ? context[key] : undefined;
+
+        if (!cell) return null;
+
+        return (
+            <input
+                value={String(cell.value ?? '')}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => cell.set(event.target.value)}
+            />
+        );
+    }
+
+    const evaluatedValue = evaluate(rawValue, context);
     const [currentValue, setCurrentValue] = React.useState(() => String(evaluatedValue ?? ''));
 
     React.useEffect(() => {
@@ -168,20 +222,22 @@ function Input({ props }: XmlComponentProps) {
 function Button({ props, children }: XmlComponentProps) {
     const context = useContext();
 
-    const action = evaluate(props.action ?? '', context);
+    const action = String(evaluate(props.action ?? '', context) ?? '');
     const method = String(evaluate(props.method ?? 'POST', context) ?? 'POST');
     const payload = evaluate(props.payload ?? '', context);
 
     const onClick = async () => {
         const body = payload ? JSON.stringify(payload) : undefined;
-        await fetch(action ?? '', {
+        if (!action) return;
+
+        await fetch(action, {
             method,
             body,
             headers: body ? { 'Content-Type': 'application/json' } : undefined,
         });
     };
 
-    return <button onClick={onClick}>{renderXml(children ?? [], context)}</button>;
+    return <button onClick={onClick}>{renderXml(children ?? [])}</button>;
 }
 
 /** Iterates over a list and renders scoped children. */
@@ -198,7 +254,15 @@ function For({ props, children }: XmlComponentProps) {
     return (
         <>
             {each.map((item, index) => {
-                const nextContext: XmlContext = { ...context, [as]: item };
+                const nextContext: XmlContext = {
+                    ...context,
+                    [as]: {
+                        value: item,
+                        set: () => {
+                            throw new Error('Cannot set value inside <For>');
+                        },
+                    },
+                };
 
                 return (
                     <Context key={index} value={nextContext}>
