@@ -1,5 +1,5 @@
 import { createContext, useContext as useReactContext, type ReactNode } from 'react';
-import { renderNode } from './renderers';
+import { renderXml } from './renderers';
 import type { ExecutionContext, RuntimeOptions, RuntimeState, SetterContext } from './types';
 
 const ValueContext = createContext<ExecutionContext>({});
@@ -119,9 +119,9 @@ export function useContext(): RuntimeState {
 
 /** Renders the current runtime node children. */
 export function RuntimeChildren() {
-    const { ctx, children } = useContext();
+    const { children } = useContext();
 
-    return renderNode(children, ctx);
+    return renderXml(children);
 }
 
 /** Returns the flat values for either runtime or execution context input. */

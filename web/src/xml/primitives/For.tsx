@@ -1,5 +1,5 @@
 import type { XmlComponentProps } from '@/xml';
-import { evaluate, renderNode, RuntimeProvider, useContext } from '@/xml';
+import { evaluate, renderXml, RuntimeProvider, useContext } from '@/xml';
 import { Fragment } from 'react';
 
 /** Iterates over an array and renders children in a scoped context. */
@@ -21,7 +21,7 @@ export function For({ props, children }: XmlComponentProps) {
         return (
             <Fragment key={index}>
                 <RuntimeProvider value={{ ...context, ctx: childCtx, props, children }}>
-                    {renderNode(children, childCtx)}
+                    {renderXml(children)}
                 </RuntimeProvider>
             </Fragment>
         );

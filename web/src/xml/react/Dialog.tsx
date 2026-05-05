@@ -8,39 +8,32 @@ import {
     DialogTrigger as UIDialogTrigger,
 } from '@/ui/dialog';
 import type { XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml } from '@/xml';
 
 export function Dialog({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UIDialog>{renderNode(children, context.ctx)}</UIDialog>;
+    return <UIDialog>{renderXml(children)}</UIDialog>;
 }
 
 export function DialogContent({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UIDialogContent>{renderNode(children, context.ctx)}</UIDialogContent>;
+    return <UIDialogContent>{renderXml(children)}</UIDialogContent>;
 }
 
 export function DialogHeader({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UIDialogHeader>{renderNode(children, context.ctx)}</UIDialogHeader>;
+    return <UIDialogHeader>{renderXml(children)}</UIDialogHeader>;
 }
 
 export function DialogTitle({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UIDialogTitle>{renderNode(children, context.ctx)}</UIDialogTitle>;
+    return <UIDialogTitle>{renderXml(children)}</UIDialogTitle>;
 }
 
 export function DialogDescription({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UIDialogDescription>{renderNode(children, context.ctx)}</UIDialogDescription>;
+    return <UIDialogDescription>{renderXml(children)}</UIDialogDescription>;
 }
 
 export function DialogFooter({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UIDialogFooter>{renderNode(children, context.ctx)}</UIDialogFooter>;
+    return <UIDialogFooter>{renderXml(children)}</UIDialogFooter>;
 }
 
 export function DialogTrigger({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UIDialogTrigger>{renderNode(children, context.ctx)}</UIDialogTrigger>;
+    return <UIDialogTrigger>{renderXml(children)}</UIDialogTrigger>;
 }

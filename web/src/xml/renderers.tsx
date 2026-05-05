@@ -1,6 +1,6 @@
-import { Component, Fragment, type ComponentType, type ReactNode } from 'react';
+import { Component, Fragment, useContext as useReactContext, type ComponentType, type ReactNode } from 'react';
 import { registry } from './registry';
-import { evaluate, resolveBinding, resolveCondition, RuntimeProvider } from './runtime';
+import { evaluate, resolveBinding, resolveCondition, RuntimeContext, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RenderableASTNode, RuntimeOptions, SetterContext } from './types';
 
 type XmlErrorBoundaryProps = {
@@ -89,15 +89,21 @@ function toChangeHandlerName(propName: string): string {
 }
 
 /**
+ * Renders XML AST nodes with the current runtime context.
+ */
+export function renderXml(nodes: RenderableASTNode): ReactNode {
+    return renderNode(nodes);
+}
+
+/**
  * Renders a single ASTNode (or array/null) into React elements.
  *
  * - Text nodes are resolved through the same `{expression}` rule and returned as strings.
  * - Nodes whose `if` param evaluates to false are skipped.
  * - Component lookup is performed against the registry; unknown tags throw.
- * - Each rendered element is wrapped in a RuntimeProvider so child primitives
- *   and `<RuntimeChildren />` can access the current node, registry, and context.
+ * - Context is read from the nearest RuntimeProvider unless a scoped context is passed.
  */
-export function renderNode(node: RenderableASTNode, ctx: ExecutionContext, options?: RuntimeOptions): ReactNode {
+export function renderNode(node: RenderableASTNode, ctx?: ExecutionContext, options?: RuntimeOptions): ReactNode {
     if (!node) return null;
 
     return (
@@ -114,26 +120,32 @@ function RenderedNode({
     options,
 }: {
     node: RenderableASTNode;
-    ctx: ExecutionContext;
+    ctx?: ExecutionContext;
     options?: RuntimeOptions;
 }): ReactNode {
+    const runtime = useReactContext(RuntimeContext);
+    const activeCtx = ctx ?? runtime?.ctx ?? {};
+    const activeOptions = options ?? runtime?.options;
+
     if (!node) return null;
 
     if (Array.isArray(node)) {
-        return node.map((child, index) => <Fragment key={index}>{renderNode(child, ctx, options)}</Fragment>);
+        return node.map((child, index) => (
+            <Fragment key={index}>{renderNode(child, activeCtx, activeOptions)}</Fragment>
+        ));
     }
 
     if (node.name === 'text') {
         if (!node.value) return null;
 
-        const value = evaluate(node.value, ctx);
+        const value = evaluate(node.value, activeCtx);
 
         if (isRenderableValue(value)) return value;
 
         throw new Error(`XML text expression resolved to ${describeValue(value)}, which cannot be rendered as text`);
     }
 
-    if (!resolveCondition(node.params?.if, ctx)) {
+    if (!resolveCondition(node.params?.if, activeCtx)) {
         return null;
     }
 
@@ -144,13 +156,9 @@ function RenderedNode({
     }
 
     const Component = component;
-    const resolvedProps = resolveParams(node.params, ctx);
+    const resolvedProps = resolveParams(node.params, activeCtx);
 
-    return (
-        <RuntimeProvider value={{ ctx, options, props: resolvedProps, children: node.children }}>
-            <Component props={resolvedProps} children={node.children} />
-        </RuntimeProvider>
-    );
+    return <Component props={resolvedProps} children={node.children} />;
 }
 
 /**
@@ -160,9 +168,7 @@ function RenderedNode({
 export function render(ast: ASTNode[], ctx: ExecutionContext, options?: RuntimeOptions): ReactNode {
     return (
         <XmlErrorBoundary resetKey={ast} source={ast}>
-            {ast.map((node, index) => (
-                <Fragment key={index}>{renderNode(node, ctx, options)}</Fragment>
-            ))}
+            <RuntimeProvider value={{ ctx, options, props: {}, children: ast }}>{renderXml(ast)}</RuntimeProvider>
         </XmlErrorBoundary>
     );
 }

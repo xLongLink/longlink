@@ -6,7 +6,7 @@ import {
     MenuList,
 } from '@/ui/menu';
 import type { ASTNode, XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml } from '@/xml';
 import type { LucideIcon } from 'lucide-react';
 import { AppWindow } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -59,17 +59,14 @@ function parseSectionsFromAST(menuNode: ASTNode): NormalizedSection[] {
 }
 
 export function MenuSection({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <>{renderNode(children, context.ctx)}</>;
+    return <>{renderXml(children)}</>;
 }
 
 export function MenuSubSection({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <>{renderNode(children, context.ctx)}</>;
+    return <>{renderXml(children)}</>;
 }
 
 export function Menu({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
     const sections = useMemo(() => parseSectionsFromAST({ name: 'Menu', children: children as any }), [children]);
     const [activeValue, setActiveValue] = useState<string | undefined>(() => {
         const first = sections[0];
@@ -112,12 +109,12 @@ export function Menu({ props: _props, children }: XmlComponentProps) {
                     <div key={`${section.id}-content`}>
                         {section.rootSubSection ? (
                             <MenuContent value={section.id}>
-                                {renderNode(section.rootSubSection.node.children, context.ctx)}
+                                {renderXml(section.rootSubSection.node.children)}
                             </MenuContent>
                         ) : null}
                         {section.subSections.map((sub) => (
                             <MenuContent key={sub.id} value={sub.id}>
-                                {renderNode(sub.node.children, context.ctx)}
+                                {renderXml(sub.node.children)}
                             </MenuContent>
                         ))}
                     </div>

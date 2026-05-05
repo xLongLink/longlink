@@ -1,9 +1,8 @@
 import type { XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml } from '@/xml';
 import { Icon } from './Icon';
 
 export function Hero({ props, children }: XmlComponentProps) {
-    const context = useContext();
     const title = String(props.title ?? '');
     const subtitle = String(props.subtitle ?? '');
     const icon = String(props.icon ?? '');
@@ -20,7 +19,7 @@ export function Hero({ props, children }: XmlComponentProps) {
                     {subtitle ? <p className="text-sm text-white/60">{subtitle}</p> : null}
                 </div>
             </div>
-            {children ? <div className="shrink-0">{renderNode(children, context.ctx)}</div> : null}
+            {children ? <div className="shrink-0">{renderXml(children)}</div> : null}
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import type { XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml } from '@/xml';
 const ALIGN_ITEMS = { center: 'center', end: 'flex-end', start: 'flex-start', stretch: 'stretch' } as const;
 const JUSTIFY_CONTENT = { between: 'space-between', center: 'center', end: 'flex-end', start: 'flex-start' } as const;
 
@@ -14,7 +14,6 @@ function px(value: unknown, fallback: number) {
 
 /** Renders XML children in a configurable stack. */
 export function Stack({ props, children }: XmlComponentProps) {
-    const context = useContext();
     const align = String(props.align ?? 'stretch');
     const direction = String(props.direction ?? 'column');
     const gap = props.gap ?? 16;
@@ -28,7 +27,7 @@ export function Stack({ props, children }: XmlComponentProps) {
                 alignItems: ALIGN_ITEMS[align as keyof typeof ALIGN_ITEMS] ?? ALIGN_ITEMS.stretch,
             }}
         >
-            {renderNode(children, context.ctx)}
+            {renderXml(children)}
         </div>
     );
 }

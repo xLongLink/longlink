@@ -1,5 +1,5 @@
 import type { XmlComponentProps } from '@/xml';
-import { RuntimeProvider, renderNode, useContext } from '@/xml';
+import { RuntimeProvider, renderXml, useContext } from '@/xml';
 import { useMemo, useState } from 'react';
 
 /** Creates a local reactive state slot for descendant XML nodes. */
@@ -22,7 +22,7 @@ export function State({ props, children }: XmlComponentProps) {
 
     return (
         <RuntimeProvider value={{ ...context, ctx: childCtx, setters: childSetters, props, children }}>
-            {renderNode(children, childCtx)}
+            {renderXml(children)}
         </RuntimeProvider>
     );
 }

@@ -1,9 +1,8 @@
 import type { XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml } from '@/xml';
 
 /** Renders XML children in a CSS grid. */
 export function Grid({ props, children }: XmlComponentProps) {
-    const context = useContext();
     const gap = String(props.gap ?? '1rem');
     const columns = String(props.columns ?? '');
     const align = String(props.align ?? '');
@@ -18,7 +17,7 @@ export function Grid({ props, children }: XmlComponentProps) {
                 justifyItems: justify,
             }}
         >
-            {renderNode(children, context.ctx)}
+            {renderXml(children)}
         </div>
     );
 }

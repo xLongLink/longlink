@@ -5,28 +5,24 @@ import {
     TabsTrigger as UITabsTrigger,
 } from '@/ui/tabs';
 import type { XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml } from '@/xml';
 
 export function Tabs({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UITabs>{renderNode(children, context.ctx)}</UITabs>;
+    return <UITabs>{renderXml(children)}</UITabs>;
 }
 
 export function TabsList({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UITabsList>{renderNode(children, context.ctx)}</UITabsList>;
+    return <UITabsList>{renderXml(children)}</UITabsList>;
 }
 
 export function TabsTrigger({ props, children }: XmlComponentProps) {
-    const context = useContext();
     const value = String(props.value ?? '');
     if (!value) throw new Error('TabsTrigger requires a "value" parameter');
-    return <UITabsTrigger value={value}>{renderNode(children, context.ctx)}</UITabsTrigger>;
+    return <UITabsTrigger value={value}>{renderXml(children)}</UITabsTrigger>;
 }
 
 export function TabsContent({ props, children }: XmlComponentProps) {
-    const context = useContext();
     const value = String(props.value ?? '');
     if (!value) throw new Error('TabsContent requires a "value" parameter');
-    return <UITabsContent value={value}>{renderNode(children, context.ctx)}</UITabsContent>;
+    return <UITabsContent value={value}>{renderXml(children)}</UITabsContent>;
 }

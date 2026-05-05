@@ -8,39 +8,32 @@ import {
     CardTitle as UICardTitle,
 } from '@/ui/card';
 import type { XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml } from '@/xml';
 
 export function Card({ props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UICard size={(props.size as 'default' | 'sm') ?? 'default'}>{renderNode(children, context.ctx)}</UICard>;
+    return <UICard size={(props.size as 'default' | 'sm') ?? 'default'}>{renderXml(children)}</UICard>;
 }
 
 export function CardHeader({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UICardHeader>{renderNode(children, context.ctx)}</UICardHeader>;
+    return <UICardHeader>{renderXml(children)}</UICardHeader>;
 }
 
 export function CardTitle({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UICardTitle>{renderNode(children, context.ctx)}</UICardTitle>;
+    return <UICardTitle>{renderXml(children)}</UICardTitle>;
 }
 
 export function CardDescription({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UICardDescription>{renderNode(children, context.ctx)}</UICardDescription>;
+    return <UICardDescription>{renderXml(children)}</UICardDescription>;
 }
 
 export function CardAction({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UICardAction>{renderNode(children, context.ctx)}</UICardAction>;
+    return <UICardAction>{renderXml(children)}</UICardAction>;
 }
 
 export function CardContent({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UICardContent>{renderNode(children, context.ctx)}</UICardContent>;
+    return <UICardContent>{renderXml(children)}</UICardContent>;
 }
 
 export function CardFooter({ props: _props, children }: XmlComponentProps) {
-    const context = useContext();
-    return <UICardFooter>{renderNode(children, context.ctx)}</UICardFooter>;
+    return <UICardFooter>{renderXml(children)}</UICardFooter>;
 }

@@ -1,5 +1,5 @@
 import type { RenderableASTNode, XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml } from '@/xml';
 import { Children, isValidElement, type ReactNode } from 'react';
 
 type ColumnProps = {
@@ -29,7 +29,6 @@ function getColumnSpan(child: ReactNode) {
 
 /** Renders XML children in a column grid. */
 export function Columns({ props, children }: XmlComponentProps) {
-    const context = useContext();
     const gap = props.gap ?? 16;
     const widths = props.widths as number[] | undefined;
     const columnSpans = Children.toArray(children as any)
@@ -42,21 +41,20 @@ export function Columns({ props, children }: XmlComponentProps) {
             : { gridTemplateColumns: `repeat(${totalColumns}, minmax(0, 1fr))` };
     return (
         <div className="grid" style={{ ...style, gap: px(gap as number | string | undefined, 16) }}>
-            {renderNode(children as any, context.ctx) as unknown as ReactNode}
+            {renderXml(children as any) as unknown as ReactNode}
         </div>
     );
 }
 
 /** Renders a single XML column. */
 export function Column({ props, children }: XmlComponentProps) {
-    const context = useContext();
     const span = props.span;
     const width = props.width;
     const explicitSpan = (span as number | undefined) ?? (width as number | undefined);
     const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, explicitSpan));
     return (
         <div className="space-y-4" style={{ gridColumn: `span ${safeSpan}` }}>
-            {renderNode(children, context.ctx)}
+            {renderXml(children)}
         </div>
     );
 }

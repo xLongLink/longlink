@@ -1,6 +1,6 @@
 import { Button as UIButton } from '@/ui/button';
 import type { RenderableASTNode, XmlComponentProps } from '@/xml';
-import { renderNode, useContext } from '@/xml';
+import { renderXml, useContext } from '@/xml';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -23,7 +23,7 @@ type ActionButtonProps = Pick<
     'action' | 'method' | 'payload' | 'invalidate' | 'disabled' | 'variant' | 'size'
 > & {
     baseUrl: string;
-    children: ReturnType<typeof renderNode>;
+    children: ReturnType<typeof renderXml>;
 };
 
 /** Normalizes invalidate targets into a list of query keys. */
@@ -95,7 +95,7 @@ export function Button({ props, children }: XmlComponentProps) {
     const method = String(props.method ?? 'POST');
     const payload = props.payload;
     const invalidate = props.invalidate as ButtonProps['invalidate'];
-    const content = renderNode(children, context.ctx);
+    const content = renderXml(children);
 
     if (href) {
         return (
