@@ -1,7 +1,7 @@
 import { useApiData } from '@/hooks/use-data';
 import { getApiBaseUrl } from '@/lib/api';
 import { type AppNavigationPage } from '@/lib/navigation';
-import { createContext, fromXml, render } from '@/xml';
+import { fromXml, render } from '@/xml';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { getPageContentFromResponse, getPagesFromResponse } from './pages';
@@ -46,6 +46,6 @@ export default function SdkLongLink() {
     }
 
     const ast = fromXml(data);
-    const ctx = createContext();
+    const ctx = {};
     return <div className="space-y-6">{render(ast, ctx, { baseUrl: getApiBaseUrl() })}</div>;
 }

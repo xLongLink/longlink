@@ -154,7 +154,7 @@ export function useProps(rawProps: Record<string, string> = {}): Record<string, 
 
 /** Converts a bound prop name into the React-style change callback name. */
 function toChangeHandlerName(propName: string): string {
-    if (propName === 'value' || propName === 'checked' || propName === 'active') return 'onChange';
+    if (propName === 'value' || propName === 'checked') return 'onChange';
 
     return `on${propName.charAt(0).toUpperCase()}${propName.slice(1)}Change`;
 }

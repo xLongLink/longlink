@@ -14,6 +14,7 @@
         <xsd:any processContents="lax" />
       </xsd:choice>
     </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
 

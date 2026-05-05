@@ -1,21 +1,21 @@
 import type { XmlComponentProps } from '@/xml';
-import { evaluate, renderXml, useContext } from '@/xml';
+import { evaluate, useContext } from '@/xml';
 
 /** Renders XML text content through the standard XML renderer. */
-export function Text({ children }: XmlComponentProps) {
+export function Text({ props: rawProps }: XmlComponentProps) {
     const context = useContext();
 
-    if (typeof children === 'string') {
-        const value = evaluate(children, context.ctx);
+    const raw = rawProps.text ?? rawProps.value;
 
-        if (value == null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-            return value;
-        }
+    if (typeof raw !== 'string') return null;
 
-        throw new Error(
-            `XML text expression resolved to ${Array.isArray(value) ? 'an array' : typeof value}, which cannot be rendered as text`
-        );
+    const value = evaluate(raw, context.ctx);
+
+    if (value == null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        return value;
     }
 
-    return renderXml(children);
+    throw new Error(
+        `XML text expression resolved to ${Array.isArray(value) ? 'an array' : typeof value}, which cannot be rendered as text`
+    );
 }

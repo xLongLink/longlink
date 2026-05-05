@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 
 type ColumnProps = {
     span?: number;
-    width?: number;
     children?: RenderableASTNode;
 };
 
@@ -26,7 +25,7 @@ function toGridTemplate(widths: number[]) {
 function getColumnSpan(child: ASTNode) {
     if (child.name !== 'Column') return 0;
 
-    const explicitSpan = Number(child.params?.span ?? child.params?.width ?? 1);
+    const explicitSpan = Number(child.params?.span ?? 1);
     const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, explicitSpan));
     return Number.isFinite(safeSpan) ? safeSpan : 1;
 }
@@ -62,8 +61,7 @@ export function Columns({ props: rawProps, children }: XmlComponentProps) {
 export function Column({ props: rawProps, children }: XmlComponentProps) {
     const props = useProps(rawProps as Record<string, string>);
     const span = props.span;
-    const width = props.width;
-    const explicitSpan = (span as number | undefined) ?? (width as number | undefined);
+    const explicitSpan = span as number | undefined;
     const safeSpan = explicitSpan === undefined ? 1 : Math.max(1, Math.min(12, explicitSpan));
     return (
         <div className="space-y-4" style={{ gridColumn: `span ${safeSpan}` }}>

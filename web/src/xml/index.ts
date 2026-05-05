@@ -1,5 +1,5 @@
 export { xmlToAST as fromXml } from './compiler';
-export { createContext, registry } from './registry';
+export { registry } from './registry';
 export { render, renderXml } from './renderers';
 export {
     RuntimeContext,

@@ -22,7 +22,7 @@ export type SetterContext = Record<string, (value: unknown) => void>;
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
 
 /** A node or array of nodes that can be rendered by renderXml. */
-export type RenderableASTNode = ASTNode | ASTNode[] | string | null | undefined;
+export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 
 /** State provided by RuntimeProvider to the render tree. */
 export type RuntimeState = {

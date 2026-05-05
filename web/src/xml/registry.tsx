@@ -1,5 +1,3 @@
-import type { ExecutionContext } from '@/xml/types';
-
 import { Blockquote } from '@/xml/html/Blockquote';
 import { H1 } from '@/xml/html/H1';
 import { H2 } from '@/xml/html/H2';
@@ -41,15 +39,6 @@ import {
 import { Grid } from '@/xml/react/Grid';
 import { Stack } from '@/xml/react/Stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/xml/react/Tabs';
-
-/** Creates a flat XML execution context for page state and expression values. */
-export function createContext(initial: Partial<ExecutionContext> = {}): ExecutionContext {
-    const values = { ...initial };
-
-    delete values.baseUrl;
-
-    return values;
-}
 
 /* Build the built-in XML component registry once at module load. */
 export const registry = {
@@ -109,4 +98,4 @@ export const registry = {
     blockquote: Blockquote,
     ul: Ul,
     li: Li,
-} as const;
+};

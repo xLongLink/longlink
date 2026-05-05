@@ -33,7 +33,7 @@ function toNodes(input: unknown, tagName?: string): ASTNode[] {
 
     /* Primitive parser values become text nodes when they contain visible content. */
     if (typeof input === 'string') {
-        return input.trim() ? [{ name: 'Text', children: input }] : [];
+        return input.trim() ? [{ name: 'Text', params: { text: input } }] : [];
     }
 
     if (typeof input !== 'object') return [];
@@ -78,7 +78,7 @@ function buildElement(tagName: string, value: unknown): ASTNode {
 /** Converts an element body into child AST nodes. */
 function toChildNodes(value: unknown): ASTNode[] {
     if (typeof value === 'string') {
-        return value.trim() ? [{ name: 'Text', children: value }] : [];
+        return value.trim() ? [{ name: 'Text', params: { text: value } }] : [];
     }
 
     if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
