@@ -12,7 +12,11 @@ export function evaluate(expr: string, values: ExecutionContext): unknown {
 
     if (input.startsWith('$')) {
         const target = input.slice(1).trim();
-        const value = readPath(values, target);
+        const value = target.split('.').reduce<unknown>((current, segment) => {
+            if (current == null || typeof current !== 'object') return undefined;
+
+            return (current as Record<string, unknown>)[segment];
+        }, values);
 
         if (value === undefined) {
             const stateKey = target.includes('.') ? target.slice(0, target.indexOf('.')) : target;
@@ -88,15 +92,4 @@ export function useContext(): { ctx: ExecutionContext; baseUrl: string } {
 /** Runs an expression with XML values exposed as local variables. */
 function runExpression(expression: string, values: ExecutionContext): unknown {
     return new Function('ctx', `with (ctx) { return (${expression}); }`)(values);
-}
-
-/** Reads a dotted path from the flat XML context. */
-function readPath(values: ExecutionContext, path: string): unknown {
-    if (!path) return undefined;
-
-    return path.split('.').reduce<unknown>((current, segment) => {
-        if (current == null || typeof current !== 'object') return undefined;
-
-        return (current as Record<string, unknown>)[segment];
-    }, values);
 }
