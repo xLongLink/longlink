@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { evaluate, resolveBinding } from '../../src/xml/runtime';
+import { evaluate } from '../../src/xml/runtime';
 import type { ExecutionContext } from '../../src/xml/types';
 
 describe('evaluate', () => {
@@ -45,28 +45,20 @@ describe('evaluate literals', () => {
     });
 });
 
-describe('resolveBinding', () => {
-    /* $ targets should read and write nested state through one resolved binding. */
-    it('resolves nested $ value and setter', () => {
-        let latestValue: unknown;
-        const current = { value: 'draft', placeholder: 'Name' };
-        const setter = (value: unknown) => {
-            latestValue = typeof value === 'function' ? (value as (prev: unknown) => unknown)(current) : value;
+describe('evaluate bindings', () => {
+    /* $ targets should resolve directly to the bound value. */
+    it('resolves nested $ value', () => {
+        const ctx: ExecutionContext = {
+            form: { value: 'draft', placeholder: 'Name' },
         };
 
-        const ctx: ExecutionContext = { form: current };
-
-        const binding = resolveBinding('form.value', ctx, { form: setter });
-        binding.setValue('saved');
-
-        expect(binding.value).toBe('draft');
-        expect(latestValue).toEqual({ value: 'saved', placeholder: 'Name' });
+        expect(evaluate('$form.value', ctx)).toBe('draft');
     });
 
     /* Missing state keys should produce a clear runtime error. */
     it('throws when target state key is missing', () => {
         const ctx: ExecutionContext = {};
 
-        expect(() => resolveBinding('missing.value', ctx)).toThrow('Unknown state "missing"');
+        expect(() => evaluate('$missing.value', ctx)).toThrow('Unknown state "missing"');
     });
 });

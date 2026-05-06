@@ -1,6 +1,6 @@
 import { Input as UIInput } from '@/ui/input';
 import type { XmlComponentProps } from '@/xml';
-import { evaluate, resolveBinding, useContext } from '@/xml';
+import { evaluate, useContext } from '@/xml';
 
 /** Renders a minimal XML input control. */
 export function Input({ props: rawProps }: XmlComponentProps) {
@@ -8,7 +8,7 @@ export function Input({ props: rawProps }: XmlComponentProps) {
     const valueProp = rawProps.value ?? '';
     const placeholder = String(evaluate(rawProps.placeholder ?? '', ctx) ?? '');
     const isBound = typeof valueProp === 'string' && valueProp.startsWith('$');
-    const value = String(isBound ? resolveBinding(valueProp.slice(1).trim(), ctx) : (evaluate(valueProp, ctx) ?? ''));
+    const value = String(evaluate(valueProp, ctx) ?? '');
 
     /* Resolve the binding target once for direct updates. */
     let bindingState: Record<string, unknown> | undefined;

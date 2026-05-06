@@ -1,7 +1,7 @@
 export { xmlToAST as fromXml } from './compiler';
 export { registry } from './registry';
 export { render, renderXml } from './renderers';
-export { BaseUrlContext, RuntimeContext, RuntimeProvider, evaluate, resolveBinding, useContext } from './runtime';
+export { BaseUrlContext, RuntimeContext, RuntimeProvider, evaluate, useContext } from './runtime';
 export type {
     ASTNode,
     ExecutionContext,

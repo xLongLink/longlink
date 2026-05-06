@@ -11,7 +11,18 @@ export function evaluate(expr: string, values: ExecutionContext): unknown {
     if (input === '') return '';
 
     if (input.startsWith('$')) {
-        return readPath(values, input.slice(1).trim());
+        const target = input.slice(1).trim();
+        const value = readPath(values, target);
+
+        if (value === undefined) {
+            const stateKey = target.includes('.') ? target.slice(0, target.indexOf('.')) : target;
+
+            if (!stateKey || values[stateKey] == null) {
+                throw new Error(`Unknown state "${stateKey}"`);
+            }
+        }
+
+        return value;
     }
 
     if (input.startsWith('{') || input.startsWith('[')) {
@@ -55,19 +66,6 @@ export function evaluate(expr: string, values: ExecutionContext): unknown {
     }
 
     return expr;
-}
-
-/** Resolves a $ target into its current value. */
-export function resolveBinding(target: string, ctx: ExecutionContext): unknown {
-    const normalized = target.trim();
-    const dotIndex = normalized.indexOf('.');
-    const stateKey = dotIndex === -1 ? normalized : normalized.slice(0, dotIndex);
-
-    if (!stateKey || ctx[stateKey] == null) {
-        throw new Error(`Unknown state "${stateKey}"`);
-    }
-
-    return readPath(ctx, normalized);
 }
 
 /** Provides XML value context to a rendered subtree. */
