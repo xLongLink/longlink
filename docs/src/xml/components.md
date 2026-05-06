@@ -1,9 +1,17 @@
 # Components
 
 Components are the interactive building blocks of XML pages.
-They cover inputs, actions, and icons.
+They cover text output, inputs, actions, and icons.
 Use them when the page needs direct user interaction or data display.
 The sections below describe each component and how it is used.
+
+## Text
+
+Use `<Text>` when you need an explicit text node rendered from an expression.
+
+```xml
+<Text value="{user.name}" />
+```
 
 ## Button
 

@@ -54,14 +54,7 @@ export function evaluate(expr: string, values: ExecutionContext): unknown {
         );
     }
 
-    return inferLiteral(expr);
-}
-
-/** Resolves an XML `if` attribute to a render decision. */
-export function resolveCondition(condition: string | undefined, ctx: ExecutionContext): boolean {
-    if (condition == null) return true;
-
-    return Boolean(evaluate(condition, ctx));
+    return expr;
 }
 
 /** Resolves a $ target into its current value. */
@@ -97,30 +90,6 @@ export function useContext(): { ctx: ExecutionContext; baseUrl: string } {
 /** Runs an expression with XML values exposed as local variables. */
 function runExpression(expression: string, values: ExecutionContext): unknown {
     return new Function('ctx', `with (ctx) { return (${expression}); }`)(values);
-}
-
-/** Infers primitive values from literal XML attribute text. */
-function inferLiteral(value: string): unknown {
-    const input = value.trim();
-
-    if (input === '') return '';
-    if (input === 'null') return null;
-    if (input === 'undefined') return undefined;
-    if (input === 'true') return true;
-    if (input === 'false') return false;
-
-    const numberValue = Number(input);
-    if (Number.isFinite(numberValue) && String(numberValue) === input) return numberValue;
-
-    if ((input.startsWith('{') && input.endsWith('}')) || (input.startsWith('[') && input.endsWith(']'))) {
-        try {
-            return JSON.parse(input);
-        } catch {
-            return value;
-        }
-    }
-
-    return value;
 }
 
 /** Reads a dotted path from the flat XML context. */

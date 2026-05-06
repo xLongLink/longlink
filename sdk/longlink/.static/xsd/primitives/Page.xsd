@@ -9,6 +9,7 @@
       </xsd:choice>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required" />
+    <xsd:attribute name="title" type="xsd:string" use="optional" />
     <xsd:attribute name="icon" type="xsd:string" use="optional" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>

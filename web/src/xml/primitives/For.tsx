@@ -5,15 +5,15 @@ import { Fragment } from 'react';
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ props, children }: XmlComponentProps) {
     const { ctx } = useContext();
-    if (props.each == null || props.each === '') throw new Error('For requires an "each" parameter');
     if (props.as == null || props.as === '') throw new Error('For requires an "as" parameter');
+    if (props.each == null || props.each === '') throw new Error('For requires an "each" parameter');
 
-    const eachExpression = evaluate(props.each, ctx);
+    const each = evaluate(props.each, ctx);
     const as = String(evaluate(props.as, ctx) ?? '');
 
-    if (!Array.isArray(eachExpression)) return null;
+    if (!Array.isArray(each)) return null;
 
-    return eachExpression.map((item, index) => {
+    return each.map((item, index) => {
         const childCtx = { ...ctx, [as]: item, $index: index };
 
         return (

@@ -30,6 +30,17 @@ Use `$<prop>` on supported input-like props to sync UI and state.
 
 `reset` on a `State` element restores its initial value.
 
+## Page
+
+`Page` defines the root page shell.
+`title` overrides the browser title; otherwise LongLink falls back to `name`.
+
+```xml
+<Page name="Dashboard" title="Overview">
+  <p>Dashboard</p>
+</Page>
+```
+
 ## Query
 
 `Query` fetches JSON from a path and stores the result in `queries[id]`.

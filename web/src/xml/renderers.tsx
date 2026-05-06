@@ -1,6 +1,6 @@
 import { Component, Fragment, useContext as useReactContext, type ComponentType, type ReactNode } from 'react';
 import { registry } from './registry';
-import { BaseUrlContext, resolveCondition, RuntimeContext, RuntimeProvider } from './runtime';
+import { BaseUrlContext, evaluate, RuntimeContext, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
 
 type XmlErrorBoundaryProps = {
@@ -70,7 +70,7 @@ function RenderedNode({ node }: { node: RenderableASTNode }): ReactNode {
         return node.map((child, index) => <Fragment key={index}>{renderXml(child)}</Fragment>);
     }
 
-    if (!resolveCondition(node.params?.if, activeCtx)) {
+    if (node.params?.if != null && !Boolean(evaluate(node.params.if, activeCtx))) {
         return null;
     }
 

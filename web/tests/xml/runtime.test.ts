@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { evaluate, resolveBinding, resolveCondition } from '../../src/xml/runtime';
+import { evaluate, resolveBinding } from '../../src/xml/runtime';
 import type { ExecutionContext } from '../../src/xml/types';
 
 describe('evaluate', () => {
@@ -42,26 +42,6 @@ describe('evaluate literals', () => {
         };
 
         expect(evaluate('{next: value + 1}', ctx)).toEqual({ next: 6 });
-    });
-});
-
-describe('resolveCondition', () => {
-    /* Missing conditions default to true, but blank strings should not render. */
-    it('handles empty and missing conditions', () => {
-        const ctx: ExecutionContext = {};
-
-        expect(resolveCondition(undefined, ctx)).toBe(true);
-        expect(resolveCondition('   ', ctx)).toBe(false);
-    });
-
-    /* Conditional expressions must be explicit expressions, not raw text. */
-    it('evaluates braced conditions and rejects plain text', () => {
-        const ctx: ExecutionContext = {
-            count: 2,
-        };
-
-        expect(resolveCondition('{count > 1}', ctx)).toBe(true);
-        expect(resolveCondition('{count < 1}', ctx)).toBe(false);
     });
 });
 

@@ -9,4 +9,5 @@
   <xsd:include schemaLocation="react/Button.xsd" />
   <xsd:include schemaLocation="react/Icon.xsd" />
   <xsd:include schemaLocation="react/Input.xsd" />
+  <xsd:include schemaLocation="react/Text.xsd" />
 </xsd:schema>

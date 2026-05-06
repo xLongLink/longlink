@@ -9,7 +9,7 @@ Use it to author valid XML without reading the SDK code.
 - Element names are case-sensitive.
 - XML attributes map to component props.
 - Curly-brace expressions are evaluated against runtime state and scope.
-- Unknown attributes are allowed by the XSD, but only documented attributes are guaranteed.
+- Unknown attributes may pass XSD validation, but only documented attributes are supported by LongLink.
 - A valid page must use only the elements and attributes described here.
 
 ## Expression Model
@@ -79,6 +79,7 @@ Defines the page root.
 Attributes:
 
 - `name` required. Page name.
+- `title` optional. Explicit document title. Falls back to `name` when omitted.
 - `icon` optional. Icon name for page metadata.
 
 Children:
@@ -103,6 +104,20 @@ Behavior:
 - The state is exposed as `state[id]`.
 - Each attribute is readable as `state[id].<attributeName>`.
 - The value is a `[currentValue, setter]` tuple internally.
+
+### `<Text>`
+
+Renders evaluated text content.
+
+Attributes:
+
+- `text` optional. Preferred text expression.
+- `value` optional. Alias for `text`.
+
+Behavior:
+
+- Resolves the expression against runtime state.
+- Returns plain text, number, or boolean output.
 
 ### `<Query>`
 
