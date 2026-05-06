@@ -93,7 +93,7 @@ export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl?: string):
     return (
         <XmlErrorBoundary resetKey={ast}>
             <BaseUrlContext.Provider value={baseUrl ?? ''}>
-                <RuntimeProvider value={{ ctx, props: {}, children: ast }}>{renderXml(ast)}</RuntimeProvider>
+                <RuntimeProvider value={ctx}>{renderXml(ast)}</RuntimeProvider>
             </BaseUrlContext.Provider>
         </XmlErrorBoundary>
     );

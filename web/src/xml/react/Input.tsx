@@ -40,7 +40,7 @@ const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => 
 
 /** Renders an XML input control from evaluated XML props. */
 export function Input({ props: rawProps }: XmlComponentProps) {
-    const { ctx, states } = useContext();
+    const { ctx } = useContext();
     const name = String(evaluate(rawProps.name ?? '', ctx) ?? '');
     const kind = String(evaluate(rawProps.kind ?? '', ctx) ?? 'text') as InputProps['kind'];
     const label = String(evaluate(rawProps.label ?? '', ctx) ?? '');
@@ -57,11 +57,11 @@ export function Input({ props: rawProps }: XmlComponentProps) {
     if (valueProp.startsWith('$')) {
         try {
             const normalized = valueProp.slice(1).trim();
-            value = resolveBinding(normalized, ctx, states ?? {});
+            value = resolveBinding(normalized, ctx);
 
             const dotIndex = normalized.indexOf('.');
             const stateKey = dotIndex === -1 ? normalized : normalized.slice(0, dotIndex);
-            bindingState = states?.[stateKey] as Record<string, unknown> | undefined;
+            bindingState = ctx[stateKey] as Record<string, unknown> | undefined;
             bindingPath = dotIndex === -1 ? [] : normalized.slice(dotIndex + 1).split('.');
         } catch {
             // Use evaluated value if binding fails

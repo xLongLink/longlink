@@ -1,10 +1,8 @@
 import { createContext, useContext as useReactContext, type ReactNode } from 'react';
-import type { ExecutionContext, RuntimeState, StateContext } from './types';
+import type { ExecutionContext } from './types';
 
-const ValueContext = createContext<ExecutionContext>({});
 export const BaseUrlContext = createContext<string>('');
-const StateContextValue = createContext<StateContext>({});
-export const RuntimeContext = createContext<RuntimeState | null>(null);
+export const RuntimeContext = createContext<ExecutionContext | null>(null);
 
 /** Evaluates an XML attribute value against the current flat XML context. */
 export function evaluate(expr: string, values: ExecutionContext): unknown {
@@ -67,44 +65,33 @@ export function resolveCondition(condition: string | undefined, ctx: ExecutionCo
 }
 
 /** Resolves a $ target into its current value. */
-export function resolveBinding(target: string, ctx: ExecutionContext, states: StateContext = {}): unknown {
+export function resolveBinding(target: string, ctx: ExecutionContext): unknown {
     const normalized = target.trim();
     const dotIndex = normalized.indexOf('.');
     const stateKey = dotIndex === -1 ? normalized : normalized.slice(0, dotIndex);
 
-    if (!stateKey || states[stateKey] == null) {
+    if (!stateKey || ctx[stateKey] == null) {
         throw new Error(`Unknown state "${stateKey}"`);
     }
 
     return readPath(ctx, normalized);
 }
 
-/** Provides XML value and state contexts to a rendered subtree. */
-export function RuntimeProvider({ value, children }: { value: RuntimeState; children: ReactNode }) {
-    const parentStates = useReactContext(StateContextValue);
-    const states = value.states ?? parentStates;
-
-    return (
-        <ValueContext.Provider value={value.ctx}>
-            <StateContextValue.Provider value={states}>
-                <RuntimeContext.Provider value={{ ...value, states }}>{children}</RuntimeContext.Provider>
-            </StateContextValue.Provider>
-        </ValueContext.Provider>
-    );
+/** Provides XML value context to a rendered subtree. */
+export function RuntimeProvider({ value, children }: { value: ExecutionContext; children: ReactNode }) {
+    return <RuntimeContext.Provider value={value}>{children}</RuntimeContext.Provider>;
 }
 
 /** Returns the active XML runtime state. */
-export function useContext(): RuntimeState & { ctx: ExecutionContext; baseUrl: string; states: StateContext } {
+export function useContext(): { ctx: ExecutionContext; baseUrl: string } {
     const runtime = useReactContext(RuntimeContext);
-    const ctx = useReactContext(ValueContext);
     const baseUrl = useReactContext(BaseUrlContext);
-    const states = useReactContext(StateContextValue);
 
     if (!runtime) {
         throw new Error('useContext must be used inside a rendered XML component');
     }
 
-    return { ...runtime, ctx, baseUrl, states };
+    return { ctx: runtime, baseUrl };
 }
 
 /** Runs an expression with XML values exposed as local variables. */

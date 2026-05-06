@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 /** Fetches JSON data into a reusable query slot for descendants. */
 export function Query({ props: rawProps, children }: XmlComponentProps) {
-    const { ctx, baseUrl, states } = useContext();
+    const { ctx, baseUrl } = useContext();
     const id = String(evaluate(rawProps.id ?? '', ctx) ?? '');
     const pathTemplate = String(evaluate(rawProps.path ?? '', ctx) ?? '');
     if (!id) throw new Error('Query requires an "id" parameter');
@@ -29,11 +29,5 @@ export function Query({ props: rawProps, children }: XmlComponentProps) {
     }, [error]);
 
     const childCtx = useMemo(() => ({ ...ctx, [id]: data ?? {} }), [ctx, id, data]);
-    const resolvedProps = { id, path: pathTemplate };
-
-    return (
-        <RuntimeProvider value={{ ctx: childCtx, states, props: resolvedProps, children }}>
-            {renderXml(children)}
-        </RuntimeProvider>
-    );
+    return <RuntimeProvider value={{ ctx: childCtx }}>{renderXml(children)}</RuntimeProvider>;
 }

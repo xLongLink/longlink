@@ -4,7 +4,7 @@ import { Fragment } from 'react';
 
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ props, children }: XmlComponentProps) {
-    const { ctx, states } = useContext();
+    const { ctx } = useContext();
     if (props.each == null || props.each === '') throw new Error('For requires an "each" parameter');
     if (props.as == null || props.as === '') throw new Error('For requires an "as" parameter');
 
@@ -18,16 +18,7 @@ export function For({ props, children }: XmlComponentProps) {
 
         return (
             <Fragment key={index}>
-                <RuntimeProvider
-                    value={{
-                        ctx: childCtx,
-                        states,
-                        props: { each: props.each, as: props.as },
-                        children,
-                    }}
-                >
-                    {renderXml(children)}
-                </RuntimeProvider>
+                <RuntimeProvider value={{ ctx: childCtx }}>{renderXml(children)}</RuntimeProvider>
             </Fragment>
         );
     });

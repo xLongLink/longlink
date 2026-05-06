@@ -10,26 +10,15 @@ export type ASTNode = {
 /** Flat XML value context used for attribute evaluation. */
 export type ExecutionContext = Record<string, unknown>;
 
-/** Mutable XML state context used by $-bound XML attributes and state primitives. */
-export type StateContext = Record<string, unknown>;
-
 /** A React component that can be registered and rendered from XML. */
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
 
 /** A node or array of nodes that can be rendered by renderXml. */
 export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 
-/** State provided by RuntimeProvider to the render tree. */
-export type RuntimeState = {
-    ctx: ExecutionContext;
-    states?: StateContext;
-    props: Record<string, unknown>;
-    children?: RenderableASTNode;
-};
-
 /** Standard XML component contract used by the runtime. */
 export type XmlComponentProps = {
-    props: Record<string, unknown>;
+    props: Record<string, string>;
     children?: RenderableASTNode;
 };
 
