@@ -22,8 +22,7 @@
     <xsd:complexContent>
       <xsd:extension base="ChildrenOnlyType">
         <xsd:attribute name="action" type="xsd:string" use="optional" />
-        <xsd:attribute name="method" type="xsd:string" use="optional" />
-        <xsd:attribute name="payload" type="xsd:string" use="optional" />
+        <xsd:attribute name="json" type="xsd:string" use="optional" />
         <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

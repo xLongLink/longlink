@@ -51,6 +51,71 @@ longlink/
         └── html.md             # XML HTML bridge docs
 ```
 
+## Architecture
+
+### Runtime Flow
+
+```text
+XML string
+  -> `web/src/xml/compiler.ts`
+  -> AST (`ASTNode[]`)
+  -> `web/src/xml/renderers.tsx`
+  -> root `RuntimeProvider` + `BaseUrlContext`
+  -> component registry lookup
+  -> XML component
+  -> `renderXml(children)`
+  -> descendant scope
+```
+
+### Context Model
+
+```text
+root ExecutionContext
+  values: global XML state
+  parent: null
+
+          +----------------------------+
+          | RuntimeProvider            |
+          | RuntimeContext = ctx       |
+          +----------------------------+
+                       |
+                       v
+              current component render
+                       |
+      +----------------+----------------+
+      |                                 |
+      v                                 v
+ `evaluate(...)`                 `renderXml(children)`
+ reads `ctx` and parents          preserves current ctx
+ through lexical lookup           for descendants
+
+child ExecutionContext
+  parent -> current ctx
+  values -> scoped slot(s)
+
+lookup order:
+  current ctx.values -> parent.values -> ... -> root
+```
+
+### Scope Rules
+
+- `State` creates a stable reactive slot and exposes it as `ctx.values[id]` for descendants.
+- `Query` fetches JSON and exposes the response as `ctx.values[id]` for descendants.
+- `For` creates one child context per item and injects both the loop item and `index`.
+- `Page` renders the page shell and does not introduce a new scope.
+- `Text`, `Button`, `Input`, and HTML bridge tags consume the active scope but do not own it.
+- `if`, `value`, `json`, `path`, `title`, and similar attributes are evaluated against the active scope before rendering or requests.
+
+### Ownership Map
+
+- `compiler.ts` converts XML text into AST nodes.
+- `renderers.tsx` resolves tags, applies `if`, and wires runtime providers.
+- `runtime.tsx` owns scope evaluation, expression execution, and URL resolution.
+- `primitives/` owns page, state, query, iteration, and text behavior.
+- `react/` owns interactive XML-backed widgets.
+- `html/` owns HTML bridge tags.
+- `registry.tsx` is the single built-in tag map used by the renderer.
+
 ## Responsibilities
 
 - Use `sdk/longlink/.static/llm/SCHEMA.md` as the primary XML schema guide.
@@ -92,7 +157,7 @@ Loop over arrays: `<For each="orders" as="order"> ... </For>`
 Trigger API calls, sends request on click, `invalidate` causes related queries to refetch afterward
 
 ```xml
-<Button action="/issues" method="POST"  payload='{"title":"{issue.title}"}' invalidate="issues">
+<Button action="/issues" method="POST"  json='{"title":"{issue.title}"}' invalidate="issues">
     Save
 </Button>
 ```

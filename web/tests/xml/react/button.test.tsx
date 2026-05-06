@@ -71,7 +71,7 @@ describe('Button', () => {
     it('preserves action parameters in compiled xml', () => {
         expect(
             xmlToAST(
-                '<Button action="/issues" method="POST" payload=' +
+                '<Button action="/issues" json=' +
                     '\'{"title":"{issue.title}"}\'' +
                     ' invalidate="issues">Save</Button>'
             )
@@ -80,8 +80,7 @@ describe('Button', () => {
                 name: 'Button',
                 params: {
                     action: '/issues',
-                    method: 'POST',
-                    payload: '{"title":"{issue.title}"}',
+                    json: '{"title":"{issue.title}"}',
                     invalidate: 'issues',
                 },
                 children: [{ name: 'Text', children: 'Save' }],

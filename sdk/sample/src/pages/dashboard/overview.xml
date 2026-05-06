@@ -1,5 +1,5 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<Page name="Dashboard Overview" icon="layout-dashboard">
+<Page name="Dashboard Overview" title="Dashboard Overview" icon="layout-dashboard">
   <p>Nested dashboard page.</p>
   <Button>Back to Dashboard</Button>
 </Page>

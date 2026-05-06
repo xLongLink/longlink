@@ -23,7 +23,7 @@ Rules:
 - Expressions can read from runtime state and lexical scope.
 - Expressions may appear in attribute values and text nodes.
 - Strings wrapped in `{...}` can resolve to non-string values.
-- Nested objects and arrays in payloads are resolved recursively.
+- Nested objects and arrays in `json` values are resolved recursively.
 - Scope is lexical: child elements read from their nearest parent scope first, then walk outward.
 
 ## Global XML Patterns
@@ -60,14 +60,14 @@ Defines the page root.
 Attributes:
 
 - `name` required. Page name.
-- `title` optional. Explicit document title. Falls back to `name` when omitted.
+- `title` required. Explicit document title.
 - `icon` optional. Icon name for page metadata.
 
 Children:
 
 - Any documented XML element.
 
-Example: `<Page name="Dashboard" icon="layout-grid"><p>Dashboard</p></Page>`
+Example: `<Page name="Dashboard" title="Dashboard" icon="layout-grid"><p>Dashboard</p></Page>`
 
 ## Primitives
 
@@ -140,15 +140,14 @@ Actionable button.
 Attributes:
 
 - `action` optional. API path to call.
-- `method` optional. HTTP method. Default `POST`.
-- `payload` optional. Request body value or JSON string.
+- `json` optional. Request body value or JSON string.
 - `invalidate` optional. Comma-separated query keys.
   Behavior:
 
 - Performs the configured action request.
 - `invalidate` refetches the named query slots after the request succeeds.
 
-Example: `<Button action="/issues" method="POST" payload='{"title":"{issue.title}"}' invalidate="issues">Save</Button>`
+Example: `<Button action="/issues" json='{"title":"{issue.title}"}'>Save</Button>`
 
 ### `<Input>`
 

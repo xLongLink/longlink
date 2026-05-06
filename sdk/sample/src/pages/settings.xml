@@ -1,5 +1,5 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<Page name="Settings" icon="settings">
+<Page name="Settings" title="Settings" icon="settings">
   <p>General settings.</p>
   <Input placeholder="Lorem ipsum dolor sit amet" />
   <p>Identity.</p>

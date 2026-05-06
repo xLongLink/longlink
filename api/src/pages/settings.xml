@@ -1,5 +1,5 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<Page name="Settings" icon="settings">
+<Page name="Settings" title="Settings" icon="settings">
   <State id="connectCompute" server="" username="" password="" email="">
     <p>General settings.</p>
     <Input placeholder="Lorem ipsum dolor sit amet" />
@@ -8,7 +8,7 @@
     <Input value="connectCompute.username" placeholder="registry-user" />
     <Input value="connectCompute.password" placeholder="••••••••" />
     <Input value="connectCompute.email" placeholder="user@example.com" />
-    <Button variant="default" action="/compute/registry" method="POST" payload='{
+    <Button variant="default" action="/compute/registry" json='{
       "name": "compute",
       "server": "{connectCompute.server}",
       "username": "{connectCompute.username}",
