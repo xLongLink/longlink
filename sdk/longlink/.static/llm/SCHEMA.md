@@ -85,7 +85,7 @@ Children:
 
 - Any documented XML element.
 
-Example: `<Page name="Dashboard" icon="layout-grid"><Hero title="Dashboard" /></Page>`
+Example: `<Page name="Dashboard" icon="layout-grid"><p>Dashboard</p></Page>`
 
 ## Primitives
 
@@ -128,123 +128,7 @@ Attributes:
 
 ## Layout
 
-### `<Grid>`
-
-CSS grid container.
-
-Attributes:
-
-- `gap` optional. CSS gap value. Default `1rem`.
-- `columns` optional. `grid-template-columns` value.
-- `align` optional. `align-items` value.
-- `justify` optional. `justify-items` value.
-- `style` optional. Inline style object string.
-
-### `<Stack>`
-
-Flexible stack container.
-
-Attributes:
-
-- `direction` optional. `column` or `row`. Default `column`.
-- `gap` optional. Number or CSS length. Default `16`.
-- `align` optional. `start`, `center`, `end`, or `stretch`. Default `stretch`.
-- `justify` optional. `start`, `center`, `end`, or `between`. Default `start`.
-
-### `<Columns>`
-
-Responsive multi-column layout.
-
-Attributes:
-
-- `gap` optional. Number or CSS length. Default `16`.
-- `widths` optional. Array of column weights.
-
-### `<Column>`
-
-Child of `<Columns>`.
-
-Attributes:
-
-- `span` optional. Column span from 1 to 12.
-- `width` optional. Alias for `span`.
-
-### `<Dialog>` family
-
-Dialog elements are structural wrappers around the UI dialog component.
-
-Elements:
-
-- `<Dialog>`
-- `<DialogTrigger>`
-- `<DialogContent>`
-- `<DialogHeader>`
-- `<DialogTitle>`
-- `<DialogDescription>`
-- `<DialogFooter>`
-
-### `<Tabs>` family
-
-Tabs elements are structural wrappers around the UI tabs component.
-
-Elements:
-
-- `<Tabs>`
-- `<TabsList>`
-- `<TabsTrigger>`
-- `<TabsContent>`
-
 ## Content Components
-
-### `<Hero>`
-
-Page header block.
-
-Attributes:
-
-- `title` required.
-- `subtitle` optional.
-- `icon` optional.
-
-### `<Card>` family
-
-Card layout wrappers.
-
-Elements:
-
-- `<Card>`
-- `<CardHeader>`
-- `<CardTitle>`
-- `<CardDescription>`
-- `<CardContent>`
-- `<CardFooter>`
-- `<CardAction>`
-
-### `<Menu>` family
-
-Menu navigation container.
-
-Elements:
-
-- `<Menu>`
-- `<MenuSection title="..." icon="...">`
-- `<MenuSubSection title="..." root="true|false">`
-
-Attributes:
-
-- `MenuSection.title` required.
-- `MenuSection.icon` optional Lucide icon name.
-- `MenuSubSection.title` optional.
-- `MenuSubSection.root` optional boolean string.
-
-Behavior:
-
-- A section may contain one root subsection and any number of normal subsections.
-- The first section becomes active by default.
-
-### `<Separator>`
-
-Horizontal separator line.
 
 ### `<Icon>`
 
@@ -312,106 +196,13 @@ Attributes:
 - `required` optional.
 - `disabled` optional.
 
-### `<Select>`
-
-Dropdown select.
-
-Attributes:
-
-- `name` optional.
-- `label` optional.
-- `value` optional.
-- `placeholder` optional.
-- `description` optional.
-- `options` optional. Array of `{ label, value }` objects or a JSON string.
-- `required` optional.
-- `disabled` optional.
-
-### `<Checkbox>`
-
-Checkbox with label and description.
-
-Attributes:
-
-- `label` optional.
-- `description` optional.
-- `checked` optional. Boolean or boolean string.
-
-### `<Switch>`
-
-Toggle switch with label and description.
-
-Attributes:
-
-- `label` optional.
-- `description` optional.
-- `active` optional. Boolean or boolean string.
-- `checked` optional. Boolean or boolean string.
-
-### `<Slider>`
-
-Single-value slider or range-like slider.
-
-Attributes:
-
-- `label` optional.
-- `description` optional.
-- `min` optional. Default `0`.
-- `max` optional. Default `100`.
-- `step` optional. Default `1`.
-- `value` optional. Number, array of numbers, or JSON string.
-- `orientation` optional. `horizontal` or `vertical`.
-- `disabled` optional.
-
-### `<Range>`
-
-Two-handle range slider.
-
-Attributes:
-
-- `label` optional.
-- `description` optional.
-- `min` optional. Default `0`.
-- `max` optional. Default `100`.
-- `step` optional. Default `1`.
-- `value` optional. Two-number array or JSON string.
-
-### `<Textarea>`
-
-Multiline input.
-
-Attributes:
-
-- `label` optional.
-- `description` optional.
-
 ## Tables
-
-### `<Table>` family
-
-Table wrappers.
-
-Elements:
-
-- `<Table>`
-- `<TableHead>`
-- `<TableHeader>`
-- `<TableBody>`
-- `<TableRow>`
-- `<TableCell>`
 
 ## HTML Bridge
 
 The following HTML tags are exposed directly in XML:
 
-- `<h1>`
-- `<h2>`
-- `<h3>`
-- `<h4>`
 - `<p>`
-- `<blockquote>`
-- `<ul>`
-- `<li>`
 
 ## Summary
 

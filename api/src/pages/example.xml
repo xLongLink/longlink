@@ -2,157 +2,27 @@
 <Page name="Example" icon="layout-grid">
   <State id="exampleForm" fullName="" email="" notes="" subscribed="true" notifications="false" progress="35" status="open" priority='[2,4]'>
     <Query id="example" path="/example">
-
-  <Hero title="XML component showcase" subtitle="A single page that demonstrates the supported XML surface." icon="layout-grid">
-    <Stack direction="row" gap="8" align="center">
-      <Button variant="default" size="default">Default</Button>
-      <Button variant="secondary" size="sm">Secondary</Button>
-      <Button variant="outline" size="xs">Outline</Button>
-      <Button variant="ghost" size="lg">Ghost</Button>
-      <Button variant="destructive" size="icon" aria-label="Delete">X</Button>
-      <Button variant="link" size="icon-sm" href="/settings">Link</Button>
-    </Stack>
-  </Hero>
-
-    <Menu>
-    <MenuSection title="Overview" icon="layout-grid">
-      <MenuSubSection title="Query and state" root="true">
-        <Stack gap="12">
-          <p>Fetched title: {example.title}</p>
-          <p>Subscribed: {exampleForm.subscribed}</p>
-          <Button action="/example" method="POST" payload='{"title":"{exampleForm.fullName}"}' invalidate="example" variant="default" size="sm">
-            Refetch example
-          </Button>
-        </Stack>
-      </MenuSubSection>
-    </MenuSection>
-
-    <MenuSection title="Forms" icon="file-text">
-      <MenuSubSection title="Inputs" root="true">
-        <Grid columns="1fr 1fr" gap="1rem">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bound fields</CardTitle>
-              <CardDescription>Text, textarea, checkbox, switch, and slider</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Stack gap="12">
-                  <Input kind="text" label="Full name" value="$exampleForm.fullName" placeholder="Ada Lovelace" />
-                  <Input kind="email" label="Email" value="$exampleForm.email" placeholder="ada@example.com" />
-                  <Input kind="date" label="Due date" value="2026-05-05" />
-                  <Textarea label="Notes" value="$exampleForm.notes" description="Optional context" />
-                <Checkbox label="Subscribe to updates" checked="$exampleForm.subscribed" />
-                <Switch label="Enable notifications" checked="$exampleForm.notifications" description="Receive page updates" />
-                <Slider label="Progress" min="0" max="100" step="5" value="$exampleForm.progress" />
-              </Stack>
-            </CardContent>
-            <CardFooter>
-              <Button action="/example" method="POST" payload='{"fullName":"{exampleForm.fullName}","email":"{exampleForm.email}","notes":"{exampleForm.notes}"}' variant="outline" size="sm">
-                Save draft
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Selectors</CardTitle>
-              <CardDescription>Select, range, separator, and icon</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Stack gap="12">
-                <Select
-                  label="Status"
-                  value="$exampleForm.status"
-                  options='[{"label":"Open","value":"open"},{"label":"Closed","value":"closed"}]'
-                />
-                <Range label="Priority span" min="1" max="5" value="$exampleForm.priority" />
-                <Separator />
-                <Icon name="sparkles" fallback="box" />
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-      </MenuSubSection>
-    </MenuSection>
-
-    <MenuSection title="Layout" icon="columns-2">
-      <MenuSubSection title="Cards and columns" root="true">
-        <Columns gap="16">
-          <Column span="8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Card header</CardTitle>
-                <CardDescription>Header, content, footer, and action</CardDescription>
-                <CardAction>
-                  <Button variant="outline" size="xs">Action</Button>
-                </CardAction>
-              </CardHeader>
-              <CardContent>
-                <p>Cards can hold any nested content, including HTML bridge tags.</p>
-                <blockquote>Quoted content renders as expected.</blockquote>
-              </CardContent>
-              <CardFooter>
-                <Button variant="ghost" size="sm">Archive</Button>
-              </CardFooter>
-            </Card>
-          </Column>
-          <Column span="4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Prop</TableHead>
-                  <TableHead>Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>variant</TableCell>
-                  <TableCell>default</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>size</TableCell>
-                  <TableCell>sm</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </Column>
-        </Columns>
-      </MenuSubSection>
-    </MenuSection>
-
-    <MenuSection title="Tabs" icon="square-stack">
-      <MenuSubSection title="Tabbed content" root="true">
-        <Tabs defaultValue="details">
-          <TabsList>
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="details">
-            <p>Details content appears in the default tab.</p>
-          </TabsContent>
-
-          <TabsContent value="activity">
-            <p>Activity content shows an alternate view in the same section.</p>
-          </TabsContent>
-        </Tabs>
-      </MenuSubSection>
-    </MenuSection>
-
-    <MenuSection title="HTML" icon="code">
-      <MenuSubSection title="Element showcase" root="true">
-        <h1>Heading one</h1>
-        <h2>Heading two</h2>
-        <h3>Heading three</h3>
-        <h4>Heading four</h4>
-        <p>Paragraph content explains how standard HTML elements render in XML pages.</p>
-        <ul>
-          <li>Unordered list item one</li>
-          <li>Unordered list item two</li>
-        </ul>
-      </MenuSubSection>
-    </MenuSection>
-    </Menu>
+      <p>Fetched title: {example.title}</p>
+      <p>Subscribed: {exampleForm.subscribed}</p>
+      <Button action="/example" method="POST" payload='{"title":"{exampleForm.fullName}"}' invalidate="example" variant="default" size="sm">
+        Refetch example
+      </Button>
+      <Input kind="text" label="Full name" value="$exampleForm.fullName" placeholder="Ada Lovelace" />
+      <Input kind="email" label="Email" value="$exampleForm.email" placeholder="ada@example.com" />
+      <Input kind="date" label="Due date" value="2026-05-05" />
+      <Button action="/example" method="POST" payload='{"fullName":"{exampleForm.fullName}","email":"{exampleForm.email}","notes":"{exampleForm.notes}"}' variant="outline" size="sm">
+        Save draft
+      </Button>
+      <Icon name="sparkles" fallback="box" />
+      <p>Cards, columns, and grid are no longer part of the XML surface.</p>
+      <p>Quoted content renders as expected.</p>
+      <p>Use p and standard content elements for layout.</p>
+      <Button variant="outline" size="xs">Action</Button>
+      <Button variant="ghost" size="sm">Archive</Button>
+      <p>Details content appears in the default tab.</p>
+      <p>Activity content shows an alternate view in the same section.</p>
+      <p>Paragraph content explains how standard HTML elements render in XML pages.</p>
+      <p>Unordered list items are no longer part of the XML surface.</p>
     </Query>
   </State>
 </Page>

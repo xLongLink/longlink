@@ -1,84 +1,11 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
 <Page name="Applications" icon="blocks">
   <State id="createApp" appKey="" image="">
-    <Hero
-      title="Applications"
-      subtitle="Manage applications available to your organization."
-      icon="blocks"
-    >
-      <Dialog>
-        <DialogTrigger>Create</DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create application</DialogTitle>
-            <DialogDescription>
-              Register a new application in this workspace.
-            </DialogDescription>
-          </DialogHeader>
-          <Stack gap="12">
-            <Input kind="text" label="App key" value="$createApp.appKey" placeholder="sampleapp" />
-            <Input
-              kind="text"
-              label="Image reference"
-              value="$createApp.image"
-              placeholder="sampleapp:20260419_185022"
-            />
-            <Button
-              variant="default"
-              action="/apps"
-              method="POST"
-              payload='{
-                "name": "{createApp.appKey}",
-                "image": "{createApp.image}"
-              }'
-              onSuccess="
-                refetch(applications);
-                set(createApp.appKey, '');
-                set(createApp.image, '');
-              "
-            >
-              Create application
-            </Button>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-    </Hero>
     <Query id="applications" path="/apps">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>URL</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <For each="applications ?? []" as="application">
-            <TableRow>
-              <TableCell>{application.name}</TableCell>
-              <TableCell>{application.url}</TableCell>
-              <TableCell class="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  href="/applications/{application.name}"
-                >
-                  Open
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  action="/apps/{application.name}"
-                  method="DELETE"
-                  onSuccess="refetch(applications);"
-                >
-                  Delete
-                </Button>
-              </TableCell>
-            </TableRow>
-          </For>
-        </TableBody>
-      </Table>
+      <p>Applications list.</p>
+      <Button action="/apps" method="POST" payload='{"name":"{createApp.appKey}","image":"{createApp.image}"}' variant="default">
+        Create application
+      </Button>
     </Query>
   </State>
 </Page>

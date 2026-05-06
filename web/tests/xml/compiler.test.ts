@@ -36,20 +36,10 @@ describe('xmlToAST', () => {
 
     /* Nested XML tags should remain nested AST children in source order. */
     it('parses nested child elements', () => {
-        expect(xmlToAST('<Page><Stack><Button>Save</Button></Stack></Page>')).toEqual([
+        expect(xmlToAST('<Page><Button>Save</Button></Page>')).toEqual([
             {
                 name: 'Page',
-                children: [
-                    {
-                        name: 'Stack',
-                        children: [
-                            {
-                                name: 'Button',
-                                children: [{ name: 'Text', children: 'Save' }],
-                            },
-                        ],
-                    },
-                ],
+                children: [{ name: 'Button', children: [{ name: 'Text', children: 'Save' }] }],
             },
         ]);
     });

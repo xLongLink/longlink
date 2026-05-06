@@ -1,43 +1,16 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Settings" icon="settings">
-  <Menu>
-    <MenuSection title="General" icon="settings">
-      <MenuSubSection root="true">
-        <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." />
-      </MenuSubSection>
-    </MenuSection>
-    <MenuSection title="Identity" icon="user">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Access Control" icon="lock">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Applications" icon="app-window">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Infrastructure" icon="server">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Storage" icon="database">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Audit &amp; Compliance" icon="file-text">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Backups &amp; Recovery" icon="hard-drive">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Security" icon="shield">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Billing &amp; Plan" icon="credit-card">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="API &amp; Integrations" icon="zap">
-      <MenuSubSection root="true" />
-    </MenuSection>
-    <MenuSection title="Advanced / System" icon="sliders">
-      <MenuSubSection root="true" />
-    </MenuSection>
-  </Menu>
+  <p>General settings.</p>
+  <Input label="Normal Input" placeholder="Lorem ipsum dolor sit amet" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." />
+  <p>Identity.</p>
+  <p>Access Control.</p>
+  <p>Applications.</p>
+  <p>Infrastructure.</p>
+  <p>Storage.</p>
+  <p>Audit &amp; Compliance.</p>
+  <p>Backups &amp; Recovery.</p>
+  <p>Security.</p>
+  <p>Billing &amp; Plan.</p>
+  <p>API &amp; Integrations.</p>
+  <p>Advanced / System.</p>
 </Page>

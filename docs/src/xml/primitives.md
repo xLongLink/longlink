@@ -22,7 +22,6 @@ Use `$<prop>` on supported input-like props to sync UI and state.
 ```xml
 <State id="example" value="50" hint="Current progress value.">
   <Input label="Progress" value="$example.value" placeholder="$example.hint" />
-  <Slider label="Progress" min="0" max="100" step="5" value="$example.value" />
 </State>
 ```
 
@@ -46,7 +45,7 @@ Use a full expression for dynamic paths.
 Use `if` on any element to conditionally render it.
 
 ```xml
-<Card if="{order.active}" />
+<p if="{order.active}">Active</p>
 ```
 
 ## For
@@ -55,7 +54,7 @@ Use `if` on any element to conditionally render it.
 
 ```xml
 <For each="orders" as="order">
-  <Card>{order.number}</Card>
+  <p>{order.number}</p>
 </For>
 ```
 

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../base.xsd" />
-  <xsd:complexType name="BlockquoteType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:element name="blockquote" type="BlockquoteType" />
-</xsd:schema>
