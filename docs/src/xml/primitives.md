@@ -13,21 +13,13 @@ Its children render with that state in scope.
 
 ```xml
 <State id="user" username="" password="">
-  <Input value="$user.username" />
-  <Input value="$user.password" />
+  <Input value="user.username" />
+  <Input value="user.password" />
 </State>
 ```
 
 Every non-`id` attribute becomes a named field on the same state object.
 That includes `value`, so you can use `user.value`, `user.username`, and `user.password`.
-
-Use `$<prop>` on supported input-like props to sync UI and state.
-
-```xml
-<State id="example" value="50" hint="Current progress value.">
-  <Input value="$example.value" placeholder="$example.hint" />
-</State>
-```
 
 ## Page
 

@@ -7,8 +7,11 @@ export type ASTNode = {
     children?: RenderableASTNode;
 };
 
-/** Flat XML value context used for attribute evaluation. */
-export type ExecutionContext = Record<string, unknown>;
+/** XML runtime scope with lexical parent lookup. */
+export type ExecutionContext = {
+    parent?: ExecutionContext;
+    values: Record<string, unknown>;
+};
 
 /** A React component that can be registered and rendered from XML. */
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;

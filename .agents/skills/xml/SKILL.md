@@ -85,9 +85,6 @@ Any tag can include `if="condition"`, If false, the element is not rendered.
 **Expressions (`{}`)**: \
 Curly braces evaluate JavaScript-like expressions using state: `Hello, {user.name}` → `Hello, John Doe`
 
-**Two-way Binding (`$`)**: \
-Syncs component props with state by setting the prop value to a `$` path: `<Input value="$user.name" />` Updates flow both ways (UI ↔ state)
-
 **Iteration (`<For>`)**: \
 Loop over arrays: `<For each="orders" as="order"> ... </For>`
 

@@ -27,6 +27,3 @@ app.include_page("/pages")
     <!-- Content -->
 </Page>
 ```
-
-> Note: bound attributes use `$`, such as `value="$user.name"`.
-> `$value` and `$checked` compile to standard controlled React props and `onChange` handlers.

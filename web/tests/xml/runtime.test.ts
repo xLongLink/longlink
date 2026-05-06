@@ -46,19 +46,12 @@ describe('evaluate literals', () => {
 });
 
 describe('evaluate bindings', () => {
-    /* $ targets should resolve directly to the bound value. */
-    it('resolves nested $ value', () => {
+    /* Braced expressions should resolve directly to nested values. */
+    it('resolves nested value expression', () => {
         const ctx: ExecutionContext = {
             form: { value: 'draft', placeholder: 'Name' },
         };
 
-        expect(evaluate('$form.value', ctx)).toBe('draft');
-    });
-
-    /* Missing state keys should produce a clear runtime error. */
-    it('throws when target state key is missing', () => {
-        const ctx: ExecutionContext = {};
-
-        expect(() => evaluate('$missing.value', ctx)).toThrow('Unknown state "missing"');
+        expect(evaluate('{form.value}', ctx)).toBe('draft');
     });
 });

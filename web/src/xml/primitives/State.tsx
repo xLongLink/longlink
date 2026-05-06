@@ -25,7 +25,12 @@ export function State({ props, children }: XmlComponentProps) {
 
     const stateValue = useSnapshot(stateRef.current);
 
-    const childCtx = { ...ctx, [id]: stateValue };
+    const childCtx = {
+        parent: ctx,
+        values: {
+            [id]: stateValue,
+        },
+    };
 
-    return <RuntimeProvider value={{ ctx: childCtx }}>{renderXml(children)}</RuntimeProvider>;
+    return <RuntimeProvider value={childCtx}>{renderXml(children)}</RuntimeProvider>;
 }

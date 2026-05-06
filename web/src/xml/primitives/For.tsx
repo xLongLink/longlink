@@ -14,11 +14,17 @@ export function For({ props, children }: XmlComponentProps) {
     if (!Array.isArray(each)) return null;
 
     return each.map((item, index) => {
-        const childCtx = { ...ctx, [as]: item, $index: index };
+        const childCtx = {
+            parent: ctx,
+            values: {
+                [as]: item,
+                index,
+            },
+        };
 
         return (
             <Fragment key={index}>
-                <RuntimeProvider value={{ ctx: childCtx }}>{renderXml(children)}</RuntimeProvider>
+                <RuntimeProvider value={childCtx}>{renderXml(children)}</RuntimeProvider>
             </Fragment>
         );
     });

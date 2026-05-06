@@ -62,7 +62,7 @@ export function renderXml(node: RenderableASTNode): ReactNode {
 /** Renders a node after the XML error boundary is already mounted. */
 function RenderedNode({ node }: { node: RenderableASTNode }): ReactNode {
     const runtime = useReactContext(RuntimeContext);
-    const activeCtx: ExecutionContext = runtime ?? {};
+    const activeCtx: ExecutionContext = runtime ?? { values: {} };
 
     // Handle null/undefined early to avoid unnecessary registry lookups and error boundaries.
     if (!node) return <></>;

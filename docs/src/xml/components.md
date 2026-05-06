@@ -34,5 +34,5 @@ Use `<Icon>` for a standalone icon.
 Use `<Input>` for plain single-line text entry.
 
 ```xml
-<Input value="$user.name" placeholder="Issue title" />
+<Input value="user.name" placeholder="Issue title" />
 ```

@@ -1,6 +1,6 @@
 import { Button as UIButton } from '@/ui/button';
 import type { XmlComponentProps } from '@/xml';
-import { evaluate, renderXml, useContext } from '@/xml';
+import { evaluate, renderXml, useContext, useUrl } from '@/xml';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -68,21 +68,18 @@ async function readResponseMessage(response: Response): Promise<string> {
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
 export function Button({ props: rawProps, children }: XmlComponentProps) {
-    const { baseUrl, ctx } = useContext();
-    if (!baseUrl) {
-        throw new Error('Button requires a baseUrl');
-    }
+    const { ctx } = useContext();
 
     const action = String(evaluate(rawProps.action ?? '', ctx) ?? '');
     const method = String(evaluate(rawProps.method ?? '', ctx) ?? 'POST');
     const payload = evaluate(rawProps.payload ?? '', ctx);
     const invalidate = evaluate(rawProps.invalidate ?? '', ctx) as ButtonProps['invalidate'];
+    const requestUrl = useUrl(action);
     const queryClient = useQueryClient();
     const mutation = useMutation({
         mutationFn: async () => {
             if (!action) return 'Request completed';
 
-            const requestUrl = action.startsWith('http') ? action : `${baseUrl}${action}`;
             const response = await fetch(requestUrl, buildRequestInit(method.toUpperCase(), payload));
             const responseMessage = await readResponseMessage(response);
 

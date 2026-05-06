@@ -20,10 +20,11 @@ LongLink evaluates JavaScript-like expressions inside `{...}`.
 
 Rules:
 
-- Expressions can read from `state`, `queries`, and `scope`.
+- Expressions can read from runtime state and lexical scope.
 - Expressions may appear in attribute values and text nodes.
 - Strings wrapped in `{...}` can resolve to non-string values.
 - Nested objects and arrays in payloads are resolved recursively.
+- Scope is lexical: child elements read from their nearest parent scope first, then walk outward.
 
 ## Global XML Patterns
 
@@ -32,23 +33,6 @@ Rules:
 Any element may use `if="condition"`.
 
 If the expression is false, the element is not rendered.
-
-### Two-way Binding
-
-Any supported input-like component may bind a prop by setting its value to a `$` state path.
-
-For common controlled props like `value`, `checked`, and `active`, LongLink
-passes the current prop value and wires a normal `onChange` handler back to
-state. Other bound props use a matching `on<Prop>Change` callback when the
-component supports it.
-
-Use `$` binding for all two-way state wiring.
-
-Example:
-
-```xml
-<Input value="$user.name" />
-```
 
 ### Reusable State Slots
 
@@ -139,6 +123,12 @@ Attributes:
 - `each` required. Expression resolving to an array.
 - `as` required. Scope variable name for the current item.
 
+Behavior:
+
+- Each item is rendered in a child scope.
+- The current item is exposed as the `as` name.
+- The item index is exposed as `index`.
+
 ## Layout
 
 ## Form Controls
@@ -166,18 +156,18 @@ Single-line text input.
 
 Attributes:
 
-- `value` optional. Use `$` for two-way binding.
+- `value` optional. Expression for the displayed text.
 - `placeholder` optional.
 
 Behavior:
 
 - Renders a plain text input.
-- When `value` uses `$<state path>`, typing updates that state path.
+- The field is read-only and reflects the evaluated `value`.
 
 Example:
 
 ```xml
-<Input value="$user.name" placeholder="Your name" />
+<Input value="user.name" placeholder="Your name" />
 ```
 
 ## Tables

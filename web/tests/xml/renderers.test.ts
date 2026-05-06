@@ -52,15 +52,15 @@ describe('renderXml', () => {
         expect(renderToStaticMarkup(createElement('div', null, render([node], ctx, '')))).toContain('Count: 2');
     });
 
-    /* $-bound props should provide the bound value and a matching prop change callback. */
-    it('resolves $ props into values and change handlers', () => {
+    /* Input props should flow through as plain evaluated values. */
+    it('resolves input props from expressions', () => {
         const ctx: ExecutionContext = { form: { value: 'Ada', placeholder: 'Enter name' } };
 
         const node: ASTNode = {
             name: 'Input',
             params: {
-                value: '$form.value',
-                placeholder: '$form.placeholder',
+                value: 'form.value',
+                placeholder: 'form.placeholder',
             },
         };
 

@@ -21,14 +21,14 @@ describe('xmlToAST', () => {
         ]);
     });
 
-    /* $ bindings are runtime signals and must compile as literal attribute values. */
-    it('preserves $ binding params', () => {
-        expect(xmlToAST('<Input value="$user.name" placeholder="$user.placeholder" />')).toEqual([
+    /* Input values should remain plain expressions in compiled XML. */
+    it('preserves input expression params', () => {
+        expect(xmlToAST('<Input value="user.name" placeholder="user.placeholder" />')).toEqual([
             {
                 name: 'Input',
                 params: {
-                    placeholder: '$user.placeholder',
-                    value: '$user.name',
+                    placeholder: 'user.placeholder',
+                    value: 'user.name',
                 },
             },
         ]);

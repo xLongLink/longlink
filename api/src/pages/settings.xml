@@ -4,10 +4,10 @@
     <p>General settings.</p>
     <Input placeholder="Lorem ipsum dolor sit amet" />
     <p>Compute settings.</p>
-    <Input value="$connectCompute.server" placeholder="https://registry.example.com" />
-    <Input value="$connectCompute.username" placeholder="registry-user" />
-    <Input value="$connectCompute.password" placeholder="••••••••" />
-    <Input value="$connectCompute.email" placeholder="user@example.com" />
+    <Input value="connectCompute.server" placeholder="https://registry.example.com" />
+    <Input value="connectCompute.username" placeholder="registry-user" />
+    <Input value="connectCompute.password" placeholder="••••••••" />
+    <Input value="connectCompute.email" placeholder="user@example.com" />
     <Button variant="default" action="/compute/registry" method="POST" payload='{
       "name": "compute",
       "server": "{connectCompute.server}",
