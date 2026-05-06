@@ -2,6 +2,7 @@
 
 This document is the human-readable source of truth for LongLink XML pages.
 Use it to author valid XML without reading the SDK code.
+If this document and implementation differ, update this document first and then align the code.
 
 ## Core Rules
 
@@ -11,6 +12,7 @@ Use it to author valid XML without reading the SDK code.
 - Curly-brace expressions are evaluated against runtime state and scope.
 - Unknown attributes may pass XSD validation, but only documented attributes are supported by LongLink.
 - A valid page must use only the elements and attributes described here.
+- Do not rely on SDK code, samples, or docs outside this file for XML authoring rules.
 
 ## Expression Model
 
@@ -54,11 +56,6 @@ Example:
 
 - `<State id="user" value="John Doe" />` creates local state.
 - `<Query id="user" path="/endpoint" />` fetches data into the slot.
-
-### Reset and Refetch
-
-- `reset` on `<State>` restores the initial value.
-- `reset` on `<Query>` triggers a refetch.
 
 ### Iteration
 
@@ -144,17 +141,6 @@ Attributes:
 
 ## Layout
 
-## Content Components
-
-### `<Icon>`
-
-Loads a Lucide icon by name.
-
-Attributes:
-
-- `name` required. Lucide icon name.
-- `fallback` optional. Default `box`.
-
 ## Form Controls
 
 ### `<Button>`
@@ -166,27 +152,33 @@ Attributes:
 - `action` optional. API path to call.
 - `method` optional. HTTP method. Default `POST`.
 - `payload` optional. Request body value or JSON string.
-- `invalidate` optional. Comma-separated query keys or an array.
+- `invalidate` optional. Comma-separated query keys.
   Behavior:
 
 - Performs the configured action request.
+- `invalidate` refetches the named query slots after the request succeeds.
 
 Example: `<Button action="/issues" method="POST" payload='{"title":"{issue.title}"}' invalidate="issues">Save</Button>`
 
 ### `<Input>`
 
-Input field with optional label and description.
+Single-line text input.
 
 Attributes:
 
-- `name` optional.
-- `kind` optional. One of `text`, `number`, `password`, `textarea`, `date`, `datetime`.
-- `label` optional.
-- `value` optional.
+- `value` optional. Use `$` for two-way binding.
 - `placeholder` optional.
-- `description` optional.
-- `required` optional.
-- `disabled` optional.
+
+Behavior:
+
+- Renders a plain text input.
+- When `value` uses `$<state path>`, typing updates that state path.
+
+Example:
+
+```xml
+<Input value="$user.name" placeholder="Your name" />
+```
 
 ## Tables
 

@@ -2,6 +2,7 @@
 
 Primitives are the base building blocks of XML pages.
 They handle local state, data loading, conditional rendering, and iteration.
+Use `sdk/longlink/.static/llm/SCHEMA.md` as the authoring reference for valid XML.
 
 Use them to build dynamic pages without writing frontend code.
 
@@ -12,8 +13,8 @@ Its children render with that state in scope.
 
 ```xml
 <State id="user" username="" password="">
-  <Input label="Username" value="$user.username" />
-  <Input label="Password" value="$user.password" />
+  <Input value="$user.username" />
+  <Input value="$user.password" />
 </State>
 ```
 
@@ -24,11 +25,9 @@ Use `$<prop>` on supported input-like props to sync UI and state.
 
 ```xml
 <State id="example" value="50" hint="Current progress value.">
-  <Input label="Progress" value="$example.value" placeholder="$example.hint" />
+  <Input value="$example.value" placeholder="$example.hint" />
 </State>
 ```
-
-`reset` on a `State` element restores its initial value.
 
 ## Page
 
@@ -51,8 +50,6 @@ Use a full expression for dynamic paths.
 ```xml
 <Query id="orders" path="/apps/orders" />
 ```
-
-`reset` on a `Query` element refetches the data.
 
 ## If
 

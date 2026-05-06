@@ -26,7 +26,7 @@ describe('For', () => {
             children: [{ name: 'Text', children: 'ignored' }],
         };
 
-        const output = renderToStaticMarkup(createElement(Fragment, null, render([node], ctx)));
+        const output = renderToStaticMarkup(createElement(Fragment, null, render([node], ctx, '')));
 
         expect(output).toBe('');
     });

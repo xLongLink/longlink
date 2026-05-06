@@ -6,12 +6,12 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('Input', () => {
-    /* The compiler should preserve input attributes. */
+    /* The compiler should preserve the minimal input attributes. */
     it('compiles input xml into an input ast node', () => {
-        expect(xmlToAST('<Input label="Name" value="$user.name" placeholder="$user.placeholder" />')).toEqual([
+        expect(xmlToAST('<Input value="$user.name" placeholder="$user.placeholder" />')).toEqual([
             {
                 name: 'Input',
-                params: { label: 'Name', value: '$user.name', placeholder: '$user.placeholder' },
+                params: { value: '$user.name', placeholder: '$user.placeholder' },
             },
         ]);
     });
@@ -19,8 +19,8 @@ describe('Input', () => {
     /* The runtime should render input XML into the expected markup. */
     it('renders raw xml input content end to end', () => {
         const ctx: ExecutionContext = { user: { name: 'Ada' } };
-        const ast = xmlToAST('<Input label="Name" value="$user.name" />');
-        const renderedTree = render(ast, ctx);
+        const ast = xmlToAST('<Input value="$user.name" />');
+        const renderedTree = render(ast, ctx, '');
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Ada');
     });

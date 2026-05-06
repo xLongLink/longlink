@@ -47,5 +47,5 @@ export default function SdkLongLink() {
 
     const ast = fromXml(data);
     const ctx = {};
-    return <div className="space-y-6">{render(ast, ctx, { baseUrl: getApiBaseUrl() })}</div>;
+    return <div className="space-y-6">{render(ast, ctx, getApiBaseUrl())}</div>;
 }

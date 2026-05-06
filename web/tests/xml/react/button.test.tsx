@@ -93,7 +93,7 @@ describe('Button', () => {
     it('skips a button when if resolves false', () => {
         const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Button if="{false}">Hidden</Button>');
-        const renderedTree = render(ast, ctx);
+        const renderedTree = render(ast, ctx, '');
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toBe('<div></div>');
     });

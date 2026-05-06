@@ -20,7 +20,7 @@ describe('P', () => {
     it('renders raw xml paragraph content end to end', () => {
         const ctx: ExecutionContext = {};
         const ast = xmlToAST('<p>Paragraph text</p>');
-        const renderedTree = render(ast, ctx);
+        const renderedTree = render(ast, ctx, '');
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">Paragraph text</p>'

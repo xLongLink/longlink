@@ -1,6 +1,5 @@
 import { P } from '@/xml/html/P';
 import { Button } from '@/xml/react/Button';
-import { Icon } from '@/xml/react/Icon';
 import { Input } from '@/xml/react/Input';
 
 import { For } from '@/xml/primitives/For';
@@ -17,7 +16,6 @@ export const registry = {
     Text,
     For,
     Button,
-    Icon,
     Input,
     p: P,
 };

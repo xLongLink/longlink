@@ -31,8 +31,8 @@ Use `<Icon>` for a standalone icon.
 
 ## Input
 
-Use `<Input>` for single-line text entry.
+Use `<Input>` for plain single-line text entry.
 
 ```xml
-<Input name="title" label="Title" placeholder="Issue title" />
+<Input value="$user.name" placeholder="Issue title" />
 ```

@@ -23,7 +23,7 @@ describe('State', () => {
     it('renders raw xml state content end to end', () => {
         const ctx: ExecutionContext = {};
         const ast = xmlToAST('<State id="filter" value="day"><p>{filter}</p></State>');
-        const renderedTree = render(ast, ctx);
+        const renderedTree = render(ast, ctx, '');
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">day</p>'

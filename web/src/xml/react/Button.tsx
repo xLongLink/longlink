@@ -1,5 +1,5 @@
 import { Button as UIButton } from '@/ui/button';
-import type { RenderableASTNode, XmlComponentProps } from '@/xml';
+import type { XmlComponentProps } from '@/xml';
 import { evaluate, renderXml, useContext } from '@/xml';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -8,13 +8,11 @@ type ButtonProps = {
     action?: string;
     method?: string;
     payload?: unknown;
-    invalidate?: string | string[];
-    children?: RenderableASTNode;
+    invalidate?: string;
 };
 
-/** Normalizes invalidate targets into a list of query keys. */
+/** Normalizes the invalidate target into a list of query keys. */
 function normalizeInvalidate(value: ButtonProps['invalidate']): string[] {
-    if (Array.isArray(value)) return value;
     if (typeof value !== 'string') return [];
 
     return value
@@ -71,11 +69,14 @@ async function readResponseMessage(response: Response): Promise<string> {
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
 export function Button({ props: rawProps, children }: XmlComponentProps) {
     const { baseUrl, ctx } = useContext();
+    if (!baseUrl) {
+        throw new Error('Button requires a baseUrl');
+    }
+
     const action = String(evaluate(rawProps.action ?? '', ctx) ?? '');
     const method = String(evaluate(rawProps.method ?? '', ctx) ?? 'POST');
     const payload = evaluate(rawProps.payload ?? '', ctx);
     const invalidate = evaluate(rawProps.invalidate ?? '', ctx) as ButtonProps['invalidate'];
-    const content = renderXml(children);
     const queryClient = useQueryClient();
     const mutation = useMutation({
         mutationFn: async () => {
@@ -105,7 +106,7 @@ export function Button({ props: rawProps, children }: XmlComponentProps) {
 
     return (
         <UIButton onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-            {children}
+            {renderXml(children)}
         </UIButton>
     );
 }

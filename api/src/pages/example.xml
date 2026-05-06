@@ -7,9 +7,9 @@
       <Button action="/example" method="POST" payload='{"title":"{exampleForm.fullName}"}' invalidate="example" variant="default" size="sm">
         Refetch example
       </Button>
-      <Input kind="text" label="Full name" value="$exampleForm.fullName" placeholder="Ada Lovelace" />
-      <Input kind="email" label="Email" value="$exampleForm.email" placeholder="ada@example.com" />
-      <Input kind="date" label="Due date" value="2026-05-05" />
+      <Input value="$exampleForm.fullName" placeholder="Ada Lovelace" />
+      <Input value="$exampleForm.email" placeholder="ada@example.com" />
+      <Input value="2026-05-05" />
       <Button action="/example" method="POST" payload='{"fullName":"{exampleForm.fullName}","email":"{exampleForm.email}","notes":"{exampleForm.notes}"}' variant="outline" size="sm">
         Save draft
       </Button>

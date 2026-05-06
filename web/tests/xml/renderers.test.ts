@@ -16,7 +16,7 @@ describe('renderXml', () => {
 
         expect(
             renderToStaticMarkup(
-                createElement('div', null, render([{ name: 'Text', children: '{`Count ${count}`}' }], ctx))
+                createElement('div', null, render([{ name: 'Text', children: '{`Count ${count}`}' }], ctx, ''))
             )
         ).toBe('<div>Count 7</div>');
     });
@@ -26,14 +26,14 @@ describe('renderXml', () => {
         const ctx: ExecutionContext = {};
         const node: ASTNode = { name: 'Button', params: { if: '{false}' } };
 
-        expect(renderToStaticMarkup(createElement('div', null, render([node], ctx)))).toBe('<div></div>');
+        expect(renderToStaticMarkup(createElement('div', null, render([node], ctx, '')))).toBe('<div></div>');
     });
 
     /* Unknown tags should fail loudly so missing registry entries are obvious. */
     it('throws on unknown component', () => {
         const ctx: ExecutionContext = {};
 
-        expect(() => renderToStaticMarkup(createElement('div', null, render([{ name: 'Unknown' }], ctx)))).toThrow(
+        expect(() => renderToStaticMarkup(createElement('div', null, render([{ name: 'Unknown' }], ctx, '')))).toThrow(
             'Unknown component "Unknown"'
         );
     });
@@ -49,7 +49,7 @@ describe('renderXml', () => {
             },
         };
 
-        expect(renderToStaticMarkup(createElement('div', null, render([node], ctx)))).toContain('Count: 2');
+        expect(renderToStaticMarkup(createElement('div', null, render([node], ctx, '')))).toContain('Count: 2');
     });
 
     /* $-bound props should provide the bound value and a matching prop change callback. */
@@ -64,7 +64,7 @@ describe('renderXml', () => {
             },
         };
 
-        const output = renderToStaticMarkup(createElement('div', null, render([node], ctx)));
+        const output = renderToStaticMarkup(createElement('div', null, render([node], ctx, '')));
 
         expect(output).toContain('value="Ada"');
         expect(output).toContain('placeholder="Enter name"');

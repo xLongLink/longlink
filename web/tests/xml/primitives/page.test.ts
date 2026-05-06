@@ -26,7 +26,7 @@ describe('Page', () => {
     it('renders raw xml page content end to end', () => {
         const ctx: ExecutionContext = {};
         const ast = xmlToAST('<Page title="Dashboard" />');
-        const renderedTree = render(ast, ctx);
+        const renderedTree = render(ast, ctx, '');
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<div class="space-y-6"></div>');
     });

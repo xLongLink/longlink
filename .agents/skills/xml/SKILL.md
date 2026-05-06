@@ -85,11 +85,6 @@ Any tag can include `if="condition"`, If false, the element is not rendered.
 **Expressions (`{}`)**: \
 Curly braces evaluate JavaScript-like expressions using state: `Hello, {user.name}` → `Hello, John Doe`
 
-**State Reset / Refetch (`reset`)**:
-
-- On `<State>` → resets to initial value
-- On `<Query>` → triggers refetch
-
 **Two-way Binding (`$`)**: \
 Syncs component props with state by setting the prop value to a `$` path: `<Input value="$user.name" />` Updates flow both ways (UI ↔ state)
 
@@ -97,7 +92,7 @@ Syncs component props with state by setting the prop value to a `$` path: `<Inpu
 Loop over arrays: `<For each="orders" as="order"> ... </For>`
 
 **Actions (`<Button>` and similar)**: \
-Trigger API calls, Sends request on click, `invalidate` causes related queries to refetch afterward
+Trigger API calls, sends request on click, `invalidate` causes related queries to refetch afterward
 
 ```xml
 <Button action="/issues" method="POST"  payload='{"title":"{issue.title}"}' invalidate="issues">
