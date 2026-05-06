@@ -40,7 +40,7 @@ const parseDatetimeValue = (rawValue: string): { date?: Date; time: string } => 
 
 /** Renders an XML input control from evaluated XML props. */
 export function Input({ props: rawProps }: XmlComponentProps) {
-    const { ctx, setters } = useContext();
+    const { ctx, states } = useContext();
     const name = String(evaluate(rawProps.name ?? '', ctx) ?? '');
     const kind = String(evaluate(rawProps.kind ?? '', ctx) ?? 'text') as InputProps['kind'];
     const label = String(evaluate(rawProps.label ?? '', ctx) ?? '');
@@ -52,12 +52,17 @@ export function Input({ props: rawProps }: XmlComponentProps) {
     /* Resolve value binding for two-way data sync */
     const valueProp = rawProps.value ?? '';
     let value: unknown = evaluate(valueProp, ctx);
-    let onChange: ((value: string) => void) | undefined;
+    let bindingState: Record<string, unknown> | undefined;
+    let bindingPath: string[] = [];
     if (valueProp.startsWith('$')) {
         try {
-            const binding = resolveBinding(valueProp.slice(1), ctx, setters ?? {});
-            value = binding.value;
-            onChange = binding.setValue as (value: string) => void;
+            const normalized = valueProp.slice(1).trim();
+            value = resolveBinding(normalized, ctx, states ?? {});
+
+            const dotIndex = normalized.indexOf('.');
+            const stateKey = dotIndex === -1 ? normalized : normalized.slice(0, dotIndex);
+            bindingState = states?.[stateKey] as Record<string, unknown> | undefined;
+            bindingPath = dotIndex === -1 ? [] : normalized.slice(dotIndex + 1).split('.');
         } catch {
             // Use evaluated value if binding fails
         }
@@ -74,6 +79,26 @@ export function Input({ props: rawProps }: XmlComponentProps) {
     const [selectedDateTime, setSelectedDateTime] = useState<{ date?: Date; time: string } | undefined>(() =>
         kind === 'datetime' ? parseDatetimeValue(defaultFieldValue) : undefined
     );
+
+    /* Write directly into the Valtio proxy for bound fields. */
+    const updateBinding = (nextValue: string) => {
+        if (!bindingState) return;
+
+        if (bindingPath.length === 0) {
+            bindingState.value = nextValue;
+            return;
+        }
+
+        let current: Record<string, unknown> = bindingState;
+        for (let index = 0; index < bindingPath.length - 1; index += 1) {
+            const key = bindingPath[index]!;
+            const next = current[key];
+            current[key] = next && typeof next === 'object' ? (next as Record<string, unknown>) : {};
+            current = current[key] as Record<string, unknown>;
+        }
+
+        current[bindingPath[bindingPath.length - 1]!] = nextValue;
+    };
     useEffect(() => {
         if (kind === 'date') {
             setSelectedDate(parseDateValue(defaultFieldValue));
@@ -97,7 +122,7 @@ export function Input({ props: rawProps }: XmlComponentProps) {
                     onChange={(event) => {
                         const nextValue = event.currentTarget.value;
                         setTextValue(nextValue);
-                        onChange?.(nextValue);
+                        updateBinding(nextValue);
                     }}
                 />
             );
@@ -121,7 +146,7 @@ export function Input({ props: rawProps }: XmlComponentProps) {
                             onSelect={(nextDate) => {
                                 const nextValue = nextDate ? format(nextDate, DATE_FORMAT) : '';
                                 setSelectedDate(nextDate);
-                                onChange?.(nextValue);
+                                updateBinding(nextValue);
                             }}
                         />
                     </PopoverContent>
@@ -160,7 +185,7 @@ export function Input({ props: rawProps }: XmlComponentProps) {
                                         : '';
 
                                     setSelectedDateTime(nextValue);
-                                    onChange?.(formattedValue);
+                                    updateBinding(formattedValue);
                                 }}
                             />
                         </PopoverContent>
@@ -175,11 +200,11 @@ export function Input({ props: rawProps }: XmlComponentProps) {
                         onChange={(event) => {
                             const nextTime = event.currentTarget.value;
                             setSelectedDateTime({ ...datetimeValue, time: nextTime });
-                            onChange?.(nextTime);
+                            updateBinding(nextTime);
                         }}
                         onBlur={(event) => {
                             if (!datetimeValue.date) return;
-                            onChange?.(
+                            updateBinding(
                                 format(
                                     new Date(`${format(datetimeValue.date, DATE_FORMAT)}T${event.currentTarget.value}`),
                                     DATETIME_FORMAT
@@ -201,7 +226,7 @@ export function Input({ props: rawProps }: XmlComponentProps) {
                 onChange={(event) => {
                     const nextValue = event.currentTarget.value;
                     setTextValue(nextValue);
-                    onChange?.(nextValue);
+                    updateBinding(nextValue);
                 }}
             />
         );

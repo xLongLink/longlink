@@ -96,11 +96,12 @@ Declares local reactive state.
 Attributes:
 
 - `id` required. State key.
-- Any other attributes become the initial state object.
+- `value` and any other attributes become named fields on the state object.
 
 Behavior:
 
 - The state is exposed as `state[id]`.
+- Each attribute is readable as `state[id].<attributeName>`.
 - The value is a `[currentValue, setter]` tuple internally.
 
 ### `<Query>`

@@ -17,6 +17,9 @@ Its children render with that state in scope.
 </State>
 ```
 
+Every non-`id` attribute becomes a named field on the same state object.
+That includes `value`, so you can use `user.value`, `user.username`, and `user.password`.
+
 Use `$<prop>` on supported input-like props to sync UI and state.
 
 ```xml

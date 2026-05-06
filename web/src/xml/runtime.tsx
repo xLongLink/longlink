@@ -1,9 +1,9 @@
 import { createContext, useContext as useReactContext, type ReactNode } from 'react';
-import type { ExecutionContext, RuntimeState, SetterContext } from './types';
+import type { ExecutionContext, RuntimeState, StateContext } from './types';
 
 const ValueContext = createContext<ExecutionContext>({});
 export const BaseUrlContext = createContext<string>('');
-const SetterContextValue = createContext<SetterContext>({});
+const StateContextValue = createContext<StateContext>({});
 export const RuntimeContext = createContext<RuntimeState | null>(null);
 
 /** Evaluates an XML attribute value against the current flat XML context. */
@@ -66,65 +66,45 @@ export function resolveCondition(condition: string | undefined, ctx: ExecutionCo
     return Boolean(evaluate(condition, ctx));
 }
 
-/** Resolves a $ target into its current value and setter. */
-export function resolveBinding(
-    target: string,
-    ctx: ExecutionContext,
-    setters: SetterContext = {}
-): { value: unknown; setValue: (value: unknown) => void } {
+/** Resolves a $ target into its current value. */
+export function resolveBinding(target: string, ctx: ExecutionContext, states: StateContext = {}): unknown {
     const normalized = target.trim();
     const dotIndex = normalized.indexOf('.');
     const stateKey = dotIndex === -1 ? normalized : normalized.slice(0, dotIndex);
-    const propPath = dotIndex === -1 ? [] : normalized.slice(dotIndex + 1).split('.');
-    const setter = setters[stateKey];
 
-    if (!stateKey || !setter) {
+    if (!stateKey || states[stateKey] == null) {
         throw new Error(`Unknown state "${stateKey}"`);
     }
 
-    return {
-        value: readPath(ctx, normalized),
-        setValue: (value: unknown) => {
-            if (propPath.length === 0) {
-                setter(value);
-                return;
-            }
-
-            setter(setPath(ctx[stateKey], propPath, value));
-        },
-    };
+    return readPath(ctx, normalized);
 }
 
-/** Provides XML value and setter contexts to a rendered subtree. */
+/** Provides XML value and state contexts to a rendered subtree. */
 export function RuntimeProvider({ value, children }: { value: RuntimeState; children: ReactNode }) {
-    const parentBaseUrl = useReactContext(BaseUrlContext);
-    const parentSetters = useReactContext(SetterContextValue);
-    const baseUrl = value.baseUrl ?? parentBaseUrl;
-    const setters = value.setters ?? parentSetters;
+    const parentStates = useReactContext(StateContextValue);
+    const states = value.states ?? parentStates;
 
     return (
         <ValueContext.Provider value={value.ctx}>
-            <BaseUrlContext.Provider value={baseUrl}>
-                <SetterContextValue.Provider value={setters}>
-                    <RuntimeContext.Provider value={{ ...value, baseUrl, setters }}>{children}</RuntimeContext.Provider>
-                </SetterContextValue.Provider>
-            </BaseUrlContext.Provider>
+            <StateContextValue.Provider value={states}>
+                <RuntimeContext.Provider value={{ ...value, states }}>{children}</RuntimeContext.Provider>
+            </StateContextValue.Provider>
         </ValueContext.Provider>
     );
 }
 
 /** Returns the active XML runtime state. */
-export function useContext(): RuntimeState & { ctx: ExecutionContext; baseUrl: string; setters: SetterContext } {
+export function useContext(): RuntimeState & { ctx: ExecutionContext; baseUrl: string; states: StateContext } {
     const runtime = useReactContext(RuntimeContext);
     const ctx = useReactContext(ValueContext);
     const baseUrl = useReactContext(BaseUrlContext);
-    const setters = useReactContext(SetterContextValue);
+    const states = useReactContext(StateContextValue);
 
     if (!runtime) {
         throw new Error('useContext must be used inside a rendered XML component');
     }
 
-    return { ...runtime, ctx, baseUrl, setters };
+    return { ...runtime, ctx, baseUrl, states };
 }
 
 /** Runs an expression with XML values exposed as local variables. */
@@ -165,17 +145,4 @@ function readPath(values: ExecutionContext, path: string): unknown {
 
         return (current as Record<string, unknown>)[segment];
     }, values);
-}
-
-/** Returns a copied object with a dotted-path value replaced. */
-function setPath(value: unknown, path: string[], nextValue: unknown): unknown {
-    if (path.length === 0) return nextValue;
-
-    const [head, ...tail] = path;
-    const source = value && typeof value === 'object' ? value : {};
-
-    return {
-        ...(source as Record<string, unknown>),
-        [head!]: setPath((source as Record<string, unknown>)[head!], tail, nextValue),
-    };
 }
