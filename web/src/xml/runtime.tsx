@@ -14,7 +14,7 @@ export function evaluate(expr: string, values: ExecutionContext): unknown {
         return readPath(values, input.slice(1).trim());
     }
 
-    if (input.startsWith('[') || input.startsWith('{"')) {
+    if (input.startsWith('{') || input.startsWith('[')) {
         try {
             return JSON.parse(input, (_key, value: unknown) => {
                 if (typeof value !== 'string') return value;

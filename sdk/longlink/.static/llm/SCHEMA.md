@@ -144,7 +144,7 @@ Attributes:
 
 ### `<Button>`
 
-Actionable button or link.
+Actionable button.
 
 Attributes:
 
@@ -152,31 +152,7 @@ Attributes:
 - `method` optional. HTTP method. Default `POST`.
 - `payload` optional. Request body value or JSON string.
 - `invalidate` optional. Comma-separated query keys or an array.
-- `disabled` optional.
-- `variant` optional.
-- `size` optional.
-
-Button variants:
-
-- `default`
-- `outline`
-- `secondary`
-- `ghost`
-- `destructive`
-- `link`
-
-Button sizes:
-
-- `default`
-- `xs`
-- `sm`
-- `lg`
-- `icon`
-- `icon-xs`
-- `icon-sm`
-- `icon-lg`
-
-Behavior:
+  Behavior:
 
 - Performs the configured action request.
 
