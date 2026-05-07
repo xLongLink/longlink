@@ -34,7 +34,6 @@ export default defineConfig(({ mode }) => {
                 '/api': {
                     target: 'http://localhost:8000',
                     changeOrigin: true,
-                    rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
                 },
                 '/sdk-api': {
                     target: 'http://localhost:1707',
