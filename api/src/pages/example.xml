@@ -26,13 +26,13 @@
   <Input value="$notes" placeholder="Notes" />
   <Input value="$quantity" type="number" placeholder="1" />
 
-  <Button action="/example/profile" json='{{ fullName: fullName, email: email, notes: notes }}' invalidate="profile" variant="default" size="sm">
+  <Button action="/example/profile" json='{{ fullName: fullName, email: email, notes: notes }}' invalidate='["profile"]' variant="default" size="sm">
     Save profile
   </Button>
   <Button invalidate='["fullName", "email", "notes", "quantity"]' variant="ghost" size="sm">
     Reset
   </Button>
-  <Button action="/example/metrics" json='{{ selectedUserId: selectedUserId, quantity: quantity }}' invalidate="[metrics, users]" variant="outline" size="sm">
+  <Button action="/example/metrics" json='{{ selectedUserId: selectedUserId, quantity: quantity }}' invalidate='["metrics", "users"]' variant="outline" size="sm">
     Refresh metrics
   </Button>
 
@@ -40,7 +40,7 @@
     <p if="showActive">
       User {user.id}: {user.name} ({user.role})
     </p>
-    <Button action="/example/users/select" json='{{ userId: user.id }}' invalidate="selectedUserId" variant="secondary" size="sm">
+    <Button action="/example/users/select" json='{{ userId: user.id }}' invalidate='["selectedUserId"]' variant="secondary" size="sm">
       Select user
     </Button>
   </For>

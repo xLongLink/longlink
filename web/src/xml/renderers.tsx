@@ -22,6 +22,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         useEffect(() => {
             let active = true;
 
+            /* Attach the renderer-owned invalidation hook before setup runs. */
             ctx.invalidate = async (ids) => {
                 const list = Array.isArray(ids) ? ids : [ids];
 
@@ -47,7 +48,6 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
 
             return () => {
                 active = false;
-                ctx.invalidate = undefined;
             };
         }, [ast, ctx, baseUrl]);
 

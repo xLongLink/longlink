@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 /** Props accepted by the XML Button component. */
 export interface ButtonProps {
     action?: string;
-    invalidate?: string | string[];
+    invalidate?: string[];
     children?: ASTNode | ASTNode[] | null;
     json?: ExpressionResolver | null;
     method?: string;
@@ -17,7 +17,13 @@ export interface ButtonProps {
 }
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
-export const Button: ComponentType<ButtonProps> = ({ action, invalidate, json, method = 'POST', children }) => {
+export const Button: ComponentType<ButtonProps> = ({
+    action = '',
+    invalidate = [],
+    json,
+    method = 'POST',
+    children,
+}) => {
     const { ctx } = useContext();
     const actionUrl = String(action ?? '');
     const requestUrl = useUrl(actionUrl);
@@ -25,16 +31,10 @@ export const Button: ComponentType<ButtonProps> = ({ action, invalidate, json, m
     /** Sends the configured request and shows a minimal toast result. */
     async function handleClick() {
         /* Recreate any invalidated runtime sources after the action succeeds. */
-        const ids = Array.isArray(invalidate)
-            ? invalidate
-            : String(invalidate ?? '')
-                  .replace(/^\[|\]$/g, '')
-                  .split(',')
-                  .map((id) => id.trim().replace(/^['"]|['"]$/g, ''))
-                  .filter(Boolean);
+        const ids = invalidate;
 
         if (!actionUrl) {
-            await ctx.invalidate?.(ids);
+            await ctx.invalidate(ids);
 
             return;
         }
@@ -53,7 +53,7 @@ export const Button: ComponentType<ButtonProps> = ({ action, invalidate, json, m
             return;
         }
 
-        await ctx.invalidate?.(ids);
+        await ctx.invalidate(ids);
 
         toast.success(`Request completed with status ${response.status}`);
     }
