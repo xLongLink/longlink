@@ -124,8 +124,8 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
         return current;
     }
 
-    /* Interpolate single-brace expressions inside plain text values. */
-    if (!isText(input) && input.includes('{')) {
+    /* Interpolate single-brace expressions inside mixed text values. */
+    if (input.includes('{') && !isExpression(input) && !isReference(input)) {
         return expr.replace(/\{([^{}]+)\}/g, (_match, expression: string) => String(run(expression, values) ?? ''));
     }
 

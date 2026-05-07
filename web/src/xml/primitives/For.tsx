@@ -1,5 +1,5 @@
 import type { XMLComponent } from '@xml';
-import { RenderXML, RuntimeProvider, useContext } from '@xml';
+import { RenderXML, RuntimeProvider, useContext, useUrl } from '@xml';
 import type { ASTNode } from '@xml/types';
 import { Fragment } from 'react';
 
@@ -13,6 +13,7 @@ export interface ForProps {
 /** Iterates over an array and renders children in a scoped context. */
 export const For: XMLComponent<ForProps> = ({ each, as, children }) => {
     const { ctx } = useContext();
+    const baseUrl = useUrl('');
 
     return each.map((item, index) => {
         const childCtx = {
@@ -26,7 +27,7 @@ export const For: XMLComponent<ForProps> = ({ each, as, children }) => {
         return (
             <Fragment key={index}>
                 <RuntimeProvider value={childCtx}>
-                    <RenderXML ast={Array.isArray(children) ? children : [children]} ctx={childCtx} />
+                    <RenderXML ast={Array.isArray(children) ? children : [children]} ctx={childCtx} baseUrl={baseUrl} />
                 </RuntimeProvider>
             </Fragment>
         );

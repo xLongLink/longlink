@@ -68,6 +68,11 @@ function toNodes(input: unknown, tagName?: string): ASTNode[] {
         const params: Record<string, string> = {};
         const children: ASTNode[] = [];
 
+        /* Direct string bodies like <p>Profile title: {profile.title}</p> become text children. */
+        if (typeof input === 'string') {
+            children.push(...toNodes(input));
+        }
+
         if (input && typeof input === 'object' && !Array.isArray(input)) {
             const attributes = (input as Record<string, unknown>)[':@'];
 
