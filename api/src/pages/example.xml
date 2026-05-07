@@ -29,6 +29,9 @@
   <Button action="/example/profile" json='{{ fullName: fullName, email: email, notes: notes }}' invalidate="profile" variant="default" size="sm">
     Save profile
   </Button>
+  <Button invalidate='["fullName", "email", "notes", "quantity"]' variant="ghost" size="sm">
+    Reset
+  </Button>
   <Button action="/example/metrics" json='{{ selectedUserId: selectedUserId, quantity: quantity }}' invalidate="[metrics, users]" variant="outline" size="sm">
     Refresh metrics
   </Button>

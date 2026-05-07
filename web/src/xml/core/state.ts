@@ -5,8 +5,6 @@ import { proxy } from 'valtio';
 export function state(ctx: ExecutionContext, id: string, value: string | number | unknown[]): void {
     const values = ctx.values ?? (ctx.values = {});
 
-    if (values[id] != null) return;
-
     /* Keep primitive values as-is and proxy lists for reactive updates. */
     const initialValue = Array.isArray(value) ? value : { value };
 

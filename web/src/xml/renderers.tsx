@@ -22,7 +22,20 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         useEffect(() => {
             let active = true;
 
-            ctx.rerender = () => setVersion((current) => current + 1);
+            ctx.invalidate = async (ids) => {
+                const list = Array.isArray(ids) ? ids : [ids];
+
+                for (const id of list) {
+                    const setup = ctx.setups.find((entry) => entry.id === id)?.setup;
+
+                    if (!setup) continue;
+
+                    delete ctx.values[id];
+                    await setup();
+                }
+
+                setVersion((current) => current + 1);
+            };
 
             (async () => {
                 await setupContext(ast, ctx, baseUrl);
@@ -34,7 +47,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
 
             return () => {
                 active = false;
-                ctx.rerender = undefined;
+                ctx.invalidate = undefined;
             };
         }, [ast, ctx, baseUrl]);
 

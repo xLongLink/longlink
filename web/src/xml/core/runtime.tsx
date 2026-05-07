@@ -71,15 +71,3 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
     return ctx;
 }
-
-/** Recreates a state or query source from the stored setup metadata. */
-export async function invalidateContext(ctx: ExecutionContext, id: string): Promise<void> {
-    const setup = ctx.setups.find((entry) => entry.id === id)?.setup;
-
-    if (!setup) return;
-
-    delete ctx.values[id];
-    await setup();
-
-    ctx.rerender?.();
-}
