@@ -25,15 +25,15 @@ export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): Reac
         }
     }
 
-    // Special case for the `For` element, we muse be sure that the each is a an array
     if (node.name === 'For') {
         const For = registry['For'];
         if (!For) throw new Error(`Missing "For" component in registry`);
         if (!node.params?.as) throw new Error(`Missing "as" parameter on "For" component`);
         if (!node.params?.each) throw new Error(`Missing "each" parameter on "For" component`);
 
-        const each = evaluate(node.params?.each, runtime);
-        if (!Array.isArray(each)) throw new Error(`"each" parameter on "For" component must be an array`);
+        const each = evaluate(node.params.each, runtime);
+        if (!Array.isArray(each))
+            throw new Error(`"each" parameter on "For" component must be an array, got ${typeof each}`);
 
         return <For each={each} as={node.params.as} children={node.children} />;
     }
