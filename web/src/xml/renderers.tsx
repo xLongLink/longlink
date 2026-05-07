@@ -1,4 +1,4 @@
-import { Fragment, useContext as useReactContext, type ReactNode } from 'react';
+import { Fragment, Suspense, useContext as useReactContext, type ReactNode } from 'react';
 import { XmlErrorBoundary } from './errors';
 import { compile, evaluate } from './expressions';
 import { Query } from './primitives/Query';
@@ -90,9 +90,11 @@ function XmlRenderer({ ast, ctx, baseUrl }: { ast: ASTNode[]; ctx: ExecutionCont
 
     return (
         <XmlErrorBoundary resetKey={ast}>
-            <BaseUrlContext.Provider value={baseUrl}>
-                <RuntimeProvider value={ctx}>{renderNode(ast)}</RuntimeProvider>
-            </BaseUrlContext.Provider>
+            <Suspense fallback={<></>}>
+                <BaseUrlContext.Provider value={baseUrl}>
+                    <RuntimeProvider value={ctx}>{renderNode(ast)}</RuntimeProvider>
+                </BaseUrlContext.Provider>
+            </Suspense>
         </XmlErrorBoundary>
     );
 }

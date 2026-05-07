@@ -8,33 +8,46 @@ export interface QueryProps {
     path: string;
 }
 
-const queryCache = new Map<string, unknown>();
+type QueryEntry = {
+    data?: unknown;
+    promise?: Promise<unknown>;
+};
+
+const queryCache = new Map<string, QueryEntry>();
 
 /** Fetches JSON data into a reusable query slot for descendants. */
 export function Query(ctx: ExecutionContext, { id, path }: QueryProps): void {
     const values = ctx.values ?? (ctx.values = {});
     const url = resolveUrl(ctx.baseUrl ?? '', path);
+    const cached = queryCache.get(url);
 
-    if (queryCache.has(url)) {
-        values[id] = queryCache.get(url);
+    if (cached?.data !== undefined) {
+        values[id] = cached.data;
         return;
     }
 
-    /* Keep a stable object in context so descendants can read the slot immediately. */
-    const slot = values[id] ?? {};
-    values[id] = slot;
+    if (cached?.promise) {
+        throw cached.promise;
+    }
 
-    void fetch(url)
+    /* Start the request during render and suspend until it resolves. */
+    const promise = fetch(url)
         .then((response) => {
             if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
 
             return response.json();
         })
         .then((data) => {
-            queryCache.set(url, data);
+            queryCache.set(url, { data });
             values[id] = data;
+            return data;
         })
         .catch((error: unknown) => {
+            queryCache.delete(url);
             toast.error(error instanceof Error ? error.message : 'Failed to load query data');
+            throw error;
         });
+
+    queryCache.set(url, { promise });
+    throw promise;
 }
