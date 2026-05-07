@@ -89,25 +89,21 @@ longlink/
 ComponentScope --> LoopItemScope --> GlobalScope
 ```
 
-## Runtime
+## Runtime (web/src/xml/core/runtime.tsx)
 
-## Expressions
+Supported:
 
-Use [acorn](https://github.com/acornjs/acorn) to parse and validate all expressions:
 
-- Single-expression only. `product.active`, `quantity > 0`, `cart.length`, `product.price * quantity` are allowed
-- Control flow statements, function definitions, and side-effectful operations (`if (...) {}`, `for (...) {}`, `while (...) {}`, `function () {}`, `async () => {}`, `await ...`, `return ...`). are not allowed
-- Side-effect free: `product.name` and `total + tax` are allowed, while `cart.push(item)`, `quantity++`, and `state.value = 1` are not.
-- Mutations must be performed through declarative syntax in `mutate=""` or button request attributes, or through explicit state updates and action handlers.
-- Loop scope is isolated, so state declared inside `<For>` is local to the current iteration.
-- IDs are scoped automatically inside loops, so repeated components do not require manual unique IDs.
-- Use `$id.name` when you need explicit reference form for scoped values.
-- Expressions cannot define functions, so constructs like `items.map(x => x.name)` are not allowed.
-- Expressions also cannot access globals like `window`, `document`, `localStorage`, or `fetch`.
-- They may only reference local state, loop variables, query results, and computed values.
-- The mutate syntax is declarative, allowing for operations like `cart += item`, `selected = product.id`, or `filters.status = "active"`.
-- Network requests must use `<Query />`, button request attributes, or the `submit="..."` attribute.
-- Payload expressions must evaluate to serializable JSON.
-- Use `{{...}}` for object-literal payloads that need JSON shape.
-- Expressions should remain small, with a recommended maximum of one logical operation, one arithmetic chain, or one object literal.
-- The runtime may statically analyze all expressions, so dynamic evaluation features are forbidden.
+## Expressions (web/src/xml/core/expressions.ts)
+
+Supported:
+
+- `"test"` a simple string literal. `isText()`
+- `[]` an array literal. `isArray()`
+- `{}` an expression literal. `isExpression()`
+- `$value` a reference to a variable in scope. `isReference()`
+- `evaluate(...)` evaluate an expression with the current runtime state. 
+- `compile(...)` compile an expression string into a reusable function that accepts runtime state as arguments.
+
+TODO:
+- Install [acorn](https://github.com/acornjs/acorn) to prevent use of unsupported syntax and enforce expression constraints.

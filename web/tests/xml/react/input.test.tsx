@@ -18,7 +18,7 @@ describe('Input', () => {
 
     /* The runtime should render input XML into the expected markup. */
     it('renders raw xml input content end to end', () => {
-        const ctx: ExecutionContext = { values: {}, user: { name: 'Ada' } };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, user: { name: 'Ada' } };
         const ast = parseXML('<Input value="user.name" />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 

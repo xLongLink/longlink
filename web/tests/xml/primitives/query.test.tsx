@@ -21,7 +21,7 @@ describe('Query', () => {
 
     /* Query should reject missing ids so invalid XML fails fast. */
     it('throws when id is missing', () => {
-        const runtime: ExecutionContext = { values: {} };
+        const runtime: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const client = new QueryClient();
         const ast = parseXML('<Query path="/api/user">x</Query>');
 

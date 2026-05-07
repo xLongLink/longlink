@@ -18,13 +18,26 @@ If this document and implementation differ, update this document first and then 
 
 LongLink evaluates JavaScript-like expressions inside `{...}`.
 
-Rules:
+### Implemented
 
 - Expressions can read from runtime state and lexical scope.
 - Expressions may appear in attribute values and text nodes.
 - Strings wrapped in `{...}` can resolve to non-string values.
 - Nested objects and arrays in `json` values are resolved recursively.
 - Scope is lexical: child elements read from their nearest parent scope first, then walk outward.
+
+### TODO
+
+- Single-expression-only validation still needs to be enforced everywhere.
+- Control flow statements, function definitions, and side-effectful operations still need to be rejected.
+- Side-effect-free validation for calls, updates, and mutation operators still needs implementation.
+- Declarative mutation syntax in `mutate=""` still needs schema support.
+- Automatic loop ID scoping and `$id.name` references still need implementation.
+- Function expressions, arrow functions, and global object access still need to be blocked.
+- Restricting expressions to state, loop variables, query results, and computed values still needs enforcement.
+- Network request expressions through `<Query />`, button attributes, and `submit="..."` still need finalization.
+- Serializable payload validation and `{{...}}` object-literal payload handling still need implementation.
+- Expression size limits and static analysis support still need implementation.
 
 ## Global XML Patterns
 

@@ -15,8 +15,10 @@ export function For({ each, as, children }: ForProps) {
     const baseUrl = useUrl('');
 
     return each.map((item, index) => {
-        const childCtx = {
+        const childCtx: typeof ctx = {
             parent: ctx,
+            setups: ctx.setups,
+            invalidate: ctx.invalidate,
             values: {
                 [as]: item,
                 index,

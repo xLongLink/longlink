@@ -5,7 +5,11 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 /** Renders XML AST through the providers required by runtime components. */
-export function renderXmlToMarkup(ast: ASTNode[], ctx: ExecutionContext = { values: {} }, baseUrl = ''): string {
+export function renderXmlToMarkup(
+    ast: ASTNode[],
+    ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} },
+    baseUrl = ''
+): string {
     const queryClient = new QueryClient();
 
     return renderToStaticMarkup(

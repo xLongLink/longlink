@@ -3,6 +3,5 @@ export { renderNode } from '@xml/core/node';
 export { parseXML as fromXml } from '@xml/core/parser';
 export { RuntimeContext, RuntimeProvider, useContext } from '@xml/core/runtime';
 export { BaseUrlContext, resolveUrl, useUrl } from '@xml/core/url';
-export { registry } from '@xml/registry';
 export type { ASTNode, ExecutionContext } from '@xml/types';
 export { RenderXML } from './renderers.tsx';

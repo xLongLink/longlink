@@ -24,13 +24,12 @@ export function useContext(): { ctx: ExecutionContext } {
 
 /** Resolves top-level State and Query nodes before rendering the page tree. */
 export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): Promise<ExecutionContext> {
-    const setups = ctx.setups ?? (ctx.setups = []);
+    const setups = ctx.setups;
 
     async function walk(nodes: ASTNode[]): Promise<void> {
         for (const node of nodes) {
-            if (node.name === 'For') {
-                continue;
-            }
+            // If we reach a "For" component, we stop the walk since the content of "For" has a different context.
+            if (node.name === 'For') continue;
 
             // Seed state and queries before rendering the component tree.
             if (node.name === 'State') {
@@ -43,8 +42,9 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 const id = node.params.id.trim();
                 const value = node.params.value;
 
-                setups.push({ id, setup: () => state(ctx, id, value) });
-                await setups[setups.length - 1].setup();
+                // We store the setup function so that it case of invaludation it can be re-run to reset the state to its initial value.
+                setups[id] = () => state(ctx, id, value);
+                await setups[id]();
             }
 
             if (node.name === 'Query') {
@@ -57,8 +57,9 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 const id = node.params.id.trim();
                 const path = node.params.path.trim();
 
-                setups.push({ id, setup: () => query(ctx, id, path, baseUrl) });
-                await setups[setups.length - 1].setup();
+                // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
+                setups[id] = () => query(ctx, id, path, baseUrl);
+                await setups[id]();
             }
 
             if (Array.isArray(node.children)) {

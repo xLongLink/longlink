@@ -46,7 +46,7 @@ export default function SdkLongLink() {
     }
 
     const ast = fromXml(data);
-    const ctx = { values: {} };
+    const ctx = { setups: {}, invalidate: async () => {}, values: {} };
     return (
         <div className="space-y-6">
             <RenderXML ast={ast} ctx={ctx} baseUrl={getApiBaseUrl()} />

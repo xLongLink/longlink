@@ -27,7 +27,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
                 const list = Array.isArray(ids) ? ids : [ids];
 
                 for (const id of list) {
-                    const setup = ctx.setups.find((entry) => entry.id === id)?.setup;
+                    const setup = ctx.setups[id];
 
                     if (!setup) continue;
 

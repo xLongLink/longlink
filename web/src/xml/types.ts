@@ -10,7 +10,7 @@ export type ASTNode = {
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     parent?: ExecutionContext;
-    setups: Array<{ id: string; setup: () => Promise<void> | void }>;
+    setups: Record<string, () => Promise<void> | void>;
     invalidate: (ids: string | string[]) => Promise<void>;
     values: Record<string, unknown>;
     [key: string]: unknown;

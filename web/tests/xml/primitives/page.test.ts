@@ -24,7 +24,7 @@ describe('Page', () => {
      * container markup.
      */
     it('renders raw xml page content end to end', () => {
-        const ctx: ExecutionContext = { values: {} };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<Page title="Dashboard" />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 

@@ -17,13 +17,6 @@ export function isReference(expr: string): boolean {
     return /^\$[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(input);
 }
 
-/** Returns true when the input is wrapped in square brackets. */
-export function isArray(expr: string): boolean {
-    const input = expr.trim();
-
-    return input.startsWith('[') && input.endsWith(']');
-}
-
 /** Returns true when the input is a simple text string. */
 export function isText(expr: string): boolean {
     const input = expr.trim();
@@ -102,19 +95,6 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
 
             throw error;
         }
-    }
-
-    /* Treat `[ ... ]` as a list literal and evaluate each item in order. */
-    if (isArray(input)) {
-        const inner = input.slice(1, -1).trim();
-
-        if (inner === '') return [];
-
-        return inner
-            .split(',')
-            .map((item) => item.trim())
-            .filter(Boolean)
-            .map((item) => evaluate(item, ctx));
     }
 
     /* Resolve `$` references directly through the runtime scope. */

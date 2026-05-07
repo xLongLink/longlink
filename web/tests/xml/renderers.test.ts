@@ -7,11 +7,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('renderNode', () => {
     it('returns null for missing node input', () => {
-        expect(renderNode(null, { values: {} })).toBeNull();
+        expect(renderNode(null, { setups: {}, invalidate: async () => {}, values: {} })).toBeNull();
     });
 
     it('resolves text nodes from full expressions', () => {
-        const ctx: ExecutionContext = { values: {}, count: 7 };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, count: 7 };
         expect(
             renderToStaticMarkup(
                 createElement(
@@ -24,7 +24,7 @@ describe('renderNode', () => {
     });
 
     it('skips nodes when if condition is false', () => {
-        const ctx: ExecutionContext = { values: {} };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const node: ASTNode = { name: 'Button', params: { if: '{false}' } };
         expect(renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast: [node], ctx })))).toBe(
             '<div></div>'
@@ -32,7 +32,7 @@ describe('renderNode', () => {
     });
 
     it('throws on unknown component', () => {
-        const ctx: ExecutionContext = { values: {} };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         expect(() =>
             renderToStaticMarkup(
                 createElement('div', null, createElement(RenderXML, { ast: [{ name: 'Unknown' }], ctx }))
@@ -41,7 +41,7 @@ describe('renderNode', () => {
     });
 
     it('resolves props from expressions', () => {
-        const ctx: ExecutionContext = { values: {}, count: 2 };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, count: 2 };
         const node: ASTNode = { name: 'Input', params: { label: '{`Count: ${count}`}' } };
         expect(
             renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast: [node], ctx })))
@@ -49,7 +49,12 @@ describe('renderNode', () => {
     });
 
     it('resolves input props from expressions', () => {
-        const ctx: ExecutionContext = { values: {}, form: { value: 'Ada', placeholder: 'Enter name' } };
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+            form: { value: 'Ada', placeholder: 'Enter name' },
+        };
         const node: ASTNode = { name: 'Input', params: { value: 'form.value', placeholder: 'form.placeholder' } };
         const output = renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast: [node], ctx })));
         expect(output).toContain('value="Ada"');

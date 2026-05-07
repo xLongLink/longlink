@@ -18,7 +18,7 @@ describe('P', () => {
 
     /* The runtime should render paragraph XML into the expected HTML output. */
     it('renders raw xml paragraph content end to end', () => {
-        const ctx: ExecutionContext = { values: {} };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<p>Paragraph text</p>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 

@@ -90,7 +90,7 @@ describe('Button', () => {
 
     /* The runtime should honor conditional rendering on button nodes. */
     it('skips a button when if resolves false', () => {
-        const ctx: ExecutionContext = { values: {} };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<Button if="{false}">Hidden</Button>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 

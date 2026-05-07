@@ -20,6 +20,7 @@ export function Button({ action = '', invalidate = [], json, method = 'POST', ch
     const { ctx } = useContext();
     const actionUrl = String(action ?? '');
     const requestUrl = useUrl(actionUrl);
+    const invalidateRuntime = ctx.invalidate ?? (async () => {});
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleClick() {
@@ -27,7 +28,7 @@ export function Button({ action = '', invalidate = [], json, method = 'POST', ch
         const ids = invalidate;
 
         if (!actionUrl) {
-            await ctx.invalidate(ids);
+            await invalidateRuntime(ids);
 
             return;
         }
@@ -46,7 +47,7 @@ export function Button({ action = '', invalidate = [], json, method = 'POST', ch
             return;
         }
 
-        await ctx.invalidate(ids);
+        await invalidateRuntime(ids);
 
         toast.success(`Request completed with status ${response.status}`);
     }

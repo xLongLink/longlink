@@ -19,7 +19,7 @@ describe('For', () => {
 
     /* Non-array results should render nothing instead of crashing. */
     it('returns null when each resolves to a non-array value', () => {
-        const ctx: ExecutionContext = { values: {}, items: 'not-an-array' };
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, items: 'not-an-array' };
         const node: ASTNode = {
             name: 'For',
             params: { each: 'items', as: 'item' },
@@ -40,7 +40,10 @@ describe('For', () => {
                 createElement(
                     'div',
                     null,
-                    createElement(RenderXML, { ast: [{ name: 'For', params: { as: 'item' } }], ctx: { values: {} } })
+                    createElement(RenderXML, {
+                        ast: [{ name: 'For', params: { as: 'item' } }],
+                        ctx: { setups: {}, invalidate: async () => {}, values: {} },
+                    })
                 )
             )
         ).toThrow('For requires an "each" parameter');
@@ -50,7 +53,10 @@ describe('For', () => {
                 createElement(
                     'div',
                     null,
-                    createElement(RenderXML, { ast: [{ name: 'For', params: { each: '[]' } }], ctx: { values: {} } })
+                    createElement(RenderXML, {
+                        ast: [{ name: 'For', params: { each: '[]' } }],
+                        ctx: { setups: {}, invalidate: async () => {}, values: {} },
+                    })
                 )
             )
         ).toThrow('For requires an "as" parameter');
