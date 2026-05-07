@@ -24,45 +24,49 @@ export function useContext(): { ctx: ExecutionContext } {
 
 /** Resolves top-level State and Query nodes before rendering the page tree. */
 export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): Promise<ExecutionContext> {
-    for (const node of ast) {
-        if (node.name === 'For') continue;
-
-        // Make sure that the state are initialized and exist in the context before evaluating the expressions.
-        if (node.name === 'State') {
-            if (!node.params?.id) throw new Error('State requires a string id');
-            if (!node.params?.value) throw new Error('State requires a value');
-
-            const id = evaluate(node.params.id, ctx);
-            const value = evaluate(node.params.value, ctx);
-
-            if (typeof id !== 'string') throw new Error('State requires a string id');
-            if (value == null) throw new Error('State requires a value');
-            if (typeof value !== 'string' && typeof value !== 'number' && !Array.isArray(value)) {
-                throw new Error('State value must be a string, number, or array');
+    async function walk(nodes: ASTNode[]): Promise<void> {
+        for (const node of nodes) {
+            if (node.name === 'For') {
+                continue;
             }
 
-            state(ctx, id, value);
-            continue;
-        }
+            // Seed state and queries before rendering the component tree.
+            if (node.name === 'State') {
+                if (!node.params?.id) throw new Error('State requires a string id');
+                if (!node.params?.value) throw new Error('State requires a value');
 
-        // Make sure that the queries are executed and exist in the context before evaluating the expressions.
-        if (node.name === 'Query') {
-            if (!node.params?.id) throw new Error('Query requires a string id');
-            if (!node.params?.path) throw new Error('Query requires a string path');
+                const id = evaluate(node.params.id, ctx);
+                const value = evaluate(node.params.value, ctx);
 
-            const id = evaluate(node.params.id, ctx);
-            const path = evaluate(node.params.path, ctx);
+                if (typeof id !== 'string') throw new Error('State requires a string id');
+                if (value == null) throw new Error('State requires a value');
+                if (typeof value !== 'string' && typeof value !== 'number' && !Array.isArray(value)) {
+                    throw new Error('State value must be a string, number, or array');
+                }
 
-            if (typeof id !== 'string') throw new Error('Query requires a string id');
-            if (typeof path !== 'string') throw new Error('Query requires a string path');
+                state(ctx, id, value);
+            }
 
-            try {
+            if (node.name === 'Query') {
+                if (!node.params?.id) throw new Error('Query requires a string id');
+                if (!node.params?.path) throw new Error('Query requires a string path');
+
+                const id = evaluate(node.params.id, ctx);
+                const path = evaluate(node.params.path, ctx);
+
+                if (typeof id !== 'string') throw new Error('Query requires a string id');
+                if (typeof path !== 'string') throw new Error('Query requires a string path');
+
                 await query(ctx, id, path, baseUrl);
-            } catch (error) {
-                throw error;
+            }
+
+            if (Array.isArray(node.children)) {
+                await walk(node.children);
             }
         }
     }
+
+    await walk(ast);
 
     return ctx;
 }
