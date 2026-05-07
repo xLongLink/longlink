@@ -1,5 +1,5 @@
 import { parseXML } from '@xml/core/parser';
-import { render } from '@xml/renderers.tsx';
+import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -21,7 +21,7 @@ describe('State', () => {
     it('renders raw xml state content end to end', () => {
         const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<State id="filter" value="day"><p>{filter}</p></State>');
-        const renderedTree = render(ast, ctx, '');
+        const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">day</p>'
@@ -33,7 +33,7 @@ describe('State', () => {
         const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<State id="filter" value="day">{filter}</State>');
 
-        const output = renderToStaticMarkup(createElement(Fragment, null, render(ast, ctx, '')));
+        const output = renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })));
 
         expect(output).toBe('day');
     });
@@ -43,8 +43,8 @@ describe('State', () => {
         const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<State value="x">x</State>');
 
-        expect(() => renderToStaticMarkup(createElement(Fragment, null, render(ast, ctx, '')))).toThrow(
-            'State requires a string id'
-        );
+        expect(() =>
+            renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))
+        ).toThrow('State requires a string id');
     });
 });

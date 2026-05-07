@@ -48,10 +48,3 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
 
     return <RenderTree />;
 }
-
-/**
- * Renders a parsed XML tree with loading state while context initializes.
- */
-export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl = ''): ReactNode {
-    return <RenderXML ast={ast} ctx={ctx} baseUrl={baseUrl} />;
-}

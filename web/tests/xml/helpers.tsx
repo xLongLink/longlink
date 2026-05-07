@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@xml/renderers.tsx';
+import { RenderXML } from '@xml/renderers.tsx';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -12,7 +12,7 @@ export function renderXmlToMarkup(ast: ASTNode[], ctx: ExecutionContext = { valu
         createElement(
             QueryClientProvider,
             { client: queryClient },
-            createElement('div', null, render(ast, ctx, baseUrl))
+            createElement('div', null, createElement(RenderXML, { ast, ctx, baseUrl }))
         )
     );
 }

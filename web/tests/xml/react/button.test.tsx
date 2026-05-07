@@ -1,5 +1,5 @@
 import { parseXML } from '@xml/core/parser';
-import { render } from '@xml/renderers.tsx';
+import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -92,7 +92,7 @@ describe('Button', () => {
     it('skips a button when if resolves false', () => {
         const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<Button if="{false}">Hidden</Button>');
-        const renderedTree = render(ast, ctx, '');
+        const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toBe('<div></div>');
     });

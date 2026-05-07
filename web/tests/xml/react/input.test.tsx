@@ -1,5 +1,5 @@
 import { parseXML } from '@xml/core/parser';
-import { render } from '@xml/renderers.tsx';
+import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -20,7 +20,7 @@ describe('Input', () => {
     it('renders raw xml input content end to end', () => {
         const ctx: ExecutionContext = { values: {}, user: { name: 'Ada' } };
         const ast = parseXML('<Input value="user.name" />');
-        const renderedTree = render(ast, ctx, '');
+        const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Ada');
     });

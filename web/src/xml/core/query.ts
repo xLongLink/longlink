@@ -2,7 +2,6 @@ import { resolveUrl } from '@xml/core/url';
 import type { ExecutionContext } from '@xml/types';
 import { toast } from 'sonner';
 
-
 /** Fetches JSON data into a reusable query slot for descendants. */
 export async function query(ctx: ExecutionContext, id: string, path: string, baseUrl = ''): Promise<void> {
     const values = ctx.values ?? (ctx.values = {});

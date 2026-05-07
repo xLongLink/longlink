@@ -1,5 +1,5 @@
 import { parseXML } from '@xml/core/parser';
-import { render } from '@xml/renderers.tsx';
+import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -20,7 +20,7 @@ describe('P', () => {
     it('renders raw xml paragraph content end to end', () => {
         const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<p>Paragraph text</p>');
-        const renderedTree = render(ast, ctx, '');
+        const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">Paragraph text</p>'

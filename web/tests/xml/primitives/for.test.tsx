@@ -1,5 +1,5 @@
 import { parseXML } from '@xml/core/parser';
-import { render } from '@xml/renderers.tsx';
+import { RenderXML } from '@xml/renderers.tsx';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -26,7 +26,9 @@ describe('For', () => {
             children: [{ name: 'Text', children: 'ignored' }],
         };
 
-        const output = renderToStaticMarkup(createElement(Fragment, null, render([node], ctx, '')));
+        const output = renderToStaticMarkup(
+            createElement(Fragment, null, createElement(RenderXML, { ast: [node], ctx }))
+        );
 
         expect(output).toBe('');
     });
@@ -35,13 +37,21 @@ describe('For', () => {
     it('throws when each or as is missing', () => {
         expect(() =>
             renderToStaticMarkup(
-                createElement('div', null, render([{ name: 'For', params: { as: 'item' } }], { values: {} }))
+                createElement(
+                    'div',
+                    null,
+                    createElement(RenderXML, { ast: [{ name: 'For', params: { as: 'item' } }], ctx: { values: {} } })
+                )
             )
         ).toThrow('For requires an "each" parameter');
 
         expect(() =>
             renderToStaticMarkup(
-                createElement('div', null, render([{ name: 'For', params: { each: '[]' } }], { values: {} }))
+                createElement(
+                    'div',
+                    null,
+                    createElement(RenderXML, { ast: [{ name: 'For', params: { each: '[]' } }], ctx: { values: {} } })
+                )
             )
         ).toThrow('For requires an "as" parameter');
     });

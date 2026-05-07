@@ -36,7 +36,11 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
             if (typeof id !== 'string') throw new Error('State requires a string id');
             if (resolved.value == null) throw new Error('State requires a value');
-            if (typeof resolved.value !== 'string' && typeof resolved.value !== 'number' && !Array.isArray(resolved.value)) {
+            if (
+                typeof resolved.value !== 'string' &&
+                typeof resolved.value !== 'number' &&
+                !Array.isArray(resolved.value)
+            ) {
                 throw new Error('State value must be a string, number, or array');
             }
 

@@ -12,4 +12,4 @@ export type {
     XMLComponent,
     XmlRegistryComponent,
 } from '@xml/types';
-export { RenderXML, render } from './renderers.tsx';
+export { RenderXML } from './renderers.tsx';
