@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { parseXML } from '@xml/core/parser';
-import { RuntimeProvider } from '@xml/core/runtime';
+import { RuntimeProvider } from '@xml/core/context';
 import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';

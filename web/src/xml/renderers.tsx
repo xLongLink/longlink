@@ -1,6 +1,6 @@
 import { XmlErrorBoundary } from '@xml/core/errors';
 import { renderNode } from '@xml/core/node';
-import { RuntimeProvider, setupContext } from '@xml/core/runtime';
+import { RuntimeProvider, setupContext } from '@xml/core/context';
 import { BaseUrlContext } from '@xml/core/url';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { useEffect, useState, type ReactNode } from 'react';
