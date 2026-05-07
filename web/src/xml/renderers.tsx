@@ -68,11 +68,8 @@ export function renderNode(node: RenderableASTNode): ReactNode {
     return renderNodeWithContext(node, ctx);
 }
 
-/**
- * Renders a top-level ASTNode array into a React node.
- * Wraps each root node in a Fragment with a stable index key.
- */
-export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl = ''): ReactNode {
+/** Renders a parsed XML tree inside the active XML runtime contexts. */
+function XmlRenderer({ ast, ctx, baseUrl }: { ast: ASTNode[]; ctx: ExecutionContext; baseUrl: string }): ReactNode {
     return (
         <XmlErrorBoundary resetKey={ast}>
             <BaseUrlContext.Provider value={baseUrl}>
@@ -80,6 +77,14 @@ export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl = ''): Rea
             </BaseUrlContext.Provider>
         </XmlErrorBoundary>
     );
+}
+
+/**
+ * Renders a top-level ASTNode array into a React node.
+ * Wraps each root node in a Fragment with a stable index key.
+ */
+export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl = ''): ReactNode {
+    return <XmlRenderer ast={ast} ctx={ctx} baseUrl={baseUrl} />;
 }
 
 /** Backwards-compatible alias for callers that still import renderXml. */

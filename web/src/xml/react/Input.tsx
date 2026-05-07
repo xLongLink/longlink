@@ -5,9 +5,6 @@ import type { XMLComponent } from '@/xml';
 export interface InputProps {
     placeholder?: unknown;
     value?: unknown;
-    bind?: string;
-    min?: string | number;
-    max?: string | number;
     type?: string;
 }
 

@@ -19,11 +19,11 @@ app = LongLink(env=env)
 app.include_page("/pages")
 ```
 
-`Page` is the root element of every UI definition. It wraps the full document and sets page metadata such as the name, title, and icon.
+`Page` is the root element of every UI definition. It wraps the full document and sets page metadata such as the name and icon.
 
 ```xml
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
-<Page name="Tab Name" title="Tab Title" icon="settings">
+<Page name="Tab Name" icon="settings">
     <!-- Content -->
 </Page>
 ```

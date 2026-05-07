@@ -24,10 +24,9 @@ Use a string, number, or list value depending on the state shape.
 ## Page
 
 `Page` defines the root page shell.
-`title` overrides the browser title; otherwise LongLink falls back to `name`.
 
 ```xml
-<Page name="Dashboard" title="Overview">
+<Page name="Dashboard" icon="layout-grid">
   <p>Dashboard</p>
 </Page>
 ```
@@ -36,8 +35,6 @@ Use a string, number, or list value depending on the state shape.
 
 `Query` fetches JSON from a path and stores the result in `queries[id]`.
 Its children render with the fetched data in scope.
-
-Use a full expression for dynamic paths.
 
 ```xml
 <Query id="orders" path="/apps/orders" />

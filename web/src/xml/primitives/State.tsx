@@ -7,7 +7,7 @@ import { useSnapshot } from 'valtio/react';
 /** Props accepted by the XML State component. */
 export interface StateProps {
     id: string;
-    value: string | number | readonly unknown[];
+    value?: unknown;
 }
 
 /** Creates a local reactive state slot for descendant XML nodes. */

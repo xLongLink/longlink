@@ -43,7 +43,8 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
 
     if (input === '') return '';
 
-    if (input.startsWith('{') || input.startsWith('[')) {
+    /* Treat full JSON literals as data before attempting expression evaluation. */
+    if ((input.startsWith('{') && input.endsWith('}')) || (input.startsWith('[') && input.endsWith(']'))) {
         try {
             return JSON.parse(input, (_key, value: unknown) => {
                 if (typeof value !== 'string') return value;
@@ -56,9 +57,11 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
                 );
             });
         } catch {
-            // JSON attributes may contain string placeholders such as "{issue.title}".
+            // Fall through to expression handling when the value is not valid JSON.
         }
+    }
 
+    if (input.startsWith('{') || input.startsWith('[')) {
         try {
             const interpolated = input.replace(/\{([^{}]+)\}/g, (_match, expression: string) =>
                 String(run(expression, values) ?? '')

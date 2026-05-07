@@ -1,3 +1,4 @@
+import { useApiData } from '@/hooks/use-data';
 import { getPageContentFromResponse } from '@/sdk/pages';
 import { fromXml, render } from '@/xml';
 import { useMemo } from 'react';
@@ -15,20 +16,27 @@ type ViewProps = {
  * Renders XML page content from a metadata response.
  */
 export default function View({ metadata, page, isLoading, error, emptyMessage, unexpectedMessage }: ViewProps) {
+    const {
+        data: pageXml,
+        isLoading: isPageLoading,
+        error: pageError,
+    } = useApiData<string>(page ? `/pages/${page}` : null);
     const pageContent = useMemo(() => getPageContentFromResponse(metadata, page), [metadata, page]);
+    const xmlSource = pageXml ?? pageContent;
 
-    if (error) {
-        return <div>{error.message}</div>;
+    if (error || pageError) {
+        const message = error?.message ?? pageError?.message ?? 'Unknown error';
+        return <div>{message}</div>;
     }
 
-    if (isLoading) {
+    if (isLoading || isPageLoading) {
         return <div>Loading...</div>;
     }
 
-    if (!pageContent) {
+    if (!xmlSource) {
         return <div>{unexpectedMessage ?? emptyMessage}</div>;
     }
 
-    const ast = fromXml(pageContent);
+    const ast = fromXml(xmlSource);
     return <div className="space-y-6">{render(ast, {}, '/api')}</div>;
 }

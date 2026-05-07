@@ -60,14 +60,13 @@ Defines the page root.
 Attributes:
 
 - `name` required. Page name.
-- `title` required. Explicit document title.
 - `icon` optional. Icon name for page metadata.
 
 Children:
 
 - Any documented XML element.
 
-Example: `<Page name="Dashboard" title="Dashboard" icon="layout-grid"><p>Dashboard</p></Page>`
+Example: `<Page name="Dashboard" icon="layout-grid"><p>Dashboard</p></Page>`
 
 ## Primitives
 
@@ -139,9 +138,11 @@ Actionable button.
 Attributes:
 
 - `action` optional. API path to call.
+- `method` optional. HTTP method. Defaults to `POST`.
 - `json` optional. Request body value or JSON string.
 - `invalidate` optional. Comma-separated query keys.
-  Behavior:
+
+Behavior:
 
 - Performs the configured action request.
 - `invalidate` refetches the named query slots after the request succeeds.
@@ -156,6 +157,7 @@ Attributes:
 
 - `value` optional. Expression for the displayed text.
 - `placeholder` optional.
+- `type` optional. Input type.
 
 Behavior:
 

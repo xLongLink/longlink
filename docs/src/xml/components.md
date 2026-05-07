@@ -32,6 +32,7 @@ Use `<Icon>` for a standalone icon.
 ## Input
 
 Use `<Input>` for plain single-line text entry.
+The runtime currently renders it as read-only text input.
 
 ```xml
 <Input value="user.name" placeholder="Issue title" />
