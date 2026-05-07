@@ -2,7 +2,7 @@ import { parseXML } from '@/xml/parser';
 import { State } from '@/xml/primitives/State';
 import { render } from '@/xml/renderers';
 import { RuntimeProvider } from '@/xml/runtime';
-import type { ExecutionContext, RuntimeState } from '@/xml/types';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -33,7 +33,7 @@ describe('State', () => {
     /* State should register a scoped tuple and preserve its initial object shape. */
     it('exposes initial state to descendants', () => {
         const ctx: ExecutionContext = {};
-        const runtime: RuntimeState = { ctx, props: {}, children: null };
+        const runtime: ExecutionContext = { ctx, props: {}, children: null };
 
         const output = renderToStaticMarkup(
             createElement(RuntimeProvider, {
@@ -51,7 +51,7 @@ describe('State', () => {
     /* Missing ids should fail fast so XML authors get a clear runtime error. */
     it('throws when id is missing', () => {
         const ctx: ExecutionContext = {};
-        const runtime: RuntimeState = { ctx, props: {}, children: null };
+        const runtime: ExecutionContext = { ctx, props: {}, children: null };
 
         expect(() =>
             renderToStaticMarkup(

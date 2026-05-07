@@ -1,7 +1,7 @@
 import { parseXML } from '@/xml/parser';
 import { Query } from '@/xml/primitives/Query';
 import { RuntimeProvider } from '@/xml/runtime';
-import type { RuntimeState } from '@/xml/types';
+import type { ExecutionContext } from '@/xml/types';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -21,7 +21,7 @@ describe('Query', () => {
 
     /* Query should reject missing ids so invalid XML fails fast. */
     it('throws when id is missing', () => {
-        const runtime: RuntimeState = { ctx: {}, props: {}, children: null };
+        const runtime: ExecutionContext = { ctx: {}, props: {}, children: null };
         const client = new QueryClient();
 
         expect(() =>

@@ -147,7 +147,7 @@ Behavior:
 - Performs the configured action request.
 - `invalidate` refetches the named query slots after the request succeeds.
 
-Example: `<Button action="/issues" json='{"title":"{issue.title}"}'>Save</Button>`
+Example: `<Button action="/issues" json='{{ title: issue.title }}'>Save</Button>`
 
 ### `<Input>`
 

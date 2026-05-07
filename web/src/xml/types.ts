@@ -21,9 +21,6 @@ export type ExecutionContext = {
     [key: string]: unknown;
 };
 
-/** Backwards-compatible alias used by older XML helpers and tests. */
-export type RuntimeState = ExecutionContext;
-
 /** A React component that can be registered and rendered from XML. */
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
 

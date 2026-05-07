@@ -64,54 +64,14 @@ export function evaluate(expr: string, ctx: ExecutionContext, source?: XmlSource
 
     if (input === '') return '';
 
-    /* Treat full JSON literals as data before attempting expression evaluation. */
-    if ((input.startsWith('{') && input.endsWith('}')) || (input.startsWith('[') && input.endsWith(']'))) {
-        try {
-            return JSON.parse(input, (_key, value: unknown) => {
-                if (typeof value !== 'string') return value;
-
-                const expressionMatch = value.match(/^\{([^{}]+)\}$/);
-                if (expressionMatch) return run(expressionMatch[1]!, values);
-
-                return value.replace(/\{([^{}]+)\}/g, (_match, expression: string) =>
-                    String(run(expression, values) ?? '')
-                );
-            });
-        } catch (error) {
-            if (error instanceof XmlExpressionError) throw error;
-
-            // Fall through to expression handling when the value is not valid JSON.
-        }
+    /* Treat `{{ ... }}` as a declarative object or JSON-like expression. */
+    if (input.startsWith('{{') && input.endsWith('}}')) {
+        return run(input.slice(2, -2).trim(), values);
     }
 
-    if (input.startsWith('{') || input.startsWith('[')) {
-        try {
-            const interpolated = input.replace(/\{([^{}]+)\}/g, (_match, expression: string) =>
-                String(run(expression, values) ?? '')
-            );
-            return JSON.parse(interpolated);
-        } catch (error) {
-            if (error instanceof XmlExpressionError) throw error;
-
-            const location = source?.nodeName
-                ? `<${source.nodeName}>${source.attributeName ? ` attribute "${source.attributeName}"` : ''}`
-                : 'XML expression';
-            throw new XmlExpressionError(
-                `${location}: ${error instanceof Error ? error.message : 'Invalid JSON expression'}`,
-                error
-            );
-        }
-    }
-
-    if (input.startsWith('{') && input.endsWith('}')) {
-        const expression = input.slice(1, -1).trim();
-        const expressionValue = /^[A-Za-z_$][\w$]*\s*:/.test(expression) ? input : expression;
-
-        return run(expressionValue, values);
-    }
-
+    /* Interpolate single-brace expressions inside plain text values. */
     if (input.includes('{')) {
-        return expr.replace(/\{([^}]+)\}/g, (_match, expression: string) => String(run(expression, values) ?? ''));
+        return expr.replace(/\{([^{}]+)\}/g, (_match, expression: string) => String(run(expression, values) ?? ''));
     }
 
     return expr;

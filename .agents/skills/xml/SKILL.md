@@ -25,12 +25,12 @@ XML
     <Card if="product.active">
       <Text> {product.name} </Text>
       <Input bind="quantity" type="number" min="1"/>
-      <Button mutate="cart += { id: product.id, quantity: quantity}">
+      <Button mutate="cart += {{ id: product.id, quantity: quantity }}">
         Add to cart
       </Button>
     </Card>
   </For>
-  <Button path="/cart/add" method="POST" invalidate="[products, cart]" payload="{productId: product.id, quantity: quantity }">
+  <Button path="/cart/add" method="POST" invalidate="[products, cart]" payload="{{ productId: product.id, quantity: quantity }}">
     Save to server
   </Button>
   <Text> Cart items: {cart.length} </Text>

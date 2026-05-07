@@ -1,16 +1,17 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Example" icon="layout-grid">
-  <State id="exampleForm" value='{"fullName":"","email":"","notes":"","subscribed":true,"notifications":false,"progress":35,"status":"open","priority":[2,4]}' />
+  <State id="fullName" value="" />
+  <State id="email" value="" />
+  <State id="notes" value="" />
   <Query id="example" path="/example" />
   <p>Fetched title: {example.title}</p>
-  <p>Subscribed: {exampleForm.subscribed}</p>
-  <Button action="/example" json='{"title":"{exampleForm.fullName}"}' invalidate="example" variant="default" size="sm">
+  <Button action="/example" json='{"title":"{fullName}"}' invalidate="example" variant="default" size="sm">
     Refetch example
   </Button>
-  <Input value="exampleForm.fullName" placeholder="Ada Lovelace" />
-  <Input value="exampleForm.email" placeholder="ada@example.com" />
+  <Input value="fullName" placeholder="Ada Lovelace" />
+  <Input value="email" placeholder="ada@example.com" />
   <Input value="2026-05-05" />
-  <Button action="/example" json='{"fullName":"{exampleForm.fullName}","email":"{exampleForm.email}","notes":"{exampleForm.notes}"}' variant="outline" size="sm">
+  <Button action="/example" json='{"fullName":"{fullName}","email":"{email}","notes":"{notes}"}' variant="outline" size="sm">
     Save draft
   </Button>
 </Page>

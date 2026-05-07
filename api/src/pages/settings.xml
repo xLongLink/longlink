@@ -1,19 +1,22 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <Page name="Settings" icon="settings">
-  <State id="connectCompute" value='{"server":"","username":"","password":"","email":""}' />
+  <State id="server" value="this is the value" />
+  <State id="username" value="" />
+  <State id="password" value="" />
+  <State id="email" value="" />
   <p>General settings.</p>
   <Input placeholder="Lorem ipsum dolor sit amet" />
   <p>Compute settings.</p>
-  <Input value="connectCompute.server" placeholder="https://registry.example.com" />
-  <Input value="connectCompute.username" placeholder="registry-user" />
-  <Input value="connectCompute.password" placeholder="••••••••" />
-  <Input value="connectCompute.email" placeholder="user@example.com" />
+  <Input value="{server}" placeholder="https://registry.example.com" />
+  <Input value="username" placeholder="registry-user" />
+  <Input value="password" placeholder="••••••••" />
+  <Input value="email" placeholder="user@example.com" />
   <Button variant="default" action="/compute/registry" json='{
     "name": "compute",
-    "server": "{connectCompute.server}",
-    "username": "{connectCompute.username}",
-    "password": "{connectCompute.password}",
-    "email": "{connectCompute.email}"
+    "server": "{server}",
+    "username": "{username}",
+    "password": "{password}",
+    "email": "{email}"
   }'>
     Connect
   </Button>
