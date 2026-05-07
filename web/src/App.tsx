@@ -1,7 +1,7 @@
 import { RequireAuth } from '@/components/Auth';
 import { Toaster } from '@/ui/sonner';
 import type { ReactElement } from 'react';
-import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
+import { RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from './Layout';
 import Login from './pages/Login';
 import LongLink from './pages/Longlink';
@@ -32,7 +32,8 @@ const apiRoutes = [
         path: '/',
         element: withAuth(<Layout />),
         children: [
-            { index: true, element: <Navigate to="/applications" replace /> },
+            { index: true, element: <OrganizationPage page="applications" /> },
+            { path: ':org', element: <OrganizationPage page="applications" /> },
             { path: 'applications', element: <OrganizationPage page="applications" /> },
             { path: 'settings', element: <OrganizationPage page="settings" /> },
             { path: 'example', element: <OrganizationPage page="example" /> },

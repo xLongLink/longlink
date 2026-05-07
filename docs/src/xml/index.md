@@ -19,6 +19,8 @@ app = LongLink(env=env)
 app.include_page("/pages")
 ```
 
+Pages are served from nested `*.xml` files under the registered folder, so a file like `pages/dashboard/overview.xml` is available at `/pages/dashboard/overview.xml`.
+
 `Page` is the root element of every UI definition. It wraps the full document and sets page metadata such as the name and icon.
 
 ```xml

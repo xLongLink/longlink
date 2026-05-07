@@ -5,7 +5,6 @@ class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
     SESSION_KEY: str
-    ORGANIZATION_NAME: str
 
     # Control plane database URL
     DATABASE_URL: str

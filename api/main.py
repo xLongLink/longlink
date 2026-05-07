@@ -12,8 +12,8 @@ class SPAStaticFiles(StaticFiles):
     """Static file server that serves index.html for unmatched SPA routes."""
 
     async def get_response(self, path: str, scope):
-        # Let API paths fall through as real 404s instead of SPA navigation.
-        if path == "api" or path.startswith("api/"):
+        # Let organization-scoped API paths fall through as real 404s instead of SPA navigation.
+        if "api" in path.split("/"):
             return await super().get_response(path, scope)
 
         try:
@@ -51,7 +51,7 @@ app.add_middleware(
 
 # Register routers
 for router in routers:
-    app.include_router(router, prefix="/api")
+    app.include_router(router, prefix="/{organization}/api")
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():

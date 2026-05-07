@@ -6,7 +6,7 @@ from fastapi.responses import Response
 router = APIRouter()
 
 
-@router.get("/pages/{page_path:path}")
+@router.get("/pages/{page_path:path}.xml")
 async def get_page(page_path: str, request: Request) -> Response:
     """Retrieve raw XML page content for a nested page path."""
 
