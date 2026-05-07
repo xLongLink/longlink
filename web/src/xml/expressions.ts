@@ -1,6 +1,16 @@
-import type { ExecutionContext } from './types';
+import type { ExecutionContext, XmlSourceContext } from './types';
 
 export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
+
+class XmlExpressionError extends Error {
+    constructor(message: string, cause: unknown) {
+        super(message);
+        this.name = 'XmlExpressionError';
+        if (cause instanceof Error) {
+            this.stack = `${this.name}: ${this.message}\nCaused by: ${cause.stack ?? cause.message}`;
+        }
+    }
+}
 
 /** Creates a proxy that resolves identifiers through lexical parent contexts. */
 function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
@@ -32,13 +42,23 @@ function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
 }
 
 /** Evaluates an XML attribute value against the current XML runtime scope. */
-export function evaluate(expr: string, ctx: ExecutionContext): unknown {
+export function evaluate(expr: string, ctx: ExecutionContext, source?: XmlSourceContext): unknown {
     const input = expr.trim();
     const values = createScopeProxy(ctx);
 
     /** Runs an expression with XML values exposed as local variables. */
     function run(expression: string, values: Record<string, unknown>): unknown {
-        return new Function('ctx', `with (ctx) { return (${expression}); }`)(values);
+        try {
+            return new Function('ctx', `with (ctx) { return (${expression}); }`)(values);
+        } catch (error) {
+            const location = source?.nodeName
+                ? `<${source.nodeName}>${source.attributeName ? ` attribute "${source.attributeName}"` : ''}`
+                : 'XML expression';
+            throw new XmlExpressionError(
+                `${location}: ${error instanceof Error ? error.message : 'Expression evaluation failed'}`,
+                error
+            );
+        }
     }
 
     if (input === '') return '';
@@ -56,7 +76,9 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
                     String(run(expression, values) ?? '')
                 );
             });
-        } catch {
+        } catch (error) {
+            if (error instanceof XmlExpressionError) throw error;
+
             // Fall through to expression handling when the value is not valid JSON.
         }
     }
@@ -67,8 +89,16 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
                 String(run(expression, values) ?? '')
             );
             return JSON.parse(interpolated);
-        } catch {
-            // Fall through so malformed JSON can still be handled as a literal string.
+        } catch (error) {
+            if (error instanceof XmlExpressionError) throw error;
+
+            const location = source?.nodeName
+                ? `<${source.nodeName}>${source.attributeName ? ` attribute "${source.attributeName}"` : ''}`
+                : 'XML expression';
+            throw new XmlExpressionError(
+                `${location}: ${error instanceof Error ? error.message : 'Invalid JSON expression'}`,
+                error
+            );
         }
     }
 

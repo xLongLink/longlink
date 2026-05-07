@@ -47,46 +47,50 @@ Expressions are single-expression only. `product.active`, `quantity > 0`, `cart.
 longlink/
 ├── sdk/
 │   ├── longlink/
-│   │   ├── .static/xsd/         # XML schema definitions
-│   │   │   ├── base.xsd         # Shared schema base
-│   │   │   ├── react/           # React-backed component contracts
-│   │   │   ├── primitives/      # Page/state/query/iteration contracts
-│   │   │   ├── html/            # HTML bridge contracts
-│   │   │   └── llm/SCHEMA.md    # Human-readable schema guide
-│   │   ├── routes/              # XML page metadata and page routes
-│   │   │   ├── metadata.py      # Metadata route helpers
-│   │   │   └── pages.py         # Page route helpers
-│   │   ├── utils/               # XML helpers and page utilities
-│   │   │   ├── xml.py           # XML utility helpers
-│   │   │   ├── metadata.py      # Metadata utilities
-│   │   │   └── page.py          # Page utilities
-│   │   ├── app.py               # SDK app entrypoint
-│   │   ├── router.py            # SDK router wiring
-│   │   └── constants.py         # Shared SDK constants
-│   └── tests/xml/               # SDK XML tests
-│       ├── react/               # React-backed component behavior tests
-│       ├── primitives/          # Primitive behavior tests
-│       └── html/                # HTML bridge behavior tests
-├── web/
-│   ├── src/xml/                # XML runtime parser/renderer and domain groupings
-│   │   ├── react/              # XML React-backed components and layout widgets
-│   │   ├── primitives/         # Low-level XML primitives
-│   │   └── html/               # HTML/XML bridge tags
-│   ├── src/components/         # Shared UI logic and primitives
-│   └── tests/xml/              # Web XML runtime and component rendering behavior
-│       ├── react/              # XML React-backed component tests
-│       ├── primitives/         # XML primitive tests
-│       └── html/               # HTML/XML bridge tests
-├── api/
-│   └── src/pages/              # XML pages used by control-plane views
-├── sdk/sample/src/pages/       # Sample XML pages and fixtures
-└── docs/
-    └── src/xml/                # XML documentation pages
-        ├── index.md            # XML docs entry
-        ├── components.md       # XML react docs
-        ├── layout.md           # XML layout docs
-        ├── primitives.md       # XML primitives docs
-        └── html.md             # XML HTML bridge docs
+│   │   ├── .static/
+│   │   │   ├── llm/SCHEMA.md     # Human-readable schema guide
+│   │   │   ├── web/              # Packaged frontend assets
+│   │   │   └── xsd/              # XML schema definitions
+│   │   ├── app.py                # SDK app entrypoint
+│   │   ├── router.py             # SDK router wiring
+│   │   ├── routes/               # XML page route helpers
+│   │   │   ├── metadata.py
+│   │   │   └── pages.py
+│   │   ├── cli/                  # SDK CLI commands
+│   │   ├── database/             # DB helpers and migrations
+│   │   ├── types/                # Shared SDK types
+│   │   └── utils/                # XML, metadata, and page helpers
+│   └── sample/
+│       └── src/pages/            # Sample XML pages and fixtures
+ ├── web/
+│   └── src/xml/                  # XML runtime, parser, registry, and components
+│       ├── parser.ts
+│       ├── runtime.tsx
+│       ├── renderers.tsx
+│       ├── registry.tsx
+│       ├── expressions.ts
+│       ├── types.ts
+│       ├── errors.tsx
+│       ├── primitives/           # Page/state/query/iteration components
+│       │   ├── Page.tsx
+│       │   ├── State.tsx
+│       │   ├── Query.tsx
+│       │   ├── For.tsx
+│       │   └── Text.tsx
+│       ├── react/                # React-backed interactive components
+│       │   ├── Button.tsx
+│       │   └── Input.tsx
+│       └── html/                 # HTML bridge components
+│           └── P.tsx
+ ├── api/
+│   └── src/pages/                # Control-plane XML pages
+ └── docs/
+    └── src/xml/                  # XML documentation pages
+        ├── index.md
+        ├── components.md
+        ├── layout.md
+        ├── primitives.md
+        └── html.md
 ```
 
 ## Reactivity

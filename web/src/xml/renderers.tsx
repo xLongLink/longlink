@@ -18,7 +18,7 @@ function resolveParams(params: Record<string, string> | undefined, ctx: Executio
             continue;
         }
 
-        resolved[key] = evaluate(value, ctx);
+        resolved[key] = evaluate(value, ctx, { attributeName: key });
     }
 
     return resolved;
@@ -47,8 +47,10 @@ function renderNodeWithContext(node: RenderableASTNode, ctx: ExecutionContext): 
     }
 
     // Handle conditional rendering with "if" parameter.
-    if (node.params?.if != null && !Boolean(evaluate(node.params.if, ctx))) {
-        return <></>;
+    if (node.params?.if != null) {
+        if (!Boolean(evaluate(node.params.if, ctx, { nodeName: node.name, attributeName: 'if' }))) {
+            return <></>;
+        }
     }
 
     const Component = registry[node.name];
