@@ -1,11 +1,61 @@
 import { XmlErrorBoundary } from '@xml/errors';
 import { compile, evaluate } from '@xml/expressions';
-import { Query, type QueryProps } from '@xml/primitives/Query';
-import { State, type StateProps } from '@xml/primitives/State';
+import { Query } from '@xml/primitives/Query';
+import { State } from '@xml/primitives/State';
 import { registry } from '@xml/registry';
 import { BaseUrlContext, RuntimeContext, RuntimeProvider } from '@xml/runtime';
 import type { ASTNode, ExecutionContext, RenderableASTNode } from '@xml/types';
-import { Fragment, Suspense, useContext as useReactContext, type ReactNode } from 'react';
+import { Fragment, useEffect, useContext as useReactContext, useState, type ReactNode } from 'react';
+
+/** Creates a shallow XML runtime context from the top-level AST nodes. */
+export async function initContext( ast: ASTNode[], ctx: ExecutionContext = { values: {} } ): Promise<ExecutionContext> {
+    /* Only the first AST layer is initialized for now; nested For scopes are skipped. */
+    for (const node of ast) {
+        if (node.name === 'For') {
+            continue;
+        }
+
+        const resolved = resolveParams(node.params, ctx);
+
+        if (node.name === 'State') {
+            const id = resolved.id;
+
+            if (typeof id !== 'string') {
+                throw new Error('State requires a string id');
+            }
+
+            State(ctx, { id, value: resolved.value });
+            continue;
+        }
+
+        if (node.name === 'Query') {
+            const resolved = resolveParams(node.params, ctx);
+            const id = resolved.id;
+            const path = resolved.path;
+
+            if (typeof id !== 'string') {
+                throw new Error('Query requires a string id');
+            }
+
+            if (typeof path !== 'string') {
+                throw new Error('Query requires a string path');
+            }
+
+            try {
+                Query(ctx, { id, path });
+            } catch (error) {
+                if (error instanceof Promise) {
+                    await error;
+                    continue;
+                }
+
+                throw error;
+            }
+        }
+    }
+
+    return ctx;
+}
 
 /** Converts XML attribute strings into the React prop shape a component expects. */
 function resolveParams(params: Record<string, string> | undefined, ctx: ExecutionContext): Record<string, unknown> {
@@ -57,33 +107,7 @@ function renderNodeWithContext(node: RenderableASTNode, ctx: ExecutionContext): 
 
     const resolved = resolveParams(node.params, ctx);
 
-    if (node.name === 'State') {
-        const id = resolved.id;
-        if (typeof id !== 'string') {
-            throw new Error('State requires a string id');
-        }
-
-        const stateProps: StateProps = { id, value: resolved.value };
-        State(ctx, stateProps);
-        return <></>;
-    }
-
-    if (node.name === 'Query') {
-        const id = resolved.id;
-        const path = resolved.path;
-
-        if (typeof id !== 'string') {
-            throw new Error('Query requires a string id');
-        }
-
-        if (typeof path !== 'string') {
-            throw new Error('Query requires a string path');
-        }
-
-        const queryProps: QueryProps = { id, path };
-        Query(ctx, queryProps);
-        return <></>;
-    }
+    if (node.name === 'State' || node.name === 'Query') return <></>;
 
     const Component = registry[node.name];
     if (!Component) throw new Error(`Unknown component "${node.name}"`);
@@ -102,28 +126,43 @@ export function renderNode(node: RenderableASTNode): ReactNode {
     return renderNodeWithContext(node, ctx);
 }
 
-/** Renders a parsed XML tree inside the active XML runtime contexts. */
-function XmlRenderer({ ast, ctx, baseUrl }: { ast: ASTNode[]; ctx: ExecutionContext; baseUrl: string }): ReactNode {
-    ctx.baseUrl = baseUrl;
+
+/**
+ * Renders a top-level ASTNode array into a React node.
+ * Renders a parsed XML tree with loading state while context initializes.
+ */
+export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl = ''): ReactNode {
+    const [initializedCtx, setInitializedCtx] = useState<ExecutionContext | null>(null);
+
+    useEffect(() => {
+        let active = true;
+
+        initContext(ast, ctx)
+            .then((nextCtx) => {
+                if (active) setInitializedCtx(nextCtx);
+            })
+            .catch((error) => {
+                if (active) throw error;
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [ast, ctx]);
+
+    if (!initializedCtx) {
+        return <div>Loading</div>;
+    }
 
     return (
         <XmlErrorBoundary resetKey={ast}>
-            <Suspense fallback={<></>}>
-                <BaseUrlContext.Provider value={baseUrl}>
-                    <RuntimeProvider value={ctx}>{renderNode(ast)}</RuntimeProvider>
-                </BaseUrlContext.Provider>
-            </Suspense>
+            <BaseUrlContext.Provider value={baseUrl}>
+                <RuntimeProvider value={initializedCtx}>{renderNode(ast)}</RuntimeProvider>
+            </BaseUrlContext.Provider>
         </XmlErrorBoundary>
     );
 }
 
-/**
- * Renders a top-level ASTNode array into a React node.
- * Wraps each root node in a Fragment with a stable index key.
- */
-export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl = ''): ReactNode {
-    return <XmlRenderer ast={ast} ctx={ctx} baseUrl={baseUrl} />;
-}
 
 /** Backwards-compatible alias for callers that still import renderXml. */
 export function renderXml(node: RenderableASTNode, _ctx: ExecutionContext = { values: {} }, _baseUrl = ''): ReactNode {

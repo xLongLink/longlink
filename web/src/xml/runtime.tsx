@@ -1,9 +1,9 @@
 import { evaluate } from '@xml/expressions';
 import type { ExecutionContext } from '@xml/types';
-import { createContext, useContext as useReactContext, type ReactNode } from 'react';
+import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
 
-export const BaseUrlContext = createContext<string>('');
-export const RuntimeContext = createContext<ExecutionContext | null>(null);
+export const BaseUrlContext = createReactContext<string>('');
+export const RuntimeContext = createReactContext<ExecutionContext | null>(null);
 
 /** Provides XML runtime scope to a rendered subtree. */
 export function RuntimeProvider({ value, children }: { value: ExecutionContext; children: ReactNode }) {
