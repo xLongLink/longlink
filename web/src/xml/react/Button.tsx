@@ -1,14 +1,15 @@
 import { Button as UIButton } from '@/ui/button';
 import type { ASTNode, XMLComponent } from '@xml';
-import { evaluate, renderNode, useContext, useUrl } from '@xml';
+import { renderNode, useContext, useUrl } from '@xml';
+import type { ExpressionResolver } from '@xml/core/expressions';
 import { toast } from 'sonner';
 
 /** Props accepted by the XML Button component. */
 export interface ButtonProps {
     action?: string;
     invalidate?: string | string[];
-    children?: ASTNode | ASTNode[] | null | string | number | boolean;
-    json?: object | string | number | boolean | null;
+    children?: ASTNode | ASTNode[] | null;
+    json?: ExpressionResolver | null;
     method?: string;
     size?: string;
     variant?: string;
@@ -24,8 +25,8 @@ export const Button: XMLComponent<ButtonProps> = ({ action, json, method = 'POST
     async function handleClick() {
         if (!actionUrl) return;
 
-        /* Resolve request payload at click time so sibling state has already populated the scope. */
-        const jsonValue = typeof json === 'string' ? evaluate(json, ctx) : json;
+        /* Resolve the compiled payload at click time so it sees the latest state. */
+        const jsonValue = json ? json(ctx) : null;
 
         const response = await fetch(requestUrl, {
             method,
@@ -41,10 +42,5 @@ export const Button: XMLComponent<ButtonProps> = ({ action, json, method = 'POST
         toast.success(`Request completed with status ${response.status}`);
     }
 
-    const content: ASTNode | ASTNode[] | null =
-        typeof children === 'string' || typeof children === 'number' || typeof children === 'boolean'
-            ? ({ name: 'Text', params: { value: String(children) } } satisfies ASTNode)
-            : (children ?? null);
-
-    return <UIButton onClick={handleClick}>{renderNode(content, ctx)}</UIButton>;
+    return <UIButton onClick={handleClick}>{renderNode(children ?? null, ctx)}</UIButton>;
 };

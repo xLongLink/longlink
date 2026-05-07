@@ -57,6 +57,11 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                 continue;
             }
 
+            if (node.name === 'Button' && key === 'json') {
+                resolved[key] = compile(value);
+                continue;
+            }
+
             try {
                 resolved[key] = evaluate(value, ctx);
             } catch (error) {
