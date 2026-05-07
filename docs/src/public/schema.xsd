@@ -13,6 +13,7 @@
         <xsd:any processContents="lax" />
       </xsd:choice>
     </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
 
@@ -51,6 +52,7 @@
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
     </xsd:sequence>
     <xsd:attribute name="id" type="xsd:string" use="required" />
+    <xsd:attribute name="value" type="xsd:string" use="required" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
 
@@ -92,4 +94,12 @@
   <xsd:complexType name="InputType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
   <xsd:element name="Input" type="InputType" />
   
+
+  <xsd:complexType name="TextType">
+    <xsd:attribute name="text" type="xsd:string" use="optional" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:anyAttribute processContents="lax" />
+  </xsd:complexType>
+
+  <xsd:element name="Text" type="TextType" />
 </xsd:schema>

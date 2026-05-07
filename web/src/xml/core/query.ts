@@ -10,7 +10,7 @@ export async function query(
     baseUrl = '',
     resolvedUrl?: string
 ): Promise<void> {
-    const values = ctx.values
+    const values = ctx.values;
     const url = resolvedUrl ?? resolveUrl(baseUrl, path);
 
     /* Start the request during render and suspend until it resolves. */

@@ -12,13 +12,13 @@ Use them to build dynamic pages without writing frontend code.
 Its children render with that state in scope.
 
 ```xml
-<State id="user" value="{{ username: '', password: '' }}">
+<State id="user" value="&#123;&#123; username: '', password: '' &#125;&#125;">
   <Input value="user.username" />
   <Input value="user.password" />
 </State>
 ```
 
-Use `{{ ... }}` for JSON or object literals in attribute values.
+Use `&#123;&#123; ... &#125;&#125;` for JSON or object literals in attribute values.
 
 `value` is required and sets the initial state value.
 Use a string, number, or list value depending on the state shape.
