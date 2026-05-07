@@ -6,17 +6,13 @@ import { toast } from 'sonner';
 
 /** Props accepted by the XML Query component. */
 export interface QueryProps {
-    id?: string;
-    path?: string;
-    method?: string;
-    invalidate?: string | string[];
+    id: string;
+    path: string;
 }
 
 /** Fetches JSON data into a reusable query slot for descendants. */
 export const Query: XMLComponent<QueryProps> = ({ id, path }) => {
     const { ctx } = useContext();
-    if (!id || !path) return null;
-
     const values = ctx.values ?? (ctx.values = {});
 
     const url = useUrl(path);
@@ -28,7 +24,6 @@ export const Query: XMLComponent<QueryProps> = ({ id, path }) => {
 
             return response.json();
         },
-        enabled: Boolean(id && url),
     });
 
     useEffect(() => {

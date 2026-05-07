@@ -1,5 +1,5 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<Page name="Example" title="Example" icon="layout-grid">
+<Page name="Example" icon="layout-grid">
   <State id="exampleForm" fullName="" email="" notes="" subscribed="true" notifications="false" progress="35" status="open" priority='[2,4]'>
     <Query id="example" path="/example">
       <p>Fetched title: {example.title}</p>

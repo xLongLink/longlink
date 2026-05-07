@@ -1,4 +1,4 @@
-export { compile as compileExpression, evaluate, resolve, resolveProps } from './expressions';
+export { compile as compileExpression, evaluate } from './expressions';
 export { parseXML as fromXml } from './parser';
 export { registry } from './registry';
 export { render, renderNode } from './renderers';

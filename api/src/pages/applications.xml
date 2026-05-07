@@ -1,5 +1,5 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
-<Page name="Applications" title="Applications" icon="blocks">
+<Page name="Applications" icon="blocks">
   <State id="createApp" appKey="" image="">
     <Query id="applications" path="/apps">
       <p>Applications list.</p>

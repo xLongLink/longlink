@@ -3,15 +3,13 @@
   <xsd:include schemaLocation="../base.xsd" />
 
   <xsd:complexType name="PageType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
-    <xsd:attribute name="name" type="xsd:string" use="required" />
-    <xsd:attribute name="title" type="xsd:string" use="required" />
-    <xsd:attribute name="icon" type="xsd:string" use="optional" />
-    <xsd:anyAttribute processContents="lax" />
+    <xsd:complexContent>
+      <xsd:extension base="PageChildrenType">
+        <xsd:attribute name="name" type="xsd:string" use="required" />
+        <xsd:attribute name="icon" type="xsd:string" use="optional" />
+        <xsd:anyAttribute processContents="lax" />
+      </xsd:extension>
+    </xsd:complexContent>
   </xsd:complexType>
 
   <xsd:element name="Page" type="PageType" />
