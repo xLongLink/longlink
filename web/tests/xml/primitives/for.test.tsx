@@ -12,7 +12,7 @@ describe('For', () => {
             {
                 name: 'For',
                 params: { each: 'items', as: 'item' },
-                children: [{ name: 'p', children: [{ name: 'Text', children: '{item}' }] }],
+                children: [{ name: 'p', children: [{ name: 'Text', params: { value: '{item}' } }] }],
             },
         ]);
     });
@@ -23,7 +23,7 @@ describe('For', () => {
         const node: ASTNode = {
             name: 'For',
             params: { each: 'items', as: 'item' },
-            children: [{ name: 'Text', children: 'ignored' }],
+            children: [{ name: 'Text', params: { value: 'ignored' } }],
         };
 
         const output = renderToStaticMarkup(

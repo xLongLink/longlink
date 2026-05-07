@@ -11,7 +11,7 @@ describe('P', () => {
         expect(parseXML('<p>Paragraph text</p>')).toEqual([
             {
                 name: 'p',
-                children: [{ name: 'Text', children: 'Paragraph text' }],
+                children: [{ name: 'Text', params: { value: 'Paragraph text' } }],
             },
         ]);
     });

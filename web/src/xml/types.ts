@@ -18,12 +18,12 @@ export type ExecutionContext = {
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
 
 /** A node or array of nodes that can be rendered by renderNode. */
-export type RenderableASTNode = ASTNode | ASTNode[] | string | number | boolean | null | undefined;
+export type RenderableASTNode = ASTNode | ASTNode[] | null;
 
 /** Standard XML component contract used by the runtime. */
 export type XMLComponent<Props = Record<string, unknown>> = ComponentType<
     {
-        children?: RenderableASTNode;
+        children?: RenderableASTNode | string | number | boolean;
     } & Props
 >;
 

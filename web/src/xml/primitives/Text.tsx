@@ -1,8 +1,8 @@
-import type { XMLComponent } from '@xml';
+import type { RenderableASTNode, XMLComponent } from '@xml';
 
 /** Props accepted by the XML Text component. */
 export interface TextProps {
-    value?: unknown;
+    value?: RenderableASTNode | string | number | boolean;
 }
 
 /** Renders XML text content through the standard XML renderer. */

@@ -39,7 +39,7 @@ describe('parseXML', () => {
         expect(parseXML('<Page><Button>Save</Button></Page>')).toEqual([
             {
                 name: 'Page',
-                children: [{ name: 'Button', children: [{ name: 'Text', children: 'Save' }] }],
+                children: [{ name: 'Button', children: [{ name: 'Text', params: { value: 'Save' } }] }],
             },
         ]);
     });
@@ -62,7 +62,7 @@ describe('parseXML', () => {
         expect(parseXML('<Page>  Hello, {user.name}  </Page>')).toEqual([
             {
                 name: 'Page',
-                children: [{ name: 'Text', children: '  Hello, {user.name}  ' }],
+                children: [{ name: 'Text', params: { value: '  Hello, {user.name}  ' } }],
             },
         ]);
     });
@@ -72,7 +72,7 @@ describe('parseXML', () => {
         expect(parseXML('<?xml version="1.0"?><Page><!-- hidden --><Button>Save</Button></Page>')).toEqual([
             {
                 name: 'Page',
-                children: [{ name: 'Button', children: [{ name: 'Text', children: 'Save' }] }],
+                children: [{ name: 'Button', children: [{ name: 'Text', params: { value: 'Save' } }] }],
             },
         ]);
     });

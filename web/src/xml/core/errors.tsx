@@ -2,7 +2,7 @@ import { Component, type ReactNode } from 'react';
 
 type XmlErrorBoundaryProps = {
     children: ReactNode;
-    resetKey?: unknown;
+    resetKey?: string | number | object | null;
 };
 
 type XmlErrorBoundaryState = {

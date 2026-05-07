@@ -12,7 +12,7 @@ describe('State', () => {
             {
                 name: 'State',
                 params: { id: 'filter', value: 'day' },
-                children: [{ name: 'p', children: [{ name: 'Text', children: 'Ready' }] }],
+                children: [{ name: 'p', children: [{ name: 'Text', params: { value: 'Ready' } }] }],
             },
         ]);
     });

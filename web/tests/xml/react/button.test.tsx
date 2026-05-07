@@ -24,7 +24,7 @@ describe('Button', () => {
             {
                 name: 'Button',
                 params: { href: '/issues' },
-                children: [{ name: 'Text', children: 'Open issues' }],
+                children: [{ name: 'Text', params: { value: 'Open issues' } }],
             },
         ]);
     });
@@ -83,7 +83,7 @@ describe('Button', () => {
                     json: '{"title":"{issue.title}"}',
                     invalidate: 'issues',
                 },
-                children: [{ name: 'Text', children: 'Save' }],
+                children: [{ name: 'Text', params: { value: 'Save' } }],
             },
         ]);
     });
@@ -103,7 +103,7 @@ describe('Button', () => {
             {
                 name: 'Button',
                 params: { if: '{true}' },
-                children: [{ name: 'Text', children: 'Visible' }],
+                children: [{ name: 'Text', params: { value: 'Visible' } }],
             },
         ]);
     });

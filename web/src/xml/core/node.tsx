@@ -10,8 +10,6 @@ export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): Reac
 
     // Handle null/undefined early to avoid unnecessary registry lookups and error boundaries.
     if (!node) return <></>;
-    if (typeof node === 'string' || typeof node === 'number') return node;
-    if (typeof node === 'boolean') return <></>;
 
     let rendered: ReactNode;
 
@@ -25,6 +23,19 @@ export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): Reac
         if (!Boolean(evaluate(node.params.if, runtime))) {
             return <></>;
         }
+    }
+
+    // Special case for the `For` element, we muse be sure that the each is a an array
+    if (node.name === 'For') {
+        const For = registry['For'];
+        if (!For) throw new Error(`Missing "For" component in registry`);
+        if (!node.params?.as) throw new Error(`Missing "as" parameter on "For" component`);
+        if (!node.params?.each) throw new Error(`Missing "each" parameter on "For" component`);
+
+        const each = evaluate(node.params?.each, runtime);
+        if (!Array.isArray(each)) throw new Error(`"each" parameter on "For" component must be an array`);
+
+        return <For each={each} as={node.params.as} children={node.children} />;
     }
 
     const resolved: Record<string, unknown> = {};

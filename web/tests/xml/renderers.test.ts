@@ -17,7 +17,7 @@ describe('renderNode', () => {
                 createElement(
                     'div',
                     null,
-                    createElement(RenderXML, { ast: [{ name: 'Text', children: '{`Count ${count}`}' }], ctx })
+                    createElement(RenderXML, { ast: [{ name: 'Text', params: { value: '{`Count ${count}`}' } }], ctx })
                 )
             )
         ).toBe('<div>Count 7</div>');

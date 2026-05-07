@@ -1,10 +1,10 @@
 import { Input as UIInput } from '@/ui/input';
-import type { XMLComponent } from '@xml';
+import type { RenderableASTNode, XMLComponent } from '@xml';
 
 /** Props accepted by the XML Input component. */
 export interface InputProps {
-    placeholder?: unknown;
-    value?: unknown;
+    placeholder?: string | number | boolean;
+    value?: RenderableASTNode | string | number | boolean;
     type?: string;
 }
 

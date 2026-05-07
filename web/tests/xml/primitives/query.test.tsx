@@ -14,7 +14,7 @@ describe('Query', () => {
             {
                 name: 'Query',
                 params: { id: 'user', path: '/api/user' },
-                children: [{ name: 'p', children: [{ name: 'Text', children: 'Ready' }] }],
+                children: [{ name: 'p', children: [{ name: 'Text', params: { value: 'Ready' } }] }],
             },
         ]);
     });
