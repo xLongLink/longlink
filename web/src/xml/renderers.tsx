@@ -1,9 +1,28 @@
 import { Fragment, useContext as useReactContext, type ReactNode } from 'react';
 import { XmlErrorBoundary } from './errors';
-import { evaluate } from './expressions';
+import { compile, evaluate } from './expressions';
 import { registry } from './registry';
 import { BaseUrlContext, RuntimeContext, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
+
+/** Converts XML attribute strings into the React prop shape a component expects. */
+function resolveParams(params: Record<string, string> | undefined, ctx: ExecutionContext): Record<string, unknown> {
+    if (!params) return {};
+
+    const resolved: Record<string, unknown> = {};
+
+    /* Resolve eager values immediately and keep function-like props compiled for later use. */
+    for (const [key, value] of Object.entries(params)) {
+        if (key.startsWith('on') && key.length > 2 && key[2] === key[2]?.toUpperCase()) {
+            resolved[key] = compile(value);
+            continue;
+        }
+
+        resolved[key] = evaluate(value, ctx);
+    }
+
+    return resolved;
+}
 
 /**
  * Renders XML AST nodes with the current runtime context.
@@ -14,10 +33,7 @@ import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
  *   Output:
  *     <Button><Text value="Save" /></Button>
  */
-export function renderNode(node: RenderableASTNode): ReactNode {
-    const runtime = useReactContext(RuntimeContext);
-    const ctx: ExecutionContext = runtime ?? { values: {} };
-
+function renderNodeWithContext(node: RenderableASTNode, ctx: ExecutionContext): ReactNode {
     // Handle null/undefined early to avoid unnecessary registry lookups and error boundaries.
     if (!node) return <></>;
     if (typeof node === 'string' || typeof node === 'number') return node;
@@ -27,7 +43,7 @@ export function renderNode(node: RenderableASTNode): ReactNode {
 
     // Handle arrays of nodes as fragments with stable keys.
     if (Array.isArray(node)) {
-        return node.map((child, index) => <Fragment key={index}>{renderNode(child)}</Fragment>);
+        return node.map((child, index) => <Fragment key={index}>{renderNodeWithContext(child, ctx)}</Fragment>);
     }
 
     // Handle conditional rendering with "if" parameter.
@@ -39,9 +55,17 @@ export function renderNode(node: RenderableASTNode): ReactNode {
     if (!Component) throw new Error(`Unknown component "${node.name}"`);
 
     /* Pass the parsed XML attributes through as component props. */
-    rendered = <Component {...(node.params ?? {})} children={node.children} />;
+    rendered = <Component {...resolveParams(node.params, ctx)} children={node.children} />;
 
     return <XmlErrorBoundary resetKey={node}>{rendered}</XmlErrorBoundary>;
+}
+
+/** Renders XML AST nodes using the active runtime context. */
+export function renderNode(node: RenderableASTNode): ReactNode {
+    const runtime = useReactContext(RuntimeContext);
+    const ctx: ExecutionContext = runtime ?? { values: {} };
+
+    return renderNodeWithContext(node, ctx);
 }
 
 /**
@@ -60,5 +84,5 @@ export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl = ''): Rea
 
 /** Backwards-compatible alias for callers that still import renderXml. */
 export function renderXml(node: RenderableASTNode, _ctx: ExecutionContext = { values: {} }, _baseUrl = ''): ReactNode {
-    return renderNode(node);
+    return renderNodeWithContext(node, _ctx);
 }
