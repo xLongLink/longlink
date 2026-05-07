@@ -1,5 +1,5 @@
-import { parseXML } from '@xml/parser';
-import { render } from '@xml/renderers';
+import { parseXML } from '@xml/core/parser';
+import { render } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -18,7 +18,7 @@ describe('Input', () => {
 
     /* The runtime should render input XML into the expected markup. */
     it('renders raw xml input content end to end', () => {
-        const ctx: ExecutionContext = { user: { name: 'Ada' } };
+        const ctx: ExecutionContext = { values: {}, user: { name: 'Ada' } };
         const ast = parseXML('<Input value="user.name" />');
         const renderedTree = render(ast, ctx, '');
 

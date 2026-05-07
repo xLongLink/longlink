@@ -1,5 +1,5 @@
-import { parseXML } from '@xml/parser';
-import { render } from '@xml/renderers';
+import { parseXML } from '@xml/core/parser';
+import { render } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -18,7 +18,7 @@ describe('P', () => {
 
     /* The runtime should render paragraph XML into the expected HTML output. */
     it('renders raw xml paragraph content end to end', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<p>Paragraph text</p>');
         const renderedTree = render(ast, ctx, '');
 

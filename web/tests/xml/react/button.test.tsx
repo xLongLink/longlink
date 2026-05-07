@@ -1,5 +1,5 @@
-import { parseXML } from '@xml/parser';
-import { render } from '@xml/renderers';
+import { parseXML } from '@xml/core/parser';
+import { render } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -90,7 +90,7 @@ describe('Button', () => {
 
     /* The runtime should honor conditional rendering on button nodes. */
     it('skips a button when if resolves false', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<Button if="{false}">Hidden</Button>');
         const renderedTree = render(ast, ctx, '');
 

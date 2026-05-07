@@ -1,6 +1,6 @@
 import { useApiData } from '@/hooks/use-data';
 import { getPageContentFromResponse } from '@/sdk/pages';
-import { fromXml, render } from '@/xml';
+import { fromXml, RenderXML } from '@/xml';
 import { useMemo } from 'react';
 
 type ViewProps = {
@@ -38,5 +38,9 @@ export default function View({ metadata, page, isLoading, error, emptyMessage, u
     }
 
     const ast = fromXml(xmlSource);
-    return <div className="space-y-6">{render(ast, {}, '/api')}</div>;
+    return (
+        <div className="space-y-6">
+            <RenderXML ast={ast} ctx={{ values: {} }} baseUrl="/api" />
+        </div>
+    );
 }

@@ -23,7 +23,7 @@ export function renderNode(node: RenderableASTNode, ctx?: ExecutionContext): Rea
 
     // Handle conditional rendering with "if" parameter.
     if (node.params?.if != null) {
-        if (!Boolean(evaluate(node.params.if, runtime, { nodeName: node.name, attributeName: 'if' }))) {
+        if (!Boolean(evaluate(node.params.if, runtime))) {
             return <></>;
         }
     }
@@ -38,7 +38,7 @@ export function renderNode(node: RenderableASTNode, ctx?: ExecutionContext): Rea
                 continue;
             }
 
-            resolved[key] = evaluate(value, runtime, { attributeName: key });
+            resolved[key] = evaluate(value, runtime);
         }
     }
 

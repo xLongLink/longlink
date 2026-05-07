@@ -1,5 +1,5 @@
-import { parseXML } from '@xml/parser';
-import { render } from '@xml/renderers';
+import { parseXML } from '@xml/core/parser';
+import { render } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -19,7 +19,7 @@ describe('State', () => {
 
     /* The runtime should render state XML into the expected HTML output. */
     it('renders raw xml state content end to end', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<State id="filter" value="day"><p>{filter}</p></State>');
         const renderedTree = render(ast, ctx, '');
 
@@ -30,7 +30,7 @@ describe('State', () => {
 
     /* State should register a scoped tuple and preserve its initial object shape. */
     it('exposes initial state to descendants', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<State id="filter" value="day">{filter}</State>');
 
         const output = renderToStaticMarkup(createElement(Fragment, null, render(ast, ctx, '')));
@@ -40,7 +40,7 @@ describe('State', () => {
 
     /* Missing ids should fail fast so XML authors get a clear runtime error. */
     it('throws when id is missing', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<State value="x">x</State>');
 
         expect(() => renderToStaticMarkup(createElement(Fragment, null, render(ast, ctx, '')))).toThrow(

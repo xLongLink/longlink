@@ -1,4 +1,4 @@
-import { evaluate } from '@xml';
+import { evaluate } from '@xml/core/expressions';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 
@@ -6,6 +6,7 @@ describe('evaluate', () => {
     /* Evaluation should resolve expressions against the flat runtime context. */
     it('resolves expressions against flat context values', () => {
         const ctx: ExecutionContext = {
+            values: {},
             count: 1,
             total: 10,
             name: 'from-context',
@@ -20,6 +21,7 @@ describe('evaluate literals', () => {
     /* Plain text with interpolation should render interpolated values. */
     it('interpolates text containing expressions', () => {
         const ctx: ExecutionContext = {
+            values: {},
             count: 4,
         };
 
@@ -29,6 +31,7 @@ describe('evaluate literals', () => {
     /* A single braced expression should return its typed runtime value. */
     it('returns typed value for single expression', () => {
         const ctx: ExecutionContext = {
+            values: {},
             count: 4,
         };
 
@@ -38,6 +41,7 @@ describe('evaluate literals', () => {
     /* Object literals inside braces should be evaluated as objects, not strings. */
     it('parses object literals wrapped in braces', () => {
         const ctx: ExecutionContext = {
+            values: {},
             value: 5,
         };
 
@@ -49,6 +53,7 @@ describe('evaluate bindings', () => {
     /* Braced expressions should resolve directly to nested values. */
     it('resolves nested value expression', () => {
         const ctx: ExecutionContext = {
+            values: {},
             form: { value: 'draft', placeholder: 'Name' },
         };
 

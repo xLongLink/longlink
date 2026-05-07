@@ -1,4 +1,4 @@
-import type { ExecutionContext, XmlSourceContext } from '@xml/types';
+import type { ExecutionContext } from '@xml/types';
 
 export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
 
@@ -33,7 +33,7 @@ function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
 }
 
 /** Evaluates an XML attribute value against the current XML runtime scope. */
-export function evaluate(expr: string, ctx: ExecutionContext, source?: XmlSourceContext): unknown {
+export function evaluate(expr: string, ctx: ExecutionContext): unknown {
     const input = expr.trim();
     const values = createScopeProxy(ctx);
 
@@ -42,10 +42,7 @@ export function evaluate(expr: string, ctx: ExecutionContext, source?: XmlSource
         try {
             return new Function('ctx', `with (ctx) { return (${expression}); }`)(values);
         } catch (error) {
-            const location = source?.nodeName
-                ? `<${source.nodeName}>${source.attributeName ? ` attribute "${source.attributeName}"` : ''}`
-                : 'XML expression';
-            throw new Error(`${location}: ${error instanceof Error ? error.message : 'Expression evaluation failed'}`);
+            throw error;
         }
     }
 

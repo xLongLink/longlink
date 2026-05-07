@@ -1,4 +1,3 @@
-import { evaluate } from '@xml/core/expressions';
 import { query } from '@xml/core/query';
 import { state } from '@xml/core/state';
 import type { ASTNode, ExecutionContext } from '@xml/types';
@@ -31,26 +30,21 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
         const resolved: Record<string, unknown> = {};
 
-        if (node.params) {
-            for (const [key, value] of Object.entries(node.params)) {
-                if (key.startsWith('on') && key.length > 2 && key[2] === key[2]?.toUpperCase()) {
-                    resolved[key] = evaluate(value, ctx, { attributeName: key });
-                    continue;
-                }
-
-                resolved[key] = evaluate(value, ctx, { attributeName: key });
-            }
-        }
-
+        // Make sure that the state are initialized and exist in the context before evaluating the expressions.
         if (node.name === 'State') {
             const id = resolved.id;
 
             if (typeof id !== 'string') throw new Error('State requires a string id');
+            if (resolved.value == null) throw new Error('State requires a value');
+            if (typeof resolved.value !== 'string' && typeof resolved.value !== 'number' && !Array.isArray(resolved.value)) {
+                throw new Error('State value must be a string, number, or array');
+            }
 
-            state(ctx, { id, value: resolved.value as string | number | unknown[] });
+            state(ctx, id, resolved.value);
             continue;
         }
 
+        // Make sure that the queries are executed and exist in the context before evaluating the expressions.
         if (node.name === 'Query') {
             const id = resolved.id;
             const path = resolved.path;
@@ -59,13 +53,8 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
             if (typeof path !== 'string') throw new Error('Query requires a string path');
 
             try {
-                query(ctx, { id, path }, baseUrl);
+                await query(ctx, id, path, baseUrl);
             } catch (error) {
-                if (error instanceof Promise) {
-                    await error;
-                    continue;
-                }
-
                 throw error;
             }
         }
@@ -73,6 +62,3 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
     return ctx;
 }
-
-/** Re-exports expression evaluation for runtime callers. */
-export { evaluate };

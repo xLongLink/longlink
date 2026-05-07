@@ -1,5 +1,5 @@
-import { parseXML } from '@xml/parser';
-import { render } from '@xml/renderers';
+import { parseXML } from '@xml/core/parser';
+import { render } from '@xml/renderers.tsx';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -19,7 +19,7 @@ describe('For', () => {
 
     /* Non-array results should render nothing instead of crashing. */
     it('returns null when each resolves to a non-array value', () => {
-        const ctx: ExecutionContext = { items: 'not-an-array' };
+        const ctx: ExecutionContext = { values: {}, items: 'not-an-array' };
         const node: ASTNode = {
             name: 'For',
             params: { each: 'items', as: 'item' },
@@ -34,11 +34,15 @@ describe('For', () => {
     /* Missing loop parameters should be rejected immediately. */
     it('throws when each or as is missing', () => {
         expect(() =>
-            renderToStaticMarkup(createElement('div', null, render([{ name: 'For', params: { as: 'item' } }], {})))
+            renderToStaticMarkup(
+                createElement('div', null, render([{ name: 'For', params: { as: 'item' } }], { values: {} }))
+            )
         ).toThrow('For requires an "each" parameter');
 
         expect(() =>
-            renderToStaticMarkup(createElement('div', null, render([{ name: 'For', params: { each: '[]' } }], {})))
+            renderToStaticMarkup(
+                createElement('div', null, render([{ name: 'For', params: { each: '[]' } }], { values: {} }))
+            )
         ).toThrow('For requires an "as" parameter');
     });
 });

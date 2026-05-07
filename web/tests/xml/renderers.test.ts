@@ -1,4 +1,5 @@
-import { render, renderNode } from '@xml/renderers';
+import { renderNode } from '@xml/core/node';
+import { render } from '@xml/renderers.tsx';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
@@ -12,7 +13,7 @@ describe('renderNode', () => {
 
     /* Text nodes should evaluate expressions against the current runtime context. */
     it('resolves text nodes from full expressions', () => {
-        const ctx: ExecutionContext = { count: 7 };
+        const ctx: ExecutionContext = { values: {}, count: 7 };
 
         expect(
             renderToStaticMarkup(
@@ -23,7 +24,7 @@ describe('renderNode', () => {
 
     /* Conditional nodes should disappear when the condition resolves to false. */
     it('skips nodes when if condition is false', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
         const node: ASTNode = { name: 'Button', params: { if: '{false}' } };
 
         expect(renderToStaticMarkup(createElement('div', null, render([node], ctx, '')))).toBe('<div></div>');
@@ -31,7 +32,7 @@ describe('renderNode', () => {
 
     /* Unknown tags should fail loudly so missing registry entries are obvious. */
     it('throws on unknown component', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
 
         expect(() => renderToStaticMarkup(createElement('div', null, render([{ name: 'Unknown' }], ctx, '')))).toThrow(
             'Unknown component "Unknown"'
@@ -40,7 +41,7 @@ describe('renderNode', () => {
 
     /* Prop expressions should flow through the rendered component. */
     it('resolves props from expressions', () => {
-        const ctx: ExecutionContext = { count: 2 };
+        const ctx: ExecutionContext = { values: {}, count: 2 };
 
         const node: ASTNode = {
             name: 'Input',
@@ -54,7 +55,7 @@ describe('renderNode', () => {
 
     /* Input props should flow through as plain evaluated values. */
     it('resolves input props from expressions', () => {
-        const ctx: ExecutionContext = { form: { value: 'Ada', placeholder: 'Enter name' } };
+        const ctx: ExecutionContext = { values: {}, form: { value: 'Ada', placeholder: 'Enter name' } };
 
         const node: ASTNode = {
             name: 'Input',
@@ -74,7 +75,7 @@ describe('renderNode', () => {
 describe('render', () => {
     /* Multiple root nodes should render independently in order. */
     it('renders each root node wrapped as fragments', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
         const output = render(
             [
                 { name: 'Text', children: 'a' },

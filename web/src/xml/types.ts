@@ -7,12 +7,6 @@ export type ASTNode = {
     children?: RenderableASTNode;
 };
 
-/** Optional XML source hint attached during runtime evaluation. */
-export type XmlSourceContext = {
-    nodeName?: string;
-    attributeName?: string;
-};
-
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     parent?: ExecutionContext;

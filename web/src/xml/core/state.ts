@@ -1,14 +1,9 @@
 import type { ExecutionContext } from '@xml/types';
 import { proxy } from 'valtio';
 
-/** Props accepted by the XML State component. */
-export interface StateProps {
-    id: string;
-    value: string | number | unknown[];
-}
 
 /** Initializes a local reactive state slot for descendant XML nodes. */
-export function state(ctx: ExecutionContext, { id, value }: StateProps): void {
+export function state(ctx: ExecutionContext, id: string, value: string | number | unknown[]): void {
     const values = ctx.values ?? (ctx.values = {});
 
     if (values[id] != null) return;

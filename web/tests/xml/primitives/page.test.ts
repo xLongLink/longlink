@@ -1,5 +1,5 @@
-import { parseXML } from '@xml/parser';
-import { render } from '@xml/renderers';
+import { parseXML } from '@xml/core/parser';
+import { render } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
@@ -24,7 +24,7 @@ describe('Page', () => {
      * container markup.
      */
     it('renders raw xml page content end to end', () => {
-        const ctx: ExecutionContext = {};
+        const ctx: ExecutionContext = { values: {} };
         const ast = parseXML('<Page title="Dashboard" />');
         const renderedTree = render(ast, ctx, '');
 
