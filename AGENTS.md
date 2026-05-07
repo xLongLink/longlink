@@ -59,6 +59,7 @@ Write clear, precise, unambiguous docs for broad technical backgrounds and trans
 ## Contributing model
 
 - Keep changes small and clear.
+- Do not add new helper functions unless they are explicitly needed or requested.
 - Remove obsolete code when replacing old flows.
 - Keep responsibilities separated:
   - Control plane handles governance/infrastructure concerns.

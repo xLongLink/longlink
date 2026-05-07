@@ -1,4 +1,5 @@
 import type { ExecutionContext } from '@xml/types';
+import { getVersion, snapshot } from 'valtio';
 
 export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
 
@@ -33,7 +34,18 @@ function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
         const values = ctx.values ?? ctx;
 
         if (key in values) {
-            return values[key];
+            const value = values[key];
+
+            /* Unwrap scalar Valtio state objects like `{ value: "Ada" }` to plain values. */
+            if (value && typeof value === 'object' && getVersion(value) !== undefined) {
+                const data = snapshot(value as object) as Record<string, unknown>;
+
+                if (Object.keys(data).length === 1 && 'value' in data) {
+                    return data.value;
+                }
+            }
+
+            return value;
         }
 
         return resolve(ctx.parent, key);

@@ -1,4 +1,6 @@
 import type { RenderableASTNode, XMLComponent } from '@xml';
+import { evaluate } from '@xml/core/expressions';
+import { useContext } from '@xml/core/runtime';
 
 /** Props accepted by the XML Text component. */
 export interface TextProps {
@@ -7,5 +9,7 @@ export interface TextProps {
 
 /** Renders XML text content through the standard XML renderer. */
 export const Text: XMLComponent<TextProps> = ({ value }) => {
-    return String(value ?? '');
+    const { ctx } = useContext();
+
+    return String(typeof value === 'string' ? evaluate(value, ctx) : (value ?? ''));
 };
