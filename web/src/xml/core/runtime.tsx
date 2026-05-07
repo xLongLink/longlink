@@ -1,3 +1,4 @@
+import { evaluate } from '@xml/core/expressions';
 import { query } from '@xml/core/query';
 import { state } from '@xml/core/state';
 import type { ASTNode, ExecutionContext } from '@xml/types';
@@ -29,6 +30,13 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
         }
 
         const resolved: Record<string, unknown> = {};
+
+        /* Resolve top-level attributes before seeding state or executing queries. */
+        if (node.params) {
+            for (const [key, value] of Object.entries(node.params)) {
+                resolved[key] = evaluate(value, ctx);
+            }
+        }
 
         // Make sure that the state are initialized and exist in the context before evaluating the expressions.
         if (node.name === 'State') {

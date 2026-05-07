@@ -23,9 +23,3 @@ Run the frontend in API mode:
 ```bash
 bun run api --host 0.0.0.0 --port 5173
 ```
-
-Run the frontend in SDK mode:
-
-```bash
-bun run sdk --host 0.0.0.0 --port 5174
-```
