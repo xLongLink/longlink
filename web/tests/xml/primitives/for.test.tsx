@@ -1,4 +1,4 @@
-import { xmlToAST } from '@/xml/compiler';
+import { parseXML } from '@/xml/parser';
 import { render } from '@/xml/renderers';
 import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('For', () => {
     /* The compiler should preserve loop attributes and nested content. */
     it('compiles for xml into a for ast node', () => {
-        expect(xmlToAST('<For each="items" as="item"><p>{item}</p></For>')).toEqual([
+        expect(parseXML('<For each="items" as="item"><p>{item}</p></For>')).toEqual([
             {
                 name: 'For',
                 params: { each: 'items', as: 'item' },

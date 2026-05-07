@@ -1,6 +1,6 @@
 import { Button as UIButton } from '@/ui/button';
 import type { XmlComponentProps } from '@/xml';
-import { evaluate, renderXml, useContext, useUrl } from '@/xml';
+import { evaluate, renderNode, useContext, useUrl } from '@/xml';
 import { toast } from 'sonner';
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
@@ -29,5 +29,5 @@ export function Button({ props: rawProps, children }: XmlComponentProps) {
         toast.success(`Request completed with status ${response.status}`);
     }
 
-    return <UIButton onClick={handleClick}>{renderXml(children)}</UIButton>;
+    return <UIButton onClick={handleClick}>{renderNode(children)}</UIButton>;
 }

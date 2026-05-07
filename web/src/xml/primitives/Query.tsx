@@ -1,5 +1,5 @@
 import type { XmlComponentProps } from '@/xml';
-import { RuntimeProvider, evaluate, renderXml, useContext, useUrl } from '@/xml';
+import { RuntimeProvider, evaluate, renderNode, useContext, useUrl } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -37,5 +37,5 @@ export function Query({ props: rawProps, children }: XmlComponentProps) {
         }),
         [ctx, id, data]
     );
-    return <RuntimeProvider value={childCtx}>{renderXml(children)}</RuntimeProvider>;
+    return <RuntimeProvider value={childCtx}>{renderNode(children)}</RuntimeProvider>;
 }

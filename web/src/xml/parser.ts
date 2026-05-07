@@ -1,9 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 import type { ASTNode } from './types';
 
-/**
- * Shared parser instance configured to keep XML values as strings.
- */
 const parser = new XMLParser({
     ignoreAttributes: false,
     attributesGroupName: ':@',
@@ -13,12 +10,54 @@ const parser = new XMLParser({
     trimValues: false,
 });
 
-/** Parses an XML string into an array of ASTNodes. */
-export function xmlToAST(xml: string): ASTNode[] {
+/**
+ * Parses an XML string into a flat AST structure.
+ *
+ * Input:
+ *   <Page>Hello, {user.name}<Button>Save</Button></Page>
+ *
+ * Output:
+ *   [
+ *     {
+ *       name: 'Page',
+ *       children: [
+ *         { name: 'Text', params: { text: 'Hello, {user.name}' } },
+ *         {
+ *           name: 'Button',
+ *           children: [
+ *             { name: 'Text', params: { text: 'Save' } }
+ *           ]
+ *         }
+ *       ]
+ *     }
+ *   ]
+ */
+export function parseXML(xml: string): ASTNode[] {
     return toNodes(parser.parse(xml));
 }
 
-/** Converts parser output into XML AST nodes. */
+/**
+ * Converts parser output into XML AST nodes.
+ *
+ * Input:
+ *   toNodes({ Page: { '#text': 'Hello, {user.name}', Button: { '#text': 'Save' } } })
+ *
+ * Output:
+ *   [
+ *     {
+ *       name: 'Page',
+ *       children: [
+ *         { name: 'Text', params: { text: 'Hello, {user.name}' } },
+ *         {
+ *           name: 'Button',
+ *           children: [
+ *             { name: 'Text', params: { text: 'Save' } }
+ *           ]
+ *         }
+ *       ]
+ *     }
+ *   ]
+ */
 function toNodes(input: unknown, tagName?: string): ASTNode[] {
     /* Arrays are flattened so repeated sibling tags become sibling AST nodes. */
     if (Array.isArray(input)) {

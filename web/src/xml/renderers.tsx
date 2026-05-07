@@ -45,43 +45,34 @@ class XmlErrorBoundary extends Component<XmlErrorBoundaryProps, XmlErrorBoundary
 /**
  * Renders XML AST nodes with the current runtime context.
  *
- * - Nodes whose `if` param evaluates to false are skipped.
- * - Component lookup is performed against the registry; unknown tags throw.
- * - Context is read from the nearest RuntimeProvider.
+ * Example:
+ *   Input:
+ *     { name: 'Button', params: { if: 'true' }, children: [{ name: 'Text', params: { text: 'Save' } }] }
+ *   Output:
+ *     <Button><Text text="Save" /></Button>
  */
-export function renderXml(node: RenderableASTNode): ReactNode {
-    if (!node) return <></>;
-
-    return (
-        <XmlErrorBoundary resetKey={node}>
-            <RenderedNode node={node} />
-        </XmlErrorBoundary>
-    );
-}
-
-/** Renders a node after the XML error boundary is already mounted. */
-function RenderedNode({ node }: { node: RenderableASTNode }): ReactNode {
+export function renderNode(node: RenderableASTNode): ReactNode {
     const runtime = useReactContext(RuntimeContext);
     const activeCtx: ExecutionContext = runtime ?? { values: {} };
 
     // Handle null/undefined early to avoid unnecessary registry lookups and error boundaries.
     if (!node) return <></>;
 
+    let rendered: ReactNode;
+
     // Arrays of nodes are rendered as fragments with stable keys.
     if (Array.isArray(node)) {
-        return node.map((child, index) => <Fragment key={index}>{renderXml(child)}</Fragment>);
+        rendered = node.map((child, index) => <Fragment key={index}>{renderNode(child)}</Fragment>);
+    } else if (node.params?.if != null && !Boolean(evaluate(node.params.if, activeCtx))) {
+        rendered = <></>;
+    } else {
+        const Component = (registry as Record<string, ComponentType<any>>)[node.name];
+        if (!Component) throw new Error(`Unknown component "${node.name}"`);
+
+        rendered = <Component props={node.params ?? {}} children={node.children} />;
     }
 
-    // Nodes with a falsy `if` param are not rendered at all.
-    if (node.params?.if != null && !Boolean(evaluate(node.params.if, activeCtx))) {
-        return <></>;
-    }
-
-    // Look up the component for this node's tag name in the registry.
-    const Component = (registry as Record<string, ComponentType<any>>)[node.name];
-    if (!Component) throw new Error(`Unknown component "${node.name}"`);
-
-    return <Component props={node.params ?? {}} children={node.children} />;
+    return <XmlErrorBoundary resetKey={node}>{rendered}</XmlErrorBoundary>;
 }
 
 /**
@@ -92,7 +83,7 @@ export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): 
     return (
         <XmlErrorBoundary resetKey={ast}>
             <BaseUrlContext.Provider value={baseUrl}>
-                <RuntimeProvider value={ctx}>{renderXml(ast)}</RuntimeProvider>
+                <RuntimeProvider value={ctx}>{renderNode(ast)}</RuntimeProvider>
             </BaseUrlContext.Provider>
         </XmlErrorBoundary>
     );

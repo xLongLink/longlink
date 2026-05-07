@@ -1,4 +1,4 @@
-import { xmlToAST } from '@/xml/compiler';
+import { parseXML } from '@/xml/parser';
 import { State } from '@/xml/primitives/State';
 import { render } from '@/xml/renderers';
 import { RuntimeProvider } from '@/xml/runtime';
@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('State', () => {
     /* The compiler should preserve state attributes and child content. */
     it('compiles state xml into a state ast node', () => {
-        expect(xmlToAST('<State id="filter" value="day"><p>Ready</p></State>')).toEqual([
+        expect(parseXML('<State id="filter" value="day"><p>Ready</p></State>')).toEqual([
             {
                 name: 'State',
                 params: { id: 'filter', value: 'day' },
@@ -22,7 +22,7 @@ describe('State', () => {
     /* The runtime should render state XML into the expected HTML output. */
     it('renders raw xml state content end to end', () => {
         const ctx: ExecutionContext = {};
-        const ast = xmlToAST('<State id="filter" value="day"><p>{filter}</p></State>');
+        const ast = parseXML('<State id="filter" value="day"><p>{filter}</p></State>');
         const renderedTree = render(ast, ctx, '');
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(

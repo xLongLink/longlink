@@ -13,16 +13,6 @@
       <Button action="/example" json='{"fullName":"{exampleForm.fullName}","email":"{exampleForm.email}","notes":"{exampleForm.notes}"}' variant="outline" size="sm">
         Save draft
       </Button>
-      <Icon name="sparkles" fallback="box" />
-      <p>Cards, columns, and grid are no longer part of the XML surface.</p>
-      <p>Quoted content renders as expected.</p>
-      <p>Use p and standard content elements for layout.</p>
-      <Button variant="outline" size="xs">Action</Button>
-      <Button variant="ghost" size="sm">Archive</Button>
-      <p>Details content appears in the default tab.</p>
-      <p>Activity content shows an alternate view in the same section.</p>
-      <p>Paragraph content explains how standard HTML elements render in XML pages.</p>
-      <p>Unordered list items are no longer part of the XML surface.</p>
     </Query>
   </State>
 </Page>

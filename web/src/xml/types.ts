@@ -16,7 +16,7 @@ export type ExecutionContext = {
 /** A React component that can be registered and rendered from XML. */
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
 
-/** A node or array of nodes that can be rendered by renderXml. */
+/** A node or array of nodes that can be rendered by renderNode. */
 export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 
 /** Standard XML component contract used by the runtime. */

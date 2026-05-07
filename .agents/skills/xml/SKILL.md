@@ -3,6 +3,45 @@ name: xml
 description: Guide LongLink XML component creation and maintenance across SDK, web runtime, tests, and docs
 ---
 
+This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards using XML as the single source of truth for the UI. Each `.xml` file defines page structure, layout, data bindings, and actions, while the runtime parses the XML, maps tags to React components, and manages rendering, navigation, state, and REST-based data interactions. The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling, prioritizing consistency, maintainability, validation, and development speed through a strictly declarative and predictable architecture.
+
+```text
+XML
+  → Schema validation
+  → Parsed AST
+  → Runtime renderer
+  → React component registry
+  → REST API layer
+```
+
+## Example
+
+```xml
+<Page>
+  <State id="cart" value="[]" />
+  <Query id="products" path="/api/products"/>
+  <Action id="saveCartItem" path="/cart/add" method="POST" invalidate="[products, cart]"/>
+  <For each="products.items" as="product">
+    <State id="quantity" value="1" />
+    <Card if="product.active">
+      <Text> {product.name} </Text>
+      <Input bind="quantity" type="number" min="1"/>
+      <Button mutate="cart += { id: product.id, quantity: quantity}">
+        Add to cart
+      </Button>
+    </Card>
+  </For>
+  <Button submit="saveCartItem" payload="{productId: product.id, quantity: quantity }">
+    Save to server
+  </Button>
+  <Text> Cart items: {cart.length} </Text>
+</Page>
+```
+
+Each XML tag maps directly to a React component that controls rendering and behavior. XML attributes become component props, defining configuration and data inputs. `<State>` and `<Query>` tags create reactive data sources that can be referenced in expressions. `<For>` enables iteration over arrays, while `if` attributes control conditional rendering. `<Action>` tags define reusable API interactions that can be triggered by buttons or other events. The `invalidate` attribute reset the `<State>` to the default value and refetches any `<Query>` that depends on it, ensuring data consistency after mutations.
+
+Expressions are single-expression only. `product.active`, `quantity > 0`, `cart.length`, `product.price * quantity` are allowed, while control flow statements, function definitions, and side-effectful operations are not (`if (...) {}`, `for (...) {}`, `while (...) {}`, `function () {}`, `async () => {}`, `await ...`, `return ...`). Furthermore they must be side-effect free: `product.name` and `total + tax` are allowed, while `cart.push(item)`, `quantity++`, and `state.value = 1` are not. Mutations must be performed through declarative syntax in `mutate=""` or `submit=""` attributes, or through explicit state updates and action handlers. Loop scope is isolated, so state declared inside `<For>` is local to the current iteration. IDs are scoped automatically inside loops, so repeated components do not require manual unique IDs. Expressions cannot define functions, so constructs like `items.map(x => x.name)` are not allowed. Expressions also cannot access globals like `window`, `document`, `localStorage`, or `fetch`. They may only reference local state, loop variables, query results, and computed values. The mutate syntax is declarative, allowing for operations like `cart += item`, `selected = product.id`, or `filters.status = "active"`. Network requests must use `<Query />`, `<Action />`, or the `submit="..."` attribute. Payload expressions must evaluate to serializable JSON. Finally, expressions should remain small, with a recommended maximum of one logical operation, one arithmetic chain, or one object literal. The runtime may statically analyze all expressions, so dynamic evaluation features are forbidden.
+
 ## Structure
 
 ```text
@@ -51,113 +90,14 @@ longlink/
         └── html.md             # XML HTML bridge docs
 ```
 
-## Architecture
+## Reactivity
 
-### Runtime Flow
-
-```text
-XML string
-  -> `web/src/xml/compiler.ts`
-  -> AST (`ASTNode[]`)
-  -> `web/src/xml/renderers.tsx`
-  -> root `RuntimeProvider` + `BaseUrlContext`
-  -> component registry lookup
-  -> XML component
-  -> `renderXml(children)`
-  -> descendant scope
 ```
-
-### Context Model
-
-```text
-root ExecutionContext
-  values: global XML state
-  parent: null
-
-          +----------------------------+
-          | RuntimeProvider            |
-          | RuntimeContext = ctx       |
-          +----------------------------+
-                       |
-                       v
-              current component render
-                       |
-      +----------------+----------------+
-      |                                 |
-      v                                 v
- `evaluate(...)`                 `renderXml(children)`
- reads `ctx` and parents          preserves current ctx
- through lexical lookup           for descendants
-
-child ExecutionContext
-  parent -> current ctx
-  values -> scoped slot(s)
-
-lookup order:
-  current ctx.values -> parent.values -> ... -> root
-```
-
-### Scope Rules
-
-- `State` creates a stable reactive slot and exposes it as `ctx.values[id]` for descendants.
-- `Query` fetches JSON and exposes the response as `ctx.values[id]` for descendants.
-- `For` creates one child context per item and injects both the loop item and `index`.
-- `Page` renders the page shell and does not introduce a new scope.
-- `Text`, `Button`, `Input`, and HTML bridge tags consume the active scope but do not own it.
-- `if`, `value`, `json`, `path`, `title`, and similar attributes are evaluated against the active scope before rendering or requests.
-
-### Ownership Map
-
-- `compiler.ts` converts XML text into AST nodes.
-- `renderers.tsx` resolves tags, applies `if`, and wires runtime providers.
-- `runtime.tsx` owns scope evaluation, expression execution, and URL resolution.
-- `primitives/` owns page, state, query, iteration, and text behavior.
-- `react/` owns interactive XML-backed widgets.
-- `html/` owns HTML bridge tags.
-- `registry.tsx` is the single built-in tag map used by the renderer.
-
-## Responsibilities
-
-- Use `sdk/longlink/.static/llm/SCHEMA.md` as the primary XML schema guide.
-- Keep schema (`xsd`), runtime, pages, and docs aligned. Especially for the attributes.
-- Verify XML tags and attributes mean the same thing across SDK, web, and docs.
-- Check that component placement matches ownership boundaries.
-- Check that renderer behavior matches schema contract and page usage.
-- Check that sample pages and API pages reflect the final XML shape.
-- Check that documentation describes the final behavior, not an intermediate state.
-- Remove obsolete XML flow when replacement is complete.
-- Keep llm/SCHEMA.md up to date. Using the content of the markdown file, one shall be able to create a valid XML page without needing to reference the SDK code.
-
-## How it works
-
-**Tags → Components**: \
-Each XML tag maps directly to a React component that controls rendering and behavior.
-
-**Attributes → Props**: \
-XML attributes become component props, defining configuration and data inputs.
-
-**State and Data (`<State>`, `<Query>`)**: \
-Both use an `id` to define a reusable state slot:
-
-- `<State id="user" value="John Doe" />` \
-  Creates local state → `user.value === "John Doe"`
-- `<Query id="user" path="/endpoint" />` \
-  Fetches data into state → e.g. `{ name: "John Doe" }` → `user.name`
-
-**Conditional Rendering (`if`)**: \
-Any tag can include `if="condition"`, If false, the element is not rendered.
-
-**Expressions (`{}`)**: \
-Curly braces evaluate JavaScript-like expressions using state: `Hello, {user.name}` → `Hello, John Doe`
-
-**Iteration (`<For>`)**: \
-Loop over arrays: `<For each="orders" as="order"> ... </For>`
-
-**Actions (`<Button>` and similar)**: \
-Trigger API calls, sends request on click, `invalidate` causes related queries to refetch afterward
-
-```xml
-<Button action="/issues" method="POST"  json='{"title":"{issue.title}"}' invalidate="issues">
-    Save
-</Button>
+GlobalScope
+   ^
+   |
+LoopItemScope
+   ^
+   |
+ComponentScope
 ```

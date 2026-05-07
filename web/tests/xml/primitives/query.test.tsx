@@ -1,4 +1,4 @@
-import { xmlToAST } from '@/xml/compiler';
+import { parseXML } from '@/xml/parser';
 import { Query } from '@/xml/primitives/Query';
 import { RuntimeProvider } from '@/xml/runtime';
 import type { RuntimeState } from '@/xml/types';
@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('Query', () => {
     /* The compiler should preserve query attributes and nested content. */
     it('compiles query xml into a query ast node', () => {
-        expect(xmlToAST('<Query id="user" path="/api/user"><p>Ready</p></Query>')).toEqual([
+        expect(parseXML('<Query id="user" path="/api/user"><p>Ready</p></Query>')).toEqual([
             {
                 name: 'Query',
                 params: { id: 'user', path: '/api/user' },

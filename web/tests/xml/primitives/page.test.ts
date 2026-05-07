@@ -1,4 +1,4 @@
-import { xmlToAST } from '@/xml/compiler';
+import { parseXML } from '@/xml/parser';
 import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('Page', () => {
     /* The compiler should turn a raw <Page> element into a Page AST node. */
     it('compiles page xml into a page ast node', () => {
-        expect(xmlToAST('<Page title="Dashboard" />')).toEqual([
+        expect(parseXML('<Page title="Dashboard" />')).toEqual([
             {
                 name: 'Page',
                 params: {
@@ -25,7 +25,7 @@ describe('Page', () => {
      */
     it('renders raw xml page content end to end', () => {
         const ctx: ExecutionContext = {};
-        const ast = xmlToAST('<Page title="Dashboard" />');
+        const ast = parseXML('<Page title="Dashboard" />');
         const renderedTree = render(ast, ctx, '');
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<div class="space-y-6"></div>');

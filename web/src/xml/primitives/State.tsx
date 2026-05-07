@@ -1,5 +1,5 @@
 import type { XmlComponentProps } from '@/xml';
-import { RuntimeProvider, evaluate, renderXml, useContext } from '@/xml';
+import { RuntimeProvider, evaluate, renderNode, useContext } from '@/xml';
 import { useRef } from 'react';
 import { proxy } from 'valtio';
 import { useSnapshot } from 'valtio/react';
@@ -32,5 +32,5 @@ export function State({ props, children }: XmlComponentProps) {
         },
     };
 
-    return <RuntimeProvider value={childCtx}>{renderXml(children)}</RuntimeProvider>;
+    return <RuntimeProvider value={childCtx}>{renderNode(children)}</RuntimeProvider>;
 }

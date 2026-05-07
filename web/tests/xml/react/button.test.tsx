@@ -1,4 +1,4 @@
-import { xmlToAST } from '@/xml/compiler';
+import { parseXML } from '@/xml/parser';
 import { render } from '@/xml/renderers';
 import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -10,7 +10,7 @@ describe('Button', () => {
     /* External href buttons should render as anchors. */
     it('renders an anchor when href is external', () => {
         const output = renderXmlToMarkup(
-            xmlToAST('<Button href="https://example.com" variant="default">Open</Button>')
+            parseXML('<Button href="https://example.com" variant="default">Open</Button>')
         );
 
         expect(output).toContain('<a');
@@ -20,7 +20,7 @@ describe('Button', () => {
 
     /* Internal href buttons should stay inside the app router. */
     it('preserves an internal href in compiled xml', () => {
-        expect(xmlToAST('<Button href="/issues">Open issues</Button>')).toEqual([
+        expect(parseXML('<Button href="/issues">Open issues</Button>')).toEqual([
             {
                 name: 'Button',
                 params: { href: '/issues' },
@@ -31,7 +31,7 @@ describe('Button', () => {
 
     /* Variant should flow into the shared button class recipe. */
     it('applies the requested variant', () => {
-        const ast = xmlToAST('<Button variant="destructive">Delete</Button>');
+        const ast = parseXML('<Button variant="destructive">Delete</Button>');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('bg-destructive/10');
@@ -40,7 +40,7 @@ describe('Button', () => {
 
     /* Size should flow into the shared button class recipe. */
     it('applies the requested size', () => {
-        const ast = xmlToAST('<Button size="lg">Save</Button>');
+        const ast = parseXML('<Button size="lg">Save</Button>');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('h-9');
@@ -49,7 +49,7 @@ describe('Button', () => {
 
     /* Disabled should mark the rendered button as inactive. */
     it('disables normal buttons when disabled is set', () => {
-        const ast = xmlToAST('<Button disabled="true">Submit</Button>');
+        const ast = parseXML('<Button disabled="true">Submit</Button>');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
@@ -59,7 +59,7 @@ describe('Button', () => {
 
     /* Action buttons should still render as disabled when requested. */
     it('disables action buttons when disabled is set', () => {
-        const ast = xmlToAST('<Button action="/issues" disabled="true">Submit</Button>');
+        const ast = parseXML('<Button action="/issues" disabled="true">Submit</Button>');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
@@ -70,7 +70,7 @@ describe('Button', () => {
     /* Action props should remain part of the XML contract. */
     it('preserves action parameters in compiled xml', () => {
         expect(
-            xmlToAST(
+            parseXML(
                 '<Button action="/issues" json=' +
                     '\'{"title":"{issue.title}"}\'' +
                     ' invalidate="issues">Save</Button>'
@@ -91,7 +91,7 @@ describe('Button', () => {
     /* The runtime should honor conditional rendering on button nodes. */
     it('skips a button when if resolves false', () => {
         const ctx: ExecutionContext = {};
-        const ast = xmlToAST('<Button if="{false}">Hidden</Button>');
+        const ast = parseXML('<Button if="{false}">Hidden</Button>');
         const renderedTree = render(ast, ctx, '');
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toBe('<div></div>');
@@ -99,7 +99,7 @@ describe('Button', () => {
 
     /* The compiler should preserve the if parameter on button nodes. */
     it('preserves if in compiled xml', () => {
-        expect(xmlToAST('<Button if="{true}">Visible</Button>')).toEqual([
+        expect(parseXML('<Button if="{true}">Visible</Button>')).toEqual([
             {
                 name: 'Button',
                 params: { if: '{true}' },

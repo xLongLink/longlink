@@ -1,6 +1,6 @@
-export { xmlToAST as fromXml } from './compiler';
+export { parseXML as fromXml } from './parser';
 export { registry } from './registry';
-export { render, renderXml } from './renderers';
+export { render, renderNode } from './renderers';
 export { BaseUrlContext, RuntimeContext, RuntimeProvider, evaluate, resolve, useContext, useUrl } from './runtime';
 export type {
     ASTNode,
