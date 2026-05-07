@@ -41,5 +41,5 @@ export const Button: XMLComponent<ButtonProps> = ({ action, json, method = 'POST
         toast.success(`Request completed with status ${response.status}`);
     }
 
-    return <UIButton onClick={handleClick}>{renderNode(children)}</UIButton>;
+    return <UIButton onClick={handleClick}>{renderNode(children, ctx)}</UIButton>;
 };

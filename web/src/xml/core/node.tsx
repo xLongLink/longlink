@@ -1,13 +1,12 @@
 import { XmlErrorBoundary } from '@xml/core/errors';
 import { compile, evaluate } from '@xml/core/expressions';
-import { RuntimeContext } from '@xml/core/runtime';
 import { registry } from '@xml/registry';
 import type { ExecutionContext, RenderableASTNode } from '@xml/types';
-import { Fragment, useContext as useReactContext, type ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 
-/** Renders XML AST nodes using the active runtime context when present. */
-export function renderNode(node: RenderableASTNode, ctx?: ExecutionContext): ReactNode {
-    const runtime = ctx ?? useReactContext(RuntimeContext) ?? { values: {} };
+/** Renders XML AST nodes using the active runtime context. */
+export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): ReactNode {
+    const runtime = ctx;
 
     // Handle null/undefined early to avoid unnecessary registry lookups and error boundaries.
     if (!node) return <></>;
