@@ -1,0 +1,40 @@
+import { Component, type ReactNode } from 'react';
+
+type XmlErrorBoundaryProps = {
+    children: ReactNode;
+    resetKey?: unknown;
+};
+
+type XmlErrorBoundaryState = {
+    error: Error | null;
+};
+
+/** Keeps XML rendering failures scoped to the XML surface. */
+export class XmlErrorBoundary extends Component<XmlErrorBoundaryProps, XmlErrorBoundaryState> {
+    state: XmlErrorBoundaryState = { error: null };
+
+    /** Stores the thrown error so the XML area can render the message. */
+    static getDerivedStateFromError(error: Error): XmlErrorBoundaryState {
+        return { error };
+    }
+
+    /** Clears a previous XML error when the rendered XML node changes. */
+    componentDidUpdate(previousProps: XmlErrorBoundaryProps) {
+        if (previousProps.resetKey !== this.props.resetKey && this.state.error) {
+            this.setState({ error: null });
+        }
+    }
+
+    /** Renders the XML error message or the protected XML subtree. */
+    render() {
+        if (this.state.error) {
+            return (
+                <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                    <div className="font-medium">{this.state.error.message || 'XML rendering failed'}</div>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
+}

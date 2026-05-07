@@ -2,14 +2,12 @@ import type { ExecutionContext } from './types';
 
 export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
 
-
 /** Creates a proxy that resolves identifiers through lexical parent contexts. */
 function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
-
     /** Resolves a value from the current XML runtime scope chain. */
     function resolve(ctx: ExecutionContext | null | undefined, key: string): unknown {
         if (!ctx) return undefined;
-        
+
         /** Returns the active scope values for the current XML context. */
         const values = ctx.values ?? ctx;
 
@@ -32,8 +30,6 @@ function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
         }
     );
 }
-
-
 
 /** Evaluates an XML attribute value against the current XML runtime scope. */
 export function evaluate(expr: string, ctx: ExecutionContext): unknown {
