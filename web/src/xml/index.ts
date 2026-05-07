@@ -1,8 +1,10 @@
-export { compile as compileExpression, evaluate } from '@xml/expressions';
-export { parseXML as fromXml } from '@xml/parser';
+export { compile as compileExpression, evaluate } from '@xml/core/expressions';
+export { renderNode } from '@xml/core/node';
+export { parseXML as fromXml } from '@xml/core/parser';
+export { RuntimeContext, RuntimeProvider, useContext } from '@xml/core/runtime';
+export { BaseUrlContext, resolveUrl, useUrl } from '@xml/core/url';
 export { registry } from '@xml/registry';
-export { render, renderNode } from '@xml/renderers';
-export { BaseUrlContext, RuntimeContext, RuntimeProvider, resolveUrl, useContext, useUrl } from '@xml/runtime';
+export { render } from '@xml/renderers';
 export type {
     ASTNode,
     ExecutionContext,

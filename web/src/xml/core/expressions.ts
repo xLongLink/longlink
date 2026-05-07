@@ -2,16 +2,6 @@ import type { ExecutionContext, XmlSourceContext } from '@xml/types';
 
 export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
 
-class XmlExpressionError extends Error {
-    constructor(message: string, cause: unknown) {
-        super(message);
-        this.name = 'XmlExpressionError';
-        if (cause instanceof Error) {
-            this.stack = `${this.name}: ${this.message}\nCaused by: ${cause.stack ?? cause.message}`;
-        }
-    }
-}
-
 /** Creates a proxy that resolves identifiers through lexical parent contexts. */
 function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
     /** Resolves a value from the current XML runtime scope chain. */
@@ -55,10 +45,7 @@ export function evaluate(expr: string, ctx: ExecutionContext, source?: XmlSource
             const location = source?.nodeName
                 ? `<${source.nodeName}>${source.attributeName ? ` attribute "${source.attributeName}"` : ''}`
                 : 'XML expression';
-            throw new XmlExpressionError(
-                `${location}: ${error instanceof Error ? error.message : 'Expression evaluation failed'}`,
-                error
-            );
+            throw new Error(`${location}: ${error instanceof Error ? error.message : 'Expression evaluation failed'}`);
         }
     }
 

@@ -16,8 +16,7 @@ export type XmlSourceContext = {
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     parent?: ExecutionContext;
-    values?: Record<string, unknown>;
-    baseUrl?: string;
+    values: Record<string, unknown>;
     [key: string]: unknown;
 };
 
