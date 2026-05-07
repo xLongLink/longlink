@@ -1,13 +1,13 @@
-import { render, renderXml } from '@xml/renderers';
+import { render, renderNode } from '@xml/renderers';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-describe('renderXml', () => {
+describe('renderNode', () => {
     /* Null input should short-circuit before any registry lookup. */
     it('returns null for missing node input', () => {
-        expect(renderXml(null)).toBeNull();
+        expect(renderNode(null)).toBeNull();
     });
 
     /* Text nodes should evaluate expressions against the current runtime context. */
