@@ -17,6 +17,7 @@ export type XmlSourceContext = {
 export type ExecutionContext = {
     parent?: ExecutionContext;
     values?: Record<string, unknown>;
+    baseUrl?: string;
     [key: string]: unknown;
 };
 

@@ -1,6 +1,8 @@
 import { Fragment, useContext as useReactContext, type ReactNode } from 'react';
 import { XmlErrorBoundary } from './errors';
 import { compile, evaluate } from './expressions';
+import { Query } from './primitives/Query';
+import { State } from './primitives/State';
 import { registry } from './registry';
 import { BaseUrlContext, RuntimeContext, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
@@ -53,11 +55,23 @@ function renderNodeWithContext(node: RenderableASTNode, ctx: ExecutionContext): 
         }
     }
 
+    const resolved = resolveParams(node.params, ctx);
+
+    if (node.name === 'State') {
+        State(ctx, resolved as Parameters<typeof State>[1]);
+        return <></>;
+    }
+
+    if (node.name === 'Query') {
+        Query(ctx, resolved as Parameters<typeof Query>[1]);
+        return <></>;
+    }
+
     const Component = registry[node.name];
     if (!Component) throw new Error(`Unknown component "${node.name}"`);
 
     /* Pass the parsed XML attributes through as component props. */
-    rendered = <Component {...resolveParams(node.params, ctx)} children={node.children} />;
+    rendered = <Component {...resolved} children={node.children} />;
 
     return <XmlErrorBoundary resetKey={node}>{rendered}</XmlErrorBoundary>;
 }
@@ -72,6 +86,8 @@ export function renderNode(node: RenderableASTNode): ReactNode {
 
 /** Renders a parsed XML tree inside the active XML runtime contexts. */
 function XmlRenderer({ ast, ctx, baseUrl }: { ast: ASTNode[]; ctx: ExecutionContext; baseUrl: string }): ReactNode {
+    ctx.baseUrl = baseUrl;
+
     return (
         <XmlErrorBoundary resetKey={ast}>
             <BaseUrlContext.Provider value={baseUrl}>

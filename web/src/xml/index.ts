@@ -2,7 +2,7 @@ export { compile as compileExpression, evaluate } from './expressions';
 export { parseXML as fromXml } from './parser';
 export { registry } from './registry';
 export { render, renderNode } from './renderers';
-export { BaseUrlContext, RuntimeContext, RuntimeProvider, useContext, useUrl } from './runtime';
+export { BaseUrlContext, RuntimeContext, RuntimeProvider, resolveUrl, useContext, useUrl } from './runtime';
 export type {
     ASTNode,
     ExecutionContext,

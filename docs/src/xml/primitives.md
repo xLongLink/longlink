@@ -13,8 +13,8 @@ Its children render with that state in scope.
 
 ```xml
 <State id="user" value="{ username: '', password: '' }">
-  <Input value="user.value.username" />
-  <Input value="user.value.password" />
+  <Input value="user.username" />
+  <Input value="user.password" />
 </State>
 ```
 

@@ -32,7 +32,8 @@ function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
         {},
         {
             has(_target, key) {
-                return typeof key === 'string' ? resolve(ctx, key) !== undefined : false;
+                /* Allow `with` lookups to flow through the scope chain instead of falling back to globals. */
+                return typeof key === 'string';
             },
             get(_target, key) {
                 return typeof key === 'string' ? resolve(ctx, key) : undefined;
