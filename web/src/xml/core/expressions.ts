@@ -1,7 +1,9 @@
 import type { ExecutionContext } from '@xml/types';
 import { getVersion, snapshot } from 'valtio';
 
+
 export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
+
 
 /** Returns true when the input is wrapped in braces. */
 export function isExpression(expr: string): boolean {
@@ -10,6 +12,7 @@ export function isExpression(expr: string): boolean {
     return input.startsWith('{') && input.endsWith('}');
 }
 
+
 /** Returns true when the input is a `$`-prefixed reference path. */
 export function isReference(expr: string): boolean {
     const input = expr.trim();
@@ -17,12 +20,14 @@ export function isReference(expr: string): boolean {
     return /^\$[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(input);
 }
 
+
 /** Returns true when the input is a simple text string. */
 export function isText(expr: string): boolean {
     const input = expr.trim();
 
     return input === '' || (!isExpression(input) && !isReference(input));
 }
+
 
 /** Creates a proxy that resolves identifiers through lexical parent contexts. */
 function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {

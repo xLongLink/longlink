@@ -70,5 +70,6 @@ Write clear, precise, unambiguous docs for broad technical backgrounds and trans
 
 - All JavaScript functions must have JSDoc (`/** ... */`) directly above declaration.
 - Any non-trivial JavaScript logic block must have standalone inline comment (`/* ... */`) above block.
+- Include two blank lines between function definitions.
 - All Python functions must include docstring (`""" ... """`) immediately after definition.
 - Any non-trivial Python logic block must have standalone inline comment (`# ...`) above block.

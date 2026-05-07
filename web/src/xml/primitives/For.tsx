@@ -6,16 +6,13 @@ import { Fragment } from 'react';
 /** Props accepted by the XML For component. */
 export interface ForProps {
     as: string;
-    each: unknown[] | string;
-    children: ASTNode | ASTNode[] | null;
+    each: unknown[];
+    children: ASTNode | ASTNode[];
 }
 
 /** Iterates over an array and renders children in a scoped context. */
 export const For: XMLComponent<ForProps> = ({ each, as, children }) => {
     const { ctx } = useContext();
-
-    if (!Array.isArray(each)) return null;
-    if (!children) return null;
 
     return each.map((item, index) => {
         const childCtx = {
