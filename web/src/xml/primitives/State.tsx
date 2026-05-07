@@ -1,15 +1,20 @@
-import type { XmlComponentProps } from '@/xml';
-import { RuntimeProvider, evaluate, renderNode, useContext } from '@/xml';
+import { RuntimeProvider, renderNode, useContext } from '@/xml';
 import { useRef } from 'react';
 import { proxy } from 'valtio';
 import { useSnapshot } from 'valtio/react';
 
+/** Props accepted by the XML State component. */
+export interface StateProps {
+    id?: unknown;
+    [key: string]: unknown;
+}
+
 /** Creates a local reactive state slot for descendant XML nodes. */
-export function State({ props, children }: XmlComponentProps) {
+export function State({ props, children }: { props: StateProps; children?: unknown }) {
     const { ctx } = useContext();
     if (props.id == null || props.id === '') throw new Error('State requires an "id" parameter');
 
-    const id = String(evaluate(props.id, ctx) ?? '');
+    const id = String(props.id ?? '');
 
     /* Create one Valtio proxy and keep it stable for descendants. */
     const stateRef = useRef<Record<string, unknown> | null>(null);
@@ -18,7 +23,7 @@ export function State({ props, children }: XmlComponentProps) {
             Object.fromEntries(
                 Object.entries(props)
                     .filter(([key]) => key !== 'id')
-                    .map(([key, val]) => [key, evaluate(val, ctx)])
+                    .map(([key, val]) => [key, val])
             ) as Record<string, unknown>
         );
     }

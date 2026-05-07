@@ -1,6 +1,7 @@
 import { Component, Fragment, useContext as useReactContext, type ComponentType, type ReactNode } from 'react';
+import { evaluate, resolveProps } from './expressions';
 import { registry } from './registry';
-import { BaseUrlContext, evaluate, RuntimeContext, RuntimeProvider } from './runtime';
+import { BaseUrlContext, RuntimeContext, RuntimeProvider } from './runtime';
 import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
 
 type XmlErrorBoundaryProps = {
@@ -69,10 +70,22 @@ export function renderNode(node: RenderableASTNode): ReactNode {
         const Component = (registry as Record<string, ComponentType<any>>)[node.name];
         if (!Component) throw new Error(`Unknown component "${node.name}"`);
 
-        rendered = <Component props={node.params ?? {}} children={node.children} />;
+        rendered = (
+            <Component
+                props={resolveProps(node.params ?? {}, activeCtx, componentLazyKeys(node.name))}
+                children={node.children}
+            />
+        );
     }
 
     return <XmlErrorBoundary resetKey={node}>{rendered}</XmlErrorBoundary>;
+}
+
+/** Returns lazy expression keys for built-in XML components. */
+function componentLazyKeys(name: string): string[] {
+    if (name === 'Button') return ['action', 'json'];
+
+    return [];
 }
 
 /**

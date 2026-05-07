@@ -1,14 +1,19 @@
-import type { XmlComponentProps } from '@/xml';
-import { RuntimeProvider, evaluate, renderNode, useContext, useUrl } from '@/xml';
+import { RuntimeProvider, renderNode, useContext, useUrl } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
+/** Props accepted by the XML Query component. */
+export interface QueryProps {
+    id?: unknown;
+    path?: unknown;
+}
+
 /** Fetches JSON data into a reusable query slot for descendants. */
-export function Query({ props: rawProps, children }: XmlComponentProps) {
+export function Query({ props: rawProps, children }: { props: QueryProps; children?: unknown }) {
     const { ctx } = useContext();
-    const id = String(evaluate(rawProps.id ?? '', ctx) ?? '');
-    const pathTemplate = String(evaluate(rawProps.path ?? '', ctx) ?? '');
+    const id = String(rawProps.id ?? '');
+    const pathTemplate = String(rawProps.path ?? '');
     if (!id) throw new Error('Query requires an "id" parameter');
     if (!pathTemplate) throw new Error('Query requires a "path" parameter');
 

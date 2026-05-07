@@ -21,7 +21,7 @@ export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
 
 /** Standard XML component contract used by the runtime. */
 export type XmlComponentProps = {
-    props: Record<string, string>;
+    props: Record<string, unknown>;
     children?: RenderableASTNode;
 };
 

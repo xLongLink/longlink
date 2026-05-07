@@ -1,13 +1,16 @@
 import { Input as UIInput } from '@/ui/input';
-import type { XmlComponentProps } from '@/xml';
-import { evaluate, useContext } from '@/xml';
+
+/** Props accepted by the XML Input component. */
+export interface InputProps {
+    placeholder?: unknown;
+    value?: unknown;
+}
 
 /** Renders a minimal XML input control. */
-export function Input({ props }: XmlComponentProps) {
-    const { ctx } = useContext();
+export function Input({ props }: { props: InputProps }) {
     const valueProp = props.value ?? '';
-    const placeholder = String(evaluate(props.placeholder ?? '', ctx) ?? '');
-    const value = String(evaluate(valueProp, ctx) ?? '');
+    const placeholder = String(props.placeholder ?? '');
+    const value = String(valueProp ?? '');
 
     return <UIInput type="text" placeholder={placeholder} value={value} readOnly />;
 }

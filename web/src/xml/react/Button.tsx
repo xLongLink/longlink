@@ -1,14 +1,21 @@
 import { Button as UIButton } from '@/ui/button';
-import type { XmlComponentProps } from '@/xml';
-import { evaluate, renderNode, useContext, useUrl } from '@/xml';
+import { renderNode, useContext, useUrl } from '@/xml';
 import { toast } from 'sonner';
 
+/** Props accepted by the XML Button component. */
+export interface ButtonProps {
+    action?: (ctx: ReturnType<typeof useContext>['ctx']) => unknown;
+    children?: unknown;
+    json?: (ctx: ReturnType<typeof useContext>['ctx']) => unknown;
+    [key: string]: unknown;
+}
+
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
-export function Button({ props: rawProps, children }: XmlComponentProps) {
+export function Button({ props, children }: { props: ButtonProps; children?: unknown }) {
     const { ctx } = useContext();
 
-    const action = String(evaluate(rawProps.action ?? '', ctx) ?? '');
-    const json = evaluate(rawProps.json ?? '', ctx);
+    const action = String(props.action?.(ctx) ?? '');
+    const json = props.json?.(ctx);
     const requestUrl = useUrl(action);
 
     /** Sends the configured request and shows a minimal toast result. */
