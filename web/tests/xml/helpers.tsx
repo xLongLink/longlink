@@ -1,6 +1,6 @@
-import { render } from '@/xml/renderers';
-import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render } from '@xml/renderers';
+import type { ASTNode, ExecutionContext } from '@xml/types';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 

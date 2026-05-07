@@ -1,8 +1,8 @@
+import { render, renderXml } from '@xml/renderers';
+import type { ASTNode, ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { render, renderXml } from '../../src/xml/renderers';
-import type { ASTNode, ExecutionContext } from '../../src/xml/types';
 
 describe('renderXml', () => {
     /* Null input should short-circuit before any registry lookup. */

@@ -1,5 +1,5 @@
 import { Input as UIInput } from '@/ui/input';
-import type { XMLComponent } from '@/xml';
+import type { XMLComponent } from '@xml';
 
 /** Props accepted by the XML Input component. */
 export interface InputProps {

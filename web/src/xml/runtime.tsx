@@ -1,6 +1,6 @@
+import { evaluate } from '@xml/expressions';
+import type { ExecutionContext } from '@xml/types';
 import { createContext, useContext as useReactContext, type ReactNode } from 'react';
-import { evaluate } from './expressions';
-import type { ExecutionContext } from './types';
 
 export const BaseUrlContext = createContext<string>('');
 export const RuntimeContext = createContext<ExecutionContext | null>(null);

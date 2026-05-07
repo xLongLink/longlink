@@ -24,7 +24,9 @@
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
+            "@xml": ["./src/xml"],
+            "@xml/*": ["./src/xml/*"]
         }
     },
     "include": ["src", "api", "sdk"]

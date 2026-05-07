@@ -1,8 +1,6 @@
-import { parseXML } from '@/xml/parser';
-import { State } from '@/xml/primitives/State';
-import { render } from '@/xml/renderers';
-import { RuntimeProvider } from '@/xml/runtime';
-import type { ExecutionContext } from '@/xml/types';
+import { parseXML } from '@xml/parser';
+import { render } from '@xml/renderers';
+import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -33,17 +31,9 @@ describe('State', () => {
     /* State should register a scoped tuple and preserve its initial object shape. */
     it('exposes initial state to descendants', () => {
         const ctx: ExecutionContext = {};
-        const runtime: ExecutionContext = { ctx, props: {}, children: null };
+        const ast = parseXML('<State id="filter" value="day">{filter}</State>');
 
-        const output = renderToStaticMarkup(
-            createElement(RuntimeProvider, {
-                value: runtime,
-                children: createElement(State, {
-                    props: { id: 'filter', value: 'day' },
-                    children: { name: 'Text', children: '{filter}' },
-                }),
-            })
-        );
+        const output = renderToStaticMarkup(createElement(Fragment, null, render(ast, ctx, '')));
 
         expect(output).toBe('day');
     });
@@ -51,15 +41,10 @@ describe('State', () => {
     /* Missing ids should fail fast so XML authors get a clear runtime error. */
     it('throws when id is missing', () => {
         const ctx: ExecutionContext = {};
-        const runtime: ExecutionContext = { ctx, props: {}, children: null };
+        const ast = parseXML('<State value="x">x</State>');
 
-        expect(() =>
-            renderToStaticMarkup(
-                createElement(RuntimeProvider, {
-                    value: runtime,
-                    children: createElement(State, { props: {}, children: 'x' }),
-                })
-            )
-        ).toThrow('State requires an "id" parameter');
+        expect(() => renderToStaticMarkup(createElement(Fragment, null, render(ast, ctx, '')))).toThrow(
+            'State requires a string id'
+        );
     });
 });

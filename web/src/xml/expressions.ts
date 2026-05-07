@@ -1,4 +1,4 @@
-import type { ExecutionContext, XmlSourceContext } from './types';
+import type { ExecutionContext, XmlSourceContext } from '@xml/types';
 
 export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
 

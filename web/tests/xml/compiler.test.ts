@@ -1,5 +1,5 @@
+import { parseXML } from '@xml/parser';
 import { describe, expect, it } from 'bun:test';
-import { parseXML } from '../../src/xml/parser';
 
 describe('parseXML', () => {
     /* A single XML root should compile into the matching AST element. */

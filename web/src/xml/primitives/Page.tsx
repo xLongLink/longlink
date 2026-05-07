@@ -1,5 +1,5 @@
-import type { XMLComponent } from '@/xml';
-import { renderNode } from '@/xml';
+import type { XMLComponent } from '@xml';
+import { renderNode } from '@xml';
 
 /** Props accepted by the XML Page component. */
 export interface PageProps {

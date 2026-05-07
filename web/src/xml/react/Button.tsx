@@ -1,6 +1,6 @@
 import { Button as UIButton } from '@/ui/button';
-import type { XMLComponent } from '@/xml';
-import { evaluate, renderNode, useContext, useUrl } from '@/xml';
+import type { XMLComponent } from '@xml';
+import { evaluate, renderNode, useContext, useUrl } from '@xml';
 import { toast } from 'sonner';
 
 /** Props accepted by the XML Button component. */

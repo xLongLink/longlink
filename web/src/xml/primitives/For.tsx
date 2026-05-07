@@ -1,5 +1,5 @@
-import type { RenderableASTNode, XMLComponent } from '@/xml';
-import { renderNode, RuntimeProvider, useContext } from '@/xml';
+import type { RenderableASTNode, XMLComponent } from '@xml';
+import { renderNode, RuntimeProvider, useContext } from '@xml';
 import { Fragment } from 'react';
 
 /** Props accepted by the XML For component. */

@@ -1,5 +1,5 @@
+import type { ExecutionContext } from '@xml/types';
 import { proxy } from 'valtio';
-import type { ExecutionContext } from '../types';
 
 /** Props accepted by the XML State component. */
 export interface StateProps {
@@ -16,5 +16,5 @@ export function State(ctx: ExecutionContext, { id, value }: StateProps): void {
     /* Preserve object state shapes so descendants can read fields directly. */
     const initialValue = value != null && typeof value === 'object' && !Array.isArray(value) ? value : { value };
 
-    values[id] = proxy(initialValue as Record<string, unknown>);
+    values[id] = proxy<Record<string, unknown>>(initialValue as Record<string, unknown>);
 }

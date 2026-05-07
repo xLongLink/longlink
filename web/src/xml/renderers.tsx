@@ -1,11 +1,11 @@
+import { XmlErrorBoundary } from '@xml/errors';
+import { compile, evaluate } from '@xml/expressions';
+import { Query, type QueryProps } from '@xml/primitives/Query';
+import { State, type StateProps } from '@xml/primitives/State';
+import { registry } from '@xml/registry';
+import { BaseUrlContext, RuntimeContext, RuntimeProvider } from '@xml/runtime';
+import type { ASTNode, ExecutionContext, RenderableASTNode } from '@xml/types';
 import { Fragment, Suspense, useContext as useReactContext, type ReactNode } from 'react';
-import { XmlErrorBoundary } from './errors';
-import { compile, evaluate } from './expressions';
-import { Query } from './primitives/Query';
-import { State } from './primitives/State';
-import { registry } from './registry';
-import { BaseUrlContext, RuntimeContext, RuntimeProvider } from './runtime';
-import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
 
 /** Converts XML attribute strings into the React prop shape a component expects. */
 function resolveParams(params: Record<string, string> | undefined, ctx: ExecutionContext): Record<string, unknown> {
@@ -58,12 +58,30 @@ function renderNodeWithContext(node: RenderableASTNode, ctx: ExecutionContext): 
     const resolved = resolveParams(node.params, ctx);
 
     if (node.name === 'State') {
-        State(ctx, resolved as Parameters<typeof State>[1]);
+        const id = resolved.id;
+        if (typeof id !== 'string') {
+            throw new Error('State requires a string id');
+        }
+
+        const stateProps: StateProps = { id, value: resolved.value };
+        State(ctx, stateProps);
         return <></>;
     }
 
     if (node.name === 'Query') {
-        Query(ctx, resolved as Parameters<typeof Query>[1]);
+        const id = resolved.id;
+        const path = resolved.path;
+
+        if (typeof id !== 'string') {
+            throw new Error('Query requires a string id');
+        }
+
+        if (typeof path !== 'string') {
+            throw new Error('Query requires a string path');
+        }
+
+        const queryProps: QueryProps = { id, path };
+        Query(ctx, queryProps);
         return <></>;
     }
 

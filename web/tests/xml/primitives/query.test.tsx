@@ -1,10 +1,10 @@
-import { parseXML } from '@/xml/parser';
-import { Query } from '@/xml/primitives/Query';
-import { RuntimeProvider } from '@/xml/runtime';
-import type { ExecutionContext } from '@/xml/types';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { parseXML } from '@xml/parser';
+import { render } from '@xml/renderers';
+import { RuntimeProvider } from '@xml/runtime';
+import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
-import { createElement } from 'react';
+import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('Query', () => {
@@ -21,8 +21,9 @@ describe('Query', () => {
 
     /* Query should reject missing ids so invalid XML fails fast. */
     it('throws when id is missing', () => {
-        const runtime: ExecutionContext = { ctx: {}, props: {}, children: null };
+        const runtime: ExecutionContext = { values: {} };
         const client = new QueryClient();
+        const ast = parseXML('<Query path="/api/user">x</Query>');
 
         expect(() =>
             renderToStaticMarkup(
@@ -31,10 +32,10 @@ describe('Query', () => {
                     { client },
                     createElement(RuntimeProvider, {
                         value: runtime,
-                        children: createElement(Query, { props: { path: '/api/user' }, children: null }),
+                        children: createElement(Fragment, null, render(ast, runtime, '')),
                     })
                 )
             )
-        ).toThrow('Query requires an "id" parameter');
+        ).toThrow('Query requires a string id');
     });
 });

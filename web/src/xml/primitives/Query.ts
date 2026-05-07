@@ -1,6 +1,6 @@
-import { resolveUrl } from '@/xml';
+import { resolveUrl } from '@xml';
+import type { ExecutionContext } from '@xml/types';
 import { toast } from 'sonner';
-import type { ExecutionContext } from '../types';
 
 /** Props accepted by the XML Query component. */
 export interface QueryProps {

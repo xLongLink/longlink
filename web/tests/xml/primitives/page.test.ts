@@ -1,6 +1,6 @@
-import { parseXML } from '@/xml/parser';
-import { render } from '@/xml/renderers';
-import type { ExecutionContext } from '@/xml/types';
+import { parseXML } from '@xml/parser';
+import { render } from '@xml/renderers';
+import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

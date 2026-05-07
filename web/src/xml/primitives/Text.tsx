@@ -1,4 +1,4 @@
-import type { XMLComponent } from '@/xml';
+import type { XMLComponent } from '@xml';
 
 /** Props accepted by the XML Text component. */
 export interface TextProps {

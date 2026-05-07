@@ -1,6 +1,6 @@
+import { evaluate } from '@xml';
+import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
-import { evaluate } from '../../src/xml/runtime';
-import type { ExecutionContext } from '../../src/xml/types';
 
 describe('evaluate', () => {
     /* Evaluation should resolve expressions against the flat runtime context. */

@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, './src'),
+                '@xml': path.resolve(__dirname, './src/xml'),
             },
         },
 

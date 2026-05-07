@@ -1,5 +1,5 @@
-import type { XMLComponent } from '@/xml';
-import { renderNode } from '@/xml';
+import type { XMLComponent } from '@xml';
+import { renderNode } from '@xml';
 
 /** Props accepted by the XML paragraph bridge component. */
 export interface PProps {
