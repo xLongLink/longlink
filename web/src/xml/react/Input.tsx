@@ -1,4 +1,5 @@
 import { Input as UIInput } from '@/ui/input';
+import type { XMLComponent } from '@/xml';
 
 /** Props accepted by the XML Input component. */
 export interface InputProps {
@@ -7,10 +8,10 @@ export interface InputProps {
 }
 
 /** Renders a minimal XML input control. */
-export function Input({ props }: { props: InputProps }) {
-    const valueProp = props.value ?? '';
-    const placeholder = String(props.placeholder ?? '');
-    const value = String(valueProp ?? '');
+export const Input: XMLComponent<InputProps> = ({ props }) => {
+    const { value: rawValue, placeholder } = props;
+    const valueText = String(rawValue ?? '');
+    const placeholderText = String(placeholder ?? '');
 
-    return <UIInput type="text" placeholder={placeholder} value={value} readOnly />;
-}
+    return <UIInput type="text" placeholder={placeholderText} value={valueText} readOnly />;
+};

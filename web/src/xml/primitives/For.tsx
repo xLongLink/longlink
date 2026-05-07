@@ -1,15 +1,17 @@
+import type { RenderableASTNode, XMLComponent } from '@/xml';
 import { renderNode, RuntimeProvider, useContext } from '@/xml';
-import type { RenderableASTNode } from '@/xml';
 import { Fragment } from 'react';
 
 /** Props accepted by the XML For component. */
 export interface ForProps {
     as: string;
     each: unknown;
+    children?: RenderableASTNode;
 }
 
 /** Iterates over an array and renders children in a scoped context. */
-export function For({ each, as, children }: ForProps & { children?: RenderableASTNode }) {
+export const For: XMLComponent<ForProps> = ({ props, children }) => {
+    const { each, as } = props;
     const { ctx } = useContext();
 
     if (!Array.isArray(each)) return null;
@@ -29,4 +31,4 @@ export function For({ each, as, children }: ForProps & { children?: RenderableAS
             </Fragment>
         );
     });
-}
+};

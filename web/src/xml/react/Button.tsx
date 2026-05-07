@@ -1,4 +1,5 @@
 import { Button as UIButton } from '@/ui/button';
+import type { XMLComponent } from '@/xml';
 import { renderNode, useContext, useUrl } from '@/xml';
 import { toast } from 'sonner';
 
@@ -11,20 +12,21 @@ export interface ButtonProps {
 }
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
-export function Button({ props, children }: { props: ButtonProps; children?: unknown }) {
+export const Button: XMLComponent<ButtonProps> = ({ props, children }) => {
     const { ctx } = useContext();
+    const { action, json } = props;
 
-    const action = String(props.action?.(ctx) ?? '');
-    const json = props.json?.(ctx);
-    const requestUrl = useUrl(action);
+    const actionUrl = String(action?.(ctx) ?? '');
+    const jsonValue = json?.(ctx);
+    const requestUrl = useUrl(actionUrl);
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleClick() {
-        if (!action) return;
+        if (!actionUrl) return;
 
         const response = await fetch(requestUrl, {
             method: 'POST',
-            body: JSON.stringify(json),
+            body: JSON.stringify(jsonValue),
             headers: { 'content-type': 'application/json' },
         });
 
@@ -37,4 +39,4 @@ export function Button({ props, children }: { props: ButtonProps; children?: unk
     }
 
     return <UIButton onClick={handleClick}>{renderNode(children)}</UIButton>;
-}
+};

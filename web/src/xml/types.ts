@@ -10,20 +10,24 @@ export type ASTNode = {
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     parent?: ExecutionContext;
-    values: Record<string, unknown>;
+    values?: Record<string, unknown>;
+    [key: string]: unknown;
 };
+
+/** Backwards-compatible alias used by older XML helpers and tests. */
+export type RuntimeState = ExecutionContext;
 
 /** A React component that can be registered and rendered from XML. */
 export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<Props>;
 
 /** A node or array of nodes that can be rendered by renderNode. */
-export type RenderableASTNode = ASTNode | ASTNode[] | null | undefined;
+export type RenderableASTNode = ASTNode | ASTNode[] | string | number | boolean | null | undefined;
 
 /** Standard XML component contract used by the runtime. */
-export type XmlComponentProps = {
-    props: Record<string, unknown>;
+export type XMLComponent<Props = Record<string, unknown>> = ComponentType<{
+    props: Props;
     children?: RenderableASTNode;
-};
+}>;
 
 /** XML component type with the runtime contract. */
-export type XmlRegistryComponent<Props = Record<string, unknown>> = ComponentType<Props & XmlComponentProps>;
+export type XmlRegistryComponent<Props = Record<string, unknown>> = XMLComponent<Props>;

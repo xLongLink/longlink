@@ -1,41 +1,31 @@
-import { RuntimeProvider, renderNode, useContext } from '@/xml';
+import type { XMLComponent } from '@/xml';
+import { useContext } from '@/xml';
 import { useRef } from 'react';
 import { proxy } from 'valtio';
 import { useSnapshot } from 'valtio/react';
 
 /** Props accepted by the XML State component. */
 export interface StateProps {
-    id?: unknown;
-    [key: string]: unknown;
+    id?: string;
+    value?: string | number | unknown[];
 }
 
 /** Creates a local reactive state slot for descendant XML nodes. */
-export function State({ props, children }: { props: StateProps; children?: unknown }) {
+export const State: XMLComponent<StateProps> = ({ props }) => {
     const { ctx } = useContext();
-    if (props.id == null || props.id === '') throw new Error('State requires an "id" parameter');
-
-    const id = String(props.id ?? '');
+    const { id, value } = props;
+    if (!id) throw new Error('State requires an "id" parameter');
+    const values = ctx.values ?? (ctx.values = {});
 
     /* Create one Valtio proxy and keep it stable for descendants. */
     const stateRef = useRef<Record<string, unknown> | null>(null);
     if (stateRef.current == null) {
-        stateRef.current = proxy(
-            Object.fromEntries(
-                Object.entries(props)
-                    .filter(([key]) => key !== 'id')
-                    .map(([key, val]) => [key, val])
-            ) as Record<string, unknown>
-        );
+        stateRef.current = proxy({ value });
     }
 
     const stateValue = useSnapshot(stateRef.current);
 
-    const childCtx = {
-        parent: ctx,
-        values: {
-            [id]: stateValue,
-        },
-    };
+    values[id] = stateValue;
 
-    return <RuntimeProvider value={childCtx}>{renderNode(children)}</RuntimeProvider>;
-}
+    return null;
+};

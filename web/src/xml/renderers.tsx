@@ -59,6 +59,14 @@ export function renderNode(node: RenderableASTNode): ReactNode {
     // Handle null/undefined early to avoid unnecessary registry lookups and error boundaries.
     if (!node) return <></>;
 
+    if (typeof node === 'string' || typeof node === 'number') {
+        return node;
+    }
+
+    if (typeof node === 'boolean') {
+        return <></>;
+    }
+
     let rendered: ReactNode;
 
     // Arrays of nodes are rendered as fragments with stable keys.
@@ -72,7 +80,7 @@ export function renderNode(node: RenderableASTNode): ReactNode {
 
         rendered = (
             <Component
-                props={resolveProps(node.params ?? {}, activeCtx, componentLazyKeys(node.name))}
+                props={resolveProps(node.params ?? {}, activeCtx, (node.name))}
                 children={node.children}
             />
         );
@@ -81,18 +89,12 @@ export function renderNode(node: RenderableASTNode): ReactNode {
     return <XmlErrorBoundary resetKey={node}>{rendered}</XmlErrorBoundary>;
 }
 
-/** Returns lazy expression keys for built-in XML components. */
-function componentLazyKeys(name: string): string[] {
-    if (name === 'Button') return ['action', 'json'];
-
-    return [];
-}
 
 /**
  * Renders a top-level ASTNode array into a React node.
  * Wraps each root node in a Fragment with a stable index key.
  */
-export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): ReactNode {
+export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl = ''): ReactNode {
     return (
         <XmlErrorBoundary resetKey={ast}>
             <BaseUrlContext.Provider value={baseUrl}>
@@ -100,4 +102,9 @@ export function render(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): 
             </BaseUrlContext.Provider>
         </XmlErrorBoundary>
     );
+}
+
+/** Backwards-compatible alias for callers that still import renderXml. */
+export function renderXml(node: RenderableASTNode, _ctx: ExecutionContext = { values: {} }, _baseUrl = ''): ReactNode {
+    return renderNode(node);
 }

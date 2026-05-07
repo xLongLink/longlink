@@ -1,4 +1,5 @@
 import { createContext, useContext as useReactContext, type ReactNode } from 'react';
+import { evaluate } from './expressions';
 import type { ExecutionContext } from './types';
 
 export const BaseUrlContext = createContext<string>('');
@@ -30,3 +31,6 @@ export function useUrl(path: string): string {
 
     return `${baseUrl}${path}`;
 }
+
+/** Re-exports expression evaluation for runtime callers. */
+export { evaluate };

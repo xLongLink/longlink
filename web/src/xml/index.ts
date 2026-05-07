@@ -8,6 +8,6 @@ export type {
     ExecutionContext,
     RegistryComponent,
     RenderableASTNode,
-    XmlComponentProps,
+    XMLComponent,
     XmlRegistryComponent,
 } from './types';
