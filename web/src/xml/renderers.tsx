@@ -1,13 +1,13 @@
+import { ContextProvider, createContext, setupContext } from '@xml/core/context';
 import { XmlErrorBoundary } from '@xml/core/errors';
 import { renderNode } from '@xml/core/node';
-import { RuntimeProvider, setupContext } from '@xml/core/context';
 import { BaseUrlContext } from '@xml/core/url';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { useEffect, useState, type ReactNode } from 'react';
 
 type RenderXMLProps = {
     ast: ASTNode[];
-    ctx: ExecutionContext;
+    ctx?: ExecutionContext;
     baseUrl?: string;
 };
 
@@ -15,6 +15,8 @@ type RenderXMLProps = {
  * Renders a parsed XML tree with loading state while context initializes.
  */
 export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
+    const runtimeCtx = ctx ?? createContext();
+
     function RenderTree() {
         const [initializedCtx, setInitializedCtx] = useState<ExecutionContext | null>(null);
         const [version, setVersion] = useState(0);
@@ -23,15 +25,15 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             let active = true;
 
             /* Attach the renderer-owned invalidation hook before setup runs. */
-            ctx.invalidate = async (ids) => {
+            runtimeCtx.invalidate = async (ids) => {
                 const list = Array.isArray(ids) ? ids : [ids];
 
                 for (const id of list) {
-                    const setup = ctx.setups[id];
+                    const setup = runtimeCtx.setups[id];
 
                     if (!setup) continue;
 
-                    delete ctx.values[id];
+                    delete runtimeCtx.values[id];
                     await setup();
                 }
 
@@ -39,9 +41,9 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             };
 
             (async () => {
-                await setupContext(ast, ctx, baseUrl);
+                await setupContext(ast, runtimeCtx, baseUrl);
 
-                if (active) setInitializedCtx(ctx);
+                if (active) setInitializedCtx(runtimeCtx);
             })().catch((error) => {
                 if (active) throw error;
             });
@@ -49,7 +51,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             return () => {
                 active = false;
             };
-        }, [ast, ctx, baseUrl]);
+        }, [ast, runtimeCtx, baseUrl]);
 
         // TODO: Given that we already have the ast, this can create a skeleton UI.
         if (!initializedCtx) return <div>Loading</div>;
@@ -57,7 +59,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         return (
             <XmlErrorBoundary resetKey={`${version}`}>
                 <BaseUrlContext.Provider value={baseUrl}>
-                    <RuntimeProvider value={initializedCtx}>{renderNode(ast, initializedCtx)}</RuntimeProvider>
+                    <ContextProvider value={initializedCtx}>{renderNode(ast, initializedCtx)}</ContextProvider>
                 </BaseUrlContext.Provider>
             </XmlErrorBoundary>
         );

@@ -40,7 +40,7 @@ export default function View({ metadata, page, isLoading, error, emptyMessage, u
     const ast = fromXml(xmlSource);
     return (
         <div className="space-y-6">
-            <RenderXML ast={ast} ctx={{ setups: {}, invalidate: async () => {}, values: {} }} baseUrl="/api" />
+            <RenderXML ast={ast} baseUrl="/api" />
         </div>
     );
 }

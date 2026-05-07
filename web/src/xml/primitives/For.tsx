@@ -1,4 +1,4 @@
-import { RenderXML, RuntimeProvider, useContext, useUrl } from '@xml';
+import { ContextProvider, RenderXML, useContext, useUrl } from '@xml';
 import type { ASTNode } from '@xml/types';
 import { Fragment } from 'react';
 
@@ -27,9 +27,9 @@ export function For({ each, as, children }: ForProps) {
 
         return (
             <Fragment key={index}>
-                <RuntimeProvider value={childCtx}>
+                <ContextProvider value={childCtx}>
                     <RenderXML ast={Array.isArray(children) ? children : [children]} ctx={childCtx} baseUrl={baseUrl} />
-                </RuntimeProvider>
+                </ContextProvider>
             </Fragment>
         );
     });

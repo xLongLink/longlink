@@ -4,16 +4,25 @@ import { state } from '@xml/core/state';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
 
-export const RuntimeContext = createReactContext<ExecutionContext | null>(null);
+export const Context = createReactContext<ExecutionContext | null>(null);
+
+/** Creates a blank XML runtime context. */
+export function createContext(): ExecutionContext {
+    return {
+        setups: {},
+        invalidate: async () => {},
+        values: {},
+    };
+}
 
 /** Provides XML runtime scope to a rendered subtree. */
-export function RuntimeProvider({ value, children }: { value: ExecutionContext; children: ReactNode }) {
-    return <RuntimeContext.Provider value={value}>{children}</RuntimeContext.Provider>;
+export function ContextProvider({ value, children }: { value: ExecutionContext; children: ReactNode }) {
+    return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
 /** Returns the active XML runtime state. */
 export function useContext(): { ctx: ExecutionContext } {
-    const runtime = useReactContext(RuntimeContext);
+    const runtime = useReactContext(Context);
 
     if (!runtime) {
         throw new Error('useContext must be used inside a rendered XML component');

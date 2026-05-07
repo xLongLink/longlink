@@ -5,8 +5,6 @@ description: Guide LongLink XML component creation and maintenance across SDK, w
 
 This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards using XML as the single source of truth for the UI. Each `.xml` file defines page structure, layout, data bindings, and actions, while the runtime parses the XML, maps tags to React components, and manages rendering, navigation, state, and REST-based data interactions. The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling, prioritizing consistency, maintainability, validation, and development speed through a strictly declarative and predictable architecture.
 
-`RenderXML` is the public entrypoint. Runtime setup seeds state and query data first, then `renderNode()` performs expression evaluation and component prop validation. Loop bodies render in their own scoped runtime, and `baseUrl` stays separate from execution context.
-
 ## Example
 
 ```xml
@@ -83,27 +81,25 @@ longlink/
         └── html.md
 ```
 
-## Reactivity
+## Parser (web/src/xml/core/parser.ts)
 
-```
-ComponentScope --> LoopItemScope --> GlobalScope
-```
+- `parseXML` turns an XML string into a DOM-like tree, and toNodes converts that tree into renderable runtime nodes
 
-## Runtime (web/src/xml/core/runtime.tsx)
+## Context (web/src/xml/core/context.tsx)
 
-Supported:
-
+- `useContext`
+- `ContextProvider`
+- `setupContext`
 
 ## Expressions (web/src/xml/core/expressions.ts)
-
-Supported:
 
 - `"test"` a simple string literal. `isText()`
 - `[]` an array literal. `isArray()`
 - `{}` an expression literal. `isExpression()`
 - `$value` a reference to a variable in scope. `isReference()`
-- `evaluate(...)` evaluate an expression with the current runtime state. 
+- `evaluate(...)` evaluate an expression with the current runtime state.
 - `compile(...)` compile an expression string into a reusable function that accepts runtime state as arguments.
 
 TODO:
+
 - Install [acorn](https://github.com/acornjs/acorn) to prevent use of unsupported syntax and enforce expression constraints.

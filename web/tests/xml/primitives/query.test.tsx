@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ContextProvider } from '@xml/core/context';
 import { parseXML } from '@xml/core/parser';
-import { RuntimeProvider } from '@xml/core/context';
 import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -30,7 +30,7 @@ describe('Query', () => {
                 createElement(
                     QueryClientProvider,
                     { client },
-                    createElement(RuntimeProvider, {
+                    createElement(ContextProvider, {
                         value: runtime,
                         children: createElement(Fragment, null, createElement(RenderXML, { ast, ctx: runtime })),
                     })
