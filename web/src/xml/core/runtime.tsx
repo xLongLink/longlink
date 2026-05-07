@@ -1,4 +1,4 @@
-import { evaluate } from '@xml/core/expressions';
+import { isText } from '@xml/core/expressions';
 import { query } from '@xml/core/query';
 import { state } from '@xml/core/state';
 import type { ASTNode, ExecutionContext } from '@xml/types';
@@ -24,6 +24,8 @@ export function useContext(): { ctx: ExecutionContext } {
 
 /** Resolves top-level State and Query nodes before rendering the page tree. */
 export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): Promise<ExecutionContext> {
+    const setups = ctx.setups ?? (ctx.setups = []);
+
     async function walk(nodes: ASTNode[]): Promise<void> {
         for (const node of nodes) {
             if (node.name === 'For') {
@@ -35,29 +37,28 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 if (!node.params?.id) throw new Error('State requires a string id');
                 if (!node.params?.value) throw new Error('State requires a value');
 
-                const id = evaluate(node.params.id, ctx);
-                const value = evaluate(node.params.value, ctx);
+                if (!isText(node.params.id)) throw new Error('State id must be literal text');
+                if (!isText(node.params.value)) throw new Error('State value must be literal text');
 
-                if (typeof id !== 'string') throw new Error('State requires a string id');
-                if (value == null) throw new Error('State requires a value');
-                if (typeof value !== 'string' && typeof value !== 'number' && !Array.isArray(value)) {
-                    throw new Error('State value must be a string, number, or array');
-                }
+                const id = node.params.id.trim();
+                const value = node.params.value;
 
-                state(ctx, id, value);
+                setups.push({ id, setup: () => state(ctx, id, value) });
+                await setups[setups.length - 1].setup();
             }
 
             if (node.name === 'Query') {
                 if (!node.params?.id) throw new Error('Query requires a string id');
                 if (!node.params?.path) throw new Error('Query requires a string path');
 
-                const id = evaluate(node.params.id, ctx);
-                const path = evaluate(node.params.path, ctx);
+                if (!isText(node.params.id)) throw new Error('Query id must be literal text');
+                if (!isText(node.params.path)) throw new Error('Query path must be literal text');
 
-                if (typeof id !== 'string') throw new Error('Query requires a string id');
-                if (typeof path !== 'string') throw new Error('Query requires a string path');
+                const id = node.params.id.trim();
+                const path = node.params.path.trim();
 
-                await query(ctx, id, path, baseUrl);
+                setups.push({ id, setup: () => query(ctx, id, path, baseUrl) });
+                await setups[setups.length - 1].setup();
             }
 
             if (Array.isArray(node.children)) {
@@ -69,4 +70,16 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
     await walk(ast);
 
     return ctx;
+}
+
+/** Recreates a state or query source from the stored setup metadata. */
+export async function invalidateContext(ctx: ExecutionContext, id: string): Promise<void> {
+    const setup = ctx.setups.find((entry) => entry.id === id)?.setup;
+
+    if (!setup) return;
+
+    delete ctx.values[id];
+    await setup();
+
+    ctx.rerender?.();
 }

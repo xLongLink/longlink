@@ -1,5 +1,5 @@
 import { Input as UIInput } from '@/ui/input';
-import type { XMLComponent } from '@xml';
+import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { getVersion, useSnapshot } from 'valtio';
 
@@ -11,7 +11,7 @@ export interface InputProps {
 }
 
 /** Renders a minimal XML input control. */
-export const Input: XMLComponent<InputProps> = ({ value: rawValue, placeholder, type = 'text' }) => {
+export const Input: ComponentType<InputProps> = ({ value: rawValue, placeholder, type = 'text' }) => {
     const placeholderText = String(placeholder ?? '');
 
     if (rawValue && typeof rawValue === 'object' && getVersion(rawValue) !== undefined) {

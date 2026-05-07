@@ -62,6 +62,11 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                 continue;
             }
 
+            if (node.name === 'Button' && key === 'invalidate') {
+                resolved[key] = evaluate(value, ctx);
+                continue;
+            }
+
             try {
                 resolved[key] = evaluate(value, ctx);
             } catch (error) {

@@ -3,9 +3,15 @@ import type { ExecutionContext } from '@xml/types';
 import { toast } from 'sonner';
 
 /** Fetches JSON data into a reusable query slot for descendants. */
-export async function query(ctx: ExecutionContext, id: string, path: string, baseUrl = ''): Promise<void> {
+export async function query(
+    ctx: ExecutionContext,
+    id: string,
+    path: string,
+    baseUrl = '',
+    resolvedUrl?: string
+): Promise<void> {
     const values = ctx.values ?? (ctx.values = {});
-    const url = resolveUrl(baseUrl, path);
+    const url = resolvedUrl ?? resolveUrl(baseUrl, path);
 
     /* Start the request during render and suspend until it resolves. */
     try {

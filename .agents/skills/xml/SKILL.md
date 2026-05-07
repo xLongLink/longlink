@@ -91,7 +91,6 @@ ComponentScope --> LoopItemScope --> GlobalScope
 
 ## Runtime
 
-
 ## Expressions
 
 Use [acorn](https://github.com/acornjs/acorn) to parse and validate all expressions:

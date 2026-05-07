@@ -5,16 +5,13 @@ export type ASTNode = {
     children?: ASTNode | ASTNode[] | null;
 };
 
+/** Cached setup entry used to recreate runtime sources during invalidation. */
+
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     parent?: ExecutionContext;
+    setups: Array<{ id: string; setup: () => Promise<void> | void }>;
+    rerender?: () => void;
     values: Record<string, unknown>;
     [key: string]: unknown;
 };
-
-/** Standard XML component contract used by the runtime. */
-export type XMLComponent<Props = Record<string, unknown>> = import('react').ComponentType<
-    {
-        children?: ASTNode | ASTNode[] | null | string | number | boolean;
-    } & Props
->;

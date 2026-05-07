@@ -1,6 +1,6 @@
-import type { XMLComponent } from '@xml';
 import { RenderXML, RuntimeProvider, useContext, useUrl } from '@xml';
 import type { ASTNode } from '@xml/types';
+import type { ComponentType } from 'react';
 import { Fragment } from 'react';
 
 /** Props accepted by the XML For component. */
@@ -11,7 +11,7 @@ export interface ForProps {
 }
 
 /** Iterates over an array and renders children in a scoped context. */
-export const For: XMLComponent<ForProps> = ({ each, as, children }) => {
+export const For: ComponentType<ForProps> = ({ each, as, children }) => {
     const { ctx } = useContext();
     const baseUrl = useUrl('');
 

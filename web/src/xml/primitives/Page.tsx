@@ -1,5 +1,6 @@
-import type { ASTNode, XMLComponent } from '@xml';
+import type { ASTNode } from '@xml';
 import { renderNode, useContext } from '@xml';
+import type { ComponentType } from 'react';
 
 /** Props accepted by the XML Page component. */
 export interface PageProps {
@@ -9,7 +10,7 @@ export interface PageProps {
 }
 
 /** Renders the page shell. */
-export const Page: XMLComponent<PageProps> = ({ children }) => {
+export const Page: ComponentType<PageProps> = ({ children }) => {
     const { ctx } = useContext();
 
     return <div className="space-y-6">{renderNode(children ?? null, ctx)}</div>;
