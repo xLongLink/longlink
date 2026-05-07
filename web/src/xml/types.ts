@@ -24,10 +24,11 @@ export type RegistryComponent<Props = Record<string, unknown>> = ComponentType<P
 export type RenderableASTNode = ASTNode | ASTNode[] | string | number | boolean | null | undefined;
 
 /** Standard XML component contract used by the runtime. */
-export type XMLComponent<Props = Record<string, unknown>> = ComponentType<{
-    props: Props;
-    children?: RenderableASTNode;
-}>;
+export type XMLComponent<Props = Record<string, unknown>> = ComponentType<
+    {
+        children?: RenderableASTNode;
+    } & Props
+>;
 
 /** XML component type with the runtime contract. */
 export type XmlRegistryComponent<Props = Record<string, unknown>> = XMLComponent<Props>;

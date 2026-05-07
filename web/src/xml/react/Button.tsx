@@ -1,23 +1,23 @@
 import { Button as UIButton } from '@/ui/button';
 import type { XMLComponent } from '@/xml';
-import { renderNode, useContext, useUrl } from '@/xml';
+import { renderNode, useUrl } from '@/xml';
 import { toast } from 'sonner';
 
 /** Props accepted by the XML Button component. */
 export interface ButtonProps {
-    action?: (ctx: ReturnType<typeof useContext>['ctx']) => unknown;
+    action?: string;
+    invalidate?: string | string[];
     children?: unknown;
-    json?: (ctx: ReturnType<typeof useContext>['ctx']) => unknown;
-    [key: string]: unknown;
+    json?: unknown;
+    method?: string;
+    size?: string;
+    variant?: string;
 }
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
-export const Button: XMLComponent<ButtonProps> = ({ props, children }) => {
-    const { ctx } = useContext();
-    const { action, json } = props;
-
-    const actionUrl = String(action?.(ctx) ?? '');
-    const jsonValue = json?.(ctx);
+export const Button: XMLComponent<ButtonProps> = ({ action, json, method = 'POST', children }) => {
+    const actionUrl = String(action ?? '');
+    const jsonValue = json;
     const requestUrl = useUrl(actionUrl);
 
     /** Sends the configured request and shows a minimal toast result. */
@@ -25,7 +25,7 @@ export const Button: XMLComponent<ButtonProps> = ({ props, children }) => {
         if (!actionUrl) return;
 
         const response = await fetch(requestUrl, {
-            method: 'POST',
+            method,
             body: JSON.stringify(jsonValue),
             headers: { 'content-type': 'application/json' },
         });

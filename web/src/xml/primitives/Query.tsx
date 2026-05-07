@@ -8,12 +8,13 @@ import { toast } from 'sonner';
 export interface QueryProps {
     id?: string;
     path?: string;
+    method?: string;
+    invalidate?: string | string[];
 }
 
 /** Fetches JSON data into a reusable query slot for descendants. */
-export const Query: XMLComponent<QueryProps> = ({ props }) => {
+export const Query: XMLComponent<QueryProps> = ({ id, path }) => {
     const { ctx } = useContext();
-    const { id, path } = props;
     if (!id || !path) return null;
 
     const values = ctx.values ?? (ctx.values = {});

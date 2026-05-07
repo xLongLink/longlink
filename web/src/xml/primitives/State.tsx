@@ -6,15 +6,13 @@ import { useSnapshot } from 'valtio/react';
 
 /** Props accepted by the XML State component. */
 export interface StateProps {
-    id?: string;
-    value?: string | number | unknown[];
+    id: string;
+    value: string | number | readonly unknown[];
 }
 
 /** Creates a local reactive state slot for descendant XML nodes. */
-export const State: XMLComponent<StateProps> = ({ props }) => {
+export const State: XMLComponent<StateProps> = ({ id, value }) => {
     const { ctx } = useContext();
-    const { id, value } = props;
-    if (!id) throw new Error('State requires an "id" parameter');
     const values = ctx.values ?? (ctx.values = {});
 
     /* Create one Valtio proxy and keep it stable for descendants. */

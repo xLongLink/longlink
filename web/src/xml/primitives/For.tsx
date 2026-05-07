@@ -5,13 +5,12 @@ import { Fragment } from 'react';
 /** Props accepted by the XML For component. */
 export interface ForProps {
     as: string;
-    each: unknown;
+    each: unknown[] | string;
     children?: RenderableASTNode;
 }
 
 /** Iterates over an array and renders children in a scoped context. */
-export const For: XMLComponent<ForProps> = ({ props, children }) => {
-    const { each, as } = props;
+export const For: XMLComponent<ForProps> = ({ each, as, children }) => {
     const { ctx } = useContext();
 
     if (!Array.isArray(each)) return null;

@@ -21,11 +21,11 @@ const parser = new XMLParser({
  *     {
  *       name: 'Page',
  *       children: [
- *         { name: 'Text', params: { text: 'Hello, {user.name}' } },
+ *         { name: 'Text', params: { value: 'Hello, {user.name}' } },
  *         {
  *           name: 'Button',
  *           children: [
- *             { name: 'Text', params: { text: 'Save' } }
+ *             { name: 'Text', params: { value: 'Save' } }
  *           ]
  *         }
  *       ]
@@ -47,11 +47,11 @@ export function parseXML(xml: string): ASTNode[] {
  *     {
  *       name: 'Page',
  *       children: [
- *         { name: 'Text', params: { text: 'Hello, {user.name}' } },
+ *         { name: 'Text', params: { value: 'Hello, {user.name}' } },
  *         {
  *           name: 'Button',
  *           children: [
- *             { name: 'Text', params: { text: 'Save' } }
+ *             { name: 'Text', params: { value: 'Save' } }
  *           ]
  *         }
  *       ]
@@ -105,7 +105,7 @@ function toNodes(input: unknown, tagName?: string): ASTNode[] {
 
     /* Primitive parser values become text nodes when they contain visible content. */
     if (typeof input === 'string') {
-        return input.trim() ? [{ name: 'Text', params: { text: input } }] : [];
+        return input.trim() ? [{ name: 'Text', params: { value: input } }] : [];
     }
 
     if (typeof input !== 'object') return [];

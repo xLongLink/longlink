@@ -6,8 +6,6 @@ export interface TextProps {
 }
 
 /** Renders XML text content through the standard XML renderer. */
-export const Text: XMLComponent<TextProps> = ({ props, children }) => {
-    const { value } = props;
-
-    return String(value ?? children ?? '');
+export const Text: XMLComponent<TextProps> = ({ value }) => {
+    return String(value ?? '');
 };

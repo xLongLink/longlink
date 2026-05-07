@@ -5,13 +5,16 @@ import type { XMLComponent } from '@/xml';
 export interface InputProps {
     placeholder?: unknown;
     value?: unknown;
+    bind?: string;
+    min?: string | number;
+    max?: string | number;
+    type?: string;
 }
 
 /** Renders a minimal XML input control. */
-export const Input: XMLComponent<InputProps> = ({ props }) => {
-    const { value: rawValue, placeholder } = props;
+export const Input: XMLComponent<InputProps> = ({ value: rawValue, placeholder, type = 'text' }) => {
     const valueText = String(rawValue ?? '');
     const placeholderText = String(placeholder ?? '');
 
-    return <UIInput type="text" placeholder={placeholderText} value={valueText} readOnly />;
+    return <UIInput type={type} placeholder={placeholderText} value={valueText} readOnly />;
 };

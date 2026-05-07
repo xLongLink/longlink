@@ -10,9 +10,9 @@ import type { ASTNode, ExecutionContext, RenderableASTNode } from './types';
  *
  * Example:
  *   Input:
- *     { name: 'Button', params: { if: 'true' }, children: [{ name: 'Text', params: { text: 'Save' } }] }
+ *     { name: 'Button', params: { if: 'true' }, children: [{ name: 'Text', params: { value: 'Save' } }] }
  *   Output:
- *     <Button><Text text="Save" /></Button>
+ *     <Button><Text value="Save" /></Button>
  */
 export function renderNode(node: RenderableASTNode): ReactNode {
     const runtime = useReactContext(RuntimeContext);
@@ -38,7 +38,8 @@ export function renderNode(node: RenderableASTNode): ReactNode {
     const Component = registry[node.name];
     if (!Component) throw new Error(`Unknown component "${node.name}"`);
 
-    rendered = <Component props={(node.params ?? {}, ctx, node.name)} children={node.children} />;
+    /* Pass the parsed XML attributes through as component props. */
+    rendered = <Component {...(node.params ?? {})} children={node.children} />;
 
     return <XmlErrorBoundary resetKey={node}>{rendered}</XmlErrorBoundary>;
 }

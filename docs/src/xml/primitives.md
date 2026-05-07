@@ -12,14 +12,14 @@ Use them to build dynamic pages without writing frontend code.
 Its children render with that state in scope.
 
 ```xml
-<State id="user" username="" password="">
-  <Input value="user.username" />
-  <Input value="user.password" />
+<State id="user" value="{ username: '', password: '' }">
+  <Input value="user.value.username" />
+  <Input value="user.value.password" />
 </State>
 ```
 
-Every non-`id` attribute becomes a named field on the same state object.
-That includes `value`, so you can use `user.value`, `user.username`, and `user.password`.
+`value` is required and sets the initial state value.
+Use a string, number, or list value depending on the state shape.
 
 ## Page
 

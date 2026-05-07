@@ -78,12 +78,11 @@ Declares local reactive state.
 Attributes:
 
 - `id` required. State key.
-- `value` and any other attributes become named fields on the state object.
+- `value` required. Initial state value.
 
 Behavior:
 
 - The state is exposed as `state[id]`.
-- Each attribute is readable as `state[id].<attributeName>`.
 - The value is a `[currentValue, setter]` tuple internally.
 
 ### `<Text>`
