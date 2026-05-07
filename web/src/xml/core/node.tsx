@@ -3,12 +3,11 @@ import { compile, evaluate } from '@xml/core/expressions';
 import { For } from '@xml/primitives/For';
 import { Text } from '@xml/primitives/Text';
 import { registry } from '@xml/registry';
-import type { ExecutionContext, RenderableASTNode } from '@xml/types';
+import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
 
-
 /** Renders XML AST nodes using the active runtime context. */
-export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): ReactNode {
+export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionContext): ReactNode {
     // Handle null/undefined early to avoid unnecessary registry lookups and error boundaries.
     if (!node) return <></>;
 
@@ -29,7 +28,6 @@ export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): Reac
 
     // Special handling for "For" component to support array iteration and scoped variables.
     if (node.name === 'For') {
-
         // If there are no children, there's nothing to render, so we can skip the "For" component entirely.
         if (!node.children) return <></>;
 
@@ -45,7 +43,7 @@ export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): Reac
 
     if (node.name === 'Text') {
         if (!node.params?.value) return <></>;
-        
+
         return <Text value={String(evaluate(node.params.value, ctx) ?? '')} />;
     }
 
@@ -68,7 +66,6 @@ export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): Reac
             }
         }
     }
-
 
     const Component = registry[node.name];
     if (!Component) throw new Error(`Unknown component "${node.name}"`);

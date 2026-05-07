@@ -2,7 +2,7 @@
 export type ASTNode = {
     name: string;
     params?: Record<string, string>;
-    children?: RenderableASTNode;
+    children?: ASTNode | ASTNode[] | null;
 };
 
 /** XML runtime scope with lexical parent lookup. */
@@ -12,12 +12,9 @@ export type ExecutionContext = {
     [key: string]: unknown;
 };
 
-/** A node or array of nodes that can be rendered by renderNode. */
-export type RenderableASTNode = ASTNode | ASTNode[] | null;
-
 /** Standard XML component contract used by the runtime. */
 export type XMLComponent<Props = Record<string, unknown>> = import('react').ComponentType<
     {
-        children?: RenderableASTNode | string | number | boolean;
+        children?: ASTNode | ASTNode[] | null | string | number | boolean;
     } & Props
 >;

@@ -1,5 +1,5 @@
 import { Button as UIButton } from '@/ui/button';
-import type { ASTNode, RenderableASTNode, XMLComponent } from '@xml';
+import type { ASTNode, XMLComponent } from '@xml';
 import { evaluate, renderNode, useContext, useUrl } from '@xml';
 import { toast } from 'sonner';
 
@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 export interface ButtonProps {
     action?: string;
     invalidate?: string | string[];
-    children?: RenderableASTNode | string | number | boolean;
+    children?: ASTNode | ASTNode[] | null | string | number | boolean;
     json?: object | string | number | boolean | null;
     method?: string;
     size?: string;
@@ -41,7 +41,7 @@ export const Button: XMLComponent<ButtonProps> = ({ action, json, method = 'POST
         toast.success(`Request completed with status ${response.status}`);
     }
 
-    const content: RenderableASTNode =
+    const content: ASTNode | ASTNode[] | null =
         typeof children === 'string' || typeof children === 'number' || typeof children === 'boolean'
             ? ({ name: 'Text', params: { value: String(children) } } satisfies ASTNode)
             : (children ?? null);
