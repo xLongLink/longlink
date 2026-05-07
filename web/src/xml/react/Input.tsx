@@ -1,5 +1,4 @@
 import { Input as UIInput } from '@/ui/input';
-import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { getVersion, useSnapshot } from 'valtio';
 
@@ -11,12 +10,12 @@ export interface InputProps {
 }
 
 /** Renders a minimal XML input control. */
-export const Input: ComponentType<InputProps> = ({ value: rawValue, placeholder, type = 'text' }) => {
+export function Input({ value = '', placeholder, type = 'text' }: InputProps) {
     const placeholderText = String(placeholder ?? '');
 
-    if (rawValue && typeof rawValue === 'object' && getVersion(rawValue) !== undefined) {
-        const value = rawValue as Record<string, unknown> & { value?: unknown };
-        const snapshot = useSnapshot(value);
+    if (value && typeof value === 'object' && getVersion(value) !== undefined) {
+        const state = value as Record<string, unknown> & { value?: unknown };
+        const snapshot = useSnapshot(state);
         const currentValue = 'value' in snapshot ? snapshot.value : snapshot;
 
         return (
@@ -27,15 +26,15 @@ export const Input: ComponentType<InputProps> = ({ value: rawValue, placeholder,
                 onChange={(event) => {
                     const nextValue = type === 'number' ? Number(event.target.value) : event.target.value;
 
-                    if ('value' in value) {
-                        value.value = nextValue;
+                    if ('value' in state) {
+                        state.value = nextValue;
                     }
                 }}
             />
         );
     }
 
-    const [initialValue] = useState(String(rawValue ?? ''));
+    const [initialValue] = useState(String(value ?? ''));
 
     return <UIInput type={type} placeholder={placeholderText} defaultValue={initialValue} />;
-};
+}

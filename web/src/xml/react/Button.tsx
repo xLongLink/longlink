@@ -2,7 +2,6 @@ import { Button as UIButton } from '@/ui/button';
 import type { ASTNode } from '@xml';
 import { renderNode, useContext, useUrl } from '@xml';
 import type { ExpressionResolver } from '@xml/core/expressions';
-import type { ComponentType } from 'react';
 import { toast } from 'sonner';
 
 /** Props accepted by the XML Button component. */
@@ -17,13 +16,7 @@ export interface ButtonProps {
 }
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
-export const Button: ComponentType<ButtonProps> = ({
-    action = '',
-    invalidate = [],
-    json,
-    method = 'POST',
-    children,
-}) => {
+export function Button({ action = '', invalidate = [], json, method = 'POST', children }: ButtonProps) {
     const { ctx } = useContext();
     const actionUrl = String(action ?? '');
     const requestUrl = useUrl(actionUrl);
@@ -59,4 +52,4 @@ export const Button: ComponentType<ButtonProps> = ({
     }
 
     return <UIButton onClick={handleClick}>{renderNode(children ?? null, ctx)}</UIButton>;
-};
+}
