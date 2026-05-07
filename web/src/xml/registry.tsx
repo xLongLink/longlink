@@ -5,7 +5,10 @@ import { Input } from '@xml/react/Input';
 import { For } from '@xml/primitives/For';
 import { Page } from '@xml/primitives/Page';
 import { Text } from '@xml/primitives/Text';
-import type { XmlRegistryComponent } from '@xml/types';
+import type { XMLComponent } from '@xml/types';
+
+/** XML component type used by the built-in registry. */
+export type XmlRegistryComponent<Props = Record<string, unknown>> = XMLComponent<Props>;
 
 /* Build the built-in XML component registry once at module load. */
 export const registry: Record<string, XmlRegistryComponent<any>> = {
