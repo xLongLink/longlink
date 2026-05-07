@@ -1,5 +1,6 @@
 import { XmlErrorBoundary } from '@xml/core/errors';
 import { compile, evaluate } from '@xml/core/expressions';
+import { For } from '@xml/primitives/For';
 import { registry } from '@xml/registry';
 import type { ExecutionContext, RenderableASTNode } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
@@ -25,17 +26,26 @@ export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): Reac
         }
     }
 
+    // Special handling for "For" component to support array iteration and scoped variables.
     if (node.name === 'For') {
-        const For = registry['For'];
         if (!For) throw new Error(`Missing "For" component in registry`);
         if (!node.params?.as) throw new Error(`Missing "as" parameter on "For" component`);
         if (!node.params?.each) throw new Error(`Missing "each" parameter on "For" component`);
 
-        const each = evaluate(node.params.each, runtime);
-        if (!Array.isArray(each))
-            throw new Error(`"each" parameter on "For" component must be an array, got ${typeof each}`);
+        let each: unknown;
+        try {
+            each = evaluate(node.params.each, runtime);
+        } catch (error) {
+            throw new Error(
+                `Failed to evaluate For.each="${node.params.each}": ${error instanceof Error ? error.message : String(error)}`
+            );
+        }
 
-        return <For each={each} as={node.params.as} children={node.children} />;
+        if (!Array.isArray(each)) {
+            throw new Error(`For.each must evaluate to an array, but got ${each === null ? 'null' : typeof each}`);
+        }
+
+        return <For each={each} as={node.params.as} children={node.children ?? null} />;
     }
 
     const resolved: Record<string, unknown> = {};
@@ -48,7 +58,13 @@ export function renderNode(node: RenderableASTNode, ctx: ExecutionContext): Reac
                 continue;
             }
 
-            resolved[key] = evaluate(value, runtime);
+            try {
+                resolved[key] = evaluate(value, runtime);
+            } catch (error) {
+                throw new Error(
+                    `Failed to evaluate ${node.name}.${key}="${value}": ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
         }
     }
 
