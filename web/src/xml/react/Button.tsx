@@ -1,4 +1,4 @@
-import { Button as UIButton } from '@/ui/button';
+import { Button as UIButton } from '@ui/button';
 import type { ASTNode } from '@xml';
 import { renderNode, useContext, useUrl } from '@xml';
 import type { ExpressionResolver } from '@xml/core/expressions';

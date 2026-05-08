@@ -1,6 +1,6 @@
 import type { NavigationTab } from '@/hooks/use-tabs';
 import { useTabs } from '@/hooks/use-tabs';
-import { TabsList, TabsTrigger, Tabs as UITabs } from '@/ui/tabs';
+import { TabsList, TabsTrigger, Tabs as UITabs } from '@ui/tabs';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 type TabsProps = {

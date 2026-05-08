@@ -1,5 +1,5 @@
 import { useSignOut, useUser } from '@/hooks/use-user';
-import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,7 +8,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '@/ui/dropdown-menu';
+} from '@ui/dropdown-menu';
 import { BookOpen, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router';
 

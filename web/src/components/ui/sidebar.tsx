@@ -5,12 +5,12 @@ import * as React from 'react';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { Button } from '@/ui/button';
-import { Input } from '@/ui/input';
-import { Separator } from '@/ui/separator';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/ui/sheet';
-import { Skeleton } from '@/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
+import { Button } from '@ui/button';
+import { Input } from '@ui/input';
+import { Separator } from '@ui/separator';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@ui/sheet';
+import { Skeleton } from '@ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@ui/tooltip';
 import { PanelLeftIcon } from 'lucide-react';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';

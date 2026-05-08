@@ -1,5 +1,5 @@
 import { RequireAuth } from '@/components/Auth';
-import { Toaster } from '@/ui/sonner';
+import { Toaster } from '@ui/sonner';
 import type { ReactElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import LongLink from './pages/Longlink';

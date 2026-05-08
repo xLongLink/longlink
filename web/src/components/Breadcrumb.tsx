@@ -5,7 +5,7 @@ import {
     BreadcrumbList,
     BreadcrumbSeparator,
     Breadcrumb as UIBreadcrumb,
-} from '@/ui/breadcrumb';
+} from '@ui/breadcrumb';
 import startCase from 'lodash/startCase';
 import { Link, useParams } from 'react-router';
 

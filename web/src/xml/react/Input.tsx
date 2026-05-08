@@ -1,4 +1,4 @@
-import { Input as UIInput } from '@/ui/input';
+import { Input as UIInput } from '@ui/input';
 import { useState } from 'react';
 import { getVersion, useSnapshot } from 'valtio';
 

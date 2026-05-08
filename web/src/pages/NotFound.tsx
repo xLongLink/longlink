@@ -1,6 +1,6 @@
 import { useUser } from '@/hooks/use-user';
-import { buttonVariants } from '@/ui/button';
-import { Card, CardContent } from '@/ui/card';
+import { buttonVariants } from '@ui/button';
+import { Card, CardContent } from '@ui/card';
 import { Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
