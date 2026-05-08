@@ -5,7 +5,7 @@ from src.routes.pages import get_all_pages
 router = APIRouter()
 
 
-@router.get("/api/organizations/{name}/metadata.json")
+@router.get("/{name}/metadata.json")
 async def metadata(name: str) -> dict:
     """Return the metadata document for one organization."""
     organization = await db.organizations.get(name)

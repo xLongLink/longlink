@@ -27,10 +27,7 @@ function getRoutes() {
             children: [
                 { index: true, element: <Index /> },
                 { path: ':org', element: withAuth(<LongLink path="/api/:org/metadata.json" />) },
-                {
-                    path: ':org/:application/*',
-                    element: withAuth(<LongLink path="/api/:org/:application/metadata.json" />),
-                },
+                { path: ':org/:app/*', element: withAuth(<LongLink path="/api/:org/:app/metadata.json" />) },
             ],
         },
         { path: '/login', element: <Login /> },

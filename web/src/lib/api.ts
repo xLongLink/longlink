@@ -4,7 +4,7 @@ import { resolveUrl } from '@/hooks/use-url';
  * Resolves API base URL for current runtime mode.
  */
 export const getApiBaseUrl = () => {
-    return import.meta.env.MODE === 'sdk' ? '' : '/api';
+    return import.meta.env.MODE === 'sdk' ? '' : '/';
 };
 
 type QueryValue = string | number | boolean | null | undefined;
