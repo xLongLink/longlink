@@ -4,13 +4,10 @@ import { getApiBaseUrl } from '@/lib/api';
 import { Toaster } from '@/ui/sonner';
 import type { ReactElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router';
-import Layout from './Layout';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import LongLink from './pages/Longlink';
 import NotFound from './pages/NotFound';
-import Organization from './pages/Organization';
-import SdkLongLink from './sdk/Longlink';
 
 /**
  * Builds the route tree for the current bundle mode.
@@ -20,24 +17,20 @@ function getRoutes() {
 
     // SDK bundle serves the app runtime without control-plane routes.
     if (import.meta.env.MODE === 'sdk') {
-        return [
-            {
-                path: '/',
-                element: <Layout />,
-                children: [{ path: '*', element: <SdkLongLink /> }],
-            },
-        ];
+        return [{ path: '/', element: <LongLink path="/metadata.json" /> }];
     }
 
     // Default bundle serves the full app with control-plane routes.
     return [
         {
             path: '/',
-            element: <Layout />,
             children: [
                 { index: true, element: <Index /> },
-                { path: ':org', element: withAuth(<Organization />) },
-                { path: ':org/:application/*', element: withAuth(<LongLink />) },
+                { path: ':org', element: withAuth(<LongLink path="/api/:org/metadata.json" />) },
+                {
+                    path: ':org/:application/*',
+                    element: withAuth(<LongLink path="/api/:org/:application/metadata.json" />),
+                },
             ],
         },
         { path: '/login', element: <Login /> },
