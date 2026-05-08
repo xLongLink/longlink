@@ -1,63 +1,48 @@
 import { RequireAuth } from '@/components/Auth';
+import { BaseUrlContext } from '@/hooks/use-url';
+import { getApiBaseUrl } from '@/lib/api';
 import { Toaster } from '@/ui/sonner';
 import type { ReactElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from './Layout';
+import Index from './pages/Index';
 import Login from './pages/Login';
 import LongLink from './pages/Longlink';
 import NotFound from './pages/NotFound';
-import OrganizationPage from './pages/OrganizationPage';
-import SdkLayout from './sdk/Layout';
+import Organization from './pages/Organization';
 import SdkLongLink from './sdk/Longlink';
-
-const buildMode = import.meta.env.MODE;
-
-const isSdkBuild = buildMode === 'sdk';
-
-/**
- * Wraps a route element with the auth guard.
- */
-const withAuth = (element: ReactElement) => <RequireAuth>{element}</RequireAuth>;
-
-const sdkRoutes = [
-    {
-        path: '/',
-        element: <SdkLayout />,
-        children: [{ path: '*', element: <SdkLongLink /> }],
-    },
-];
-
-const apiRoutes = [
-    {
-        path: '/',
-        element: withAuth(<Layout />),
-        children: [
-            { index: true, element: <OrganizationPage page="applications" /> },
-            { path: ':org', element: <OrganizationPage page="applications" /> },
-            { path: 'applications', element: <OrganizationPage page="applications" /> },
-            { path: 'settings', element: <OrganizationPage page="settings" /> },
-            { path: 'example', element: <OrganizationPage page="example" /> },
-            {
-                path: 'applications/:appId/*',
-                element: <LongLink />,
-            },
-        ],
-    },
-    { path: '/login', element: <Login /> },
-    { path: '*', element: withAuth(<NotFound />) },
-];
 
 /**
  * Builds the route tree for the current bundle mode.
  */
 function getRoutes() {
-    /* SDK bundle serves the app runtime without control-plane routes. */
-    // SDK bundle serves app from root without control-plane auth routes.
-    if (isSdkBuild) {
-        return sdkRoutes;
+    const withAuth = (element: ReactElement) => <RequireAuth>{element}</RequireAuth>;
+
+    // SDK bundle serves the app runtime without control-plane routes.
+    if (import.meta.env.MODE === 'sdk') {
+        return [
+            {
+                path: '/',
+                element: <Layout />,
+                children: [{ path: '*', element: <SdkLongLink /> }],
+            },
+        ];
     }
 
-    return apiRoutes;
+    // Default bundle serves the full app with control-plane routes.
+    return [
+        {
+            path: '/',
+            element: <Layout />,
+            children: [
+                { index: true, element: <Index /> },
+                { path: ':org', element: withAuth(<Organization />) },
+                { path: ':org/:application/*', element: withAuth(<LongLink />) },
+            ],
+        },
+        { path: '/login', element: <Login /> },
+        { path: '*', element: withAuth(<NotFound />) },
+    ];
 }
 
 const router = createBrowserRouter(getRoutes());
@@ -66,10 +51,12 @@ const router = createBrowserRouter(getRoutes());
  * Renders the app shell, router, and global toaster.
  */
 export default function App() {
+    const baseUrl = getApiBaseUrl();
+
     return (
-        <>
+        <BaseUrlContext.Provider value={baseUrl}>
             <RouterProvider router={router} />
             <Toaster position="bottom-right" />
-        </>
+        </BaseUrlContext.Provider>
     );
 }

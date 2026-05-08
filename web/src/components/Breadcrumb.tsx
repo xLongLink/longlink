@@ -17,11 +17,11 @@ type MetadataResponse = {
  * Render the top navigation breadcrumb for organization, app, and profile routes.
  */
 export function Breadcrumb() {
-    const { appId } = useParams();
+    const { org, application } = useParams();
     const { data: metadata } = useApiData<MetadataResponse>('/metadata.json');
-    const { data: appMetadata } = useApiData<{ name?: string }>(appId ? `/apps/${appId}/metadata` : null);
+    const { data: appMetadata } = useApiData<{ name?: string }>(application ? `/apps/${application}/metadata` : null);
 
-    const appName = appId ? appMetadata?.name?.trim() || startCase(appId) : undefined;
+    const appName = application ? appMetadata?.name?.trim() || startCase(application) : undefined;
     const organizationName = metadata?.organization_name?.trim() || 'Organization';
 
     return (
@@ -39,7 +39,7 @@ export function Breadcrumb() {
                         )}
                     />
                 </BreadcrumbItem>
-                {appName && appId ? (
+                {appName && org && application ? (
                     <>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
@@ -47,7 +47,7 @@ export function Breadcrumb() {
                                 render={(props) => (
                                     <Link
                                         {...props}
-                                        to={`/applications/${appId}`}
+                                        to={`/${org}/${application}`}
                                         className="text-sm font-semibold text-white/70"
                                     >
                                         {appName}

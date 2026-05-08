@@ -1,5 +1,5 @@
+import { useUrl } from '@/hooks/use-url';
 import { useUser } from '@/hooks/use-user';
-import { getApiBaseUrl } from '@/lib/api';
 import { Layers } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router';
 export default function Login() {
     const navigate = useNavigate();
     const { data: user, isLoading } = useUser();
-    const apiBaseUrl = getApiBaseUrl();
+    const loginUrl = useUrl('/login/oidc');
 
     /* Redirect authenticated users or hand off to the identity provider. */
     useEffect(() => {
@@ -15,10 +15,10 @@ export default function Login() {
             if (user) {
                 navigate('/');
             } else {
-                window.location.href = `${apiBaseUrl}/login/oidc`;
+                window.location.href = loginUrl;
             }
         }
-    }, [isLoading, navigate, user, apiBaseUrl]);
+    }, [isLoading, loginUrl, navigate, user]);
 
     return (
         <div className="flex min-h-screen items-center justify-center px-6 py-12 text-white">

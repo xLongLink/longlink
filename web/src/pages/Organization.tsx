@@ -2,17 +2,13 @@ import { useApiData } from '@/hooks/use-data';
 import { useSearchParams } from 'react-router';
 import View from './View';
 
-type OrganizationPageProps = {
-    page?: string;
-};
-
 /**
  * Renders an organization-level XML page.
  */
-export default function OrganizationPage({ page }: OrganizationPageProps) {
+export default function Organization() {
     const [searchParams] = useSearchParams();
     const { data: metadata, isLoading, error } = useApiData('/metadata.json');
-    const activePage = searchParams.get('tab') ?? page ?? 'applications';
+    const activePage = searchParams.get('tab') ?? 'applications';
 
     return (
         <View

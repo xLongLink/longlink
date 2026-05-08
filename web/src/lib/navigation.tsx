@@ -59,6 +59,13 @@ export function getAppTabsFromPages(pages: AppNavigationPage[]): NavigationTab[]
 }
 
 /**
+ * Returns the first available tab value.
+ */
+export function getDefaultTabValue(tabs: NavigationTab[]): string {
+    return tabs[0]?.value ?? '';
+}
+
+/**
  * Determines the active navigation tab based on current location path.
  * Matches the first tab whose path prefixes the location, falling back to the first tab.
  */

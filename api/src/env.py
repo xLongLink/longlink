@@ -6,6 +6,9 @@ class Env(BaseSettings):
 
     SESSION_KEY: str
 
+    # Default organization name for the control plane.
+    ORGANIZATION_NAME: str
+
     # Control plane database URL
     DATABASE_URL: str
 

@@ -1,14 +1,10 @@
-const controlPlaneApiBaseUrl = '/api';
-const sdkDevApiBaseUrl = '/sdk-api';
+import { resolveUrl } from '@/hooks/use-url';
 
 /**
  * Resolves API base URL for current runtime mode.
  */
 export const getApiBaseUrl = () => {
-    if (import.meta.env.MODE === 'sdk') {
-        return import.meta.env.DEV ? sdkDevApiBaseUrl.replace(/\/+$/, '') : '';
-    }
-    return controlPlaneApiBaseUrl.replace(/\/+$/, '');
+    return import.meta.env.MODE === 'sdk' ? '' : '/api';
 };
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -46,9 +42,9 @@ const normalizePath = (path: string, appName?: string) => {
 };
 
 /**
- * Builds a fully qualified API path for the current runtime.
+ * Resolves an API path for the current runtime.
  */
-const buildApiUrl = (path: string, appName?: string) => `${getApiBaseUrl()}${normalizePath(path, appName)}`;
+const resolveApiUrl = (path: string, appName?: string) => resolveUrl(getApiBaseUrl(), normalizePath(path, appName));
 
 /**
  * Converts an API failure payload into a readable error message.
@@ -72,7 +68,7 @@ const toApiErrorMessage = (status: number, responseData: unknown) => {
  * Builds a request URL with optional query parameters.
  */
 const buildUrl = (path: string, query?: ApiQueryParams) => {
-    const baseUrl = buildApiUrl(path);
+    const baseUrl = resolveApiUrl(path);
     if (!query) return baseUrl;
 
     const params = new URLSearchParams();

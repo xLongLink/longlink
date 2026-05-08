@@ -1,7 +1,7 @@
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { useApiData } from '@/hooks/use-data';
-import { getActiveTabConfig, getAppTabsFromPages, getDefaultTabValue, type AppNavigationPage } from '@/lib/navigation';
+import { getActiveTabConfig, getAppTabsFromPages, type AppNavigationPage } from '@/lib/navigation';
 import { getRootPagesFromResponse } from '@/sdk/pages';
 import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
 import { Loader2 } from 'lucide-react';
@@ -23,103 +23,21 @@ const toNavigationPages = (value: unknown): AppNavigationPage[] => {
     }));
 };
 
-function OrgNavigation() {
-    const location = useLocation();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>('/metadata.json');
-
-    const pageList = toNavigationPages(pagesResponse);
-
-    const tabs = getAppTabsFromPages(
-        pageList.map((p) => ({
-            name: p.name,
-            path: p.path,
-            icon: p.icon,
-        }))
-    );
-
-    const activeTabConfig = getActiveTabConfig({
-        tabs,
-        locationPath: location.pathname,
-        basePath: '',
-    });
-
-    const activeTab = searchParams.get('tab') ?? activeTabConfig?.value ?? getDefaultTabValue(tabs);
-
-    if (tabs.length === 0) {
-        return null;
-    }
-
-    return (
-        <Tabs
-            value={activeTab}
-            onValueChange={(value) => {
-                if (isLoading) {
-                    return;
-                }
-                const nextTab = tabs.find((tab) => tab.value === value);
-                if (!nextTab) {
-                    return;
-                }
-                const nextSearchParams = new URLSearchParams(searchParams);
-                nextSearchParams.set('tab', nextTab.value);
-                setSearchParams(nextSearchParams, { replace: true });
-            }}
-        >
-            <TabsList variant="line" className="gap-4">
-                {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    return (
-                        <TabsTrigger key={tab.value} value={tab.value} className="cursor-pointer">
-                            <Icon className="h-4 w-4" />
-                            {tab.label}
-                        </TabsTrigger>
-                    );
-                })}
-            </TabsList>
-        </Tabs>
-    );
-}
-
-function OrgLayout() {
-    return (
-        <div className="min-h-screen text-white">
-            <header className="border-b border-white/10">
-                <div className="mx-auto w-full px-6 pb-2 pt-4">
-                    <div className="flex items-center justify-between gap-4 text-white/80">
-                        <div className="flex items-center gap-4">
-                            <Breadcrumb />
-                        </div>
-                        <UserProfile />
-                    </div>
-                </div>
-
-                <div className="mx-auto w-full px-6 pb-2">
-                    <OrgNavigation />
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-6xl gap-8 px-6 pb-16 pt-10">
-                <section className="space-y-6">
-                    <Outlet />
-                </section>
-            </main>
-        </div>
-    );
-}
-
-function AppLayout() {
-    const { appId } = useParams();
+/**
+ * Renders the shared page shell for sdk and api routes.
+ */
+export default function Layout() {
+    const { org, application } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const appMetadataEndpoint = appId ? `/apps/${appId}/metadata` : null;
-    const { data: appMetadata, isLoading: isAppMetadataLoading } = useApiData<AppMetadata>(appMetadataEndpoint);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const isSdkMode = import.meta.env.MODE === 'sdk';
+    const appMetadataEndpoint = application ? `/apps/${application}/metadata` : '/metadata.json';
+    const { data: pagesResponse, isLoading } = useApiData<AppMetadata | AppNavigationPage[] | string>(
+        appMetadataEndpoint
+    );
 
-    if (!appId) {
-        return <OrgLayout />;
-    }
-
-    const tabs = isAppMetadataLoading
+    const tabs = isLoading
         ? [
               {
                   value: 'loading',
@@ -128,22 +46,17 @@ function AppLayout() {
                   icon: Loader2,
               },
           ]
-        : getAppTabsFromPages(
-              getRootPagesFromResponse(appMetadata).map((page) => ({
-                  path: page.path,
-                  name: page.name,
-                  icon: page.icon ?? 'file-text',
-              }))
-          );
+        : getAppTabsFromPages(toNavigationPages(pagesResponse));
 
-    const basePath = `/applications/${appId}`;
     const activeTabConfig = getActiveTabConfig({
         tabs,
         locationPath: location.pathname,
-        basePath,
+        basePath: application ? `/${org}/${application}` : org ? `/${org}` : '',
     });
 
-    const activeTab = isAppMetadataLoading ? 'loading' : (activeTabConfig?.value ?? tabs[0]?.value ?? '');
+    const activeTab = isLoading
+        ? 'loading'
+        : (searchParams.get('tab') ?? activeTabConfig?.value ?? tabs[0]?.value ?? '');
 
     return (
         <div className="min-h-screen text-white">
@@ -153,7 +66,7 @@ function AppLayout() {
                         <div className="flex items-center gap-4">
                             <Breadcrumb />
                         </div>
-                        <UserProfile />
+                        {isSdkMode ? null : <UserProfile />}
                     </div>
                 </div>
 
@@ -162,15 +75,29 @@ function AppLayout() {
                         <Tabs
                             value={activeTab}
                             onValueChange={(value) => {
-                                if (isAppMetadataLoading) {
+                                if (isLoading) {
                                     return;
                                 }
+
                                 const nextTab = tabs.find((tab) => tab.value === value);
                                 if (!nextTab) {
                                     return;
                                 }
-                                const nextPath = nextTab.path ?? '';
-                                navigate(nextPath === '' ? basePath : `${basePath}/${nextPath}`);
+
+                                const nextSearchParams = new URLSearchParams(searchParams);
+                                nextSearchParams.set('tab', nextTab.value);
+
+                                if (application) {
+                                    navigate(`/${org}/${application}?${nextSearchParams.toString()}`);
+                                    return;
+                                }
+
+                                if (org) {
+                                    navigate(`/${org}?${nextSearchParams.toString()}`);
+                                    return;
+                                }
+
+                                setSearchParams(nextSearchParams, { replace: true });
                             }}
                         >
                             <TabsList variant="line" className="gap-4">
@@ -180,7 +107,7 @@ function AppLayout() {
                                         <TabsTrigger
                                             key={tab.value}
                                             value={tab.value}
-                                            disabled={isAppMetadataLoading}
+                                            disabled={isLoading}
                                             className="cursor-pointer"
                                         >
                                             <Icon
@@ -203,8 +130,4 @@ function AppLayout() {
             </main>
         </div>
     );
-}
-
-export default function Layout() {
-    return <AppLayout />;
 }
