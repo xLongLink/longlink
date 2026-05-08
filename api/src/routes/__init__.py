@@ -12,8 +12,8 @@ routers = [
     auth_router,
     example_router,
     compute_router,
-    metadata_router,
     pages_router,
     users_router,
+    metadata_router,
     proxies_router,
 ]

@@ -24,7 +24,7 @@ async def list_users() -> dict[str, list[dict[str, int | str | None]]]:
     }
 
 
-@router.get("/users/metadata.json")
+@router.get("/user/metadata.json")
 async def users_metadata() -> dict[str, list[dict[str, str | None]]]:
     """Return the example page metadata document for the users view."""
 

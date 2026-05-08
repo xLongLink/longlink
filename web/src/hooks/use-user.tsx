@@ -13,14 +13,14 @@ export type User = {
 
 /** Hook that fetches the current user. */
 export function useUser() {
-    return useApiData<User>('/me');
+    return useApiData<User>('/auth/me');
 }
 
 export function useSignOut() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: () => fetch('/logout', { credentials: 'same-origin' }),
+        mutationFn: () => fetch('/auth/logout', { credentials: 'same-origin' }),
         /**
          * Clears the cached user after a successful sign-out.
          */

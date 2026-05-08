@@ -1,17 +1,24 @@
 import { useUser } from '@/hooks/use-user';
 import type { ReactElement } from 'react';
-import { Navigate } from 'react-router';
+import { useEffect } from 'react';
 
-/** Redirects to /login if user is not authenticated. */
+/** Redirects unauthenticated users to the OIDC provider. */
 export function RequireAuth({ children }: { children: ReactElement }) {
     const { data: user, isLoading } = useUser();
+
+    /* Start the login flow once we know the user is missing. */
+    useEffect(() => {
+        if (!isLoading && !user) {
+            window.location.href = '/auth/login/oidc';
+        }
+    }, [isLoading, user]);
 
     if (isLoading) {
         return null;
     }
 
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return null;
     }
 
     return children;

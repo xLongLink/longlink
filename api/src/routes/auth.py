@@ -15,11 +15,6 @@ router = APIRouter(prefix="/auth")
 async def login_oidc(request: Request):
     """Initiate OIDC login flow by redirecting to the identity provider."""
     oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
-    next_path = request.query_params.get("next")
-
-    # Only keep relative in-app paths to avoid open redirects.
-    if next_path and next_path.startswith("/") and not next_path.startswith("//"):
-        request.session["post_login_redirect"] = next_path
 
     try:
         return await oidc.authorize_redirect(
@@ -36,7 +31,7 @@ async def login_oidc(request: Request):
         ) from exc
 
 
-@router.get("/auth/oidc")
+@router.get("/oidc")
 async def auth_oidc(request: Request):
     """Handle OIDC callback, exchange code for token, and create/update user."""
     oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
@@ -71,14 +66,7 @@ async def auth_oidc(request: Request):
     )
 
     request.session["userid"] = user.id
-    next_path = request.session.pop("post_login_redirect", None)
-    redirect_url = env.URL.rstrip("/")
-
-    # Send the browser back to the configured frontend origin after login completes.
-    if next_path and next_path.startswith("/") and not next_path.startswith("//"):
-        redirect_url = f"{redirect_url}{next_path}"
-
-    return RedirectResponse(redirect_url)
+    return RedirectResponse(env.URL.rstrip("/"))
 
 
 @router.get("/logout")

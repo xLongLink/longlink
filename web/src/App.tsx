@@ -2,7 +2,6 @@ import { RequireAuth } from '@/components/Auth';
 import { Toaster } from '@/ui/sonner';
 import type { ReactElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router';
-import Login from './pages/Login';
 import LongLink from './pages/Longlink';
 import NotFound from './pages/NotFound';
 
@@ -22,7 +21,6 @@ function getRoutes() {
         { path: '/', element: withAuth(<LongLink path="/api/user/metadata.json" />) },
         { path: ':org', element: withAuth(<LongLink path="/api/:org/metadata.json" />) },
         { path: ':org/:app/*', element: withAuth(<LongLink path="/api/:org/:app/metadata.json" />) },
-        { path: '/login', element: <Login /> },
         { path: '*', element: withAuth(<NotFound />) },
     ];
 }
