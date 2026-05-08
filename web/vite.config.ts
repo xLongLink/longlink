@@ -32,7 +32,23 @@ export default defineConfig(({ mode }) => {
             host: '0.0.0.0',
             port: devServerPort,
             proxy: {
+                '/auth/oidc': {
+                    target: 'http://localhost:8000',
+                    changeOrigin: true,
+                },
                 '/api': {
+                    target: 'http://localhost:8000',
+                    changeOrigin: true,
+                },
+                '/login/oidc': {
+                    target: 'http://localhost:8000',
+                    changeOrigin: true,
+                },
+                '/logout': {
+                    target: 'http://localhost:8000',
+                    changeOrigin: true,
+                },
+                '/me': {
                     target: 'http://localhost:8000',
                     changeOrigin: true,
                 },

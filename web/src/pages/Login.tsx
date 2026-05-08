@@ -1,23 +1,28 @@
 import { useUser } from '@/hooks/use-user';
 import { Layers } from 'lucide-react';
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 
+/**
+ * Starts the OIDC login flow or returns authenticated users to their target route.
+ */
 export default function Login() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { data: user, isLoading } = useUser();
-    const loginUrl = '/login/oidc';
+    const nextPath = searchParams.get('next')?.startsWith('/') ? searchParams.get('next')! : '/';
+    const loginUrl = `/login/oidc?next=${encodeURIComponent(nextPath)}`;
 
     /* Redirect authenticated users or hand off to the identity provider. */
     useEffect(() => {
         if (!isLoading) {
             if (user) {
-                navigate('/');
+                navigate(nextPath, { replace: true });
             } else {
                 window.location.href = loginUrl;
             }
         }
-    }, [isLoading, loginUrl, navigate, user]);
+    }, [isLoading, loginUrl, navigate, nextPath, user]);
 
     return (
         <div className="flex min-h-screen items-center justify-center px-6 py-12 text-white">
