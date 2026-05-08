@@ -1,12 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { apiFetch } from '@/lib/api';
-
-/** Hook that fetches data from an API endpoint using TanStack Query. */
+/**
+ * Fetches JSON from an API endpoint using TanStack Query.
+ */
 export function useApiData<T>(endpoint: string | null) {
     return useQuery({
         queryKey: ['api', endpoint],
-        queryFn: () => apiFetch<T>(endpoint!),
+        queryFn: async () => {
+            const response = await fetch(endpoint!, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed (${response.status})`);
+            }
+
+            return (await response.json()) as T;
+        },
         enabled: Boolean(endpoint),
     });
 }

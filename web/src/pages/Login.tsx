@@ -1,4 +1,3 @@
-import { useUrl } from '@/hooks/use-url';
 import { useUser } from '@/hooks/use-user';
 import { Layers } from 'lucide-react';
 import { useEffect } from 'react';
@@ -7,8 +6,7 @@ import { useNavigate } from 'react-router';
 export default function Login() {
     const navigate = useNavigate();
     const { data: user, isLoading } = useUser();
-    const nextUrl = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
-    const loginUrl = useUrl(`/login/oidc?next=${encodeURIComponent(nextUrl)}`);
+    const loginUrl = '/login/oidc';
 
     /* Redirect authenticated users or hand off to the identity provider. */
     useEffect(() => {

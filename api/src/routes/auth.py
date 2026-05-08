@@ -15,10 +15,6 @@ router = APIRouter()
 async def login_oidc(request: Request):
     """Initiate OIDC login flow by redirecting to the identity provider."""
     oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
-    next_url = request.query_params.get("next")
-
-    if next_url:
-        request.session["next_url"] = next_url
 
     try:
         return await oidc.authorize_redirect(
@@ -70,8 +66,7 @@ async def auth_oidc(request: Request):
     )
 
     request.session["userid"] = user.id
-    next_url = request.session.pop("next_url", None)
-    return RedirectResponse(next_url or env.URL)
+    return RedirectResponse("/")
 
 
 @router.get("/logout")

@@ -1,6 +1,4 @@
 import { RequireAuth } from '@/components/Auth';
-import { BaseUrlContext } from '@/hooks/use-url';
-import { getApiBaseUrl } from '@/lib/api';
 import { Toaster } from '@/ui/sonner';
 import type { ReactElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router';
@@ -41,12 +39,10 @@ const router = createBrowserRouter(getRoutes());
  * Renders the app shell, router, and global toaster.
  */
 export default function App() {
-    const baseUrl = getApiBaseUrl();
-
     return (
-        <BaseUrlContext.Provider value={baseUrl}>
+        <>
             <RouterProvider router={router} />
             <Toaster position="bottom-right" />
-        </BaseUrlContext.Provider>
+        </>
     );
 }

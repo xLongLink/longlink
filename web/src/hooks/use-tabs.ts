@@ -1,12 +1,24 @@
-import { useQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { FileTextIcon, Loader2 } from 'lucide-react';
 
-import { apiFetch } from '@/lib/api';
-import { getAppTabsFromPages, type AppNavigationPage, type NavigationTab } from '@/lib/navigation';
+import { useApiData } from '@/hooks/use-data';
+import type { ComponentType } from 'react';
 
 type MetadataResponse = {
     tabs?: unknown;
     pages?: unknown;
+};
+
+export type NavigationTab = {
+    value: string;
+    label: string;
+    path?: string;
+    icon: ComponentType<{ className?: string }>;
+};
+
+type AppNavigationPage = {
+    path: string;
+    name: string;
+    icon?: string;
 };
 
 const loadingTabs: NavigationTab[] = [
@@ -22,11 +34,7 @@ const loadingTabs: NavigationTab[] = [
  * Fetches a metadata document and returns its tabs payload.
  */
 export function useTabs(metadataPath: string | null) {
-    const query = useQuery({
-        queryKey: ['tabs', metadataPath],
-        queryFn: () => apiFetch<MetadataResponse | unknown[]>(metadataPath!),
-        enabled: Boolean(metadataPath),
-    });
+    const query = useApiData<MetadataResponse | unknown[]>(metadataPath);
 
     const rawTabs = Array.isArray(query.data)
         ? query.data
@@ -36,12 +44,12 @@ export function useTabs(metadataPath: string | null) {
 
     const tabs = query.isLoading
         ? loadingTabs
-        : getAppTabsFromPages(
-              rawTabs.map((page) => ({
-                  ...(page as AppNavigationPage),
-                  icon: (page as AppNavigationPage).icon ?? 'file-text',
-              }))
-          );
+        : rawTabs.map((page) => ({
+              value: (page as AppNavigationPage).path,
+              label: (page as AppNavigationPage).name,
+              path: (page as AppNavigationPage).path,
+              icon: FileTextIcon,
+          }));
 
     return { tabs };
 }

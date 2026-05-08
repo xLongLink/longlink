@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { apiFetch } from '@/lib/api';
+import { useApiData } from '@/hooks/use-data';
 
 export type User = {
     id: number;
@@ -13,22 +13,14 @@ export type User = {
 
 /** Hook that fetches the current user. */
 export function useUser() {
-    return useQuery({
-        queryKey: ['user'],
-        queryFn: () => apiFetch<User>('/me'),
-        staleTime: Infinity,
-    });
+    return useApiData<User>('/me');
 }
 
 export function useSignOut() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: () =>
-            apiFetch('/logout', {
-                method: 'GET',
-                credentials: 'include',
-            }),
+        mutationFn: () => fetch('/logout', { credentials: 'same-origin' }),
         /**
          * Clears the cached user after a successful sign-out.
          */
