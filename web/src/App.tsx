@@ -20,14 +20,9 @@ function getRoutes() {
 
     // Default bundle serves the full app with control-plane routes.
     return [
-        {
-            path: '/',
-            children: [
-                { index: true, element: <Index /> },
-                { path: ':org', element: withAuth(<LongLink path="/api/:org/metadata.json" />) },
-                { path: ':org/:app/*', element: withAuth(<LongLink path="/api/:org/:app/metadata.json" />) },
-            ],
-        },
+        { path: '/', element: <Index /> },
+        { path: ':org', element: withAuth(<LongLink path="/api/:org/metadata.json" />) },
+        { path: ':org/:app/*', element: withAuth(<LongLink path="/api/:org/:app/metadata.json" />) },
         { path: '/login', element: <Login /> },
         { path: '*', element: withAuth(<NotFound />) },
     ];

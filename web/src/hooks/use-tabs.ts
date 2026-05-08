@@ -4,8 +4,8 @@ import { useApiData } from '@/hooks/use-data';
 import type { ComponentType } from 'react';
 
 type MetadataResponse = {
-    tabs?: unknown;
-    pages?: unknown;
+    tabs?: AppNavigationPage[];
+    pages?: AppNavigationPage[];
 };
 
 export type NavigationTab = {
@@ -34,12 +34,12 @@ const loadingTabs: NavigationTab[] = [
  * Fetches a metadata document and returns its tabs payload.
  */
 export function useTabs(metadataPath: string | null) {
-    const query = useApiData<MetadataResponse | unknown[]>(metadataPath);
+    const query = useApiData<MetadataResponse | AppNavigationPage[]>(metadataPath);
 
-    const rawTabs = Array.isArray(query.data)
+    const rawTabs: AppNavigationPage[] = Array.isArray(query.data)
         ? query.data
         : query.data && typeof query.data === 'object'
-          ? ((query.data as MetadataResponse).tabs ?? (query.data as MetadataResponse).pages ?? [])
+          ? (query.data as MetadataResponse).tabs ?? (query.data as MetadataResponse).pages ?? []
           : [];
 
     const tabs = query.isLoading
