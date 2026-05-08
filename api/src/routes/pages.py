@@ -4,7 +4,7 @@ from src.constants import PAGES
 from longlink.utils import Page
 from fastapi.responses import Response
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 def get_all_pages() -> list[PageInfo]:

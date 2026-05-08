@@ -7,7 +7,7 @@ from src.models.apps import AppResponse
 from src.utils.utils import app_url, app_path
 from fastapi.responses import JSONResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 client_http = httpx.AsyncClient()
 
 

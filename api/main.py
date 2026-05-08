@@ -56,7 +56,7 @@ app.include_router(auth_router)
 for router in routers:
     if router is auth_router:
         continue
-    app.include_router(router, prefix="/api")
+    app.include_router(router)
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():

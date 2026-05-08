@@ -7,7 +7,7 @@ from src.models.apps import AppCreate, AppResponse
 from src.utils.utils import app_url as compute_app_url
 from src.utils.compute import compute
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 def _get_pod_logs(app_key: str) -> str:

@@ -2,7 +2,7 @@ import src.db as db
 from fastapi import APIRouter, HTTPException
 from src.routes.pages import get_all_pages
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 @router.get("/{name}/metadata.json")

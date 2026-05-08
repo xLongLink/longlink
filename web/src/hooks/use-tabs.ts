@@ -39,7 +39,7 @@ export function useTabs(metadataPath: string | null) {
     const rawTabs: AppNavigationPage[] = Array.isArray(query.data)
         ? query.data
         : query.data && typeof query.data === 'object'
-          ? (query.data as MetadataResponse).tabs ?? (query.data as MetadataResponse).pages ?? []
+          ? ((query.data as MetadataResponse).tabs ?? (query.data as MetadataResponse).pages ?? [])
           : [];
 
     const tabs = query.isLoading

@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse
 from src.utils.compute import compute
 from src.models.compute import DockerRegistryCreate
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 @router.post("/compute/registry")

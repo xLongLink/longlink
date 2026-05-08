@@ -8,7 +8,7 @@ from src.models import UserUpdate
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
-router = APIRouter()
+router = APIRouter(prefix="/auth")
 
 
 @router.get("/login/oidc")

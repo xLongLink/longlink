@@ -2,7 +2,7 @@ from src.db import users as users_service
 from fastapi import APIRouter
 from src.routes.pages import get_all_pages
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 @router.get("/users")
