@@ -5,28 +5,22 @@ from src.routes.pages import get_all_pages
 router = APIRouter(prefix="/api")
 
 
-@router.get("/users")
-async def list_users() -> dict[str, list[dict[str, int | str | None]]]:
-    """Return all users known to the control plane."""
-
-    users = await users_service.list()
-    return {
-        "items": [
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "avatar": user.avatar,
-                "oidcSubject": user.oidc_subject,
-            }
-            for user in users
-        ]
-    }
-
-
 @router.get("/user/metadata.json")
 async def users_metadata() -> dict[str, list[dict[str, str | None]]]:
     """Return the example page metadata document for the users view."""
 
-    pages = [page.model_dump() for page in get_all_pages() if page.path == "example"]
+    return {
+        "pages": [
+            {"name": "Example 1", "path": "example", "icon": "layout-grid", "content": None},
+            {"name": "Example 2", "path": "example", "icon": "layout-grid", "content": None},
+            {"name": "Example 3", "path": "example", "icon": "layout-grid", "content": None},
+        ]
+    }
+
+
+@router.get("/user/pages/{page_name}")
+async def get_user_page(page_name: str) -> dict[str, list[dict[str, str | None]]]:
+    """Return the metadata for a specific user page."""
+
+    pages = [page.model_dump() for page in get_all_pages() if page.path == page_name]
     return {"pages": pages}

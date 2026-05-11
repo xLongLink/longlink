@@ -27,11 +27,11 @@ export function UserProfile() {
     const avatarUrl = user.avatar ?? '';
 
     /**
-     * Signs the current user out and redirects to login.
+     * Signs the current user out and redirects to home.
      */
     const handleSignOut = async () => {
         await signOut();
-        navigate('/login');
+        navigate('/');
     };
 
     return (

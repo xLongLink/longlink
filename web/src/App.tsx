@@ -1,7 +1,7 @@
 import { RequireAuth } from '@/components/Auth';
 import { Toaster } from '@ui/sonner';
-import type { ReactElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router';
+import Home from './pages/Home';
 import LongLink from './pages/Longlink';
 import NotFound from './pages/NotFound';
 
@@ -9,8 +9,6 @@ import NotFound from './pages/NotFound';
  * Builds the route tree for the current bundle mode.
  */
 function getRoutes() {
-    const withAuth = (element: ReactElement) => <RequireAuth>{element}</RequireAuth>;
-
     // SDK bundle serves the app runtime without control-plane routes.
     if (import.meta.env.MODE === 'sdk') {
         return [{ path: '/', element: <LongLink path="/metadata.json" /> }];
@@ -18,10 +16,31 @@ function getRoutes() {
 
     // Default bundle serves the full app with control-plane routes.
     return [
-        { path: '/', element: withAuth(<LongLink path="/api/user/metadata.json" />) },
-        { path: ':org', element: withAuth(<LongLink path="/api/:org/metadata.json" />) },
-        { path: ':org/:app/*', element: withAuth(<LongLink path="/api/:org/:app/metadata.json" />) },
-        { path: '*', element: withAuth(<NotFound />) },
+        { path: '/', element: <Home /> },
+        {
+            path: ':org',
+            element: (
+                <RequireAuth>
+                    <LongLink path="/api/:org/metadata.json" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org/:app/*',
+            element: (
+                <RequireAuth>
+                    <LongLink path="/api/:org/:app/metadata.json" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: '*',
+            element: (
+                <RequireAuth>
+                    <NotFound />
+                </RequireAuth>
+            ),
+        },
     ];
 }
 

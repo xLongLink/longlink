@@ -1,6 +1,6 @@
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
-import { Tabs } from '@/components/Tabs';
+import Tabs from '@/components/Tabs';
 import View from '@/components/View';
 import { useApiData } from '@/hooks/use-data';
 import { useParams } from 'react-router';

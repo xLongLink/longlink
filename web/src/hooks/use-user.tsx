@@ -25,7 +25,8 @@ export function useSignOut() {
          * Clears the cached user after a successful sign-out.
          */
         onSuccess: () => {
-            queryClient.setQueryData(['user'], null);
+            queryClient.setQueryData(['api', '/auth/me'], null);
+            queryClient.invalidateQueries({ queryKey: ['api', '/auth/me'] });
         },
     });
 }

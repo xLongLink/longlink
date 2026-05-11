@@ -1,7 +1,7 @@
 import type { NavigationTab } from '@/hooks/use-tabs';
 import { useTabs } from '@/hooks/use-tabs';
-import { TabsList, TabsTrigger, Tabs as UITabs } from '@ui/tabs';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { cn } from '@/lib/utils';
+import { Link, useParams, useSearchParams } from 'react-router';
 
 type TabsProps = {
     path: string;
@@ -16,6 +16,8 @@ export function Tabs({ path }: TabsProps) {
     return <TabsContent tabs={tabs} />;
 }
 
+export default Tabs;
+
 type TabsContentProps = {
     tabs: NavigationTab[];
 };
@@ -25,57 +27,57 @@ type TabsContentProps = {
  */
 function TabsContent({ tabs }: TabsContentProps) {
     const params = useParams();
-    const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
 
-    const activeTab = searchParams.get('tab') ?? tabs[0]?.value ?? '';
+    const selectedTab = searchParams.get('tab');
+    const activeTab = tabs.some((tab) => tab.value === selectedTab) ? selectedTab : (tabs[0]?.value ?? '');
 
     if (tabs.length === 0) {
         return null;
     }
 
+    const buildTabHref = (value: string) => {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.set('tab', value);
+
+        if (params.application) {
+            return `/${params.org}/${params.application}?${nextSearchParams.toString()}`;
+        }
+
+        if (params.org) {
+            return `/${params.org}?${nextSearchParams.toString()}`;
+        }
+
+        return `?${nextSearchParams.toString()}`;
+    };
+
     return (
         <div className="mx-auto w-full px-6 pb-2">
-            <UITabs
-                value={activeTab}
-                onValueChange={(value) => {
-                    const nextTab = tabs.find((tab) => tab.value === value);
-                    if (!nextTab) {
-                        return;
-                    }
+            <div className="inline-flex items-center gap-4 border-b border-white/10">
+                {tabs.map((tab) => {
+                    const isActive = tab.value === activeTab;
 
-                    const nextSearchParams = new URLSearchParams(searchParams);
-                    nextSearchParams.set('tab', nextTab.value);
-
-                    if (params.application) {
-                        navigate(`/${params.org}/${params.application}?${nextSearchParams.toString()}`);
-                        return;
-                    }
-
-                    if (params.org) {
-                        navigate(`/${params.org}?${nextSearchParams.toString()}`);
-                        return;
-                    }
-
-                    setSearchParams(nextSearchParams, { replace: true });
-                }}
-            >
-                <TabsList variant="line" className="gap-4">
-                    {tabs.map((tab) => {
-                        return (
-                            <TabsTrigger
-                                key={tab.value}
-                                value={tab.value}
-                                disabled={tab.value === 'loading'}
-                                className="cursor-pointer"
-                            >
-                                <tab.icon className={`h-4 w-4 ${tab.value === 'loading' ? 'animate-spin' : ''}`} />
-                                {tab.label}
-                            </TabsTrigger>
-                        );
-                    })}
-                </TabsList>
-            </UITabs>
+                    return (
+                        <Link
+                            key={tab.value}
+                            to={buildTabHref(tab.value)}
+                            replace
+                            aria-current={isActive ? 'page' : undefined}
+                            aria-disabled={tab.value === 'loading'}
+                            tabIndex={tab.value === 'loading' ? -1 : undefined}
+                            className={cn(
+                                'relative inline-flex items-center gap-1.5 pb-3 text-sm font-medium text-white/60 transition-colors hover:text-white',
+                                tab.value === 'loading' && 'pointer-events-none opacity-50',
+                                isActive &&
+                                    'text-white after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-white'
+                            )}
+                        >
+                            <tab.icon className={cn('h-4 w-4', tab.value === 'loading' && 'animate-spin')} />
+                            {tab.label}
+                        </Link>
+                    );
+                })}
+            </div>
         </div>
     );
 }

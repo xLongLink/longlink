@@ -3,6 +3,8 @@ name: api
 description: LongLink control-plane API
 ---
 
+The api is a fastapi application that serves as the control-plane for LongLink.
+
 ## Structure
 
 ```text
@@ -47,10 +49,15 @@ api/
 └── tests/                        # Tests
 ```
 
+## Landing Page
+
+```
+https://longlink.dev
+```
+
 ## Organization
 
 - Support for multi organization
-- The first page is dedicated to the user
 
 ```
 https://longlink.dev/{org}?tab=tab
