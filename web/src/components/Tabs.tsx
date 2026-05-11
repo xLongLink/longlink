@@ -40,8 +40,8 @@ function TabsContent({ tabs }: TabsContentProps) {
         const nextSearchParams = new URLSearchParams(searchParams);
         nextSearchParams.set('tab', value);
 
-        if (params.application) {
-            return `/${params.org}/${params.application}?${nextSearchParams.toString()}`;
+        if (params.app) {
+            return `/${params.org}/${params.app}?${nextSearchParams.toString()}`;
         }
 
         if (params.org) {

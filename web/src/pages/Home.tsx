@@ -1,6 +1,6 @@
 import Layout from '@/Layout';
 import { useUser } from '@/hooks/use-user';
-import LongLink from '@/pages/Longlink';
+import View from '@/pages/View';
 import { buttonVariants } from '@ui/button';
 import { ArrowRight } from 'lucide-react';
 
@@ -13,7 +13,7 @@ export default function Home() {
     }
 
     if (user) {
-        return <LongLink path="/api/user/metadata.json" />;
+        return <View metadata="/api/user/metadata.json" baseurl="/api" />;
     }
 
     return (

@@ -5,11 +5,11 @@ import Layout from './Layout';
 import Features from './pages/Features';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
-import LongLink from './pages/Longlink';
 import NotFound from './pages/NotFound';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import View from './pages/View';
 
 /**
  * Builds the route tree for the current bundle mode.
@@ -17,7 +17,7 @@ import Terms from './pages/Terms';
 function getRoutes() {
     // SDK bundle serves the app runtime without control-plane routes.
     if (import.meta.env.MODE === 'sdk') {
-        return [{ path: '/', element: <LongLink path="/metadata.json" /> }];
+        return [{ path: '/', element: <View metadata="/metadata.json" baseurl="" /> }];
     }
 
     // Default bundle serves the full app with control-plane routes.
@@ -53,7 +53,7 @@ function getRoutes() {
             path: ':org',
             element: (
                 <RequireAuth>
-                    <LongLink path="/api/:org/metadata.json" />
+                    <View metadata="/api/:org/metadata.json" baseurl="/api" />
                 </RequireAuth>
             ),
         },
@@ -61,7 +61,7 @@ function getRoutes() {
             path: ':org/:app/*',
             element: (
                 <RequireAuth>
-                    <LongLink path="/api/:org/:app/metadata.json" />
+                    <View metadata="/api/:org/:app/metadata.json" baseurl="/api/apps/:app" />
                 </RequireAuth>
             ),
         },
