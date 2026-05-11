@@ -31,12 +31,22 @@ longlink/
 └── docs/
 ```
 
-/metadata.json
-/{org}/metadata.json
+## View
 
-```sdk
+- Manage the fetching and rendering of metadata-driven views in the web runtime. 
+- For the user
 
+```jsx
+<View metadata="/path/to/metadata.json" baseurl={baseurl} />
+// User 
+<View metadata="/api/user/metadata.json" baseurl="/api" />
+// Organization
+<View metadata="/api/{org}/metadata.json" baseurl="/api" />
+// Application
+<View metadata="/api/{org}/{app}/metadata.json" baseurl="/api/apps/{app_id}" />
 ```
+
+
 
 ## Formatting
 

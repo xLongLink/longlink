@@ -1,34 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from src.models import PageInfo
 from src.constants import PAGES
 from longlink.utils import Page
 from fastapi.responses import Response
 
 router = APIRouter(prefix="/api")
-
-
-def get_all_pages() -> list[PageInfo]:
-    """Scan pages directory and return metadata for each XML page."""
-    pages: list[PageInfo] = []
-    if not PAGES.is_dir():
-        return pages
-
-    page_order = ["example"]
-
-    for page_file in sorted(PAGES.glob("*.xml")):
-        page = Page(page_file)
-        page.validate()
-        pages.append(
-            PageInfo(
-                name=page.metadata.get("name", page_file.stem.replace("-", " ").title()),
-                path=page_file.stem,
-                icon=page.metadata.get("icon", "file-text"),
-                content=page.content,
-            )
-        )
-
-    pages.sort(key=lambda p: page_order.index(p.path) if p.path in page_order else 999)
-    return pages
 
 
 @router.get("/pages/{page_name}")

@@ -1,6 +1,8 @@
 import src.db as db
 from fastapi import APIRouter, HTTPException
-from src.routes.pages import get_all_pages
+from src.models import PageInfo
+from src.constants import PAGES
+from longlink.utils import Page
 
 router = APIRouter(prefix="/api")
 
@@ -12,7 +14,23 @@ async def metadata(name: str) -> dict:
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Organization '{name}' not found")
 
+    pages: list[PageInfo] = []
+
+    # Scan XML pages for organization metadata.
+    if PAGES.is_dir():
+        for page_file in sorted(PAGES.glob("*.xml")):
+            page = Page(page_file)
+            page.validate()
+            pages.append(
+                PageInfo(
+                    name=page.metadata.get("name", page_file.stem.replace("-", " ").title()),
+                    path=page_file.stem,
+                    icon=page.metadata.get("icon", "file-text"),
+                    content=page.content,
+                )
+            )
+
     return {
         "organization": organization.model_dump(),
-        "pages": [page.model_dump() for page in get_all_pages()],
+        "pages": [page.model_dump() for page in pages],
     }

@@ -3,7 +3,7 @@ import { UserProfile } from '@/components/Profile';
 import Tabs from '@/components/Tabs';
 import View from '@/components/View';
 import { useApiData } from '@/hooks/use-data';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 
 type LongLinkProps = {
     path: string;
@@ -25,13 +25,16 @@ const resolvePath = (path: string, params: Record<string, string | undefined>) =
  */
 export default function LongLink({ path }: LongLinkProps) {
     const params = useParams();
+    const [searchParams] = useSearchParams();
     const { '*': wildcardPath } = params;
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
+    const selectedTab = searchParams.get('tab');
     const metadataPath = resolvePath(path, params);
     const { data: metadata } = useApiData<{ pages?: Array<{ path: string; content?: string }> }>(metadataPath);
-    const activePage = metadata?.pages?.find(
-        (page) => normalizePath(page.path.replace(/\.xml$/i, '')) === normalizedRoutePath
-    );
+    const activePageKey = selectedTab ?? normalizedRoutePath;
+    const activePage =
+        metadata?.pages?.find((page) => normalizePath(page.path.replace(/\.xml$/i, '')) === activePageKey) ??
+        metadata?.pages?.[0];
 
     return (
         <div className="min-h-screen text-white">
