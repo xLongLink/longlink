@@ -61,7 +61,7 @@ export function UserProfile() {
                         <a
                             href="https://docs.longlink.dev"
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
                             className="flex w-full items-center"
                         >
                             <BookOpen className="mr-2 h-4 w-4" />

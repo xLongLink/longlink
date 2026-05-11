@@ -1,9 +1,15 @@
 import { RequireAuth } from '@/components/Auth';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
+import Layout from './Layout';
+import Features from './pages/Features';
 import Home from './pages/Home';
+import Impressum from './pages/Impressum';
 import LongLink from './pages/Longlink';
 import NotFound from './pages/NotFound';
+import Pricing from './pages/Pricing';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 /**
  * Builds the route tree for the current bundle mode.
@@ -17,6 +23,32 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
+        { path: 'features', element: <Features /> },
+        { path: 'pricing', element: <Pricing /> },
+        {
+            path: 'impressum',
+            element: (
+                <Layout>
+                    <Impressum />
+                </Layout>
+            ),
+        },
+        {
+            path: 'terms',
+            element: (
+                <Layout>
+                    <Terms />
+                </Layout>
+            ),
+        },
+        {
+            path: 'privacy',
+            element: (
+                <Layout>
+                    <Privacy />
+                </Layout>
+            ),
+        },
         {
             path: ':org',
             element: (
