@@ -3,11 +3,13 @@ name: api
 description: LongLink control-plane API
 ---
 
-The api is a fastapi application that serves as the control-plane for LongLink.
+- The FastAPI control-plane API is hosted on `localhost:8000` during development.
+- In local development, the Vite frontend dev server (`localhost:5173`) proxies /api and /auth requests to the backend on `localhost:8000`.
+
 
 ## Structure
 
-```text
+```bash
 api/
 ├── src/
 │   ├── __init__.py
@@ -49,22 +51,35 @@ api/
 └── tests/                        # Tests
 ```
 
-## Landing Page
+- User are are logged using an `OIDC` client (e.g. Keycloak) 
+- Support for multi organization (`/orgs/{org_id}/...` routes)
+- Each organization has its own set of users and permissions
+- Each organization has its own database
+- Each organization has its own isolated storage
+- Each organization has its own compute namespace
 
+## Database
+
+```bash
+Database Server       # Managed by the control place
+└── Database          # One per organization
+    └── Schema        # Each app gets its own schema
+        └── Tables    # Managed by each app (SQLModel + Alembic)
 ```
-https://longlink.dev
+
+## Storage
+
+```bash
+Storage Cluster       # Managed by the control plane
+└── Tenant            # One per organization
+    └── Bucket        # Each app gets isolated storage
+        └── Objects   # Managed by each app (ffspec)
 ```
 
-## Organization
+## Compute
 
-- Support for multi organization
-
-```
-https://longlink.dev/{org}?tab=tab
-```
-
-## Application
-
-```
-https://longlink.dev/{org}/{application}?tab=tab
+```bash
+Compute Cluster       # Managed by the control plane
+└── Namespace         # One per organization
+    └── Containers    # Application packaged (fastapi)
 ```

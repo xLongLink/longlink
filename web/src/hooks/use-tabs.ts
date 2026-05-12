@@ -45,10 +45,7 @@ export function useTabs(metadataPath: string | null) {
     const tabs = query.isLoading
         ? loadingTabs
         : rawTabs.map((page) => ({
-              value: (page as AppNavigationPage).name
-                  .toLowerCase()
-                  .replace(/[^a-z0-9]+/g, '_')
-                  .replace(/^_+|_+$/g, ''),
+              value: (page as AppNavigationPage).path,
               label: (page as AppNavigationPage).name,
               path: (page as AppNavigationPage).path,
               icon: FileTextIcon,
