@@ -6,7 +6,6 @@ description: LongLink control-plane API
 - The FastAPI control-plane API is hosted on `localhost:8000` during development.
 - In local development, the Vite frontend dev server (`localhost:5173`) proxies /api and /auth requests to the backend on `localhost:8000`.
 
-
 ## Structure
 
 ```bash
@@ -51,7 +50,7 @@ api/
 └── tests/                        # Tests
 ```
 
-- User are are logged using an `OIDC` client (e.g. Keycloak) 
+- User are are logged using an `OIDC` client (e.g. Keycloak)
 - Support for multi organization (`/orgs/{org_id}/...` routes)
 - Each organization has its own set of users and permissions
 - Each organization has its own database
