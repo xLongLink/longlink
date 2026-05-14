@@ -1,4 +1,3 @@
-import type { NavigationTab } from '@/hooks/use-tabs';
 import { useTabs } from '@/hooks/use-tabs';
 import { cn } from '@/lib/utils';
 import { Link, useParams, useSearchParams } from 'react-router';
@@ -12,20 +11,6 @@ type TabsProps = {
  */
 export function Tabs({ path }: TabsProps) {
     const { tabs } = useTabs(path);
-
-    return <TabsContent tabs={tabs} />;
-}
-
-export default Tabs;
-
-type TabsContentProps = {
-    tabs: NavigationTab[];
-};
-
-/**
- * Renders the tab list and current selection.
- */
-function TabsContent({ tabs }: TabsContentProps) {
     const params = useParams();
     const [searchParams] = useSearchParams();
 
@@ -52,8 +37,8 @@ function TabsContent({ tabs }: TabsContentProps) {
     };
 
     return (
-        <div className="mx-auto w-full px-6 pb-2">
-            <div className="inline-flex items-center gap-4 border-b border-white/10">
+        <div className="mx-auto w-full px-6">
+            <div className="flex w-full items-center gap-2 border-b border-white/10">
                 {tabs.map((tab) => {
                     const isActive = tab.value === activeTab;
 
@@ -66,7 +51,7 @@ function TabsContent({ tabs }: TabsContentProps) {
                             aria-disabled={tab.value === 'loading'}
                             tabIndex={tab.value === 'loading' ? -1 : undefined}
                             className={cn(
-                                'relative inline-flex items-center gap-1.5 pb-3 text-sm font-medium text-white/60 transition-colors hover:text-white',
+                                'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-3 text-sm font-medium text-white/60 transition-colors hover:border-white/10 hover:bg-white/5 hover:text-white',
                                 tab.value === 'loading' && 'pointer-events-none opacity-50',
                                 isActive &&
                                     'text-white after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-white'
@@ -81,3 +66,5 @@ function TabsContent({ tabs }: TabsContentProps) {
         </div>
     );
 }
+
+export default Tabs;

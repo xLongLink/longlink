@@ -21,10 +21,10 @@
     Active filters: {showActive}
   </p>
 
-  <Input value="$fullName" placeholder="Full name" />
-  <Input value="$email" placeholder="ada@example.com" />
-  <Input value="$notes" placeholder="Notes" />
-  <Input value="$quantity" type="number" placeholder="1" />
+  <Input bind="fullName" placeholder="Full name" />
+  <Input bind="email" placeholder="ada@example.com" />
+  <Input bind="notes" placeholder="Notes" />
+  <Input bind="quantity" type="number" placeholder="1" />
 
   <Button action="/example/profile" json='{{ fullName: fullName, email: email, notes: notes }}' invalidate='["profile"]' variant="default" size="sm">
     Save profile

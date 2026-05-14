@@ -1,0 +1,17 @@
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<Page name="Organizations" icon="layout-grid">
+  <Query id="organizations" path="/user/organizations" />
+
+  <P>
+    Your organizations
+  </P>
+
+  <For each="$organizations.items" as="organization">
+    <P>
+      {organization.name}
+      <Button href="/{organization.name}" variant="outline" size="sm">
+        Open
+      </Button>
+    </P>
+  </For>
+</Page>
