@@ -2,9 +2,19 @@
 <Page name="Organizations" icon="layout-grid">
   <Query id="organizations" path="/user/organizations" />
 
-  <P>
-    Your organizations
-  </P>
+  <Hero icon="layout-grid">
+    <HeroTitle>
+      Organizations
+    </HeroTitle>
+    <HeroDescription>
+      Browse the organizations you belong to and open the workspace you need.
+    </HeroDescription>
+    <HeroContent>
+      <Button action="/organizations/new" variant="default" size="sm">
+        Create organization
+      </Button>
+    </HeroContent>
+  </Hero>
 
   <For each="$organizations.items" as="organization">
     <P>

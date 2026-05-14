@@ -11,5 +11,5 @@ SCHEMA = ROOT / ".static" / "xsd" / "react" / "Input.xsd"
 def test_input_validation() -> None:
     """Validate a minimal `Input` fragment."""
 
-    element = Element.from_content('<Input name="title" value="Draft" />', schema=SCHEMA)
+    element = Element.from_content('<Input placeholder="Draft title" value="Draft" type="text" />', schema=SCHEMA)
     element.validate()

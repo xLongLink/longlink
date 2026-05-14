@@ -11,5 +11,5 @@ SCHEMA = ROOT / ".static" / "xsd" / "react" / "Icon.xsd"
 def test_icon_validation() -> None:
     """Validate a minimal `Icon` fragment."""
 
-    element = Element.from_content('<Icon name="sparkles" />', schema=SCHEMA)
+    element = Element.from_content('<Icon />', schema=SCHEMA)
     element.validate()

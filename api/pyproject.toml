@@ -57,7 +57,7 @@ py-modules = ['main']
 include = ['src*']
 
 [tool.uv.sources]
-longlink = { path = '../sdk' }
+longlink = { path = '../sdk', editable = true }
 
 
 [tool.isort]

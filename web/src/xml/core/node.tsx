@@ -4,6 +4,7 @@ import { For } from '@xml/primitives/For';
 import { Page } from '@xml/primitives/Page';
 import { Text } from '@xml/primitives/Text';
 import { Button } from '@xml/react/Button';
+import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Input } from '@xml/react/Input';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
@@ -20,7 +21,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
     // Handle conditional rendering with "if" parameter.
     if (node.params?.if != null) {
-        if (!Boolean(evaluate(node.params.if, ctx))) {
+        if (!evaluate(node.params.if, ctx)) {
             return <></>;
         }
     }
@@ -45,7 +46,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     if (node.name === 'Text') {
         if (!node.params?.value) return <></>;
 
-        let value = evaluate(node.params.value, ctx);
+        const value = evaluate(node.params.value, ctx);
         if (typeof value !== 'string') throw new Error(`Text.value must evaluate to a string, but got ${typeof value}`);
 
         return <Text value={value} />;
@@ -60,12 +61,31 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return <Page name={name} icon={icon} children={node.children} />;
     }
 
+    if (node.name === 'Hero') {
+        const icon = node.params?.icon ? String(node.params.icon) : undefined;
+
+        return <Hero icon={icon} children={node.children} />;
+    }
+
+    if (node.name === 'HeroTitle') {
+        return <HeroTitle children={node.children} />;
+    }
+
+    if (node.name === 'HeroDescription') {
+        return <HeroDescription children={node.children} />;
+    }
+
+    if (node.name === 'HeroContent') {
+        return <HeroContent children={node.children} />;
+    }
+
     if (node.name === 'P' || node.name === 'p') {
         return <P children={node.children} />;
     }
 
     if (node.name === 'Button') {
         const action = node.params?.action ? String(evaluate(node.params.action, ctx) ?? '') : '';
+        const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
         const invalidateValue = node.params?.invalidate ? evaluate(node.params.invalidate, ctx) : [];
         const invalidate = Array.isArray(invalidateValue) ? (invalidateValue as string[]) : [];
         const json = node.params?.json ? compile(String(node.params.json)) : null;
@@ -76,6 +96,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return (
             <Button
                 action={action}
+                href={href}
                 invalidate={invalidate}
                 json={json}
                 method={method}

@@ -12,14 +12,28 @@ This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
 
 ## Development setup
 
-From the `web` directory, install dependencies with Bun:
-
 ```bash
-bun install
+bun install     # Install dependendices
+bun run dev     # Run the frontend development mode
 ```
 
-Run the frontend in API mode:
+## Pre-Commit 
 
 ```bash
-bun run api --host 0.0.0.0 --port 5173
+bun test        # Run the tests cases
+bun format      # Format the code
 ```
+
+
+<br />
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](../LICENSE) &nbsp; - &nbsp; [Contributing](../CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.ch)
+
+</div>
+
+---

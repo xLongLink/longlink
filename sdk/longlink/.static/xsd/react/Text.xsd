@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../base.xsd" />
-
   <xsd:complexType name="TextType">
     <xsd:attribute name="text" type="xsd:string" use="optional" />
     <xsd:attribute name="value" type="xsd:string" use="optional" />
-    <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
 
   <xsd:element name="Text" type="TextType" />

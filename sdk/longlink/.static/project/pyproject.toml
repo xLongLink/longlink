@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "longlink-app"
+version = "0.0.0"
+description = "LongLink application."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi",
+  "longlink",
+  "uvicorn",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src",
+  "main.py",
+  "README.md",
+  "AGENTS.md",
+  ".env.sample",
+]

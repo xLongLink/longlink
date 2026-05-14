@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="base.xsd" />
   <xsd:include schemaLocation="primitives/Page.xsd" />
   <xsd:include schemaLocation="primitives/State.xsd" />
   <xsd:include schemaLocation="primitives/For.xsd" />

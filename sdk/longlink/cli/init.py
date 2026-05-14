@@ -5,11 +5,11 @@ from longlink.constants import ROOT
 
 
 def setup(target: Path) -> None:
-    """Create a new app folder by copying the bundled sample project."""
+    """Create a new app scaffold from the bundled static template."""
 
-    # Use the repository sample app as the scaffold template for new projects.
-    source = ROOT.parent / "sample"
-    target.mkdir(parents=True, exist_ok=True)
+    # Copy the minimal project template into the requested target directory.
+    source = ROOT / ".static" / "project"
+    target.parent.mkdir(parents=True, exist_ok=True)
     copytree(source, target, dirs_exist_ok=True)
 
 
@@ -17,4 +17,5 @@ def setup(target: Path) -> None:
 @click.option("--folder", prompt="Enter folder name", help="Folder to initialize")
 def init_command(folder: str):
     """Initialize a new longlink project."""
+
     setup(Path(folder))

@@ -591,7 +591,7 @@ wheels = [
 
 [[package]]
 name = "longlink"
-source = { directory = "../sdk" }
+source = { editable = "../sdk" }
 dependencies = [
     { name = "aiosqlite" },
     { name = "alembic" },
@@ -691,7 +691,7 @@ requires-dist = [
     { name = "jinja2" },
     { name = "kr8s" },
     { name = "kubernetes" },
-    { name = "longlink", directory = "../sdk" },
+    { name = "longlink", editable = "../sdk" },
     { name = "lxml" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.18.2" },
     { name = "psycopg", extras = ["binary", "pool"] },

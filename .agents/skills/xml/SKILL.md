@@ -44,8 +44,10 @@ longlink/
 │   │   ├── database/             # DB helpers and migrations
 │   │   ├── types/                # Shared SDK types
 │   │   └── utils/                # XML, metadata, and page helpers
+│   │
 │   └── sample/
 │       └── src/pages/            # Sample XML pages and fixtures
+│
 ├── web/
 │   └── src/xml/                  # XML runtime, parser, registry, and components
 │       ├── core/
@@ -59,17 +61,10 @@ longlink/
 │       │   ├── query.ts
 │       │   ├── state.ts
 │       │   └── url.tsx
-│       ├── primitives/           # Page/state/query/iteration components
-│       │   ├── Page.tsx
-│       │   ├── State.tsx
-│       │   ├── Query.tsx
-│       │   ├── For.tsx
-│       │   └── Text.tsx
-│       ├── react/                # React-backed interactive components
-│       │   ├── Button.tsx         # Render-only button adapter
-│       │   └── Input.tsx
+│       ├── primitives/           # Core XML components and layout primitives
+│       ├── react/                # Any component that relies on React
 │       └── html/                 # HTML bridge components
-│           └── P.tsx
+│
 ├── api/
 │   └── src/pages/                # Control-plane XML pages
 └── docs/
@@ -103,3 +98,5 @@ longlink/
 TODO:
 
 - Install [acorn](https://github.com/acornjs/acorn) to prevent use of unsupported syntax and enforce expression constraints.
+
+## Adding a new Component

@@ -11,5 +11,5 @@ SCHEMA = ROOT / ".static" / "xsd" / "react" / "Button.xsd"
 def test_button_validation() -> None:
     """Validate a minimal `Button` fragment."""
 
-    element = Element.from_content('<Button action="save">Save</Button>', schema=SCHEMA)
+    element = Element.from_content('<Button action="save" variant="outline" size="sm">Save</Button>', schema=SCHEMA)
     element.validate()

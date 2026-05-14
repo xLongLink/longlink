@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../base.xsd" />
+  <xsd:complexType name="PageChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="PageChildrenType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="PageChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
 
   <xsd:complexType name="PageType">
     <xsd:complexContent>
       <xsd:extension base="PageChildrenType">
         <xsd:attribute name="name" type="xsd:string" use="required" />
         <xsd:attribute name="icon" type="xsd:string" use="optional" />
-        <xsd:anyAttribute processContents="lax" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
