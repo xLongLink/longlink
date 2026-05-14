@@ -1,6 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { useApiData } from '@/hooks/use-data';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export type User = {
     id: number;
@@ -13,7 +11,21 @@ export type User = {
 
 /** Hook that fetches the current user. */
 export function useUser() {
-    return useApiData<User>('/auth/me');
+    return useQuery({
+        queryKey: ['api', '/auth/me'],
+        queryFn: async () => {
+            const response = await fetch('/auth/me', {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed (${response.status})`);
+            }
+
+            return (await response.json()) as User;
+        },
+    });
 }
 
 export function useSignOut() {

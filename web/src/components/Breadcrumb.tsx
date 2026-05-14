@@ -1,4 +1,3 @@
-import { useApiData } from '@/hooks/use-data';
 import {
     BreadcrumbItem,
     BreadcrumbLink,
@@ -8,21 +7,14 @@ import {
 } from '@ui/breadcrumb';
 import startCase from 'lodash/startCase';
 import { Link, useParams } from 'react-router';
-
-type MetadataResponse = {
-    organization_name?: string;
-};
-
 /**
  * Render the top navigation breadcrumb for organization, app, and profile routes.
  */
 export function Breadcrumb() {
     const { org, app } = useParams();
-    const { data: metadata } = useApiData<MetadataResponse>('/metadata.json');
-    const { data: appMetadata } = useApiData<{ name?: string }>(app ? `/apps/${app}/metadata` : null);
 
-    const appName = app ? appMetadata?.name?.trim() || startCase(app) : undefined;
-    const organizationName = metadata?.organization_name?.trim() || 'Organization';
+    const organizationName = org ? startCase(org) : 'Organization';
+    const appName = app ? startCase(app) : undefined;
 
     return (
         <UIBreadcrumb>

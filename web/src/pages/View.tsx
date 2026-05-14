@@ -1,8 +1,9 @@
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import Tabs from '@/components/Tabs';
-import { useApiData } from '@/hooks/use-data';
+import { tabValueFromName } from '@/lib/tab-value';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 
@@ -51,13 +52,39 @@ export default function View({ metadata, baseurl }: ViewProps) {
     const { '*': wildcardPath } = params;
     const resolvedMetadata = resolveTemplate(metadata, routeParams);
     const resolvedBaseUrl = resolveTemplate(baseurl, routeParams);
-    const { data: metadataDocument, isLoading, error } = useApiData<MetadataResponse>(resolvedMetadata);
+    const {
+        data: metadataDocument,
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ['api', resolvedMetadata],
+        queryFn: async () => {
+            const response = await fetch(resolvedMetadata, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            if (response.status === 404) {
+                return null;
+            }
+
+            if (!response.ok) {
+                throw new Error(`API request failed (${response.status})`);
+            }
+
+            return (await response.json()) as MetadataResponse;
+        },
+    });
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
     const selectedTab = searchParams.get('tab');
-    const activePageKey = normalizePath((selectedTab ?? normalizedRoutePath).replace(/\.xml$/i, ''));
+    /* Resolve the active page from the selected tab label first, then the route path. */
     const activePage =
-        metadataDocument?.pages?.find((page) => normalizePath(page.path.replace(/\.xml$/i, '')) === activePageKey) ??
+        metadataDocument?.pages?.find((page) => (page.name ? tabValueFromName(page.name) : '') === selectedTab) ??
+        metadataDocument?.pages?.find(
+            (page) => normalizePath(page.path.replace(/\.xml$/i, '')) === normalizedRoutePath
+        ) ??
         metadataDocument?.pages?.[0];
+    const isNotFound = metadataDocument === null;
 
     /* Load the active page XML from its path. */
     useEffect(() => {
@@ -119,6 +146,27 @@ export default function View({ metadata, baseurl }: ViewProps) {
         return <div>{error.message}</div>;
     }
 
+    if (isNotFound) {
+        return (
+            <div className="min-h-screen text-white">
+                <header className="border-b border-white/10">
+                    <div className="mx-auto w-full px-6 pb-2 pt-4">
+                        <div className="flex items-center justify-between gap-4 text-white/80">
+                            <div className="flex items-center gap-4">
+                                <Breadcrumb />
+                            </div>
+                            <UserProfile />
+                        </div>
+                    </div>
+                </header>
+
+                <main className="mx-auto w-full max-w-6xl gap-8 px-6 pb-16 pt-10">
+                    <div>404This page was not found</div>
+                </main>
+            </div>
+        );
+    }
+
     if (pageError && pageErrorPath === activePage?.path) {
         return <div>{pageError}</div>;
     }
@@ -149,7 +197,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
                     </div>
                 </div>
 
-                <Tabs path={resolvedMetadata} />
+                {metadataDocument ? <Tabs path={resolvedMetadata} /> : null}
             </header>
 
             <main className="mx-auto w-full max-w-6xl gap-8 px-6 pb-16 pt-10">

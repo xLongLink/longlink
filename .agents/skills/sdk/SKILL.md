@@ -119,3 +119,12 @@ longlink migrate
 ```
 
 ## Testing
+
+Dev
+aiosqlite
+
+Prod
+
+pytest
+pytest-asyncio
+pytest-mock
