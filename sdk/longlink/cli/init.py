@@ -5,10 +5,10 @@ from longlink.constants import ROOT
 
 
 def setup(target: Path) -> None:
-    """Create a new app scaffold from the bundled static template."""
+    """Create a new blank app scaffold from the bundled static template."""
 
-    # Copy the minimal project template into the requested target directory.
-    source = ROOT / ".static" / "project"
+    # Copy the bundled blank project scaffold into the requested target directory.
+    source = ROOT / ".static" / "new"
     target.parent.mkdir(parents=True, exist_ok=True)
     copytree(source, target, dirs_exist_ok=True)
 

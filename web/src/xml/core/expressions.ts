@@ -1,7 +1,81 @@
 import type { ExecutionContext } from '@xml/types';
+import { parse } from 'acorn';
 import { getVersion, snapshot } from 'valtio';
 
 export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
+
+type LiteralNode = {
+    type: 'Literal';
+    value: unknown;
+};
+
+type IdentifierNode = {
+    type: 'Identifier';
+    name: string;
+};
+
+type BinaryExpressionNode = {
+    type: 'BinaryExpression';
+    operator: '+' | '-' | '*' | '/';
+    left: ExpressionNode;
+    right: ExpressionNode;
+};
+
+type ArrayExpressionNode = {
+    type: 'ArrayExpression';
+    elements: Array<ExpressionNode | null>;
+};
+
+type ExpressionNode = LiteralNode | IdentifierNode | BinaryExpressionNode | ArrayExpressionNode;
+
+/** Parses an XML expression so unsupported syntax fails fast. */
+function parseExpression(expression: string): ExpressionNode {
+    const ast = parse(`(${expression})`, {
+        ecmaVersion: 'latest',
+        sourceType: 'script',
+    }) as unknown as { body: Array<{ expression: ExpressionNode }> };
+
+    return ast.body[0].expression;
+}
+
+/** Evaluates a supported AST node against the current scope. */
+function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {}): unknown {
+    switch (node.type) {
+        case 'Literal':
+            return node.value;
+
+        case 'Identifier':
+            return scope[node.name as string];
+
+        case 'BinaryExpression': {
+            const left = evaluateNode(node.left, scope);
+            const right = evaluateNode(node.right, scope);
+
+            switch (node.operator) {
+                case '+':
+                    return left + right;
+
+                case '-':
+                    return left - right;
+
+                case '*':
+                    return left * right;
+
+                case '/':
+                    return left / right;
+
+                default:
+                    throw new Error('Operator not allowed');
+            }
+        }
+
+        case 'ArrayExpression':
+            return node.elements.map((element) => (element ? evaluateNode(element, scope) : null));
+
+        default:
+            throw new Error(`Unsupported node: ${(node as { type: string }).type}`);
+    }
+}
 
 /** Returns true when the input is wrapped in braces. */
 export function isExpression(expr: string): boolean {
@@ -72,11 +146,7 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
 
     /** Runs an expression with XML values exposed as local variables. */
     function run(expression: string, values: Record<string, unknown>): unknown {
-        try {
-            return new Function('ctx', `with (ctx) { return (${expression}); }`)(values);
-        } catch (error) {
-            throw error;
-        }
+        return evaluateNode(parseExpression(expression), values);
     }
 
     if (input === '') return '';

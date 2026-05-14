@@ -24,4 +24,5 @@ include = [
   "README.md",
   "AGENTS.md",
   ".env.sample",
+  "tests",
 ]

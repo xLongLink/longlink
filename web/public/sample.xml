@@ -1,15 +1,17 @@
 <Page name="Sample">
-    <Hero>
+    <Hero icon="sparkles">
         <HeroTitle>Component Playground</HeroTitle>
         <HeroDescription>Live XML sample for testing web components without touching the API.</HeroDescription>
         <HeroContent>
-            <P>This page is loaded from <Text value="/sample.xml" /> and rendered at <Text value="/sample" />.</P>
-            <P><Button href="/">Back home</Button></P>
+            <Button href="/">Back home</Button>
+        </HeroContent>
+    </Hero>
+
+    <P>This page is loaded from <Text value="/sample.xml" /> and rendered at <Text value="/sample" />.</P>
+            <P></P>
             <P><Button href="/pricing" variant="outline">Open pricing</Button></P>
             <P><Input placeholder="Type to test the input" value="Live preview" /></P>
             <P><Input placeholder="Number input" type="number" value="42" /></P>
-        </HeroContent>
-    </Hero>
 
     <P>Rendered components:</P>
     <For each='{["Hero", "Button", "Input"]}' as="name">

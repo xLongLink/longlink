@@ -1,4 +1,4 @@
-# LongLink app
+# Blank LongLink app
 
 ## Setup with uv (preferred)
 
@@ -10,4 +10,10 @@ Start the app in development mode:
 
 ```bash
 uv run longlink dev
+```
+
+Build the application using Docker:
+
+```bash
+uv run longlink build
 ```

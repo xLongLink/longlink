@@ -23,7 +23,7 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     setup(target)
 
     assert target.exists()
-    assert copied['src'] == ROOT / '.static' / 'project'
+    assert copied['src'] == ROOT / '.static' / 'new'
     assert copied['dst'] == target
     assert copied['dirs_exist_ok'] is True
     assert (target / 'pyproject.toml').exists()
@@ -33,14 +33,24 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert (target / '.env.sample').exists()
     assert (target / 'main.py').exists()
     assert (target / 'src/api/__init__.py').exists()
+    assert (target / 'src/api/health.py').exists()
+    assert (target / 'src/models/__init__.py').exists()
+    assert (target / 'src/models/project.py').exists()
+    assert (target / 'src/routes/__init__.py').exists()
+    assert (target / 'src/types/__init__.py').exists()
+    assert (target / 'src/types/user.py').exists()
+    assert (target / 'src/utils/__init__.py').exists()
+    assert (target / 'src/utils/strings.py').exists()
     assert (target / 'src/envs.py').exists()
-    assert not (target / 'src/pages').exists()
-    assert not (target / 'tests').exists()
+    assert (target / 'src/pages').exists()
+    assert (target / 'tests/conftest.py').exists()
+    assert (target / 'tests/api').exists()
 
     pyproject = (target / 'pyproject.toml').read_text()
     assert 'name = "longlink-app"' in pyproject
     assert 'packages = ["src"]' in pyproject
-    assert (target / 'README.md').read_text().startswith('# LongLink app')
+    assert '"tests"' in pyproject
+    assert (target / 'README.md').read_text().startswith('# Blank LongLink app')
 
 
 def test_init_command_calls_setup(monkeypatch):

@@ -8,7 +8,7 @@ type HeroProps = React.ComponentProps<'section'> & {
 };
 
 /**
- * Renders the hero shell with an optional icon and a two-column layout.
+ * Renders the hero shell with an optional icon and a simple horizontal layout.
  */
 function Hero({ className, icon, children, ...props }: HeroProps) {
     let iconNode: React.ReactNode = null;
@@ -25,23 +25,16 @@ function Hero({ className, icon, children, ...props }: HeroProps) {
     }
 
     return (
-        <section
-            data-slot="hero"
-            className={cn(
-                'grid gap-8 rounded-3xl border border-border/60 bg-muted/20 p-6 shadow-sm lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:p-8',
-                className
-            )}
-            {...props}
-        >
+        <section data-slot="hero" className={cn('flex items-start gap-4', className)} {...props}>
             {iconNode ? (
                 <div
                     data-slot="hero-icon"
-                    className="flex size-11 items-center justify-center rounded-2xl bg-background text-foreground ring-1 ring-border/70 [&_svg]:size-5"
+                    className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-muted text-foreground [&_svg]:size-5"
                 >
                     {iconNode}
                 </div>
             ) : null}
-            {children}
+            <div className="min-w-0 flex-1">{children}</div>
         </section>
     );
 }
@@ -70,16 +63,7 @@ function HeroDescription({ className, ...props }: React.ComponentProps<'div'>) {
 
 /** Renders the right-side hero content block. */
 function HeroContent({ className, ...props }: React.ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot="hero-content"
-            className={cn(
-                'flex w-full flex-col gap-3 lg:col-start-2 lg:row-start-1 lg:max-w-md lg:justify-self-end',
-                className
-            )}
-            {...props}
-        />
-    );
+    return <div data-slot="hero-content" className={cn('mt-4 flex w-full flex-col gap-3', className)} {...props} />;
 }
 
 export { Hero, HeroContent, HeroDescription, HeroTitle };

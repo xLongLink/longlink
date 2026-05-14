@@ -17,9 +17,7 @@ docs/
 │   ├── xml/           # XML page documentation
 │   │   ├── index.md
 │   │   ├── components.md
-│   │   ├── html.md
-│   │   ├── layout.md
-│   │   └── primitives.md
+│   │   └── html.md
 │   ├── public/        # Public assets
 │   │   ├── favicon.ico
 │   │   ├── image.png
