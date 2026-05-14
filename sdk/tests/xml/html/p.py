@@ -23,3 +23,10 @@ def test_p_rejects_attributes() -> None:
 
     with pytest.raises(ValueError):
         element.validate()
+
+
+def test_p_allows_if_attribute() -> None:
+    """Allow the schema-supported `if` attribute on `p`."""
+
+    element = Element.from_content('<p if="show">Paragraph text</p>', schema=SCHEMA)
+    element.validate()

@@ -1,16 +1,11 @@
-# Pages
+# XML Pages
 
-Unlike typical Python UI frameworks such as [Streamlit](https://streamlit.io/), [Dash](https://dash.plotly.com/), or [Reflex](https://reflex.dev/), LongLink enforces a strict separation between user interface and application logic.
+LongLink XML pages define the user interface for backoffice applications, admin panels, and internal tools.
+The runtime parses each `.xml` file, resolves expressions, and renders the supported tags as React components.
 
-Application logic is exposed through a dedicated RESTful API, making it directly accessible to external systems, including automation pipelines and AI tools.
+Use XML pages for CRUD screens, forms, tables, dashboards, and operational workflows.
 
-To avoid maintaining a separate frontend codebase, pages are defined using an XML-based format that extends HTML with predefined components. These pages are interpreted at runtime and provide declarative data fetching, state management, and action execution over REST endpoints.
-
-The resulting interface is consistent with the LongLink control plane and acts as an adapter over it, ensuring a uniform interaction model across applications. This keeps business logic centralized, reduces duplication, and improves maintainability over time.
-
-## Pages
-
-Each XML page maps to a tab in the user interface.
+## Page Loading
 
 ```python
 from longlink import LongLink
@@ -19,13 +14,18 @@ app = LongLink(env=env)
 app.include_page("/pages")
 ```
 
-Pages are served from nested `*.xml` files under the registered folder, so a file like `pages/dashboard/overview.xml` is available at `/pages/dashboard/overview.xml`.
+Pages are loaded from nested `*.xml` files under the registered folder.
+For example, `pages/dashboard/overview.xml` is available at `/pages/dashboard/overview.xml`.
 
-`Page` is the root element of every UI definition. It wraps the full document and sets page metadata such as the name and icon.
+## Root Element
+
+Every page starts with the `Page` root element.
+It defines the page shell and page metadata.
 
 ```xml
-<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
 <Page name="Tab Name" icon="settings">
-    <!-- Content -->
+  <p>Hello</p>
 </Page>
 ```
+
+Use only the elements and attributes documented in this section and in `sdk/longlink/.static/llm/SCHEMA.md`.

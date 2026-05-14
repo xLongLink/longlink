@@ -1,31 +1,13 @@
 # Primitives
 
-Primitives are the base building blocks of XML pages.
-They handle local state, data loading, conditional rendering, and iteration.
+Primitives define page structure and runtime data.
 Use `sdk/longlink/.static/llm/SCHEMA.md` as the authoring reference for valid XML.
-
-Use them to build dynamic pages without writing frontend code.
-
-## State
-
-`State` defines a local state slot identified by `id`.
-Its children render with that state in scope.
-
-```xml
-<State id="user" value="&#123;&#123; username: '', password: '' &#125;&#125;">
-  <Input value="user.username" />
-  <Input value="user.password" />
-</State>
-```
-
-Use `&#123;&#123; ... &#125;&#125;` for JSON or object literals in attribute values.
-
-`value` is required and sets the initial state value.
-Use a string, number, or list value depending on the state shape.
 
 ## Page
 
-`Page` defines the root page shell.
+The `Page` root element is required for every XML page.
+`name` is required.
+`icon` is optional.
 
 ```xml
 <Page name="Dashboard" icon="layout-grid">
@@ -33,37 +15,59 @@ Use a string, number, or list value depending on the state shape.
 </Page>
 ```
 
+## State
+
+The `State` primitive creates a local reactive slot identified by `id`.
+`value` must be literal text.
+
+```xml
+<State id="user" value="Ada Lovelace" />
+```
+
+The runtime stores the value in `state[id]`.
+Use the slot from descendant expressions.
+
 ## Query
 
-`Query` fetches JSON from a path and stores the result in `queries[id]`.
-Its children render with the fetched data in scope.
+The `Query` primitive fetches JSON and stores the result in `queries[id]`.
+`id` and `path` must be literal text.
 
 ```xml
 <Query id="orders" path="/apps/orders" />
 ```
 
-## If
+The fetched data is available to descendant expressions.
 
-Use `if` on any element to conditionally render it.
+## For
+
+The `For` component renders children for each item in an array.
+`each` is the array expression.
+`as` names the current item.
+
+```xml
+<For each="$orders.items" as="order">
+  <p>{order.number}</p>
+</For>
+```
+
+The current item is available under `as`.
+The item index is available as `index`.
+
+## Conditional Rendering
+
+Use `if="..."` on any element to skip rendering when the expression is false.
 
 ```xml
 <p if="{order.active}">Active</p>
 ```
 
-## For
-
-`For` iterates over an array and exposes each item through `as`.
-
-```xml
-<For each="orders" as="order">
-  <p>{order.number}</p>
-</For>
-```
-
 ## Expressions
 
-Use `{...}` in text nodes and attribute values to read from `state`, `queries`, or `scope`.
+Use brace expressions in text nodes and attribute values to read runtime values.
 
 ```xml
 <p>Hello, {user.name}</p>
 ```
+
+Use `$name` for direct references.
+Use double-brace object payloads for `json` values.

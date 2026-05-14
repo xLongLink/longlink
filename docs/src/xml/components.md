@@ -1,13 +1,11 @@
 # Components
 
-Components are the interactive building blocks of XML pages.
-They cover text output, inputs, actions, and icons.
-Use them when the page needs direct user interaction or data display.
-The sections below describe each component and how it is used.
+Components handle visible content and user actions.
+Use them when a page needs text output, navigation, or form input.
 
 ## Text
 
-Use `<Text>` when you need an explicit text node rendered from an expression.
+Use the `Text` component for evaluated text output.
 
 ```xml
 <Text value="{user.name}" />
@@ -15,25 +13,26 @@ Use `<Text>` when you need an explicit text node rendered from an expression.
 
 ## Button
 
-Use `<Button>` for actions.
+Use the `Button` component to trigger an action or navigate to a route.
 
 ```xml
-<Button action="/issues/new" method="GET" variant="default">Create issue</Button>
+<Button action="/issues/new" method="GET" variant="default">
+  Create issue
+</Button>
 ```
 
-## Icon
-
-Use `<Icon>` for a standalone icon.
-
-```xml
-<Icon name="bug" />
-```
+`action` sends a request to the configured path.
+`href` turns the button into a navigation link.
+`json` is evaluated at click time.
+`invalidate` accepts a list of slot ids to rerun after success.
 
 ## Input
 
-Use `<Input>` for plain single-line text entry.
-The runtime currently renders it as read-only text input.
+Use the `Input` component for single-line text entry.
 
 ```xml
 <Input value="user.name" placeholder="Issue title" />
 ```
+
+When `value` resolves to a reactive state object, the input stays in sync and writes back to `state.value`.
+Otherwise, `value` initializes the field.

@@ -8,6 +8,7 @@ import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
+import Sample from './pages/Sample';
 import Terms from './pages/Terms';
 import View from './pages/View';
 
@@ -23,6 +24,7 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
+        { path: 'sample', element: <Sample /> },
         { path: 'features', element: <Features /> },
         { path: 'pricing', element: <Pricing /> },
         {

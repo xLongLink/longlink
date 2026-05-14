@@ -17,13 +17,12 @@ bun install     # Install dependendices
 bun run dev     # Run the frontend development mode
 ```
 
-## Pre-Commit 
+## Pre-Commit
 
 ```bash
 bun test        # Run the tests cases
 bun format      # Format the code
 ```
-
 
 <br />
 
