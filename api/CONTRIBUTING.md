@@ -46,3 +46,10 @@ Before opening PR:
 ```bash
 python -m isort .
 ```
+
+## Development
+
+```bash
+uv sync
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```

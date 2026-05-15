@@ -1,0 +1,34 @@
+import { createScopeProxy, resolvePath, resolveValue } from '@xml/core/expressions';
+import type { ExecutionContext } from '@xml/types';
+import { describe, expect, it } from 'bun:test';
+
+describe('resolve', () => {
+    it('resolves values through scope chains', () => {
+        const parent: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+            answer: 42,
+        };
+        const ctx: ExecutionContext = {
+            parent,
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+        };
+
+        expect(resolveValue(ctx, 'answer')).toBe(42);
+        expect(createScopeProxy(ctx).answer).toBe(42);
+    });
+
+    it('resolves dotted paths against nested values', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+            user: { profile: { name: 'Ada' } },
+        };
+
+        expect(resolvePath(ctx, ['user', 'profile', 'name'])).toBe('Ada');
+    });
+});

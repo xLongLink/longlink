@@ -1,6 +1,8 @@
 import { Link } from 'react-router';
 
-import { Button } from '@ui/button';
+import { buttonVariants } from '@ui/button';
+
+import { cn } from '@/lib/utils';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
@@ -45,9 +47,9 @@ export function Navbar() {
                         </li>
                     </ul>
 
-                    <Button asChild className="ml-auto w-24">
-                        <Link to="/login">Login</Link>
-                    </Button>
+                    <Link to="/login" className={cn(buttonVariants(), 'ml-auto w-24')}>
+                        Login
+                    </Link>
                 </nav>
             </div>
         </header>

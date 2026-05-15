@@ -17,9 +17,7 @@ describe('evaluate', () => {
         expect(evaluate('{count + total}', ctx)).toBe(11);
         expect(evaluate('{name}', ctx)).toBe('from-context');
     });
-});
 
-describe('evaluate literals', () => {
     /* Plain text with interpolation should render interpolated values. */
     it('interpolates text containing expressions', () => {
         const ctx: ExecutionContext = {
@@ -55,9 +53,7 @@ describe('evaluate literals', () => {
 
         expect(evaluate('{next: value + 1}', ctx)).toEqual({ next: 6 });
     });
-});
 
-describe('evaluate bindings', () => {
     /* Braced expressions should resolve directly to nested values. */
     it('resolves nested value expression', () => {
         const ctx: ExecutionContext = {

@@ -1,8 +1,12 @@
 <div align="center">
 
-# Control Panel
+# LongLink Control Panel
+
+[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://docs.longlink.dev) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 
 </div>
+
+## Introduction
 
 ```
 ┌───────────────────────────────────┐
@@ -11,13 +15,14 @@
 │ • Authentication                  │
 │ • Permissions                     │
 │ • Routing                         │
+│ • Logging                         │
 └───────────────────────────────────┘
                   ▼
 ┌───────────────────────────────────┐
 │           ORGANIZATIONS           │
 ├───────────────────────────────────┤
 │ • Users                           │
-│                                   │
+│ •                                 │
 └───────────────────────────────────┘
                   ▼
 ┌───────────────────────────────────┐
@@ -28,12 +33,23 @@
 └───────────────────────────────────┘
 ```
 
+<br />
+
+## Organizations
 
 <br />
 
-## Development
+## Apps
 
-```bash
-uv sync
-uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
+<br />
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](../LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.ch)
+
+</div>
+
+---
