@@ -4,14 +4,15 @@ import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML Input component. */
 export interface InputProps {
+    label?: string;
     placeholder?: string | number | boolean;
     value?: string | number | boolean;
     type?: string;
 }
 
 /** Renders a minimal XML input control. */
-export function Input({ value = '', placeholder, type = 'text' }: InputProps) {
-    const placeholderText = String(placeholder ?? '');
+export function Input({ value = '', label, placeholder, type = 'text' }: InputProps) {
+    const placeholderText = String(placeholder ?? label ?? '');
 
     if (value && typeof value === 'object' && getVersion(value) !== undefined) {
         const state = value as Record<string, unknown> & { value?: unknown };

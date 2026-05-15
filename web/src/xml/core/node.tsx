@@ -1,4 +1,6 @@
-import { compile, evaluate, isText } from '@xml/core/expressions';
+import { ContextProvider } from '@xml/core/context';
+import { compile, evaluate } from '@xml/core/expressions';
+import { state } from '@xml/core/state';
 import { P } from '@xml/html/P';
 import { For } from '@xml/primitives/For';
 import { Page } from '@xml/primitives/Page';
@@ -12,7 +14,7 @@ import { Fragment, type ReactNode } from 'react';
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionContext): ReactNode {
     // Handle null/undefined early to avoid unnecessary component resolution and error boundaries.
-    if (!node) return <></>;
+    if (!node) return null;
 
     // Handle arrays of nodes as fragments with stable keys.
     if (Array.isArray(node)) {
@@ -26,20 +28,46 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         }
     }
 
-    // For and State component are already handled in the setupContext
-    if (node.name === 'State' || node.name === 'Query') return <></>;
+    // State nodes seed a scoped child context so descendants can resolve initial values immediately.
+    if (node.name === 'State') {
+        if (!node.params?.id) throw new Error('State requires a string id');
+        if (!node.params?.value) throw new Error('State requires a value');
+
+        const childCtx: ExecutionContext = {
+            parent: ctx,
+            setups: ctx.setups,
+            invalidate: ctx.invalidate,
+            values: { ...ctx.values },
+        };
+
+        state(childCtx, node.params.id.trim(), node.params.value);
+
+        return node.children ? (
+            <ContextProvider value={childCtx}>{renderNode(node.children, childCtx)}</ContextProvider>
+        ) : (
+            <></>
+        );
+    }
+
+    // Query nodes are validated here and resolved by the runtime setup pass.
+    if (node.name === 'Query') {
+        if (!node.params?.id) throw new Error('Query requires a string id');
+        if (!node.params?.path) throw new Error('Query requires a string path');
+
+        return node.children ? renderNode(node.children, ctx) : <></>;
+    }
 
     if (node.name === 'For') {
+        // Ensure that the parameters are defined
+        if (!node.params?.as) throw new Error(`For requires an "as" parameter`);
+        if (!node.params?.each) throw new Error(`For requires an "each" parameter`);
+
         // If there are no children, there's nothing to render, so we can skip the "For" component entirely.
         if (!node.children) return <></>;
 
-        // Ensure that the parameters are defined
-        if (!node.params?.as) throw new Error(`Missing "as" parameter on "For" component`);
-        if (!node.params?.each) throw new Error(`Missing "each" parameter on "For" component`);
-
         const each = evaluate(node.params.each, ctx);
 
-        if (!Array.isArray(each)) throw new Error(`For.each must evaluate to an array, but got ${typeof each}`);
+        if (!Array.isArray(each)) return <></>;
         return <For each={each} as={node.params.as} children={node.children} />;
     }
 
@@ -53,12 +81,9 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'Page') {
-        if (!node.params?.name) throw new Error(`Missing required "name" parameter on Page component`);
-        if (!isText(node.params.name)) throw new Error(`Page.name must be a text parameter`);
-        const name = String(node.params.name);
         const icon = node.params?.icon ? String(node.params.icon) : undefined;
 
-        return <Page name={name} icon={icon} children={node.children} />;
+        return <Page icon={icon} children={node.children} />;
     }
 
     if (node.name === 'Hero') {
@@ -108,6 +133,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'Input') {
+        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
         const placeholder = node.params?.placeholder
             ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
             : undefined;
@@ -116,7 +142,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             : undefined;
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
 
-        return <Input placeholder={placeholder} value={value} type={type} />;
+        return <Input label={label} placeholder={placeholder} value={value} type={type} />;
     }
 
     throw new Error(`Unknown component "${node.name}"`);

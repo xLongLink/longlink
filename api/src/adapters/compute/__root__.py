@@ -1,0 +1,5 @@
+
+
+class Compute:
+    """Compute Adapter"""
+

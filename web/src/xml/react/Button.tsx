@@ -3,7 +3,6 @@ import { Button as UIButton, buttonVariants } from '@ui/button';
 import type { ASTNode } from '@xml';
 import { renderNode, useContext, useUrl } from '@xml';
 import type { ExpressionResolver } from '@xml/core/expressions';
-import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 /** Props accepted by the XML Button component. */
@@ -68,9 +67,9 @@ export function Button({
 
     if (hrefUrl) {
         return (
-            <Link className={cn(buttonVariants({ variant: variant as never, size: size as never }))} to={linkUrl}>
+            <a className={cn(buttonVariants({ variant: variant as never, size: size as never }))} href={linkUrl}>
                 {renderNode(children ?? null, ctx)}
-            </Link>
+            </a>
         );
     }
 
