@@ -3,7 +3,7 @@ import { parse } from 'acorn';
 
 import { createScopeProxy, resolvePath } from './resolve';
 import type { ExpressionNode } from './types';
-import { isExpression, isReference } from './utils';
+import { isReference } from './utils';
 
 /** Evaluates a supported AST node against the current scope. */
 function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {}): unknown {
@@ -94,6 +94,7 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
 export function evaluate(expr: string, ctx: ExecutionContext): unknown {
     const input = expr.trim();
     const values = createScopeProxy(ctx);
+    let isWrappedExpression = false;
 
     /** Runs an expression with XML values exposed as local variables. */
     function run(expression: string, currentValues: Record<string, unknown>): unknown {
@@ -107,24 +108,51 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
 
     if (input === '') return '';
 
-    /* Treat `{ ... }` and `{{ ... }}` as expressions. */
-    if (isExpression(input)) {
-        const inner = input.startsWith('{{') ? input.slice(2, -2).trim() : input.slice(1, -1).trim();
+    /* Treat values that are fully wrapped in braces as expressions. */
+    if (input.startsWith('{') && input.endsWith('}')) {
+        let depth = 0;
+        isWrappedExpression = true;
 
-        try {
-            return input.startsWith('{{') ? run(`({ ${inner} })`, values) : run(inner, values);
-        } catch (error) {
-            if (input.startsWith('{{') && error instanceof SyntaxError) {
-                throw new Error(
-                    `Invalid object expression "${expr}": use key/value pairs inside double braces, for example "{{ fullName: fullName }}" or shorthand "{{ fullName }}".`
-                );
+        for (let index = 0; index < input.length; index += 1) {
+            const char = input[index];
+
+            if (char === '{') {
+                depth += 1;
+            } else if (char === '}') {
+                depth -= 1;
+
+                if (depth < 0) {
+                    isWrappedExpression = false;
+                    break;
+                }
+
+                if (depth === 0 && index < input.length - 1) {
+                    isWrappedExpression = false;
+                    break;
+                }
             }
+        }
 
-            if (!input.startsWith('{{') && error instanceof SyntaxError) {
-                return run(`({ ${inner} })`, values);
+        isWrappedExpression = isWrappedExpression && depth === 0;
+
+        if (isWrappedExpression) {
+            const inner = input.startsWith('{{') ? input.slice(2, -2).trim() : input.slice(1, -1).trim();
+
+            try {
+                return input.startsWith('{{') ? run(`({ ${inner} })`, values) : run(inner, values);
+            } catch (error) {
+                if (input.startsWith('{{') && error instanceof SyntaxError) {
+                    throw new Error(
+                        `Invalid object expression "${expr}": use key/value pairs inside double braces, for example "{{ fullName: fullName }}" or shorthand "{{ fullName }}".`
+                    );
+                }
+
+                if (!input.startsWith('{{') && error instanceof SyntaxError) {
+                    return run(`({ ${inner} })`, values);
+                }
+
+                throw error;
             }
-
-            throw error;
         }
     }
 
@@ -139,7 +167,7 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
     }
 
     /* Interpolate single-brace expressions inside mixed text values. */
-    if (input.includes('{') && !isExpression(input) && !isReference(input)) {
+    if (input.includes('{') && !isWrappedExpression && !isReference(input)) {
         return expr.replace(/\{([^{}]+)\}/g, (_match, expression: string) => String(run(expression, values) ?? ''));
     }
 

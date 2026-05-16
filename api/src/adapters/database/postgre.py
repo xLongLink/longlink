@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-import uuid
 import asyncio
+from contextlib import suppress
+import uuid
+
 import psycopg
 from psycopg import sql
+
 from src.env import env
+
 from .__root__ import Database
-from contextlib import suppress
 
 
 class Postgre(Database):
@@ -34,8 +37,24 @@ class Postgre(Database):
         if sslmode:
             self._kwargs["sslmode"] = sslmode
 
+    async def _ensure_organization_database(self, organization: str) -> None:
+        """Create the organization database when it is missing."""
+        async with await psycopg.AsyncConnection.connect(**self._kwargs) as conn:
+            await conn.set_autocommit(True)
+            async with conn.cursor() as cursor:
+                await cursor.execute(
+                    "SELECT 1 FROM pg_database WHERE datname = %s",
+                    (organization,),
+                )
+                if await cursor.fetchone() is None:
+                    await cursor.execute(
+                        sql.SQL("CREATE DATABASE {}").format(sql.Identifier(organization))
+                    )
+
     async def list(self, organization: str) -> list[str]:
         """List created schemas for an organization."""
+        await self._ensure_organization_database(organization)
+
         query = """
             SELECT schema_name
             FROM information_schema.schemata
@@ -55,6 +74,8 @@ class Postgre(Database):
 
     async def create(self, organization: str, application: str) -> None:
         """Create one schema in the given organization for the given application."""
+        await self._ensure_organization_database(organization)
+
         connection_kwargs = {**self._kwargs, "dbname": organization}
         async with await psycopg.AsyncConnection.connect(**connection_kwargs) as conn:
             await conn.set_autocommit(True)
@@ -65,6 +86,8 @@ class Postgre(Database):
 
     async def remove(self, organization: str, application: str) -> None:
         """Delete one schema in the given organization for the given application."""
+        await self._ensure_organization_database(organization)
+
         connection_kwargs = {**self._kwargs, "dbname": organization}
         async with await psycopg.AsyncConnection.connect(**connection_kwargs) as conn:
             await conn.set_autocommit(True)
@@ -123,14 +146,6 @@ async def _smoke_test() -> None:
 
     organization = f"ll_smoke_{uuid.uuid4().hex[:12]}"
     application = f"app_{uuid.uuid4().hex[:8]}"
-
-    # Create the organization database first so the schema-level operations have a target.
-    async with await psycopg.AsyncConnection.connect(**maintenance_kwargs) as conn:
-        await conn.set_autocommit(True)
-        async with conn.cursor() as cursor:
-            await cursor.execute(
-                sql.SQL("CREATE DATABASE {}").format(sql.Identifier(organization))
-            )
 
     try:
         schemas = await adapter.list(organization)

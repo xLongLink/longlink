@@ -115,7 +115,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const invalidate = Array.isArray(invalidateValue) ? (invalidateValue as string[]) : [];
         const json = node.params?.json ? compile(String(node.params.json)) : null;
         const method = node.params?.method ? String(evaluate(node.params.method, ctx) ?? 'POST') : 'POST';
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'md') : 'md';
+        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
         return (

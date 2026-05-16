@@ -95,8 +95,32 @@ longlink/
 - `evaluate(...)` evaluate an expression with the current runtime state.
 - `compile(...)` compile an expression string into a reusable function that accepts runtime state as arguments.
 
-TODO:
+## Expression Rules
 
-- Install [acorn](https://github.com/acornjs/acorn) to prevent use of unsupported syntax and enforce expression constraints.
+Allowed:
+
+1. Plain text values like `hello` or `"hello"`.
+2. `$` references like `$user.name`.
+3. Dotted runtime lookups like `user.name`.
+4. Wrapped expressions like `{ count + 1 }`.
+5. Arrays, objects, and template literals.
+6. Basic arithmetic with `+`, `-`, `*`, and `/`.
+7. Mixed text interpolation like `Hello {name}`.
+
+Not allowed:
+
+1. Statements such as `if`, `for`, `return`, `const`, or `function`.
+2. Function calls like `format(name)` or `Math.max(a, b)`.
+3. Assignments, mutations, and other side effects.
+4. Unsupported operators or AST nodes.
+5. JavaScript that depends on module scope, imports, or globals not present in XML runtime state.
 
 ## Adding a new Component
+
+1. Choose the right layer for the component: `primitives/` for XML building blocks, `react/` for React-backed controls, or `html/` for simple HTML bridges.
+2. Add the component file with a clear props interface and a short docstring for the component entry point.
+3. Keep the implementation declarative and predictable, and reuse `useContext`, `renderNode`, or `useUrl` when the component needs runtime state or child rendering.
+4. Export the component from the relevant XML entry points so the runtime and page bundles can import it consistently.
+5. Update the XML schema, parser, or runtime helpers if the new component introduces new attributes, bindings, or execution behavior.
+6. Add or update documentation and examples so the new tag and its props are discoverable.
+7. Verify the component against the existing XML pages or fixtures before shipping it.

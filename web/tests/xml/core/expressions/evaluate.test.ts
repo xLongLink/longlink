@@ -30,6 +30,18 @@ describe('evaluate', () => {
         expect(evaluate('Count: {count}', ctx)).toBe('Count: 4');
     });
 
+    it('interpolates mixed text that starts and ends with braces', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+            index: 0,
+            name: 'Hero',
+        };
+
+        expect(evaluate('{index + 1}. {name}', ctx)).toBe('1. Hero');
+    });
+
     /* A single braced expression should return its typed runtime value. */
     it('returns typed value for single expression', () => {
         const ctx: ExecutionContext = {

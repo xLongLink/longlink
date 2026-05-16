@@ -73,7 +73,7 @@ async def auth_oidc(request: Request):
 async def logout(request: Request):
     """Clear the user session and log out."""
     request.session.clear()
-    return {"ok": True}
+    return RedirectResponse("/")
 
 
 @router.get("/me")
