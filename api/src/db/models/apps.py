@@ -7,6 +7,7 @@ class App(Base, table=True):
 
     __tablename__ = 'apps'
 
+    organization: str = Field(primary_key=True, max_length=100)
     url: str = Field(unique=True, max_length=255)
     name: str = Field(primary_key=True, max_length=100)
     image: str = Field(max_length=255)

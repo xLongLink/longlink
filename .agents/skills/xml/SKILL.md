@@ -12,13 +12,13 @@ This DSL provides a declarative, schema-driven way to build backoffice applicati
   <State id="cart" value="[]" />
   <Query id="products" path="/api/products" />
   <For each="$products.items" as="product">
-    <Text value="{product.name}" />
     <Input label="Quantity" value="1" type="number" />
     <Button action="/cart/add" method="POST" json="{{ productId: product.id, quantity: 1 }}">
       Add to cart
     </Button>
+    {product.name}
   </For>
-  <Text value="Cart items: {cart.length}" />
+  Cart items: {cart.length}
 </Page>
 ```
 
@@ -81,6 +81,14 @@ longlink/
 - `useContext` reads the active XML runtime state from React context.
 - `ContextProvider` exposes a runtime context to rendered XML children.
 - `setupContext` walks the AST, seeds top-level `State` and `Query` nodes, and stores their re-run hooks for invalidation.
+
+## Primitives
+
+- `Page` is the root page shell.
+- `State` declares local reactive state.
+- `Query` fetches JSON data into a named slot.
+- `For` iterates over arrays in a scoped child context.
+- `Text` is internal only and is produced by the parser for raw text content. Do not author it directly.
 
 ## Expressions (web/src/xml/core/expressions/)
 

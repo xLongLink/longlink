@@ -7,6 +7,7 @@ import { Page } from '@xml/primitives/Page';
 import { Text } from '@xml/primitives/Text';
 import { Button } from '@xml/react/Button';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
+import { Divider } from '@xml/react/Divider';
 import { Input } from '@xml/react/Input';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
@@ -84,6 +85,10 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const icon = node.params?.icon ? String(node.params.icon) : undefined;
 
         return <Page icon={icon} children={node.children} />;
+    }
+
+    if (node.name === 'Divider') {
+        return <Divider />;
     }
 
     if (node.name === 'Hero') {

@@ -1,15 +1,7 @@
 # Components
 
 Components handle visible content and user actions.
-Use them when a page needs text output, navigation, or form input.
-
-## Text
-
-Use the `Text` component for evaluated text output.
-
-```xml
-<Text value="{user.name}" />
-```
+Use them when a page needs navigation or form input.
 
 ## Button
 
@@ -36,3 +28,11 @@ Use the `Input` component for single-line text entry.
 
 When `value` resolves to a reactive state object, the input stays in sync and writes back to `state.value`.
 Otherwise, `value` initializes the field.
+
+## Divider
+
+Use the `Divider` component to separate sections with a horizontal rule.
+
+```xml
+<Divider />
+```

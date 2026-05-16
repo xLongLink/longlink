@@ -6,9 +6,6 @@ class Env(BaseSettings):
 
     SESSION_KEY: str
 
-    # Default organization name for the control plane.
-    ORGANIZATION_NAME: str
-
     # Control plane database URL
     DATABASE_URL: str
 
@@ -33,7 +30,6 @@ class Env(BaseSettings):
 
     COMPUTE_URL: str
     COMPUTE_KUBE_CONFIG_PATH: str
-    COMPUTE_NAMESPACE: str
 
     # Web URL used for auth redirects
     URL: str

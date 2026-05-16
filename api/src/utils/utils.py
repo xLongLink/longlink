@@ -36,19 +36,20 @@ def normalize(url: str) -> str:
     return cleaned_url
 
 
-def app_path(app_key: str, path: str = "") -> str:
-    """Return the ingress path for an app-scoped request."""
+def app_path(organization: str, app_key: str, path: str = "") -> str:
+    """Return the ingress path for an organization-scoped app request."""
+    normalized_org = organization.strip("/")
     normalized_key = app_key.strip("/")
     normalized_path = path.strip("/")
     if normalized_path == "":
-        return normalized_key
+        return f"{normalized_org}/{normalized_key}"
 
-    return f"{normalized_key}/{normalized_path}"
+    return f"{normalized_org}/{normalized_key}/{normalized_path}"
 
 
-def app_url(app_key: str) -> str:
-    """Return the public compute base URL for an app."""
-    return f"{env.COMPUTE_URL.rstrip('/')}/{app_path(app_key)}"
+def app_url(organization: str, app_key: str) -> str:
+    """Return the public compute base URL for an organization app."""
+    return f"{env.COMPUTE_URL.rstrip('/')}/{app_path(organization, app_key)}"
 
 
 def yaml(template_path: str | Path, **context: str) -> dict | list[dict]:

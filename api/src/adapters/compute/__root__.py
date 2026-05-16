@@ -7,35 +7,20 @@ class Root(ABC):
     """Compute adapter root."""
 
     @abstractmethod
-    def list(self) -> list[str]:
+    async def list(self, organization: str) -> list[str]:
         """List managed compute resources."""
 
 
     @abstractmethod
-    def create(self, name: str, image: str) -> list[dict]:
+    async def create(self, organization: str, application: str) -> None:
         """Create or replace one compute resource."""
 
 
     @abstractmethod
-    def delete(self, name: str) -> list[dict]:
-        """Delete one compute resource."""
+    async def remove(self, organization: str, application: str) -> None:
+        """Remove one compute resource."""
 
 
     @abstractmethod
-    def apply(self) -> list[dict]:
-        """Apply the persisted compute state to the cluster."""
-
-
-    @abstractmethod
-    def save(self, filename: str | None = None):
-        """Persist the current desired cluster state to YAML."""
-
-
-    @abstractmethod
-    def load(self, filename: str | None = None) -> list[dict]:
-        """Load state from YAML and rebuild the in-memory application map."""
-
-
-    @abstractmethod
-    def replace_applications(self, applications: dict[str, str]) -> list[dict]:
-        """Replace managed applications with a new application map."""
+    async def delete(self, organization: str) -> None:
+        """Delete the namespace and all managed compute resources."""

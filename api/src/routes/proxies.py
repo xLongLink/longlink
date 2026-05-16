@@ -11,9 +11,9 @@ router = APIRouter(prefix="/api")
 client_http = httpx.AsyncClient()
 
 
-async def _get_app(app_name: str):
-    """Resolve one registered app by name."""
-    app = await db.apps.get(app_name)
+async def _get_app(organization: str, app_name: str):
+    """Resolve one registered app by organization and name."""
+    app = await db.apps.get(organization, app_name)
     if app is None:
         raise HTTPException(status_code=404, detail=f"App '{app_name}' not found")
     return app
@@ -53,21 +53,21 @@ async def _forward(path: str, request: Request) -> Response:
     )
 
 
-@router.get("/apps")
-async def list_apps() -> list[AppResponse]:
-    """List registered apps."""
-    registered_apps = await db.apps.list()
+@router.get("/orgs/{organization}/apps")
+async def list_apps(organization: str) -> list[AppResponse]:
+    """List registered apps for one organization."""
+    registered_apps = await db.apps.list(organization)
     return [
-        AppResponse(name=app.name, url=app_url(app.name))
+        AppResponse(name=app.name, url=app_url(organization, app.name))
         for app in registered_apps
     ]
 
 
-@router.get("/apps/{app_name}/metadata")
-async def get_app_metadata(req: Request, app_name: str):
+@router.get("/orgs/{organization}/apps/{app_name}/metadata")
+async def get_app_metadata(req: Request, organization: str, app_name: str):
     """Return app metadata used by the control-plane web runtime."""
-    app = await _get_app(app_name)
-    upstream = await _forward(app_path(app.name, "metadata.json"), req)
+    app = await _get_app(organization, app_name)
+    upstream = await _forward(app_path(organization, app.name, "metadata.json"), req)
 
     if not 200 <= upstream.status_code < 300:
         return upstream
@@ -76,22 +76,22 @@ async def get_app_metadata(req: Request, app_name: str):
     return JSONResponse(
         content={
             "name": app.name,
-            "url": app_url(app.name),
+            "url": app_url(organization, app.name),
             "pages": pages,
         },
         status_code=200,
     )
 
 
-@router.api_route("/apps/{app_name}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
-async def proxy_root(req: Request, app_name: str):
+@router.api_route("/orgs/{organization}/apps/{app_name}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def proxy_root(req: Request, organization: str, app_name: str):
     """Proxy requests to the app root through the shared ingress endpoint."""
-    app = await _get_app(app_name)
-    return await _forward(app_path(app.name), req)
+    app = await _get_app(organization, app_name)
+    return await _forward(app_path(organization, app.name), req)
 
 
-@router.api_route("/apps/{app_name}/{full_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
-async def proxy_path(req: Request, app_name: str, full_path: str):
+@router.api_route("/orgs/{organization}/apps/{app_name}/{full_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def proxy_path(req: Request, organization: str, app_name: str, full_path: str):
     """Proxy requests with path to the target app."""
-    app = await _get_app(app_name)
-    return await _forward(app_path(app.name, full_path), req)
+    app = await _get_app(organization, app_name)
+    return await _forward(app_path(organization, app.name, full_path), req)

@@ -22,7 +22,7 @@ Configure the API container with these variables:
 
 - `COMPUTE_URL`
 - `COMPUTE_KUBE_CONFIG_PATH`
-- `COMPUTE_NAMESPACE`
+
 
 ### Database
 

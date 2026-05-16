@@ -9,6 +9,7 @@
 
 
     <p>This page is loaded from and rendered at</p>
+    <Divider />
     <p>
         <Button href="/pricing" variant="outline">Open pricing</Button>
     </p>
@@ -20,7 +21,7 @@
     </p>
 
     <p>Rendered components:</p>
-    <For each='{["Hero", "Button", "Input"]}' as="name">
+    <For each='{["Hero", "Button", "Divider", "Input"]}' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

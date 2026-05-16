@@ -97,20 +97,6 @@ Behavior:
 - The state is exposed as `state[id]`.
 - The value is a `[currentValue, setter]` tuple internally.
 
-### `<Text>`
-
-Renders evaluated text content.
-
-Attributes:
-
-- `text` optional. Preferred text expression.
-- `value` optional. Alias for `text`.
-
-Behavior:
-
-- Resolves the expression against runtime state.
-- Returns plain text, number, or boolean output.
-
 ### `<Query>`
 
 Fetches JSON data and stores it in query state.
@@ -141,6 +127,20 @@ Behavior:
 - The item index is exposed as `index`.
 
 ## Layout
+
+### `<Divider>`
+
+Renders a simple horizontal separator.
+
+Attributes:
+
+- none.
+
+Behavior:
+
+- Outputs a visual divider between sections.
+
+Example: `<Divider />`
 
 ## Form Controls
 

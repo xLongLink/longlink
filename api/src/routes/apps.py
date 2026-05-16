@@ -1,15 +1,17 @@
 import time
+from contextlib import suppress
+
 import src.db as db
 from fastapi import Response, APIRouter, HTTPException
 from src.env import env
 from src.models.apps import AppCreate, AppResponse
-from src.utils.utils import app_url as compute_app_url
 from src.adapters.compute import root as compute
+from src.utils.utils import app_url as compute_app_url
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api/orgs/{organization}")
 
 
-def _get_pod_logs(app_key: str) -> str:
+def _get_pod_logs(organization: str, app_key: str) -> str:
     """Fetch the last logs from pods belonging to the app deployment."""
     from kubernetes import client, config
 
@@ -18,14 +20,14 @@ def _get_pod_logs(app_key: str) -> str:
 
     try:
         pods = core_api.list_namespaced_pod(
-            compute.namespace,
+            organization,
             label_selector=f"app={app_key}",
         )
         for pod in pods.items:
             try:
                 return core_api.read_namespaced_pod_log(
                     pod.metadata.name,
-                    compute.namespace,
+                    organization,
                     tail_lines=50,
                 )
             except client.ApiException:
@@ -35,7 +37,7 @@ def _get_pod_logs(app_key: str) -> str:
     return "(no logs available)"
 
 
-def _check_pod_failure(app_key: str) -> str | None:
+def _check_pod_failure(organization: str, app_key: str) -> str | None:
     """Check if any pod for the app is in a failed state and return the reason."""
     from kubernetes import client, config
 
@@ -44,7 +46,7 @@ def _check_pod_failure(app_key: str) -> str | None:
 
     try:
         pods = core_api.list_namespaced_pod(
-            compute.namespace,
+            organization,
             label_selector=f"app={app_key}",
         )
         for pod in pods.items:
@@ -66,7 +68,7 @@ def _check_pod_failure(app_key: str) -> str | None:
     return None
 
 
-def _wait_for_deployment_ready(app_key: str, timeout: int = 30, interval: int = 2) -> None:
+def _wait_for_deployment_ready(organization: str, app_key: str, timeout: int = 30, interval: int = 2) -> None:
     """Wait until the app deployment reports ready, or raise with container logs on failure."""
     from kubernetes import client, config
 
@@ -77,7 +79,7 @@ def _wait_for_deployment_ready(app_key: str, timeout: int = 30, interval: int = 
 
     while time.time() < deadline:
         try:
-            deployment = apps_api.read_namespaced_deployment(app_key, compute.namespace)
+            deployment = apps_api.read_namespaced_deployment(app_key, organization)
             ready_replicas = deployment.status.ready_replicas or 0
             if ready_replicas >= 1:
                 return
@@ -91,9 +93,9 @@ def _wait_for_deployment_ready(app_key: str, timeout: int = 30, interval: int = 
         except client.ApiException:
             pass
 
-        failure_reason = _check_pod_failure(app_key)
+        failure_reason = _check_pod_failure(organization, app_key)
         if failure_reason:
-            logs = _get_pod_logs(app_key)
+            logs = _get_pod_logs(organization, app_key)
             raise RuntimeError(
                 f"Deployment '{app_key}' failed. "
                 f"Reason: {failure_reason}. "
@@ -102,40 +104,26 @@ def _wait_for_deployment_ready(app_key: str, timeout: int = 30, interval: int = 
 
         time.sleep(interval)
 
-    logs = _get_pod_logs(app_key)
+    logs = _get_pod_logs(organization, app_key)
     raise TimeoutError(
         f"Deployment '{app_key}' did not become ready within {timeout}s. "
         f"Conditions: [{last_conditions}]. "
         f"Container logs:\n{logs}"
     )
-
-
-async def _sync_compute_state_from_api() -> None:
-    """Persist compute state from the registered API application rows."""
-    registered_apps = await db.apps.list()
-    compute.replace_applications(
-        {app.name: app.image for app in registered_apps}
-    )
-
-
-async def _rollback_app_registration(app_name: str) -> None:
-    """Remove a newly created app row after provisioning fails."""
-    await db.apps.delete(app_name)
-
-
 @router.post("/apps")
-async def create_app(payload: AppCreate) -> AppResponse:
+async def create_app(organization: str, payload: AppCreate) -> AppResponse:
     """Create a new app by provisioning its container and registering it."""
     app_name = payload.name.strip().lower()
-    app_url = compute_app_url(app_name)
+    app_url = compute_app_url(organization, app_name)
 
-    existing_app = await db.apps.get(app_name)
+    existing_app = await db.apps.get(organization, app_name)
     if existing_app is not None:
         raise HTTPException(status_code=409, detail="App name already exists")
 
     try:
         # Register the app immediately and let runtime metadata be resolved later.
         app = await db.apps.create(
+            organization,
             app_name,
             url=app_url,
             image=payload.image,
@@ -144,47 +132,58 @@ async def create_app(payload: AppCreate) -> AppResponse:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     try:
-        await _sync_compute_state_from_api()
-        compute.apply()
-        _wait_for_deployment_ready(app_name)
+        await compute.create(organization, app_name)
+        _wait_for_deployment_ready(organization, app_name)
     except ValueError as exc:
-        await _rollback_app_registration(app_name)
+        with suppress(Exception):
+            await db.apps.delete(organization, app_name)
+        with suppress(Exception):
+            await compute.remove(organization, app_name)
         raise HTTPException(
             status_code=500,
             detail=f"Failed to apply compute manifests: {exc}",
         ) from exc
     except RuntimeError as exc:
-        await _rollback_app_registration(app_name)
+        with suppress(Exception):
+            await db.apps.delete(organization, app_name)
+        with suppress(Exception):
+            await compute.remove(organization, app_name)
         raise HTTPException(
             status_code=500,
             detail=str(exc),
         ) from exc
     except TimeoutError as exc:
-        await _rollback_app_registration(app_name)
+        with suppress(Exception):
+            await db.apps.delete(organization, app_name)
+        with suppress(Exception):
+            await compute.remove(organization, app_name)
         raise HTTPException(
             status_code=500,
             detail=str(exc),
         ) from exc
     except Exception as exc:
-        await _rollback_app_registration(app_name)
+        with suppress(Exception):
+            await db.apps.delete(organization, app_name)
+        with suppress(Exception):
+            await compute.remove(organization, app_name)
         raise HTTPException(
             status_code=500,
             detail=f"Failed to provision app: {exc}",
         ) from exc
 
-    return AppResponse(name=app.name, url=compute_app_url(app.name))
+    return AppResponse(name=app.name, url=compute_app_url(organization, app.name))
 
 
 @router.delete("/apps/{app_name}", status_code=204)
-async def delete_app(app_name: str) -> Response:
+async def delete_app(organization: str, app_name: str) -> Response:
     """Delete an app by removing its compute resources and registry row."""
     app_name = app_name.strip().lower()
-    app = await db.apps.get(app_name)
+    app = await db.apps.get(organization, app_name)
     if app is None:
         raise HTTPException(status_code=404, detail="App not found")
 
     try:
-        deleted_app = await db.apps.delete(app.name)
+        deleted_app = await db.apps.delete(organization, app.name)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -192,8 +191,7 @@ async def delete_app(app_name: str) -> Response:
         raise HTTPException(status_code=404, detail="App not found")
 
     try:
-        await _sync_compute_state_from_api()
-        compute.apply()
+        await compute.remove(organization, app_name)
     except ValueError as exc:
         raise HTTPException(
             status_code=500,

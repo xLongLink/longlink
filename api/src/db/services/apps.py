@@ -7,42 +7,50 @@ from src.db.session import get_session
 
 
 class AppsService:
-    async def list(self) -> list[App]:
-        '''Return all registered apps.'''
+    async def list(self, organization: str) -> list[App]:
+        '''Return all registered apps for one organization.'''
 
         Session = await get_session()
         async with Session() as session:
-            statement = select(App)
+            statement = select(App).where(App.organization == organization)
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def get(self, name: str) -> App | None:
-        '''Return a registered app by name.'''
+    async def get(self, organization: str, name: str) -> App | None:
+        '''Return a registered app by organization and name.'''
 
         Session = await get_session()
         async with Session() as session:
-            statement = select(App).where(App.name == name)
+            statement = select(App).where(
+                App.organization == organization,
+                App.name == name,
+            )
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
     async def create(
         self,
+        organization: str,
         name: str,
         url: str,
         image: str,
     ) -> App:
-        '''Add a new app to the database.'''
+        '''Add a new app to the database for one organization.'''
 
         Session = await get_session()
 
         async with Session() as session:
-            statement = select(App).where(App.url == url)
+            statement = select(App).where(
+                App.organization == organization,
+                App.url == url,
+            )
             result = await session.execute(statement)
             existing_app = result.scalar_one_or_none()
             if existing_app is not None:
                 raise ValueError('App URL already exists')
 
             app_kwargs: dict[str, str] = {
+                'organization': organization,
                 'name': name,
                 'url': url,
                 'image': image,
@@ -54,14 +62,17 @@ class AppsService:
             await session.refresh(app)
             return app
 
-    async def delete(self, name: str) -> App | None:
-        '''Delete an app by name and return the deleted app when found.'''
+    async def delete(self, organization: str, name: str) -> App | None:
+        '''Delete an app by organization and name and return it when found.'''
 
         Session = await get_session()
 
         async with Session() as session:
             # Load the app first so callers can still access its identifying fields.
-            statement = select(App).where(App.name == name)
+            statement = select(App).where(
+                App.organization == organization,
+                App.name == name,
+            )
             result = await session.execute(statement)
             app = result.scalar_one_or_none()
             if app is None:
