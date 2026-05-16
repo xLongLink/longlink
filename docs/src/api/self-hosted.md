@@ -30,14 +30,13 @@ Configure the API container with these variables:
 - `DATABASE_PORT`
 - `DATABASE_USERNAME`
 - `DATABASE_PASSWORD`
-- `DATABASE_MAINTENANCE_DATABASE`
 
 ### Optional
 
 - `DATABASE_SSLMODE`
 
 Use database administrator credentials for `ENV_PROVISION_DATABASE_USERNAME` and `ENV_PROVISION_DATABASE_PASSWORD`.
-The account must be able to create databases on the maintenance database.
+The account must be able to create databases on the `postgres` maintenance database.
 
 ### Storage
 

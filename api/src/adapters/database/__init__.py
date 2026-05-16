@@ -1,3 +1,4 @@
 """Database adapter exports."""
 
-from .__root__ import Root, root
+from .postgre import Postgre, root
+from .__root__ import Database

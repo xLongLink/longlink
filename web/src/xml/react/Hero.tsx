@@ -31,8 +31,18 @@ export interface HeroContentProps {
 /** Renders the hero shell. */
 export function Hero({ icon, children }: HeroProps) {
     const { ctx } = useContext();
+    const nodes = Array.isArray(children) ? children : children ? [children] : [];
+    const content = nodes.filter((node) => node.name === 'HeroContent');
+    const body = nodes.filter((node) => node.name !== 'HeroContent');
 
-    return <HeroShell icon={icon}>{renderNode(children ?? null, ctx)}</HeroShell>;
+    return (
+        <HeroShell icon={icon} className="items-center">
+            <div className="flex w-full flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div className="min-w-0 flex-1">{renderNode(body, ctx)}</div>
+                {content.length ? <div className="shrink-0">{renderNode(content, ctx)}</div> : null}
+            </div>
+        </HeroShell>
+    );
 }
 
 /** Renders the hero title slot. */
@@ -53,5 +63,5 @@ export function HeroDescription({ children }: HeroDescriptionProps) {
 export function HeroContent({ children }: HeroContentProps) {
     const { ctx } = useContext();
 
-    return <HeroShellContent>{renderNode(children ?? null, ctx)}</HeroShellContent>;
+    return <HeroShellContent className="mt-0 w-auto">{renderNode(children ?? null, ctx)}</HeroShellContent>;
 }

@@ -1,61 +1,35 @@
 from __future__ import annotations
 
-import psycopg
-from psycopg import sql
-from src.env import env
+from abc import ABC, abstractmethod
 
 
-class Root:
-    """Database adapter root."""
+class Database(ABC):
+    """Database adapter root interface, extended by specific database implementations.
+
+    Structure:
+    Server              # Connected to the database server (e.g. PostgreSQL, MySQL, etc.)
+    └── Database        # One for each organization
+        └── Schema      # One for each application
+            └── Tables  # Managed by the applications, using an ORM (e.g. Prisma, SQLAlchemy, etc.)
+    """
 
     def __init__(self) -> None:
-        """Initialize the database adapter root."""
-        self._kwargs: dict[str, str | int] = {
-            "host": env.DATABASE_HOST,
-            "port": env.DATABASE_PORT,
-            "user": env.DATABASE_USERNAME,
-            "password": env.DATABASE_PASSWORD,
-            "dbname": env.DATABASE_MAINTENANCE_DATABASE,
-        }
-        if env.DATABASE_SSLMODE:
-            self._kwargs["sslmode"] = env.DATABASE_SSLMODE
+        """Initialize the database adapter."""
 
-    async def list(self) -> list[str]:
-        """List non-template databases in the PostgreSQL cluster."""
-        query = "SELECT datname FROM pg_database WHERE datistemplate = false ORDER BY datname"
-        async with await psycopg.AsyncConnection.connect(**self._kwargs) as conn:
-            async with conn.cursor() as cursor:
-                await cursor.execute(query)
-                rows = await cursor.fetchall()
+        pass
 
-        return [row[0] for row in rows]
+    @abstractmethod
+    async def list(self, organization: str) -> list[str]:
+        """List created schemas for an organization."""
 
-    async def create(self, database_name: str) -> None:
-        """Create one database."""
-        async with await psycopg.AsyncConnection.connect(**self._kwargs) as conn:
-            conn.autocommit = True
-            async with conn.cursor() as cursor:
-                await cursor.execute(
-                    sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name))
-                )
+    @abstractmethod
+    async def create(self, organization: str, application: str) -> None:
+        """Create one schema in the given organization for the given application."""
 
-    async def delete(self, database_name: str) -> None:
-        """Delete one database."""
-        async with await psycopg.AsyncConnection.connect(**self._kwargs) as conn:
-            conn.autocommit = True
-            async with conn.cursor() as cursor:
-                # Drop active sessions first so the database can be removed cleanly.
-                await cursor.execute(
-                    """
-                    SELECT pg_terminate_backend(pid)
-                    FROM pg_stat_activity
-                    WHERE datname = %s AND pid <> pg_backend_pid()
-                    """,
-                    (database_name,),
-                )
-                await cursor.execute(
-                    sql.SQL("DROP DATABASE IF EXISTS {}").format(sql.Identifier(database_name))
-                )
+    @abstractmethod
+    async def remove(self, organization: str, application: str) -> None:
+        """Delete one schema in the given organization for the given application."""
 
-
-root = Root()
+    @abstractmethod
+    async def delete(self, organization: str) -> None:
+        """Delete the entire database for the given organization."""

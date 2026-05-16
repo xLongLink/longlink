@@ -24,7 +24,6 @@ class Env(BaseSettings):
     DATABASE_PORT: int
     DATABASE_USERNAME: str
     DATABASE_PASSWORD: str
-    DATABASE_MAINTENANCE_DATABASE: str
     DATABASE_SSLMODE: str | None = None
 
     STORAGE_ENDPOINT_URL: str

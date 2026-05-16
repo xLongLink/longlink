@@ -3,18 +3,25 @@
         <HeroTitle>Component Playground</HeroTitle>
         <HeroDescription>Live XML sample for testing web components without touching the API.</HeroDescription>
         <HeroContent>
-            <Button href="/">Back home</Button>
+            <Button href="/pricing" variant="outline">Open pricing</Button>
         </HeroContent>
     </Hero>
 
-    <P>This page is loaded from <Text value="/sample.xml" /> and rendered at <Text value="/sample" />.</P>
-            <P></P>
-            <P><Button href="/pricing" variant="outline">Open pricing</Button></P>
-            <P><Input placeholder="Type to test the input" value="Live preview" /></P>
-            <P><Input placeholder="Number input" type="number" value="42" /></P>
 
-    <P>Rendered components:</P>
+    <p>This page is loaded from and rendered at</p>
+    <p>
+        <Button href="/pricing" variant="outline">Open pricing</Button>
+    </p>
+    <p>
+        <Input placeholder="Type to test the input" value="Live preview" />
+    </p>
+    <p>
+        <Input placeholder="Number input" type="number" value="42" />
+    </p>
+
+    <p>Rendered components:</p>
     <For each='{["Hero", "Button", "Input"]}' as="name">
-        <P>{index + 1}. {name}</P>
+        <p>{index + 1}. {name}</p>
     </For>
+
 </Page>

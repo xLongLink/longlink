@@ -13,7 +13,7 @@ longlink/
 ```
 
 ## Contributing model
-  
+
 - Keep changes small and clear.
 - Include two blank lines between function definitions
 - Always read folder's `CONTRIBUTING.md` for local contributing rules

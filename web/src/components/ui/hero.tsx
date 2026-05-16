@@ -13,9 +13,14 @@ type HeroProps = React.ComponentProps<'section'> & {
 function Hero({ className, icon, children, ...props }: HeroProps) {
     let iconNode: React.ReactNode = null;
 
-    /* Resolve string icon names so XML callers can reference lucide exports directly. */
+    // Resolve string icon names so XML callers can use lowercase or kebab-case Lucide names.
     if (typeof icon === 'string') {
-        const Icon = LucideIcons[icon as keyof typeof LucideIcons] as React.ComponentType<{
+        const normalizedIcon = icon
+            .trim()
+            .replace(/(?:^|[-_\s]+)([a-zA-Z0-9])/g, (_, char: string) => char.toUpperCase())
+            .replace(/[^a-zA-Z0-9]/g, '');
+        const Icon = (LucideIcons[icon as keyof typeof LucideIcons] ??
+            LucideIcons[normalizedIcon as keyof typeof LucideIcons]) as React.ComponentType<{
             className?: string;
         }> | null;
 
