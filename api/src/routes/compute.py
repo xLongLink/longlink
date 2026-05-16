@@ -2,7 +2,7 @@ import src.db as db
 from fastapi import Query, APIRouter
 from src.utils import kubectl
 from fastapi.responses import PlainTextResponse
-from src.utils.compute import compute
+from src.adapters.compute import root as compute
 from src.models.compute import DockerRegistryCreate
 
 router = APIRouter(prefix="/api")

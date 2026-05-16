@@ -3,7 +3,7 @@ name: xml
 description: Guide LongLink XML component creation and maintenance across SDK, web runtime, tests, and docs
 ---
 
-This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards using XML as the single source of truth for the UI. Each `.xml` file defines page structure, layout, data bindings, and actions, while the runtime parses the XML, maps tags to React components, and manages rendering, navigation, state, and REST-based data interactions. The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling, prioritizing consistency, maintainability, validation, and development speed through a strictly declarative and predictable architecture.
+This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards using XML as the single source of truth for the UI. Each `.xml` file defines page structure, layout, data bindings, and actions, while the runtime parses the XML, maps tags to React components, and manages rendering, state initialization, data fetching, and invalidation-driven refreshes. The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling, prioritizing consistency, maintainability, validation, and development speed through a strictly declarative and predictable architecture.
 
 ## Example
 
@@ -12,16 +12,13 @@ This DSL provides a declarative, schema-driven way to build backoffice applicati
   <State id="cart" value="[]" />
   <Query id="products" path="/api/products" />
   <For each="$products.items" as="product">
-    <State id="quantity" value="1" />
-    <Card if="product.active">
-      <Text> {product.name} </Text>
-      <Input bind="quantity" type="number" min="1" />
-      <Button action="/cart/add" method="POST" json="{{ productId: product.id, quantity: quantity }}">
-        Add to cart
-      </Button>
-    </Card>
+    <Text value="{product.name}" />
+    <Input label="Quantity" value="1" type="number" />
+    <Button action="/cart/add" method="POST" json="{{ productId: product.id, quantity: 1 }}">
+      Add to cart
+    </Button>
   </For>
-  <Text> Cart items: {cart.length} </Text>
+  <Text value="Cart items: {cart.length}" />
 </Page>
 ```
 
@@ -49,13 +46,12 @@ longlink/
 │       └── src/pages/            # Sample XML pages and fixtures
 │
 ├── web/
-│   └── src/xml/                  # XML runtime, parser, registry, and components
+│   └── src/xml/                  # XML runtime, parser, and components
 │       ├── core/
 │       │   ├── parser.ts          # XML parsing and AST conversion
 │       │   ├── runtime.tsx        # Runtime setup and provider wiring
 │       │   ├── node.tsx           # Node rendering and prop validation
-│       │   ├── registry.tsx
-│       │   ├── expressions.ts     # Expression compilation and evaluation
+│       │   ├── expressions/        # Expression compilation, evaluation, and helpers
 │       │   ├── types.ts
 │       │   ├── errors.tsx
 │       │   ├── query.ts
@@ -82,18 +78,18 @@ longlink/
 
 ## Context (web/src/xml/core/context.tsx)
 
-- `useContext`
-- `ContextProvider`
-- `setupContext`
+- `useContext` reads the active XML runtime state from React context.
+- `ContextProvider` exposes a runtime context to rendered XML children.
+- `setupContext` walks the AST, seeds top-level `State` and `Query` nodes, and stores their re-run hooks for invalidation.
 
-## Expressions (web/src/xml/core/expressions.ts)
+## Expressions (web/src/xml/core/expressions/)
 
 - `"test"` a simple string literal. `isText()`
 - `[]` an array literal. `isArray()`
 - `{}` an expression literal. `isExpression()`
 - `$value` a reference to a variable in scope. `isReference()`
 - `evaluate(...)` evaluate an expression with the current runtime state.
-- `compile(...)` compile an expression string into a reusable function that accepts runtime state as arguments.
+- `compile(...)` return a resolver that evaluates an expression string against the current runtime state.
 
 ## Expression Rules
 
@@ -112,7 +108,7 @@ Not allowed:
 1. Statements such as `if`, `for`, `return`, `const`, or `function`.
 2. Function calls like `format(name)` or `Math.max(a, b)`.
 3. Assignments, mutations, and other side effects.
-4. Unsupported operators or AST nodes.
+4. Ternaries, logical operators, comparisons, optional chaining, and other unsupported AST nodes.
 5. JavaScript that depends on module scope, imports, or globals not present in XML runtime state.
 
 ## Adding a new Component
@@ -120,7 +116,7 @@ Not allowed:
 1. Choose the right layer for the component: `primitives/` for XML building blocks, `react/` for React-backed controls, or `html/` for simple HTML bridges.
 2. Add the component file with a clear props interface and a short docstring for the component entry point.
 3. Keep the implementation declarative and predictable, and reuse `useContext`, `renderNode`, or `useUrl` when the component needs runtime state or child rendering.
-4. Export the component from the relevant XML entry points so the runtime and page bundles can import it consistently.
+4. Wire the component into `web/src/xml/core/node.tsx` so the renderer can resolve the tag, and export it from `web/src/xml/index.ts` if it should be public.
 5. Update the XML schema, parser, or runtime helpers if the new component introduces new attributes, bindings, or execution behavior.
 6. Add or update documentation and examples so the new tag and its props are discoverable.
 7. Verify the component against the existing XML pages or fixtures before shipping it.

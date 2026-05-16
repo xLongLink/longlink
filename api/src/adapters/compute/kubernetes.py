@@ -2,27 +2,33 @@ from __future__ import annotations
 
 import yaml
 from pathlib import Path
-from src.env import env
-from src.utils import kubectl
+
 from kubernetes import client, config
-from src.constants import TEMPLATES
-from src.utils.utils import yaml as template_yaml
-from src.utils.utils import knames
 from kubernetes.client.rest import ApiException
 
+from src.constants import TEMPLATES
+from src.env import env
+from src.utils import kubectl
+from src.utils.utils import knames
+from src.utils.utils import yaml as template_yaml
 
-class Compute:
+from .__root__ import Root
+
+
+class Compute(Root):
     """Manage a persisted desired Kubernetes state for compute applications."""
 
     def __init__(
         self,
+        kube_config_path: str,
+        namespace: str,
         state_path: str | Path = "state.yaml",
-        namespace: str = "default",
         ingress_name: str = "control-ingress",
         ingress_host: str = "localhost",
     ) -> None:
         """Initialize the compute state manager."""
         self.state_path = Path(state_path).expanduser()
+        self._kube_config_path = Path(kube_config_path).expanduser()
         self.namespace = namespace
         self.ingress_name = ingress_name
         self.ingress_host = ingress_host
@@ -30,7 +36,7 @@ class Compute:
 
     def _api_client(self) -> client.ApiClient:
         """Return a Kubernetes API client for the configured kubeconfig."""
-        config.load_kube_config(config_file=str(Path(env.COMPUTE_KUBE_CONFIG_PATH).expanduser()))
+        config.load_kube_config(config_file=str(self._kube_config_path))
         return client.ApiClient()
 
     def _manifest_key(self, manifest: dict) -> tuple[str, str, str]:
@@ -256,4 +262,7 @@ class Compute:
         return self.manifests()
 
 
-compute = Compute(namespace=env.COMPUTE_NAMESPACE)
+root = Compute(
+    kube_config_path=env.COMPUTE_KUBE_CONFIG_PATH,
+    namespace=env.COMPUTE_NAMESPACE,
+)

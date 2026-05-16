@@ -1,42 +1,41 @@
 from __future__ import annotations
 
-from src.env import env
-from src.utils.compute import Compute
+from abc import ABC, abstractmethod
 
 
-class Root:
+class Root(ABC):
     """Compute adapter root."""
 
-    def __init__(
-        self,
-        state_path: str = "state.yaml",
-        namespace: str = env.COMPUTE_NAMESPACE,
-        ingress_name: str = "control-ingress",
-        ingress_host: str = "localhost",
-    ) -> None:
-        """Initialize the compute adapter root."""
-        self._compute = Compute(
-            state_path=state_path,
-            namespace=namespace,
-            ingress_name=ingress_name,
-            ingress_host=ingress_host,
-        )
-
+    @abstractmethod
     def list(self) -> list[str]:
         """List managed compute resources."""
-        return self._compute.list()
 
+
+    @abstractmethod
     def create(self, name: str, image: str) -> list[dict]:
         """Create or replace one compute resource."""
-        return self._compute.create(name=name, image=image)
 
+
+    @abstractmethod
     def delete(self, name: str) -> list[dict]:
         """Delete one compute resource."""
-        return self._compute.delete(name=name)
 
+
+    @abstractmethod
     def apply(self) -> list[dict]:
         """Apply the persisted compute state to the cluster."""
-        return self._compute.apply()
 
 
-root = Root()
+    @abstractmethod
+    def save(self, filename: str | None = None):
+        """Persist the current desired cluster state to YAML."""
+
+
+    @abstractmethod
+    def load(self, filename: str | None = None) -> list[dict]:
+        """Load state from YAML and rebuild the in-memory application map."""
+
+
+    @abstractmethod
+    def replace_applications(self, applications: dict[str, str]) -> list[dict]:
+        """Replace managed applications with a new application map."""

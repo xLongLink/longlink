@@ -2,10 +2,9 @@ import time
 import src.db as db
 from fastapi import Response, APIRouter, HTTPException
 from src.env import env
-from src.utils import kubectl
 from src.models.apps import AppCreate, AppResponse
 from src.utils.utils import app_url as compute_app_url
-from src.utils.compute import compute
+from src.adapters.compute import root as compute
 
 router = APIRouter(prefix="/api")
 
@@ -146,7 +145,7 @@ async def create_app(payload: AppCreate) -> AppResponse:
 
     try:
         await _sync_compute_state_from_api()
-        kubectl.apply(compute.save())
+        compute.apply()
         _wait_for_deployment_ready(app_name)
     except ValueError as exc:
         await _rollback_app_registration(app_name)
