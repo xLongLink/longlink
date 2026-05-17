@@ -1,6 +1,0 @@
-<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<Page name="Dashboard" icon="layout-dashboard">
-  <p>Dashboard.</p>
-  <Button>Refresh Data</Button>
-  <Button>Open Nested Page</Button>
-</Page>
