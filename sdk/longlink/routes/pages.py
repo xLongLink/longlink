@@ -1,6 +1,6 @@
 from fastapi import Request, APIRouter, HTTPException
 from pathlib import Path
-from longlink.utils import Page
+from longlink.utils import Longlink
 from fastapi.responses import Response
 
 router = APIRouter()
@@ -17,8 +17,8 @@ async def get_page(page_path: str, request: Request) -> Response:
     for page_root in request.app.state.page_roots:
         page_file = (Path(page_root) / normalized_path).resolve()
         if page_file.is_file() and page_file.is_relative_to(Path(page_root).resolve()):
-            page = Page(page_file)
-            page.validate()
-            return Response(content=page.content, media_type="application/xml")
+            document = Longlink(page_file)
+            document.validate()
+            return Response(content=document.content, media_type="application/xml")
 
-    raise HTTPException(status_code=404, detail="Page not found")
+    raise HTTPException(status_code=404, detail="Document not found")

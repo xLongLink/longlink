@@ -5,24 +5,24 @@ import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-describe('Page', () => {
-    /* The compiler should turn a raw <Page> element into a Page AST node. */
-    it('compiles page xml into a page ast node', () => {
-        expect(parseXML('<Page />')).toEqual([
+describe('Longlink', () => {
+    /* The compiler should turn a raw <longlink> element into a root AST node. */
+    it('compiles xml into a root ast node', () => {
+        expect(parseXML('<longlink />')).toEqual([
             {
-                name: 'Page',
+                name: 'longlink',
             },
         ]);
     });
 
     /*
-     * This integration test proves that raw XML containing `<Page>` is parsed,
+     * This integration test proves that raw XML containing `<longlink>` is parsed,
      * resolved through the runtime registry, and emitted as the expected page
      * container markup.
      */
-    it('renders raw xml page content end to end', () => {
+    it('renders raw xml content end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<Page />');
+        const ast = parseXML('<longlink />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<div class="space-y-6"></div>');

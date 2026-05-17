@@ -6,7 +6,7 @@ If this document and implementation differ, update this document first and then 
 
 ## Core Rules
 
-- Every page starts with a `<Page>` root element.
+- Every document starts with a `<longlink>` root element.
 - Element names are case-sensitive.
 - XML attributes map to component props.
 - Curly-brace expressions are evaluated against runtime state and scope.
@@ -60,9 +60,9 @@ If the expression is false, the element is not rendered.
 
 ## Root Element
 
-### `<Page>`
+### `<longlink>`
 
-Defines the page root.
+Defines the root shell.
 
 Attributes:
 
@@ -74,9 +74,9 @@ Children:
 
 Behavior:
 
-- SDK page metadata exposes page paths directly.
+- SDK metadata exposes page paths directly.
 
-Example: `<Page><p>Dashboard</p></Page>`
+Example: `<longlink><p>Dashboard</p></longlink>`
 
 ## Primitives
 
@@ -119,6 +119,8 @@ Attributes:
 
 - `icon` optional. Hero icon name.
 
+The `icon` value uses the same Lucide icon names supported by `<Icon>`.
+
 Children:
 
 - Any documented XML element.
@@ -141,6 +143,20 @@ Hero description slot.
 ### `<HeroContent>`
 
 Hero action/content slot.
+
+### `<Icon>`
+
+Renders a Lucide icon.
+
+Attributes:
+
+- `name` required. Lucide icon name such as `layout-grid`.
+- `className` optional. Extra SVG classes for sizing and styling.
+
+Behavior:
+
+- Renders as an inline SVG icon.
+- Supports the global `if` attribute.
 
 ### `<For>`
 
@@ -255,6 +271,72 @@ Body content slot for the card.
 ### `<CardFooter>`
 
 Footer slot for the card.
+
+## Table
+
+### `<Table>`
+
+Renders a scrollable shadcn table shell.
+
+Attributes:
+
+- `className` optional. Extra classes for the table element.
+
+Behavior:
+
+- Renders inside a horizontal scroll container.
+- Use `TableCaption`, `TableHeader`, `TableBody`, and `TableFooter` inside `Table`.
+- Use `TableRow` inside header, body, and footer sections.
+- Use `TableHead` for header cells and `TableCell` for body cells.
+- All table parts accept optional `className` for local styling.
+
+Example:
+
+```xml
+<Table>
+  <TableCaption>Revenue by quarter</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Quarter</TableHead>
+      <TableHead>Revenue</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Q1</TableCell>
+      <TableCell>$120k</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+```
+
+### `<TableHeader>`
+
+Header section for table columns.
+
+### `<TableBody>`
+
+Body section for table rows.
+
+### `<TableFooter>`
+
+Footer section for summary rows.
+
+### `<TableRow>`
+
+Table row slot.
+
+### `<TableHead>`
+
+Header cell slot.
+
+### `<TableCell>`
+
+Body cell slot.
+
+### `<TableCaption>`
+
+Caption slot for the table.
 
 ## Dialog
 
@@ -419,6 +501,21 @@ Example:
 The following HTML tags are exposed directly in XML:
 
 - `<p>`
+- `<a>`
+
+### `<a>`
+
+Renders a standard anchor link.
+
+Attributes:
+
+- `href` required. Link target.
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Renders as a normal HTML anchor.
+- Supports the global `if` attribute.
 
 ## Summary
 

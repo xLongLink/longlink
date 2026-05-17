@@ -8,7 +8,7 @@ This DSL provides a declarative, schema-driven way to build backoffice applicati
 ## Example
 
 ```xml
-<Page>
+<longlink>
   <State id="cart" value="[]" />
   <Query id="products" path="/api/products" />
   <For each="$products.items" as="product">
@@ -19,7 +19,7 @@ This DSL provides a declarative, schema-driven way to build backoffice applicati
     {product.name}
   </For>
   Cart items: {cart.length}
-</Page>
+</longlink>
 ```
 
 ## Structure
@@ -74,7 +74,7 @@ longlink/
 
 Primitives:
 
-- `Page` - root page shell.
+- `longlink` - root page shell.
 - `State` - local reactive state slot.
 - `Query` - JSON fetch slot.
 - `For` - array iteration in scoped child context.
@@ -108,7 +108,7 @@ HTML:
 
 ## Primitives
 
-- `Page` is the root page shell.
+- `longlink` is the root page shell.
 - `State` declares local reactive state.
 - `Query` fetches JSON data into a named slot.
 - `For` iterates over arrays in a scoped child context.
@@ -122,7 +122,7 @@ HTML:
 
 ## Root Metadata
 
-- `Page` does not support `name` metadata.
+- `longlink` does not support `name` metadata.
 - SDK page metadata exposes explicit paths only; do not infer names from filenames.
 
 ## Global XML Patterns

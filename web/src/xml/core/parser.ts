@@ -14,12 +14,12 @@ const parser = new XMLParser({
  * Parses an XML string into a flat AST structure.
  *
  * Input:
- *   <Page>Hello, {user.name}<Button>Save</Button></Page>
+ *   <longlink>Hello, {user.name}<Button>Save</Button></longlink>
  *
  * Output:
  *   [
  *     {
- *       name: 'Page',
+ *       name: 'longlink',
  *       children: [
  *         { name: 'Text', params: { value: 'Hello, {user.name}' } },
  *         {
@@ -40,12 +40,12 @@ export function parseXML(xml: string): ASTNode[] {
  * Converts parser output into XML AST nodes.
  *
  * Input:
- *   toNodes({ Page: { '#text': 'Hello, {user.name}', Button: { '#text': 'Save' } } })
+ *   toNodes({ longlink: { '#text': 'Hello, {user.name}', Button: { '#text': 'Save' } } })
  *
  * Output:
  *   [
  *     {
- *       name: 'Page',
+ *       name: 'longlink',
  *       children: [
  *         { name: 'Text', params: { value: 'Hello, {user.name}' } },
  *         {

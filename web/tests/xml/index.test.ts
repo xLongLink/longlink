@@ -1,4 +1,20 @@
-import { Column, Columns, compileExpression, evaluate, fromXml, renderNode } from '@xml';
+import {
+    Column,
+    Columns,
+    Icon,
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+    compileExpression,
+    evaluate,
+    fromXml,
+    renderNode,
+} from '@xml';
 import { describe, expect, it } from 'bun:test';
 
 describe('xml index', () => {
@@ -9,5 +25,14 @@ describe('xml index', () => {
         expect(typeof renderNode).toBe('function');
         expect(Column).toBeDefined();
         expect(Columns).toBeDefined();
+        expect(Icon).toBeDefined();
+        expect(Table).toBeDefined();
+        expect(TableHeader).toBeDefined();
+        expect(TableBody).toBeDefined();
+        expect(TableFooter).toBeDefined();
+        expect(TableRow).toBeDefined();
+        expect(TableHead).toBeDefined();
+        expect(TableCell).toBeDefined();
+        expect(TableCaption).toBeDefined();
     });
 });

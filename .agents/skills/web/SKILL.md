@@ -62,7 +62,7 @@ web/                          # Web app workspace for the frontend runtime
 - `src/pages/View.tsx` loads metadata, resolves the active page, fetches the page document, and renders it.
 - Route params are interpolated into metadata and base URL templates.
 - Tab selection is derived from page names before falling back to the route path.
-- Page documents are fetched with the expected content type and parsed by the runtime.
+- XML documents are fetched with the expected content type and parsed by the runtime.
 
 ## Local Dev
 

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="TableChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attribute name="className" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="TableType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TableChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TableHeaderType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TableChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TableBodyType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TableChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TableFooterType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TableChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TableRowType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TableChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TableHeadType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TableChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TableCellType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TableChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TableCaptionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TableChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Table" type="TableType" />
+  <xsd:element name="TableHeader" type="TableHeaderType" />
+  <xsd:element name="TableBody" type="TableBodyType" />
+  <xsd:element name="TableFooter" type="TableFooterType" />
+  <xsd:element name="TableRow" type="TableRowType" />
+  <xsd:element name="TableHead" type="TableHeadType" />
+  <xsd:element name="TableCell" type="TableCellType" />
+  <xsd:element name="TableCaption" type="TableCaptionType" />
+</xsd:schema>

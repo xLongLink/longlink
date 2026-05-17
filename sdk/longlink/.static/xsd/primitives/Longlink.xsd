@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="PageChildrenOnlyType" mixed="true">
+  <xsd:complexType name="LonglinkChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,17 +9,17 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="PageChildrenType" mixed="true">
+  <xsd:complexType name="LonglinkChildrenType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="PageChildrenOnlyType" />
+      <xsd:extension base="LonglinkChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="PageType">
+  <xsd:complexType name="LonglinkType">
     <xsd:complexContent>
-      <xsd:extension base="PageChildrenType" />
+      <xsd:extension base="LonglinkChildrenType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="Page" type="PageType" />
+  <xsd:element name="longlink" type="LonglinkType" />
 </xsd:schema>

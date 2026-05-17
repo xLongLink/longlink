@@ -4,7 +4,7 @@ import { describe, expect, it } from 'bun:test';
 describe('parseXML', () => {
     /* A single XML root should compile into the matching AST element. */
     it('parses a root element', () => {
-        expect(parseXML('<Page />')).toEqual([{ name: 'Page' }]);
+        expect(parseXML('<longlink />')).toEqual([{ name: 'longlink' }]);
     });
 
     /* XML attributes are component props and must stay as strings for runtime resolution. */
@@ -36,9 +36,9 @@ describe('parseXML', () => {
 
     /* Nested XML tags should remain nested AST children in source order. */
     it('parses nested child elements', () => {
-        expect(parseXML('<Page><Button>Save</Button></Page>')).toEqual([
+        expect(parseXML('<longlink><Button>Save</Button></longlink>')).toEqual([
             {
-                name: 'Page',
+                name: 'longlink',
                 children: [{ name: 'Button', children: [{ name: 'Text', params: { value: 'Save' } }] }],
             },
         ]);
@@ -46,9 +46,9 @@ describe('parseXML', () => {
 
     /* Repeated sibling tags are represented as repeated AST nodes, not merged props. */
     it('flattens repeated sibling elements', () => {
-        expect(parseXML('<Page><State id="first" /><State id="second" /></Page>')).toEqual([
+        expect(parseXML('<longlink><State id="first" /><State id="second" /></longlink>')).toEqual([
             {
-                name: 'Page',
+                name: 'longlink',
                 children: [
                     { name: 'State', params: { id: 'first' } },
                     { name: 'State', params: { id: 'second' } },
@@ -59,9 +59,9 @@ describe('parseXML', () => {
 
     /* Text nodes should preserve meaningful whitespace while whitespace-only nodes are removed. */
     it('preserves visible text and drops blank text nodes', () => {
-        expect(parseXML('<Page>  Hello, {user.name}  </Page>')).toEqual([
+        expect(parseXML('<longlink>  Hello, {user.name}  </longlink>')).toEqual([
             {
-                name: 'Page',
+                name: 'longlink',
                 children: [{ name: 'Text', params: { value: '  Hello, {user.name}  ' } }],
             },
         ]);
@@ -69,9 +69,9 @@ describe('parseXML', () => {
 
     /* Compiler output should only include page elements, not XML declarations or comments. */
     it('ignores declarations and comments', () => {
-        expect(parseXML('<?xml version="1.0"?><Page><!-- hidden --><Button>Save</Button></Page>')).toEqual([
+        expect(parseXML('<?xml version="1.0"?><longlink><!-- hidden --><Button>Save</Button></longlink>')).toEqual([
             {
-                name: 'Page',
+                name: 'longlink',
                 children: [{ name: 'Button', children: [{ name: 'Text', params: { value: 'Save' } }] }],
             },
         ]);

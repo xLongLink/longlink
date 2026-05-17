@@ -113,9 +113,9 @@ async def sample():
 - Declare pages with the `page` decorator exported from `longlink`.
 
 ```xml
-<Page>
+<longlink>
   <p>Hello from XML.</p>
-</Page>
+</longlink>
 ```
 
 ## Storage

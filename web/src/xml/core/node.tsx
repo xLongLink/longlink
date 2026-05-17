@@ -3,7 +3,7 @@ import { compile, evaluate, isText } from '@xml/core/expressions';
 import { state } from '@xml/core/state';
 import { P } from '@xml/html/P';
 import { For } from '@xml/primitives/For';
-import { Page } from '@xml/primitives/Page';
+import { Longlink } from '@xml/primitives/Longlink';
 import { Text } from '@xml/primitives/Text';
 import { Badge } from '@xml/react/Badge';
 import { Button } from '@xml/react/Button';
@@ -20,8 +20,11 @@ import {
 } from '@xml/react/Dialog';
 import { Divider } from '@xml/react/Divider';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
+import { Icon } from '@xml/react/Icon';
 import { Input } from '@xml/react/Input';
+import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
+import { A } from '@xml/html/A';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
 
@@ -95,12 +98,19 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return <Text value={value} />;
     }
 
-    if (node.name === 'Page') {
-        return <Page children={node.children} />;
+    if (node.name === 'longlink') {
+        return <Longlink children={node.children} />;
     }
 
     if (node.name === 'Divider') {
         return <Divider />;
+    }
+
+    if (node.name === 'Icon') {
+        const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : '';
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Icon className={className} name={name} />;
     }
 
     if (node.name === 'Tabs') {
@@ -163,6 +173,13 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
     if (node.name === 'p') {
         return <P children={node.children} />;
+    }
+
+    if (node.name === 'a') {
+        const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <A className={className} href={href} children={node.children} />;
     }
 
     if (node.name === 'Button') {
@@ -305,6 +322,54 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
 
         return <Input label={label} placeholder={placeholder} value={value} type={type} />;
+    }
+
+    if (node.name === 'Table') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Table className={className} children={node.children} />;
+    }
+
+    if (node.name === 'TableHeader') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <TableHeader className={className} children={node.children} />;
+    }
+
+    if (node.name === 'TableBody') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <TableBody className={className} children={node.children} />;
+    }
+
+    if (node.name === 'TableFooter') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <TableFooter className={className} children={node.children} />;
+    }
+
+    if (node.name === 'TableRow') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <TableRow className={className} children={node.children} />;
+    }
+
+    if (node.name === 'TableHead') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <TableHead className={className} children={node.children} />;
+    }
+
+    if (node.name === 'TableCell') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <TableCell className={className} children={node.children} />;
+    }
+
+    if (node.name === 'TableCaption') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <TableCaption className={className} children={node.children} />;
     }
 
     throw new Error(`Unknown component "${node.name}"`);

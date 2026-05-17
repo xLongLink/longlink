@@ -2,7 +2,7 @@ import src.db as db
 from fastapi import APIRouter, HTTPException
 from src.models import PageInfo
 from src.constants import PAGES
-from longlink.utils import Page
+from longlink.utils import Longlink
 
 router = APIRouter(prefix="/api")
 
@@ -19,13 +19,13 @@ async def metadata(name: str) -> dict:
     # Scan XML pages for organization metadata.
     if PAGES.is_dir():
         for page_file in sorted(PAGES.glob("*.xml")):
-            page = Page(page_file)
-            page.validate()
+            document = Longlink(page_file)
+            document.validate()
             pages.append(
                 PageInfo(
-                    name=page.metadata.get("name", page_file.stem.replace("-", " ").title()),
+                    name=document.metadata.get("name", page_file.stem.replace("-", " ").title()),
                     path=page_file.stem,
-                    content=page.content,
+                    content=document.content,
                 )
             )
 

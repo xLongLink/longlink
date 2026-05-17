@@ -11,7 +11,7 @@ This folder contains instructions for agents that generate or edit LongLink XML.
 
 ## Working Rules
 
-- Root documents use the `<Page>` element.
+- Root documents use the `<longlink>` element.
 - Use only elements and attributes documented in `SCHEMA.md`.
 - Prefer small, explicit XML fragments over speculative structures.
 - Do not invent tags, attributes, or namespaces unless the schema allows them.

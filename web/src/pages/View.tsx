@@ -115,7 +115,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
         })
             .then(async (response) => {
                 if (!response.ok) {
-                    throw new Error(`Page request failed (${response.status})`);
+                    throw new Error(`Document request failed (${response.status})`);
                 }
 
                 return response.text();

@@ -21,6 +21,62 @@ All other children render in the main hero body.
 ```
 
 `HeroTitle`, `HeroDescription`, and `HeroContent` are the three supported hero slots.
+`Hero.icon` uses the same Lucide icon names as `<Icon>`.
+
+## Icon
+
+Use `Icon` for standalone Lucide icons in cards, buttons, and inline layout chrome.
+
+```xml
+<Icon name="layout-grid" className="size-5" />
+```
+
+`name` is required.
+`className` is optional and can be used to tune size or color.
+
+## Table
+
+Use `Table` with `TableCaption`, `TableHeader`, `TableBody`, and `TableFooter` for tabular data.
+
+```xml
+<Table>
+  <TableCaption>Revenue by quarter</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Quarter</TableHead>
+      <TableHead>Revenue</TableHead>
+      <TableHead>Growth</TableHead>
+      <TableHead>Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Q1</TableCell>
+      <TableCell>$120k</TableCell>
+      <TableCell>12%</TableCell>
+      <TableCell>On track</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+```
+
+`TableHead` is for column headers.
+`TableCell` is for body cells.
+`TableRow` groups cells in each section.
+`className` is available on every table part.
+
+## HTML Bridge
+
+Use lowercase HTML tags for simple bridges.
+
+```xml
+<a href="/icons">
+  <Icon name="sparkles" className="size-5" />
+  Open icons
+</a>
+```
+
+`<p>` and `<a>` are the current HTML bridge elements.
 
 ## Card
 

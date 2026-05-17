@@ -1,2 +1,2 @@
-from .xml import Page, Element
+from .xml import Element, Longlink
 from .settings import Environments

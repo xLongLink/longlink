@@ -26,6 +26,7 @@ class Element:
         instance.path = Path("<memory>")
         instance.schema_path = Path(schema) if schema is not None else None
         instance._content = content
+        instance._metadata = None
         return instance
 
     @property
@@ -64,17 +65,18 @@ class Element:
         return self._schema_file_path().read_bytes()
 
 
-class Page(Element):
-    """Load and validate XML page documents from disk.
-    Pages are discovered from XML files and can be used to define custom UI components and interactions.
+class Longlink(Element):
+    """Load and validate LongLink XML documents from disk.
+
+    LongLink documents are discovered from XML files and can define custom UI components and interactions.
     """
 
     def __init__(self, path: str | Path, schema: str | Path | None = None) -> None:
-        """Store XML file path and page schema for later parsing operations."""
+        """Store XML file path and document schema for later parsing operations."""
 
         default_schema = schema or ROOT / ".static" / "xsd" / "schema.xsd"
         super().__init__(path=path, schema=default_schema)
-        self._schema: dict[str, Any] | None = None
+        self._metadata: dict[str, Any] | None = None
 
     @property
     def content(self) -> str:
@@ -83,9 +85,9 @@ class Page(Element):
         return super().content
 
     @property
-    def schema(self) -> dict[str, Any]:
-        """Return full page document as a dict for downstream processing."""
+    def metadata(self) -> dict[str, Any]:
+        """Return the parsed XML document as a dict for downstream processing."""
 
-        if self._schema is None:
-            self._schema = xmltodict.parse(self.content)
-        return self._schema
+        if self._metadata is None:
+            self._metadata = xmltodict.parse(self.content)
+        return self._metadata

@@ -5,7 +5,7 @@ The runtime parses each `.xml` file, resolves expressions, and renders the suppo
 
 Use XML pages for CRUD screens, forms, tables, dashboards, and operational workflows.
 
-## Page Loading
+## Document Loading
 
 ```python
 from longlink import LongLink, page

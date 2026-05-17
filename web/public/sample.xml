@@ -1,8 +1,13 @@
-<Page>
+<longlink>
     <Hero icon="sparkles">
         <HeroTitle>Component Playground</HeroTitle>
         <HeroDescription>Live XML sample for testing web components without touching the API.</HeroDescription>
         <HeroContent>
+            <Icon name="sparkles" className="size-5" />
+            <a href="/icons">
+                <Icon name="sparkles" className="size-5" />
+                Open icons
+            </a>
             <Badge variant="secondary">New</Badge>
             <Button action="/pricing" method="GET" variant="outline">Open pricing</Button>
         </HeroContent>
@@ -45,6 +50,39 @@
             <p>Activity content</p>
         </TabsContent>
     </Tabs>
+    <Table>
+        <TableCaption>Revenue by quarter</TableCaption>
+        <TableHeader>
+            <TableRow>
+                <TableHead>Quarter</TableHead>
+                <TableHead>Revenue</TableHead>
+                <TableHead>Growth</TableHead>
+                <TableHead>Status</TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            <TableRow>
+                <TableCell>Q1</TableCell>
+                <TableCell>$120k</TableCell>
+                <TableCell>12%</TableCell>
+                <TableCell>On track</TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell>Q2</TableCell>
+                <TableCell>$154k</TableCell>
+                <TableCell>28%</TableCell>
+                <TableCell>On track</TableCell>
+            </TableRow>
+        </TableBody>
+        <TableFooter>
+            <TableRow>
+                <TableCell>Total</TableCell>
+                <TableCell>$274k</TableCell>
+                <TableCell>20%</TableCell>
+                <TableCell>Projected</TableCell>
+            </TableRow>
+        </TableFooter>
+    </Table>
     <Dialog>
         <DialogTrigger>
             <Button variant="outline">Open dialog</Button>
@@ -74,8 +112,13 @@
     </p>
 
     <p>Rendered components:</p>
-    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input"]' as="name">
+    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input", "a"]' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 
-</Page>
+    <p>Table parts:</p>
+    <For each='["Table", "TableCaption", "TableHeader", "TableBody", "TableFooter", "TableRow", "TableHead", "TableCell", "Icon"]' as="name">
+        <p>{index + 1}. {name}</p>
+    </For>
+
+</longlink>

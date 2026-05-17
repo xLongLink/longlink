@@ -40,16 +40,18 @@ cli = [
   "click",
 ]
 dev = [
-  "pytest==8.4.2",
-  "pytest-asyncio==0.24.0",
-  "isort==8.0.1"
+  "pytest",
+  "pytest-asyncio",
+  "pytest-mock",
+  "isort"
 ]
 
 [dependency-groups]
 dev = [
-  "pytest==8.4.2",
-  "pytest-asyncio==0.24.0",
-  "isort==8.0.1"
+  "pytest",
+  "pytest-asyncio",
+  "pytest-mock",
+  "isort"
 ]
 
 [project.urls]

@@ -3,10 +3,10 @@ import { describe, expect, it } from 'bun:test';
 
 describe('xml types', () => {
     it('supports AST node and runtime context shapes', () => {
-        const node: ASTNode = { name: 'Page', children: { name: 'Text', params: { value: 'Hello' } } };
+        const node: ASTNode = { name: 'longlink', children: { name: 'Text', params: { value: 'Hello' } } };
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
 
-        expect(node.name).toBe('Page');
+        expect(node.name).toBe('longlink');
         expect(ctx.values).toEqual({});
     });
 });
