@@ -3,9 +3,9 @@
   <State id="fullName" value="Ada Lovelace" />
   <State id="email" value="ada@example.com" />
   <State id="notes" value="Build the first program" />
-  <State id="showActive" value="true" />
-  <State id="quantity" value="1" />
-  <State id="selectedUserId" value="0" />
+  <State id="showActive" value="{true}" />
+  <State id="quantity" value="{1}" />
+  <State id="selectedUserId" value="{0}" />
 
   <Query id="profile" path="/example/profile" />
   <Query id="users" path="/example/users" />

@@ -1,4 +1,4 @@
-import { isText } from '@xml/core/expressions';
+import { evaluate, isText } from '@xml/core/expressions';
 import { query } from '@xml/core/query';
 import { state } from '@xml/core/state';
 import type { ASTNode, ExecutionContext } from '@xml/types';
@@ -43,16 +43,14 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
             // Seed state and queries before rendering the component tree.
             if (node.name === 'State') {
                 if (!node.params?.id) throw new Error('State requires a string id');
-                if (!node.params?.value) throw new Error('State requires a value');
-
+                if (node.params.value == null) throw new Error('State requires a value');
                 if (!isText(node.params.id)) throw new Error('State id must be literal text');
-                if (!isText(node.params.value)) throw new Error('State value must be literal text');
 
                 const id = node.params.id.trim();
                 const value = node.params.value;
 
-                // We store the setup function so that it case of invaludation it can be re-run to reset the state to its initial value.
-                setups[id] = () => state(ctx, id, value);
+                // Re-evaluate the initializer on invalidation so expression-based state stays in sync.
+                setups[id] = () => state(ctx, id, evaluate(value, ctx));
                 await setups[id]();
             }
 

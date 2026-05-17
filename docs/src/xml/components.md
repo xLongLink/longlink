@@ -62,6 +62,8 @@ If `action` is empty, the button only runs invalidation.
 `json` is evaluated at click time.
 `invalidate` accepts an array expression of slot ids to rerun after success.
 
+`method` defaults to `POST`.
+
 ## Input
 
 Use the `Input` component for single-line text entry.

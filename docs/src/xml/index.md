@@ -49,15 +49,15 @@ The current web renderer uses `children` and does not read `name`.
 ### `State`
 
 The `State` primitive creates a local reactive slot identified by `id`.
-`value` must be literal text, not an expression.
+`value` is evaluated as an expression.
 
 ```xml
-<State id="user" value="Ada Lovelace" />
+<State id="cart" value="{[]}" />
 ```
 
 The runtime stores the value in `ctx.values[id]`.
 Scalar values become a proxied object with a `value` field.
-Array values become proxied arrays.
+Array and object values become proxied values directly.
 Use the slot from descendant expressions.
 
 ### `Query`

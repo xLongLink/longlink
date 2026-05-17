@@ -2,9 +2,9 @@ import type { ExecutionContext } from '@xml/types';
 import { proxy } from 'valtio';
 
 /** Initializes a local reactive state slot for descendant XML nodes. */
-export function state(ctx: ExecutionContext, id: string, value: string | number | unknown[]): void {
-    /* Keep primitive values as-is and proxy lists for reactive updates. */
-    const initialValue = Array.isArray(value) ? value : { value };
+export function state(ctx: ExecutionContext, id: string, value: unknown): void {
+    /* Proxy arrays and objects directly; wrap primitives in a reactive scalar slot. */
+    const initialValue = Array.isArray(value) || (value !== null && typeof value === 'object') ? value : { value };
 
-    ctx.values[id] = proxy<Record<string, unknown>>(initialValue as Record<string, unknown>);
+    ctx.values[id] = proxy(initialValue as Record<string, unknown>);
 }

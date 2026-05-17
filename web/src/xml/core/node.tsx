@@ -1,15 +1,15 @@
 import { ContextProvider } from '@xml/core/context';
-import { compile, evaluate } from '@xml/core/expressions';
+import { compile, evaluate, isText } from '@xml/core/expressions';
 import { state } from '@xml/core/state';
 import { P } from '@xml/html/P';
 import { For } from '@xml/primitives/For';
 import { Page } from '@xml/primitives/Page';
 import { Text } from '@xml/primitives/Text';
 import { Badge } from '@xml/react/Badge';
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/react/Card';
 import { Button } from '@xml/react/Button';
-import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/react/Card';
 import { Divider } from '@xml/react/Divider';
+import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Input } from '@xml/react/Input';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
@@ -34,7 +34,8 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     // State nodes seed a scoped child context so descendants can resolve initial values immediately.
     if (node.name === 'State') {
         if (!node.params?.id) throw new Error('State requires a string id');
-        if (!node.params?.value) throw new Error('State requires a value');
+        if (node.params.value == null) throw new Error('State requires a value');
+        if (!isText(node.params.id)) throw new Error('State id must be literal text');
 
         const childCtx: ExecutionContext = {
             parent: ctx,
@@ -43,7 +44,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             values: { ...ctx.values },
         };
 
-        state(childCtx, node.params.id.trim(), node.params.value);
+        state(childCtx, node.params.id.trim(), evaluate(node.params.value, ctx));
 
         return node.children ? (
             <ContextProvider value={childCtx}>{renderNode(node.children, childCtx)}</ContextProvider>

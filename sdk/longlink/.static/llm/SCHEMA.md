@@ -43,7 +43,9 @@ If the expression is false, the element is not rendered.
 
 `<State>` and `<Query>` both create a slot identified by `id`.
 
-- `<State id="user" value="John Doe" />` creates local state. `value` must be literal text.
+- `<State id="user" value="John Doe" />` creates local state.
+- `<State id="cart" value="{[]}" />` creates an array state slot.
+- `value` is evaluated as an expression against runtime state.
 - `<Query id="user" path="/endpoint" />` fetches data into the slot. `id` and `path` must be literal text.
 
 ### Iteration
