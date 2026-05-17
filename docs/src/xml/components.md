@@ -45,6 +45,32 @@ Use the `Card` component for grouped content blocks and simple dashboard panels.
 `size="sm"` keeps the compact card density.
 Each card part also accepts `className` for local styling.
 
+## Dialog
+
+Use `Dialog` with `DialogTrigger` and `DialogContent` for modal workflows and confirmations.
+
+```xml
+<Dialog open="{true}">
+  <DialogTrigger>
+    <Button variant="outline">Open dialog</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Delete issue</DialogTitle>
+      <DialogDescription>This cannot be undone.</DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <Button variant="outline">Cancel</Button>
+      <Button>Delete</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+`DialogHeader` groups the title and description.
+`DialogFooter` holds actions for the dialog body.
+`DialogContent` renders in a portal and includes the standard close affordance.
+
 ## Button
 
 Use the `Button` component to navigate or trigger an action.

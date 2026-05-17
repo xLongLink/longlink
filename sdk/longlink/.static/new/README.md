@@ -1,4 +1,4 @@
-# Blank LongLink app
+# Minimal LongLink showcase app
 
 ## Setup with uv (preferred)
 

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="DialogChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="DialogType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="DialogChildrenOnlyType">
+        <xsd:attribute name="open" type="xsd:string" use="optional" />
+        <xsd:attribute name="defaultOpen" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="DialogTriggerType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="DialogChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="DialogContentType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="DialogChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="DialogHeaderType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="DialogChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="DialogTitleType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="DialogChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="DialogDescriptionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="DialogChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="DialogFooterType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="DialogChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Dialog" type="DialogType" />
+  <xsd:element name="DialogTrigger" type="DialogTriggerType" />
+  <xsd:element name="DialogContent" type="DialogContentType" />
+  <xsd:element name="DialogHeader" type="DialogHeaderType" />
+  <xsd:element name="DialogTitle" type="DialogTitleType" />
+  <xsd:element name="DialogDescription" type="DialogDescriptionType" />
+  <xsd:element name="DialogFooter" type="DialogFooterType" />
+</xsd:schema>

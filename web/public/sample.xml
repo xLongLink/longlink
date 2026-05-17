@@ -38,6 +38,21 @@
             <p>Activity content</p>
         </TabsContent>
     </Tabs>
+    <Dialog>
+        <DialogTrigger>
+            <Button variant="outline">Open dialog</Button>
+        </DialogTrigger>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Delete issue</DialogTitle>
+                <DialogDescription>This cannot be undone.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button variant="outline">Cancel</Button>
+                <Button>Delete</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
     <p>
         <Button href="/pricing" variant="outline">Open pricing</Button>
     </p>
@@ -52,7 +67,7 @@
     </p>
 
     <p>Rendered components:</p>
-        <For each='{["Hero", "Badge", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Button", "Divider", "Input"]}' as="name">
+        <For each='{["Hero", "Badge", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input"]}' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

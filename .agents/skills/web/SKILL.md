@@ -18,51 +18,36 @@ LongLink web skill.
 ## Structure
 
 ```text
-web/
-├── CONTRIBUTING.md
-├── README.md
-├── public/
-├── src/
-│   ├── App.tsx
-│   ├── Layout.tsx
-│   ├── main.tsx
-│   ├── index.css
-│   ├── components/
-│   ├── hooks/
-│   ├── lib/
-│   │   ├── react-query.ts
-│   │   ├── tab-value.ts
-│   │   └── utils.ts
-│   ├── pages/
-│   │   ├── Features.tsx
-│   │   ├── Home.tsx
-│   │   ├── NotFound.tsx
-│   │   ├── Pricing.tsx
-│   │   ├── Privacy.tsx
-│   │   ├── Sample.tsx
-│   │   ├── Terms.tsx
-│   │   └── View.tsx
-│   └── xml/
-│       # Refer to the `xml` skill for anything related to this folder.
-│       ├── core/
-│       │   ├── context.tsx
-│       │   ├── errors.tsx
-│       │   ├── expressions/
-│       │   ├── node.tsx
-│       │   ├── parser.ts
-│       │   ├── query.ts
-│       │   ├── state.ts
-│       │   └── url.tsx
-│       ├── html/
-│       ├── primitives/
-│       ├── react/
-│       ├── index.ts
-│       ├── renderers.tsx
-│       └── types.ts
-├── components.json
-├── index.html
-├── vite.config.ts
-└── package.json
+web/                          # Web app workspace for the frontend runtime
+├── CONTRIBUTING.md           # Local contribution rules for web changes
+├── README.md                 # Web package overview and usage notes
+├── public/                   # Static assets served by Vite as-is
+├── src/                      # Application source for the web runtime
+│   ├── App.tsx               # Root app composition and routing entry
+│   ├── Layout.tsx            # Shared shell for public-facing pages
+│   ├── main.tsx              # Client bootstrap and React mount point
+│   ├── index.css             # Global styles and theme baseline
+│   ├── components/           # Shared app components used across pages
+│   ├── hooks/                # Shared React hooks and user/session helpers
+│   ├── lib/                  # Shared utilities, query helpers, and adapters
+│   │   ├── react-query.ts    # React Query client setup and config
+│   │   ├── tab-value.ts      # Helpers for deriving tab-safe route values
+│   │   └── utils.ts          # General utility helpers
+│   ├── pages/                # Route-level pages and page renderers
+│   │   ├── Features.tsx      # Public features landing page
+│   │   ├── Home.tsx          # Public home page and auth-aware entry
+│   │   ├── NotFound.tsx      # Fallback 404 page for unknown routes
+│   │   ├── Pricing.tsx       # Public pricing and rollout page
+│   │   ├── Privacy.tsx       # Public privacy policy page
+│   │   ├── Sample.tsx        # Live XML sample and component playground
+│   │   ├── Terms.tsx         # Public terms of service page
+│   │   ├── Impressum.tsx     # Public impressum and legal notice page
+│   │   └── View.tsx          # Metadata-driven XML page renderer
+│   └── xml/                  # Refer to the `xml` skill for anything related to this folder
+├── components.json           # shadcn/ui configuration for generated components
+├── index.html                # Vite HTML entry template
+├── vite.config.ts            # Vite configuration and build setup
+└── package.json              # Web package scripts and dependencies
 ```
 
 ## Rules

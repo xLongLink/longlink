@@ -9,6 +9,7 @@
   <xsd:include schemaLocation="react/Hero.xsd" />
   <xsd:include schemaLocation="react/Badge.xsd" />
   <xsd:include schemaLocation="react/Card.xsd" />
+  <xsd:include schemaLocation="react/Dialog.xsd" />
   <xsd:include schemaLocation="react/Divider.xsd" />
   <xsd:include schemaLocation="react/Input.xsd" />
   <xsd:include schemaLocation="react/Tabs.xsd" />

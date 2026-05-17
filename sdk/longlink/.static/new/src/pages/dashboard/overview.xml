@@ -1,0 +1,4 @@
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<Page name="Dashboard Overview" icon="layout-dashboard">
+  <p>Nested page showcase.</p>
+</Page>

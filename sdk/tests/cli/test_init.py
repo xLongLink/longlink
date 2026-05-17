@@ -6,7 +6,7 @@ from longlink.constants import ROOT
 
 
 def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
-    """Ensure setup creates a full scaffold from scratch."""
+    """Ensure setup creates the minimal showcase scaffold from scratch."""
     copied = {}
 
     def fake_copytree(src: Path, dst: Path, dirs_exist_ok: bool):
@@ -33,24 +33,24 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert (target / '.env.sample').exists()
     assert (target / 'main.py').exists()
     assert (target / 'src/api/__init__.py').exists()
-    assert (target / 'src/api/health.py').exists()
+    assert (target / 'src/api/sample.py').exists()
     assert (target / 'src/models/__init__.py').exists()
     assert (target / 'src/models/project.py').exists()
-    assert (target / 'src/routes/__init__.py').exists()
     assert (target / 'src/types/__init__.py').exists()
     assert (target / 'src/types/user.py').exists()
-    assert (target / 'src/utils/__init__.py').exists()
-    assert (target / 'src/utils/strings.py').exists()
     assert (target / 'src/envs.py').exists()
     assert (target / 'src/pages').exists()
+    assert (target / 'src/pages/dashboard.xml').exists()
+    assert (target / 'src/pages/dashboard/overview.xml').exists()
     assert (target / 'tests/conftest.py').exists()
     assert (target / 'tests/api').exists()
+    assert (target / 'tests/api/test_sample_routes.py').exists()
 
     pyproject = (target / 'pyproject.toml').read_text()
     assert 'name = "longlink-app"' in pyproject
     assert 'packages = ["src"]' in pyproject
     assert '"tests"' in pyproject
-    assert (target / 'README.md').read_text().startswith('# Blank LongLink app')
+    assert (target / 'README.md').read_text().startswith('# Minimal LongLink showcase app')
 
 
 def test_init_command_calls_setup(monkeypatch):

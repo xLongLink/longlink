@@ -5,13 +5,27 @@ build-backend = "hatchling.build"
 [project]
 name = "longlink-app"
 version = "0.0.0"
-description = "LongLink application."
+description = "Minimal LongLink showcase application."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi",
   "longlink",
   "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-asyncio",
+  "isort",
+]
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "pytest-asyncio",
+  "isort",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -23,6 +37,25 @@ include = [
   "main.py",
   "README.md",
   "AGENTS.md",
+  "Dockerfile",
   ".env.sample",
   "tests",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.uv.sources]
+longlink = { path = "../", editable = true }
+
+[tool.longlink]
+
+[tool.isort]
+from_first = false
+no_sections = true
+lines_between_types = 0
+length_sort = true

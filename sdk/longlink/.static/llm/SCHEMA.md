@@ -219,6 +219,68 @@ Body content slot for the card.
 
 Footer slot for the card.
 
+## Dialog
+
+### `<Dialog>`
+
+Renders a modal shell.
+
+Attributes:
+
+- `open` optional. Control whether the dialog is currently open.
+- `defaultOpen` optional. Open the dialog on first render.
+
+Behavior:
+
+- Use `DialogTrigger` to open the dialog.
+- Use `DialogContent` for the modal body.
+- Use `DialogHeader`, `DialogTitle`, `DialogDescription`, and `DialogFooter` inside the content area.
+- `DialogContent` renders in a portal and includes the standard close affordance.
+
+Example:
+
+```xml
+<Dialog open="{true}">
+  <DialogTrigger>
+    <Button variant="outline">Open dialog</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Delete issue</DialogTitle>
+      <DialogDescription>This cannot be undone.</DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <Button variant="outline">Cancel</Button>
+      <Button>Delete</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+### `<DialogTrigger>`
+
+Opens the dialog.
+
+### `<DialogContent>`
+
+Dialog body surface.
+
+### `<DialogHeader>`
+
+Header slot for the dialog body.
+
+### `<DialogTitle>`
+
+Title slot for the dialog header.
+
+### `<DialogDescription>`
+
+Description slot for the dialog header.
+
+### `<DialogFooter>`
+
+Footer slot for dialog actions.
+
 ## Layout
 
 ### `<Divider>`

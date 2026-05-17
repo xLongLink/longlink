@@ -7,5 +7,6 @@ export type { ASTNode, ExecutionContext } from '@xml/types';
 export { Badge } from './react/Badge';
 export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './react/Card';
 export { Divider } from './react/Divider';
+export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './react/Dialog';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';
 export { RenderXML } from './renderers.tsx';

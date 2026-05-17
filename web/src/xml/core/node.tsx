@@ -9,6 +9,15 @@ import { Badge } from '@xml/react/Badge';
 import { Button } from '@xml/react/Button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/react/Card';
 import { Divider } from '@xml/react/Divider';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@xml/react/Dialog';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Input } from '@xml/react/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
@@ -218,6 +227,44 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
 
         return <CardFooter className={className} children={node.children} />;
+    }
+
+    if (node.name === 'Dialog') {
+        const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
+        const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
+        const open = openValue === true || openValue === 'true' ? true : openValue === false || openValue === 'false' ? false : undefined;
+        const defaultOpen =
+            defaultOpenValue === true || defaultOpenValue === 'true'
+                ? true
+                : defaultOpenValue === false || defaultOpenValue === 'false'
+                    ? false
+                    : undefined;
+
+        return <Dialog defaultOpen={defaultOpen} open={open} children={node.children} />;
+    }
+
+    if (node.name === 'DialogTrigger') {
+        return <DialogTrigger children={node.children} />;
+    }
+
+    if (node.name === 'DialogContent') {
+        return <DialogContent children={node.children} />;
+    }
+
+    if (node.name === 'DialogHeader') {
+        return <DialogHeader children={node.children} />;
+    }
+
+    if (node.name === 'DialogTitle') {
+        return <DialogTitle children={node.children} />;
+    }
+
+    if (node.name === 'DialogDescription') {
+        return <DialogDescription children={node.children} />;
+    }
+
+    if (node.name === 'DialogFooter') {
+        return <DialogFooter children={node.children} />;
     }
 
     if (node.name === 'Input') {

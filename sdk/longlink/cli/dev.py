@@ -11,7 +11,7 @@ def _set_dev_env_defaults() -> None:
     # Ensure dev mode stays enabled for parent process and uvicorn reload workers.
     os.environ["DEV"] = "True"
 
-    # Provide local-first defaults so sample apps boot without external secrets.
+    # Provide local-first defaults so showcase apps boot without external secrets.
     os.environ.setdefault("ENV_APP_KEY", "1234")
     os.environ.setdefault("ENV_DATABASE_URL", "sqlite:///./dev.db")
     os.environ.setdefault("ENV_STORAGE_PROTOCOL", "file")

@@ -108,7 +108,7 @@ class LongLink(FastAPI):
         page_path = Path(page)
         candidate_paths: list[Path] = []
 
-        # Resolve non-existent declarations against common app roots used by sample projects.
+        # Resolve non-existent declarations against common app roots used by showcase apps.
         if not page_path.exists():
             normalized_page_path = (
                 page_path.relative_to(page_path.anchor)
