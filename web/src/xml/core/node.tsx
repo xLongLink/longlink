@@ -5,6 +5,7 @@ import { P } from '@xml/html/P';
 import { For } from '@xml/primitives/For';
 import { Page } from '@xml/primitives/Page';
 import { Text } from '@xml/primitives/Text';
+import { Badge } from '@xml/react/Badge';
 import { Button } from '@xml/react/Button';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Divider } from '@xml/react/Divider';
@@ -135,6 +136,13 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                 children={node.children}
             />
         );
+    }
+
+    if (node.name === 'Badge') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+
+        return <Badge className={className} variant={variant} children={node.children} />;
     }
 
     if (node.name === 'Input') {

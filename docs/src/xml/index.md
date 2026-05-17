@@ -36,8 +36,9 @@ Use `sdk/longlink/.static/llm/SCHEMA.md` as the authoring reference for valid XM
 ### `Page`
 
 The `Page` root element is required for every XML page.
-`name` is required.
+`name` is required by the schema.
 `icon` is optional.
+The current web renderer uses `children` and does not read `name`.
 
 ```xml
 <Page name="Dashboard" icon="layout-grid">
@@ -48,19 +49,21 @@ The `Page` root element is required for every XML page.
 ### `State`
 
 The `State` primitive creates a local reactive slot identified by `id`.
-`value` must be literal text.
+`value` must be literal text, not an expression.
 
 ```xml
 <State id="user" value="Ada Lovelace" />
 ```
 
 The runtime stores the value in `ctx.values[id]`.
+Scalar values become a proxied object with a `value` field.
+Array values become proxied arrays.
 Use the slot from descendant expressions.
 
 ### `Query`
 
 The `Query` primitive fetches JSON and stores the result in `ctx.values[id]`.
-`id` and `path` must be literal text.
+`id` and `path` must be literal text, not expressions.
 
 ```xml
 <Query id="orders" path="/apps/orders" />
@@ -82,6 +85,7 @@ The `For` component renders children for each item in an array.
 
 The current item is available under `as`.
 The item index is available as `index`.
+If `each` does not resolve to an array, nothing renders.
 
 ## Components
 
@@ -91,6 +95,8 @@ Use the component layer for layout and interactive controls.
 
 The `Hero` component renders a page header shell.
 It accepts an optional `icon` attribute.
+`HeroContent` renders in a separate slot on the right.
+All other children render in the main hero body.
 
 ```xml
 <Hero icon="layout-grid">
@@ -116,7 +122,7 @@ Use `HeroContent` for hero actions or supplemental content.
 
 ### Conditional Rendering
 
-Use `if="..."` on any element to skip rendering when the expression is false.
+Use `if="..."` on any documented XML element to skip rendering when the expression is false.
 
 ```xml
 <p if="{order.active}">Active</p>

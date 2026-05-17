@@ -26,18 +26,10 @@ LongLink evaluates JavaScript-like expressions inside `{...}`.
 - Nested objects and arrays in `json` values are resolved recursively.
 - Scope is lexical: child elements read from their nearest parent scope first, then walk outward.
 
-### TODO
+### Limits
 
-- Single-expression-only validation still needs to be enforced everywhere.
-- Control flow statements, function definitions, and side-effectful operations still need to be rejected.
-- Side-effect-free validation for calls, updates, and mutation operators still needs implementation.
-- Declarative mutation syntax in `mutate=""` still needs schema support.
-- Automatic loop ID scoping and `$id.name` references still need implementation.
-- Function expressions, arrow functions, and global object access still need to be blocked.
-- Restricting expressions to state, loop variables, query results, and computed values still needs enforcement.
-- Network request expressions through `<Query />`, button attributes, and `submit="..."` still need finalization.
-- Serializable payload validation and `{{...}}` object-literal payload handling still need implementation.
-- Expression size limits and static analysis support still need implementation.
+- Use expressions for values, lookups, array literals, object literals, template literals, and basic arithmetic.
+- Do not rely on statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, or globals.
 
 ## Global XML Patterns
 
@@ -51,8 +43,8 @@ If the expression is false, the element is not rendered.
 
 `<State>` and `<Query>` both create a slot identified by `id`.
 
-- `<State id="user" value="John Doe" />` creates local state.
-- `<Query id="user" path="/endpoint" />` fetches data into the slot.
+- `<State id="user" value="John Doe" />` creates local state. `value` must be literal text.
+- `<Query id="user" path="/endpoint" />` fetches data into the slot. `id` and `path` must be literal text.
 
 ### Iteration
 
@@ -79,6 +71,10 @@ Children:
 
 - Any documented XML element.
 
+Behavior:
+
+- The web renderer uses `children` and does not read `name` today.
+
 Example: `<Page name="Dashboard" icon="layout-grid"><p>Dashboard</p></Page>`
 
 ## Primitives
@@ -90,12 +86,13 @@ Declares local reactive state.
 Attributes:
 
 - `id` required. State key.
-- `value` required. Initial state value.
+- `value` required. Initial state value. Must be literal text.
 
 Behavior:
 
 - The state is exposed as `ctx.values[id]`.
-- The value is a `[currentValue, setter]` tuple internally.
+- Scalar values are stored as a proxied object with a `value` property.
+- Array values are stored as proxied arrays.
 
 ### `<Query>`
 
@@ -104,7 +101,7 @@ Fetches JSON data and stores it in query state.
 Attributes:
 
 - `id` required. Query key.
-- `path` required. Request path or absolute URL.
+- `path` required. Request path or absolute URL. Must be literal text.
 
 Behavior:
 
@@ -126,6 +123,11 @@ Children:
 - Any documented XML element.
 
 Example: `<Hero icon="layout-grid"><HeroTitle>Organizations</HeroTitle></Hero>`
+
+Behavior:
+
+- `HeroContent` is rendered in a separate slot on the right.
+- All other children render in the main hero body.
 
 ### `<HeroTitle>`
 
@@ -153,6 +155,24 @@ Behavior:
 - Each item is rendered in a child scope.
 - The current item is exposed as the `as` name.
 - The item index is exposed as `index`.
+- If `each` does not resolve to an array, nothing renders.
+
+## Badge
+
+### `<Badge>`
+
+Renders a compact status label.
+
+Attributes:
+
+- `variant` optional. Badge style variant.
+
+Behavior:
+
+- Renders inline content using the shared badge shell.
+- Supports the global `if` attribute.
+
+Example: `<Badge variant="secondary">New</Badge>`
 
 ## Layout
 
@@ -179,13 +199,16 @@ Actionable button.
 Attributes:
 
 - `action` optional. API path to call.
+- `href` optional. Navigation path for a link button.
 - `method` optional. HTTP method. Defaults to `POST`.
 - `json` optional. Request body value or JSON string.
 - `invalidate` optional. Array expression of slot ids to rerun.
 
 Behavior:
 
-- Performs the configured action request.
+- If `href` is set, the button renders as a link and ignores `action`.
+- If `action` is empty, the button only reruns invalidation targets.
+- Otherwise, the button sends the configured action request.
 - `invalidate` refetches the named query slots after the request succeeds.
 
 Example: `<Button action="/issues" json='{{ title: issue.title }}'>Save</Button>`
@@ -203,7 +226,7 @@ Attributes:
 Behavior:
 
 - Renders a plain text input.
-- When `value` resolves to a reactive state slot, changes write back to `state.value`.
+- When `value` resolves to a reactive Valtio-backed state slot, changes write back to `state.value`.
 - Otherwise, the field uses `value` as its initial text.
 
 Example:

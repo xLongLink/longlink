@@ -3,6 +3,7 @@
         <HeroTitle>Component Playground</HeroTitle>
         <HeroDescription>Live XML sample for testing web components without touching the API.</HeroDescription>
         <HeroContent>
+            <Badge variant="secondary">New</Badge>
             <Button href="/pricing" variant="outline">Open pricing</Button>
         </HeroContent>
     </Hero>
@@ -19,9 +20,12 @@
     <p>
         <Input placeholder="Number input" type="number" value="42" />
     </p>
+    <p>
+        <Badge variant="outline">Preview</Badge>
+    </p>
 
     <p>Rendered components:</p>
-    <For each='{["Hero", "Button", "Divider", "Input"]}' as="name">
+    <For each='{["Hero", "Badge", "Button", "Divider", "Input"]}' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

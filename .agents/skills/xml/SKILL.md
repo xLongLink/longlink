@@ -114,6 +114,12 @@ HTML:
 - `For` iterates over arrays in a scoped child context.
 - `Text` is internal only and is produced by the parser for raw text content. Do not author it directly.
 
+## Primitive Attribute Rules
+
+- `State.value` must be literal text.
+- `Query.id` must be literal text.
+- `Query.path` must be literal text.
+
 ## Root Metadata
 
 - `Page` supports `name` and `icon` attributes.
@@ -162,8 +168,6 @@ Not allowed:
 4. Wire the component into `web/src/xml/core/node.tsx` so the renderer can resolve the tag, and export it from `web/src/xml/index.ts` if it should be public.
 5. Update the XML schema, parser, or runtime helpers if the new component introduces new attributes, bindings, or execution behavior.
 6. Add or update documentation and examples so the new tag and its props are discoverable.
-7. Verify the component against the existing XML pages or fixtures before shipping it.
-
-## Current Gaps
-
-- No known gaps in the documented XML component set.
+7. Add focused tests in both `web/tests/xml/` and `sdk/tests/xml/` for every new component, covering compile-time AST shape, schema validation, and runtime rendering when practical.
+8. Add the component definition to the SDK schema pack (`sdk/longlink/.static/xsd/`) and human-readable schema docs (`sdk/longlink/.static/llm/SCHEMA.md`).
+9. Verify the component against the existing XML pages or fixtures before shipping it.
