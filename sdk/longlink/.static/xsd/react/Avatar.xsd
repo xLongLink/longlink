@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="AvatarChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attribute name="className" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="AvatarType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="AvatarChildrenOnlyType">
+        <xsd:attribute name="size" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="AvatarImageType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="AvatarChildrenOnlyType">
+        <xsd:attribute name="src" type="xsd:string" use="optional" />
+        <xsd:attribute name="alt" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="AvatarFallbackType" mixed="true"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="AvatarBadgeType" mixed="true"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="AvatarGroupType" mixed="true"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="AvatarGroupCountType" mixed="true"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+
+  <xsd:element name="Avatar" type="AvatarType" />
+  <xsd:element name="AvatarImage" type="AvatarImageType" />
+  <xsd:element name="AvatarFallback" type="AvatarFallbackType" />
+  <xsd:element name="AvatarBadge" type="AvatarBadgeType" />
+  <xsd:element name="AvatarGroup" type="AvatarGroupType" />
+  <xsd:element name="AvatarGroupCount" type="AvatarGroupCountType" />
+</xsd:schema>

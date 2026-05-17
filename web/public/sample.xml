@@ -13,6 +13,19 @@
         </HeroContent>
     </Hero>
 
+    <AvatarGroup>
+        <Avatar size="sm">
+            <AvatarImage src="/avatars/ada.png" alt="Ada Lovelace" />
+            <AvatarFallback>AL</AvatarFallback>
+            <AvatarBadge>1</AvatarBadge>
+        </Avatar>
+        <Avatar>
+            <AvatarImage src="/avatars/grace.png" alt="Grace Hopper" />
+            <AvatarFallback>GH</AvatarFallback>
+        </Avatar>
+        <AvatarGroupCount>+2</AvatarGroupCount>
+    </AvatarGroup>
+
     <p>This page is loaded from and rendered at</p>
     <Divider />
     <Columns>
@@ -129,6 +142,9 @@
         <Switch id="marketing" defaultChecked="false" size="sm" />
     </p>
     <p>
+        <Toggle id="notifications" defaultPressed="true" size="sm" variant="outline">Notifications</Toggle>
+    </p>
+    <p>
         <Select defaultValue="overview">
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -176,7 +192,7 @@
     </FieldSet>
 
     <p>Rendered components:</p>
-    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent", "Button", "Divider", "Input", "Textarea", "Checkbox", "Label", "Switch", "FieldSet", "FieldLegend", "FieldDescription", "FieldGroup", "Field", "FieldContent", "FieldTitle", "FieldLabel", "FieldError", "FieldSeparator", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
+    <For each='["Hero", "AvatarGroup", "Avatar", "AvatarImage", "AvatarFallback", "AvatarBadge", "AvatarGroupCount", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent", "Button", "Divider", "Input", "Textarea", "Checkbox", "Toggle", "Label", "Switch", "FieldSet", "FieldLegend", "FieldDescription", "FieldGroup", "Field", "FieldContent", "FieldTitle", "FieldLabel", "FieldError", "FieldSeparator", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

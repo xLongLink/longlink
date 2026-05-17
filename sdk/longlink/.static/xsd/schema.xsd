@@ -7,6 +7,7 @@
   <xsd:include schemaLocation="html/p.xsd" />
   <xsd:include schemaLocation="html/a.xsd" />
   <xsd:include schemaLocation="react/Button.xsd" />
+  <xsd:include schemaLocation="react/Avatar.xsd" />
   <xsd:include schemaLocation="react/Checkbox.xsd" />
   <xsd:include schemaLocation="react/FieldSet.xsd" />
   <xsd:include schemaLocation="react/Hero.xsd" />
@@ -22,6 +23,7 @@
   <xsd:include schemaLocation="react/Textarea.xsd" />
   <xsd:include schemaLocation="react/Select.xsd" />
   <xsd:include schemaLocation="react/Switch.xsd" />
+  <xsd:include schemaLocation="react/Toggle.xsd" />
   <xsd:include schemaLocation="react/Table.xsd" />
   <xsd:include schemaLocation="react/Tabs.xsd" />
 </xsd:schema>

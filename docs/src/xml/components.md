@@ -2,7 +2,19 @@
 
 Components handle visible content and user actions.
 Use them when a page needs navigation or form input.
-This page documents the current component surface.
+This page documents the current XML element surface.
+
+Supported elements:
+
+- Root: `longlink`
+- Primitives: `State`, `Query`, `For`
+- Hero: `Hero`, `HeroTitle`, `HeroDescription`, `HeroContent`, `Icon`
+- Field: `FieldSet`, `FieldLegend`, `FieldGroup`, `Field`, `FieldContent`, `FieldLabel`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError`
+- Layout: `Columns`, `Column`, `Divider`, `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
+- Surface: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`, `Table`, `TableCaption`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
+- Identity: `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
+- Form controls: `Button`, `Label`, `Badge`, `Checkbox`, `Switch`, `Input`, `Textarea`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
+- HTML bridge: `p`, `a`
 
 ## Hero
 
@@ -23,6 +35,17 @@ All other children render in the main hero body.
 `HeroTitle`, `HeroDescription`, and `HeroContent` are the three supported hero slots.
 `Hero.icon` uses the same Lucide icon names as `<Icon>`.
 
+## Icon
+
+Use `Icon` for standalone Lucide icons in cards, buttons, and inline layout chrome.
+
+```xml
+<Icon name="layout-grid" className="size-5" />
+```
+
+`name` is required.
+`className` is optional and can be used to tune size or color.
+
 ## Columns
 
 Use `Columns` with `Column` children for side-by-side layout rows.
@@ -41,17 +64,6 @@ Use `Columns` with `Column` children for side-by-side layout rows.
 
 `Column` renders one percentage-based slot inside `Columns`.
 `width` is required.
-
-## Icon
-
-Use `Icon` for standalone Lucide icons in cards, buttons, and inline layout chrome.
-
-```xml
-<Icon name="layout-grid" className="size-5" />
-```
-
-`name` is required.
-`className` is optional and can be used to tune size or color.
 
 ## Table
 
@@ -149,6 +161,23 @@ Use `Dialog` with `DialogTrigger` and `DialogContent` for modal workflows and co
 `DialogContent` renders in a portal and includes the standard close affordance.
 `open` and `defaultOpen` control dialog visibility.
 
+## Tooltip
+
+Use `TooltipProvider` with `Tooltip`, `TooltipTrigger`, and `TooltipContent` for hover or focus help.
+
+```xml
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger>Hover me</TooltipTrigger>
+    <TooltipContent side="top">Tooltip text</TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+```
+
+`Tooltip` supports `open` and `defaultOpen`.
+`TooltipContent` supports `align`, `alignOffset`, `className`, `hidden`, `side`, and `sideOffset`.
+Wrap multiple tooltips in `TooltipProvider`.
+
 ## Button
 
 Use the `Button` component to navigate or trigger an action.
@@ -179,6 +208,29 @@ Use the `Badge` component for compact status labels and tags.
 
 `variant` is optional.
 
+## Avatar
+
+Use `Avatar` with `AvatarImage`, `AvatarFallback`, and `AvatarBadge` for user identity chips.
+
+```xml
+<AvatarGroup>
+  <Avatar size="sm">
+    <AvatarImage src="/ada.png" alt="Ada Lovelace" />
+    <AvatarFallback>AL</AvatarFallback>
+    <AvatarBadge>1</AvatarBadge>
+  </Avatar>
+  <Avatar>
+    <AvatarImage src="/grace.png" alt="Grace Hopper" />
+    <AvatarFallback>GH</AvatarFallback>
+  </Avatar>
+  <AvatarGroupCount>+2</AvatarGroupCount>
+</AvatarGroup>
+```
+
+`Avatar.size` accepts `default`, `sm`, or `lg`.
+`AvatarGroup` stacks multiple avatars with shared spacing.
+`AvatarGroupCount` renders the trailing count chip.
+
 ## Checkbox
 
 Use `Checkbox` for binary form toggles.
@@ -190,6 +242,21 @@ Use `Checkbox` for binary form toggles.
 `checked` can bind to a reactive state slot.
 `defaultChecked` seeds the initial value when `checked` is not bound.
 `disabled` and `id` are supported.
+
+## Toggle
+
+Use `Toggle` for button-style on/off controls.
+
+```xml
+<Toggle pressed="settings.enabled" id="enabled" size="sm">
+  Enabled
+</Toggle>
+```
+
+`pressed` can bind to a reactive state slot.
+`defaultPressed` seeds the initial value when `pressed` is not bound.
+`variant` accepts `default` or `outline`.
+`size` accepts `sm`, `default`, or `lg`.
 
 ## Label
 

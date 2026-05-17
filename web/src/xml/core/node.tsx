@@ -6,6 +6,7 @@ import { For } from '@xml/primitives/For';
 import { Longlink } from '@xml/primitives/Longlink';
 import { Text } from '@xml/primitives/Text';
 import { Badge } from '@xml/react/Badge';
+import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from '@xml/react/Avatar';
 import { Button } from '@xml/react/Button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/react/Card';
 import { Column, Columns } from '@xml/react/Columns';
@@ -40,6 +41,7 @@ import { Textarea } from '@xml/react/Textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@xml/react/Tooltip';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@xml/react/Select';
 import { Switch } from '@xml/react/Switch';
+import { Toggle } from '@xml/react/Toggle';
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
 import { A } from '@xml/html/A';
@@ -226,6 +228,45 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
         return <Badge variant={variant} children={node.children} />;
+    }
+
+    if (node.name === 'Avatar') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+
+        return <Avatar className={className} size={size} children={node.children} />;
+    }
+
+    if (node.name === 'AvatarImage') {
+        const alt = node.params?.alt ? String(evaluate(node.params.alt, ctx) ?? '') : undefined;
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const src = node.params?.src ? String(evaluate(node.params.src, ctx) ?? '') : undefined;
+
+        return <AvatarImage alt={alt} className={className} src={src} />;
+    }
+
+    if (node.name === 'AvatarFallback') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <AvatarFallback className={className} children={node.children} />;
+    }
+
+    if (node.name === 'AvatarBadge') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <AvatarBadge className={className} children={node.children} />;
+    }
+
+    if (node.name === 'AvatarGroup') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <AvatarGroup className={className} children={node.children} />;
+    }
+
+    if (node.name === 'AvatarGroupCount') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <AvatarGroupCount className={className} children={node.children} />;
     }
 
     if (node.name === 'Columns') {
@@ -574,6 +615,50 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
 
         return <Switch checked={checked} className={className} defaultChecked={defaultChecked} disabled={disabled} id={id} size={size as 'sm' | 'default'} />;
+    }
+
+    if (node.name === 'Toggle') {
+        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+        const pressedValue = node.params?.pressed != null ? evaluate(node.params.pressed, ctx) : undefined;
+        const defaultPressedValue = node.params?.defaultPressed != null ? evaluate(node.params.defaultPressed, ctx) : undefined;
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+        const pressed = pressedValue && typeof pressedValue === 'object' ? (pressedValue as Record<string, unknown>) : undefined;
+        const literalPressed =
+            pressedValue === true || pressedValue === 'true'
+                ? true
+                : pressedValue === false || pressedValue === 'false'
+                  ? false
+                  : pressedValue != null
+                    ? Boolean(pressedValue)
+                    : undefined;
+        const defaultPressed = pressed
+            ? undefined
+            : literalPressed !== undefined
+              ? literalPressed
+              : defaultPressedValue === true || defaultPressedValue === 'true'
+                ? true
+                : defaultPressedValue === false || defaultPressedValue === 'false'
+                  ? false
+                  : defaultPressedValue != null
+                    ? Boolean(defaultPressedValue)
+                    : undefined;
+        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+
+        return (
+            <Toggle
+                className={className}
+                defaultPressed={defaultPressed}
+                disabled={disabled}
+                id={id}
+                pressed={pressed}
+                size={size as 'sm' | 'default' | 'lg'}
+                variant={variant as 'default' | 'outline'}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'Select') {

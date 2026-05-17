@@ -285,6 +285,83 @@ Behavior:
 
 Example: `<Badge variant="secondary">New</Badge>`
 
+## Avatar
+
+### `<Avatar>`
+
+Renders a single user avatar shell.
+
+Attributes:
+
+- `size` optional. Avatar size variant.
+- `className` optional. Extra avatar classes.
+
+Behavior:
+
+- Use `AvatarImage`, `AvatarFallback`, and `AvatarBadge` inside `Avatar`.
+- Supports the global `if` attribute.
+
+Example:
+
+```xml
+<Avatar size="sm">
+  <AvatarImage src="/ada.png" alt="Ada Lovelace" />
+  <AvatarFallback>AL</AvatarFallback>
+  <AvatarBadge>1</AvatarBadge>
+</Avatar>
+```
+
+### `<AvatarImage>`
+
+Renders the avatar image slot.
+
+Attributes:
+
+- `src` optional. Image source URL.
+- `alt` optional. Image alt text.
+- `className` optional. Extra image classes.
+
+### `<AvatarFallback>`
+
+Renders fallback content when the image is unavailable.
+
+Attributes:
+
+- `className` optional. Extra fallback classes.
+
+### `<AvatarBadge>`
+
+Renders the badge overlay on top of an avatar.
+
+Attributes:
+
+- `className` optional. Extra badge classes.
+
+### `<AvatarGroup>`
+
+Renders a stacked row of avatars.
+
+Attributes:
+
+- `className` optional. Extra group classes.
+
+Behavior:
+
+- `Avatar` children overlap with shared ring spacing.
+- Use `AvatarGroupCount` for the trailing count chip.
+
+### `<AvatarGroupCount>`
+
+Renders the trailing count chip for an avatar group.
+
+Attributes:
+
+- `className` optional. Extra count classes.
+
+Behavior:
+
+- Usually follows one or more `Avatar` children inside `AvatarGroup`.
+
 ## Columns
 
 ### `<Columns>`
@@ -647,6 +724,26 @@ Behavior:
 
 - When `checked` resolves to a Valtio-backed state slot, toggle updates write back to `state.value`.
 - Otherwise, `defaultChecked` sets the initial checked state.
+- Supports the global `if` attribute.
+
+### `<Toggle>`
+
+Button-style toggle control.
+
+Attributes:
+
+- `pressed` optional. Reactive state slot or current pressed value.
+- `defaultPressed` optional. Initial pressed state.
+- `className` optional. Extra classes for styling.
+- `disabled` optional. Disables interaction.
+- `id` optional. Control id for associated labels.
+- `size` optional. Toggle size variant. Use `sm`, `default`, or `lg`.
+- `variant` optional. Toggle style variant. Use `default` or `outline`.
+
+Behavior:
+
+- When `pressed` resolves to a Valtio-backed state slot, toggle updates write back to `state.value`.
+- Otherwise, `defaultPressed` sets the initial pressed state.
 - Supports the global `if` attribute.
 
 ### `<Switch>`

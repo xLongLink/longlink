@@ -1,4 +1,10 @@
 import {
+    Avatar,
+    AvatarBadge,
+    AvatarFallback,
+    AvatarGroup,
+    AvatarGroupCount,
+    AvatarImage,
     Column,
     Columns,
     Checkbox,
@@ -27,6 +33,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
     Switch,
+    Toggle,
     Textarea,
     Table,
     TableBody,
@@ -49,6 +56,12 @@ describe('xml index', () => {
         expect(typeof evaluate).toBe('function');
         expect(typeof fromXml).toBe('function');
         expect(typeof renderNode).toBe('function');
+        expect(Avatar).toBeDefined();
+        expect(AvatarBadge).toBeDefined();
+        expect(AvatarFallback).toBeDefined();
+        expect(AvatarGroup).toBeDefined();
+        expect(AvatarGroupCount).toBeDefined();
+        expect(AvatarImage).toBeDefined();
         expect(Column).toBeDefined();
         expect(Columns).toBeDefined();
         expect(Checkbox).toBeDefined();
@@ -77,6 +90,7 @@ describe('xml index', () => {
         expect(TooltipProvider).toBeDefined();
         expect(TooltipTrigger).toBeDefined();
         expect(Switch).toBeDefined();
+        expect(Toggle).toBeDefined();
         expect(Textarea).toBeDefined();
         expect(Table).toBeDefined();
         expect(TableHeader).toBeDefined();
