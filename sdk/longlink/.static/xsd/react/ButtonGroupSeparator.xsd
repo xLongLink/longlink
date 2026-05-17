@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="ButtonGroupSeparatorType">
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attribute name="className" type="xsd:string" use="optional" />
+    <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:element name="ButtonGroupSeparator" type="ButtonGroupSeparatorType" />
+</xsd:schema>

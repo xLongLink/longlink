@@ -9,11 +9,14 @@ Use XML pages for CRUD screens, forms, tables, dashboards, and operational workf
 
 Every XML document starts with a `<longlink>` root element.
 Use `<State>` for local reactive state slots, `<Query>` for JSON fetch slots, and `<For>` to render arrays in a child scope.
-Use `Slider` with the other form controls when you need a numeric range input.
+Use `Input`, `Textarea`, `Select`, `RadioGroup`, `Toggle`, `Checkbox`, `Switch`, and `Slider` for form controls.
+Use `Button`, `Badge`, `Divider`, `Icon`, `Hero`, `Card`, `Dialog`, `Tooltip`, `Avatar`, `Columns`, `Table`, `Tabs`, `Field`, `Label`, `p`, and `a` for the rest of the documented surface.
 
 `<State value="...">` uses an expression and can seed objects, arrays, or scalar values.
 `<Query id="..." path="...">` requires literal text for both attributes.
 Any documented XML element may also use `if="..."` for conditional rendering.
+
+The parser also emits internal `Text` nodes for raw text content. Do not author `Text` directly.
 
 ## Document Loading
 
@@ -40,6 +43,22 @@ See `components.md` for the component surface.
 `ContextProvider` exposes a runtime context to rendered XML children.
 `createContext` returns a blank execution context.
 `setupContext` walks the AST, seeds `State` and `Query` nodes, and stores their re-run hooks for invalidation.
+
+## Component Surface
+
+See `components.md` for the full component reference.
+
+The current XML surface includes:
+
+- Root: `longlink`
+- Primitives: `State`, `Query`, `For`
+- Hero: `Hero`, `HeroTitle`, `HeroDescription`, `HeroContent`
+- Field: `FieldSet`, `FieldLegend`, `FieldGroup`, `Field`, `FieldContent`, `FieldLabel`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError`
+- Layout: `Columns`, `Column`, `Divider`, `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
+- Surface: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`, `Table`, `TableCaption`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
+- Identity: `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
+- Form controls: `Button`, `Label`, `Badge`, `Checkbox`, `Switch`, `Slider`, `Input`, `Textarea`, `RadioGroup`, `RadioGroupItem`, `Toggle`, `ToggleGroup`, `ToggleGroupItem`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
+- HTML bridge: `p`, `a`, `hr`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ul`, `li`
 
 ### Conditional Rendering
 

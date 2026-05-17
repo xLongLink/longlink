@@ -14,7 +14,9 @@ Supported elements:
 - Surface: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`, `Table`, `TableCaption`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
 - Identity: `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
 - Form controls: `Button`, `Label`, `Badge`, `Checkbox`, `Switch`, `Slider`, `Input`, `Textarea`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
-- HTML bridge: `p`, `a`
+- HTML bridge: `p`, `a`, `hr`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ul`, `li`
+
+The parser also emits internal `Text` nodes for raw text content. Do not author `Text` directly.
 
 ## Hero
 
@@ -105,10 +107,27 @@ Use lowercase HTML tags for simple bridges.
   <Icon name="sparkles" className="size-5" />
   Open icons
 </a>
+
+<h2>Team</h2>
+
+<code>dashboard_id</code>
+
+<ul>
+  <li>Projects</li>
+  <li>Users</li>
+</ul>
 ```
 
-`<p>` and `<a>` are the current HTML bridge elements.
+`p`, `a`, `hr`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ul`, and `li` are the current HTML bridge elements.
 Use `a` with `href` for links.
+Use `hr` for separators.
+Use heading tags for document structure.
+Use `b` for bold text.
+Use `code` for inline code.
+Use `s` for strikethrough text.
+Use `sup` and `sub` for inline annotations.
+Use `u` for underlined text.
+Use `ul` and `li` for simple lists.
 
 ## Card
 

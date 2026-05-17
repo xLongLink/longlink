@@ -8,6 +8,9 @@ import {
     Column,
     Columns,
     Checkbox,
+    ButtonGroup,
+    ButtonGroupSeparator,
+    ButtonGroupText,
     Field,
     FieldContent,
     FieldDescription,
@@ -68,6 +71,9 @@ describe('xml index', () => {
         expect(Column).toBeDefined();
         expect(Columns).toBeDefined();
         expect(Checkbox).toBeDefined();
+        expect(ButtonGroup).toBeDefined();
+        expect(ButtonGroupSeparator).toBeDefined();
+        expect(ButtonGroupText).toBeDefined();
         expect(Field).toBeDefined();
         expect(FieldContent).toBeDefined();
         expect(FieldDescription).toBeDefined();

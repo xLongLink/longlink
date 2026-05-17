@@ -1,14 +1,30 @@
 import { ContextProvider } from '@xml/core/context';
 import { compile, evaluate, isText } from '@xml/core/expressions';
 import { state } from '@xml/core/state';
+import { A } from '@xml/html/A';
+import { B } from '@xml/html/B';
+import { Code } from '@xml/html/Code';
+import { H1 } from '@xml/html/H1';
+import { H2 } from '@xml/html/H2';
+import { H3 } from '@xml/html/H3';
+import { H4 } from '@xml/html/H4';
+import { Hr } from '@xml/html/Hr';
+import { Li } from '@xml/html/Li';
 import { P } from '@xml/html/P';
+import { S } from '@xml/html/S';
+import { Sub } from '@xml/html/Sub';
+import { Sup } from '@xml/html/Sup';
+import { U } from '@xml/html/U';
+import { Ul } from '@xml/html/Ul';
 import { For } from '@xml/primitives/For';
 import { Longlink } from '@xml/primitives/Longlink';
 import { Text } from '@xml/primitives/Text';
-import { Badge } from '@xml/react/Badge';
 import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from '@xml/react/Avatar';
+import { Badge } from '@xml/react/Badge';
 import { Button } from '@xml/react/Button';
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@xml/react/ButtonGroup';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/react/Card';
+import { Checkbox } from '@xml/react/Checkbox';
 import { Column, Columns } from '@xml/react/Columns';
 import {
     Dialog,
@@ -20,8 +36,6 @@ import {
     DialogTrigger,
 } from '@xml/react/Dialog';
 import { Divider } from '@xml/react/Divider';
-import { Checkbox } from '@xml/react/Checkbox';
-import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import {
     Field,
     FieldContent,
@@ -34,20 +48,38 @@ import {
     FieldSet,
     FieldTitle,
 } from '@xml/react/Field';
+import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Icon } from '@xml/react/Icon';
-import { Label } from '@xml/react/Label';
 import { Input } from '@xml/react/Input';
+import { Label } from '@xml/react/Label';
 import { RadioGroup, RadioGroupItem } from '@xml/react/RadioGroup';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectSeparator,
+    SelectTrigger,
+    SelectValue,
+} from '@xml/react/Select';
 import { Slider } from '@xml/react/Slider';
-import { Textarea } from '@xml/react/Textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@xml/react/Tooltip';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@xml/react/Select';
 import { Switch } from '@xml/react/Switch';
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@xml/react/Table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
+import { Textarea } from '@xml/react/Textarea';
 import { Toggle } from '@xml/react/Toggle';
 import { ToggleGroup, ToggleGroupItem } from '@xml/react/ToggleGroup';
-import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
-import { A } from '@xml/html/A';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@xml/react/Tooltip';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
 
@@ -198,6 +230,84 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return <P children={node.children} />;
     }
 
+    if (node.name === 'hr') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Hr className={className} />;
+    }
+
+    if (node.name === 'b') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <B className={className} children={node.children} />;
+    }
+
+    if (node.name === 'h1') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <H1 className={className} children={node.children} />;
+    }
+
+    if (node.name === 'h2') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <H2 className={className} children={node.children} />;
+    }
+
+    if (node.name === 'h3') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <H3 className={className} children={node.children} />;
+    }
+
+    if (node.name === 'h4') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <H4 className={className} children={node.children} />;
+    }
+
+    if (node.name === 'code') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Code className={className} children={node.children} />;
+    }
+
+    if (node.name === 's') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <S className={className} children={node.children} />;
+    }
+
+    if (node.name === 'sup') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Sup className={className} children={node.children} />;
+    }
+
+    if (node.name === 'sub') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Sub className={className} children={node.children} />;
+    }
+
+    if (node.name === 'u') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <U className={className} children={node.children} />;
+    }
+
+    if (node.name === 'ul') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Ul className={className} children={node.children} />;
+    }
+
+    if (node.name === 'li') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Li className={className} children={node.children} />;
+    }
+
     if (node.name === 'a') {
         const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
@@ -225,6 +335,36 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                 children={node.children}
             />
         );
+    }
+
+    if (node.name === 'ButtonGroup') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const orientation = node.params?.orientation
+            ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
+            : 'horizontal';
+
+        return (
+            <ButtonGroup
+                className={className}
+                orientation={orientation as 'horizontal' | 'vertical'}
+                children={node.children}
+            />
+        );
+    }
+
+    if (node.name === 'ButtonGroupText') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <ButtonGroupText className={className} children={node.children} />;
+    }
+
+    if (node.name === 'ButtonGroupSeparator') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const orientation = node.params?.orientation
+            ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
+            : 'vertical';
+
+        return <ButtonGroupSeparator className={className} orientation={orientation as 'horizontal' | 'vertical'} />;
     }
 
     if (node.name === 'Badge') {
@@ -413,7 +553,13 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                 align={align}
                 alignOffset={alignOffset == null ? undefined : String(alignOffset)}
                 className={className}
-                hidden={hiddenValue === true || hiddenValue === 'true' ? true : hiddenValue === false || hiddenValue === 'false' ? false : undefined}
+                hidden={
+                    hiddenValue === true || hiddenValue === 'true'
+                        ? true
+                        : hiddenValue === false || hiddenValue === 'false'
+                          ? false
+                          : undefined
+                }
                 side={side}
                 sideOffset={sideOffset == null ? undefined : String(sideOffset)}
                 children={node.children}
@@ -431,16 +577,15 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             : undefined;
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-        const autoComplete = node.params?.autoComplete ? String(evaluate(node.params.autoComplete, ctx) ?? '') : undefined;
+        const autoComplete = node.params?.autoComplete
+            ? String(evaluate(node.params.autoComplete, ctx) ?? '')
+            : undefined;
         const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const ariaInvalidValue = node.params?.['aria-invalid'] != null ? evaluate(node.params['aria-invalid'], ctx) : undefined;
+        const ariaInvalidValue =
+            node.params?.['aria-invalid'] != null ? evaluate(node.params['aria-invalid'], ctx) : undefined;
         const disabled =
-            disabledValue === false || disabledValue === 'false'
-                ? false
-                : disabledValue != null
-                  ? true
-                  : undefined;
+            disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
         const ariaInvalid =
             ariaInvalidValue === false || ariaInvalidValue === 'false'
                 ? false
@@ -448,7 +593,19 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                   ? true
                   : undefined;
 
-        return <Input aria-invalid={ariaInvalid} autoComplete={autoComplete} className={className} disabled={disabled} id={id} label={label} placeholder={placeholder} value={value} type={type} />;
+        return (
+            <Input
+                aria-invalid={ariaInvalid}
+                autoComplete={autoComplete}
+                className={className}
+                disabled={disabled}
+                id={id}
+                label={label}
+                placeholder={placeholder}
+                value={value}
+                type={type}
+            />
+        );
     }
 
     if (node.name === 'Textarea') {
@@ -464,7 +621,12 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
         const rowsValue = node.params?.rows != null ? evaluate(node.params.rows, ctx) : undefined;
         const colsValue = node.params?.cols != null ? evaluate(node.params.cols, ctx) : undefined;
-        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
 
         return (
             <Textarea
@@ -501,9 +663,17 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
     if (node.name === 'Field') {
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-        const orientation = node.params?.orientation ? String(evaluate(node.params.orientation, ctx) ?? 'vertical') : 'vertical';
+        const orientation = node.params?.orientation
+            ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
+            : 'vertical';
 
-        return <Field className={className} orientation={orientation as 'vertical' | 'horizontal' | 'responsive'} children={node.children} />;
+        return (
+            <Field
+                className={className}
+                orientation={orientation as 'vertical' | 'horizontal' | 'responsive'}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'FieldContent') {
@@ -553,10 +723,12 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     if (node.name === 'Checkbox') {
         const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
         const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
-        const defaultCheckedValue = node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
+        const defaultCheckedValue =
+            node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const checked = checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
+        const checked =
+            checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
         const literalChecked =
             checkedValue === true || checkedValue === 'true'
                 ? true
@@ -576,23 +748,52 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                   : defaultCheckedValue != null
                     ? Boolean(defaultCheckedValue)
                     : undefined;
-        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
 
-        return <Checkbox checked={checked} className={className} defaultChecked={defaultChecked} disabled={disabled} id={id} />;
+        return (
+            <Checkbox
+                checked={checked}
+                className={className}
+                defaultChecked={defaultChecked}
+                disabled={disabled}
+                id={id}
+            />
+        );
     }
 
     if (node.name === 'RadioGroup') {
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-        const defaultValueValue = node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
+        const defaultValueValue =
+            node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const form = node.params?.form ? String(evaluate(node.params.form, ctx) ?? '') : undefined;
         const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : undefined;
         const readOnlyValue = node.params?.readOnly != null ? evaluate(node.params.readOnly, ctx) : undefined;
         const requiredValue = node.params?.required != null ? evaluate(node.params.required, ctx) : undefined;
         const valueValue = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
-        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
-        const readOnly = readOnlyValue === true || readOnlyValue === 'true' ? true : readOnlyValue === false || readOnlyValue === 'false' ? false : undefined;
-        const required = requiredValue === true || requiredValue === 'true' ? true : requiredValue === false || requiredValue === 'false' ? false : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
+        const readOnly =
+            readOnlyValue === true || readOnlyValue === 'true'
+                ? true
+                : readOnlyValue === false || readOnlyValue === 'false'
+                  ? false
+                  : undefined;
+        const required =
+            requiredValue === true || requiredValue === 'true'
+                ? true
+                : requiredValue === false || requiredValue === 'false'
+                  ? false
+                  : undefined;
 
         return (
             <RadioGroup
@@ -615,11 +816,35 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const readOnlyValue = node.params?.readOnly != null ? evaluate(node.params.readOnly, ctx) : undefined;
         const requiredValue = node.params?.required != null ? evaluate(node.params.required, ctx) : undefined;
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
-        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
-        const readOnly = readOnlyValue === true || readOnlyValue === 'true' ? true : readOnlyValue === false || readOnlyValue === 'false' ? false : undefined;
-        const required = requiredValue === true || requiredValue === 'true' ? true : requiredValue === false || requiredValue === 'false' ? false : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
+        const readOnly =
+            readOnlyValue === true || readOnlyValue === 'true'
+                ? true
+                : readOnlyValue === false || readOnlyValue === 'false'
+                  ? false
+                  : undefined;
+        const required =
+            requiredValue === true || requiredValue === 'true'
+                ? true
+                : requiredValue === false || requiredValue === 'false'
+                  ? false
+                  : undefined;
 
-        return <RadioGroupItem className={className} disabled={disabled} readOnly={readOnly} required={required} value={value} children={node.children} />;
+        return (
+            <RadioGroupItem
+                className={className}
+                disabled={disabled}
+                readOnly={readOnly}
+                required={required}
+                value={value}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'Label') {
@@ -632,11 +857,13 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     if (node.name === 'Switch') {
         const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
         const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
-        const defaultCheckedValue = node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
+        const defaultCheckedValue =
+            node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
-        const checked = checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
+        const checked =
+            checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
         const literalChecked =
             checkedValue === true || checkedValue === 'true'
                 ? true
@@ -656,9 +883,23 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                   : defaultCheckedValue != null
                     ? Boolean(defaultCheckedValue)
                     : undefined;
-        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
 
-        return <Switch checked={checked} className={className} defaultChecked={defaultChecked} disabled={disabled} id={id} size={size as 'sm' | 'default'} />;
+        return (
+            <Switch
+                checked={checked}
+                className={className}
+                defaultChecked={defaultChecked}
+                disabled={disabled}
+                id={id}
+                size={size as 'sm' | 'default'}
+            />
+        );
     }
 
     if (node.name === 'Slider') {
@@ -669,15 +910,24 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const max = node.params?.max != null ? evaluate(node.params.max, ctx) : undefined;
         const min = node.params?.min != null ? evaluate(node.params.min, ctx) : undefined;
         const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : undefined;
-        const orientation = node.params?.orientation ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal') : 'horizontal';
+        const orientation = node.params?.orientation
+            ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
+            : 'horizontal';
         const step = node.params?.step != null ? evaluate(node.params.step, ctx) : undefined;
         const value = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
-        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
 
         return (
             <Slider
                 className={className}
-                defaultValue={defaultValue as number[] | number | string | boolean | Record<string, unknown> | undefined}
+                defaultValue={
+                    defaultValue as number[] | number | string | boolean | Record<string, unknown> | undefined
+                }
                 disabled={disabled}
                 id={id}
                 max={max == null ? undefined : String(max)}
@@ -693,12 +943,14 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     if (node.name === 'Toggle') {
         const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
         const pressedValue = node.params?.pressed != null ? evaluate(node.params.pressed, ctx) : undefined;
-        const defaultPressedValue = node.params?.defaultPressed != null ? evaluate(node.params.defaultPressed, ctx) : undefined;
+        const defaultPressedValue =
+            node.params?.defaultPressed != null ? evaluate(node.params.defaultPressed, ctx) : undefined;
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
-        const pressed = pressedValue && typeof pressedValue === 'object' ? (pressedValue as Record<string, unknown>) : undefined;
+        const pressed =
+            pressedValue && typeof pressedValue === 'object' ? (pressedValue as Record<string, unknown>) : undefined;
         const literalPressed =
             pressedValue === true || pressedValue === 'true'
                 ? true
@@ -718,7 +970,12 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                   : defaultPressedValue != null
                     ? Boolean(defaultPressedValue)
                     : undefined;
-        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
 
         return (
             <Toggle
@@ -739,14 +996,26 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const defaultValue = node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const loopFocusValue = node.params?.loopFocus != null ? evaluate(node.params.loopFocus, ctx) : undefined;
-        const orientation = node.params?.orientation ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal') : 'horizontal';
+        const orientation = node.params?.orientation
+            ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
+            : 'horizontal';
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
         const spacingValue = node.params?.spacing != null ? evaluate(node.params.spacing, ctx) : 0;
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'single') : 'single';
         const value = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
-        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
-        const loopFocus = loopFocusValue === true || loopFocusValue === 'true' ? true : loopFocusValue === false || loopFocusValue === 'false' ? false : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
+        const loopFocus =
+            loopFocusValue === true || loopFocusValue === 'true'
+                ? true
+                : loopFocusValue === false || loopFocusValue === 'false'
+                  ? false
+                  : undefined;
         const spacing = spacingValue == null ? undefined : Number(spacingValue);
 
         return (
@@ -772,7 +1041,15 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
-        return <ToggleGroupItem className={className} size={size as 'sm' | 'default' | 'lg'} value={value} variant={variant as 'default' | 'outline'} children={node.children} />;
+        return (
+            <ToggleGroupItem
+                className={className}
+                size={size as 'sm' | 'default' | 'lg'}
+                value={value}
+                variant={variant as 'default' | 'outline'}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'Select') {
@@ -785,11 +1062,25 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                   ? false
                   : undefined;
         const open =
-            openValue === true || openValue === 'true' ? true : openValue === false || openValue === 'false' ? false : undefined;
-        const defaultValue = node.params?.defaultValue ? String(evaluate(node.params.defaultValue, ctx) ?? '') : undefined;
+            openValue === true || openValue === 'true'
+                ? true
+                : openValue === false || openValue === 'false'
+                  ? false
+                  : undefined;
+        const defaultValue = node.params?.defaultValue
+            ? String(evaluate(node.params.defaultValue, ctx) ?? '')
+            : undefined;
         const value = node.params?.value ? evaluate(node.params.value, ctx) : undefined;
 
-        return <Select defaultOpen={defaultOpen} defaultValue={defaultValue} open={open} value={value as never} children={node.children} />;
+        return (
+            <Select
+                defaultOpen={defaultOpen}
+                defaultValue={defaultValue}
+                open={open}
+                value={value as never}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'SelectTrigger') {

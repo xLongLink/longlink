@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Button.xsd" />
+  <xsd:include schemaLocation="Input.xsd" />
+  <xsd:include schemaLocation="ButtonGroupText.xsd" />
+  <xsd:include schemaLocation="ButtonGroupSeparator.xsd" />
+
+  <xsd:complexType name="ButtonGroupChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:element ref="Button" />
+        <xsd:element ref="Input" />
+        <xsd:element ref="ButtonGroupText" />
+        <xsd:element ref="ButtonGroupSeparator" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="ButtonGroupType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="ButtonGroupChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="ButtonGroup" type="ButtonGroupType" />
+</xsd:schema>

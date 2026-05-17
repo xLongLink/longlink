@@ -13,6 +13,7 @@ If this document and implementation differ, update this document first and then 
 - Unknown attributes may pass XSD validation, but only documented attributes are supported by LongLink.
 - A valid page must use only the elements and attributes described here.
 - Do not rely on SDK code, samples, or docs outside this file for XML authoring rules.
+- The parser emits internal `Text` nodes for raw text content. Do not author `Text` directly.
 
 ## Expression Model
 
@@ -43,9 +44,8 @@ If the expression is false, the element is not rendered.
 
 `<State>` and `<Query>` both create a slot identified by `id`.
 
-- `<State id="user" value="John Doe" />` creates local state.
+- `<State id="user" value="John Doe" />` creates local state. `value` is evaluated as an expression.
 - `<State id="cart" value="{[]}" />` creates an array state slot.
-- `value` is evaluated as an expression against runtime state.
 - `<Query id="user" path="/endpoint" />` fetches data into the slot. `id` and `path` must be literal text.
 
 ### Iteration
@@ -694,6 +694,55 @@ Behavior:
 
 Example: `<Button action="/issues" json='{{ title: issue.title }}'>Save</Button>`
 
+### `<ButtonGroup>`
+
+Groups buttons and inputs into a shared action strip.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+- `orientation` optional. Use `horizontal` or `vertical`.
+
+Children:
+
+- `Button`
+- `Input`
+- `ButtonGroupText`
+- `ButtonGroupSeparator`
+
+Behavior:
+
+- Buttons and inputs share the group chrome from the runtime component.
+- Use `ButtonGroupText` for inline labels or hints.
+- Use `ButtonGroupSeparator` to split grouped actions.
+
+Example:
+
+```xml
+<ButtonGroup>
+  <Button variant="outline">Cancel</Button>
+  <Input placeholder="Search" />
+  <Button>Search</Button>
+</ButtonGroup>
+```
+
+### `<ButtonGroupText>`
+
+Inline text segment inside a button group.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+### `<ButtonGroupSeparator>`
+
+Visual separator between button group segments.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+- `orientation` optional. Use `horizontal` or `vertical`.
+
 ### `<Label>`
 
 Form label for controls.
@@ -976,6 +1025,19 @@ The following HTML tags are exposed directly in XML:
 
 - `<p>`
 - `<a>`
+- `<hr>`
+- `<b>`
+- `<h1>`
+- `<h2>`
+- `<h3>`
+- `<h4>`
+- `<code>`
+- `<s>`
+- `<sup>`
+- `<sub>`
+- `<u>`
+- `<ul>`
+- `<li>`
 
 ### `<p>`
 
@@ -1002,6 +1064,162 @@ Attributes:
 Behavior:
 
 - Renders as a normal HTML anchor.
+- Supports the global `if` attribute.
+
+### `<hr>`
+
+Renders a horizontal rule.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<b>`
+
+Renders bold text.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<h1>`
+
+Renders a primary heading.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<h2>`
+
+Renders a secondary heading.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<h3>`
+
+Renders a tertiary heading.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<h4>`
+
+Renders a quaternary heading.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<code>`
+
+Renders inline code.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<s>`
+
+Renders strikethrough text.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<sup>`
+
+Renders superscript text.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<sub>`
+
+Renders subscript text.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<u>`
+
+Renders underlined text.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<ul>`
+
+Renders an unordered list.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<li>`
+
+Renders a list item.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
 - Supports the global `if` attribute.
 
 ## Summary

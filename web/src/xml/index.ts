@@ -7,6 +7,7 @@ export type { ASTNode, ExecutionContext } from '@xml/types';
 export { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from './react/Avatar';
 export { Badge } from './react/Badge';
 export { Checkbox } from './react/Checkbox';
+export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from './react/ButtonGroup';
 export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './react/Card';
 export { Column, Columns } from './react/Columns';
 export {
