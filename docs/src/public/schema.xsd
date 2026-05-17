@@ -88,8 +88,14 @@
   <xsd:complexType name="ButtonType" mixed="true"><xsd:complexContent><xsd:extension base="ActionableType" /></xsd:complexContent></xsd:complexType>
   <xsd:element name="Button" type="ButtonType" />
   
-  <xsd:complexType name="IconType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:element name="Icon" type="IconType" />
+  <xsd:complexType name="HeroType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType"><xsd:attribute name="icon" type="xsd:string" use="optional" /></xsd:extension></xsd:complexContent></xsd:complexType>
+  <xsd:element name="Hero" type="HeroType" />
+  <xsd:complexType name="HeroTitleType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="HeroTitle" type="HeroTitleType" />
+  <xsd:complexType name="HeroDescriptionType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="HeroDescription" type="HeroDescriptionType" />
+  <xsd:complexType name="HeroContentType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:element name="HeroContent" type="HeroContentType" />
   
   <xsd:complexType name="InputType" mixed="true"><xsd:complexContent><xsd:extension base="ChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
   <xsd:element name="Input" type="InputType" />

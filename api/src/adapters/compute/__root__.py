@@ -4,7 +4,13 @@ from abc import ABC, abstractmethod
 
 
 class Root(ABC):
-    """Compute adapter root."""
+    """Compute adapter root.
+    
+
+    Compute Cluster       # Managed by the control plane
+    └── Namespace         # One per organization
+        └── Containers    # Application packaged (fastapi)
+    """
 
     @abstractmethod
     async def list(self, organization: str) -> list[str]:

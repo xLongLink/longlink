@@ -54,12 +54,12 @@ The `State` primitive creates a local reactive slot identified by `id`.
 <State id="user" value="Ada Lovelace" />
 ```
 
-The runtime stores the value in `state[id]`.
+The runtime stores the value in `ctx.values[id]`.
 Use the slot from descendant expressions.
 
 ### `Query`
 
-The `Query` primitive fetches JSON and stores the result in `queries[id]`.
+The `Query` primitive fetches JSON and stores the result in `ctx.values[id]`.
 `id` and `path` must be literal text.
 
 ```xml
@@ -82,6 +82,37 @@ The `For` component renders children for each item in an array.
 
 The current item is available under `as`.
 The item index is available as `index`.
+
+## Components
+
+Use the component layer for layout and interactive controls.
+
+### `Hero`
+
+The `Hero` component renders a page header shell.
+It accepts an optional `icon` attribute.
+
+```xml
+<Hero icon="layout-grid">
+  <HeroTitle>Organizations</HeroTitle>
+  <HeroDescription>Browse the organizations you belong to.</HeroDescription>
+  <HeroContent>
+    <Button action="/organizations/new">Create organization</Button>
+  </HeroContent>
+</Hero>
+```
+
+### `HeroTitle`
+
+Use `HeroTitle` for the hero heading.
+
+### `HeroDescription`
+
+Use `HeroDescription` for supporting hero copy.
+
+### `HeroContent`
+
+Use `HeroContent` for hero actions or supplemental content.
 
 ### Conditional Rendering
 

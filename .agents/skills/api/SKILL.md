@@ -65,35 +65,21 @@ api/
     └── conftest.py
 ```
 
-- User are are logged using an `OIDC` client (e.g. Keycloak)
-- Support for multi organization (`/orgs/{org_id}/...` routes)
-- Each organization has its own set of users and permissions
-- Each organization has its own database
-- Each organization has its own isolated storage
-- Each organization has its own compute namespace
+# Auth
 
-## Database
+TODO: Document auth flow and permissions model
+- Specify the envs required
 
-```bash
-Database Server       # Managed by the control place
-└── Database          # One per organization
-    └── Schema        # Each app gets its own schema
-        └── Tables    # Managed by each app (SQLModel + Alembic)
-```
+# Database
 
-## Storage
+TODO: Document database schema and access patterns
 
-```bash
-Storage Cluster       # Managed by the control plane
-└── Tenant            # One per organization
-    └── Bucket        # Each app gets isolated storage
-        └── Objects   # Managed by each app (ffspec)
-```
+# Adapters
 
-## Compute
+TODO: Document the /adapters folder
 
-```bash
-Compute Cluster       # Managed by the control plane
-└── Namespace         # One per organization
-    └── Containers    # Application packaged (fastapi)
-```
+# Routes
+
+TODO: Document the API routes and their functionality
+
+

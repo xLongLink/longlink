@@ -166,5 +166,4 @@ Not allowed:
 
 ## Current Gaps
 
-- `Icon` exists in the packaged XSD, but the web runtime does not implement an `Icon` renderer yet.
-- Do not author `Icon` in XML pages until the runtime component is added and wired into `core/node.tsx`.
+- No known gaps in the documented XML component set.

@@ -43,7 +43,7 @@ LongLink evaluates JavaScript-like expressions inside `{...}`.
 
 ### Conditional Rendering
 
-Any element may use `if="condition"`.
+Any documented XML element may use `if="condition"`.
 
 If the expression is false, the element is not rendered.
 
@@ -94,7 +94,7 @@ Attributes:
 
 Behavior:
 
-- The state is exposed as `state[id]`.
+- The state is exposed as `ctx.values[id]`.
 - The value is a `[currentValue, setter]` tuple internally.
 
 ### `<Query>`
@@ -108,8 +108,36 @@ Attributes:
 
 Behavior:
 
-- Fetched data is exposed as `queries[id]`.
+- Fetched data is exposed as `ctx.values[id]`.
 - Descendants can read it through expressions.
+
+## Hero
+
+### `<Hero>`
+
+Renders a page header shell.
+
+Attributes:
+
+- `icon` optional. Hero icon name.
+
+Children:
+
+- Any documented XML element.
+
+Example: `<Hero icon="layout-grid"><HeroTitle>Organizations</HeroTitle></Hero>`
+
+### `<HeroTitle>`
+
+Hero title slot.
+
+### `<HeroDescription>`
+
+Hero description slot.
+
+### `<HeroContent>`
+
+Hero action/content slot.
 
 ### `<For>`
 
@@ -153,7 +181,7 @@ Attributes:
 - `action` optional. API path to call.
 - `method` optional. HTTP method. Defaults to `POST`.
 - `json` optional. Request body value or JSON string.
-- `invalidate` optional. Comma-separated query keys.
+- `invalidate` optional. Array expression of slot ids to rerun.
 
 Behavior:
 
@@ -175,7 +203,8 @@ Attributes:
 Behavior:
 
 - Renders a plain text input.
-- The field is read-only and reflects the evaluated `value`.
+- When `value` resolves to a reactive state slot, changes write back to `state.value`.
+- Otherwise, the field uses `value` as its initial text.
 
 Example:
 
