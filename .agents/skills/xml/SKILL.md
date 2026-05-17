@@ -3,7 +3,7 @@ name: xml
 description: Guide LongLink XML component creation and maintenance across SDK, web runtime, tests, and docs
 ---
 
-This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards using XML as the single source of truth for the UI. Each `.xml` file defines page structure, layout, data bindings, and actions, while the runtime parses the XML, maps tags to React components, and manages rendering, state initialization, data fetching, and invalidation-driven refreshes. The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling, prioritizing consistency, maintainability, validation, and development speed through a strictly declarative and predictable architecture.
+This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards using XML as the single source of truth for the UI. Each `.xml` file defines page structure, layout, data bindings, and actions, while the runtime parses the XML, resolves expressions, maps tags to React components, and manages rendering, state initialization, data fetching, and invalidation-driven refreshes. The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling, prioritizing consistency, maintainability, validation, and development speed through a strictly declarative and predictable architecture.
 
 ## Example
 
@@ -49,14 +49,14 @@ longlink/
 │   └── src/xml/                  # XML runtime, parser, and components
 │       ├── core/
 │       │   ├── parser.ts          # XML parsing and AST conversion
-│       │   ├── runtime.tsx        # Runtime setup and provider wiring
+│       │   ├── context.tsx        # Runtime context setup and provider wiring
 │       │   ├── node.tsx           # Node rendering and prop validation
-│       │   ├── expressions/        # Expression compilation, evaluation, and helpers
-│       │   ├── types.ts
-│       │   ├── errors.tsx
-│       │   ├── query.ts
-│       │   ├── state.ts
-│       │   └── url.tsx
+│       │   ├── expressions/       # Expression compilation, evaluation, and helpers
+│       │   ├── errors.tsx         # XML error boundary
+│       │   ├── query.ts           # Query slot initialization and refetching
+│       │   ├── state.ts           # Local reactive state setup
+│       │   ├── url.tsx            # Base URL resolution helpers
+│       │   └── types.ts
 │       ├── primitives/           # Core XML components and layout primitives
 │       ├── react/                # Any component that relies on React
 │       └── html/                 # HTML bridge components
@@ -92,17 +92,19 @@ React:
 
 HTML:
 
-- `p` - paragraph bridge element.
+- `p` - paragraph bridge element. Lowercase only.
 
 ## Parser (web/src/xml/core/parser.ts)
 
-- `parseXML` turns an XML string into a DOM-like tree, and toNodes converts that tree into renderable runtime nodes
+- `parseXML` turns an XML string into AST nodes.
+- `Text` nodes are internal parser output for raw text content.
 
 ## Context (web/src/xml/core/context.tsx)
 
 - `useContext` reads the active XML runtime state from React context.
 - `ContextProvider` exposes a runtime context to rendered XML children.
-- `setupContext` walks the AST, seeds top-level `State` and `Query` nodes, and stores their re-run hooks for invalidation.
+- `createContext` returns a blank execution context.
+- `setupContext` walks the AST, seeds `State` and `Query` nodes, and stores their re-run hooks for invalidation.
 
 ## Primitives
 
@@ -111,6 +113,12 @@ HTML:
 - `Query` fetches JSON data into a named slot.
 - `For` iterates over arrays in a scoped child context.
 - `Text` is internal only and is produced by the parser for raw text content. Do not author it directly.
+
+## Root Metadata
+
+- `Page` supports `name` and `icon` attributes.
+- `name` is required in the schema, even though the current web renderer only uses `children`.
+- `icon` is optional and may be consumed by SDK or page metadata tooling.
 
 ## Global XML Patterns
 
@@ -124,6 +132,7 @@ HTML:
 - `$value` a reference to a variable in scope. `isReference()`
 - `evaluate(...)` evaluate an expression with the current runtime state.
 - `compile(...)` return a resolver that evaluates an expression string against the current runtime state.
+- `json` payloads use object-literal expressions such as `{{ fullName: fullName }}`.
 
 ## Expression Rules
 
@@ -154,3 +163,8 @@ Not allowed:
 5. Update the XML schema, parser, or runtime helpers if the new component introduces new attributes, bindings, or execution behavior.
 6. Add or update documentation and examples so the new tag and its props are discoverable.
 7. Verify the component against the existing XML pages or fixtures before shipping it.
+
+## Current Gaps
+
+- `Icon` exists in the packaged XSD, but the web runtime does not implement an `Icon` renderer yet.
+- Do not author `Icon` in XML pages until the runtime component is added and wired into `core/node.tsx`.

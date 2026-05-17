@@ -17,11 +17,11 @@
   </Hero>
 
   <For each="$organizations.items" as="organization">
-    <P>
+    <p>
       {organization.name}
       <Button href="/{organization.name}" variant="outline" size="sm">
         Open
       </Button>
-    </P>
+    </p>
   </For>
 </Page>

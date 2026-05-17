@@ -30,3 +30,12 @@ def test_p_allows_if_attribute() -> None:
 
     element = Element.from_content('<p if="show">Paragraph text</p>', schema=SCHEMA)
     element.validate()
+
+
+def test_p_rejects_uppercase_tag() -> None:
+    """Reject uppercase `P` tags in HTML bridge XML."""
+
+    element = Element.from_content('<P>Paragraph text</P>', schema=SCHEMA)
+
+    with pytest.raises(ValueError):
+        element.validate()

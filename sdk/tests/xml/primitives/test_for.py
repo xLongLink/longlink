@@ -16,10 +16,26 @@ def test_for_layout_validation() -> None:
     element.validate()
 
 
+def test_for_layout_accepts_nested_content() -> None:
+    """Allow nested XML content inside `For`."""
+
+    element = Element.from_content('<For each="items" as="item"><p>{item.name}</p></For>', schema=SCHEMA)
+    element.validate()
+
+
 def test_for_layout_requires_as() -> None:
     """Reject a `For` fragment missing its required alias."""
 
     element = Element.from_content('<For each="items" />', schema=SCHEMA)
+
+    with pytest.raises(ValueError):
+        element.validate()
+
+
+def test_for_layout_requires_each() -> None:
+    """Reject a `For` fragment missing its iterable expression."""
+
+    element = Element.from_content('<For as="item" />', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

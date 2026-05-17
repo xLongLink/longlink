@@ -109,7 +109,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return <HeroContent children={node.children} />;
     }
 
-    if (node.name === 'P' || node.name === 'p') {
+    if (node.name === 'p') {
         return <P children={node.children} />;
     }
 
