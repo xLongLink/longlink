@@ -36,6 +36,7 @@ export function Button({
     async function handleClick() {
         /* Recreate any invalidated runtime sources after the action succeeds. */
         const ids = invalidate;
+        const jsonValue = json ? json(ctx) : undefined;
 
         if (!actionUrl) {
             await invalidateRuntime(ids);
@@ -43,14 +44,15 @@ export function Button({
             return;
         }
 
-        /* Resolve the compiled payload at click time so it sees the latest state. */
-        const jsonValue = json ? json(ctx) : null;
+        const init: RequestInit = { method: normalizedMethod };
 
-        const response = await fetch(requestUrl, {
-            method: normalizedMethod,
-            body: JSON.stringify(jsonValue),
-            headers: { 'content-type': 'application/json' },
-        });
+        if (jsonValue !== undefined) {
+            /* Resolve the compiled payload at click time so it sees the latest state. */
+            init.body = JSON.stringify(jsonValue);
+            init.headers = { 'content-type': 'application/json' };
+        }
+
+        const response = await fetch(requestUrl, init);
 
         if (!response.ok) {
             toast.error(`Request failed with status ${response.status}`);

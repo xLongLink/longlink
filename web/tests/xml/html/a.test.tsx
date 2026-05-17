@@ -21,7 +21,9 @@ describe('a', () => {
     it('renders the anchor bridge with the icon', () => {
         const output = renderXmlToMarkup(parseXML('<a href="/icons"><Icon name="sparkles" className="size-5" />Open icons</a>'));
 
-        expect(output).toContain('<a href="/icons"');
+        expect(output).toContain('href="/icons"');
+        expect(output).toContain('inline-flex');
+        expect(output).toContain('hover:text-accent');
         expect(output).toContain('Open icons');
         expect(output).toContain('<svg');
     });

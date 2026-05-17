@@ -469,6 +469,7 @@ Behavior:
 - If `action` is empty, the button only reruns invalidation targets.
 - If `method` is `GET`, the button renders as a link to `action`.
 - If `method` is `POST`, `PUT`, or `DELETE`, the button sends the configured action request.
+- If `json` is omitted, the request is sent without a JSON body.
 - `invalidate` refetches the named query slots after the request succeeds.
 
 Example: `<Button action="/issues" json='{{ title: issue.title }}'>Save</Button>`
@@ -496,12 +497,95 @@ Example:
 <Input label="Your name" value="user.name" />
 ```
 
+### `<Select>`
+
+Use `Select` with `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, and `SelectSeparator` for single-choice menus.
+
+Attributes:
+
+- `defaultValue` optional. Initial selected value.
+- `value` optional. Reactive state slot or current selection.
+- `open` optional. Control whether the menu is open.
+- `defaultOpen` optional. Open the menu on first render.
+
+Behavior:
+
+- `SelectTrigger` contains `SelectValue`.
+- `SelectContent` renders grouped menu items in a portal.
+- `SelectGroup` contains `SelectLabel`, `SelectItem`, and `SelectSeparator`.
+- `SelectItem` requires a `value` attribute.
+- `className` is available on the trigger, value, content, group, label, item, and separator slots.
+
+Example:
+
+```xml
+<Select defaultValue="overview">
+  <SelectTrigger>
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Views</SelectLabel>
+      <SelectItem value="overview">Overview</SelectItem>
+      <SelectItem value="settings">Settings</SelectItem>
+    </SelectGroup>
+    <SelectSeparator />
+    <SelectGroup>
+      <SelectLabel>Status</SelectLabel>
+      <SelectItem value="active">Active</SelectItem>
+      <SelectItem value="archived">Archived</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
+```
+
+### `<SelectTrigger>`
+
+Opens the select menu.
+
+### `<SelectValue>`
+
+Displays the current value or placeholder.
+
+### `<SelectContent>`
+
+Menu surface for select options.
+
+### `<SelectGroup>`
+
+Groups related select options.
+
+### `<SelectLabel>`
+
+Label slot for a grouped section.
+
+### `<SelectItem>`
+
+Selectable menu item.
+
+### `<SelectSeparator>`
+
+Visual separator between groups.
+
 ## HTML Bridge
 
 The following HTML tags are exposed directly in XML:
 
 - `<p>`
 - `<a>`
+
+### `<p>`
+
+Renders a paragraph element.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Renders as a normal HTML paragraph.
+- Supports the global `if` attribute.
 
 ### `<a>`
 

@@ -108,11 +108,29 @@
         <Input placeholder="Number input" type="number" value="42" />
     </p>
     <p>
+        <Select defaultValue="overview">
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+                <SelectGroup>
+                    <SelectLabel>Views</SelectLabel>
+                    <SelectItem value="overview">Overview</SelectItem>
+                    <SelectItem value="settings">Settings</SelectItem>
+                </SelectGroup>
+                <SelectSeparator />
+                <SelectGroup>
+                    <SelectLabel>Status</SelectLabel>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                </SelectGroup>
+            </SelectContent>
+        </Select>
+    </p>
+    <p>
         <Badge variant="outline">Preview</Badge>
     </p>
 
     <p>Rendered components:</p>
-    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input", "a"]' as="name">
+    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

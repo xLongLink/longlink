@@ -2,6 +2,14 @@ import {
     Column,
     Columns,
     Icon,
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectSeparator,
+    SelectTrigger,
+    SelectValue,
     Table,
     TableBody,
     TableCaption,
@@ -26,6 +34,14 @@ describe('xml index', () => {
         expect(Column).toBeDefined();
         expect(Columns).toBeDefined();
         expect(Icon).toBeDefined();
+        expect(Select).toBeDefined();
+        expect(SelectContent).toBeDefined();
+        expect(SelectGroup).toBeDefined();
+        expect(SelectItem).toBeDefined();
+        expect(SelectLabel).toBeDefined();
+        expect(SelectSeparator).toBeDefined();
+        expect(SelectTrigger).toBeDefined();
+        expect(SelectValue).toBeDefined();
         expect(Table).toBeDefined();
         expect(TableHeader).toBeDefined();
         expect(TableBody).toBeDefined();

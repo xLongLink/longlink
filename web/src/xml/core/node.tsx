@@ -22,6 +22,7 @@ import { Divider } from '@xml/react/Divider';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Icon } from '@xml/react/Icon';
 import { Input } from '@xml/react/Input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@xml/react/Select';
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
 import { A } from '@xml/html/A';
@@ -322,6 +323,67 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
 
         return <Input label={label} placeholder={placeholder} value={value} type={type} />;
+    }
+
+    if (node.name === 'Select') {
+        const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
+        const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
+        const defaultOpen =
+            defaultOpenValue === true || defaultOpenValue === 'true'
+                ? true
+                : defaultOpenValue === false || defaultOpenValue === 'false'
+                  ? false
+                  : undefined;
+        const open =
+            openValue === true || openValue === 'true' ? true : openValue === false || openValue === 'false' ? false : undefined;
+        const defaultValue = node.params?.defaultValue ? String(evaluate(node.params.defaultValue, ctx) ?? '') : undefined;
+        const value = node.params?.value ? evaluate(node.params.value, ctx) : undefined;
+
+        return <Select defaultOpen={defaultOpen} defaultValue={defaultValue} open={open} value={value as never} children={node.children} />;
+    }
+
+    if (node.name === 'SelectTrigger') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <SelectTrigger className={className} children={node.children} />;
+    }
+
+    if (node.name === 'SelectValue') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const placeholder = node.params?.placeholder ? String(evaluate(node.params.placeholder, ctx) ?? '') : undefined;
+
+        return <SelectValue className={className} placeholder={placeholder} />;
+    }
+
+    if (node.name === 'SelectContent') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <SelectContent className={className} children={node.children} />;
+    }
+
+    if (node.name === 'SelectGroup') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <SelectGroup className={className} children={node.children} />;
+    }
+
+    if (node.name === 'SelectLabel') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <SelectLabel className={className} children={node.children} />;
+    }
+
+    if (node.name === 'SelectItem') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+
+        return <SelectItem className={className} value={value} children={node.children} />;
+    }
+
+    if (node.name === 'SelectSeparator') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <SelectSeparator className={className} />;
     }
 
     if (node.name === 'Table') {

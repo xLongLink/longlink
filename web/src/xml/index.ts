@@ -18,6 +18,7 @@ export {
     DialogTrigger,
 } from './react/Dialog';
 export { Divider } from './react/Divider';
+export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from './react/Select';
 export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './react/Table';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';
 export { RenderXML } from './renderers.tsx';

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="SelectChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="SelectType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="SelectChildrenOnlyType">
+        <xsd:attribute name="defaultOpen" type="xsd:string" use="optional" />
+        <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
+        <xsd:attribute name="open" type="xsd:string" use="optional" />
+        <xsd:attribute name="value" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="SelectTriggerType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="SelectChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="SelectValueType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="SelectChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+        <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="SelectContentType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="SelectChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="SelectGroupType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="SelectChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="SelectLabelType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="SelectChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="SelectItemType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="SelectChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+        <xsd:attribute name="value" type="xsd:string" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="SelectSeparatorType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="SelectChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Select" type="SelectType" />
+  <xsd:element name="SelectTrigger" type="SelectTriggerType" />
+  <xsd:element name="SelectValue" type="SelectValueType" />
+  <xsd:element name="SelectContent" type="SelectContentType" />
+  <xsd:element name="SelectGroup" type="SelectGroupType" />
+  <xsd:element name="SelectLabel" type="SelectLabelType" />
+  <xsd:element name="SelectItem" type="SelectItemType" />
+  <xsd:element name="SelectSeparator" type="SelectSeparatorType" />
+</xsd:schema>

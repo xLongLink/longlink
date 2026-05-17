@@ -44,6 +44,7 @@ function Hero({ className, icon, children, ...props }: HeroProps) {
     );
 }
 
+
 /** Renders the hero title block. */
 function HeroTitle({ className, ...props }: React.ComponentProps<'div'>) {
     return (
@@ -54,6 +55,7 @@ function HeroTitle({ className, ...props }: React.ComponentProps<'div'>) {
         />
     );
 }
+
 
 /** Renders the hero description block. */
 function HeroDescription({ className, ...props }: React.ComponentProps<'div'>) {
@@ -66,9 +68,16 @@ function HeroDescription({ className, ...props }: React.ComponentProps<'div'>) {
     );
 }
 
+
 /** Renders the right-side hero content block. */
 function HeroContent({ className, ...props }: React.ComponentProps<'div'>) {
-    return <div data-slot="hero-content" className={cn('mt-4 flex w-full flex-col gap-3', className)} {...props} />;
+    return (
+        <div
+            data-slot="hero-content"
+            className={cn('mt-4 flex w-full flex-row flex-wrap items-center gap-3', className)}
+            {...props}
+        />
+    );
 }
 
 export { Hero, HeroContent, HeroDescription, HeroTitle };

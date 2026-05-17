@@ -13,7 +13,7 @@ export function A({ children, className, href = '' }: AProps) {
     const { ctx } = useXmlContext();
 
     return (
-        <a className={className} href={href}>
+        <a className={['inline-flex items-center gap-1 transition-colors hover:text-accent', className].filter(Boolean).join(' ')} href={href}>
             {renderNode(children ?? null, ctx)}
         </a>
     );

@@ -23,6 +23,25 @@ All other children render in the main hero body.
 `HeroTitle`, `HeroDescription`, and `HeroContent` are the three supported hero slots.
 `Hero.icon` uses the same Lucide icon names as `<Icon>`.
 
+## Columns
+
+Use `Columns` with `Column` children for side-by-side layout rows.
+
+```xml
+<Columns>
+  <Column width="70">Main content</Column>
+  <Column width="30">Sidebar</Column>
+</Columns>
+```
+
+`Column.width` is required and uses the percentage share of the row.
+`Columns` and `Column` both accept `className`.
+
+### Column
+
+`Column` renders one percentage-based slot inside `Columns`.
+`width` is required.
+
 ## Icon
 
 Use `Icon` for standalone Lucide icons in cards, buttons, and inline layout chrome.
@@ -77,6 +96,7 @@ Use lowercase HTML tags for simple bridges.
 ```
 
 `<p>` and `<a>` are the current HTML bridge elements.
+Use `a` with `href` for links.
 
 ## Card
 
@@ -127,6 +147,7 @@ Use `Dialog` with `DialogTrigger` and `DialogContent` for modal workflows and co
 `DialogHeader` groups the title and description.
 `DialogFooter` holds actions for the dialog body.
 `DialogContent` renders in a portal and includes the standard close affordance.
+`open` and `defaultOpen` control dialog visibility.
 
 ## Button
 
@@ -143,6 +164,7 @@ Use the `Button` component to navigate or trigger an action.
 `method="POST"`, `PUT`, and `DELETE` send a data-changing request to `action`.
 If `action` is empty, the button only runs invalidation.
 `json` is evaluated at click time.
+If `json` is omitted, the request is sent without a JSON body.
 `invalidate` accepts an array expression of slot ids to rerun after success.
 
 `method` defaults to `POST`.
@@ -169,6 +191,36 @@ Use the `Input` component for single-line text entry.
 
 When `value` resolves to a reactive Valtio-backed state slot, the input stays in sync and writes back to `state.value`.
 Otherwise, `value` only initializes the field.
+
+## Select
+
+Use `Select` with `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, and `SelectSeparator` for single-choice menus.
+
+```xml
+<Select defaultValue="overview">
+  <SelectTrigger>
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Views</SelectLabel>
+      <SelectItem value="overview">Overview</SelectItem>
+      <SelectItem value="settings">Settings</SelectItem>
+    </SelectGroup>
+    <SelectSeparator />
+    <SelectGroup>
+      <SelectLabel>Status</SelectLabel>
+      <SelectItem value="active">Active</SelectItem>
+      <SelectItem value="archived">Archived</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
+```
+
+`SelectItem` requires a `value`.
+`value` can bind to a reactive state slot; otherwise `defaultValue` seeds the initial selection.
+`open` and `defaultOpen` control menu visibility.
+`className` is available on the select slots for local styling.
 
 ## Divider
 

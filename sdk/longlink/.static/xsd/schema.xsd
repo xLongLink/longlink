@@ -15,6 +15,7 @@
   <xsd:include schemaLocation="react/Divider.xsd" />
   <xsd:include schemaLocation="react/Icon.xsd" />
   <xsd:include schemaLocation="react/Input.xsd" />
+  <xsd:include schemaLocation="react/Select.xsd" />
   <xsd:include schemaLocation="react/Table.xsd" />
   <xsd:include schemaLocation="react/Tabs.xsd" />
 </xsd:schema>

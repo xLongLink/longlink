@@ -5,6 +5,15 @@ The runtime parses each `.xml` file, resolves expressions, and renders the suppo
 
 Use XML pages for CRUD screens, forms, tables, dashboards, and operational workflows.
 
+## Core Model
+
+Every XML page starts with a `<longlink>` root element.
+Use `<State>` for local reactive state slots, `<Query>` for JSON fetch slots, and `<For>` to render arrays in a child scope.
+
+`<State value="...">` uses an expression and can seed objects, arrays, or scalar values.
+`<Query id="..." path="...">` requires literal text for both attributes.
+Any documented XML element may also use `if="..."` for conditional rendering.
+
 ## Document Loading
 
 ```python
@@ -54,5 +63,41 @@ Use mixed text interpolation like `Hello {name}` when plain text and runtime val
 
 Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.
 Unsupported expressions include statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, and globals.
+
+## Primitives
+
+### `State`
+
+Use `State` to create a local reactive slot.
+
+```xml
+<State id="cart" value="[]" />
+```
+
+`id` must be literal text.
+`value` is evaluated as an expression.
+
+### `Query`
+
+Use `Query` to fetch JSON into a named slot.
+
+```xml
+<Query id="products" path="/api/products" />
+```
+
+`id` and `path` must be literal text.
+
+### `For`
+
+Use `For` to render a child scope for each item in an array.
+
+```xml
+<For each="products.items" as="product">
+  <p>{product.name}</p>
+</For>
+```
+
+`each` resolves to an array.
+`as` names the current item in the child scope.
 
 Use only the elements and attributes documented in this page and in `sdk/longlink/.static/llm/SCHEMA.md`.
