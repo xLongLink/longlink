@@ -6,6 +6,7 @@ import { For } from '@xml/primitives/For';
 import { Page } from '@xml/primitives/Page';
 import { Text } from '@xml/primitives/Text';
 import { Badge } from '@xml/react/Badge';
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/react/Card';
 import { Button } from '@xml/react/Button';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Divider } from '@xml/react/Divider';
@@ -116,7 +117,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
     if (node.name === 'Button') {
         const action = node.params?.action ? String(evaluate(node.params.action, ctx) ?? '') : '';
-        const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
         const invalidateValue = node.params?.invalidate ? evaluate(node.params.invalidate, ctx) : [];
         const invalidate = Array.isArray(invalidateValue) ? (invalidateValue as string[]) : [];
         const json = node.params?.json ? compile(String(node.params.json)) : null;
@@ -127,7 +127,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return (
             <Button
                 action={action}
-                href={href}
                 invalidate={invalidate}
                 json={json}
                 method={method}
@@ -143,6 +142,49 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
         return <Badge className={className} variant={variant} children={node.children} />;
+    }
+
+    if (node.name === 'Card') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+
+        return <Card className={className} size={size} children={node.children} />;
+    }
+
+    if (node.name === 'CardHeader') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <CardHeader className={className} children={node.children} />;
+    }
+
+    if (node.name === 'CardTitle') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <CardTitle className={className} children={node.children} />;
+    }
+
+    if (node.name === 'CardDescription') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <CardDescription className={className} children={node.children} />;
+    }
+
+    if (node.name === 'CardAction') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <CardAction className={className} children={node.children} />;
+    }
+
+    if (node.name === 'CardContent') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <CardContent className={className} children={node.children} />;
+    }
+
+    if (node.name === 'CardFooter') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <CardFooter className={className} children={node.children} />;
     }
 
     if (node.name === 'Input') {

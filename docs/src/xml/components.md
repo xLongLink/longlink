@@ -21,9 +21,33 @@ All other children render in the main hero body.
 
 `HeroTitle`, `HeroDescription`, and `HeroContent` are the three supported hero slots.
 
+## Card
+
+Use the `Card` component for grouped content blocks and simple dashboard panels.
+
+```xml
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card Description</CardDescription>
+    <CardAction>Card Action</CardAction>
+  </CardHeader>
+  <CardContent>
+    <p>Card Content</p>
+  </CardContent>
+  <CardFooter>
+    <p>Card Footer</p>
+  </CardFooter>
+</Card>
+```
+
+`CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, and `CardFooter` compose the shadcn card layout.
+`size="sm"` keeps the compact card density.
+Each card part also accepts `className` for local styling.
+
 ## Button
 
-Use the `Button` component to trigger an action or navigate to a route.
+Use the `Button` component to navigate or trigger an action.
 
 ```xml
 <Button action="/issues/new" method="GET" variant="default">
@@ -31,8 +55,9 @@ Use the `Button` component to trigger an action or navigate to a route.
 </Button>
 ```
 
-`action` sends a request to the configured path.
-`href` turns the button into a navigation link and takes precedence over `action`.
+`action` is the target path.
+`method="GET"` renders a navigation link to `action`.
+`method="POST"`, `PUT`, and `DELETE` send a data-changing request to `action`.
 If `action` is empty, the button only runs invalidation.
 `json` is evaluated at click time.
 `invalidate` accepts an array expression of slot ids to rerun after success.

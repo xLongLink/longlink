@@ -1,55 +1,109 @@
 ---
 name: web
-description: Guide to web folder structure and design guideliness
+description: Use when editing `web/`, `View.tsx`, shadcn/ui, routing, or the Vite frontend runtime.
 ---
 
-The web package is the frontend runtime for LongLink. It owns the shared UI, page shells, SDK-specific layout wiring, and the XML runtime used by the platform.
+LongLink web skill.
+
+- Vite dev server: `bun run dev`
+- Build modes: `bun run build`, `bun run build:api`, `bun run build:sdk`
+- Read `web/CONTRIBUTING.md` first
+
+## Use For
+
+- Frontend app shells, pages, layout, routing, and shared UI
+- Metadata-driven view loading in `src/pages/View.tsx`
+- Vite, Bun, formatting, and test workflows in `web/`
 
 ## Structure
 
 ```text
-longlink/
-├── web/
-│   ├── CONTRIBUTING.md       # Local web-layer contribution rules
-│   ├── README.md             # Frontend setup and entrypoints
-│   ├── src/
-│   │   ├── App.tsx            # Main app composition
-│   │   ├── Layout.tsx         # Shared app shell
-│   │   ├── main.tsx          # Vite entrypoint
-│   │   ├── components/       # Shared application components
-│   │   ├── hooks/            # Shared React hooks
-│   │   ├── lib/              # Shared utilities and API helpers
-│   │   ├── pages/            # Route-level pages
-│   │   ├── sdk/              # SDK-specific shell and page wiring
-│   │   ├── ui/               # shadcn/ui and shared primitives
-│   │   └── xml/              # XML compiler, runtime, registry, and components
-│   ├── tests/                # Web runtime and XML tests
-│   ├── public/               # Static assets
-│   └── vite.config.ts        # Vite configuration
-├── api/
-├── sdk/
-└── docs/
+web/
+├── CONTRIBUTING.md
+├── README.md
+├── public/
+├── src/
+│   ├── App.tsx
+│   ├── Layout.tsx
+│   ├── main.tsx
+│   ├── index.css
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   │   ├── react-query.ts
+│   │   ├── tab-value.ts
+│   │   └── utils.ts
+│   ├── pages/
+│   │   ├── Features.tsx
+│   │   ├── Home.tsx
+│   │   ├── NotFound.tsx
+│   │   ├── Pricing.tsx
+│   │   ├── Privacy.tsx
+│   │   ├── Sample.tsx
+│   │   ├── Terms.tsx
+│   │   └── View.tsx
+│   └── xml/
+│       # Refer to the `xml` skill for anything related to this folder.
+│       ├── core/
+│       │   ├── context.tsx
+│       │   ├── errors.tsx
+│       │   ├── expressions/
+│       │   ├── node.tsx
+│       │   ├── parser.ts
+│       │   ├── query.ts
+│       │   ├── state.ts
+│       │   └── url.tsx
+│       ├── html/
+│       ├── primitives/
+│       ├── react/
+│       ├── index.ts
+│       ├── renderers.tsx
+│       └── types.ts
+├── components.json
+├── index.html
+├── vite.config.ts
+└── package.json
 ```
+
+## Rules
+
+- Keep control-plane concerns in the page layer, especially `src/pages/View.tsx`.
+- Prefer existing shadcn/ui components and shared helpers over new abstractions.
+- Remove obsolete flows when replacing them end to end.
+- Favor the current MVP model over backward compatibility.
 
 ## View
 
-- Manage the fetching and rendering of metadata-driven views in the web runtime.
-- For the user
+- `src/pages/View.tsx` loads metadata, resolves the active page, fetches the page document, and renders it.
+- Route params are interpolated into metadata and base URL templates.
+- Tab selection is derived from page names before falling back to the route path.
+- Page documents are fetched with the expected content type and parsed by the runtime.
 
-```jsx
-<View metadata="/path/to/metadata.json" baseurl={baseurl} />
-// User
-<View metadata="/api/user/metadata.json" baseurl="/api" />
-// Organization
-<View metadata="/api/{org}/metadata.json" baseurl="/api" />
-// Application
-<View metadata="/api/{org}/{app}/metadata.json" baseurl="/api/apps/{app_id}" />
-```
-
-## Formatting
-
-Before PR:
+## Local Dev
 
 ```bash
+bun run dev
+```
+
+```bash
+bun run build
+bun run build:api
+bun run build:sdk
+```
+
+```bash
+bun run test
 bun run format
 ```
+
+## When Editing
+
+- Update the skill doc when the frontend route shape or page rendering flow changes.
+- Keep the Vite proxy and metadata fetch contract in mind.
+- Match the existing web folder conventions before adding new paths.
+
+## Verification
+
+- Run `bun run test` for runtime coverage.
+- Run `bun run build` to verify the default bundle.
+- Run `bun run format` before finishing.

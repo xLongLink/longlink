@@ -26,3 +26,12 @@ def test_button_rejects_unknown_attributes() -> None:
 
     with pytest.raises(ValueError):
         element.validate()
+
+
+def test_button_rejects_href() -> None:
+    """Reject the removed `href` attribute on `Button`."""
+
+    element = Element.from_content('<Button href="/issues">Open</Button>', schema=SCHEMA)
+
+    with pytest.raises(ValueError):
+        element.validate()

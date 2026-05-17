@@ -174,6 +174,49 @@ Behavior:
 
 Example: `<Badge variant="secondary">New</Badge>`
 
+## Card
+
+### `<Card>`
+
+Renders a grouped content shell.
+
+Attributes:
+
+- `size` optional. Card density variant.
+
+Behavior:
+
+- Renders content using the shared shadcn card base.
+- Supports the global `if` attribute.
+- Use `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, and `CardFooter` inside `Card`.
+- All card parts accept optional `className` for local styling.
+
+Example: `<Card><CardHeader><CardTitle>Card Title</CardTitle></CardHeader><CardContent><p>Card Content</p></CardContent></Card>`
+
+### `<CardHeader>`
+
+Header slot for the card.
+
+### `<CardTitle>`
+
+Title slot for the card header.
+
+### `<CardDescription>`
+
+Description slot for the card header.
+
+### `<CardAction>`
+
+Action slot for the card header.
+
+### `<CardContent>`
+
+Body content slot for the card.
+
+### `<CardFooter>`
+
+Footer slot for the card.
+
 ## Layout
 
 ### `<Divider>`
@@ -198,17 +241,16 @@ Actionable button.
 
 Attributes:
 
-- `action` optional. API path to call.
-- `href` optional. Navigation path for a link button.
-- `method` optional. HTTP method. Defaults to `POST`.
+- `action` optional. Target path to call or navigate to.
+- `method` optional. HTTP method. `GET` navigates to `action`; `POST`, `PUT`, and `DELETE` send a request. Defaults to `POST`.
 - `json` optional. Request body value or JSON string.
 - `invalidate` optional. Array expression of slot ids to rerun.
 
 Behavior:
 
-- If `href` is set, the button renders as a link and ignores `action`.
 - If `action` is empty, the button only reruns invalidation targets.
-- Otherwise, the button sends the configured action request.
+- If `method` is `GET`, the button renders as a link to `action`.
+- If `method` is `POST`, `PUT`, or `DELETE`, the button sends the configured action request.
 - `invalidate` refetches the named query slots after the request succeeds.
 
 Example: `<Button action="/issues" json='{{ title: issue.title }}'>Save</Button>`

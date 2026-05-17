@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="CardChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attribute name="className" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="CardType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="CardChildrenOnlyType">
+        <xsd:attribute name="size" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="CardHeaderType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="CardChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="CardTitleType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="CardChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="CardDescriptionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="CardChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="CardActionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="CardChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="CardContentType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="CardChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="CardFooterType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="CardChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Card" type="CardType" />
+  <xsd:element name="CardHeader" type="CardHeaderType" />
+  <xsd:element name="CardTitle" type="CardTitleType" />
+  <xsd:element name="CardDescription" type="CardDescriptionType" />
+  <xsd:element name="CardAction" type="CardActionType" />
+  <xsd:element name="CardContent" type="CardContentType" />
+  <xsd:element name="CardFooter" type="CardFooterType" />
+</xsd:schema>

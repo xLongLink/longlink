@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 /** Props accepted by the XML Button component. */
 export interface ButtonProps {
     action?: string;
-    href?: string;
     invalidate?: string[];
     children?: ASTNode | ASTNode[] | null;
     json?: ExpressionResolver | null;
@@ -20,7 +19,6 @@ export interface ButtonProps {
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
 export function Button({
     action = '',
-    href = '',
     invalidate = [],
     json,
     method = 'POST',
@@ -30,10 +28,9 @@ export function Button({
 }: ButtonProps) {
     const { ctx } = useContext();
     const actionUrl = String(action ?? '');
-    const hrefUrl = String(href ?? '');
     const requestUrl = useUrl(actionUrl);
-    const linkUrl = useUrl(hrefUrl);
     const invalidateRuntime = ctx.invalidate ?? (async () => {});
+    const normalizedMethod = method.trim().toUpperCase();
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleClick() {
@@ -50,7 +47,7 @@ export function Button({
         const jsonValue = json ? json(ctx) : null;
 
         const response = await fetch(requestUrl, {
-            method,
+            method: normalizedMethod,
             body: JSON.stringify(jsonValue),
             headers: { 'content-type': 'application/json' },
         });
@@ -65,9 +62,9 @@ export function Button({
         toast.success(`Request completed with status ${response.status}`);
     }
 
-    if (hrefUrl) {
+    if (actionUrl && normalizedMethod === 'GET') {
         return (
-            <a className={cn(buttonVariants({ variant: variant as never, size: size as never }))} href={linkUrl}>
+            <a className={cn(buttonVariants({ variant: variant as never, size: size as never }))} href={requestUrl}>
                 {renderNode(children ?? null, ctx)}
             </a>
         );

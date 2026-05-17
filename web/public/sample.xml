@@ -2,7 +2,7 @@
     <Hero icon="sparkles">
         <HeroTitle>Component Playground</HeroTitle>
         <HeroDescription>Live XML sample for testing web components without touching the API.</HeroDescription>
-        <HeroContent>
+    <HeroContent>
             <Badge variant="secondary">New</Badge>
             <Button href="/pricing" variant="outline">Open pricing</Button>
         </HeroContent>
@@ -11,6 +11,21 @@
 
     <p>This page is loaded from and rendered at</p>
     <Divider />
+    <Card>
+        <CardHeader>
+            <CardTitle>Revenue</CardTitle>
+            <CardDescription>Monthly performance snapshot</CardDescription>
+            <CardAction>
+                <Button href="/reports/revenue" variant="outline">View report</Button>
+            </CardAction>
+        </CardHeader>
+        <CardContent>
+            <p>Card content</p>
+        </CardContent>
+        <CardFooter>
+            <p>Card footer</p>
+        </CardFooter>
+    </Card>
     <p>
         <Button href="/pricing" variant="outline">Open pricing</Button>
     </p>
@@ -25,7 +40,7 @@
     </p>
 
     <p>Rendered components:</p>
-    <For each='{["Hero", "Badge", "Button", "Divider", "Input"]}' as="name">
+    <For each='{["Hero", "Badge", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Button", "Divider", "Input"]}' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

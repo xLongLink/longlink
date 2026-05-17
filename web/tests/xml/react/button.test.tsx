@@ -7,10 +7,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Button', () => {
-    /* External href buttons should render as anchors. */
-    it('renders an anchor when href is external', () => {
+    /* GET buttons should render as anchors. */
+    it('renders an anchor for GET actions', () => {
         const output = renderXmlToMarkup(
-            parseXML('<Button href="https://example.com" variant="default">Open</Button>')
+            parseXML('<Button action="https://example.com" method="GET" variant="default">Open</Button>')
         );
 
         expect(output).toContain('<a');
@@ -18,12 +18,12 @@ describe('Button', () => {
         expect(output).toContain('Open');
     });
 
-    /* Internal href buttons should stay inside the app router. */
-    it('preserves an internal href in compiled xml', () => {
-        expect(parseXML('<Button href="/issues">Open issues</Button>')).toEqual([
+    /* Internal GET actions should stay in the XML contract as action params. */
+    it('preserves an internal GET action in compiled xml', () => {
+        expect(parseXML('<Button action="/issues" method="GET">Open issues</Button>')).toEqual([
             {
                 name: 'Button',
-                params: { href: '/issues' },
+                params: { action: '/issues', method: 'GET' },
                 children: [{ name: 'Text', params: { value: 'Open issues' } }],
             },
         ]);
@@ -44,6 +44,15 @@ describe('Button', () => {
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('h-9');
+        expect(output).toContain('Save');
+    });
+
+    /* Data mutation buttons should stay rendered as real buttons. */
+    it('renders mutation actions as buttons', () => {
+        const ast = parseXML('<Button action="/issues" method="POST">Save</Button>');
+        const output = renderXmlToMarkup(ast);
+
+        expect(output).toContain('<button');
         expect(output).toContain('Save');
     });
 

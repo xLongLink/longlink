@@ -89,7 +89,7 @@ If `each` does not resolve to an array, nothing renders.
 
 ## Components
 
-Use the component layer for layout and interactive controls.
+Use the component layer for layout and interactive controls like `Hero`, `Card`, `Button`, `Input`, `Badge`, and `Divider`.
 
 ### `Hero`
 
@@ -119,6 +119,13 @@ Use `HeroDescription` for supporting hero copy.
 ### `HeroContent`
 
 Use `HeroContent` for hero actions or supplemental content.
+
+### `Card`
+
+The `Card` component renders a grouped content shell.
+Use `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, and `CardFooter` to compose the shadcn layout.
+Use `size="sm"` for the compact shadcn variant.
+Each card part also accepts `className` for local styling.
 
 ### Conditional Rendering
 

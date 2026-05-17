@@ -5,5 +5,6 @@ export { parseXML as fromXml } from '@xml/core/parser';
 export { BaseUrlContext, resolveUrl, useUrl } from '@xml/core/url';
 export type { ASTNode, ExecutionContext } from '@xml/types';
 export { Badge } from './react/Badge';
+export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './react/Card';
 export { Divider } from './react/Divider';
 export { RenderXML } from './renderers.tsx';
