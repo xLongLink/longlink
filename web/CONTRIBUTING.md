@@ -38,9 +38,9 @@ It owns the shared UI, XML runtime, and control-plane rendering path.
 
 ## XML
 
-- XML pages are parsed by `src/xml/compiler.ts` into an AST.
-- The renderer in `src/xml/renderers.tsx` walks that AST and resolves each tag through the XML registry.
-- Component names must exist in `src/xml/registry.tsx`; unknown tags fail at render time.
+- XML pages are parsed by `src/xml/core/parser.ts` into an AST.
+- The renderer in `src/xml/renderers.tsx` seeds runtime state and renders the AST through `src/xml/core/node.tsx`.
+- Component names must exist in `src/xml/core/node.tsx`; unknown tags fail at render time.
 - Child content is rendered recursively, so nested XML components stay under the same runtime context.
 
 ## Keep changes aligned

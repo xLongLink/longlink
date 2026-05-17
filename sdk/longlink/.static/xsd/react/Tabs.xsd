@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="TabsChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attribute name="className" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="TabsType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TabsChildrenOnlyType">
+        <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TabsListType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TabsChildrenOnlyType">
+        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TabsTriggerType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TabsChildrenOnlyType">
+        <xsd:attribute name="value" type="xsd:string" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TabsContentType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TabsChildrenOnlyType">
+        <xsd:attribute name="value" type="xsd:string" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Tabs" type="TabsType" />
+  <xsd:element name="TabsList" type="TabsListType" />
+  <xsd:element name="TabsTrigger" type="TabsTriggerType" />
+  <xsd:element name="TabsContent" type="TabsContentType" />
+</xsd:schema>

@@ -235,6 +235,41 @@ Behavior:
 
 Example: `<Divider />`
 
+### `<Tabs>`
+
+Renders a shadcn-backed tab shell.
+
+Attributes:
+
+- `defaultValue` optional. Initial active tab value.
+- `orientation` optional. Tabs orientation.
+- `className` optional. Root class override.
+
+Children:
+
+- `TabsList`
+- `TabsContent`
+
+Behavior:
+
+- `TabsList` contains `TabsTrigger` items.
+- Each `TabsTrigger` and `TabsContent` requires a `value` attribute.
+- Use `TabsContent` panels with matching `value` keys.
+- Only the active `TabsContent` is rendered.
+
+Example:
+
+```xml
+<Tabs defaultValue="overview">
+  <TabsList variant="line">
+    <TabsTrigger value="overview">Overview</TabsTrigger>
+    <TabsTrigger value="settings">Settings</TabsTrigger>
+  </TabsList>
+  <TabsContent value="overview">Overview panel</TabsContent>
+  <TabsContent value="settings">Settings panel</TabsContent>
+</Tabs>
+```
+
 ## Form Controls
 
 ### `<Button>`

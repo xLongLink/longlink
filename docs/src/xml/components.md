@@ -82,3 +82,22 @@ Use the `Divider` component to separate sections with a horizontal rule.
 ```xml
 <Divider />
 ```
+
+## Tabs
+
+Use `Tabs` with `TabsList`, `TabsTrigger`, and `TabsContent` to switch between related panels.
+
+```xml
+<Tabs defaultValue="overview">
+  <TabsList variant="line">
+    <TabsTrigger value="overview">Overview</TabsTrigger>
+    <TabsTrigger value="settings">Settings</TabsTrigger>
+  </TabsList>
+  <TabsContent value="overview">Overview panel</TabsContent>
+  <TabsContent value="settings">Settings panel</TabsContent>
+</Tabs>
+```
+
+`TabsTrigger` and `TabsContent` require a matching `value`.
+`TabsList` supports the shadcn `variant` prop, and all tabs parts accept `className`.
+Only the active `TabsContent` is rendered.

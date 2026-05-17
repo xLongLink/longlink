@@ -11,6 +11,7 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Divider } from '@xml/react/Divider';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Input } from '@xml/react/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
 
@@ -92,6 +93,37 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
     if (node.name === 'Divider') {
         return <Divider />;
+    }
+
+    if (node.name === 'Tabs') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const defaultValue = node.params?.defaultValue
+            ? String(evaluate(node.params.defaultValue, ctx) ?? '')
+            : undefined;
+        const orientation = node.params?.orientation ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal') : 'horizontal';
+
+        return <Tabs className={className} defaultValue={defaultValue} orientation={orientation} children={node.children} />;
+    }
+
+    if (node.name === 'TabsList') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+
+        return <TabsList className={className} variant={variant} children={node.children} />;
+    }
+
+    if (node.name === 'TabsTrigger') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+
+        return <TabsTrigger className={className} value={value} children={node.children} />;
+    }
+
+    if (node.name === 'TabsContent') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+
+        return <TabsContent className={className} value={value} children={node.children} />;
     }
 
     if (node.name === 'Hero') {

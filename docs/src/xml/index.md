@@ -89,7 +89,7 @@ If `each` does not resolve to an array, nothing renders.
 
 ## Components
 
-Use the component layer for layout and interactive controls like `Hero`, `Card`, `Button`, `Input`, `Badge`, and `Divider`.
+Use the component layer for layout and interactive controls like `Hero`, `Card`, `Tabs`, `Button`, `Input`, `Badge`, and `Divider`.
 
 ### `Hero`
 
@@ -126,6 +126,13 @@ The `Card` component renders a grouped content shell.
 Use `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, and `CardFooter` to compose the shadcn layout.
 Use `size="sm"` for the compact shadcn variant.
 Each card part also accepts `className` for local styling.
+
+### `Tabs`
+
+The `Tabs` component renders a shadcn tab shell.
+Use `TabsList` for the tab bar, `TabsTrigger` for each tab, and `TabsContent` for each panel.
+`TabsTrigger` and `TabsContent` require matching `value` attributes.
+`TabsList` supports `variant`, and all tabs parts accept `className`.
 
 ### Conditional Rendering
 

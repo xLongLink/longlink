@@ -26,6 +26,18 @@
             <p>Card footer</p>
         </CardFooter>
     </Card>
+    <Tabs defaultValue="overview">
+        <TabsList variant="line">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+            <p>Overview content</p>
+        </TabsContent>
+        <TabsContent value="activity">
+            <p>Activity content</p>
+        </TabsContent>
+    </Tabs>
     <p>
         <Button href="/pricing" variant="outline">Open pricing</Button>
     </p>
@@ -40,7 +52,7 @@
     </p>
 
     <p>Rendered components:</p>
-    <For each='{["Hero", "Badge", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Button", "Divider", "Input"]}' as="name">
+        <For each='{["Hero", "Badge", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Button", "Divider", "Input"]}' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 
