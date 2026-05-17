@@ -180,10 +180,9 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'Badge') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
-        return <Badge className={className} variant={variant} children={node.children} />;
+        return <Badge variant={variant} children={node.children} />;
     }
 
     if (node.name === 'Card') {

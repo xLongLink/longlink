@@ -12,6 +12,7 @@
   <xsd:complexType name="InputType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="InputChildrenOnlyType">
+        <xsd:attribute name="label" type="xsd:string" use="optional" />
         <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
         <xsd:attribute name="value" type="xsd:string" use="optional" />
         <xsd:attribute name="type" type="xsd:string" use="optional" />

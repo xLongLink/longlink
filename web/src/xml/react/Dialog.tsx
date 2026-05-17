@@ -7,7 +7,8 @@ import {
     DialogTitle as UIDialogTitle,
     DialogTrigger as UIDialogTrigger,
 } from '@/components/ui/dialog';
-import { Button as UIButton } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { evaluate } from '@xml/core/expressions';
 import type { ASTNode } from '@xml';
 import { renderNode, useContext } from '@xml';
@@ -64,19 +65,17 @@ export function Dialog({ children, defaultOpen, open }: DialogProps) {
 /** Renders the dialog trigger slot. */
 export function DialogTrigger({ children }: DialogTriggerProps) {
     const { ctx } = useContext();
+    const triggerChildren = Array.isArray(children) ? children : children ? [children] : [];
+    const buttonChild = triggerChildren.length === 1 && triggerChildren[0]?.name === 'Button' ? triggerChildren[0] : null;
 
-    if (
-        children &&
-        !Array.isArray(children) &&
-        children.name === 'Button'
-    ) {
-        const className = children.params?.className ? String(evaluate(children.params.className, ctx) ?? '') : undefined;
-        const size = children.params?.size ? String(evaluate(children.params.size, ctx) ?? '') : undefined;
-        const variant = children.params?.variant ? String(evaluate(children.params.variant, ctx) ?? '') : undefined;
+    if (buttonChild) {
+        const className = buttonChild.params?.className ? String(evaluate(buttonChild.params.className, ctx) ?? '') : undefined;
+        const size = buttonChild.params?.size ? String(evaluate(buttonChild.params.size, ctx) ?? '') : undefined;
+        const variant = buttonChild.params?.variant ? String(evaluate(buttonChild.params.variant, ctx) ?? '') : undefined;
 
         return (
-            <UIDialogTrigger render={<UIButton className={className} size={size as never} variant={variant as never} />}>
-                {renderNode(children.children ?? null, ctx)}
+            <UIDialogTrigger className={cn(buttonVariants({ className, size: size as never, variant: variant as never }))}>
+                {renderNode(buttonChild.children ?? null, ctx)}
             </UIDialogTrigger>
         );
     }

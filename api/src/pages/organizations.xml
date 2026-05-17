@@ -19,7 +19,7 @@
   <For each="$organizations.items" as="organization">
     <p>
       {organization.name}
-      <Button href="/{organization.name}" variant="outline" size="sm">
+      <Button action="/{organization.name}" method="GET" variant="outline" size="sm">
         Open
       </Button>
     </p>

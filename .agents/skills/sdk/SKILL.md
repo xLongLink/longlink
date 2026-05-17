@@ -3,34 +3,82 @@ name: sdk
 description: LongLink SDK structure
 ---
 
+LongLink SDK packages the Python runtime, CLI, storage and database helpers, XML support, and the project scaffold copied by `longlink init`.
+
+## Example
+
+```python
+from longlink import Environments, LongLink
+
+
+class Env(Environments):
+    KEY: str = "longlink"
+
+
+env = Env()
+app = LongLink(env=env)
+```
+
 ## Structure
 
 ```text
 longlink/
-├── sdk/                         # Python SDK for apps and control-plane integration
+├── sdk/
 │   ├── longlink/                # SDK package source
+│   │   ├── .static/             # Packaged assets, schemas, and templates
+│   │   │   ├── llm/             # Human-readable schema docs
+│   │   │   ├── web/             # Packaged frontend assets
+│   │   │   ├── xsd/             # XML schema definitions
+│   │   │   └── new/             # Minimal app scaffold copied by `longlink init`
 │   │   ├── cli/                 # Command-line entry points
-│   │   ├── app/                 # App runtime, API wiring, and lifecycle helpers
-│   │   ├── storage/             # Storage abstractions built on fsspec
-│   │   ├── db/                  # SQLAlchemy models and Alembic migrations
-│   │   └── tests/               # SDK tests
-│   └── sample/                  # Example SDK app and fixtures
+│   │   ├── database/            # SQLAlchemy helpers and migrations
+│   │   ├── routes/              # Route metadata helpers
+│   │   ├── storage/             # Storage abstractions
+│   │   ├── types/               # Shared SDK types
+│   │   ├── utils/               # XML, metadata, and page helpers
+│   │   ├── app.py               # App runtime and page loading
+│   │   ├── router.py            # Router wiring
+│   │   ├── constants.py         # Shared constants
+│   │   └── __init__.py          # Public exports
+│   └── tests/                   # SDK tests
+└── docs/                        # SDK docs and XML docs
 ```
 
-##
+## SDK Areas
 
-```python
-from longlink import LongLink
+Core runtime:
 
-```
+- `longlink/app.py` handles app setup and page loading.
+- `longlink/router.py` wires route registration.
+- `longlink/__init__.py` exposes the public SDK API.
+
+CLI:
+
+- `longlink/cli/` contains `dev`, `build`, `init`, and migration commands.
+
+Storage and database:
+
+- `longlink/storage/` wraps filesystem access.
+- `longlink/database/` contains SQLModel and Alembic helpers.
+
+XML support:
+
+- `longlink/.static/xsd/` stores schema definitions.
+- `longlink/.static/web/` stores packaged runtime assets.
+- `sdk/tests/xml/` covers XML primitives and components.
+
+Project scaffold:
+
+- `longlink/.static/new/` is the minimal showcase app scaffold.
 
 ## Environments
 
 - Built on top of Pydantic Settings.
-- Ensure that all environment variables are defined at startup.
+- Keep environment models explicit and validated at startup.
 
 ```python
 from longlink import Environments, LongLink
+
 
 class Env(Environments):
     """Project-specific environment model."""
@@ -45,74 +93,68 @@ app = LongLink(env=env)
 
 ## Routes
 
-- Wraps FastAPI, with additional support for dependency injection and lifecycle management.
+- Use `Router` for FastAPI routes.
 
-```py
-from longlink import App, Router
+```python
+from longlink import Router
+
 
 router = Router()
+
 
 @router.get("/sample")
 async def sample():
     return {"id": 1, "name": "apple"}
-
-app = App()
-app.register(router)
 ```
 
 ## Pages
 
-```py
-from longlink import page
+- XML pages live under `sdk/longlink/.static/new/src/pages/` in the scaffold.
+- The runtime discovers page directories passed to `app.include_page(...)`.
 
-@page("/sample")
-async def sample():
-    return {"id": 1, "name": "apple"}
-
-app = App()
-app.register(router)
+```xml
+<Page name="Sample" icon="layout-dashboard">
+  <p>Hello from XML.</p>
+</Page>
 ```
 
 ## Storage
 
-- Built on top of `fsspec`
-- `:memory:` for testing
-- `local` for local development
-- `s3` for production deployments (`s3fs`)$
+- Built on top of `fsspec`.
+- Use `:memory:` for tests, local files for development, and S3-compatible storage for production.
 
-```py
+```python
 from longlink import fs
 
-with fs.open("reports/example.txt", "wb") as f:
-    f.write(b"hello")
+
+with fs.open("reports/example.txt", "wb") as file_handle:
+    file_handle.write(b"hello")
 ```
 
 ## Database
 
-- Built on top of SQLModel
-- `:memory:` for testing
-- `sqlite` for local development
-- `postgresql` for production deployments (`asyncpg`)
+- Built on top of SQLModel.
+- Use SQLite for local development and async-compatible drivers for production.
 
-```py
+```python
 from longlink import db
+
 
 class Project(db.Table):
     id: int = db.Field(default=None, primary_key=True)
     name: str = db.Field(description="Project name")
-    owner: str = db.Field(description="Project owner")
 
 
 async def create_project() -> None:
     session_maker = await db.get_session()
     async with session_maker() as session:
-        session.add(Project(name="Launch", owner="ops"))
+        session.add(Project(name="Launch"))
         await session.commit()
 ```
 
-### Migrations
+## Migrations
 
-- Built on top of Alembic
+- Built on top of Alembic.
 
 ```bash
 longlink migrate
@@ -120,11 +162,6 @@ longlink migrate
 
 ## Testing
 
-Dev
-aiosqlite
-
-Prod
-
-pytest
-pytest-asyncio
-pytest-mock
+- `sdk/tests/cli/` covers scaffold and CLI behavior.
+- `sdk/tests/xml/` covers runtime XML behavior.
+- `sdk/tests/utils/` covers SDK helpers and metadata.

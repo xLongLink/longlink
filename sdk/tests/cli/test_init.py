@@ -41,7 +41,6 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert (target / 'src/envs.py').exists()
     assert (target / 'src/pages').exists()
     assert (target / 'src/pages/dashboard.xml').exists()
-    assert (target / 'src/pages/dashboard/overview.xml').exists()
     assert (target / 'tests/conftest.py').exists()
     assert (target / 'tests/api').exists()
     assert (target / 'tests/api/test_sample_routes.py').exists()

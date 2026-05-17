@@ -90,13 +90,25 @@ If `action` is empty, the button only runs invalidation.
 
 `method` defaults to `POST`.
 
+## Badge
+
+Use the `Badge` component for compact status labels and tags.
+
+```xml
+<Badge variant="secondary">New</Badge>
+```
+
+`variant` is optional.
+
 ## Input
 
 Use the `Input` component for single-line text entry.
 
 ```xml
-<Input value="user.name" placeholder="Issue title" />
+<Input label="Issue title" value="user.name" />
 ```
+
+`label` is optional and is used as the placeholder when `placeholder` is omitted.
 
 When `value` resolves to a reactive Valtio-backed state slot, the input stays in sync and writes back to `state.value`.
 Otherwise, `value` only initializes the field.

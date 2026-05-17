@@ -4,7 +4,7 @@
         <HeroDescription>Live XML sample for testing web components without touching the API.</HeroDescription>
     <HeroContent>
             <Badge variant="secondary">New</Badge>
-            <Button href="/pricing" variant="outline">Open pricing</Button>
+            <Button action="/pricing" method="GET" variant="outline">Open pricing</Button>
         </HeroContent>
     </Hero>
 
@@ -16,7 +16,7 @@
             <CardTitle>Revenue</CardTitle>
             <CardDescription>Monthly performance snapshot</CardDescription>
             <CardAction>
-                <Button href="/reports/revenue" variant="outline">View report</Button>
+                <Button action="/reports/revenue" method="GET" variant="outline">View report</Button>
             </CardAction>
         </CardHeader>
         <CardContent>
@@ -54,7 +54,7 @@
         </DialogContent>
     </Dialog>
     <p>
-        <Button href="/pricing" variant="outline">Open pricing</Button>
+        <Button action="/pricing" method="GET" variant="outline">Open pricing</Button>
     </p>
     <p>
         <Input placeholder="Type to test the input" value="Live preview" />

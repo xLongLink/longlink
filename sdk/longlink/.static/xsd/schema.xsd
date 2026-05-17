@@ -13,5 +13,4 @@
   <xsd:include schemaLocation="react/Divider.xsd" />
   <xsd:include schemaLocation="react/Input.xsd" />
   <xsd:include schemaLocation="react/Tabs.xsd" />
-  <xsd:include schemaLocation="react/Text.xsd" />
 </xsd:schema>

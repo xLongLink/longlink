@@ -88,7 +88,7 @@ Declares local reactive state.
 Attributes:
 
 - `id` required. State key.
-- `value` required. Initial state value. Must be literal text.
+- `value` required. Initial state value. Evaluated as an expression.
 
 Behavior:
 
@@ -360,6 +360,7 @@ Single-line text input.
 
 Attributes:
 
+- `label` optional. Fallback placeholder text.
 - `value` optional. Expression for the displayed text.
 - `placeholder` optional.
 - `type` optional. Input type.
@@ -373,10 +374,8 @@ Behavior:
 Example:
 
 ```xml
-<Input value="user.name" placeholder="Your name" />
+<Input label="Your name" value="user.name" />
 ```
-
-## Tables
 
 ## HTML Bridge
 
