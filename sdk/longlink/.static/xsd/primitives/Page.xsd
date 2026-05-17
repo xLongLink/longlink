@@ -17,9 +17,7 @@
 
   <xsd:complexType name="PageType">
     <xsd:complexContent>
-      <xsd:extension base="PageChildrenType">
-        <xsd:attribute name="name" type="xsd:string" use="optional" />
-      </xsd:extension>
+      <xsd:extension base="PageChildrenType" />
     </xsd:complexContent>
   </xsd:complexType>
 

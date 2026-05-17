@@ -2,6 +2,7 @@
 
 Components handle visible content and user actions.
 Use them when a page needs navigation or form input.
+This page documents the current component surface.
 
 ## Hero
 

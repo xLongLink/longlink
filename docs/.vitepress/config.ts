@@ -20,7 +20,8 @@ export default withMermaid(defineConfig({
     },
     nav: [
       { text: 'Control Plane', link: '/api/' },
-      { text: 'Applications SDK', link: '/sdk/' }
+      { text: 'Applications SDK', link: '/sdk/' },
+      { text: 'XML Pages', link: '/xml/' }
     ],
 
     sidebar: [
@@ -50,9 +51,9 @@ export default withMermaid(defineConfig({
         ]
       },
       {
-        text: 'XML',
+        text: 'XML Pages',
         items: [
-          { text: 'Introduction', link: '/xml/' },
+          { text: 'Overview', link: '/xml/' },
           { text: 'HTML', link: '/xml/html' },
           { text: 'Components', link: '/xml/components' }
         ]

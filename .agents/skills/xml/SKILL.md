@@ -122,8 +122,8 @@ HTML:
 
 ## Root Metadata
 
-- `Page` supports optional `name` metadata.
-- `name` falls back to the filename in SDK metadata, even though the current web renderer only uses `children`.
+- `Page` does not support `name` metadata.
+- SDK page metadata exposes explicit paths only; do not infer names from filenames.
 
 ## Global XML Patterns
 

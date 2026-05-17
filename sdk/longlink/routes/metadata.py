@@ -21,7 +21,6 @@ async def get_metadata(request: Request) -> dict[str, object]:
             pages.append(
                 {
                     "path": page_file.relative_to(root_path).as_posix(),
-                    "name": page.name,
                     "content": page.content,
                 }
             )

@@ -1,7 +1,6 @@
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import Tabs from '@/components/Tabs';
-import { tabValueFromName } from '@/lib/tab-value';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -13,7 +12,6 @@ type ViewProps = {
 };
 
 type MetadataPage = {
-    name?: string;
     path: string;
 };
 
@@ -77,9 +75,9 @@ export default function View({ metadata, baseurl }: ViewProps) {
     });
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
     const selectedTab = searchParams.get('tab');
-    /* Resolve the active page from the selected tab label first, then the route path. */
+    /* Resolve the active page from the selected tab path first, then the route path. */
     const activePage =
-        metadataDocument?.pages?.find((page) => (page.name ? tabValueFromName(page.name) : '') === selectedTab) ??
+        metadataDocument?.pages?.find((page) => normalizePath(page.path.replace(/\.xml$/i, '')) === selectedTab) ??
         metadataDocument?.pages?.find(
             (page) => normalizePath(page.path.replace(/\.xml$/i, '')) === normalizedRoutePath
         ) ??

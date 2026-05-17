@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { FileTextIcon, Loader2 } from 'lucide-react';
 
-import { tabValueFromName } from '@/lib/tab-value';
 import type { ComponentType } from 'react';
 
 type MetadataResponse = {
@@ -18,7 +17,6 @@ export type NavigationTab = {
 
 type AppNavigationPage = {
     path: string;
-    name: string;
     icon?: string;
 };
 
@@ -61,8 +59,8 @@ export function useTabs(metadataPath: string | null) {
     const tabs = query.isLoading
         ? loadingTabs
         : rawTabs.map((page) => ({
-              value: tabValueFromName((page as AppNavigationPage).name),
-              label: (page as AppNavigationPage).name,
+              value: (page as AppNavigationPage).path.replace(/\.xml$/i, ''),
+              label: (page as AppNavigationPage).path.replace(/\.xml$/i, ''),
               path: (page as AppNavigationPage).path,
               icon: FileTextIcon,
           }));

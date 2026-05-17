@@ -1,4 +1,4 @@
-import { compileExpression, evaluate, fromXml, renderNode } from '@xml';
+import { Column, Columns, compileExpression, evaluate, fromXml, renderNode } from '@xml';
 import { describe, expect, it } from 'bun:test';
 
 describe('xml index', () => {
@@ -7,5 +7,7 @@ describe('xml index', () => {
         expect(typeof evaluate).toBe('function');
         expect(typeof fromXml).toBe('function');
         expect(typeof renderNode).toBe('function');
+        expect(Column).toBeDefined();
+        expect(Columns).toBeDefined();
     });
 });

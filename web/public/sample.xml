@@ -1,31 +1,38 @@
-<Page name="Sample">
+<Page>
     <Hero icon="sparkles">
         <HeroTitle>Component Playground</HeroTitle>
         <HeroDescription>Live XML sample for testing web components without touching the API.</HeroDescription>
-    <HeroContent>
+        <HeroContent>
             <Badge variant="secondary">New</Badge>
             <Button action="/pricing" method="GET" variant="outline">Open pricing</Button>
         </HeroContent>
     </Hero>
 
-
     <p>This page is loaded from and rendered at</p>
     <Divider />
-    <Card>
-        <CardHeader>
-            <CardTitle>Revenue</CardTitle>
-            <CardDescription>Monthly performance snapshot</CardDescription>
-            <CardAction>
-                <Button action="/reports/revenue" method="GET" variant="outline">View report</Button>
-            </CardAction>
-        </CardHeader>
-        <CardContent>
-            <p>Card content</p>
-        </CardContent>
-        <CardFooter>
-            <p>Card footer</p>
-        </CardFooter>
-    </Card>
+    <Columns>
+        <Column width="70">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Revenue</CardTitle>
+                    <CardDescription>Monthly performance snapshot</CardDescription>
+                    <CardAction>
+                        <Button action="/reports/revenue" method="GET" variant="outline">View report</Button>
+                    </CardAction>
+                </CardHeader>
+                <CardContent>
+                    <p>Card content</p>
+                </CardContent>
+                <CardFooter>
+                    <p>Card footer</p>
+                </CardFooter>
+            </Card>
+        </Column>
+        <Column width="30">
+            <p>Sidebar content</p>
+            <Badge variant="outline">Preview</Badge>
+        </Column>
+    </Columns>
     <Tabs defaultValue="overview">
         <TabsList variant="line">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -67,7 +74,7 @@
     </p>
 
     <p>Rendered components:</p>
-        <For each='{["Hero", "Badge", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input"]}' as="name">
+    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input"]' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

@@ -7,7 +7,7 @@ from src.envs import env
 app = LongLink(env=env)
 
 
-@page("/pages/dashboard.xml", icon="layout-dashboard")
+@page("/pages/dashboard.xml")
 def dashboard_page():
     """Return the dashboard XML page example."""
 

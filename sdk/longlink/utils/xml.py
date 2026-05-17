@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Any
+
 import xmltodict
 from lxml import etree
-from typing import Any
-from pathlib import Path
 from longlink.constants import ROOT
 
 
@@ -65,7 +66,7 @@ class Element:
 
 class Page(Element):
     """Load and validate XML page documents from disk.
-    Pages are discovered through app metadata and can be used to define custom UI components and interactions.
+    Pages are discovered from XML files and can be used to define custom UI components and interactions.
     """
 
     def __init__(self, path: str | Path, schema: str | Path | None = None) -> None:
@@ -74,12 +75,6 @@ class Page(Element):
         default_schema = schema or ROOT / ".static" / "xsd" / "schema.xsd"
         super().__init__(path=path, schema=default_schema)
         self._schema: dict[str, Any] | None = None
-
-    @property
-    def name(self) -> str:
-        """Return page name from metadata."""
-
-        return self.metadata.get("name", self.path.stem)
 
     @property
     def content(self) -> str:
@@ -94,16 +89,3 @@ class Page(Element):
         if self._schema is None:
             self._schema = xmltodict.parse(self.content)
         return self._schema
-
-    @property
-    def metadata(self) -> dict[str, str]:
-        """Extract root metadata fields from XML page schema."""
-
-        metadata: dict[str, str] = {}
-        # Pull supported metadata attrs from root element and normalize whitespace.
-        root: dict[str, Any] = self.schema.get("Page", {})
-        value = root.get("@name") or root.get("name")
-        if isinstance(value, str) and value.strip():
-            metadata["name"] = value.strip()
-
-        return metadata

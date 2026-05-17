@@ -66,7 +66,7 @@ Defines the page root.
 
 Attributes:
 
-- `name` optional. Page label metadata.
+- None.
 
 Children:
 
@@ -74,8 +74,7 @@ Children:
 
 Behavior:
 
-- The web renderer uses `children` and does not read `name` today.
-- If `name` is omitted, SDK page metadata falls back to the page filename.
+- SDK page metadata exposes page paths directly.
 
 Example: `<Page><p>Dashboard</p></Page>`
 
@@ -175,6 +174,44 @@ Behavior:
 - Supports the global `if` attribute.
 
 Example: `<Badge variant="secondary">New</Badge>`
+
+## Columns
+
+### `<Columns>`
+
+Renders a full-width column row.
+
+Attributes:
+
+- `className` optional. Extra layout classes.
+
+Behavior:
+
+- Use `Column` children inside `Columns`.
+- Columns span the full available width.
+- `Column.width` controls the percentage share of the row.
+
+Example:
+
+```xml
+<Columns>
+  <Column width="70">Main content</Column>
+  <Column width="30">Sidebar</Column>
+</Columns>
+```
+
+### `<Column>`
+
+Renders one percentage-based column.
+
+Attributes:
+
+- `width` required. Percentage of the row, such as `70`.
+- `className` optional. Extra layout classes.
+
+Behavior:
+
+- `Column` content renders inside its own width box.
 
 ## Card
 

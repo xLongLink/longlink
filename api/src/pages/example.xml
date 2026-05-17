@@ -1,5 +1,5 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<Page name="Example">
+<Page>
   <State id="fullName" value="Ada Lovelace" />
   <State id="email" value="ada@example.com" />
   <State id="notes" value="Build the first program" />

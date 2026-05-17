@@ -8,7 +8,7 @@ import { Text } from '@xml/primitives/Text';
 import { Badge } from '@xml/react/Badge';
 import { Button } from '@xml/react/Button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/react/Card';
-import { Divider } from '@xml/react/Divider';
+import { Column, Columns } from '@xml/react/Columns';
 import {
     Dialog,
     DialogContent,
@@ -18,6 +18,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@xml/react/Dialog';
+import { Divider } from '@xml/react/Divider';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Input } from '@xml/react/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
@@ -107,9 +108,18 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const defaultValue = node.params?.defaultValue
             ? String(evaluate(node.params.defaultValue, ctx) ?? '')
             : undefined;
-        const orientation = node.params?.orientation ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal') : 'horizontal';
+        const orientation = node.params?.orientation
+            ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
+            : 'horizontal';
 
-        return <Tabs className={className} defaultValue={defaultValue} orientation={orientation} children={node.children} />;
+        return (
+            <Tabs
+                className={className}
+                defaultValue={defaultValue}
+                orientation={orientation}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'TabsList') {
@@ -183,6 +193,21 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return <Badge variant={variant} children={node.children} />;
     }
 
+    if (node.name === 'Columns') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Columns className={className} children={node.children} />;
+    }
+
+    if (node.name === 'Column') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const width = node.params?.width ? evaluate(node.params.width, ctx) : undefined;
+
+        return (
+            <Column className={className} width={width == null ? undefined : String(width)} children={node.children} />
+        );
+    }
+
     if (node.name === 'Card') {
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
@@ -229,13 +254,18 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     if (node.name === 'Dialog') {
         const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
         const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
-        const open = openValue === true || openValue === 'true' ? true : openValue === false || openValue === 'false' ? false : undefined;
+        const open =
+            openValue === true || openValue === 'true'
+                ? true
+                : openValue === false || openValue === 'false'
+                  ? false
+                  : undefined;
         const defaultOpen =
             defaultOpenValue === true || defaultOpenValue === 'true'
                 ? true
                 : defaultOpenValue === false || defaultOpenValue === 'false'
-                    ? false
-                    : undefined;
+                  ? false
+                  : undefined;
 
         return <Dialog defaultOpen={defaultOpen} open={open} children={node.children} />;
     }
