@@ -107,45 +107,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate release notes
-        env:
-          TAG: ${{ github.ref_name }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          git fetch --tags --force
-
-          PREVIOUS_TAG=""
-          FOUND_CURRENT=false
-          for CANDIDATE in $(git tag --list 'v*' --sort=-version:refname); do
-            if [ "$FOUND_CURRENT" = true ]; then
-              PREVIOUS_TAG="$CANDIDATE"
-              break
-            fi
-
-            if [ "$CANDIDATE" = "$TAG" ]; then
-              FOUND_CURRENT=true
-            fi
-          done
-
-          if [ -n "$PREVIOUS_TAG" ]; then
-            RANGE="$PREVIOUS_TAG..$TAG"
-          else
-            RANGE="$TAG"
-          fi
-
-          {
-            echo "## Changes"
-            echo
-            while IFS=$'\t' read -r SUBJECT SHORT_SHA FULL_SHA; do
-              echo "- $SUBJECT ([${SHORT_SHA}](https://github.com/${REPOSITORY}/commit/${FULL_SHA}))"
-            done < <(git log --pretty=format:'%s%x09%h%x09%H' "$RANGE")
-          } > release-notes.md
-
       - name: Create GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" --title "$TAG" --notes-file release-notes.md
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true

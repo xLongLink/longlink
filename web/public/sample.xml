@@ -107,6 +107,15 @@
     <p>
         <Input placeholder="Number input" type="number" value="42" />
     </p>
+    <p>Form controls:</p>
+    <p>
+        <Label htmlFor="newsletter">Newsletter</Label>
+        <Checkbox id="newsletter" defaultChecked="true" />
+    </p>
+    <p>
+        <Label htmlFor="marketing">Marketing</Label>
+        <Switch id="marketing" defaultChecked="false" size="sm" />
+    </p>
     <p>
         <Select defaultValue="overview">
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -130,7 +139,7 @@
     </p>
 
     <p>Rendered components:</p>
-    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
+    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input", "Checkbox", "Label", "Switch", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

@@ -7,6 +7,7 @@
   <xsd:include schemaLocation="html/p.xsd" />
   <xsd:include schemaLocation="html/a.xsd" />
   <xsd:include schemaLocation="react/Button.xsd" />
+  <xsd:include schemaLocation="react/Checkbox.xsd" />
   <xsd:include schemaLocation="react/Hero.xsd" />
   <xsd:include schemaLocation="react/Badge.xsd" />
   <xsd:include schemaLocation="react/Columns.xsd" />
@@ -14,8 +15,10 @@
   <xsd:include schemaLocation="react/Dialog.xsd" />
   <xsd:include schemaLocation="react/Divider.xsd" />
   <xsd:include schemaLocation="react/Icon.xsd" />
+  <xsd:include schemaLocation="react/Label.xsd" />
   <xsd:include schemaLocation="react/Input.xsd" />
   <xsd:include schemaLocation="react/Select.xsd" />
+  <xsd:include schemaLocation="react/Switch.xsd" />
   <xsd:include schemaLocation="react/Table.xsd" />
   <xsd:include schemaLocation="react/Tabs.xsd" />
 </xsd:schema>

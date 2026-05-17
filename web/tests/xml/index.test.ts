@@ -1,7 +1,9 @@
 import {
     Column,
     Columns,
+    Checkbox,
     Icon,
+    Label,
     Select,
     SelectContent,
     SelectGroup,
@@ -10,6 +12,7 @@ import {
     SelectSeparator,
     SelectTrigger,
     SelectValue,
+    Switch,
     Table,
     TableBody,
     TableCaption,
@@ -33,7 +36,9 @@ describe('xml index', () => {
         expect(typeof renderNode).toBe('function');
         expect(Column).toBeDefined();
         expect(Columns).toBeDefined();
+        expect(Checkbox).toBeDefined();
         expect(Icon).toBeDefined();
+        expect(Label).toBeDefined();
         expect(Select).toBeDefined();
         expect(SelectContent).toBeDefined();
         expect(SelectGroup).toBeDefined();
@@ -42,6 +47,7 @@ describe('xml index', () => {
         expect(SelectSeparator).toBeDefined();
         expect(SelectTrigger).toBeDefined();
         expect(SelectValue).toBeDefined();
+        expect(Switch).toBeDefined();
         expect(Table).toBeDefined();
         expect(TableHeader).toBeDefined();
         expect(TableBody).toBeDefined();

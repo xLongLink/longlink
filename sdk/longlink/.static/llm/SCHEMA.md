@@ -474,6 +474,57 @@ Behavior:
 
 Example: `<Button action="/issues" json='{{ title: issue.title }}'>Save</Button>`
 
+### `<Label>`
+
+Form label for controls.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+- `htmlFor` optional. Target control id.
+
+Behavior:
+
+- Renders as a normal HTML label.
+- Supports the global `if` attribute.
+
+### `<Checkbox>`
+
+Binary toggle control.
+
+Attributes:
+
+- `checked` optional. Reactive state slot or current checked value.
+- `defaultChecked` optional. Initial checked state.
+- `className` optional. Extra classes for styling.
+- `disabled` optional. Disables interaction.
+- `id` optional. Control id for associated labels.
+
+Behavior:
+
+- When `checked` resolves to a Valtio-backed state slot, toggle updates write back to `state.value`.
+- Otherwise, `defaultChecked` sets the initial checked state.
+- Supports the global `if` attribute.
+
+### `<Switch>`
+
+Binary switch control.
+
+Attributes:
+
+- `checked` optional. Reactive state slot or current checked value.
+- `defaultChecked` optional. Initial checked state.
+- `className` optional. Extra classes for styling.
+- `disabled` optional. Disables interaction.
+- `id` optional. Control id for associated labels.
+- `size` optional. Switch size variant. Use `sm` or `default`.
+
+Behavior:
+
+- When `checked` resolves to a Valtio-backed state slot, toggle updates write back to `state.value`.
+- Otherwise, `defaultChecked` sets the initial checked state.
+- Supports the global `if` attribute.
+
 ### `<Input>`
 
 Single-line text input.

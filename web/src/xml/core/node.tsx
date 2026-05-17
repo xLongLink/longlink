@@ -19,10 +19,13 @@ import {
     DialogTrigger,
 } from '@xml/react/Dialog';
 import { Divider } from '@xml/react/Divider';
+import { Checkbox } from '@xml/react/Checkbox';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Icon } from '@xml/react/Icon';
+import { Label } from '@xml/react/Label';
 import { Input } from '@xml/react/Input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@xml/react/Select';
+import { Switch } from '@xml/react/Switch';
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
 import { A } from '@xml/html/A';
@@ -323,6 +326,76 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
 
         return <Input label={label} placeholder={placeholder} value={value} type={type} />;
+    }
+
+    if (node.name === 'Checkbox') {
+        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+        const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
+        const defaultCheckedValue = node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+        const checked = checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
+        const literalChecked =
+            checkedValue === true || checkedValue === 'true'
+                ? true
+                : checkedValue === false || checkedValue === 'false'
+                  ? false
+                  : checkedValue != null
+                    ? Boolean(checkedValue)
+                    : undefined;
+        const defaultChecked = checked
+            ? undefined
+            : literalChecked !== undefined
+              ? literalChecked
+              : defaultCheckedValue === true || defaultCheckedValue === 'true'
+                ? true
+                : defaultCheckedValue === false || defaultCheckedValue === 'false'
+                  ? false
+                  : defaultCheckedValue != null
+                    ? Boolean(defaultCheckedValue)
+                    : undefined;
+        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+
+        return <Checkbox checked={checked} className={className} defaultChecked={defaultChecked} disabled={disabled} id={id} />;
+    }
+
+    if (node.name === 'Label') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
+
+        return <Label className={className} htmlFor={htmlFor} children={node.children} />;
+    }
+
+    if (node.name === 'Switch') {
+        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+        const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
+        const defaultCheckedValue = node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+        const checked = checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
+        const literalChecked =
+            checkedValue === true || checkedValue === 'true'
+                ? true
+                : checkedValue === false || checkedValue === 'false'
+                  ? false
+                  : checkedValue != null
+                    ? Boolean(checkedValue)
+                    : undefined;
+        const defaultChecked = checked
+            ? undefined
+            : literalChecked !== undefined
+              ? literalChecked
+              : defaultCheckedValue === true || defaultCheckedValue === 'true'
+                ? true
+                : defaultCheckedValue === false || defaultCheckedValue === 'false'
+                  ? false
+                  : defaultCheckedValue != null
+                    ? Boolean(defaultCheckedValue)
+                    : undefined;
+        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+
+        return <Switch checked={checked} className={className} defaultChecked={defaultChecked} disabled={disabled} id={id} size={size as 'sm' | 'default'} />;
     }
 
     if (node.name === 'Select') {
