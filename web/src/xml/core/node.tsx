@@ -37,6 +37,7 @@ import { Icon } from '@xml/react/Icon';
 import { Label } from '@xml/react/Label';
 import { Input } from '@xml/react/Input';
 import { Textarea } from '@xml/react/Textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@xml/react/Tooltip';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@xml/react/Select';
 import { Switch } from '@xml/react/Switch';
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
@@ -326,6 +327,54 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
     if (node.name === 'DialogFooter') {
         return <DialogFooter children={node.children} />;
+    }
+
+    if (node.name === 'TooltipProvider') {
+        return <TooltipProvider children={node.children} />;
+    }
+
+    if (node.name === 'Tooltip') {
+        const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
+        const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
+        const open =
+            openValue === true || openValue === 'true'
+                ? true
+                : openValue === false || openValue === 'false'
+                  ? false
+                  : undefined;
+        const defaultOpen =
+            defaultOpenValue === true || defaultOpenValue === 'true'
+                ? true
+                : defaultOpenValue === false || defaultOpenValue === 'false'
+                  ? false
+                  : undefined;
+
+        return <Tooltip defaultOpen={defaultOpen} open={open} children={node.children} />;
+    }
+
+    if (node.name === 'TooltipTrigger') {
+        return <TooltipTrigger children={node.children} />;
+    }
+
+    if (node.name === 'TooltipContent') {
+        const align = node.params?.align ? String(evaluate(node.params.align, ctx) ?? 'center') : 'center';
+        const alignOffset = node.params?.alignOffset != null ? evaluate(node.params.alignOffset, ctx) : 0;
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const hiddenValue = node.params?.hidden != null ? evaluate(node.params.hidden, ctx) : undefined;
+        const side = node.params?.side ? String(evaluate(node.params.side, ctx) ?? 'top') : 'top';
+        const sideOffset = node.params?.sideOffset != null ? evaluate(node.params.sideOffset, ctx) : 4;
+
+        return (
+            <TooltipContent
+                align={align}
+                alignOffset={alignOffset == null ? undefined : String(alignOffset)}
+                className={className}
+                hidden={hiddenValue === true || hiddenValue === 'true' ? true : hiddenValue === false || hiddenValue === 'false' ? false : undefined}
+                side={side}
+                sideOffset={sideOffset == null ? undefined : String(sideOffset)}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'Input') {

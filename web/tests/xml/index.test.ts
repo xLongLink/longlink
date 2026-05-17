@@ -22,6 +22,10 @@ import {
     SelectSeparator,
     SelectTrigger,
     SelectValue,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
     Switch,
     Textarea,
     Table,
@@ -68,6 +72,10 @@ describe('xml index', () => {
         expect(SelectSeparator).toBeDefined();
         expect(SelectTrigger).toBeDefined();
         expect(SelectValue).toBeDefined();
+        expect(Tooltip).toBeDefined();
+        expect(TooltipContent).toBeDefined();
+        expect(TooltipProvider).toBeDefined();
+        expect(TooltipTrigger).toBeDefined();
         expect(Switch).toBeDefined();
         expect(Textarea).toBeDefined();
         expect(Table).toBeDefined();

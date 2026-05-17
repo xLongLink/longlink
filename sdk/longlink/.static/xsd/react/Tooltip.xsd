@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="TooltipChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="TooltipType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TooltipChildrenOnlyType">
+        <xsd:attribute name="defaultOpen" type="xsd:string" use="optional" />
+        <xsd:attribute name="open" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TooltipProviderType" mixed="true"><xsd:complexContent><xsd:extension base="TooltipChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="TooltipTriggerType" mixed="true"><xsd:complexContent><xsd:extension base="TooltipChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+
+  <xsd:complexType name="TooltipContentType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="TooltipChildrenOnlyType">
+        <xsd:attribute name="align" type="xsd:string" use="optional" />
+        <xsd:attribute name="alignOffset" type="xsd:string" use="optional" />
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+        <xsd:attribute name="hidden" type="xsd:string" use="optional" />
+        <xsd:attribute name="side" type="xsd:string" use="optional" />
+        <xsd:attribute name="sideOffset" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="TooltipProvider" type="TooltipProviderType" />
+  <xsd:element name="Tooltip" type="TooltipType" />
+  <xsd:element name="TooltipTrigger" type="TooltipTriggerType" />
+  <xsd:element name="TooltipContent" type="TooltipContentType" />
+</xsd:schema>

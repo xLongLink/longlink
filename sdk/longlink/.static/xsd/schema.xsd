@@ -18,6 +18,7 @@
   <xsd:include schemaLocation="react/Icon.xsd" />
   <xsd:include schemaLocation="react/Label.xsd" />
   <xsd:include schemaLocation="react/Input.xsd" />
+  <xsd:include schemaLocation="react/Tooltip.xsd" />
   <xsd:include schemaLocation="react/Textarea.xsd" />
   <xsd:include schemaLocation="react/Select.xsd" />
   <xsd:include schemaLocation="react/Switch.xsd" />

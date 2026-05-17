@@ -98,6 +98,12 @@
             </DialogFooter>
         </DialogContent>
     </Dialog>
+    <TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger>Hover tooltip</TooltipTrigger>
+            <TooltipContent side="top">Tooltip text</TooltipContent>
+        </Tooltip>
+    </TooltipProvider>
     <p>
         <Button action="/pricing" method="GET" variant="outline">Open pricing</Button>
     </p>
@@ -170,7 +176,7 @@
     </FieldSet>
 
     <p>Rendered components:</p>
-    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input", "Textarea", "Checkbox", "Label", "Switch", "FieldSet", "FieldLegend", "FieldDescription", "FieldGroup", "Field", "FieldContent", "FieldTitle", "FieldLabel", "FieldError", "FieldSeparator", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
+    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent", "Button", "Divider", "Input", "Textarea", "Checkbox", "Label", "Switch", "FieldSet", "FieldLegend", "FieldDescription", "FieldGroup", "Field", "FieldContent", "FieldTitle", "FieldLabel", "FieldError", "FieldSeparator", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

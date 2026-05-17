@@ -33,6 +33,7 @@ export {
 } from './react/Dialog';
 export { Divider } from './react/Divider';
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from './react/Select';
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './react/Tooltip';
 export { Switch } from './react/Switch';
 export { Textarea } from './react/Textarea';
 export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './react/Table';

@@ -494,6 +494,55 @@ Description slot for the dialog header.
 
 Footer slot for dialog actions.
 
+## Tooltip
+
+### `<TooltipProvider>`
+
+Provides tooltip context for descendant tooltip roots.
+
+### `<Tooltip>`
+
+Renders a tooltip root shell.
+
+Attributes:
+
+- `open` optional. Control whether the tooltip is open.
+- `defaultOpen` optional. Open the tooltip on first render.
+
+Behavior:
+
+- Wrap tooltip roots in `TooltipProvider` when using multiple tooltips on a page.
+- Use `TooltipTrigger` for the hover or focus target.
+- Use `TooltipContent` for the popup body.
+
+Example:
+
+```xml
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger>Hover me</TooltipTrigger>
+    <TooltipContent>Tooltip text</TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+```
+
+### `<TooltipTrigger>`
+
+Trigger slot for the tooltip target.
+
+### `<TooltipContent>`
+
+Tooltip popup content.
+
+Attributes:
+
+- `align` optional. Popup alignment.
+- `alignOffset` optional. Alignment offset.
+- `className` optional. Extra popup classes.
+- `hidden` optional. Hide the popup.
+- `side` optional. Popup placement side.
+- `sideOffset` optional. Distance from the trigger.
+
 ## Layout
 
 ### `<Divider>`
