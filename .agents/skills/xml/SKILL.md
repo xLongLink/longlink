@@ -67,10 +67,32 @@ longlink/
     └── src/xml/                  # XML documentation pages
         ├── index.md
         ├── components.md
-        ├── layout.md
-        ├── primitives.md
         └── html.md
 ```
+
+## Components
+
+Primitives:
+
+- `Page` - root page shell.
+- `State` - local reactive state slot.
+- `Query` - JSON fetch slot.
+- `For` - array iteration in scoped child context.
+- `Text` - internal only; produced by the parser for raw text.
+
+React:
+
+- `Button` - action button and link adapter.
+- `Divider` - horizontal separator.
+- `Input` - single-line input control.
+- `Hero` - hero shell.
+- `HeroTitle` - hero title slot.
+- `HeroDescription` - hero description slot.
+- `HeroContent` - hero content slot.
+
+HTML:
+
+- `p` - paragraph bridge element.
 
 ## Parser (web/src/xml/core/parser.ts)
 
@@ -89,6 +111,10 @@ longlink/
 - `Query` fetches JSON data into a named slot.
 - `For` iterates over arrays in a scoped child context.
 - `Text` is internal only and is produced by the parser for raw text content. Do not author it directly.
+
+## Global XML Patterns
+
+- Any element may use `if="..."` for conditional rendering.
 
 ## Expressions (web/src/xml/core/expressions/)
 
