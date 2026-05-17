@@ -21,9 +21,22 @@ import {
 import { Divider } from '@xml/react/Divider';
 import { Checkbox } from '@xml/react/Checkbox';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
+import {
+    Field,
+    FieldContent,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+    FieldLegend,
+    FieldSeparator,
+    FieldSet,
+    FieldTitle,
+} from '@xml/react/Field';
 import { Icon } from '@xml/react/Icon';
 import { Label } from '@xml/react/Label';
 import { Input } from '@xml/react/Input';
+import { Textarea } from '@xml/react/Textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@xml/react/Select';
 import { Switch } from '@xml/react/Switch';
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
@@ -324,8 +337,124 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
             : undefined;
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const autoComplete = node.params?.autoComplete ? String(evaluate(node.params.autoComplete, ctx) ?? '') : undefined;
+        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+        const ariaInvalidValue = node.params?.['aria-invalid'] != null ? evaluate(node.params['aria-invalid'], ctx) : undefined;
+        const disabled =
+            disabledValue === false || disabledValue === 'false'
+                ? false
+                : disabledValue != null
+                  ? true
+                  : undefined;
+        const ariaInvalid =
+            ariaInvalidValue === false || ariaInvalidValue === 'false'
+                ? false
+                : ariaInvalidValue != null
+                  ? true
+                  : undefined;
 
-        return <Input label={label} placeholder={placeholder} value={value} type={type} />;
+        return <Input aria-invalid={ariaInvalid} autoComplete={autoComplete} className={className} disabled={disabled} id={id} label={label} placeholder={placeholder} value={value} type={type} />;
+    }
+
+    if (node.name === 'Textarea') {
+        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+        const placeholder = node.params?.placeholder
+            ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
+            : undefined;
+        const value = node.params?.value
+            ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+            : undefined;
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+        const rowsValue = node.params?.rows != null ? evaluate(node.params.rows, ctx) : undefined;
+        const colsValue = node.params?.cols != null ? evaluate(node.params.cols, ctx) : undefined;
+        const disabled = disabledValue === true || disabledValue === 'true' ? true : disabledValue === false || disabledValue === 'false' ? false : undefined;
+
+        return (
+            <Textarea
+                className={className}
+                cols={colsValue == null ? undefined : String(colsValue)}
+                disabled={disabled}
+                id={id}
+                label={label}
+                placeholder={placeholder}
+                rows={rowsValue == null ? undefined : String(rowsValue)}
+                value={value}
+            />
+        );
+    }
+
+    if (node.name === 'FieldSet') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <FieldSet className={className} children={node.children} />;
+    }
+
+    if (node.name === 'FieldLegend') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'legend') : 'legend';
+
+        return <FieldLegend className={className} variant={variant as 'legend' | 'label'} children={node.children} />;
+    }
+
+    if (node.name === 'FieldGroup') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <FieldGroup className={className} children={node.children} />;
+    }
+
+    if (node.name === 'Field') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const orientation = node.params?.orientation ? String(evaluate(node.params.orientation, ctx) ?? 'vertical') : 'vertical';
+
+        return <Field className={className} orientation={orientation as 'vertical' | 'horizontal' | 'responsive'} children={node.children} />;
+    }
+
+    if (node.name === 'FieldContent') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <FieldContent className={className} children={node.children} />;
+    }
+
+    if (node.name === 'FieldLabel') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
+
+        return <FieldLabel className={className} htmlFor={htmlFor} children={node.children} />;
+    }
+
+    if (node.name === 'FieldTitle') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <FieldTitle className={className} children={node.children} />;
+    }
+
+    if (node.name === 'FieldDescription') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <FieldDescription className={className} children={node.children} />;
+    }
+
+    if (node.name === 'FieldSeparator') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <FieldSeparator className={className} children={node.children} />;
+    }
+
+    if (node.name === 'FieldError') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+        const errors = node.params?.errors != null ? evaluate(node.params.errors, ctx) : undefined;
+
+        return (
+            <FieldError
+                className={className}
+                errors={errors as Array<{ message?: string } | undefined> | string | undefined}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'Checkbox') {

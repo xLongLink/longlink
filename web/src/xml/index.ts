@@ -8,6 +8,18 @@ export { Badge } from './react/Badge';
 export { Checkbox } from './react/Checkbox';
 export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './react/Card';
 export { Column, Columns } from './react/Columns';
+export {
+    Field,
+    FieldContent,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+    FieldLegend,
+    FieldSeparator,
+    FieldSet,
+    FieldTitle,
+} from './react/Field';
 export { Icon } from './react/Icon';
 export { Label } from './react/Label';
 export {
@@ -22,6 +34,7 @@ export {
 export { Divider } from './react/Divider';
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from './react/Select';
 export { Switch } from './react/Switch';
+export { Textarea } from './react/Textarea';
 export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './react/Table';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';
 export { RenderXML } from './renderers.tsx';

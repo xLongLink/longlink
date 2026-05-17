@@ -4,14 +4,19 @@ import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML Input component. */
 export interface InputProps {
+    'aria-invalid'?: boolean;
+    autoComplete?: string;
+    className?: string;
+    disabled?: boolean;
+    id?: string;
     label?: string;
     placeholder?: string | number | boolean;
-    value?: string | number | boolean;
+    value?: string | number | boolean | Record<string, unknown>;
     type?: string;
 }
 
 /** Renders a minimal XML input control. */
-export function Input({ value = '', label, placeholder, type = 'text' }: InputProps) {
+export function Input({ 'aria-invalid': ariaInvalid, autoComplete, className, disabled, id, value = '', label, placeholder, type = 'text' }: InputProps) {
     const placeholderText = String(placeholder ?? label ?? '');
 
     if (value && typeof value === 'object' && getVersion(value) !== undefined) {
@@ -21,6 +26,11 @@ export function Input({ value = '', label, placeholder, type = 'text' }: InputPr
 
         return (
             <UIInput
+                aria-invalid={ariaInvalid}
+                autoComplete={autoComplete}
+                className={className}
+                disabled={disabled}
+                id={id}
                 type={type}
                 placeholder={placeholderText}
                 value={String(currentValue ?? '')}
@@ -37,5 +47,5 @@ export function Input({ value = '', label, placeholder, type = 'text' }: InputPr
 
     const [initialValue] = useState(String(value ?? ''));
 
-    return <UIInput type={type} placeholder={placeholderText} defaultValue={initialValue} />;
+    return <UIInput aria-invalid={ariaInvalid} autoComplete={autoComplete} className={className} disabled={disabled} id={id} type={type} placeholder={placeholderText} defaultValue={initialValue} />;
 }

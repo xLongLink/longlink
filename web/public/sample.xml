@@ -107,6 +107,12 @@
     <p>
         <Input placeholder="Number input" type="number" value="42" />
     </p>
+    <p>
+        <Label htmlFor="notes">Notes</Label>
+    </p>
+    <p>
+        <Textarea id="notes" label="Notes" rows="4" value="Draft notes" />
+    </p>
     <p>Form controls:</p>
     <p>
         <Label htmlFor="newsletter">Newsletter</Label>
@@ -138,8 +144,33 @@
         <Badge variant="outline">Preview</Badge>
     </p>
 
+    <FieldSet>
+        <FieldLegend>Profile</FieldLegend>
+        <FieldDescription>This appears on invoices and emails.</FieldDescription>
+        <FieldGroup>
+            <Field>
+                <FieldContent>
+                    <FieldTitle>Full name</FieldTitle>
+                    <FieldDescription>This appears on invoices and emails.</FieldDescription>
+                </FieldContent>
+                <FieldLabel htmlFor="name">Full name</FieldLabel>
+                <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
+            </Field>
+            <Field>
+                <FieldLabel htmlFor="username">Username</FieldLabel>
+                <Input id="username" autoComplete="off" aria-invalid="true" />
+                <FieldError>Choose another username.</FieldError>
+            </Field>
+            <Field orientation="horizontal">
+                <Switch id="newsletter" />
+                <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
+            </Field>
+            <FieldSeparator>or</FieldSeparator>
+        </FieldGroup>
+    </FieldSet>
+
     <p>Rendered components:</p>
-    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input", "Checkbox", "Label", "Switch", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
+    <For each='["Hero", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "Button", "Divider", "Input", "Textarea", "Checkbox", "Label", "Switch", "FieldSet", "FieldLegend", "FieldDescription", "FieldGroup", "Field", "FieldContent", "FieldTitle", "FieldLabel", "FieldError", "FieldSeparator", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

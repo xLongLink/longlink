@@ -2,6 +2,16 @@ import {
     Column,
     Columns,
     Checkbox,
+    Field,
+    FieldContent,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+    FieldLegend,
+    FieldSeparator,
+    FieldSet,
+    FieldTitle,
     Icon,
     Label,
     Select,
@@ -13,6 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
     Switch,
+    Textarea,
     Table,
     TableBody,
     TableCaption,
@@ -37,6 +48,16 @@ describe('xml index', () => {
         expect(Column).toBeDefined();
         expect(Columns).toBeDefined();
         expect(Checkbox).toBeDefined();
+        expect(Field).toBeDefined();
+        expect(FieldContent).toBeDefined();
+        expect(FieldDescription).toBeDefined();
+        expect(FieldError).toBeDefined();
+        expect(FieldGroup).toBeDefined();
+        expect(FieldLabel).toBeDefined();
+        expect(FieldLegend).toBeDefined();
+        expect(FieldSeparator).toBeDefined();
+        expect(FieldSet).toBeDefined();
+        expect(FieldTitle).toBeDefined();
         expect(Icon).toBeDefined();
         expect(Label).toBeDefined();
         expect(Select).toBeDefined();
@@ -48,6 +69,7 @@ describe('xml index', () => {
         expect(SelectTrigger).toBeDefined();
         expect(SelectValue).toBeDefined();
         expect(Switch).toBeDefined();
+        expect(Textarea).toBeDefined();
         expect(Table).toBeDefined();
         expect(TableHeader).toBeDefined();
         expect(TableBody).toBeDefined();

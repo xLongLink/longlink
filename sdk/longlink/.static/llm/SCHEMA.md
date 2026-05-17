@@ -158,6 +158,100 @@ Behavior:
 - Renders as an inline SVG icon.
 - Supports the global `if` attribute.
 
+## Field
+
+### `<FieldSet>`
+
+Groups a form section.
+
+Attributes:
+
+- `className` optional. Extra fieldset classes.
+
+### `<FieldLegend>`
+
+Renders the fieldset legend.
+
+Attributes:
+
+- `className` optional. Extra legend classes.
+- `variant` optional. Use `legend` or `label`.
+
+### `<FieldGroup>`
+
+Groups related fields inside a fieldset.
+
+Attributes:
+
+- `className` optional. Extra group classes.
+
+### `<Field>`
+
+Renders one field row.
+
+Attributes:
+
+- `className` optional. Extra field classes.
+- `orientation` optional. Use `vertical`, `horizontal`, or `responsive`.
+
+### `<FieldContent>`
+
+Field content slot.
+
+Attributes:
+
+- `className` optional. Extra content classes.
+
+### `<FieldLabel>`
+
+Field label slot.
+
+Attributes:
+
+- `className` optional. Extra label classes.
+- `htmlFor` optional. Target control id.
+
+### `<FieldTitle>`
+
+Field title slot.
+
+Attributes:
+
+- `className` optional. Extra title classes.
+
+### `<FieldDescription>`
+
+Field description slot.
+
+Attributes:
+
+- `className` optional. Extra description classes.
+
+### `<FieldSeparator>`
+
+Separates field sections.
+
+Attributes:
+
+- `className` optional. Extra separator classes.
+
+Children:
+
+- Optional separator label text.
+
+### `<FieldError>`
+
+Field error slot.
+
+Attributes:
+
+- `className` optional. Extra error classes.
+- `errors` optional. Error list expression.
+
+Children:
+
+- Optional error message content.
+
 ### `<For>`
 
 Renders children for each item in a list.
@@ -534,6 +628,11 @@ Attributes:
 - `label` optional. Fallback placeholder text.
 - `value` optional. Expression for the displayed text.
 - `placeholder` optional.
+- `id` optional. Control id for associated labels.
+- `className` optional. Extra classes for styling.
+- `autoComplete` optional. Browser autocomplete hint.
+- `disabled` optional. Disables interaction.
+- `aria-invalid` optional. Marks the field invalid.
 - `type` optional. Input type.
 
 Behavior:
@@ -546,6 +645,33 @@ Example:
 
 ```xml
 <Input label="Your name" value="user.name" />
+```
+
+### `<Textarea>`
+
+Multi-line text input.
+
+Attributes:
+
+- `label` optional. Fallback placeholder text.
+- `value` optional. Expression for the displayed text.
+- `placeholder` optional.
+- `className` optional. Extra classes for styling.
+- `disabled` optional. Disables interaction.
+- `id` optional. Control id for associated labels.
+- `rows` optional. Visible row count.
+- `cols` optional. Visible column count.
+
+Behavior:
+
+- Renders a plain textarea.
+- When `value` resolves to a reactive Valtio-backed state slot, changes write back to `state.value`.
+- Otherwise, the field uses `value` as its initial text.
+
+Example:
+
+```xml
+<Textarea label="Notes" value="Draft notes" rows="4" />
 ```
 
 ### `<Select>`

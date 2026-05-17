@@ -179,6 +179,53 @@ Use the `Badge` component for compact status labels and tags.
 
 `variant` is optional.
 
+## Checkbox
+
+Use `Checkbox` for binary form toggles.
+
+```xml
+<Checkbox checked="settings.enabled" id="enabled" />
+```
+
+`checked` can bind to a reactive state slot.
+`defaultChecked` seeds the initial value when `checked` is not bound.
+`disabled` and `id` are supported.
+
+## Label
+
+Use `Label` for form labels.
+
+```xml
+<Label htmlFor="enabled">Enabled</Label>
+```
+
+`htmlFor` points at the control id.
+`className` is optional.
+
+## Switch
+
+Use `Switch` for binary on/off controls.
+
+```xml
+<Switch checked="settings.enabled" id="enabled" size="sm" />
+```
+
+`checked` can bind to a reactive state slot.
+`defaultChecked` seeds the initial value when `checked` is not bound.
+`size` accepts `sm` or `default`.
+
+## Textarea
+
+Use `Textarea` for multi-line text entry.
+
+```xml
+<Textarea label="Notes" value="Draft notes" rows="4" />
+```
+
+`label` is optional and falls back to the placeholder when `placeholder` is omitted.
+`value` can bind to a reactive state slot.
+`className`, `disabled`, `id`, `rows`, and `cols` are supported.
+
 ## Input
 
 Use the `Input` component for single-line text entry.
@@ -188,9 +235,42 @@ Use the `Input` component for single-line text entry.
 ```
 
 `label` is optional and is used as the placeholder when `placeholder` is omitted.
+`id`, `className`, `autoComplete`, `disabled`, and `aria-invalid` are also supported.
 
 When `value` resolves to a reactive Valtio-backed state slot, the input stays in sync and writes back to `state.value`.
 Otherwise, `value` only initializes the field.
+
+## Field
+
+Use `FieldSet`, `FieldLegend`, `FieldDescription`, `FieldGroup`, `Field`, `FieldContent`, `FieldTitle`, `FieldLabel`, `FieldError`, and `FieldSeparator` to build grouped form layouts.
+
+```xml
+<FieldSet>
+  <FieldLegend>Profile</FieldLegend>
+  <FieldDescription>This appears on invoices and emails.</FieldDescription>
+  <FieldGroup>
+    <Field>
+      <FieldLabel htmlFor="name">Full name</FieldLabel>
+      <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
+      <FieldDescription>This appears on invoices and emails.</FieldDescription>
+    </Field>
+    <Field>
+      <FieldLabel htmlFor="username">Username</FieldLabel>
+      <Input id="username" autoComplete="off" aria-invalid />
+      <FieldError>Choose another username.</FieldError>
+    </Field>
+    <Field orientation="horizontal">
+      <Switch id="newsletter" />
+      <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
+    </Field>
+  </FieldGroup>
+</FieldSet>
+```
+
+`Field` supports `vertical`, `horizontal`, and `responsive` orientations.
+`FieldLegend` accepts `variant="legend"` or `variant="label"`.
+`FieldError` can render children or an `errors` expression.
+`FieldLabel` and `FieldTitle` both render the field label slot.
 
 ## Select
 

@@ -44,5 +44,5 @@ export function Icon({ className, name = '' }: IconProps) {
         throw new Error(`Unknown icon "${iconName}"`);
     }
 
-    return <IconComponent aria-hidden="true" className={cn('size-5', className)} />;
+    return <IconComponent aria-hidden={true} className={cn('size-5', className)} />;
 }

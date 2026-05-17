@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="InputChildrenOnlyType" mixed="true">
+  <xsd:complexType name="TextareaChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,20 +9,20 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="InputType" mixed="true">
+  <xsd:complexType name="TextareaType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="InputChildrenOnlyType">
-        <xsd:attribute name="aria-invalid" type="xsd:string" use="optional" />
-        <xsd:attribute name="autoComplete" type="xsd:string" use="optional" />
+      <xsd:extension base="TextareaChildrenOnlyType">
         <xsd:attribute name="className" type="xsd:string" use="optional" />
+        <xsd:attribute name="cols" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
         <xsd:attribute name="label" type="xsd:string" use="optional" />
         <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
+        <xsd:attribute name="rows" type="xsd:string" use="optional" />
         <xsd:attribute name="value" type="xsd:string" use="optional" />
-        <xsd:attribute name="type" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
-  <xsd:element name="Input" type="InputType" />
+
+  <xsd:element name="Textarea" type="TextareaType" />
 </xsd:schema>
