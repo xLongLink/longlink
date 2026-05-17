@@ -9,6 +9,7 @@ Use XML pages for CRUD screens, forms, tables, dashboards, and operational workf
 
 Every XML document starts with a `<longlink>` root element.
 Use `<State>` for local reactive state slots, `<Query>` for JSON fetch slots, and `<For>` to render arrays in a child scope.
+Use `Slider` with the other form controls when you need a numeric range input.
 
 `<State value="...">` uses an expression and can seed objects, arrays, or scalar values.
 `<Query id="..." path="...">` requires literal text for both attributes.

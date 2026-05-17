@@ -13,7 +13,7 @@ Supported elements:
 - Layout: `Columns`, `Column`, `Divider`, `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
 - Surface: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`, `Table`, `TableCaption`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
 - Identity: `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
-- Form controls: `Button`, `Label`, `Badge`, `Checkbox`, `Switch`, `Input`, `Textarea`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
+- Form controls: `Button`, `Label`, `Badge`, `Checkbox`, `Switch`, `Slider`, `Input`, `Textarea`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
 - HTML bridge: `p`, `a`
 
 ## Hero
@@ -258,6 +258,38 @@ Use `Toggle` for button-style on/off controls.
 `variant` accepts `default` or `outline`.
 `size` accepts `sm`, `default`, or `lg`.
 
+## ToggleGroup
+
+Use `ToggleGroup` with `ToggleGroupItem` for segmented single- or multi-select controls.
+
+```xml
+<ToggleGroup type="single">
+  <ToggleGroupItem value="a">A</ToggleGroupItem>
+  <ToggleGroupItem value="b">B</ToggleGroupItem>
+  <ToggleGroupItem value="c">C</ToggleGroupItem>
+</ToggleGroup>
+```
+
+`type` accepts `single` or `multiple`.
+`defaultValue` and `value` can be used to seed or bind the selected item set.
+`orientation`, `size`, `variant`, `spacing`, `disabled`, and `loopFocus` are supported.
+
+## RadioGroup
+
+Use `RadioGroup` with `RadioGroupItem` for single-choice form controls.
+
+```xml
+<RadioGroup name="priority" defaultValue="medium">
+  <RadioGroupItem value="low">Low</RadioGroupItem>
+  <RadioGroupItem value="medium">Medium</RadioGroupItem>
+  <RadioGroupItem value="high">High</RadioGroupItem>
+</RadioGroup>
+```
+
+`defaultValue` and `value` can seed or bind the selected option.
+`name`, `form`, `required`, `readOnly`, and `disabled` are supported.
+`ToggleGroupItem.value` is required.
+
 ## Label
 
 Use `Label` for form labels.
@@ -280,6 +312,19 @@ Use `Switch` for binary on/off controls.
 `checked` can bind to a reactive state slot.
 `defaultChecked` seeds the initial value when `checked` is not bound.
 `size` accepts `sm` or `default`.
+
+## Slider
+
+Use `Slider` for single-value and range controls.
+
+```xml
+<Slider value="volume" min="0" max="100" step="5" />
+```
+
+`value` can bind to a reactive state slot or seed the initial thumb position.
+`defaultValue` is an explicit fallback when you do not want to use `value`.
+Use wrapped expressions like `{[25]}` when you need multiple thumb values.
+`min`, `max`, `step`, `orientation`, `disabled`, `id`, and `name` are supported.
 
 ## Textarea
 

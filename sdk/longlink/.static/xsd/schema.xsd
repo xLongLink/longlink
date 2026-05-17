@@ -23,7 +23,10 @@
   <xsd:include schemaLocation="react/Textarea.xsd" />
   <xsd:include schemaLocation="react/Select.xsd" />
   <xsd:include schemaLocation="react/Switch.xsd" />
+  <xsd:include schemaLocation="react/Slider.xsd" />
   <xsd:include schemaLocation="react/Toggle.xsd" />
+  <xsd:include schemaLocation="react/ToggleGroup.xsd" />
+  <xsd:include schemaLocation="react/RadioGroup.xsd" />
   <xsd:include schemaLocation="react/Table.xsd" />
   <xsd:include schemaLocation="react/Tabs.xsd" />
 </xsd:schema>

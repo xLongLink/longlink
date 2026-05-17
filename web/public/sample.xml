@@ -145,6 +145,27 @@
         <Toggle id="notifications" defaultPressed="true" size="sm" variant="outline">Notifications</Toggle>
     </p>
     <p>
+        <Slider defaultValue="{[35]}" min="0" max="100" step="5" />
+    </p>
+    <p>
+        <ToggleGroup type="single">
+            <ToggleGroupItem value="a">A</ToggleGroupItem>
+            <ToggleGroupItem value="b">B</ToggleGroupItem>
+            <ToggleGroupItem value="c">C</ToggleGroupItem>
+        </ToggleGroup>
+    </p>
+    <FieldSet>
+        <FieldLegend>Priority</FieldLegend>
+        <FieldDescription>Choose one level for this item.</FieldDescription>
+        <FieldGroup>
+            <RadioGroup name="priority" defaultValue="medium">
+                <RadioGroupItem value="low">Low</RadioGroupItem>
+                <RadioGroupItem value="medium">Medium</RadioGroupItem>
+                <RadioGroupItem value="high">High</RadioGroupItem>
+            </RadioGroup>
+        </FieldGroup>
+    </FieldSet>
+    <p>
         <Select defaultValue="overview">
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -192,7 +213,7 @@
     </FieldSet>
 
     <p>Rendered components:</p>
-    <For each='["Hero", "AvatarGroup", "Avatar", "AvatarImage", "AvatarFallback", "AvatarBadge", "AvatarGroupCount", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent", "Button", "Divider", "Input", "Textarea", "Checkbox", "Toggle", "Label", "Switch", "FieldSet", "FieldLegend", "FieldDescription", "FieldGroup", "Field", "FieldContent", "FieldTitle", "FieldLabel", "FieldError", "FieldSeparator", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
+    <For each='["Hero", "AvatarGroup", "Avatar", "AvatarImage", "AvatarFallback", "AvatarBadge", "AvatarGroupCount", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent", "Button", "Divider", "Input", "Textarea", "Checkbox", "Toggle", "Slider", "ToggleGroup", "ToggleGroupItem", "RadioGroup", "RadioGroupItem", "Label", "Switch", "FieldSet", "FieldLegend", "FieldDescription", "FieldGroup", "Field", "FieldContent", "FieldTitle", "FieldLabel", "FieldError", "FieldSeparator", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
         <p>{index + 1}. {name}</p>
     </For>
 

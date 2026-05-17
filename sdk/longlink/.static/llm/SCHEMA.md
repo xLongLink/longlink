@@ -746,6 +746,61 @@ Behavior:
 - Otherwise, `defaultPressed` sets the initial pressed state.
 - Supports the global `if` attribute.
 
+### `<ToggleGroup>`
+
+Group of toggle buttons.
+
+Attributes:
+
+- `type` optional. Use `single` or `multiple`.
+- `className` optional. Extra classes for styling.
+- `defaultValue` optional. Initial selected value or values.
+- `disabled` optional. Disables interaction.
+- `loopFocus` optional. Enables arrow-key looping.
+- `orientation` optional. Use `horizontal` or `vertical`.
+- `size` optional. Group size variant. Use `sm`, `default`, or `lg`.
+- `spacing` optional. Gap between items.
+- `value` optional. Reactive state slot or current selected value(s).
+- `variant` optional. Toggle style variant. Use `default` or `outline`.
+
+### `<ToggleGroupItem>`
+
+Toggle button within a group.
+
+Attributes:
+
+- `value` required. Unique item value.
+- `className` optional. Extra classes for styling.
+- `size` optional. Item size variant.
+- `variant` optional. Item style variant.
+
+### `<RadioGroup>`
+
+Group of radio buttons.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+- `defaultValue` optional. Initial selected value.
+- `disabled` optional. Disables interaction.
+- `form` optional. Owning form id.
+- `name` optional. Form field name.
+- `readOnly` optional. Prevents selection changes.
+- `required` optional. Requires a selection.
+- `value` optional. Reactive state slot or current selected value.
+
+### `<RadioGroupItem>`
+
+Radio button within a group.
+
+Attributes:
+
+- `value` required. Unique item value.
+- `className` optional. Extra classes for styling.
+- `disabled` optional. Disables interaction.
+- `readOnly` optional. Prevents selection changes.
+- `required` optional. Requires a selection.
+
 ### `<Switch>`
 
 Binary switch control.
@@ -763,6 +818,31 @@ Behavior:
 
 - When `checked` resolves to a Valtio-backed state slot, toggle updates write back to `state.value`.
 - Otherwise, `defaultChecked` sets the initial checked state.
+- Supports the global `if` attribute.
+
+### `<Slider>`
+
+Range or single-value slider control.
+
+Attributes:
+
+- `value` optional. Reactive state slot or current slider value(s).
+- `defaultValue` optional. Initial slider value(s).
+- `className` optional. Extra classes for styling.
+- `disabled` optional. Disables interaction.
+- `id` optional. Control id for associated labels.
+- `min` optional. Minimum slider value.
+- `max` optional. Maximum slider value.
+- `name` optional. Form field name.
+- `orientation` optional. Use `horizontal` or `vertical`.
+- `step` optional. Step increment.
+
+Behavior:
+
+- When `value` resolves to a Valtio-backed state slot, slider updates write back to `state.value` or the bound array.
+- Otherwise, `defaultValue` sets the initial slider position.
+- Use wrapped array expressions such as `{[25]}` when you need more than one thumb value.
+- If neither `value` nor `defaultValue` is provided, the slider starts at `min`.
 - Supports the global `if` attribute.
 
 ### `<Input>`

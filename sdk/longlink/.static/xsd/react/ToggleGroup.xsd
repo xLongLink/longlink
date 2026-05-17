@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="ToggleGroupChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="ToggleGroupType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="ToggleGroupChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+        <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
+        <xsd:attribute name="disabled" type="xsd:string" use="optional" />
+        <xsd:attribute name="loopFocus" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="spacing" type="xsd:string" use="optional" />
+        <xsd:attribute name="type" type="xsd:string" use="optional" />
+        <xsd:attribute name="value" type="xsd:string" use="optional" />
+        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="ToggleGroupItemType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="ToggleGroupChildrenOnlyType">
+        <xsd:attribute name="className" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="value" type="xsd:string" use="required" />
+        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="ToggleGroup" type="ToggleGroupType" />
+  <xsd:element name="ToggleGroupItem" type="ToggleGroupItemType" />
+</xsd:schema>

@@ -33,10 +33,13 @@ export {
     DialogTrigger,
 } from './react/Dialog';
 export { Divider } from './react/Divider';
+export { RadioGroup, RadioGroupItem } from './react/RadioGroup';
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from './react/Select';
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './react/Tooltip';
 export { Switch } from './react/Switch';
+export { Slider } from './react/Slider';
 export { Toggle } from './react/Toggle';
+export { ToggleGroup, ToggleGroupItem } from './react/ToggleGroup';
 export { Textarea } from './react/Textarea';
 export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './react/Table';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';
