@@ -110,10 +110,10 @@ async def sample():
 ## Pages
 
 - XML pages live under `sdk/longlink/.static/new/src/pages/` in the scaffold.
-- The runtime discovers page directories passed to `app.include_page(...)`.
+- Declare pages with the `page` decorator exported from `longlink`.
 
 ```xml
-<Page name="Sample" icon="layout-dashboard">
+<Page>
   <p>Hello from XML.</p>
 </Page>
 ```

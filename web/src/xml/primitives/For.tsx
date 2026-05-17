@@ -1,4 +1,4 @@
-import { ContextProvider, RenderXML, useContext, useUrl } from '@xml';
+import { ContextProvider, RenderXML, useUrl, useXmlContext } from '@xml';
 import type { ASTNode } from '@xml/types';
 import { Fragment } from 'react';
 
@@ -11,7 +11,7 @@ export interface ForProps {
 
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ each, as, children }: ForProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
     const baseUrl = useUrl('');
 
     return each.map((item, index) => {

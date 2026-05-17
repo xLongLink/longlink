@@ -101,10 +101,9 @@ class Page(Element):
 
         metadata: dict[str, str] = {}
         # Pull supported metadata attrs from root element and normalize whitespace.
-        for key in ("name", "icon"):
-            root: dict[str, Any] = self.schema.get("Page", {})
-            value = root.get(f"@{key}") or root.get(key)
-            if isinstance(value, str) and value.strip():
-                metadata[key] = value.strip()
+        root: dict[str, Any] = self.schema.get("Page", {})
+        value = root.get("@name") or root.get("name")
+        if isinstance(value, str) and value.strip():
+            metadata["name"] = value.strip()
 
         return metadata

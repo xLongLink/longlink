@@ -22,7 +22,6 @@ async def get_metadata(request: Request) -> dict[str, object]:
                 {
                     "path": page_file.relative_to(root_path).as_posix(),
                     "name": page.name,
-                    "icon": page.metadata.get("icon", "file-text"),
                     "content": page.content,
                 }
             )

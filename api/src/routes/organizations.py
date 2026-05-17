@@ -25,7 +25,6 @@ async def metadata(name: str) -> dict:
                 PageInfo(
                     name=page.metadata.get("name", page_file.stem.replace("-", " ").title()),
                     path=page_file.stem,
-                    icon=page.metadata.get("icon", "file-text"),
                     content=page.content,
                 )
             )

@@ -28,7 +28,7 @@ LongLink evaluates JavaScript-like expressions inside `{...}`.
 
 ### Limits
 
-- Use expressions for values, lookups, array literals, object literals, template literals, and basic arithmetic.
+- Use expressions for literal text, dotted lookups, wrapped values, array literals, object literals, template literals, basic arithmetic, and mixed text interpolation.
 - Do not rely on statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, or globals.
 
 ## Global XML Patterns
@@ -66,8 +66,7 @@ Defines the page root.
 
 Attributes:
 
-- `name` required. Page name.
-- `icon` optional. Icon name for page metadata.
+- `name` optional. Page label metadata.
 
 Children:
 
@@ -76,8 +75,9 @@ Children:
 Behavior:
 
 - The web renderer uses `children` and does not read `name` today.
+- If `name` is omitted, SDK page metadata falls back to the page filename.
 
-Example: `<Page name="Dashboard" icon="layout-grid"><p>Dashboard</p></Page>`
+Example: `<Page><p>Dashboard</p></Page>`
 
 ## Primitives
 

@@ -95,9 +95,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'Page') {
-        const icon = node.params?.icon ? String(node.params.icon) : undefined;
-
-        return <Page icon={icon} children={node.children} />;
+        return <Page children={node.children} />;
     }
 
     if (node.name === 'Divider') {

@@ -1,16 +1,19 @@
 from pathlib import Path
+
+from longlink import LongLink, page
 from src.api import routers
-from longlink import LongLink
 from src.envs import env
 
 app = LongLink(env=env)
-pages_dir = Path(__file__).resolve().parent / "src" / "pages"
+
+
+@page("/pages/dashboard.xml", icon="layout-dashboard")
+def dashboard_page():
+    """Return the dashboard XML page example."""
+
+    # Load the scaffolded dashboard page directly from disk.
+    return (Path(__file__).resolve().parent / "src" / "pages" / "dashboard.xml").read_text(encoding="utf-8")
 
 # Register routers
 for router in routers:
     app.include_router(router)
-
-
-# Register pages when the app provides any.
-if pages_dir.exists():
-    app.include_page(pages_dir)

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Button as UIButton, buttonVariants } from '@ui/button';
 import type { ASTNode } from '@xml';
-import { renderNode, useContext, useUrl } from '@xml';
+import { renderNode, useUrl, useXmlContext } from '@xml';
 import type { ExpressionResolver } from '@xml/core/expressions';
 import { toast } from 'sonner';
 
@@ -26,7 +26,7 @@ export function Button({
     variant = 'default',
     children,
 }: ButtonProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
     const actionUrl = String(action ?? '');
     const requestUrl = useUrl(actionUrl);
     const invalidateRuntime = ctx.invalidate ?? (async () => {});

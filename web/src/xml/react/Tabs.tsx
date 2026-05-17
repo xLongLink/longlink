@@ -1,6 +1,6 @@
 import { Tabs as UITabs, TabsContent as UITabsContent, TabsList as UITabsList, TabsTrigger as UITabsTrigger } from '@ui/tabs';
 import type { ASTNode } from '@xml';
-import { renderNode, useContext } from '@xml';
+import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Tabs component. */
 export interface TabsProps {
@@ -33,7 +33,7 @@ export interface TabsContentProps {
 
 /** Renders a shadcn-backed tabs shell. */
 export function Tabs({ children, className, defaultValue, orientation = 'horizontal' }: TabsProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return (
         <UITabs className={className} defaultValue={defaultValue} orientation={orientation as never}>
@@ -45,7 +45,7 @@ export function Tabs({ children, className, defaultValue, orientation = 'horizon
 
 /** Renders the tabs list slot. */
 export function TabsList({ children, className, variant = 'default' }: TabsListProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <UITabsList className={className} variant={variant as never}>{renderNode(children ?? null, ctx)}</UITabsList>;
 }
@@ -53,7 +53,7 @@ export function TabsList({ children, className, variant = 'default' }: TabsListP
 
 /** Renders an individual tabs trigger. */
 export function TabsTrigger({ children, className, value }: TabsTriggerProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     if (!value) throw new Error('TabsTrigger requires a value');
 
@@ -67,7 +67,7 @@ export function TabsTrigger({ children, className, value }: TabsTriggerProps) {
 
 /** Renders a tabs content panel. */
 export function TabsContent({ children, className, value }: TabsContentProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     if (!value) throw new Error('TabsContent requires a value');
 

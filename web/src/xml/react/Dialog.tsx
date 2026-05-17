@@ -11,7 +11,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { evaluate } from '@xml/core/expressions';
 import type { ASTNode } from '@xml';
-import { renderNode, useContext } from '@xml';
+import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Dialog component. */
 export interface DialogProps {
@@ -52,7 +52,7 @@ export interface DialogFooterProps {
 
 /** Renders a dialog root that groups trigger and content slots. */
 export function Dialog({ children, defaultOpen, open }: DialogProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return (
         <UIDialog defaultOpen={defaultOpen} open={open}>
@@ -64,7 +64,7 @@ export function Dialog({ children, defaultOpen, open }: DialogProps) {
 
 /** Renders the dialog trigger slot. */
 export function DialogTrigger({ children }: DialogTriggerProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
     const triggerChildren = Array.isArray(children) ? children : children ? [children] : [];
     const buttonChild = triggerChildren.length === 1 && triggerChildren[0]?.name === 'Button' ? triggerChildren[0] : null;
 
@@ -86,7 +86,7 @@ export function DialogTrigger({ children }: DialogTriggerProps) {
 
 /** Renders the dialog content surface. */
 export function DialogContent({ children }: DialogContentProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <UIDialogContent>{renderNode(children ?? null, ctx)}</UIDialogContent>;
 }
@@ -94,7 +94,7 @@ export function DialogContent({ children }: DialogContentProps) {
 
 /** Renders the dialog header slot. */
 export function DialogHeader({ children }: DialogHeaderProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <UIDialogHeader>{renderNode(children ?? null, ctx)}</UIDialogHeader>;
 }
@@ -102,7 +102,7 @@ export function DialogHeader({ children }: DialogHeaderProps) {
 
 /** Renders the dialog title slot. */
 export function DialogTitle({ children }: DialogTitleProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <UIDialogTitle>{renderNode(children ?? null, ctx)}</UIDialogTitle>;
 }
@@ -110,7 +110,7 @@ export function DialogTitle({ children }: DialogTitleProps) {
 
 /** Renders the dialog description slot. */
 export function DialogDescription({ children }: DialogDescriptionProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <UIDialogDescription>{renderNode(children ?? null, ctx)}</UIDialogDescription>;
 }
@@ -118,7 +118,7 @@ export function DialogDescription({ children }: DialogDescriptionProps) {
 
 /** Renders the dialog footer slot. */
 export function DialogFooter({ children }: DialogFooterProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <UIDialogFooter>{renderNode(children ?? null, ctx)}</UIDialogFooter>;
 }

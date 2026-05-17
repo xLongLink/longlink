@@ -101,7 +101,7 @@ HTML:
 
 ## Context (web/src/xml/core/context.tsx)
 
-- `useContext` reads the active XML runtime state from React context.
+- `useXmlContext` reads the active XML runtime state from React context.
 - `ContextProvider` exposes a runtime context to rendered XML children.
 - `createContext` returns a blank execution context.
 - `setupContext` walks the AST, seeds `State` and `Query` nodes, and stores their re-run hooks for invalidation.
@@ -122,9 +122,8 @@ HTML:
 
 ## Root Metadata
 
-- `Page` supports `name` and `icon` attributes.
-- `name` is required in the schema, even though the current web renderer only uses `children`.
-- `icon` is optional and may be consumed by SDK or page metadata tooling.
+- `Page` supports optional `name` metadata.
+- `name` falls back to the filename in SDK metadata, even though the current web renderer only uses `children`.
 
 ## Global XML Patterns
 
@@ -164,7 +163,7 @@ Not allowed:
 
 1. Choose the right layer for the component: `primitives/` for XML building blocks, `react/` for React-backed controls, or `html/` for simple HTML bridges.
 2. Add the component file with a clear props interface and a short docstring for the component entry point.
-3. Keep the implementation declarative and predictable, and reuse `useContext`, `renderNode`, or `useUrl` when the component needs runtime state or child rendering.
+3. Keep the implementation declarative and predictable, and reuse `useXmlContext`, `renderNode`, or `useUrl` when the component needs runtime state or child rendering.
 4. Wire the component into `web/src/xml/core/node.tsx` so the renderer can resolve the tag, and export it from `web/src/xml/index.ts` if it should be public.
 5. Update the XML schema, parser, or runtime helpers if the new component introduces new attributes, bindings, or execution behavior.
 6. Add or update documentation and examples so the new tag and its props are discoverable.

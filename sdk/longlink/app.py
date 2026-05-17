@@ -1,7 +1,6 @@
 import traceback
 from fastapi import FastAPI, Request
-from pathlib import Path
-from longlink.utils import Page, Environments
+from longlink.utils import Environments
 from longlink.routes import routes
 from fastapi.responses import JSONResponse
 from pydantic_settings import BaseSettings
@@ -101,29 +100,3 @@ class LongLink(FastAPI):
                 "traceback": error_detail,
             },
         )
-
-    def include_page(self, page: str | Path) -> None:
-        """Register a page folder so nested XML pages are discovered by path."""
-
-        page_path = Path(page)
-        candidate_paths: list[Path] = []
-
-        # Resolve non-existent declarations against common app roots used by showcase apps.
-        if not page_path.exists():
-            normalized_page_path = (
-                page_path.relative_to(page_path.anchor)
-                if page_path.is_absolute()
-                else page_path
-            )
-            candidate_paths = [
-                Path.cwd() / normalized_page_path,
-                Path.cwd() / "app" / normalized_page_path,
-            ]
-
-        for candidate in candidate_paths:
-            if candidate.exists():
-                page_path = candidate
-                break
-
-        page_root = page_path.parent if page_path.is_file() else page_path
-        self.state.page_roots.append(page_root.resolve())

@@ -5,7 +5,7 @@ import {
     HeroTitle as HeroShellTitle,
 } from '@ui/hero';
 import type { ASTNode } from '@xml';
-import { renderNode, useContext } from '@xml';
+import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Hero component. */
 export interface HeroProps {
@@ -30,7 +30,7 @@ export interface HeroContentProps {
 
 /** Renders the hero shell. */
 export function Hero({ icon, children }: HeroProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
     const nodes = Array.isArray(children) ? children : children ? [children] : [];
     const content = nodes.filter((node) => node.name === 'HeroContent');
     const body = nodes.filter((node) => node.name !== 'HeroContent');
@@ -47,21 +47,21 @@ export function Hero({ icon, children }: HeroProps) {
 
 /** Renders the hero title slot. */
 export function HeroTitle({ children }: HeroTitleProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <HeroShellTitle>{renderNode(children ?? null, ctx)}</HeroShellTitle>;
 }
 
 /** Renders the hero description slot. */
 export function HeroDescription({ children }: HeroDescriptionProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <HeroShellDescription>{renderNode(children ?? null, ctx)}</HeroShellDescription>;
 }
 
 /** Renders the hero content slot. */
 export function HeroContent({ children }: HeroContentProps) {
-    const { ctx } = useContext();
+    const { ctx } = useXmlContext();
 
     return <HeroShellContent className="mt-0 w-auto">{renderNode(children ?? null, ctx)}</HeroShellContent>;
 }

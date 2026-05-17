@@ -12,7 +12,7 @@ SCHEMA = ROOT / ".static" / "xsd" / "primitives" / "Page.xsd"
 def test_page_layout_validation() -> None:
     """Validate a minimal `Page` layout fragment."""
 
-    element = Element.from_content('<Page name="dashboard" icon="layout-grid"><p>Dashboard</p></Page>', schema=SCHEMA)
+    element = Element.from_content('<Page name="dashboard"><p>Dashboard</p></Page>', schema=SCHEMA)
     element.validate()
 
 
@@ -23,19 +23,17 @@ def test_page_layout_allows_nested_children() -> None:
     element.validate()
 
 
-def test_page_layout_requires_name() -> None:
-    """Reject a `Page` fragment missing its required name."""
+def test_page_layout_allows_missing_name() -> None:
+    """Allow a `Page` fragment without a name attribute."""
 
-    element = Element.from_content('<Page icon="layout-grid"><p>Dashboard</p></Page>', schema=SCHEMA)
-
-    with pytest.raises(ValueError):
-        element.validate()
+    element = Element.from_content('<Page><p>Dashboard</p></Page>', schema=SCHEMA)
+    element.validate()
 
 
 def test_page_layout_rejects_unknown_attributes() -> None:
     """Reject attributes that are not allowed on `Page`."""
 
-    element = Element.from_content('<Page name="dashboard" icon="layout-grid" tone="dark"><p>Dashboard</p></Page>', schema=SCHEMA)
+    element = Element.from_content('<Page name="dashboard" icon="layout-grid"><p>Dashboard</p></Page>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

@@ -8,14 +8,18 @@ Use XML pages for CRUD screens, forms, tables, dashboards, and operational workf
 ## Page Loading
 
 ```python
-from longlink import LongLink
+from longlink import LongLink, page
 
 app = LongLink(env=env)
-app.include_page("/pages")
+
+
+@page("/pages/dashboard/overview.xml", icon="layout-grid")
+def dashboard_page():
+    return None
 ```
 
-Pages are loaded from nested `*.xml` files under the registered folder.
-For example, `pages/dashboard/overview.xml` is available at `/pages/dashboard/overview.xml`.
+Pages are declared directly with the `page` decorator.
+The `url` points at the XML page path and `icon` is optional.
 
 ## Root Element
 
@@ -23,7 +27,7 @@ Every page starts with the `Page` root element.
 It defines the page shell and page metadata.
 
 ```xml
-<Page name="Tab Name" icon="settings">
+<Page>
   <p>Hello</p>
 </Page>
 ```
@@ -36,12 +40,11 @@ Use `sdk/longlink/.static/llm/SCHEMA.md` as the authoring reference for valid XM
 ### `Page`
 
 The `Page` root element is required for every XML page.
-`name` is required by the schema.
-`icon` is optional.
+`name` is optional and falls back to the filename in SDK metadata.
 The current web renderer uses `children` and does not read `name`.
 
 ```xml
-<Page name="Dashboard" icon="layout-grid">
+<Page>
   <p>Dashboard</p>
 </Page>
 ```
@@ -158,6 +161,11 @@ Use brace expressions in text nodes and attribute values to read runtime values.
 ```
 
 Use `$name` for direct references.
-Use double-brace object payloads for `json` values.
+Use `{count + 1}` for wrapped expressions that return typed values.
+Use `{{ fullName: fullName }}` for object payloads in `json` attributes.
+Use mixed text interpolation like `Hello {name}` when plain text and runtime values need to share a string.
+
+Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.
+Unsupported expressions include statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, and globals.
 
 Use only the elements and attributes documented in this page and in `sdk/longlink/.static/llm/SCHEMA.md`.
