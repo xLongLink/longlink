@@ -40,23 +40,25 @@ uv run longlink init
 
 :::
 
-This creates a standardized project structure:
+## Applications
 
-```
-├── app/
-│   ├── api/          # API routes
+`longlink init` creates a minimal application scaffold:
+
+```text
+├── src/
+│   ├── api/          # Route registration
 │   ├── models/       # Database models
+│   ├── pages/        # XML page definitions
 │   ├── types/        # Data schemas
-│   ├── utils/        # Shared utilities
 │   └── envs.py       # Configuration
 ├── tests/
 │   ├── api/          # API tests
 │   └── conftest.py   # Test setup
-│
+├── main.py           # Entry point
+├── Dockerfile        # Container build definition
+├── pyproject.toml    # Project configuration
 ├── .env.sample       # Environment template
 ├── AGENTS.md         # Platform metadata
-├── main.py           # Entry point
-├── pyproject.toml    # Project configuration
 └── README.md
 ```
 

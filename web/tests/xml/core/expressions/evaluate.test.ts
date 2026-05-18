@@ -14,8 +14,8 @@ describe('evaluate', () => {
             name: 'from-context',
         };
 
-        expect(evaluate('{count + total}', ctx)).toBe(11);
-        expect(evaluate('{name}', ctx)).toBe('from-context');
+        expect(evaluate('${count + total}', ctx)).toBe(11);
+        expect(evaluate('${name}', ctx)).toBe('from-context');
     });
 
     /* Plain text with interpolation should render interpolated values. */
@@ -27,10 +27,10 @@ describe('evaluate', () => {
             count: 4,
         };
 
-        expect(evaluate('Count: {count}', ctx)).toBe('Count: 4');
+        expect(evaluate('Count: ${count}', ctx)).toBe('Count: 4');
     });
 
-    it('interpolates mixed text that starts and ends with braces', () => {
+    it('interpolates mixed text with `${...}` expressions', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
@@ -39,10 +39,10 @@ describe('evaluate', () => {
             name: 'Hero',
         };
 
-        expect(evaluate('{index + 1}. {name}', ctx)).toBe('1. Hero');
+        expect(evaluate('${index + 1}. ${name}', ctx)).toBe('1. Hero');
     });
 
-    /* A single braced expression should return its typed runtime value. */
+    /* A single `${...}` expression should return its typed runtime value. */
     it('returns typed value for single expression', () => {
         const ctx: ExecutionContext = {
             setups: {},
@@ -51,11 +51,11 @@ describe('evaluate', () => {
             count: 4,
         };
 
-        expect(evaluate('{count * 2}', ctx)).toBe(8);
+        expect(evaluate('${count * 2}', ctx)).toBe(8);
     });
 
-    /* Object literals inside braces should be evaluated as objects, not strings. */
-    it('parses object literals wrapped in braces', () => {
+    /* Object literals inside `${...}` should be evaluated as objects, not strings. */
+    it('parses object literals wrapped in `${...}`', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
@@ -63,10 +63,10 @@ describe('evaluate', () => {
             value: 5,
         };
 
-        expect(evaluate('{next: value + 1}', ctx)).toEqual({ next: 6 });
+        expect(evaluate('${{ next: value + 1 }}', ctx)).toEqual({ next: 6 });
     });
 
-    /* Braced expressions should resolve directly to nested values. */
+    /* `${...}` expressions should resolve directly to nested values. */
     it('resolves nested value expression', () => {
         const ctx: ExecutionContext = {
             setups: {},
@@ -75,6 +75,6 @@ describe('evaluate', () => {
             form: { value: 'draft', placeholder: 'Name' },
         };
 
-        expect(evaluate('{form.value}', ctx)).toBe('draft');
+        expect(evaluate('${form.value}', ctx)).toBe('draft');
     });
 });

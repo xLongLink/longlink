@@ -13,12 +13,12 @@ This DSL provides a declarative, schema-driven way to build backoffice applicati
   <Query id="products" path="/api/products" />
   <For each="$products.items" as="product">
     <Input label="Quantity" value="1" type="number" />
-    <Button action="/cart/add" method="POST" json="{{ productId: product.id, quantity: 1 }}">
+    <Button action="/cart/add" method="POST" json="${{ productId: product.id, quantity: 1 }}">
       Add to cart
     </Button>
-    {product.name}
+    ${product.name}
   </For>
-  Cart items: {cart.length}
+  Cart items: ${cart.length}
 </longlink>
 ```
 
@@ -152,11 +152,11 @@ HTML bridge:
 
 - `"test"` a simple string literal. `isText()`
 - `[]` an array literal. `isArray()`
-- `{}` an expression literal. `isExpression()`
+- `${}` an expression literal. `isExpression()`
 - `$value` a reference to a variable in scope. `isReference()`
 - `evaluate(...)` evaluate an expression with the current runtime state.
 - `compile(...)` return a resolver that evaluates an expression string against the current runtime state.
-- `json` payloads use object-literal expressions such as `{{ fullName: fullName }}`.
+- `json` payloads use object-literal expressions such as `${{ fullName: fullName }}`.
 
 ## Expression Rules
 
@@ -165,10 +165,10 @@ Allowed:
 1. Plain text values like `hello` or `"hello"`.
 2. `$` references like `$user.name`.
 3. Dotted runtime lookups like `user.name`.
-4. Wrapped expressions like `{ count + 1 }`.
+4. Wrapped expressions like `${count + 1}`.
 5. Arrays, objects, and template literals.
 6. Basic arithmetic with `+`, `-`, `*`, and `/`.
-7. Mixed text interpolation like `Hello {name}`.
+7. Mixed text interpolation like `Hello ${name}`.
 
 Not allowed:
 

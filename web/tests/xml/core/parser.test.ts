@@ -59,10 +59,10 @@ describe('parseXML', () => {
 
     /* Text nodes should preserve meaningful whitespace while whitespace-only nodes are removed. */
     it('preserves visible text and drops blank text nodes', () => {
-        expect(parseXML('<longlink>  Hello, {user.name}  </longlink>')).toEqual([
+        expect(parseXML('<longlink>  Hello, ${user.name}  </longlink>')).toEqual([
             {
                 name: 'longlink',
-                children: [{ name: 'Text', params: { value: '  Hello, {user.name}  ' } }],
+                children: [{ name: 'Text', params: { value: '  Hello, ${user.name}  ' } }],
             },
         ]);
     });

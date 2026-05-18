@@ -3,7 +3,7 @@ import { describe, expect, it } from 'bun:test';
 
 describe('expression utils', () => {
     it('detects expression syntax', () => {
-        expect(isExpression('{count}')).toBe(true);
+        expect(isExpression('${count}')).toBe(true);
         expect(isExpression('count')).toBe(false);
     });
 
@@ -14,6 +14,6 @@ describe('expression utils', () => {
 
     it('detects text values', () => {
         expect(isText('Hello')).toBe(true);
-        expect(isText('{count}')).toBe(false);
+        expect(isText('${count}')).toBe(false);
     });
 });

@@ -17,7 +17,7 @@ describe('renderNode', () => {
                 createElement(
                     'div',
                     null,
-                    createElement(RenderXML, { ast: [{ name: 'Text', params: { value: '{`Count ${count}`}' } }], ctx })
+                    createElement(RenderXML, { ast: [{ name: 'Text', params: { value: '${`Count ${count}`}' } }], ctx })
                 )
             )
         ).toBe('<div>Count 7</div>');
@@ -25,7 +25,7 @@ describe('renderNode', () => {
 
     it('skips nodes when if condition is false', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const node: ASTNode = { name: 'Button', params: { if: '{false}' } };
+        const node: ASTNode = { name: 'Button', params: { if: '${false}' } };
         expect(renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast: [node], ctx })))).toBe(
             '<div></div>'
         );
@@ -42,7 +42,7 @@ describe('renderNode', () => {
 
     it('resolves props from expressions', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, count: 2 };
-        const node: ASTNode = { name: 'Input', params: { label: '{`Count: ${count}`}' } };
+        const node: ASTNode = { name: 'Input', params: { label: '${`Count: ${count}`}' } };
         expect(
             renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast: [node], ctx })))
         ).toContain('Count: 2');

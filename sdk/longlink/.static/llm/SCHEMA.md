@@ -9,7 +9,7 @@ If this document and implementation differ, update this document first and then 
 - Every document starts with a `<longlink>` root element.
 - Element names are case-sensitive.
 - XML attributes map to component props.
-- Curly-brace expressions are evaluated against runtime state and scope.
+- `${...}` expressions are evaluated against runtime state and scope.
 - Unknown attributes may pass XSD validation, but only documented attributes are supported by LongLink.
 - A valid page must use only the elements and attributes described here.
 - Do not rely on SDK code, samples, or docs outside this file for XML authoring rules.
@@ -17,13 +17,13 @@ If this document and implementation differ, update this document first and then 
 
 ## Expression Model
 
-LongLink evaluates JavaScript-like expressions inside `{...}`.
+LongLink evaluates JavaScript-like expressions inside `${...}`.
 
 ### Implemented
 
 - Expressions can read from runtime state and lexical scope.
 - Expressions may appear in attribute values and text nodes.
-- Strings wrapped in `{...}` can resolve to non-string values.
+- Strings wrapped in `${...}` can resolve to non-string values.
 - Nested objects and arrays in `json` values are resolved recursively.
 - Scope is lexical: child elements read from their nearest parent scope first, then walk outward.
 
@@ -45,7 +45,7 @@ If the expression is false, the element is not rendered.
 `<State>` and `<Query>` both create a slot identified by `id`.
 
 - `<State id="user" value="John Doe" />` creates local state. `value` is evaluated as an expression.
-- `<State id="cart" value="{[]}" />` creates an array state slot.
+- `<State id="cart" value="${[]}" />` creates an array state slot.
 - `<Query id="user" path="/endpoint" />` fetches data into the slot. `id` and `path` must be literal text.
 
 ### Iteration
@@ -54,7 +54,7 @@ If the expression is false, the element is not rendered.
 
 ```xml
 <For each="orders" as="order">
-  <p>{order.title}</p>
+  <p>${order.title}</p>
 </For>
 ```
 
@@ -508,7 +508,7 @@ Behavior:
 Example:
 
 ```xml
-<Dialog open="{true}">
+<Dialog open="${true}">
   <DialogTrigger>
     <Button variant="outline">Open dialog</Button>
   </DialogTrigger>
@@ -670,7 +670,7 @@ Behavior:
 - If `json` is omitted, the request is sent without a JSON body.
 - `invalidate` refetches the named query slots after the request succeeds.
 
-Example: `<Button action="/issues" json='{{ title: issue.title }}'>Save</Button>`
+Example: `<Button action="/issues" json='${{ title: issue.title }}'>Save</Button>`
 
 ### `<ButtonGroup>`
 
@@ -856,7 +856,7 @@ Behavior:
 
 - When `value` resolves to a Valtio-backed state slot, slider updates write back to `state.value` or the bound array.
 - Otherwise, `defaultValue` sets the initial slider position.
-- Use wrapped array expressions such as `{[25]}` when you need more than one thumb value.
+- Use wrapped array expressions such as `${[25]}` when you need more than one thumb value.
 - If neither `value` nor `defaultValue` is provided, the slider starts at `min`.
 - Supports the global `if` attribute.
 

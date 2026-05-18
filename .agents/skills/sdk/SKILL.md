@@ -41,7 +41,32 @@ longlink/
 │   │   ├── constants.py         # Shared constants
 │   │   └── __init__.py          # Public exports
 │   └── tests/                   # SDK tests
+│       ├── cli/                 # CLI tests
+│       ├── utils/               # SDK helper tests
+│       └── xml/                 # XML runtime and component tests
 └── docs/                        # SDK docs and XML docs
+```
+
+## Applications
+
+`longlink init` creates a minimal application scaffold:
+
+```text
+├── src/
+│   ├── api/          # Route registration
+│   ├── models/       # Database models
+│   ├── pages/        # XML page definitions
+│   ├── types/        # Data schemas
+│   └── envs.py       # Configuration
+├── tests/
+│   ├── api/          # API tests
+│   └── conftest.py   # Test setup
+├── main.py           # Entry point
+├── Dockerfile        # Container build definition
+├── pyproject.toml    # Project configuration
+├── .env.sample       # Environment template
+├── AGENTS.md         # Platform metadata
+└── README.md
 ```
 
 ## SDK Areas
@@ -159,9 +184,3 @@ async def create_project() -> None:
 ```bash
 longlink migrate
 ```
-
-## Testing
-
-- `sdk/tests/cli/` covers scaffold and CLI behavior.
-- `sdk/tests/xml/` covers runtime XML behavior.
-- `sdk/tests/utils/` covers SDK helpers and metadata.

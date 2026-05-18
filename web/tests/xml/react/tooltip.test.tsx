@@ -7,7 +7,7 @@ describe('Tooltip', () => {
     it('preserves the compound tooltip structure in compiled xml', () => {
         expect(
             parseXML(
-                '<TooltipProvider><Tooltip open="{true}"><TooltipTrigger>Hover me</TooltipTrigger><TooltipContent side="right">Tooltip text</TooltipContent></Tooltip></TooltipProvider>'
+                '<TooltipProvider><Tooltip open="${true}"><TooltipTrigger>Hover me</TooltipTrigger><TooltipContent side="right">Tooltip text</TooltipContent></Tooltip></TooltipProvider>'
             )
         ).toEqual([
             {
@@ -15,7 +15,7 @@ describe('Tooltip', () => {
                 children: [
                     {
                         name: 'Tooltip',
-                        params: { open: '{true}' },
+                        params: { open: '${true}' },
                         children: [
                             {
                                 name: 'TooltipTrigger',
@@ -37,7 +37,7 @@ describe('Tooltip', () => {
     it('renders the tooltip provider and trigger in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<TooltipProvider><Tooltip open="{true}"><TooltipTrigger>Hover me</TooltipTrigger><TooltipContent side="right">Tooltip text</TooltipContent></Tooltip></TooltipProvider>'
+                '<TooltipProvider><Tooltip open="${true}"><TooltipTrigger>Hover me</TooltipTrigger><TooltipContent side="right">Tooltip text</TooltipContent></Tooltip></TooltipProvider>'
             )
         );
 

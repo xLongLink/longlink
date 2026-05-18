@@ -18,8 +18,8 @@
 
   <For each="$organizations.items" as="organization">
     <p>
-      {organization.name}
-      <Button action="/{organization.name}" method="GET" variant="outline" size="sm">
+      ${organization.name}
+      <Button action="/${organization.name}" method="GET" variant="outline" size="sm">
         Open
       </Button>
     </p>

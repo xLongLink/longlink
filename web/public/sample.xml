@@ -72,11 +72,11 @@
                     </Field>
                     <Field>
                         <FieldLabel htmlFor="volume">Priority</FieldLabel>
-                        <Slider id="volume" defaultValue="{[35]}" min="0" max="100" step="5" />
+                        <Slider id="volume" defaultValue="${[35]}" min="0" max="100" step="5" />
                     </Field>
                     <Field>
                         <FieldLabel htmlFor="range">Range</FieldLabel>
-                        <Slider id="range" defaultValue="{[25, 75]}" min="0" max="100" step="5" />
+                        <Slider id="range" defaultValue="${[25, 75]}" min="0" max="100" step="5" />
                     </Field>
                     <Field>
                         <FieldLabel>View mode</FieldLabel>

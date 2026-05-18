@@ -5,7 +5,7 @@ describe('expressions barrel', () => {
     it('re-exports the expression helpers', () => {
         expect(typeof compile).toBe('function');
         expect(typeof evaluate).toBe('function');
-        expect(isExpression('{x}')).toBe(true);
+        expect(isExpression('${x}')).toBe(true);
         expect(isReference('$x.y')).toBe(true);
         expect(isText('hello')).toBe(true);
     });

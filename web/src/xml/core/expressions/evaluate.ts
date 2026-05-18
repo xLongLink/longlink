@@ -108,8 +108,8 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
 
     if (input === '') return '';
 
-    /* Treat values that are fully wrapped in braces as expressions. */
-    if (input.startsWith('{') && input.endsWith('}')) {
+    /* Treat values that are fully wrapped in `${...}` as expressions. */
+    if (input.startsWith('${') && input.endsWith('}')) {
         let depth = 0;
         isWrappedExpression = true;
 
@@ -136,23 +136,9 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
         isWrappedExpression = isWrappedExpression && depth === 0;
 
         if (isWrappedExpression) {
-            const inner = input.startsWith('{{') ? input.slice(2, -2).trim() : input.slice(1, -1).trim();
+            const inner = input.slice(2, -1).trim();
 
-            try {
-                return input.startsWith('{{') ? run(`({ ${inner} })`, values) : run(inner, values);
-            } catch (error) {
-                if (input.startsWith('{{') && error instanceof SyntaxError) {
-                    throw new Error(
-                        `Invalid object expression "${expr}": use key/value pairs inside double braces, for example "{{ fullName: fullName }}" or shorthand "{{ fullName }}".`
-                    );
-                }
-
-                if (!input.startsWith('{{') && error instanceof SyntaxError) {
-                    return run(`({ ${inner} })`, values);
-                }
-
-                throw error;
-            }
+            return run(inner, values);
         }
     }
 
@@ -166,9 +152,9 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
         return resolvePath(ctx, input.split('.'));
     }
 
-    /* Interpolate single-brace expressions inside mixed text values. */
-    if (input.includes('{') && !isWrappedExpression && !isReference(input)) {
-        return expr.replace(/\{([^{}]+)\}/g, (_match, expression: string) => String(run(expression, values) ?? ''));
+    /* Interpolate `${...}` expressions inside mixed text values. */
+    if (input.includes('${') && !isWrappedExpression && !isReference(input)) {
+        return expr.replace(/\$\{([^{}]+)\}/g, (_match, expression: string) => String(run(expression, values) ?? ''));
     }
 
     return expr;

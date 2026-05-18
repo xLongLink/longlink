@@ -133,7 +133,7 @@ Use `Columns` with `Column` children for side-by-side layout rows.
 Use `Dialog` with `DialogContent` and `DialogTrigger` for modal workflows and confirmations.
 
 ```xml
-<Dialog open="{true}">
+<Dialog open="${true}">
   <DialogTrigger>
     <Button variant="outline">Open dialog</Button>
   </DialogTrigger>
@@ -335,7 +335,7 @@ Use `Slider` for single-value and range controls.
 
 `value` can bind to a reactive state slot or seed the initial thumb position.
 `defaultValue` is an explicit fallback when you do not want to use `value`.
-Use wrapped expressions like `{[25]}` when you need multiple thumb values.
+Use wrapped expressions like `${[25]}` when you need multiple thumb values.
 `min`, `max`, `step`, `orientation`, `disabled`, `id`, and `name` are supported.
 
 ## Switch

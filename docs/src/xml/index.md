@@ -55,7 +55,7 @@ Use `For` to render one child scope for each item in an array.
 
 ```xml
 <For each="products.items" as="product">
-  <p>{product.name}</p>
+  <p>${product.name}</p>
 </For>
 ```
 
@@ -68,7 +68,7 @@ The `each` expression must resolve to an array.
 Use `if` on any supported XML element to render the element only when the expression is truthy.
 
 ```xml
-<p if="{order.active}">Active</p>
+<p if="${order.active}">Active</p>
 ```
 
 ## `Expressions`
@@ -76,13 +76,13 @@ Use `if` on any supported XML element to render the element only when the expres
 Use expressions in text nodes and attribute values to read runtime state.
 
 ```xml
-<p>Hello, {user.name}</p>
+<p>Hello, ${user.name}</p>
 ```
 
 Use `$name` for direct references.
-Use `{count + 1}` for wrapped expressions that return typed values.
-Use `&#123;&#123; fullName: fullName &#125;&#125;` for object payloads in `json` attributes.
-Use mixed text interpolation like `Hello {name}` when plain text and runtime values need to share a string.
+Use `${count + 1}` for wrapped expressions that return typed values.
+Use `${{ fullName: fullName }}` for object payloads in `json` attributes.
+Use mixed text interpolation like `Hello ${name}` when plain text and runtime values need to share a string.
 
 Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.
 Unsupported expressions include statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, and globals.

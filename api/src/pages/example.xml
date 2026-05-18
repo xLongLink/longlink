@@ -3,22 +3,22 @@
   <State id="fullName" value="Ada Lovelace" />
   <State id="email" value="ada@example.com" />
   <State id="notes" value="Build the first program" />
-  <State id="showActive" value="{true}" />
-  <State id="quantity" value="{1}" />
-  <State id="selectedUserId" value="{0}" />
+  <State id="showActive" value="${true}" />
+  <State id="quantity" value="${1}" />
+  <State id="selectedUserId" value="${0}" />
 
   <Query id="profile" path="/example/profile" />
   <Query id="users" path="/example/users" />
   <Query id="metrics" path="/example/metrics" />
 
   <p>
-    Profile title: {profile.title}
+    Profile title: ${profile.title}
   </p>
   <p>
-    Users loaded: {users.items.length}
+    Users loaded: ${users.items.length}
   </p>
   <p>
-    Active filters: {showActive}
+    Active filters: ${showActive}
   </p>
 
   <Input value="fullName" placeholder="Full name" />
@@ -26,29 +26,29 @@
   <Input value="notes" placeholder="Notes" />
   <Input value="quantity" type="number" placeholder="1" />
 
-  <Button action="/example/profile" json='{{ fullName: fullName, email: email, notes: notes }}' invalidate='["profile"]' variant="default" size="sm">
+  <Button action="/example/profile" json='${{ fullName: fullName, email: email, notes: notes }}' invalidate='["profile"]' variant="default" size="sm">
     Save profile
   </Button>
   <Button invalidate='["fullName", "email", "notes", "quantity"]' variant="ghost" size="sm">
     Reset
   </Button>
-  <Button action="/example/metrics" json='{{ selectedUserId: selectedUserId, quantity: quantity }}' invalidate='["metrics", "users"]' variant="outline" size="sm">
+  <Button action="/example/metrics" json='${{ selectedUserId: selectedUserId, quantity: quantity }}' invalidate='["metrics", "users"]' variant="outline" size="sm">
     Refresh metrics
   </Button>
 
   <For each="$users.items" as="user">
-    <p if="showActive">
-      User {user.id}: {user.name} ({user.role})
+    <p if="$showActive">
+      User ${user.id}: ${user.name} (${user.role})
     </p>
-    <Button action="/example/users/select" json='{{ userId: user.id }}' invalidate='["selectedUserId"]' variant="secondary" size="sm">
+    <Button action="/example/users/select" json='${{ userId: user.id }}' invalidate='["selectedUserId"]' variant="secondary" size="sm">
       Select user
     </Button>
   </For>
 
   <p>
-    Selected user: {selectedUserId}
+    Selected user: ${selectedUserId}
   </p>
   <p>
-    Metric total: {metrics.total}
+    Metric total: ${metrics.total}
   </p>
 </longlink>

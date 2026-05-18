@@ -13,7 +13,7 @@ def test_button_validation() -> None:
     """Validate a minimal `Button` fragment."""
 
     element = Element.from_content(
-        '<Button action="save" method="POST" submit="true" json="{{ value: value }}" invalidate="projects" variant="outline" size="sm" if="canSave">Save</Button>',
+        '<Button action="save" method="POST" submit="true" json="${{ value: value }}" invalidate="projects" variant="outline" size="sm" if="${canSave}">Save</Button>',
         schema=SCHEMA,
     )
     element.validate()

@@ -92,7 +92,7 @@ describe('Button', () => {
         expect(
             parseXML(
                 '<Button action="/issues" json=' +
-                    '\'{"title":"{issue.title}"}\'' +
+                    '\'${{ title: issue.title }}\'' +
                     ' invalidate="issues">Save</Button>'
             )
         ).toEqual([
@@ -100,7 +100,7 @@ describe('Button', () => {
                 name: 'Button',
                 params: {
                     action: '/issues',
-                    json: '{"title":"{issue.title}"}',
+                    json: '${{ title: issue.title }}',
                     invalidate: 'issues',
                 },
                 children: [{ name: 'Text', params: { value: 'Save' } }],
@@ -111,7 +111,7 @@ describe('Button', () => {
     /* The runtime should honor conditional rendering on button nodes. */
     it('skips a button when if resolves false', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<Button if="{false}">Hidden</Button>');
+        const ast = parseXML('<Button if="${false}">Hidden</Button>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toBe('<div></div>');
@@ -119,10 +119,10 @@ describe('Button', () => {
 
     /* The compiler should preserve the if parameter on button nodes. */
     it('preserves if in compiled xml', () => {
-        expect(parseXML('<Button if="{true}">Visible</Button>')).toEqual([
+        expect(parseXML('<Button if="${true}">Visible</Button>')).toEqual([
             {
                 name: 'Button',
-                params: { if: '{true}' },
+                params: { if: '${true}' },
                 children: [{ name: 'Text', params: { value: 'Visible' } }],
             },
         ]);
