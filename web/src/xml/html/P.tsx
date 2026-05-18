@@ -10,5 +10,5 @@ export interface PProps {
 export function P({ children }: PProps) {
     const { ctx } = useXmlContext();
 
-    return <p className="leading-7 [&:not(:first-child)]:mt-6">{renderNode(children ?? [], ctx)}</p>;
+    return <p className="leading-7">{renderNode(children ?? [], ctx)}</p>;
 }

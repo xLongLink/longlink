@@ -63,4 +63,17 @@ describe('Dialog', () => {
         expect(output).toContain('Open dialog');
         expect(output).not.toContain('<button><button');
     });
+
+    /* The runtime should support anchor-style dialog triggers. */
+    it('renders an anchor trigger in static markup', () => {
+        const output = renderXmlToMarkup(
+            parseXML(
+                '<Dialog open="${true}"><DialogTrigger><A href="/quotes/edit">Edit quote</A></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Edit quote</DialogTitle><DialogDescription>Review the quote details before saving the next revision.</DialogDescription></DialogHeader><DialogFooter>Actions</DialogFooter></DialogContent></Dialog>'
+            )
+        );
+
+        expect(output).toContain('data-slot="dialog-trigger"');
+        expect(output).toContain('href="/quotes/edit"');
+        expect(output).toContain('Edit quote');
+    });
 });

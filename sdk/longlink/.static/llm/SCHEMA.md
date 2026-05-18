@@ -322,27 +322,6 @@ Renders the badge overlay on top of an avatar.
 
 Attributes:
 
-### `<AvatarGroup>`
-
-Renders a stacked row of avatars.
-
-Attributes:
-
-Behavior:
-
-- `Avatar` children overlap with shared ring spacing.
-- Use `AvatarGroupCount` for the trailing count chip.
-
-### `<AvatarGroupCount>`
-
-Renders the trailing count chip for an avatar group.
-
-Attributes:
-
-Behavior:
-
-- Usually follows one or more `Avatar` children inside `AvatarGroup`.
-
 ## Columns
 
 ### `<Columns>`

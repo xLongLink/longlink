@@ -7,18 +7,11 @@ Reusable UI components for XML pages.
 TODO: Component description
 
 ```xml
-<AvatarGroup>
-  <Avatar size="sm">
-    <AvatarImage src="/ada.png" alt="Ada Lovelace" />
-    <AvatarFallback>AL</AvatarFallback>
-    <AvatarBadge>1</AvatarBadge>
-  </Avatar>
-  <Avatar>
-    <AvatarImage src="/grace.png" alt="Grace Hopper" />
-    <AvatarFallback>GH</AvatarFallback>
-  </Avatar>
-  <AvatarGroupCount>+2</AvatarGroupCount>
-</AvatarGroup>
+<Avatar size="sm">
+  <AvatarImage src="/ada.png" alt="Ada Lovelace" />
+  <AvatarFallback>AL</AvatarFallback>
+  <AvatarBadge>1</AvatarBadge>
+</Avatar>
 ```
 
 ## Badge

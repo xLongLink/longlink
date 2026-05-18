@@ -37,8 +37,8 @@ export function Hero({ icon, children }: HeroProps) {
 
     return (
         <HeroShell icon={icon}>
-            <div>
-                <div>{renderNode(body, ctx)}</div>
+            <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">{renderNode(body, ctx)}</div>
                 {content.length ? <div>{renderNode(content, ctx)}</div> : null}
             </div>
         </HeroShell>

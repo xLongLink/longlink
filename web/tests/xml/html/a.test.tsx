@@ -26,4 +26,13 @@ describe('A', () => {
         expect(output).toContain('Open icons');
         expect(output).toContain('<svg');
     });
+
+    /* The runtime should omit href when the anchor is used as a triggerless label. */
+    it('renders an anchor without href when omitted', () => {
+        const output = renderXmlToMarkup(parseXML('<A>Label only</A>'));
+
+        expect(output).toContain('class="inline-flex items-center gap-1 text-primary underline underline-offset-4 hover:opacity-80"');
+        expect(output).not.toContain('href=');
+        expect(output).toContain('Label only');
+    });
 });

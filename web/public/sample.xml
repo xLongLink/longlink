@@ -303,17 +303,33 @@
                         <Divider />
                         <A href="/orders/new"><Icon name="shopping-cart" /> Create order</A>
                         <A href="/invoices/new"><Icon name="file-text" /> Create invoice</A>
-                        <A href="/quotes/edit"><Icon name="pencil" /> Edit quote</A>
+                        <Dialog>
+                            <DialogTrigger>
+                                <A><Icon name="pencil" /> Edit quote</A>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Edit quote</DialogTitle>
+                                    <DialogDescription>Review the quote details before saving the next revision.</DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                    <Button variant="outline">Cancel</Button>
+                                    <Button>Save quote</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                         <Divider />
                         <A href="/quotes/email"><Icon name="mail" /> Email quote</A>
                         <Divider />
                         <A href="/actions"><Icon name="layout-grid" /> More actions</A>
                         <Divider />
-                        <Avatar size="sm">
-                            <AvatarImage src="/avatars/ada.png" alt="Ada Lovelace" />
-                            <AvatarFallback>AL</AvatarFallback>
-                        </Avatar>
-                        Ada Lovelace
+                        <Field orientation="horizontal">
+                            <Avatar size="sm">
+                                <AvatarImage src="/avatars/ada.png" alt="Ada Lovelace" />
+                                <AvatarFallback>AL</AvatarFallback>
+                            </Avatar>
+                            Ada Lovelace
+                        </Field>
                     </Stack>
                 </Column>
             </Columns>
@@ -424,33 +440,6 @@
             </Columns>
         </TabsContent>
         <TabsContent value="other">
-            <Dialog>
-                <DialogTrigger>
-                    <Button variant="outline">Open dialog</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete issue</DialogTitle>
-                        <DialogDescription>This cannot be undone.</DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline">Cancel</Button>
-                        <Button>Delete</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-            <AvatarGroup>
-                <Avatar size="sm">
-                    <AvatarImage src="/avatars/ada.png" alt="Ada Lovelace" />
-                    <AvatarFallback>AL</AvatarFallback>
-                    <AvatarBadge>1</AvatarBadge>
-                </Avatar>
-                <Avatar>
-                    <AvatarImage src="/avatars/grace.png" alt="Grace Hopper" />
-                    <AvatarFallback>GH</AvatarFallback>
-                </Avatar>
-                <AvatarGroupCount>+2</AvatarGroupCount>
-            </AvatarGroup>
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger>Hover tooltip</TooltipTrigger>

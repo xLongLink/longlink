@@ -11,12 +11,10 @@ describe('Typography', () => {
             )
         );
 
-        expect(output).toContain('class="group relative mt-2 scroll-m-20 text-4xl font-semibold tracking-tight"');
-        expect(output).toContain(
-            'class="group relative mt-10 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0"'
-        );
-        expect(output).toContain('class="group relative mt-8 scroll-m-20 text-2xl font-semibold tracking-tight"');
-        expect(output).toContain('class="group relative mt-6 scroll-m-20 text-xl font-semibold tracking-tight"');
+        expect(output).toContain('class="group relative scroll-m-20 text-4xl font-semibold tracking-tight"');
+        expect(output).toContain('class="group relative scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight"');
+        expect(output).toContain('class="group relative scroll-m-20 text-2xl font-semibold tracking-tight"');
+        expect(output).toContain('class="group relative scroll-m-20 text-xl font-semibold tracking-tight"');
         expect(output).toContain(
             'class="absolute left-0 top-1/2 inline-flex -translate-y-1/2 items-center text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 -translate-x-7"'
         );
@@ -28,11 +26,10 @@ describe('Typography', () => {
         expect(output).toContain('href="#subsection"');
         expect(output).toContain('href="#detail"');
         expect(output).toContain('aria-label="Link to this heading"');
-        expect(output).toContain('class="leading-7 [&amp;:not(:first-child)]:mt-6"');
-        expect(output).toContain('class="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground"');
-        expect(output).toContain('class="my-6 ml-6 list-disc space-y-2"');
-        expect(output).toContain('class="my-6 ml-6 list-decimal space-y-2"');
         expect(output).toContain('class="leading-7"');
+        expect(output).toContain('class="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground"');
+        expect(output).toContain('class="ml-6 list-disc space-y-2"');
+        expect(output).toContain('class="ml-6 list-decimal space-y-2"');
         expect(output).toContain('Page title');
         expect(output).toContain('docs');
     });

@@ -71,7 +71,7 @@ function HeroContent({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
             data-slot="hero-content"
-            className={cn('mt-4 flex w-full flex-row flex-wrap items-center gap-3', className)}
+            className={cn('flex shrink-0 items-center gap-3', className)}
             {...props}
         />
     );

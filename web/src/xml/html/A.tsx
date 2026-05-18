@@ -8,11 +8,14 @@ export interface AProps {
 }
 
 /** Renders a linked anchor with standard styling. */
-export function A({ children, href = '' }: AProps) {
+export function A({ children, href }: AProps) {
     const { ctx } = useXmlContext();
 
     return (
-        <a className="inline-flex items-center gap-1 text-primary underline underline-offset-4 hover:opacity-80" href={href}>
+        <a
+            className="inline-flex items-center gap-1 text-primary underline underline-offset-4 hover:opacity-80"
+            {...(href ? { href } : {})}
+        >
             {renderNode(children ?? [], ctx)}
         </a>
     );

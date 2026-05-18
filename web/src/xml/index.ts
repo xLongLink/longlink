@@ -6,7 +6,7 @@ export { BaseUrlContext, resolveUrl, useUrl } from '@xml/core/url';
 export type { ASTNode, ExecutionContext } from '@xml/types';
 export { Br } from './html/Br';
 export { Ol } from './html/Ol';
-export { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from './react/Avatar';
+export { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from './react/Avatar';
 export { Badge } from './react/Badge';
 export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from './react/ButtonGroup';
 export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './react/Card';

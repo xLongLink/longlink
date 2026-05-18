@@ -7,7 +7,9 @@ import {
     DialogTitle as UIDialogTitle,
     DialogTrigger as UIDialogTrigger,
 } from '@/components/ui/dialog';
+import { Button as UIButton } from '@/components/ui/button';
 import type { ASTNode } from '@xml';
+import { evaluate } from '@xml/core/expressions';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Dialog component. */
@@ -64,9 +66,38 @@ export function DialogTrigger({ children }: DialogTriggerProps) {
     const triggerChildren = Array.isArray(children) ? children : children ? [children] : [];
     const buttonChild =
         triggerChildren.length === 1 && triggerChildren[0]?.name === 'Button' ? triggerChildren[0] : null;
+    const anchorChild = triggerChildren.length === 1 && triggerChildren[0]?.name === 'A' ? triggerChildren[0] : null;
 
     if (buttonChild) {
-        return <UIDialogTrigger>{renderNode(buttonChild.children ?? [], ctx)}</UIDialogTrigger>;
+        // Reuse the XML button's label as the trigger content while keeping the button shell.
+        const variant = buttonChild.params?.variant
+            ? String(evaluate(buttonChild.params.variant, ctx) ?? 'default')
+            : 'default';
+        const size = buttonChild.params?.size ? String(evaluate(buttonChild.params.size, ctx) ?? 'default') : 'default';
+
+        return (
+            <UIDialogTrigger render={<UIButton type="button" variant={variant as never} size={size as never} />}>
+                {renderNode(buttonChild.children ?? [], ctx)}
+            </UIDialogTrigger>
+        );
+    }
+
+    if (anchorChild) {
+        // Reuse the XML anchor's label and href for a link-style trigger.
+        const href = anchorChild.params?.href ? String(evaluate(anchorChild.params.href, ctx) ?? '') : '';
+
+        return (
+            <UIDialogTrigger
+                render={
+                    <a
+                        className="inline-flex items-center gap-1 text-primary underline underline-offset-4 hover:opacity-80"
+                        {...(href ? { href } : {})}
+                    />
+                }
+            >
+                {renderNode(anchorChild.children ?? [], ctx)}
+            </UIDialogTrigger>
+        );
     }
 
     return <UIDialogTrigger>{renderNode(children ?? [], ctx)}</UIDialogTrigger>;

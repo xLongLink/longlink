@@ -10,5 +10,5 @@ export interface LiProps {
 export function Li({ children }: LiProps) {
     const { ctx } = useXmlContext();
 
-    return <li className="leading-7">{renderNode(children ?? [], ctx)}</li>;
+    return <li>{renderNode(children ?? [], ctx)}</li>;
 }

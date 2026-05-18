@@ -2,8 +2,6 @@ import {
     Avatar as UIAvatar,
     AvatarBadge as UIAvatarBadge,
     AvatarFallback as UIAvatarFallback,
-    AvatarGroup as UIAvatarGroup,
-    AvatarGroupCount as UIAvatarGroupCount,
     AvatarImage as UIAvatarImage,
 } from '@ui/avatar';
 import type { ASTNode } from '@xml';
@@ -31,16 +29,6 @@ export interface AvatarBadgeProps {
     children?: ASTNode[];
 }
 
-/** Props accepted by the XML AvatarGroup component. */
-export interface AvatarGroupProps {
-    children?: ASTNode[];
-}
-
-/** Props accepted by the XML AvatarGroupCount component. */
-export interface AvatarGroupCountProps {
-    children?: ASTNode[];
-}
-
 /** Renders the avatar shell used for a single user or record. */
 export function Avatar({ children, size = 'default' }: AvatarProps) {
     const { ctx } = useXmlContext();
@@ -65,18 +53,4 @@ export function AvatarBadge({ children }: AvatarBadgeProps) {
     const { ctx } = useXmlContext();
 
     return <UIAvatarBadge>{renderNode(children ?? [], ctx)}</UIAvatarBadge>;
-}
-
-/** Renders the avatar group shell for stacked avatars. */
-export function AvatarGroup({ children }: AvatarGroupProps) {
-    const { ctx } = useXmlContext();
-
-    return <UIAvatarGroup>{renderNode(children ?? [], ctx)}</UIAvatarGroup>;
-}
-
-/** Renders the trailing count chip inside an avatar group. */
-export function AvatarGroupCount({ children }: AvatarGroupCountProps) {
-    const { ctx } = useXmlContext();
-
-    return <UIAvatarGroupCount>{renderNode(children ?? [], ctx)}</UIAvatarGroupCount>;
 }

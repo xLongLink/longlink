@@ -2,8 +2,6 @@ import {
     Avatar,
     AvatarBadge,
     AvatarFallback,
-    AvatarGroup,
-    AvatarGroupCount,
     AvatarImage,
     Br,
     ButtonGroup,
@@ -72,8 +70,6 @@ describe('xml index', () => {
         expect(Avatar).toBeDefined();
         expect(AvatarBadge).toBeDefined();
         expect(AvatarFallback).toBeDefined();
-        expect(AvatarGroup).toBeDefined();
-        expect(AvatarGroupCount).toBeDefined();
         expect(AvatarImage).toBeDefined();
         expect(Column).toBeDefined();
         expect(Columns).toBeDefined();

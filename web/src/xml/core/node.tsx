@@ -20,7 +20,7 @@ import { Ul } from '@xml/html/Ul';
 import { For } from '@xml/primitives/For';
 import { Longlink } from '@xml/primitives/Longlink';
 import { Text } from '@xml/primitives/Text';
-import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from '@xml/react/Avatar';
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from '@xml/react/Avatar';
 import { Badge } from '@xml/react/Badge';
 import { Button } from '@xml/react/Button';
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@xml/react/ButtonGroup';
@@ -439,14 +439,6 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
         if (node.name === 'AvatarBadge') {
             return <AvatarBadge children={node.children} />;
-        }
-
-        if (node.name === 'AvatarGroup') {
-            return <AvatarGroup children={node.children} />;
-        }
-
-        if (node.name === 'AvatarGroupCount') {
-            return <AvatarGroupCount children={node.children} />;
         }
 
         if (node.name === 'Columns') {

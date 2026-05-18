@@ -10,5 +10,5 @@ export interface UlProps {
 export function Ul({ children }: UlProps) {
     const { ctx } = useXmlContext();
 
-    return <ul className="my-6 ml-6 list-disc space-y-2">{renderNode(children ?? [], ctx)}</ul>;
+    return <ul className="ml-6 list-disc space-y-2">{renderNode(children ?? [], ctx)}</ul>;
 }
