@@ -11,13 +11,13 @@
   <Query id="users" path="/example/users" />
   <Query id="metrics" path="/example/metrics" />
 
-  <p>
+  <P>
     Profile title: ${profile.title}
   </p>
-  <p>
+  <P>
     Users loaded: ${users.items.length}
   </p>
-  <p>
+  <P>
     Active filters: ${showActive}
   </p>
 
@@ -37,7 +37,7 @@
   </Button>
 
   <For each="$users.items" as="user">
-    <p if="$showActive">
+    <P if="$showActive">
       User ${user.id}: ${user.name} (${user.role})
     </p>
     <Button action="/example/users/select" json='${{ userId: user.id }}' invalidate='["selectedUserId"]' variant="secondary" size="sm">
@@ -45,10 +45,10 @@
     </Button>
   </For>
 
-  <p>
+  <P>
     Selected user: ${selectedUserId}
   </p>
-  <p>
+  <P>
     Metric total: ${metrics.total}
   </p>
 </longlink>

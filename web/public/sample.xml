@@ -12,34 +12,34 @@
         </TabsList>
 
         <TabsContent value="text">
-            <br />
+            <Br />
 
-            <h1>Basic Html Elements are Supported</h1>
-            <p>The import pipeline is now stable. We
-    finished the retry fix for <code>customer_sync</code>, and the nightly run completed without
-    manual intervention.</p>
-            <h2>What changed</h2>
-            <p>The team tightened validation on <b>customer IDs</b>,
-    removed one <s>temporary bypass</s>, and kept the rollout limited to the staging workspace. The
-    result is a cleaner path from source data to <u>dashboard output</u>.</p>
-            <h3>Today’s checklist</h3>
-            <ul>
-                <li>Confirm the summary totals match the warehouse export.</li>
-                <li>Review any
-    records marked with H<sub>2</sub>O-style test labels.</li>
-                <li>Watch the next deploy window at 10<sup>
-    30</sup> for regressions.</li>
-            </ul>
-            <h3>Follow-up steps</h3>
-            <ol>
-                <li>Share the digest with ops and support.</li>
-                <li>Validate the next sync against the staging workspace.</li>
-                <li>Close the ticket after the report refreshes.</li>
-            </ol>
-            <h4>Notes</h4>
-            <p>For
-    the deeper walkthrough, open <a href="/icons">the icon catalog</a> or inspect the generated
-    report after the next sync.</p>
+            <H1>Basic Html Elements are Supported</H1>
+            <P>The import pipeline is now stable. We
+    finished the retry fix for <Code>customer_sync</Code>, and the nightly run completed without
+    manual intervention.</P>
+            <H2>What changed</H2>
+            <P>The team tightened validation on <B>customer IDs</B>,
+    removed one <S>temporary bypass</S>, and kept the rollout limited to the staging workspace. The
+    result is a cleaner path from source data to <U>dashboard output</U>.</P>
+            <H3>Today’s checklist</H3>
+            <Ul>
+                <Li>Confirm the summary totals match the warehouse export.</Li>
+                <Li>Review any
+    records marked with H<Sub>2</Sub>O-style test labels.</Li>
+                <Li>Watch the next deploy window at 10<Sup>
+    30</Sup> for regressions.</Li>
+            </Ul>
+            <H3>Follow-up steps</H3>
+            <Ol>
+                <Li>Share the digest with ops and support.</Li>
+                <Li>Validate the next sync against the staging workspace.</Li>
+                <Li>Close the ticket after the report refreshes.</Li>
+            </Ol>
+            <H4>Notes</H4>
+            <P>For
+    the deeper walkthrough, open <A href="/icons">the icon catalog</A> or inspect the generated
+    report after the next sync.</P>
         </TabsContent>
 
         <TabsContent value="form">
@@ -188,17 +188,17 @@
                     <Stack> Actions for the current invoice and quote. <Badge variant="outline">Pending
     approval</Badge>
                         <Divider />
-                        <a href="/orders/new">
+                        <A href="/orders/new">
                             <Icon name="shopping-cart" /> Create order </a>
-                        <a href="/invoices/new">
+                        <A href="/invoices/new">
                             <Icon name="file-text" /> Create invoice </a>
-                        <a href="/quotes/edit">
+                        <A href="/quotes/edit">
                             <Icon name="pencil" /> Edit quote </a>
                         <Divider />
-                        <a href="/quotes/email">
+                        <A href="/quotes/email">
                             <Icon name="mail" /> Email quote </a>
                         <Divider />
-                        <a href="/actions">
+                        <A href="/actions">
                             <Icon name="layout-grid" /> More actions </a>
                         <Divider />
                         <Avatar
@@ -240,8 +240,8 @@
                                 </CardAction>
                             </CardHeader>
                             <CardContent>
-                                <p>Revenue is trending up, with 88% of the weekly target already
-    complete.</p>
+                                <P>Revenue is trending up, with 88% of the weekly target already
+    complete.</P>
                             </CardContent>
                             <CardFooter>
                                 <Badge variant="outline">On track</Badge>
@@ -253,10 +253,10 @@
                                 <CardDescription>Active sessions</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p>Traffic increased by 14% over the last seven days.</p>
+                                <P>Traffic increased by 14% over the last seven days.</P>
                             </CardContent>
                             <CardFooter>
-                                <p>Updated 12 minutes ago.</p>
+                                <P>Updated 12 minutes ago.</P>
                             </CardFooter>
                         </Card>
                         <Card>
@@ -265,7 +265,7 @@
                                 <CardDescription>Open work</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p>Three items are blocked and awaiting review.</p>
+                                <P>Three items are blocked and awaiting review.</P>
                             </CardContent>
                             <CardFooter>
                                 <Badge variant="outline">3 open</Badge>
@@ -277,7 +277,7 @@
                                 <CardDescription>Recent signals</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p>Two new notifications were raised this morning.</p>
+                                <P>Two new notifications were raised this morning.</P>
                             </CardContent>
                             <CardFooter>
                                 <Button variant="outline">Review alerts</Button>
@@ -288,26 +288,26 @@
                 <Column
                     width="30">
                     <Stack> 
-                        <p> Quick links in the same style as a GitHub repo sidebar. </p> 
-                        <a href="/code">
+                        <P> Quick links in the same style as a GitHub repo sidebar. </P> 
+                        <A href="/code">
                             <Icon name="code-2" /> Code 
                         </a>
-                        <a href="/issues">
+                        <A href="/issues">
                             <Icon name="circle-alert" /> Issues 
                         </a>
-                        <a href="/pulls">
+                        <A href="/pulls">
                             <Icon name="git-pull-request" /> Pull requests 
                         </a>
-                        <a href="/actions">
+                        <A href="/actions">
                             <Icon name="play-circle" /> Actions 
                         </a>
-                        <a href="/projects">
+                        <A href="/projects">
                             <Icon name="layout-grid" /> Projects 
                         </a>
-                        <a href="/security">
+                        <A href="/security">
                             <Icon name="shield" /> Security 
                         </a>
-                        <a href="/insights">
+                        <A href="/insights">
                             <Icon name="chart-column" /> Insights 
                         </a>
                     </Stack>

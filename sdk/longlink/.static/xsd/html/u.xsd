@@ -16,5 +16,5 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="u" type="UType" />
+  <xsd:element name="U" type="UType" />
 </xsd:schema>

@@ -16,5 +16,5 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="sub" type="SubType" />
+  <xsd:element name="Sub" type="SubType" />
 </xsd:schema>

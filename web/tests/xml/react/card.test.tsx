@@ -7,7 +7,7 @@ describe('Card', () => {
     it('preserves the compound card structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Card><CardHeader><CardTitle>Card Title</CardTitle><CardDescription>Card Description</CardDescription><CardAction>Card Action</CardAction></CardHeader><CardContent><p>Card Content</p></CardContent><CardFooter><p>Card Footer</p></CardFooter></Card>'
+                '<Card><CardHeader><CardTitle>Card Title</CardTitle><CardDescription>Card Description</CardDescription><CardAction>Card Action</CardAction></CardHeader><CardContent><P>Card Content</P></CardContent><CardFooter><P>Card Footer</P></CardFooter></Card>'
             )
         ).toEqual([
             {
@@ -28,7 +28,7 @@ describe('Card', () => {
                         name: 'CardContent',
                         children: [
                             {
-                                name: 'p',
+                                name: 'P',
                                 children: [{ name: 'Text', params: { value: 'Card Content' } }],
                             },
                         ],
@@ -37,7 +37,7 @@ describe('Card', () => {
                         name: 'CardFooter',
                         children: [
                             {
-                                name: 'p',
+                                name: 'P',
                                 children: [{ name: 'Text', params: { value: 'Card Footer' } }],
                             },
                         ],
@@ -51,7 +51,7 @@ describe('Card', () => {
     it('renders the full card composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Card><CardHeader><CardTitle>Card Title</CardTitle><CardDescription>Card Description</CardDescription><CardAction>Card Action</CardAction></CardHeader><CardContent><p>Card Content</p></CardContent><CardFooter><p>Card Footer</p></CardFooter></Card>'
+                '<Card><CardHeader><CardTitle>Card Title</CardTitle><CardDescription>Card Description</CardDescription><CardAction>Card Action</CardAction></CardHeader><CardContent><P>Card Content</P></CardContent><CardFooter><P>Card Footer</P></CardFooter></Card>'
             )
         );
 

@@ -10,5 +10,5 @@
   </xsd:complexType>
 
   <xsd:complexType name="PType" mixed="true"><xsd:complexContent><xsd:extension base="PChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:element name="p" type="PType" />
+  <xsd:element name="P" type="PType" />
 </xsd:schema>

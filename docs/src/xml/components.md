@@ -1,6 +1,6 @@
 # Components
 
-TODO: Intoduction
+Reusable UI components for XML pages.
 
 ## Avatar
 
@@ -79,10 +79,10 @@ TODO: Component description
     <CardAction>Card Action</CardAction>
   </CardHeader>
   <CardContent>
-    <p>Card Content</p>
+    <P>Card Content</P>
   </CardContent>
   <CardFooter>
-    <p>Card Footer</p>
+    <P>Card Footer</P>
   </CardFooter>
 </Card>
 ```
@@ -93,17 +93,9 @@ TODO: Component description
 
 ```xml
 <Stack>
-  <p>First</p>
-  <p>Second</p>
+  <P>First</P>
+  <P>Second</P>
 </Stack>
-```
-
-## Checkbox
-
-TODO: Component description
-
-```xml
-<Checkbox checked="settings.enabled" id="enabled" />
 ```
 
 ## Divider
@@ -136,79 +128,6 @@ TODO: Component description
 <Icon name="layout-grid" />
 ```
 
-## Input
-
-TODO: Component description
-
-```xml
-<Input label="Issue title" value="user.name" />
-```
-
-## Label
-
-TODO: Component description
-
-```xml
-<Label htmlFor="enabled">Enabled</Label>
-```
-
-## RadioGroup
-
-TODO: Component description
-
-```xml
-<RadioGroup name="priority" defaultValue="medium">
-  <RadioGroupItem value="low">Low</RadioGroupItem>
-  <RadioGroupItem value="medium">Medium</RadioGroupItem>
-  <RadioGroupItem value="high">High</RadioGroupItem>
-</RadioGroup>
-```
-
-## Select
-
-TODO: Component description
-
-```xml
-<Select defaultValue="overview">
-  <SelectTrigger>
-    <SelectValue />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectGroup>
-      <SelectLabel>Views</SelectLabel>
-      <SelectItem value="overview">Overview</SelectItem>
-      <SelectItem value="settings">Settings</SelectItem>
-    </SelectGroup>
-    <SelectSeparator />
-    <SelectGroup>
-      <SelectLabel>Status</SelectLabel>
-      <SelectItem value="active">Active</SelectItem>
-      <SelectItem value="archived">Archived</SelectItem>
-    </SelectGroup>
-  </SelectContent>
-</Select>
-```
-
-## Slider
-
-TODO: Component description
-
-```xml
-<Slider value="volume" min="0" max="100" step="5" />
-```
-
-## Switch
-
-TODO: Component description
-
-```xml
-<Switch checked="settings.enabled" id="enabled" size="sm" />
-```
-
-`checked` can bind to a reactive state slot.
-`defaultChecked` seeds the initial value when `checked` is not bound.
-`size` accepts `sm` or `default`.
-
 ## Table
 
 TODO: Component description
@@ -232,36 +151,6 @@ TODO: Component description
     </TableRow>
   </TableBody>
 </Table>
-```
-
-## Textarea
-
-TODO: Component description
-
-```xml
-<Textarea label="Notes" value="Draft notes" rows="4" />
-```
-
-## Toggle
-
-TODO: Component description
-
-```xml
-<Toggle pressed="settings.enabled" id="enabled" size="sm">
-  Enabled
-</Toggle>
-```
-
-## ToggleGroup
-
-TODO: Component description
-
-```xml
-<ToggleGroup type="single">
-  <ToggleGroupItem value="a">A</ToggleGroupItem>
-  <ToggleGroupItem value="b">B</ToggleGroupItem>
-  <ToggleGroupItem value="c">C</ToggleGroupItem>
-</ToggleGroup>
 ```
 
 ## Tooltip

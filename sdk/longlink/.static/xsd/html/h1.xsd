@@ -16,5 +16,5 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="h1" type="H1Type" />
+  <xsd:element name="H1" type="H1Type" />
 </xsd:schema>

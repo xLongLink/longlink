@@ -9,13 +9,14 @@ Use `<longlink>` as the root page shell.
 ```xml
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink>
-  <p>Hello world</p>
+  <P>Hello world</P>
 </longlink>
 ```
 
 ## State
 
 Use `<State />` to create a local reactive slot, where the `id` attribute to name and `value` to seed the initial state.
+`<State>` does not accept children.
 
 ```xml
 <State id="user" value="name" />
@@ -24,6 +25,7 @@ Use `<State />` to create a local reactive slot, where the `id` attribute to nam
 ## Query
 
 Use `<Query />` to fetch JSON into a named slot, where the `id` attribute to name the query slot and the `path` attribute to point at the JSON endpoint or absolute URL.
+`<Query>` does not accept children.
 
 ```xml
 <Query id="products" path="/api/products" />
@@ -34,7 +36,7 @@ Use `<Query />` to fetch JSON into a named slot, where the `id` attribute to nam
 Use `${count}` for wrapped expressions that return typed values.
 
 ```xml
-<p>Current products, ${products.total}</p>
+<P>Current products, ${products.total}</P>
 ```
 
 ## References
@@ -51,7 +53,7 @@ Use `For` to render one child scope for each item in an array.
 
 ```xml
 <For each="${products.items}" as="product">
-  <p>${product.name}</p>
+  <P>${product.name}</P>
 </For>
 ```
 
@@ -60,5 +62,5 @@ Use `For` to render one child scope for each item in an array.
 Use `if` on any supported XML element to render the element only when the expression is truthy.
 
 ```xml
-<p if="${order.active}">Active</p>
+<P if="${order.active}">Active</P>
 ```

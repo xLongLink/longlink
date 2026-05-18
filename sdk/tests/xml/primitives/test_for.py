@@ -19,7 +19,7 @@ def test_for_layout_validation() -> None:
 def test_for_layout_accepts_nested_content() -> None:
     """Allow nested XML content inside `For`."""
 
-    element = Element.from_content('<For each="items" as="item"><p>{item.name}</p></For>', schema=SCHEMA)
+    element = Element.from_content('<For each="items" as="item"><P>{item.name}</P></For>', schema=SCHEMA)
     element.validate()
 
 

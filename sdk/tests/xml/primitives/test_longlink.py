@@ -12,7 +12,7 @@ SCHEMA = ROOT / ".static" / "xsd" / "primitives" / "Longlink.xsd"
 def test_longlink_layout_validation() -> None:
     """Validate a minimal `longlink` layout fragment."""
 
-    element = Element.from_content('<longlink><p>Dashboard</p></longlink>', schema=SCHEMA)
+    element = Element.from_content('<longlink><P>Dashboard</P></longlink>', schema=SCHEMA)
     element.validate()
 
 
@@ -26,12 +26,12 @@ def test_longlink_layout_allows_nested_children() -> None:
 def test_longlink_layout_rejects_root_attributes() -> None:
     """Reject attributes that are not allowed on `longlink`."""
 
-    element = Element.from_content('<longlink name="dashboard"><p>Dashboard</p></longlink>', schema=SCHEMA)
+    element = Element.from_content('<longlink name="dashboard"><P>Dashboard</P></longlink>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()
 
-    element = Element.from_content('<longlink icon="layout-grid"><p>Dashboard</p></longlink>', schema=SCHEMA)
+    element = Element.from_content('<longlink icon="layout-grid"><P>Dashboard</P></longlink>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

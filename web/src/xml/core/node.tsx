@@ -1,4 +1,3 @@
-import { ContextProvider } from '@xml/core/context';
 import { compile, evaluate, isText } from '@xml/core/expressions';
 import { state } from '@xml/core/state';
 import { A } from '@xml/html/A';
@@ -108,29 +107,20 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         if (!node.params?.id) throw new Error('State requires a string id');
         if (node.params.value == null) throw new Error('State requires a value');
         if (!isText(node.params.id)) throw new Error('State id must be literal text');
+        if (node.children != null) throw new Error('State cannot have children');
 
-        const childCtx: ExecutionContext = {
-            parent: ctx,
-            setups: ctx.setups,
-            invalidate: ctx.invalidate,
-            values: { ...ctx.values },
-        };
+        state(ctx, node.params.id.trim(), evaluate(node.params.value, ctx));
 
-        state(childCtx, node.params.id.trim(), evaluate(node.params.value, ctx));
-
-        return node.children ? (
-            <ContextProvider value={childCtx}>{renderNode(node.children, childCtx)}</ContextProvider>
-        ) : (
-            <></>
-        );
+        return <></>;
     }
 
     // Query nodes are validated here and resolved by the runtime setup pass.
     if (node.name === 'Query') {
         if (!node.params?.id) throw new Error('Query requires a string id');
         if (!node.params?.path) throw new Error('Query requires a string path');
+        if (node.children != null) throw new Error('Query cannot have children');
 
-        return node.children ? renderNode(node.children, ctx) : <></>;
+        return <></>;
     }
 
     if (node.name === 'For') {
@@ -216,67 +206,67 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return <HeroContent children={node.children} />;
     }
 
-    if (node.name === 'p') {
+    if (node.name === 'P') {
         return <P children={node.children} />;
     }
 
-    if (node.name === 'br') {
+    if (node.name === 'Br') {
         return <Br />;
     }
 
-    if (node.name === 'b') {
+    if (node.name === 'B') {
         return <B children={node.children} />;
     }
 
-    if (node.name === 'h1') {
+    if (node.name === 'H1') {
         return <H1 children={node.children} />;
     }
 
-    if (node.name === 'h2') {
+    if (node.name === 'H2') {
         return <H2 children={node.children} />;
     }
 
-    if (node.name === 'h3') {
+    if (node.name === 'H3') {
         return <H3 children={node.children} />;
     }
 
-    if (node.name === 'h4') {
+    if (node.name === 'H4') {
         return <H4 children={node.children} />;
     }
 
-    if (node.name === 'code') {
+    if (node.name === 'Code') {
         return <Code children={node.children} />;
     }
 
-    if (node.name === 's') {
+    if (node.name === 'S') {
         return <S children={node.children} />;
     }
 
-    if (node.name === 'sup') {
+    if (node.name === 'Sup') {
         return <Sup children={node.children} />;
     }
 
-    if (node.name === 'sub') {
+    if (node.name === 'Sub') {
         return <Sub children={node.children} />;
     }
 
-    if (node.name === 'u') {
+    if (node.name === 'U') {
         return <U children={node.children} />;
     }
 
-    if (node.name === 'ul') {
+    if (node.name === 'Ul') {
         return <Ul children={node.children} />;
     }
 
-    if (node.name === 'li') {
+    if (node.name === 'Li') {
         return <Li children={node.children} />;
     }
 
-    if (node.name === 'ol') {
+    if (node.name === 'Ol') {
         return <Ol children={node.children} />;
     }
 
-    if (node.name === 'a') {
+    if (node.name === 'A') {
         const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
         return <A href={href} children={node.children} />;
     }

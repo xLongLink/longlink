@@ -16,5 +16,5 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="li" type="LiType" />
+  <xsd:element name="Li" type="LiType" />
 </xsd:schema>

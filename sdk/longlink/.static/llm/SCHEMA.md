@@ -49,6 +49,7 @@ If the expression is false, the element is not rendered.
 - `<State id="user" value="John Doe" />` creates local state. `value` is evaluated as an expression.
 - `<State id="cart" value="${[]}" />` creates an array state slot.
 - `<Query id="user" path="/endpoint" />` fetches data into the slot. `id` and `path` must be literal text.
+- Both elements are self-closing and do not allow children.
 
 ### Iteration
 
@@ -56,7 +57,7 @@ If the expression is false, the element is not rendered.
 
 ```xml
 <For each="orders" as="order">
-  <p>${order.title}</p>
+  <P>${order.title}</P>
 </For>
 ```
 
@@ -78,7 +79,7 @@ Behavior:
 
 - SDK metadata exposes page paths directly.
 
-Example: `<longlink><p>Dashboard</p></longlink>`
+Example: `<longlink><P>Dashboard</P></longlink>`
 
 ## Primitives
 
@@ -96,6 +97,7 @@ Behavior:
 - The state is exposed as `ctx.values[id]`.
 - Scalar values are stored as a proxied object with a `value` property.
 - Array values are stored as proxied arrays.
+- `State` must not contain child elements.
 
 ### `<Query>`
 
@@ -110,6 +112,7 @@ Behavior:
 
 - Fetched data is exposed as `ctx.values[id]`.
 - Descendants can read it through expressions.
+- `Query` must not contain child elements.
 
 ## Hero
 
@@ -389,8 +392,8 @@ Example:
 
 ```xml
 <Stack>
-  <p>First</p>
-  <p>Second</p>
+  <P>First</P>
+  <P>Second</P>
 </Stack>
 ```
 
@@ -435,7 +438,7 @@ Behavior:
 - Supports the global `if` attribute.
 - Use `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, and `CardFooter` inside `Card`.
 
-Example: `<Card><CardHeader><CardTitle>Card Title</CardTitle></CardHeader><CardContent><p>Card Content</p></CardContent></Card>`
+Example: `<Card><CardHeader><CardTitle>Card Title</CardTitle></CardHeader><CardContent><P>Card Content</P></CardContent></Card>`
 
 ### `<CardHeader>`
 
@@ -1101,23 +1104,24 @@ Visual separator between groups.
 
 The following HTML tags are exposed directly in XML:
 
-- `<p>`
-- `<a>`
-- `<br>`
-- `<b>`
-- `<h1>`
-- `<h2>`
-- `<h3>`
-- `<h4>`
-- `<code>`
-- `<s>`
-- `<sup>`
-- `<sub>`
-- `<u>`
-- `<ul>`
-- `<li>`
+- `<P>`
+- `<A>`
+- `<Br>`
+- `<B>`
+- `<H1>`
+- `<H2>`
+- `<H3>`
+- `<H4>`
+- `<Code>`
+- `<S>`
+- `<Sup>`
+- `<Sub>`
+- `<U>`
+- `<Ul>`
+- `<Li>`
+- `<Ol>`
 
-### `<p>`
+### `<P>`
 
 Renders a paragraph element.
 
@@ -1128,7 +1132,7 @@ Behavior:
 - Renders as a normal HTML paragraph.
 - Supports the global `if` attribute.
 
-### `<a>`
+### `<A>`
 
 Renders a standard anchor link.
 
@@ -1141,7 +1145,7 @@ Behavior:
 - Renders as a normal HTML anchor.
 - Supports the global `if` attribute.
 
-### `<br>`
+### `<Br>`
 
 Renders a spacer break.
 
@@ -1151,7 +1155,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<b>`
+### `<B>`
 
 Renders bold text.
 
@@ -1161,7 +1165,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<h1>`
+### `<H1>`
 
 Renders a primary heading.
 
@@ -1171,7 +1175,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<h2>`
+### `<H2>`
 
 Renders a secondary heading.
 
@@ -1181,7 +1185,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<h3>`
+### `<H3>`
 
 Renders a tertiary heading.
 
@@ -1191,7 +1195,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<h4>`
+### `<H4>`
 
 Renders a quaternary heading.
 
@@ -1201,7 +1205,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<code>`
+### `<Code>`
 
 Renders inline code.
 
@@ -1211,7 +1215,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<s>`
+### `<S>`
 
 Renders strikethrough text.
 
@@ -1221,7 +1225,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<sup>`
+### `<Sup>`
 
 Renders superscript text.
 
@@ -1231,7 +1235,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<sub>`
+### `<Sub>`
 
 Renders subscript text.
 
@@ -1241,7 +1245,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<u>`
+### `<U>`
 
 Renders underlined text.
 
@@ -1251,7 +1255,7 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<ul>`
+### `<Ul>`
 
 Renders an unordered list.
 
@@ -1261,9 +1265,19 @@ Behavior:
 
 - Supports the global `if` attribute.
 
-### `<li>`
+### `<Li>`
 
 Renders a list item.
+
+Attributes:
+
+Behavior:
+
+- Supports the global `if` attribute.
+
+### `<Ol>`
+
+Renders an ordered list.
 
 Attributes:
 

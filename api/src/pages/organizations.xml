@@ -17,7 +17,7 @@
   </Hero>
 
   <For each="$organizations.items" as="organization">
-    <p>
+    <P>
       ${organization.name}
       <Button action="/${organization.name}" method="GET" variant="outline" size="sm">
         Open

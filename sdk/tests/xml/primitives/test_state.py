@@ -12,15 +12,17 @@ SCHEMA = ROOT / ".static" / "xsd" / "primitives" / "State.xsd"
 def test_state_layout_validation() -> None:
     """Validate a minimal `State` layout fragment."""
 
-    element = Element.from_content('<State id="filters" value="[]"><query /></State>', schema=SCHEMA)
+    element = Element.from_content('<State id="filters" value="[]" />', schema=SCHEMA)
     element.validate()
 
 
-def test_state_layout_accepts_nested_content() -> None:
-    """Allow nested XML content inside `State`."""
+def test_state_layout_rejects_nested_content() -> None:
+    """Reject nested XML content inside `State`."""
 
-    element = Element.from_content('<State id="filters" value="[]"><p>Filters</p></State>', schema=SCHEMA)
-    element.validate()
+    element = Element.from_content('<State id="filters" value="[]"><P>Filters</P></State>', schema=SCHEMA)
+
+    with pytest.raises(ValueError):
+        element.validate()
 
 
 def test_state_layout_requires_id() -> None:

@@ -139,7 +139,7 @@ async def sample():
 
 ```xml
 <longlink>
-  <p>Hello from XML.</p>
+  <P>Hello from XML.</P>
 </longlink>
 ```
 

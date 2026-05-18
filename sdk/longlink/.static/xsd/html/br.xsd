@@ -4,5 +4,5 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:element name="br" type="BrType" />
+  <xsd:element name="Br" type="BrType" />
 </xsd:schema>

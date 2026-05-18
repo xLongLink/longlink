@@ -8,22 +8,41 @@ import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('Query', () => {
-    /* The compiler should preserve query attributes and nested content. */
+    /* The compiler should preserve query attributes for self-closing query nodes. */
     it('compiles query xml into a query ast node', () => {
-        expect(parseXML('<Query id="user" path="/api/user"><p>Ready</p></Query>')).toEqual([
+        expect(parseXML('<Query id="user" path="/api/user" />')).toEqual([
             {
                 name: 'Query',
                 params: { id: 'user', path: '/api/user' },
-                children: [{ name: 'p', children: [{ name: 'Text', params: { value: 'Ready' } }] }],
             },
         ]);
+    });
+
+    /* Query nodes must reject nested children so invalid layouts fail fast. */
+    it('throws when children are present', () => {
+        const runtime: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const client = new QueryClient();
+        const ast = parseXML('<Query id="user" path="/api/user"><P>Ready</P></Query>');
+
+        expect(() =>
+            renderToStaticMarkup(
+                createElement(
+                    QueryClientProvider,
+                    { client },
+                    createElement(ContextProvider, {
+                        value: runtime,
+                        children: createElement(Fragment, null, createElement(RenderXML, { ast, ctx: runtime })),
+                    })
+                )
+            )
+        ).toThrow('Query cannot have children');
     });
 
     /* Query should reject missing ids so invalid XML fails fast. */
     it('throws when id is missing', () => {
         const runtime: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const client = new QueryClient();
-        const ast = parseXML('<Query path="/api/user">x</Query>');
+        const ast = parseXML('<Query path="/api/user" />');
 
         expect(() =>
             renderToStaticMarkup(

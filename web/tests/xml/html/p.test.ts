@@ -8,9 +8,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('P', () => {
     /* The compiler should preserve paragraph text without HTML params. */
     it('compiles p xml into a paragraph ast node', () => {
-        expect(parseXML('<p>Paragraph text</p>')).toEqual([
+        expect(parseXML('<P>Paragraph text</P>')).toEqual([
             {
-                name: 'p',
+                name: 'P',
                 children: [{ name: 'Text', params: { value: 'Paragraph text' } }],
             },
         ]);
@@ -19,11 +19,11 @@ describe('P', () => {
     /* The runtime should render paragraph XML into the expected HTML output. */
     it('renders raw xml paragraph content end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<p>Paragraph text</p>');
+        const ast = parseXML('<P>Paragraph text</P>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
-            '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">Paragraph text</p>'
+            '<p class="leading-7 [&amp;:not(:first-child)]:mt-4">Paragraph text</p>'
         );
     });
 });

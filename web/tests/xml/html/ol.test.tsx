@@ -5,15 +5,15 @@ import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-describe('ol', () => {
-    /* The compiler should preserve ordered list bridges. */
+describe('Ol', () => {
+    /* The compiler should preserve titlecase ordered list bridges. */
     it('compiles ol xml into an ordered list ast node', () => {
-        expect(parseXML('<ol><li>First item</li><li>Second item</li></ol>')).toEqual([
+        expect(parseXML('<Ol><Li>First item</Li><Li>Second item</Li></Ol>')).toEqual([
             {
-                name: 'ol',
+                name: 'Ol',
                 children: [
-                    { name: 'li', children: [{ name: 'Text', params: { value: 'First item' } }] },
-                    { name: 'li', children: [{ name: 'Text', params: { value: 'Second item' } }] },
+                    { name: 'Li', children: [{ name: 'Text', params: { value: 'First item' } }] },
+                    { name: 'Li', children: [{ name: 'Text', params: { value: 'Second item' } }] },
                 ],
             },
         ]);
@@ -22,7 +22,7 @@ describe('ol', () => {
     /* The runtime should render ordered list XML into the expected HTML output. */
     it('renders ordered list xml end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<ol><li>First item</li><li>Second item</li></ol>');
+        const ast = parseXML('<Ol><Li>First item</Li><Li>Second item</Li></Ol>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(

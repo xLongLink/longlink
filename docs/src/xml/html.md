@@ -4,143 +4,143 @@ LongLink exposes a small HTML bridge layer for common formatting, layout, and li
 
 These tags share the same conditional rendering model through the global `if` attribute.
 
-## `a`
+## `A`
 
 Links to another page or resource.
 
 - `href` required. Link target.
 
 ```xml
-<a href="/settings">Open settings</a>
+<A href="/settings">Open settings</A>
 ```
 
-## `b`
+## `B`
 
 Renders bold inline text.
 
 ```xml
-<b>Important</b>
+<B>Important</B>
 ```
 
-## `br`
+## `Br`
 
 Renders a spacer block for visual separation.
 
 ```xml
-<br />
+<Br />
 ```
 
-## `code`
+## `Code`
 
 Renders inline monospace text.
 
 ```xml
-<code>@radix-ui/react-alert-dialog</code>
+<Code>@radix-ui/react-alert-dialog</Code>
 ```
 
-## `h1`
+## `H1`
 
 Renders the primary heading for a page.
 
 ```xml
-<h1>Dashboard</h1>
+<H1>Dashboard</H1>
 ```
 
-## `h2`
+## `H2`
 
 Renders the second-level heading.
 
 ```xml
-<h2>Overview</h2>
+<H2>Overview</H2>
 ```
 
-## `h3`
+## `H3`
 
 Renders the third-level heading.
 
 ```xml
-<h3>Usage</h3>
+<H3>Usage</H3>
 ```
 
-## `h4`
+## `H4`
 
 Renders the fourth-level heading.
 
 ```xml
-<h4>Activity</h4>
+<H4>Activity</H4>
 ```
 
-## `li`
+## `Li`
 
 Renders a list item inside `ul` or `ol`.
 
 ```xml
-<ul>
-  <li>First item</li>
-  <li>Second item</li>
-</ul>
+<Ul>
+  <Li>First item</Li>
+  <Li>Second item</Li>
+</Ul>
 ```
 
-## `ol`
+## `Ol`
 
 Renders an ordered list.
 
 ```xml
-<ol>
-  <li>First item</li>
-  <li>Second item</li>
-</ol>
+<Ol>
+  <Li>First item</Li>
+  <Li>Second item</Li>
+</Ol>
 ```
 
-## `p`
+## `P`
 
 Renders a standard paragraph.
 
 - None.
 
 ```xml
-<p>Use explicit paragraph text.</p>
+<P>Use explicit paragraph text.</P>
 ```
 
-## `s`
+## `S`
 
 Renders strikethrough text.
 
 ```xml
-<s>Deprecated</s>
+<S>Deprecated</S>
 ```
 
-## `sub`
+## `Sub`
 
 Renders subscript text.
 
 ```xml
-<sub>n</sub>
+<Sub>n</Sub>
 ```
 
-## `sup`
+## `Sup`
 
 Renders superscript text.
 
 ```xml
-<sup>2</sup>
+<Sup>2</Sup>
 ```
 
-## `u`
+## `U`
 
 Renders underlined text.
 
 ```xml
-<u>Underlined</u>
+<U>Underlined</U>
 ```
 
-## `ul`
+## `Ul`
 
 Renders an unordered list.
 
 ```xml
-<ul>
-  <li>First item</li>
-  <li>Second item</li>
-</ul>
+<Ul>
+  <Li>First item</Li>
+  <Li>Second item</Li>
+</Ul>
 ```

@@ -19,6 +19,7 @@
   <xsd:include schemaLocation="html/u.xsd" />
   <xsd:include schemaLocation="html/ul.xsd" />
   <xsd:include schemaLocation="html/li.xsd" />
+  <xsd:include schemaLocation="html/ol.xsd" />
   <xsd:include schemaLocation="react/Button.xsd" />
   <xsd:include schemaLocation="react/ButtonGroup.xsd" />
   <xsd:include schemaLocation="react/InputGroup.xsd" />
