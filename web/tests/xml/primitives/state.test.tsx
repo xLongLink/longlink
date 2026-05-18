@@ -20,18 +20,18 @@ describe('State', () => {
     /* The runtime should render state XML into the expected HTML output. */
     it('renders raw xml state content end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<State id="filter" value="day"><p>{filter}</p></State>');
+        const ast = parseXML('<State id="filter" value="day"><p>${filter}</p></State>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
-            '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">day</p>'
+            '<p class="leading-7 [&amp;:not(:first-child)]:mt-4">day</p>'
         );
     });
 
     /* State should register a scoped tuple and preserve its initial object shape. */
     it('exposes initial state to descendants', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<State id="filter" value="day">{filter}</State>');
+        const ast = parseXML('<State id="filter" value="day">${filter}</State>');
 
         const output = renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })));
 

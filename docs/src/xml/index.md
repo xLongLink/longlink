@@ -83,6 +83,8 @@ Use `$name` for direct references.
 Use `${count + 1}` for wrapped expressions that return typed values.
 Use `${{ fullName: fullName }}` for object payloads in `json` attributes.
 Use mixed text interpolation like `Hello ${name}` when plain text and runtime values need to share a string.
+Do not use bare `{name}` or `{{...}}` authoring syntax.
+LongLink only supports `${...}` expressions and `$name` references.
 
 Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.
 Unsupported expressions include statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, and globals.

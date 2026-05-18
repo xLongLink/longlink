@@ -26,6 +26,8 @@ LongLink evaluates JavaScript-like expressions inside `${...}`.
 - Strings wrapped in `${...}` can resolve to non-string values.
 - Nested objects and arrays in `json` values are resolved recursively.
 - Scope is lexical: child elements read from their nearest parent scope first, then walk outward.
+- Do not use bare `{name}` or `{{...}}` authoring syntax.
+- Use `${...}` expressions and `$name` references only.
 
 ### Limits
 

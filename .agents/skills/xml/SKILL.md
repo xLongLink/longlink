@@ -157,6 +157,7 @@ HTML bridge:
 - `evaluate(...)` evaluate an expression with the current runtime state.
 - `compile(...)` return a resolver that evaluates an expression string against the current runtime state.
 - `json` payloads use object-literal expressions such as `${{ fullName: fullName }}`.
+- Do not author bare `{name}` or `{{...}}` syntax.
 
 ## Expression Rules
 
