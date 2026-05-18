@@ -51,12 +51,6 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TableCaptionType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="TableChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:element name="Table" type="TableType" />
   <xsd:element name="TableHeader" type="TableHeaderType" />
   <xsd:element name="TableBody" type="TableBodyType" />
@@ -64,5 +58,4 @@
   <xsd:element name="TableRow" type="TableRowType" />
   <xsd:element name="TableHead" type="TableHeadType" />
   <xsd:element name="TableCell" type="TableCellType" />
-  <xsd:element name="TableCaption" type="TableCaptionType" />
 </xsd:schema>

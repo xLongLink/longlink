@@ -102,7 +102,7 @@ React-backed components:
 - `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
 - `Slider`
 - `Switch`
-- `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption`
+- `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`
 - `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
 - `Textarea`
 - `Toggle`

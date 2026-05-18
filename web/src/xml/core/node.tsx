@@ -53,6 +53,14 @@ import { Grid } from '@xml/react/Grid';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Icon } from '@xml/react/Icon';
 import { Input } from '@xml/react/Input';
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+    InputGroupText,
+    InputGroupTextarea,
+} from '@xml/react/InputGroup';
 import { Label } from '@xml/react/Label';
 import { RadioGroup, RadioGroupItem } from '@xml/react/RadioGroup';
 import {
@@ -67,16 +75,7 @@ import {
 } from '@xml/react/Select';
 import { Slider } from '@xml/react/Slider';
 import { Switch } from '@xml/react/Switch';
-import {
-    Table,
-    TableBody,
-    TableCaption,
-    TableCell,
-    TableFooter,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@xml/react/Table';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
 import { Textarea } from '@xml/react/Textarea';
 import { Toggle } from '@xml/react/Toggle';
@@ -176,13 +175,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
             : 'horizontal';
 
-        return (
-            <Tabs
-                defaultValue={defaultValue}
-                orientation={orientation}
-                children={node.children}
-            />
-        );
+        return <Tabs defaultValue={defaultValue} orientation={orientation} children={node.children} />;
     }
 
     if (node.name === 'TabsList') {
@@ -316,12 +309,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
             : 'horizontal';
 
-        return (
-            <ButtonGroup
-                orientation={orientation as 'horizontal' | 'vertical'}
-                children={node.children}
-            />
-        );
+        return <ButtonGroup orientation={orientation as 'horizontal' | 'vertical'} children={node.children} />;
     }
 
     if (node.name === 'ButtonGroupText') {
@@ -334,6 +322,50 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             : 'vertical';
 
         return <ButtonGroupSeparator orientation={orientation as 'horizontal' | 'vertical'} />;
+    }
+
+    // Input group tags reuse the shared input-group chrome from the UI layer.
+    if (node.name === 'InputGroup') {
+        return <InputGroup children={node.children} />;
+    }
+
+    if (node.name === 'InputGroupAddon') {
+        const align = node.params?.align ? String(evaluate(node.params.align, ctx) ?? 'inline-start') : 'inline-start';
+
+        return (
+            <InputGroupAddon
+                align={align as 'inline-start' | 'inline-end' | 'block-start' | 'block-end'}
+                children={node.children}
+            />
+        );
+    }
+
+    // Normalize button props before rendering the grouped button shell.
+    if (node.name === 'InputGroupButton') {
+        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
+        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'xs') : 'xs';
+        const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'button') : 'button';
+        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'ghost') : 'ghost';
+
+        return (
+            <InputGroupButton
+                disabled={disabled}
+                size={size as 'xs' | 'sm' | 'icon-xs' | 'icon-sm'}
+                type={type as 'button' | 'submit' | 'reset'}
+                variant={variant}
+                children={node.children}
+            />
+        );
+    }
+
+    if (node.name === 'InputGroupText') {
+        return <InputGroupText children={node.children} />;
     }
 
     if (node.name === 'Badge') {
@@ -552,6 +584,46 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         );
     }
 
+    // InputGroupInput mirrors Input but keeps the specialized grouped styling.
+    if (node.name === 'InputGroupInput') {
+        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+        const placeholder = node.params?.placeholder
+            ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
+            : undefined;
+        const value = node.params?.value
+            ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+            : undefined;
+        const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
+        const autoComplete = node.params?.autoComplete
+            ? String(evaluate(node.params.autoComplete, ctx) ?? '')
+            : undefined;
+        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+        const ariaInvalidValue =
+            node.params?.['aria-invalid'] != null ? evaluate(node.params['aria-invalid'], ctx) : undefined;
+        const disabled =
+            disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
+        const ariaInvalid =
+            ariaInvalidValue === false || ariaInvalidValue === 'false'
+                ? false
+                : ariaInvalidValue != null
+                  ? true
+                  : undefined;
+
+        return (
+            <InputGroupInput
+                aria-invalid={ariaInvalid}
+                autoComplete={autoComplete}
+                disabled={disabled}
+                id={id}
+                label={label}
+                placeholder={placeholder}
+                value={value}
+                type={type}
+            />
+        );
+    }
+
     if (node.name === 'Textarea') {
         const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
         const placeholder = node.params?.placeholder
@@ -573,6 +645,39 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
         return (
             <Textarea
+                cols={colsValue == null ? undefined : String(colsValue)}
+                disabled={disabled}
+                id={id}
+                label={label}
+                placeholder={placeholder}
+                rows={rowsValue == null ? undefined : String(rowsValue)}
+                value={value}
+            />
+        );
+    }
+
+    // InputGroupTextarea mirrors Textarea but keeps the specialized grouped styling.
+    if (node.name === 'InputGroupTextarea') {
+        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+        const placeholder = node.params?.placeholder
+            ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
+            : undefined;
+        const value = node.params?.value
+            ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+            : undefined;
+        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+        const rowsValue = node.params?.rows != null ? evaluate(node.params.rows, ctx) : undefined;
+        const colsValue = node.params?.cols != null ? evaluate(node.params.cols, ctx) : undefined;
+        const disabled =
+            disabledValue === true || disabledValue === 'true'
+                ? true
+                : disabledValue === false || disabledValue === 'false'
+                  ? false
+                  : undefined;
+
+        return (
+            <InputGroupTextarea
                 cols={colsValue == null ? undefined : String(colsValue)}
                 disabled={disabled}
                 id={id}
@@ -631,7 +736,12 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     if (node.name === 'FieldError') {
         const errors = node.params?.errors != null ? evaluate(node.params.errors, ctx) : undefined;
 
-        return <FieldError errors={errors as Array<{ message?: string } | undefined> | string | undefined} children={node.children} />;
+        return (
+            <FieldError
+                errors={errors as Array<{ message?: string } | undefined> | string | undefined}
+                children={node.children}
+            />
+        );
     }
 
     if (node.name === 'Checkbox') {
@@ -668,14 +778,7 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                   ? false
                   : undefined;
 
-        return (
-            <Checkbox
-                checked={checked}
-                defaultChecked={defaultChecked}
-                disabled={disabled}
-                id={id}
-            />
-        );
+        return <Checkbox checked={checked} defaultChecked={defaultChecked} disabled={disabled} id={id} />;
     }
 
     if (node.name === 'RadioGroup') {
@@ -1038,10 +1141,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
     if (node.name === 'TableCell') {
         return <TableCell children={node.children} />;
-    }
-
-    if (node.name === 'TableCaption') {
-        return <TableCaption children={node.children} />;
     }
 
     throw new Error(`Unknown component "${node.name}"`);

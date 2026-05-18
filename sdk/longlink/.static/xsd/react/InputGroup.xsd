@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="InputGroupAddon.xsd" />
+  <xsd:include schemaLocation="InputGroupButton.xsd" />
+  <xsd:include schemaLocation="InputGroupText.xsd" />
+  <xsd:include schemaLocation="InputGroupInput.xsd" />
+  <xsd:include schemaLocation="InputGroupTextarea.xsd" />
+
+  <xsd:complexType name="InputGroupChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:element ref="InputGroupAddon" />
+        <xsd:element ref="InputGroupButton" />
+        <xsd:element ref="InputGroupText" />
+        <xsd:element ref="InputGroupInput" />
+        <xsd:element ref="InputGroupTextarea" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="InputGroupType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="InputGroupChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="InputGroup" type="InputGroupType" />
+</xsd:schema>

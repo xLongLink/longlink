@@ -21,6 +21,7 @@
   <xsd:include schemaLocation="html/li.xsd" />
   <xsd:include schemaLocation="react/Button.xsd" />
   <xsd:include schemaLocation="react/ButtonGroup.xsd" />
+  <xsd:include schemaLocation="react/InputGroup.xsd" />
   <xsd:include schemaLocation="react/Avatar.xsd" />
   <xsd:include schemaLocation="react/Checkbox.xsd" />
   <xsd:include schemaLocation="react/FieldSet.xsd" />

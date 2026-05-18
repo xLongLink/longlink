@@ -7,16 +7,12 @@ describe('Table', () => {
     it('preserves the compound table structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Table><TableCaption>Revenue by quarter</TableCaption><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>'
+                '<Table><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>'
             )
         ).toEqual([
             {
                 name: 'Table',
                 children: [
-                    {
-                        name: 'TableCaption',
-                        children: [{ name: 'Text', params: { value: 'Revenue by quarter' } }],
-                    },
                     {
                         name: 'TableHeader',
                         children: [
@@ -77,7 +73,7 @@ describe('Table', () => {
     it('renders the full table composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table><TableCaption>Revenue by quarter</TableCaption><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>'
+                '<Table><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>'
             )
         );
 
@@ -89,8 +85,6 @@ describe('Table', () => {
         expect(output).toContain('data-slot="table-row"');
         expect(output).toContain('data-slot="table-head"');
         expect(output).toContain('data-slot="table-cell"');
-        expect(output).toContain('data-slot="table-caption"');
-        expect(output).toContain('Revenue by quarter');
         expect(output).toContain('Q1');
         expect(output).toContain('$154k');
         expect(output).toContain('Projected');

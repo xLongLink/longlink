@@ -1,7 +1,6 @@
 import {
     Table as UITable,
     TableBody as UITableBody,
-    TableCaption as UITableCaption,
     TableCell as UITableCell,
     TableFooter as UITableFooter,
     TableHead as UITableHead,
@@ -49,12 +48,6 @@ export interface TableHeadProps {
 
 /** Props accepted by the XML TableCell component. */
 export interface TableCellProps {
-    children?: ASTNode | ASTNode[] | null;
-    className?: string;
-}
-
-/** Props accepted by the XML TableCaption component. */
-export interface TableCaptionProps {
     children?: ASTNode | ASTNode[] | null;
     className?: string;
 }
@@ -116,12 +109,4 @@ export function TableCell({ children, className }: TableCellProps) {
     const { ctx } = useXmlContext();
 
     return <UITableCell className={className}>{renderNode(children ?? null, ctx)}</UITableCell>;
-}
-
-
-/** Renders the table caption slot. */
-export function TableCaption({ children, className }: TableCaptionProps) {
-    const { ctx } = useXmlContext();
-
-    return <UITableCaption className={className}>{renderNode(children ?? null, ctx)}</UITableCaption>;
 }

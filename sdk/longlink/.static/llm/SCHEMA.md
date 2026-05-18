@@ -437,7 +437,7 @@ Attributes:
 Behavior:
 
 - Renders inside a horizontal scroll container.
-- Use `TableCaption`, `TableHeader`, `TableBody`, and `TableFooter` inside `Table`.
+- Use `TableHeader`, `TableBody`, and `TableFooter` inside `Table`.
 - Use `TableRow` inside header, body, and footer sections.
 - Use `TableHead` for header cells and `TableCell` for body cells.
 
@@ -445,7 +445,6 @@ Example:
 
 ```xml
 <Table>
-  <TableCaption>Revenue by quarter</TableCaption>
   <TableHeader>
     <TableRow>
       <TableHead>Quarter</TableHead>
@@ -484,10 +483,6 @@ Header cell slot.
 ### `<TableCell>`
 
 Body cell slot.
-
-### `<TableCaption>`
-
-Caption slot for the table.
 
 ## Dialog
 
@@ -719,6 +714,90 @@ Visual separator between button group segments.
 Attributes:
 
 - `orientation` optional. Use `horizontal` or `vertical`.
+
+### `<InputGroup>`
+
+Groups text inputs, add-ons, and action buttons into a shared input chrome.
+
+Attributes:
+
+- `if` supported globally.
+
+Children:
+
+- `InputGroupAddon`
+- `InputGroupButton`
+- `InputGroupText`
+- `InputGroupInput`
+- `InputGroupTextarea`
+
+Behavior:
+
+- `InputGroupInput` and `InputGroupTextarea` render the editable control slots.
+- `InputGroupAddon` renders inline or block add-ons around the control.
+- `InputGroupButton` renders a compact button inside the shared shell.
+
+Example:
+
+```xml
+<InputGroup>
+  <InputGroupAddon>@</InputGroupAddon>
+  <InputGroupInput value="user.handle" placeholder="Handle" />
+  <InputGroupButton>Search</InputGroupButton>
+</InputGroup>
+```
+
+### `<InputGroupAddon>`
+
+Text or control add-on inside an input group.
+
+Attributes:
+
+- `align` optional. Use `inline-start`, `inline-end`, `block-start`, or `block-end`.
+
+### `<InputGroupButton>`
+
+Compact button rendered inside an input group.
+
+Attributes:
+
+- `disabled` optional. Disables interaction.
+- `size` optional. Use `xs`, `sm`, `icon-xs`, or `icon-sm`.
+- `type` optional. Use `button`, `submit`, or `reset`.
+- `variant` optional. Button variant string.
+
+### `<InputGroupText>`
+
+Inline text slot inside an input group.
+
+### `<InputGroupInput>`
+
+Single-line editable input inside an input group.
+
+Attributes:
+
+- `label` optional. Fallback placeholder text.
+- `value` optional. Expression for the displayed text.
+- `placeholder` optional.
+- `id` optional. Control id for associated labels.
+- `autoComplete` optional. Browser autocomplete hint.
+- `disabled` optional. Disables interaction.
+- `aria-invalid` optional. Marks the field invalid.
+- `type` optional. Input type.
+
+### `<InputGroupTextarea>`
+
+Multi-line editable textarea inside an input group.
+
+Attributes:
+
+- `label` optional. Fallback placeholder text.
+- `value` optional. Expression for the displayed text.
+- `placeholder` optional.
+- `disabled` optional. Disables interaction.
+- `id` optional. Control id for associated labels.
+- `rows` optional. Visible row count.
+- `cols` optional. Visible column count.
 
 ### `<Label>`
 

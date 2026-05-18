@@ -36,6 +36,14 @@ export {
 } from './react/Field';
 export { Grid } from './react/Grid';
 export { Icon } from './react/Icon';
+export {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+    InputGroupText,
+    InputGroupTextarea,
+} from './react/InputGroup';
 export { Label } from './react/Label';
 export { RadioGroup, RadioGroupItem } from './react/RadioGroup';
 export {
@@ -50,16 +58,7 @@ export {
 } from './react/Select';
 export { Slider } from './react/Slider';
 export { Switch } from './react/Switch';
-export {
-    Table,
-    TableBody,
-    TableCaption,
-    TableCell,
-    TableFooter,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from './react/Table';
+export { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './react/Table';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';
 export { Textarea } from './react/Textarea';
 export { Toggle } from './react/Toggle';

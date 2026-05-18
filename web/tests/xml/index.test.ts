@@ -44,7 +44,6 @@ import {
     Textarea,
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableFooter,
     TableHead,
@@ -114,7 +113,6 @@ describe('xml index', () => {
         expect(TableRow).toBeDefined();
         expect(TableHead).toBeDefined();
         expect(TableCell).toBeDefined();
-        expect(TableCaption).toBeDefined();
         expect(Br).toBeDefined();
     });
 });

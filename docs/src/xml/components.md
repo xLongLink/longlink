@@ -75,6 +75,28 @@ Use `ButtonGroup` with `ButtonGroupText` and `ButtonGroupSeparator` to build com
 `ButtonGroupText` renders inline text inside the group.
 `ButtonGroupSeparator` renders a visual split between group segments.
 
+## InputGroup
+
+Use `InputGroup` with `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `InputGroupInput`, and `InputGroupTextarea` to build grouped form controls.
+
+```xml
+<InputGroup>
+  <InputGroupAddon>
+    <Icon name="search" />
+  </InputGroupAddon>
+  <InputGroupInput label="Handle" value="user.handle" />
+  <InputGroupButton>
+    Search <Icon name="arrow-right" />
+  </InputGroupButton>
+</InputGroup>
+```
+
+`InputGroupInput` behaves like `Input`, but renders inside the grouped chrome.
+`InputGroupTextarea` behaves like `Textarea`, but renders inside the grouped chrome.
+`InputGroupAddon` renders prefix or suffix content.
+`InputGroupButton` renders a compact button inside the group.
+`InputGroupText` renders inline helper text.
+
 ## Card
 
 Use the `Card` component for grouped content blocks and simple dashboard panels.
@@ -352,11 +374,10 @@ Use `Switch` for binary on/off controls.
 
 ## Table
 
-Use `Table` with `TableBody`, `TableCaption`, `TableFooter`, and `TableHeader` for tabular data.
+Use `Table` with `TableBody`, `TableFooter`, and `TableHeader` for tabular data.
 
 ```xml
 <Table>
-  <TableCaption>Revenue by quarter</TableCaption>
   <TableHeader>
     <TableRow>
       <TableHead>Quarter</TableHead>
