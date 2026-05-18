@@ -6,7 +6,6 @@ import { getVersion, useSnapshot } from 'valtio';
 /** Props accepted by the XML Toggle component. */
 export interface ToggleProps {
     children?: ASTNode[];
-    className?: string;
     defaultPressed?: boolean;
     disabled?: boolean;
     id?: string;
@@ -18,7 +17,6 @@ export interface ToggleProps {
 /** Renders a shadcn-backed toggle with optional reactive state binding. */
 export function Toggle({
     children,
-    className: _className,
     defaultPressed,
     disabled,
     id,

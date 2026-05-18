@@ -29,7 +29,6 @@ export interface TooltipContentProps {
     align?: string;
     alignOffset?: string | number;
     children?: ASTNode[];
-    className?: string;
     hidden?: boolean;
     side?: string;
     sideOffset?: string | number;
@@ -65,7 +64,6 @@ export function TooltipContent({
     align = 'center',
     alignOffset = 0,
     children,
-    className: _className,
     hidden,
     side = 'top',
     sideOffset = 4,

@@ -14,20 +14,17 @@ import { getVersion, useSnapshot } from 'valtio';
 /** Props accepted by the XML InputGroup component. */
 export interface InputGroupProps {
     children?: ASTNode[];
-    className?: string;
 }
 
 /** Props accepted by the XML InputGroupAddon component. */
 export interface InputGroupAddonProps {
     children?: ASTNode[];
-    className?: string;
     align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end';
 }
 
 /** Props accepted by the XML InputGroupButton component. */
 export interface InputGroupButtonProps {
     children?: ASTNode[];
-    className?: string;
     size?: 'xs' | 'sm' | 'icon-xs' | 'icon-sm';
     type?: 'button' | 'submit' | 'reset';
     variant?: React.ComponentProps<typeof UIInputGroupButton>['variant'];
@@ -37,14 +34,12 @@ export interface InputGroupButtonProps {
 /** Props accepted by the XML InputGroupText component. */
 export interface InputGroupTextProps {
     children?: ASTNode[];
-    className?: string;
 }
 
 /** Props accepted by the XML InputGroupInput component. */
 export interface InputGroupInputProps {
     'aria-invalid'?: boolean;
     autoComplete?: string;
-    className?: string;
     disabled?: boolean;
     id?: string;
     label?: string;
@@ -55,7 +50,6 @@ export interface InputGroupInputProps {
 
 /** Props accepted by the XML InputGroupTextarea component. */
 export interface InputGroupTextareaProps {
-    className?: string;
     cols?: number | string;
     disabled?: boolean;
     id?: string;
@@ -66,14 +60,14 @@ export interface InputGroupTextareaProps {
 }
 
 /** Renders the shared input group shell. */
-export function InputGroup({ children, className: _className }: InputGroupProps) {
+export function InputGroup({ children }: InputGroupProps) {
     const { ctx } = useXmlContext();
 
     return <UIInputGroup>{renderNode(children ?? [], ctx)}</UIInputGroup>;
 }
 
 /** Renders an input group addon slot. */
-export function InputGroupAddon({ children, className: _className, align = 'inline-start' }: InputGroupAddonProps) {
+export function InputGroupAddon({ children, align = 'inline-start' }: InputGroupAddonProps) {
     const { ctx } = useXmlContext();
 
     return <UIInputGroupAddon align={align}>{renderNode(children ?? [], ctx)}</UIInputGroupAddon>;
@@ -82,7 +76,6 @@ export function InputGroupAddon({ children, className: _className, align = 'inli
 /** Renders a button inside an input group. */
 export function InputGroupButton({
     children,
-    className: _className,
     disabled,
     size = 'xs',
     type = 'button',
@@ -94,7 +87,7 @@ export function InputGroupButton({
 }
 
 /** Renders inline text inside an input group. */
-export function InputGroupText({ children, className: _className }: InputGroupTextProps) {
+export function InputGroupText({ children }: InputGroupTextProps) {
     const { ctx } = useXmlContext();
 
     return <UIInputGroupText data-slot="input-group-text">{renderNode(children ?? [], ctx)}</UIInputGroupText>;
@@ -104,7 +97,6 @@ export function InputGroupText({ children, className: _className }: InputGroupTe
 export function InputGroupInput({
     'aria-invalid': ariaInvalid,
     autoComplete,
-    className: _className,
     disabled,
     id,
     value = '',
@@ -158,7 +150,6 @@ export function InputGroupInput({
 
 /** Renders a reactive textarea control inside an input group. */
 export function InputGroupTextarea({
-    className: _className,
     cols,
     disabled,
     id,

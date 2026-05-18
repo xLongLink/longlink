@@ -10,7 +10,6 @@ import { renderNode, useXmlContext } from '@xml';
 /** Props accepted by the XML Tabs component. */
 export interface TabsProps {
     children?: ASTNode[];
-    className?: string;
     defaultValue?: string;
     orientation?: string;
 }
@@ -18,40 +17,37 @@ export interface TabsProps {
 /** Props accepted by the XML TabsList component. */
 export interface TabsListProps {
     children?: ASTNode[];
-    className?: string;
     variant?: string;
 }
 
 /** Props accepted by the XML TabsTrigger component. */
 export interface TabsTriggerProps {
     children?: ASTNode[];
-    className?: string;
     value?: string;
 }
 
 /** Props accepted by the XML TabsContent component. */
 export interface TabsContentProps {
     children?: ASTNode[];
-    className?: string;
     value?: string;
 }
 
 /** Renders a shadcn-backed tabs shell. */
-export function Tabs({ children, className: _className, defaultValue, orientation = 'horizontal' }: TabsProps) {
+export function Tabs({ children, defaultValue, orientation = 'horizontal' }: TabsProps) {
     const { ctx } = useXmlContext();
 
     return <UITabs defaultValue={defaultValue} orientation={orientation as never}>{renderNode(children ?? [], ctx)}</UITabs>;
 }
 
 /** Renders the tabs list slot. */
-export function TabsList({ children, className: _className, variant = 'default' }: TabsListProps) {
+export function TabsList({ children, variant = 'default' }: TabsListProps) {
     const { ctx } = useXmlContext();
 
     return <UITabsList variant={variant as never}>{renderNode(children ?? [], ctx)}</UITabsList>;
 }
 
 /** Renders an individual tabs trigger. */
-export function TabsTrigger({ children, className: _className, value }: TabsTriggerProps) {
+export function TabsTrigger({ children, value }: TabsTriggerProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('TabsTrigger requires a value');
@@ -60,7 +56,7 @@ export function TabsTrigger({ children, className: _className, value }: TabsTrig
 }
 
 /** Renders a tabs content panel. */
-export function TabsContent({ children, className: _className, value }: TabsContentProps) {
+export function TabsContent({ children, value }: TabsContentProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('TabsContent requires a value');

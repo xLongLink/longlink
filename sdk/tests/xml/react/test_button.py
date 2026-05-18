@@ -35,3 +35,12 @@ def test_button_rejects_href() -> None:
 
     with pytest.raises(ValueError):
         element.validate()
+
+
+def test_button_rejects_class_name() -> None:
+    """Reject the removed `className` attribute on `Button`."""
+
+    element = Element.from_content('<Button className="ghost">Open</Button>', schema=SCHEMA)
+
+    with pytest.raises(ValueError):
+        element.validate()

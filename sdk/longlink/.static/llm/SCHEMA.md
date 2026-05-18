@@ -13,7 +13,10 @@ If this document and implementation differ, update this document first and then 
 - Unknown attributes may pass XSD validation, but only documented attributes are supported by LongLink.
 - A valid page must use only the elements and attributes described here.
 - Do not rely on SDK code, samples, or docs outside this file for XML authoring rules.
-- The parser emits internal `Text` nodes for raw text content. Do not author `Text` directly.
+
+### Internal Parser Output
+
+- Raw text content becomes internal `Text` nodes during parsing. Do not author `Text` directly in XML pages.
 
 ## Expression Model
 

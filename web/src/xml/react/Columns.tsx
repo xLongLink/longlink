@@ -5,18 +5,16 @@ import { renderNode, useXmlContext } from '@xml';
 /** Props accepted by the XML Columns component. */
 export interface ColumnsProps {
     children?: ASTNode[];
-    className?: string;
 }
 
 /** Props accepted by the XML Column component. */
 export interface ColumnProps {
     children?: ASTNode[];
-    className?: string;
     width?: string | number;
 }
 
 /** Renders a full-width columns row. */
-export function Columns({ children, className: _className }: ColumnsProps) {
+export function Columns({ children }: ColumnsProps) {
     const { ctx } = useXmlContext();
     const nodes = Array.isArray(children) ? children : children ? [children] : [];
     const widths = nodes
@@ -39,7 +37,7 @@ export function Columns({ children, className: _className }: ColumnsProps) {
 }
 
 /** Renders a single width-managed column. */
-export function Column({ children, className: _className, width }: ColumnProps) {
+export function Column({ children, width }: ColumnProps) {
     const { ctx } = useXmlContext();
 
     return <ColumnShell width={width}>{renderNode(children ?? [], ctx)}</ColumnShell>;

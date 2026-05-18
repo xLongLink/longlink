@@ -24,43 +24,32 @@ export interface SelectProps {
 /** Props accepted by the XML SelectTrigger component. */
 export interface SelectTriggerProps {
     children?: ASTNode[];
-    className?: string;
 }
 
 /** Props accepted by the XML SelectValue component. */
 export interface SelectValueProps {
-    className?: string;
     placeholder?: string;
 }
 
 /** Props accepted by the XML SelectContent component. */
 export interface SelectContentProps {
     children?: ASTNode[];
-    className?: string;
 }
 
 /** Props accepted by the XML SelectGroup component. */
 export interface SelectGroupProps {
     children?: ASTNode[];
-    className?: string;
 }
 
 /** Props accepted by the XML SelectLabel component. */
 export interface SelectLabelProps {
     children?: ASTNode[];
-    className?: string;
 }
 
 /** Props accepted by the XML SelectItem component. */
 export interface SelectItemProps {
     children?: ASTNode[];
-    className?: string;
     value?: string;
-}
-
-/** Props accepted by the XML SelectSeparator component. */
-export interface SelectSeparatorProps {
-    className?: string;
 }
 
 /** Renders a shadcn-backed select shell with optional reactive value binding. */
@@ -99,40 +88,40 @@ export function Select({ children, defaultOpen, defaultValue, open, value }: Sel
 }
 
 /** Renders the select trigger slot. */
-export function SelectTrigger({ children, className: _className }: SelectTriggerProps) {
+export function SelectTrigger({ children }: SelectTriggerProps) {
     const { ctx } = useXmlContext();
 
     return <UISelectTrigger>{renderNode(children ?? [], ctx)}</UISelectTrigger>;
 }
 
 /** Renders the selected value placeholder or active choice. */
-export function SelectValue({ className: _className, placeholder }: SelectValueProps) {
+export function SelectValue({ placeholder }: SelectValueProps) {
     return <UISelectValue placeholder={placeholder} />;
 }
 
 /** Renders the select content portal and list surface. */
-export function SelectContent({ children, className: _className }: SelectContentProps) {
+export function SelectContent({ children }: SelectContentProps) {
     const { ctx } = useXmlContext();
 
     return <UISelectContent>{renderNode(children ?? [], ctx)}</UISelectContent>;
 }
 
 /** Renders a grouped section inside the select menu. */
-export function SelectGroup({ children, className: _className }: SelectGroupProps) {
+export function SelectGroup({ children }: SelectGroupProps) {
     const { ctx } = useXmlContext();
 
     return <UISelectGroup>{renderNode(children ?? [], ctx)}</UISelectGroup>;
 }
 
 /** Renders the label for a grouped select section. */
-export function SelectLabel({ children, className: _className }: SelectLabelProps) {
+export function SelectLabel({ children }: SelectLabelProps) {
     const { ctx } = useXmlContext();
 
     return <UISelectLabel>{renderNode(children ?? [], ctx)}</UISelectLabel>;
 }
 
 /** Renders a selectable option in the menu. */
-export function SelectItem({ children, className: _className, value }: SelectItemProps) {
+export function SelectItem({ children, value }: SelectItemProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('SelectItem requires a value');
@@ -141,6 +130,6 @@ export function SelectItem({ children, className: _className, value }: SelectIte
 }
 
 /** Renders a visual separator between select groups. */
-export function SelectSeparator({ className: _className }: SelectSeparatorProps) {
+export function SelectSeparator() {
     return <UISelectSeparator />;
 }

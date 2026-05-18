@@ -6,7 +6,6 @@ import { getVersion, useSnapshot } from 'valtio';
 /** Props accepted by the XML ToggleGroup component. */
 export interface ToggleGroupProps {
     children?: ASTNode[];
-    className?: string;
     defaultValue?: string | string[] | Record<string, unknown>;
     disabled?: boolean;
     loopFocus?: boolean;
@@ -21,7 +20,6 @@ export interface ToggleGroupProps {
 /** Props accepted by the XML ToggleGroupItem component. */
 export interface ToggleGroupItemProps {
     children?: ASTNode[];
-    className?: string;
     size?: 'sm' | 'default' | 'lg';
     value?: string;
     variant?: 'default' | 'outline';
@@ -30,7 +28,6 @@ export interface ToggleGroupItemProps {
 /** Renders a toggle group shell with XML-rendered children. */
 export function ToggleGroup({
     children,
-    className: _className,
     defaultValue,
     disabled,
     loopFocus,
@@ -100,7 +97,6 @@ export function ToggleGroup({
 /** Renders a toggle group item with XML-rendered children. */
 export function ToggleGroupItem({
     children,
-    className: _className,
     size = 'default',
     value,
     variant = 'default',

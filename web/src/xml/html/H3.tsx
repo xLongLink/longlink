@@ -4,11 +4,10 @@ import { renderNode, useXmlContext } from '@xml';
 /** Props accepted by the XML h3 bridge component. */
 export interface H3Props {
     children?: ASTNode[];
-    className?: string;
 }
 
 /** Renders a tertiary heading with typographic defaults. */
-export function H3({ children, className: _className }: H3Props) {
+export function H3({ children }: H3Props) {
     const { ctx } = useXmlContext();
 
     return <h3>{renderNode(children ?? [], ctx)}</h3>;

@@ -6,7 +6,6 @@ import { getVersion, useSnapshot } from 'valtio';
 /** Props accepted by the XML RadioGroup component. */
 export interface RadioGroupProps {
     children?: ASTNode[];
-    className?: string;
     defaultValue?: string | Record<string, unknown>;
     disabled?: boolean;
     form?: string;
@@ -19,7 +18,6 @@ export interface RadioGroupProps {
 /** Props accepted by the XML RadioGroupItem component. */
 export interface RadioGroupItemProps {
     children?: ASTNode[];
-    className?: string;
     disabled?: boolean;
     readOnly?: boolean;
     required?: boolean;
@@ -29,7 +27,6 @@ export interface RadioGroupItemProps {
 /** Renders a radio group shell with XML-rendered children. */
 export function RadioGroup({
     children,
-    className: _className,
     defaultValue,
     disabled,
     form,
@@ -81,7 +78,7 @@ export function RadioGroup({
 }
 
 /** Renders a radio group item with XML-rendered children. */
-export function RadioGroupItem({ children, className: _className, disabled, readOnly, required, value }: RadioGroupItemProps) {
+export function RadioGroupItem({ children, disabled, readOnly, required, value }: RadioGroupItemProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('RadioGroupItem requires a value');
