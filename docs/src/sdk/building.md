@@ -7,12 +7,12 @@
 
 ::: code-group
 
-```bash [pip]
-longlink build
-```
-
 ```bash [uv]
 uv run longlink build
+```
+
+```bash [pip]
+longlink build
 ```
 
 :::

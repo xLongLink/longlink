@@ -28,12 +28,12 @@ After you add or change models, run migrations to keep the database schema align
 
 ::: code-group
 
-```bash [pip]
-longlink migrate
-```
-
 ```bash [uv]
 uv run longlink migrate
+```
+
+```bash [pip]
+longlink migrate
 ```
 
 :::

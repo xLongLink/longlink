@@ -70,49 +70,6 @@ longlink/
         └── html.md
 ```
 
-## Components
-
-The current runtime component surface is:
-
-Primitives:
-
-- `longlink` - root page shell.
-- `State` - local reactive state slot.
-- `Query` - JSON fetch slot.
-- `For` - array iteration in scoped child context.
-- `Text` - internal only; produced by the parser for raw text.
-
-React-backed components:
-
-- `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
-- `Badge`
-- `Button`
-- `ButtonGroup`, `ButtonGroupText`, `ButtonGroupSeparator`
-- `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`
-- `Checkbox`
-- `Columns`, `Column`
-- `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`
-- `Divider`
-- `FieldSet`, `FieldLegend`, `FieldGroup`, `Field`, `FieldContent`, `FieldLabel`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError`
-- `Hero`, `HeroTitle`, `HeroDescription`, `HeroContent`
-- `Icon`
-- `Input`
-- `Label`
-- `RadioGroup`, `RadioGroupItem`
-- `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
-- `Slider`
-- `Switch`
-- `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`
-- `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
-- `Textarea`
-- `Toggle`
-- `ToggleGroup`, `ToggleGroupItem`
-- `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
-
-HTML bridge:
-
-- `a`, `b`, `code`, `h1`, `h2`, `h3`, `h4`, `hr`, `li`, `ol`, `p`, `s`, `sub`, `sup`, `u`, `ul`
-
 ## Parser (web/src/xml/core/parser.ts)
 
 - `parseXML` turns an XML string into AST nodes.

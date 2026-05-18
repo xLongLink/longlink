@@ -56,12 +56,13 @@ If `action` is empty, the button only runs invalidation.
 `json` is evaluated at click time.
 If `json` is omitted, the request is sent without a JSON body.
 `invalidate` accepts an array expression of slot ids to rerun after success.
+`submit` renders a native submit button and skips action requests.
 
 `method` defaults to `POST`.
 
 ## ButtonGroup
 
-Use `ButtonGroup` with `ButtonGroupText` and `ButtonGroupSeparator` to build compact action strips.
+Use `ButtonGroup` with `Button`, `Input`, `ButtonGroupText`, and `ButtonGroupSeparator` to build compact action strips.
 
 ```xml
 <ButtonGroup orientation="horizontal">
@@ -72,6 +73,7 @@ Use `ButtonGroup` with `ButtonGroupText` and `ButtonGroupSeparator` to build com
 ```
 
 `orientation` accepts `horizontal` or `vertical`.
+`ButtonGroup` also accepts `Input` children.
 `ButtonGroupText` renders inline text inside the group.
 `ButtonGroupSeparator` renders a visual split between group segments.
 

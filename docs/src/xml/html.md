@@ -1,22 +1,14 @@
 # HTML
 
-The lowercase HTML bridge elements exposed in XML pages are `a`, `b`, `br`, `code`, `h1`, `h2`, `h3`, `h4`, `li`, `ol`, `p`, `s`, `sub`, `sup`, `u`, and `ul`.
+LongLink exposes a small HTML bridge layer for common formatting, layout, and link content inside XML pages.
 
-All of these tags support the global `if` attribute.
+These tags share the same conditional rendering model through the global `if` attribute.
 
 ## `a`
 
-Use `a` for standard links.
-
-Attributes:
+Links to another page or resource.
 
 - `href` required. Link target.
-
-Behavior:
-
-- Renders as a normal HTML anchor.
-
-Example:
 
 ```xml
 <a href="/settings">Open settings</a>
@@ -24,27 +16,23 @@ Example:
 
 ## `b`
 
-Use `b` for bold text.
-
-Behavior:
-
-- Renders a normal HTML bold element.
-
-Example:
+Renders bold inline text.
 
 ```xml
 <b>Important</b>
 ```
 
+## `br`
+
+Renders a spacer block for visual separation.
+
+```xml
+<br />
+```
+
 ## `code`
 
-Use `code` for inline code text.
-
-Behavior:
-
-- Renders inline monospace text.
-
-Example:
+Renders inline monospace text.
 
 ```xml
 <code>@radix-ui/react-alert-dialog</code>
@@ -52,13 +40,7 @@ Example:
 
 ## `h1`
 
-Use `h1` for the page title.
-
-Behavior:
-
-- Renders a primary heading.
-
-Example:
+Renders the primary heading for a page.
 
 ```xml
 <h1>Dashboard</h1>
@@ -66,13 +48,7 @@ Example:
 
 ## `h2`
 
-Use `h2` for the next heading level.
-
-Behavior:
-
-- Renders a secondary heading.
-
-Example:
+Renders the second-level heading.
 
 ```xml
 <h2>Overview</h2>
@@ -80,13 +56,7 @@ Example:
 
 ## `h3`
 
-Use `h3` for section headings.
-
-Behavior:
-
-- Renders a tertiary heading.
-
-Example:
+Renders the third-level heading.
 
 ```xml
 <h3>Usage</h3>
@@ -94,50 +64,15 @@ Example:
 
 ## `h4`
 
-Use `h4` for small subsection headings.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a quaternary heading.
-
-Example:
+Renders the fourth-level heading.
 
 ```xml
 <h4>Activity</h4>
 ```
 
-## `br`
-
-Use `br` for a line break.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a normal HTML line break.
-
-Example:
-
-```xml
-<br />
-```
-
 ## `li`
 
-Use `li` for list items inside `ul`.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a normal HTML list item.
-
-Example:
+Renders a list item inside `ul` or `ol`.
 
 ```xml
 <ul>
@@ -148,16 +83,7 @@ Example:
 
 ## `ol`
 
-Use `ol` for ordered lists.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a normal HTML ordered list.
-
-Example:
+Renders an ordered list.
 
 ```xml
 <ol>
@@ -168,16 +94,9 @@ Example:
 
 ## `p`
 
-Use `p` for paragraph text.
+Renders a standard paragraph.
 
-Attributes:
-
-
-Behavior:
-
-- Renders as a normal HTML paragraph.
-
-Example:
+- None.
 
 ```xml
 <p>Use explicit paragraph text.</p>
@@ -185,16 +104,7 @@ Example:
 
 ## `s`
 
-Use `s` for strikethrough text.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a normal HTML strikethrough element.
-
-Example:
+Renders strikethrough text.
 
 ```xml
 <s>Deprecated</s>
@@ -202,16 +112,7 @@ Example:
 
 ## `sub`
 
-Use `sub` for subscript text.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a normal HTML subscript element.
-
-Example:
+Renders subscript text.
 
 ```xml
 <sub>n</sub>
@@ -219,16 +120,7 @@ Example:
 
 ## `sup`
 
-Use `sup` for superscript text.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a normal HTML superscript element.
-
-Example:
+Renders superscript text.
 
 ```xml
 <sup>2</sup>
@@ -236,16 +128,7 @@ Example:
 
 ## `u`
 
-Use `u` for underlined text.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a normal HTML underline element.
-
-Example:
+Renders underlined text.
 
 ```xml
 <u>Underlined</u>
@@ -253,16 +136,7 @@ Example:
 
 ## `ul`
 
-Use `ul` for unordered lists.
-
-Attributes:
-
-
-Behavior:
-
-- Renders a normal HTML unordered list.
-
-Example:
+Renders an unordered list.
 
 ```xml
 <ul>

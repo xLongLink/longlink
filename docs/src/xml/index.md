@@ -34,6 +34,7 @@ Use `State` to create a local reactive slot.
 ```
 
 Use `id` to name the state slot.
+The `id` attribute must be literal text.
 Use `value` to seed the initial state.
 `value` is evaluated as an expression.
 
@@ -46,7 +47,7 @@ Use `Query` to fetch JSON into a named slot.
 ```
 
 Use the `id` attribute to name the query slot.
-Use the `path` attribute to point at the JSON endpoint.
+Use the `path` attribute to point at the JSON endpoint or absolute URL.
 Both attributes must be literal text.
 
 ## `For`
@@ -61,6 +62,7 @@ Use `For` to render one child scope for each item in an array.
 
 Use `each` to select the array.
 Use `as` to name the current item in the child scope.
+The child scope also exposes `index`.
 The `each` expression must resolve to an array.
 
 ## `if`
@@ -81,9 +83,9 @@ Use expressions in text nodes and attribute values to read runtime state.
 
 Use `$name` for direct references.
 Use `${count + 1}` for wrapped expressions that return typed values.
-Use `${{ fullName: fullName }}` for object payloads in `json` attributes.
+Use object literal expressions for `json` attributes, such as a `fullName` field mapped to `fullName`.
 Use mixed text interpolation like `Hello ${name}` when plain text and runtime values need to share a string.
-Do not use bare `{name}` or `{{...}}` authoring syntax.
+Do not use bare brace syntax or double-brace authoring syntax.
 LongLink only supports `${...}` expressions and `$name` references.
 
 Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.

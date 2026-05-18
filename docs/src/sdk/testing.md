@@ -6,12 +6,12 @@ To install the development dependencies, run:
 
 ::: code-group
 
-```bash [pip]
-pip install .[dev]
-```
-
 ```bash [uv]
 uv add .[dev]
+```
+
+```bash [pip]
+pip install .[dev]
 ```
 
 :::

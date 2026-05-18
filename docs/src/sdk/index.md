@@ -14,12 +14,12 @@ Applications follow a simple model:
 
 ::: code-group
 
-```bash [pip]
-pip install longlink
-```
-
 ```bash [uv]
 uv add longlink
+```
+
+```bash [pip]
+pip install longlink
 ```
 
 :::
@@ -28,14 +28,14 @@ uv add longlink
 
 ::: code-group
 
-```bash [pip]
-pip install longlink
-longlink init
-```
-
 ```bash [uv]
 uv add longlink
 uv run longlink init
+```
+
+```bash [pip]
+pip install longlink
+longlink init
 ```
 
 :::
@@ -68,14 +68,14 @@ Install development dependencies:
 
 ::: code-group
 
-```bash [pip]
-pip install .[dev]
-longlink dev
-```
-
 ```bash [uv]
 uv add .[dev]
 uv run longlink dev
+```
+
+```bash [pip]
+pip install .[dev]
+longlink dev
 ```
 
 :::
