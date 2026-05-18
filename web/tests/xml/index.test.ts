@@ -27,6 +27,11 @@ import {
     fromXml,
     Icon,
     Label,
+    Menu,
+    MenuContent,
+    MenuList,
+    MenuSection,
+    MenuSubSection,
     Ol,
     renderNode,
     Select,
@@ -88,6 +93,11 @@ describe('xml index', () => {
         expect(FieldTitle).toBeDefined();
         expect(Icon).toBeDefined();
         expect(Label).toBeDefined();
+        expect(Menu).toBeDefined();
+        expect(MenuContent).toBeDefined();
+        expect(MenuList).toBeDefined();
+        expect(MenuSection).toBeDefined();
+        expect(MenuSubSection).toBeDefined();
         expect(Select).toBeDefined();
         expect(SelectContent).toBeDefined();
         expect(SelectGroup).toBeDefined();

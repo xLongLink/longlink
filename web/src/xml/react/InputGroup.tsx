@@ -83,7 +83,11 @@ export function InputGroupButton({
 }: InputGroupButtonProps) {
     const { ctx } = useXmlContext();
 
-    return <UIInputGroupButton disabled={disabled} size={size} type={type} variant={variant}>{renderNode(children ?? [], ctx)}</UIInputGroupButton>;
+    return (
+        <UIInputGroupButton disabled={disabled} size={size} type={type} variant={variant}>
+            {renderNode(children ?? [], ctx)}
+        </UIInputGroupButton>
+    );
 }
 
 /** Renders inline text inside an input group. */

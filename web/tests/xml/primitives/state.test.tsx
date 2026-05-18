@@ -31,9 +31,9 @@ describe('State', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<State id="filter" value="day"><P>Ready</P></State>');
 
-        expect(() => renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))).toThrow(
-            'State cannot have children'
-        );
+        expect(() =>
+            renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))
+        ).toThrow('State cannot have children');
     });
 
     /* Missing ids should fail fast so XML authors get a clear runtime error. */
@@ -41,8 +41,8 @@ describe('State', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<State value="x" />');
 
-        expect(() => renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))).toThrow(
-            'State requires a string id'
-        );
+        expect(() =>
+            renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))
+        ).toThrow('State requires a string id');
     });
 });

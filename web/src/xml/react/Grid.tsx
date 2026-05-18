@@ -12,5 +12,7 @@ export interface GridProps {
 export function Grid({ children, columns }: GridProps) {
     const { ctx } = useXmlContext();
 
-    return <GridShell columns={columns == null ? undefined : String(columns)}>{renderNode(children ?? [], ctx)}</GridShell>;
+    return (
+        <GridShell columns={columns == null ? undefined : String(columns)}>{renderNode(children ?? [], ctx)}</GridShell>
+    );
 }

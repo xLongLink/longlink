@@ -95,12 +95,7 @@ export function ToggleGroup({
 }
 
 /** Renders a toggle group item with XML-rendered children. */
-export function ToggleGroupItem({
-    children,
-    size = 'default',
-    value,
-    variant = 'default',
-}: ToggleGroupItemProps) {
+export function ToggleGroupItem({ children, size = 'default', value, variant = 'default' }: ToggleGroupItemProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('ToggleGroupItem requires a value');

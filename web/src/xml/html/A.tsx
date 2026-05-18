@@ -11,5 +11,9 @@ export interface AProps {
 export function A({ children, href = '' }: AProps) {
     const { ctx } = useXmlContext();
 
-    return <a className="text-primary underline underline-offset-4 hover:opacity-80" href={href}>{renderNode(children ?? [], ctx)}</a>;
+    return (
+        <a className="inline-flex items-center gap-1 text-primary underline underline-offset-4 hover:opacity-80" href={href}>
+            {renderNode(children ?? [], ctx)}
+        </a>
+    );
 }

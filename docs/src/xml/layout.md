@@ -61,3 +61,22 @@ TODO: Component description
   <TabsContent value="settings">Settings panel</TabsContent>
 </Tabs>
 ```
+
+## Menu
+
+```xml
+<Menu defaultValue="first">
+  <MenuList>
+    <MenuSection value="overview">Overview</MenuSection>
+    <MenuSection value="settings">
+      Settings
+      <MenuSubSection value="profile">Profile</MenuSubSection>
+      <MenuSubSection value="billing">Billing</MenuSubSection>
+    </MenuSection>
+  </MenuList>
+  <MenuContent value="overview">Overview content</MenuContent>
+  <MenuContent value="settings">Settings content</MenuContent>
+  <MenuContent value="profile">Profile content</MenuContent>
+  <MenuContent value="billing">Billing content</MenuContent>
+</Menu>
+```

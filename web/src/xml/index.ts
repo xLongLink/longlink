@@ -45,6 +45,7 @@ export {
     InputGroupTextarea,
 } from './react/InputGroup';
 export { Label } from './react/Label';
+export { Menu, MenuContent, MenuList, MenuSection, MenuSubSection } from './react/Menu';
 export { RadioGroup, RadioGroupItem } from './react/RadioGroup';
 export {
     Select,

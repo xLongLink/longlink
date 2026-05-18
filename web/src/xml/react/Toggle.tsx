@@ -32,7 +32,8 @@ export function Toggle({
         const currentPressed = 'value' in snapshot ? snapshot.value : snapshot;
 
         return (
-            <UIToggle defaultPressed={defaultPressed}
+            <UIToggle
+                defaultPressed={defaultPressed}
                 disabled={disabled}
                 id={id}
                 onPressedChange={(nextPressed) => {
@@ -50,12 +51,7 @@ export function Toggle({
     }
 
     return (
-        <UIToggle defaultPressed={defaultPressed}
-            disabled={disabled}
-            id={id}
-            size={size}
-            variant={variant}
-        >
+        <UIToggle defaultPressed={defaultPressed} disabled={disabled} id={id} size={size} variant={variant}>
             {renderNode(children ?? [], ctx)}
         </UIToggle>
     );

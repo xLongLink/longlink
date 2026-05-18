@@ -685,6 +685,46 @@ Example:
 </Tabs>
 ```
 
+### `<Menu>`
+
+Renders a sidebar-style menu shell with expandable subsections.
+
+Attributes:
+
+- `defaultValue` optional. Initial active item value.
+- `value` optional. Controlled active item value.
+
+Children:
+
+- `MenuList`
+- `MenuContent`
+
+Behavior:
+
+- `MenuList` contains `MenuSection` items.
+- `MenuSection` may contain `MenuSubSection` items.
+- Each `MenuSection`, `MenuSubSection`, and `MenuContent` requires a `value` attribute.
+- `MenuContent` panels use matching `value` keys.
+- A section with subsections expands to show its nested items.
+
+Example:
+
+```xml
+<Menu defaultValue="overview">
+  <MenuList>
+    <MenuSection value="overview">Overview</MenuSection>
+    <MenuSection value="settings">Settings
+      <MenuSubSection value="profile">Profile</MenuSubSection>
+      <MenuSubSection value="billing">Billing</MenuSubSection>
+    </MenuSection>
+  </MenuList>
+  <MenuContent value="overview">Overview content</MenuContent>
+  <MenuContent value="settings">Settings content</MenuContent>
+  <MenuContent value="profile">Profile content</MenuContent>
+  <MenuContent value="billing">Billing content</MenuContent>
+</Menu>
+```
+
 ## Form Controls
 
 ### `<Button>`

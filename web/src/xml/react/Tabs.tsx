@@ -36,7 +36,11 @@ export interface TabsContentProps {
 export function Tabs({ children, defaultValue, orientation = 'horizontal' }: TabsProps) {
     const { ctx } = useXmlContext();
 
-    return <UITabs defaultValue={defaultValue} orientation={orientation as never}>{renderNode(children ?? [], ctx)}</UITabs>;
+    return (
+        <UITabs defaultValue={defaultValue} orientation={orientation as never}>
+            {renderNode(children ?? [], ctx)}
+        </UITabs>
+    );
 }
 
 /** Renders the tabs list slot. */

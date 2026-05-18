@@ -71,7 +71,13 @@ export function TooltipContent({
     const { ctx } = useXmlContext();
 
     return (
-        <UITooltipContent align={align as never} alignOffset={alignOffset as never} hidden={hidden} side={side as never} sideOffset={sideOffset as never}>
+        <UITooltipContent
+            align={align as never}
+            alignOffset={alignOffset as never}
+            hidden={hidden}
+            side={side as never}
+            sideOffset={sideOffset as never}
+        >
             {renderNode(children ?? [], ctx)}
         </UITooltipContent>
     );

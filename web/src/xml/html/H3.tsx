@@ -1,6 +1,6 @@
+import { Heading } from '@/components/ui/heading';
 import type { ASTNode } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
-import { Heading } from '@/components/ui/heading';
 
 /** Props accepted by the XML h3 bridge component. */
 export interface H3Props {

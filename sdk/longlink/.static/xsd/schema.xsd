@@ -47,4 +47,5 @@
   <xsd:include schemaLocation="react/RadioGroup.xsd" />
   <xsd:include schemaLocation="react/Table.xsd" />
   <xsd:include schemaLocation="react/Tabs.xsd" />
+  <xsd:include schemaLocation="react/Menu.xsd" />
 </xsd:schema>

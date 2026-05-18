@@ -5,6 +5,7 @@
             <TabsTrigger value="text">Text</TabsTrigger>
             <TabsTrigger value="form">Form</TabsTrigger>
             <TabsTrigger value="item">Item</TabsTrigger>
+            <TabsTrigger value="menu">Menu</TabsTrigger>
             <TabsTrigger value="grid">Grid</TabsTrigger>
             <TabsTrigger value="other">Other</TabsTrigger>
         </TabsList>
@@ -227,28 +228,13 @@
                         Actions for the current invoice and quote.
                         <Badge variant="outline">Pending approval</Badge>
                         <Divider />
-                        <A href="/orders/new">
-                            <Icon name="shopping-cart" />
-                            Create order
-                        </A>
-                        <A href="/invoices/new">
-                            <Icon name="file-text" />
-                            Create invoice
-                        </A>
-                        <A href="/quotes/edit">
-                            <Icon name="pencil" />
-                            Edit quote
-                        </A>
+                        <A href="/orders/new"><Icon name="shopping-cart" /> Create order</A>
+                        <A href="/invoices/new"><Icon name="file-text" /> Create invoice</A>
+                        <A href="/quotes/edit"><Icon name="pencil" /> Edit quote</A>
                         <Divider />
-                        <A href="/quotes/email">
-                            <Icon name="mail" />
-                            Email quote
-                        </A>
+                        <A href="/quotes/email"><Icon name="mail" /> Email quote</A>
                         <Divider />
-                        <A href="/actions">
-                            <Icon name="layout-grid" />
-                            More actions
-                        </A>
+                        <A href="/actions"><Icon name="layout-grid" /> More actions</A>
                         <Divider />
                         <Avatar size="sm">
                             <AvatarImage src="/avatars/ada.png" alt="Ada Lovelace" />
@@ -258,6 +244,34 @@
                     </Stack>
                 </Column>
             </Columns>
+        </TabsContent>
+        <TabsContent value="menu">
+            <Hero icon="menu">
+                <HeroTitle>Menu navigation</HeroTitle>
+                <HeroDescription>A sidebar-style menu with expandable subsections.</HeroDescription>
+            </Hero>
+            <Menu defaultValue="overview">
+                <MenuList>
+                    <MenuSection value="overview">Overview</MenuSection>
+                    <MenuSection value="settings">
+                        Settings
+                        <MenuSubSection value="profile">Profile</MenuSubSection>
+                        <MenuSubSection value="billing">Billing</MenuSubSection>
+                    </MenuSection>
+                </MenuList>
+                <MenuContent value="overview">
+                    <P>Overview content for the active menu item.</P>
+                </MenuContent>
+                <MenuContent value="settings">
+                    <P>Settings content for the active menu item.</P>
+                </MenuContent>
+                <MenuContent value="profile">
+                    <P>Profile submenu content.</P>
+                </MenuContent>
+                <MenuContent value="billing">
+                    <P>Billing submenu content.</P>
+                </MenuContent>
+            </Menu>
         </TabsContent>
         <TabsContent value="grid">
             <InputGroup>
@@ -329,34 +343,13 @@
                 <Column width="30">
                     <Stack>
                         <P>Quick links in the same style as a GitHub repo sidebar.</P>
-                        <A href="/code">
-                            <Icon name="code-2" />
-                            Code
-                        </A>
-                        <A href="/issues">
-                            <Icon name="circle-alert" />
-                            Issues
-                        </A>
-                        <A href="/pulls">
-                            <Icon name="git-pull-request" />
-                            Pull requests
-                        </A>
-                        <A href="/actions">
-                            <Icon name="play-circle" />
-                            Actions
-                        </A>
-                        <A href="/projects">
-                            <Icon name="layout-grid" />
-                            Projects
-                        </A>
-                        <A href="/security">
-                            <Icon name="shield" />
-                            Security
-                        </A>
-                        <A href="/insights">
-                            <Icon name="chart-column" />
-                            Insights
-                        </A>
+                        <A href="/code"><Icon name="code-2" /> Code</A>
+                        <A href="/issues"><Icon name="circle-alert" /> Issues</A>
+                        <A href="/pulls"><Icon name="git-pull-request" /> Pull requests</A>
+                        <A href="/actions"><Icon name="play-circle" /> Actions</A>
+                        <A href="/projects"><Icon name="layout-grid" /> Projects</A>
+                        <A href="/security"><Icon name="shield" /> Security</A>
+                        <A href="/insights"><Icon name="chart-column" /> Insights</A>
                     </Stack>
                 </Column>
             </Columns>

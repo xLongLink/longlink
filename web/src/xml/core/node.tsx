@@ -63,6 +63,8 @@ import {
     InputGroupTextarea,
 } from '@xml/react/InputGroup';
 import { Label } from '@xml/react/Label';
+import { Menu, MenuContent, MenuList } from '@xml/react/Menu';
+import { MenuContent as UIMenuContent, MenuSection as UIMenuSection, MenuSubSection as UIMenuSubSection } from '@ui/menu';
 import { RadioGroup, RadioGroupItem } from '@xml/react/RadioGroup';
 import {
     Select,
@@ -134,7 +136,8 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             if (!node.params?.value) return <Fragment key={index} />;
 
             const value = evaluate(node.params.value, ctx);
-            if (typeof value !== 'string') throw new Error(`Text.value must evaluate to a string, but got ${typeof value}`);
+            if (typeof value !== 'string')
+                throw new Error(`Text.value must evaluate to a string, but got ${typeof value}`);
 
             return <Text key={index} value={value} />;
         }
@@ -180,6 +183,58 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
             return <TabsContent key={index} value={value} children={node.children} />;
+        }
+
+        if (node.name === 'Menu') {
+            const defaultValue = node.params?.defaultValue
+                ? String(evaluate(node.params.defaultValue, ctx) ?? '')
+                : undefined;
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+
+            return <Menu key={index} defaultValue={defaultValue} value={value} children={node.children} />;
+        }
+
+        if (node.name === 'MenuList') {
+            return <MenuList key={index} children={node.children} />;
+        }
+
+        if (node.name === 'MenuSection') {
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+            const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+            const disabledValue = node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined;
+            const disabled =
+                disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
+
+            return (
+                <UIMenuSection key={index} value={value} label={label} disabled={disabled}>
+                    {renderNode(node.children ?? [], ctx)}
+                </UIMenuSection>
+            );
+        }
+
+        if (node.name === 'MenuSubSection') {
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+            const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+            const disabledValue = node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined;
+            const disabled =
+                disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
+
+            return (
+                <UIMenuSubSection key={index} value={value} label={label} disabled={disabled}>
+                    {renderNode(node.children ?? [], ctx)}
+                </UIMenuSubSection>
+            );
+        }
+
+        if (node.name === 'MenuContent') {
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+            const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+            return (
+                <UIMenuContent key={index} value={value} className={className}>
+                    {renderNode(node.children ?? [], ctx)}
+                </UIMenuContent>
+            );
         }
 
         if (node.name === 'Hero') {
@@ -252,888 +307,903 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             return <Ul key={index} children={node.children} />;
         }
 
-    if (node.name === 'Li') {
-        return <Li children={node.children} />;
-    }
-
-    if (node.name === 'Ol') {
-        return <Ol children={node.children} />;
-    }
-
-    if (node.name === 'A') {
-        const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
-        return <A href={href} children={node.children} />;
-    }
-
-    if (node.name === 'Button') {
-        const action = node.params?.action ? String(evaluate(node.params.action, ctx) ?? '') : '';
-        const invalidateValue = node.params?.invalidate ? evaluate(node.params.invalidate, ctx) : [];
-        const invalidate = Array.isArray(invalidateValue) ? (invalidateValue as string[]) : [];
-        const json = node.params?.json ? compile(String(node.params.json)) : null;
-        const method = node.params?.method ? String(evaluate(node.params.method, ctx) ?? 'POST') : 'POST';
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
-        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
-        const submitValue = node.params?.submit != null ? evaluate(node.params.submit, ctx) : undefined;
-        const submit = submitValue === false || submitValue === 'false' ? false : submitValue != null ? true : false;
-
-        return (
-            <Button
-                action={action}
-                invalidate={invalidate}
-                json={json}
-                method={method}
-                size={size}
-                variant={variant}
-                submit={submit}
-                children={node.children}
-            />
-        );
-    }
-
-    if (node.name === 'ButtonGroup') {
-        const orientation = node.params?.orientation
-            ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
-            : 'horizontal';
-
-        return <ButtonGroup orientation={orientation as 'horizontal' | 'vertical'} children={node.children} />;
-    }
-
-    if (node.name === 'ButtonGroupText') {
-        return <ButtonGroupText children={node.children} />;
-    }
-
-    if (node.name === 'ButtonGroupSeparator') {
-        const orientation = node.params?.orientation
-            ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
-            : 'vertical';
-
-        return <ButtonGroupSeparator orientation={orientation as 'horizontal' | 'vertical'} />;
-    }
-
-    // Input group tags reuse the shared input-group chrome from the UI layer.
-    if (node.name === 'InputGroup') {
-        return <InputGroup children={node.children} />;
-    }
-
-    if (node.name === 'InputGroupAddon') {
-        const align = node.params?.align ? String(evaluate(node.params.align, ctx) ?? 'inline-start') : 'inline-start';
-
-        return (
-            <InputGroupAddon
-                align={align as 'inline-start' | 'inline-end' | 'block-start' | 'block-end'}
-                children={node.children}
-            />
-        );
-    }
-
-    // Normalize button props before rendering the grouped button shell.
-    if (node.name === 'InputGroupButton') {
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'xs') : 'xs';
-        const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'button') : 'button';
-        const variant = (
-            node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'ghost') : 'ghost'
-        ) as InputGroupButtonProps['variant'];
-
-        return (
-            <InputGroupButton
-                disabled={disabled}
-                size={size as 'xs' | 'sm' | 'icon-xs' | 'icon-sm'}
-                type={type as 'button' | 'submit' | 'reset'}
-                variant={variant}
-                children={node.children}
-            />
-        );
-    }
-
-    if (node.name === 'InputGroupText') {
-        return <InputGroupText children={node.children} />;
-    }
-
-    if (node.name === 'Badge') {
-        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
-
-        return <Badge variant={variant} children={node.children} />;
-    }
-
-    if (node.name === 'Avatar') {
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+        if (node.name === 'Li') {
+            return <Li children={node.children} />;
+        }
+
+        if (node.name === 'Ol') {
+            return <Ol children={node.children} />;
+        }
+
+        if (node.name === 'A') {
+            const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
+            return <A href={href} children={node.children} />;
+        }
+
+        if (node.name === 'Button') {
+            const action = node.params?.action ? String(evaluate(node.params.action, ctx) ?? '') : '';
+            const invalidateValue = node.params?.invalidate ? evaluate(node.params.invalidate, ctx) : [];
+            const invalidate = Array.isArray(invalidateValue) ? (invalidateValue as string[]) : [];
+            const json = node.params?.json ? compile(String(node.params.json)) : null;
+            const method = node.params?.method ? String(evaluate(node.params.method, ctx) ?? 'POST') : 'POST';
+            const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+            const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+            const submitValue = node.params?.submit != null ? evaluate(node.params.submit, ctx) : undefined;
+            const submit =
+                submitValue === false || submitValue === 'false' ? false : submitValue != null ? true : false;
+
+            return (
+                <Button
+                    action={action}
+                    invalidate={invalidate}
+                    json={json}
+                    method={method}
+                    size={size}
+                    variant={variant}
+                    submit={submit}
+                    children={node.children}
+                />
+            );
+        }
+
+        if (node.name === 'ButtonGroup') {
+            const orientation = node.params?.orientation
+                ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
+                : 'horizontal';
+
+            return <ButtonGroup orientation={orientation as 'horizontal' | 'vertical'} children={node.children} />;
+        }
+
+        if (node.name === 'ButtonGroupText') {
+            return <ButtonGroupText children={node.children} />;
+        }
+
+        if (node.name === 'ButtonGroupSeparator') {
+            const orientation = node.params?.orientation
+                ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
+                : 'vertical';
+
+            return <ButtonGroupSeparator orientation={orientation as 'horizontal' | 'vertical'} />;
+        }
+
+        // Input group tags reuse the shared input-group chrome from the UI layer.
+        if (node.name === 'InputGroup') {
+            return <InputGroup children={node.children} />;
+        }
+
+        if (node.name === 'InputGroupAddon') {
+            const align = node.params?.align
+                ? String(evaluate(node.params.align, ctx) ?? 'inline-start')
+                : 'inline-start';
+
+            return (
+                <InputGroupAddon
+                    align={align as 'inline-start' | 'inline-end' | 'block-start' | 'block-end'}
+                    children={node.children}
+                />
+            );
+        }
+
+        // Normalize button props before rendering the grouped button shell.
+        if (node.name === 'InputGroupButton') {
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
+            const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'xs') : 'xs';
+            const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'button') : 'button';
+            const variant = (
+                node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'ghost') : 'ghost'
+            ) as InputGroupButtonProps['variant'];
+
+            return (
+                <InputGroupButton
+                    disabled={disabled}
+                    size={size as 'xs' | 'sm' | 'icon-xs' | 'icon-sm'}
+                    type={type as 'button' | 'submit' | 'reset'}
+                    variant={variant}
+                    children={node.children}
+                />
+            );
+        }
 
-        return <Avatar size={size} children={node.children} />;
-    }
-
-    if (node.name === 'AvatarImage') {
-        const alt = node.params?.alt ? String(evaluate(node.params.alt, ctx) ?? '') : undefined;
-        const src = node.params?.src ? String(evaluate(node.params.src, ctx) ?? '') : undefined;
-
-        return <AvatarImage alt={alt} src={src} />;
-    }
-
-    if (node.name === 'AvatarFallback') {
-        return <AvatarFallback children={node.children} />;
-    }
-
-    if (node.name === 'AvatarBadge') {
-        return <AvatarBadge children={node.children} />;
-    }
-
-    if (node.name === 'AvatarGroup') {
-        return <AvatarGroup children={node.children} />;
-    }
-
-    if (node.name === 'AvatarGroupCount') {
-        return <AvatarGroupCount children={node.children} />;
-    }
-
-    if (node.name === 'Columns') {
-        return <Columns children={node.children} />;
-    }
-
-    if (node.name === 'Column') {
-        const width = node.params?.width ? evaluate(node.params.width, ctx) : undefined;
-
-        return <Column width={width == null ? undefined : String(width)} children={node.children} />;
-    }
-
-    if (node.name === 'Grid') {
-        const columns = node.params?.columns != null ? evaluate(node.params.columns, ctx) : undefined;
-
-        return <Grid columns={columns == null ? undefined : String(columns)} children={node.children} />;
-    }
-
-    if (node.name === 'Stack') {
-        return <Stack children={node.children} />;
-    }
-
-    if (node.name === 'Card') {
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
-
-        return <Card size={size} children={node.children} />;
-    }
-
-    if (node.name === 'CardHeader') {
-        return <CardHeader children={node.children} />;
-    }
-
-    if (node.name === 'CardTitle') {
-        return <CardTitle children={node.children} />;
-    }
-
-    if (node.name === 'CardDescription') {
-        return <CardDescription children={node.children} />;
-    }
-
-    if (node.name === 'CardAction') {
-        return <CardAction children={node.children} />;
-    }
-
-    if (node.name === 'CardContent') {
-        return <CardContent children={node.children} />;
-    }
-
-    if (node.name === 'CardFooter') {
-        return <CardFooter children={node.children} />;
-    }
-
-    if (node.name === 'Dialog') {
-        const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
-        const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
-        const open =
-            openValue === true || openValue === 'true'
-                ? true
-                : openValue === false || openValue === 'false'
-                  ? false
-                  : undefined;
-        const defaultOpen =
-            defaultOpenValue === true || defaultOpenValue === 'true'
-                ? true
-                : defaultOpenValue === false || defaultOpenValue === 'false'
-                  ? false
-                  : undefined;
-
-        return <Dialog defaultOpen={defaultOpen} open={open} children={node.children} />;
-    }
-
-    if (node.name === 'DialogTrigger') {
-        return <DialogTrigger children={node.children} />;
-    }
-
-    if (node.name === 'DialogContent') {
-        return <DialogContent children={node.children} />;
-    }
-
-    if (node.name === 'DialogHeader') {
-        return <DialogHeader children={node.children} />;
-    }
-
-    if (node.name === 'DialogTitle') {
-        return <DialogTitle children={node.children} />;
-    }
-
-    if (node.name === 'DialogDescription') {
-        return <DialogDescription children={node.children} />;
-    }
-
-    if (node.name === 'DialogFooter') {
-        return <DialogFooter children={node.children} />;
-    }
-
-    if (node.name === 'TooltipProvider') {
-        return <TooltipProvider children={node.children} />;
-    }
-
-    if (node.name === 'Tooltip') {
-        const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
-        const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
-        const open =
-            openValue === true || openValue === 'true'
-                ? true
-                : openValue === false || openValue === 'false'
-                  ? false
-                  : undefined;
-        const defaultOpen =
-            defaultOpenValue === true || defaultOpenValue === 'true'
-                ? true
-                : defaultOpenValue === false || defaultOpenValue === 'false'
-                  ? false
-                  : undefined;
-
-        return <Tooltip defaultOpen={defaultOpen} open={open} children={node.children} />;
-    }
-
-    if (node.name === 'TooltipTrigger') {
-        return <TooltipTrigger children={node.children} />;
-    }
-
-    if (node.name === 'TooltipContent') {
-        const align = node.params?.align ? String(evaluate(node.params.align, ctx) ?? 'center') : 'center';
-        const alignOffset = node.params?.alignOffset != null ? evaluate(node.params.alignOffset, ctx) : 0;
-        const hiddenValue = node.params?.hidden != null ? evaluate(node.params.hidden, ctx) : undefined;
-        const side = node.params?.side ? String(evaluate(node.params.side, ctx) ?? 'top') : 'top';
-        const sideOffset = node.params?.sideOffset != null ? evaluate(node.params.sideOffset, ctx) : 4;
-
-        return (
-            <TooltipContent
-                align={align}
-                alignOffset={alignOffset == null ? undefined : String(alignOffset)}
-                hidden={
-                    hiddenValue === true || hiddenValue === 'true'
-                        ? true
-                        : hiddenValue === false || hiddenValue === 'false'
-                          ? false
-                          : undefined
-                }
-                side={side}
-                sideOffset={sideOffset == null ? undefined : String(sideOffset)}
-                children={node.children}
-            />
-        );
-    }
-
-    if (node.name === 'Input') {
-        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
-        const placeholder = node.params?.placeholder
-            ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
-            : undefined;
-        const value = node.params?.value
-            ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
-            : undefined;
-        const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
-        const autoComplete = node.params?.autoComplete
-            ? String(evaluate(node.params.autoComplete, ctx) ?? '')
-            : undefined;
-        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const ariaInvalidValue =
-            node.params?.['aria-invalid'] != null ? evaluate(node.params['aria-invalid'], ctx) : undefined;
-        const disabled =
-            disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
-        const ariaInvalid =
-            ariaInvalidValue === false || ariaInvalidValue === 'false'
-                ? false
-                : ariaInvalidValue != null
-                  ? true
-                  : undefined;
-
-        return (
-            <Input
-                aria-invalid={ariaInvalid}
-                autoComplete={autoComplete}
-                disabled={disabled}
-                id={id}
-                label={label}
-                placeholder={placeholder}
-                value={value}
-                type={type}
-            />
-        );
-    }
-
-    // InputGroupInput mirrors Input but keeps the specialized grouped styling.
-    if (node.name === 'InputGroupInput') {
-        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
-        const placeholder = node.params?.placeholder
-            ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
-            : undefined;
-        const value = node.params?.value
-            ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
-            : undefined;
-        const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
-        const autoComplete = node.params?.autoComplete
-            ? String(evaluate(node.params.autoComplete, ctx) ?? '')
-            : undefined;
-        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const ariaInvalidValue =
-            node.params?.['aria-invalid'] != null ? evaluate(node.params['aria-invalid'], ctx) : undefined;
-        const disabled =
-            disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
-        const ariaInvalid =
-            ariaInvalidValue === false || ariaInvalidValue === 'false'
-                ? false
-                : ariaInvalidValue != null
-                  ? true
-                  : undefined;
-
-        return (
-            <InputGroupInput
-                aria-invalid={ariaInvalid}
-                autoComplete={autoComplete}
-                disabled={disabled}
-                id={id}
-                label={label}
-                placeholder={placeholder}
-                value={value}
-                type={type}
-            />
-        );
-    }
-
-    if (node.name === 'Textarea') {
-        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
-        const placeholder = node.params?.placeholder
-            ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
-            : undefined;
-        const value = node.params?.value
-            ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
-            : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
-        const rowsValue = node.params?.rows != null ? evaluate(node.params.rows, ctx) : undefined;
-        const colsValue = node.params?.cols != null ? evaluate(node.params.cols, ctx) : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
-
-        return (
-            <Textarea
-                cols={colsValue == null ? undefined : String(colsValue)}
-                disabled={disabled}
-                id={id}
-                label={label}
-                placeholder={placeholder}
-                rows={rowsValue == null ? undefined : String(rowsValue)}
-                value={value}
-            />
-        );
-    }
-
-    // InputGroupTextarea mirrors Textarea but keeps the specialized grouped styling.
-    if (node.name === 'InputGroupTextarea') {
-        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
-        const placeholder = node.params?.placeholder
-            ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
-            : undefined;
-        const value = node.params?.value
-            ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
-            : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
-        const rowsValue = node.params?.rows != null ? evaluate(node.params.rows, ctx) : undefined;
-        const colsValue = node.params?.cols != null ? evaluate(node.params.cols, ctx) : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
-
-        return (
-            <InputGroupTextarea
-                cols={colsValue == null ? undefined : String(colsValue)}
-                disabled={disabled}
-                id={id}
-                label={label}
-                placeholder={placeholder}
-                rows={rowsValue == null ? undefined : String(rowsValue)}
-                value={value}
-            />
-        );
-    }
-
-    if (node.name === 'FieldSet') {
-        return <FieldSet children={node.children} />;
-    }
-
-    if (node.name === 'FieldLegend') {
-        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'legend') : 'legend';
-
-        return <FieldLegend variant={variant as 'legend' | 'label'} children={node.children} />;
-    }
-
-    if (node.name === 'FieldGroup') {
-        return <FieldGroup children={node.children} />;
-    }
-
-    if (node.name === 'Field') {
-        const orientation = node.params?.orientation
-            ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
-            : 'vertical';
-
-        return <Field orientation={orientation as 'vertical' | 'horizontal' | 'responsive'} children={node.children} />;
-    }
-
-    if (node.name === 'FieldContent') {
-        return <FieldContent children={node.children} />;
-    }
-
-    if (node.name === 'FieldLabel') {
-        const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
-
-        return <FieldLabel htmlFor={htmlFor} children={node.children} />;
-    }
-
-    if (node.name === 'FieldTitle') {
-        return <FieldTitle children={node.children} />;
-    }
-
-    if (node.name === 'FieldDescription') {
-        return <FieldDescription children={node.children} />;
-    }
-
-    if (node.name === 'FieldSeparator') {
-        return <FieldSeparator children={node.children} />;
-    }
-
-    if (node.name === 'FieldError') {
-        const errors = node.params?.errors != null ? evaluate(node.params.errors, ctx) : undefined;
-
-        return (
-            <FieldError
-                errors={errors as Array<{ message?: string } | undefined> | string | undefined}
-                children={node.children}
-            />
-        );
-    }
-
-    if (node.name === 'Checkbox') {
-        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
-        const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
-        const defaultCheckedValue =
-            node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const checked =
-            checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
-        const literalChecked =
-            checkedValue === true || checkedValue === 'true'
-                ? true
-                : checkedValue === false || checkedValue === 'false'
-                  ? false
-                  : checkedValue != null
-                    ? Boolean(checkedValue)
+        if (node.name === 'InputGroupText') {
+            return <InputGroupText children={node.children} />;
+        }
+
+        if (node.name === 'Badge') {
+            const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+
+            return <Badge variant={variant} children={node.children} />;
+        }
+
+        if (node.name === 'Avatar') {
+            const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+
+            return <Avatar size={size} children={node.children} />;
+        }
+
+        if (node.name === 'AvatarImage') {
+            const alt = node.params?.alt ? String(evaluate(node.params.alt, ctx) ?? '') : undefined;
+            const src = node.params?.src ? String(evaluate(node.params.src, ctx) ?? '') : undefined;
+
+            return <AvatarImage alt={alt} src={src} />;
+        }
+
+        if (node.name === 'AvatarFallback') {
+            return <AvatarFallback children={node.children} />;
+        }
+
+        if (node.name === 'AvatarBadge') {
+            return <AvatarBadge children={node.children} />;
+        }
+
+        if (node.name === 'AvatarGroup') {
+            return <AvatarGroup children={node.children} />;
+        }
+
+        if (node.name === 'AvatarGroupCount') {
+            return <AvatarGroupCount children={node.children} />;
+        }
+
+        if (node.name === 'Columns') {
+            return <Columns children={node.children} />;
+        }
+
+        if (node.name === 'Column') {
+            const width = node.params?.width ? evaluate(node.params.width, ctx) : undefined;
+
+            return <Column width={width == null ? undefined : String(width)} children={node.children} />;
+        }
+
+        if (node.name === 'Grid') {
+            const columns = node.params?.columns != null ? evaluate(node.params.columns, ctx) : undefined;
+
+            return <Grid columns={columns == null ? undefined : String(columns)} children={node.children} />;
+        }
+
+        if (node.name === 'Stack') {
+            return <Stack children={node.children} />;
+        }
+
+        if (node.name === 'Card') {
+            const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+
+            return <Card size={size} children={node.children} />;
+        }
+
+        if (node.name === 'CardHeader') {
+            return <CardHeader children={node.children} />;
+        }
+
+        if (node.name === 'CardTitle') {
+            return <CardTitle children={node.children} />;
+        }
+
+        if (node.name === 'CardDescription') {
+            return <CardDescription children={node.children} />;
+        }
+
+        if (node.name === 'CardAction') {
+            return <CardAction children={node.children} />;
+        }
+
+        if (node.name === 'CardContent') {
+            return <CardContent children={node.children} />;
+        }
+
+        if (node.name === 'CardFooter') {
+            return <CardFooter children={node.children} />;
+        }
+
+        if (node.name === 'Dialog') {
+            const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
+            const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
+            const open =
+                openValue === true || openValue === 'true'
+                    ? true
+                    : openValue === false || openValue === 'false'
+                      ? false
+                      : undefined;
+            const defaultOpen =
+                defaultOpenValue === true || defaultOpenValue === 'true'
+                    ? true
+                    : defaultOpenValue === false || defaultOpenValue === 'false'
+                      ? false
+                      : undefined;
+
+            return <Dialog defaultOpen={defaultOpen} open={open} children={node.children} />;
+        }
+
+        if (node.name === 'DialogTrigger') {
+            return <DialogTrigger children={node.children} />;
+        }
+
+        if (node.name === 'DialogContent') {
+            return <DialogContent children={node.children} />;
+        }
+
+        if (node.name === 'DialogHeader') {
+            return <DialogHeader children={node.children} />;
+        }
+
+        if (node.name === 'DialogTitle') {
+            return <DialogTitle children={node.children} />;
+        }
+
+        if (node.name === 'DialogDescription') {
+            return <DialogDescription children={node.children} />;
+        }
+
+        if (node.name === 'DialogFooter') {
+            return <DialogFooter children={node.children} />;
+        }
+
+        if (node.name === 'TooltipProvider') {
+            return <TooltipProvider children={node.children} />;
+        }
+
+        if (node.name === 'Tooltip') {
+            const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
+            const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
+            const open =
+                openValue === true || openValue === 'true'
+                    ? true
+                    : openValue === false || openValue === 'false'
+                      ? false
+                      : undefined;
+            const defaultOpen =
+                defaultOpenValue === true || defaultOpenValue === 'true'
+                    ? true
+                    : defaultOpenValue === false || defaultOpenValue === 'false'
+                      ? false
+                      : undefined;
+
+            return <Tooltip defaultOpen={defaultOpen} open={open} children={node.children} />;
+        }
+
+        if (node.name === 'TooltipTrigger') {
+            return <TooltipTrigger children={node.children} />;
+        }
+
+        if (node.name === 'TooltipContent') {
+            const align = node.params?.align ? String(evaluate(node.params.align, ctx) ?? 'center') : 'center';
+            const alignOffset = node.params?.alignOffset != null ? evaluate(node.params.alignOffset, ctx) : 0;
+            const hiddenValue = node.params?.hidden != null ? evaluate(node.params.hidden, ctx) : undefined;
+            const side = node.params?.side ? String(evaluate(node.params.side, ctx) ?? 'top') : 'top';
+            const sideOffset = node.params?.sideOffset != null ? evaluate(node.params.sideOffset, ctx) : 4;
+
+            return (
+                <TooltipContent
+                    align={align}
+                    alignOffset={alignOffset == null ? undefined : String(alignOffset)}
+                    hidden={
+                        hiddenValue === true || hiddenValue === 'true'
+                            ? true
+                            : hiddenValue === false || hiddenValue === 'false'
+                              ? false
+                              : undefined
+                    }
+                    side={side}
+                    sideOffset={sideOffset == null ? undefined : String(sideOffset)}
+                    children={node.children}
+                />
+            );
+        }
+
+        if (node.name === 'Input') {
+            const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+            const placeholder = node.params?.placeholder
+                ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
+                : undefined;
+            const value = node.params?.value
+                ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+                : undefined;
+            const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
+            const autoComplete = node.params?.autoComplete
+                ? String(evaluate(node.params.autoComplete, ctx) ?? '')
+                : undefined;
+            const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const ariaInvalidValue =
+                node.params?.['aria-invalid'] != null ? evaluate(node.params['aria-invalid'], ctx) : undefined;
+            const disabled =
+                disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
+            const ariaInvalid =
+                ariaInvalidValue === false || ariaInvalidValue === 'false'
+                    ? false
+                    : ariaInvalidValue != null
+                      ? true
+                      : undefined;
+
+            return (
+                <Input
+                    aria-invalid={ariaInvalid}
+                    autoComplete={autoComplete}
+                    disabled={disabled}
+                    id={id}
+                    label={label}
+                    placeholder={placeholder}
+                    value={value}
+                    type={type}
+                />
+            );
+        }
+
+        // InputGroupInput mirrors Input but keeps the specialized grouped styling.
+        if (node.name === 'InputGroupInput') {
+            const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+            const placeholder = node.params?.placeholder
+                ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
+                : undefined;
+            const value = node.params?.value
+                ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+                : undefined;
+            const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
+            const autoComplete = node.params?.autoComplete
+                ? String(evaluate(node.params.autoComplete, ctx) ?? '')
+                : undefined;
+            const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const ariaInvalidValue =
+                node.params?.['aria-invalid'] != null ? evaluate(node.params['aria-invalid'], ctx) : undefined;
+            const disabled =
+                disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
+            const ariaInvalid =
+                ariaInvalidValue === false || ariaInvalidValue === 'false'
+                    ? false
+                    : ariaInvalidValue != null
+                      ? true
+                      : undefined;
+
+            return (
+                <InputGroupInput
+                    aria-invalid={ariaInvalid}
+                    autoComplete={autoComplete}
+                    disabled={disabled}
+                    id={id}
+                    label={label}
+                    placeholder={placeholder}
+                    value={value}
+                    type={type}
+                />
+            );
+        }
+
+        if (node.name === 'Textarea') {
+            const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+            const placeholder = node.params?.placeholder
+                ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
+                : undefined;
+            const value = node.params?.value
+                ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+                : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+            const rowsValue = node.params?.rows != null ? evaluate(node.params.rows, ctx) : undefined;
+            const colsValue = node.params?.cols != null ? evaluate(node.params.cols, ctx) : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
+
+            return (
+                <Textarea
+                    cols={colsValue == null ? undefined : String(colsValue)}
+                    disabled={disabled}
+                    id={id}
+                    label={label}
+                    placeholder={placeholder}
+                    rows={rowsValue == null ? undefined : String(rowsValue)}
+                    value={value}
+                />
+            );
+        }
+
+        // InputGroupTextarea mirrors Textarea but keeps the specialized grouped styling.
+        if (node.name === 'InputGroupTextarea') {
+            const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+            const placeholder = node.params?.placeholder
+                ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
+                : undefined;
+            const value = node.params?.value
+                ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+                : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+            const rowsValue = node.params?.rows != null ? evaluate(node.params.rows, ctx) : undefined;
+            const colsValue = node.params?.cols != null ? evaluate(node.params.cols, ctx) : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
+
+            return (
+                <InputGroupTextarea
+                    cols={colsValue == null ? undefined : String(colsValue)}
+                    disabled={disabled}
+                    id={id}
+                    label={label}
+                    placeholder={placeholder}
+                    rows={rowsValue == null ? undefined : String(rowsValue)}
+                    value={value}
+                />
+            );
+        }
+
+        if (node.name === 'FieldSet') {
+            return <FieldSet children={node.children} />;
+        }
+
+        if (node.name === 'FieldLegend') {
+            const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'legend') : 'legend';
+
+            return <FieldLegend variant={variant as 'legend' | 'label'} children={node.children} />;
+        }
+
+        if (node.name === 'FieldGroup') {
+            return <FieldGroup children={node.children} />;
+        }
+
+        if (node.name === 'Field') {
+            const orientation = node.params?.orientation
+                ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
+                : 'vertical';
+
+            return (
+                <Field orientation={orientation as 'vertical' | 'horizontal' | 'responsive'} children={node.children} />
+            );
+        }
+
+        if (node.name === 'FieldContent') {
+            return <FieldContent children={node.children} />;
+        }
+
+        if (node.name === 'FieldLabel') {
+            const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
+
+            return <FieldLabel htmlFor={htmlFor} children={node.children} />;
+        }
+
+        if (node.name === 'FieldTitle') {
+            return <FieldTitle children={node.children} />;
+        }
+
+        if (node.name === 'FieldDescription') {
+            return <FieldDescription children={node.children} />;
+        }
+
+        if (node.name === 'FieldSeparator') {
+            return <FieldSeparator children={node.children} />;
+        }
+
+        if (node.name === 'FieldError') {
+            const errors = node.params?.errors != null ? evaluate(node.params.errors, ctx) : undefined;
+
+            return (
+                <FieldError
+                    errors={errors as Array<{ message?: string } | undefined> | string | undefined}
+                    children={node.children}
+                />
+            );
+        }
+
+        if (node.name === 'Checkbox') {
+            const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+            const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
+            const defaultCheckedValue =
+                node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const checked =
+                checkedValue && typeof checkedValue === 'object'
+                    ? (checkedValue as Record<string, unknown>)
                     : undefined;
-        const defaultChecked = checked
-            ? undefined
-            : literalChecked !== undefined
-              ? literalChecked
-              : defaultCheckedValue === true || defaultCheckedValue === 'true'
-                ? true
-                : defaultCheckedValue === false || defaultCheckedValue === 'false'
-                  ? false
-                  : defaultCheckedValue != null
-                    ? Boolean(defaultCheckedValue)
+            const literalChecked =
+                checkedValue === true || checkedValue === 'true'
+                    ? true
+                    : checkedValue === false || checkedValue === 'false'
+                      ? false
+                      : checkedValue != null
+                        ? Boolean(checkedValue)
+                        : undefined;
+            const defaultChecked = checked
+                ? undefined
+                : literalChecked !== undefined
+                  ? literalChecked
+                  : defaultCheckedValue === true || defaultCheckedValue === 'true'
+                    ? true
+                    : defaultCheckedValue === false || defaultCheckedValue === 'false'
+                      ? false
+                      : defaultCheckedValue != null
+                        ? Boolean(defaultCheckedValue)
+                        : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
+
+            return <Checkbox checked={checked} defaultChecked={defaultChecked} disabled={disabled} id={id} />;
+        }
+
+        if (node.name === 'RadioGroup') {
+            const defaultValueValue =
+                node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const form = node.params?.form ? String(evaluate(node.params.form, ctx) ?? '') : undefined;
+            const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : undefined;
+            const readOnlyValue = node.params?.readOnly != null ? evaluate(node.params.readOnly, ctx) : undefined;
+            const requiredValue = node.params?.required != null ? evaluate(node.params.required, ctx) : undefined;
+            const valueValue = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
+            const readOnly =
+                readOnlyValue === true || readOnlyValue === 'true'
+                    ? true
+                    : readOnlyValue === false || readOnlyValue === 'false'
+                      ? false
+                      : undefined;
+            const required =
+                requiredValue === true || requiredValue === 'true'
+                    ? true
+                    : requiredValue === false || requiredValue === 'false'
+                      ? false
+                      : undefined;
+
+            return (
+                <RadioGroup
+                    defaultValue={defaultValueValue as string | Record<string, unknown> | undefined}
+                    disabled={disabled}
+                    form={form}
+                    name={name}
+                    readOnly={readOnly}
+                    required={required}
+                    value={valueValue as string | Record<string, unknown> | undefined}
+                    children={node.children}
+                />
+            );
+        }
+
+        if (node.name === 'RadioGroupItem') {
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const readOnlyValue = node.params?.readOnly != null ? evaluate(node.params.readOnly, ctx) : undefined;
+            const requiredValue = node.params?.required != null ? evaluate(node.params.required, ctx) : undefined;
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
+            const readOnly =
+                readOnlyValue === true || readOnlyValue === 'true'
+                    ? true
+                    : readOnlyValue === false || readOnlyValue === 'false'
+                      ? false
+                      : undefined;
+            const required =
+                requiredValue === true || requiredValue === 'true'
+                    ? true
+                    : requiredValue === false || requiredValue === 'false'
+                      ? false
+                      : undefined;
+
+            return (
+                <RadioGroupItem
+                    disabled={disabled}
+                    readOnly={readOnly}
+                    required={required}
+                    value={value}
+                    children={node.children}
+                />
+            );
+        }
+
+        if (node.name === 'Label') {
+            const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
+
+            return <Label htmlFor={htmlFor} children={node.children} />;
+        }
+
+        if (node.name === 'Switch') {
+            const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+            const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
+            const defaultCheckedValue =
+                node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+            const checked =
+                checkedValue && typeof checkedValue === 'object'
+                    ? (checkedValue as Record<string, unknown>)
                     : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
+            const literalChecked =
+                checkedValue === true || checkedValue === 'true'
+                    ? true
+                    : checkedValue === false || checkedValue === 'false'
+                      ? false
+                      : checkedValue != null
+                        ? Boolean(checkedValue)
+                        : undefined;
+            const defaultChecked = checked
+                ? undefined
+                : literalChecked !== undefined
+                  ? literalChecked
+                  : defaultCheckedValue === true || defaultCheckedValue === 'true'
+                    ? true
+                    : defaultCheckedValue === false || defaultCheckedValue === 'false'
+                      ? false
+                      : defaultCheckedValue != null
+                        ? Boolean(defaultCheckedValue)
+                        : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
 
-        return <Checkbox checked={checked} defaultChecked={defaultChecked} disabled={disabled} id={id} />;
-    }
+            return (
+                <Switch
+                    checked={checked}
+                    defaultChecked={defaultChecked}
+                    disabled={disabled}
+                    id={id}
+                    size={size as 'sm' | 'default'}
+                />
+            );
+        }
 
-    if (node.name === 'RadioGroup') {
-        const defaultValueValue =
-            node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const form = node.params?.form ? String(evaluate(node.params.form, ctx) ?? '') : undefined;
-        const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : undefined;
-        const readOnlyValue = node.params?.readOnly != null ? evaluate(node.params.readOnly, ctx) : undefined;
-        const requiredValue = node.params?.required != null ? evaluate(node.params.required, ctx) : undefined;
-        const valueValue = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
-        const readOnly =
-            readOnlyValue === true || readOnlyValue === 'true'
-                ? true
-                : readOnlyValue === false || readOnlyValue === 'false'
-                  ? false
-                  : undefined;
-        const required =
-            requiredValue === true || requiredValue === 'true'
-                ? true
-                : requiredValue === false || requiredValue === 'false'
-                  ? false
-                  : undefined;
+        if (node.name === 'Slider') {
+            const defaultValue =
+                node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+            const max = node.params?.max != null ? evaluate(node.params.max, ctx) : undefined;
+            const min = node.params?.min != null ? evaluate(node.params.min, ctx) : undefined;
+            const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : undefined;
+            const orientation = node.params?.orientation
+                ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
+                : 'horizontal';
+            const step = node.params?.step != null ? evaluate(node.params.step, ctx) : undefined;
+            const value = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
 
-        return (
-            <RadioGroup
-                defaultValue={defaultValueValue as string | Record<string, unknown> | undefined}
-                disabled={disabled}
-                form={form}
-                name={name}
-                readOnly={readOnly}
-                required={required}
-                value={valueValue as string | Record<string, unknown> | undefined}
-                children={node.children}
-            />
-        );
-    }
+            return (
+                <Slider
+                    defaultValue={
+                        defaultValue as number[] | number | string | boolean | Record<string, unknown> | undefined
+                    }
+                    disabled={disabled}
+                    id={id}
+                    max={max == null ? undefined : String(max)}
+                    min={min == null ? undefined : String(min)}
+                    name={name}
+                    orientation={orientation as 'horizontal' | 'vertical'}
+                    step={step == null ? undefined : String(step)}
+                    value={value as number[] | number | string | boolean | Record<string, unknown> | undefined}
+                />
+            );
+        }
 
-    if (node.name === 'RadioGroupItem') {
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const readOnlyValue = node.params?.readOnly != null ? evaluate(node.params.readOnly, ctx) : undefined;
-        const requiredValue = node.params?.required != null ? evaluate(node.params.required, ctx) : undefined;
-        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
-        const readOnly =
-            readOnlyValue === true || readOnlyValue === 'true'
-                ? true
-                : readOnlyValue === false || readOnlyValue === 'false'
-                  ? false
-                  : undefined;
-        const required =
-            requiredValue === true || requiredValue === 'true'
-                ? true
-                : requiredValue === false || requiredValue === 'false'
-                  ? false
-                  : undefined;
-
-        return (
-            <RadioGroupItem
-                disabled={disabled}
-                readOnly={readOnly}
-                required={required}
-                value={value}
-                children={node.children}
-            />
-        );
-    }
-
-    if (node.name === 'Label') {
-        const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
-
-        return <Label htmlFor={htmlFor} children={node.children} />;
-    }
-
-    if (node.name === 'Switch') {
-        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
-        const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
-        const defaultCheckedValue =
-            node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
-        const checked =
-            checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
-        const literalChecked =
-            checkedValue === true || checkedValue === 'true'
-                ? true
-                : checkedValue === false || checkedValue === 'false'
-                  ? false
-                  : checkedValue != null
-                    ? Boolean(checkedValue)
+        if (node.name === 'Toggle') {
+            const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
+            const pressedValue = node.params?.pressed != null ? evaluate(node.params.pressed, ctx) : undefined;
+            const defaultPressedValue =
+                node.params?.defaultPressed != null ? evaluate(node.params.defaultPressed, ctx) : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+            const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+            const pressed =
+                pressedValue && typeof pressedValue === 'object'
+                    ? (pressedValue as Record<string, unknown>)
                     : undefined;
-        const defaultChecked = checked
-            ? undefined
-            : literalChecked !== undefined
-              ? literalChecked
-              : defaultCheckedValue === true || defaultCheckedValue === 'true'
-                ? true
-                : defaultCheckedValue === false || defaultCheckedValue === 'false'
-                  ? false
-                  : defaultCheckedValue != null
-                    ? Boolean(defaultCheckedValue)
-                    : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
+            const literalPressed =
+                pressedValue === true || pressedValue === 'true'
+                    ? true
+                    : pressedValue === false || pressedValue === 'false'
+                      ? false
+                      : pressedValue != null
+                        ? Boolean(pressedValue)
+                        : undefined;
+            const defaultPressed = pressed
+                ? undefined
+                : literalPressed !== undefined
+                  ? literalPressed
+                  : defaultPressedValue === true || defaultPressedValue === 'true'
+                    ? true
+                    : defaultPressedValue === false || defaultPressedValue === 'false'
+                      ? false
+                      : defaultPressedValue != null
+                        ? Boolean(defaultPressedValue)
+                        : undefined;
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
 
-        return (
-            <Switch
-                checked={checked}
-                defaultChecked={defaultChecked}
-                disabled={disabled}
-                id={id}
-                size={size as 'sm' | 'default'}
-            />
-        );
-    }
+            return (
+                <Toggle
+                    defaultPressed={defaultPressed}
+                    disabled={disabled}
+                    id={id}
+                    pressed={pressed}
+                    size={size as 'sm' | 'default' | 'lg'}
+                    variant={variant as 'default' | 'outline'}
+                    children={node.children}
+                />
+            );
+        }
 
-    if (node.name === 'Slider') {
-        const defaultValue = node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
-        const max = node.params?.max != null ? evaluate(node.params.max, ctx) : undefined;
-        const min = node.params?.min != null ? evaluate(node.params.min, ctx) : undefined;
-        const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : undefined;
-        const orientation = node.params?.orientation
-            ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
-            : 'horizontal';
-        const step = node.params?.step != null ? evaluate(node.params.step, ctx) : undefined;
-        const value = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
+        if (node.name === 'ToggleGroup') {
+            const defaultValue =
+                node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
+            const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
+            const loopFocusValue = node.params?.loopFocus != null ? evaluate(node.params.loopFocus, ctx) : undefined;
+            const orientation = node.params?.orientation
+                ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
+                : 'horizontal';
+            const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+            const spacingValue = node.params?.spacing != null ? evaluate(node.params.spacing, ctx) : 0;
+            const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'single') : 'single';
+            const value = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
+            const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+            const disabled =
+                disabledValue === true || disabledValue === 'true'
+                    ? true
+                    : disabledValue === false || disabledValue === 'false'
+                      ? false
+                      : undefined;
+            const loopFocus =
+                loopFocusValue === true || loopFocusValue === 'true'
+                    ? true
+                    : loopFocusValue === false || loopFocusValue === 'false'
+                      ? false
+                      : undefined;
+            const spacing = spacingValue == null ? undefined : Number(spacingValue);
 
-        return (
-            <Slider
-                defaultValue={
-                    defaultValue as number[] | number | string | boolean | Record<string, unknown> | undefined
-                }
-                disabled={disabled}
-                id={id}
-                max={max == null ? undefined : String(max)}
-                min={min == null ? undefined : String(min)}
-                name={name}
-                orientation={orientation as 'horizontal' | 'vertical'}
-                step={step == null ? undefined : String(step)}
-                value={value as number[] | number | string | boolean | Record<string, unknown> | undefined}
-            />
-        );
-    }
+            return (
+                <ToggleGroup
+                    defaultValue={defaultValue as string | string[] | Record<string, unknown> | undefined}
+                    disabled={disabled}
+                    loopFocus={loopFocus}
+                    orientation={orientation as 'horizontal' | 'vertical'}
+                    size={size as 'sm' | 'default' | 'lg'}
+                    spacing={Number.isNaN(spacing ?? NaN) ? undefined : spacing}
+                    type={type as 'single' | 'multiple'}
+                    value={value as string | string[] | Record<string, unknown> | undefined}
+                    variant={variant as 'default' | 'outline'}
+                    children={node.children}
+                />
+            );
+        }
 
-    if (node.name === 'Toggle') {
-        const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
-        const pressedValue = node.params?.pressed != null ? evaluate(node.params.pressed, ctx) : undefined;
-        const defaultPressedValue =
-            node.params?.defaultPressed != null ? evaluate(node.params.defaultPressed, ctx) : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
-        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
-        const pressed =
-            pressedValue && typeof pressedValue === 'object' ? (pressedValue as Record<string, unknown>) : undefined;
-        const literalPressed =
-            pressedValue === true || pressedValue === 'true'
-                ? true
-                : pressedValue === false || pressedValue === 'false'
-                  ? false
-                  : pressedValue != null
-                    ? Boolean(pressedValue)
-                    : undefined;
-        const defaultPressed = pressed
-            ? undefined
-            : literalPressed !== undefined
-              ? literalPressed
-              : defaultPressedValue === true || defaultPressedValue === 'true'
-                ? true
-                : defaultPressedValue === false || defaultPressedValue === 'false'
-                  ? false
-                  : defaultPressedValue != null
-                    ? Boolean(defaultPressedValue)
-                    : undefined;
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
+        if (node.name === 'ToggleGroupItem') {
+            const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+            const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
-        return (
-            <Toggle
-                defaultPressed={defaultPressed}
-                disabled={disabled}
-                id={id}
-                pressed={pressed}
-                size={size as 'sm' | 'default' | 'lg'}
-                variant={variant as 'default' | 'outline'}
-                children={node.children}
-            />
-        );
-    }
+            return (
+                <ToggleGroupItem
+                    size={size as 'sm' | 'default' | 'lg'}
+                    value={value}
+                    variant={variant as 'default' | 'outline'}
+                    children={node.children}
+                />
+            );
+        }
 
-    if (node.name === 'ToggleGroup') {
-        const defaultValue = node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
-        const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
-        const loopFocusValue = node.params?.loopFocus != null ? evaluate(node.params.loopFocus, ctx) : undefined;
-        const orientation = node.params?.orientation
-            ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
-            : 'horizontal';
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
-        const spacingValue = node.params?.spacing != null ? evaluate(node.params.spacing, ctx) : 0;
-        const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'single') : 'single';
-        const value = node.params?.value != null ? evaluate(node.params.value, ctx) : undefined;
-        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
-        const disabled =
-            disabledValue === true || disabledValue === 'true'
-                ? true
-                : disabledValue === false || disabledValue === 'false'
-                  ? false
-                  : undefined;
-        const loopFocus =
-            loopFocusValue === true || loopFocusValue === 'true'
-                ? true
-                : loopFocusValue === false || loopFocusValue === 'false'
-                  ? false
-                  : undefined;
-        const spacing = spacingValue == null ? undefined : Number(spacingValue);
+        if (node.name === 'Select') {
+            const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
+            const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
+            const defaultOpen =
+                defaultOpenValue === true || defaultOpenValue === 'true'
+                    ? true
+                    : defaultOpenValue === false || defaultOpenValue === 'false'
+                      ? false
+                      : undefined;
+            const open =
+                openValue === true || openValue === 'true'
+                    ? true
+                    : openValue === false || openValue === 'false'
+                      ? false
+                      : undefined;
+            const defaultValue = node.params?.defaultValue
+                ? String(evaluate(node.params.defaultValue, ctx) ?? '')
+                : undefined;
+            const value = node.params?.value ? evaluate(node.params.value, ctx) : undefined;
 
-        return (
-            <ToggleGroup
-                defaultValue={defaultValue as string | string[] | Record<string, unknown> | undefined}
-                disabled={disabled}
-                loopFocus={loopFocus}
-                orientation={orientation as 'horizontal' | 'vertical'}
-                size={size as 'sm' | 'default' | 'lg'}
-                spacing={Number.isNaN(spacing ?? NaN) ? undefined : spacing}
-                type={type as 'single' | 'multiple'}
-                value={value as string | string[] | Record<string, unknown> | undefined}
-                variant={variant as 'default' | 'outline'}
-                children={node.children}
-            />
-        );
-    }
+            return (
+                <Select
+                    defaultOpen={defaultOpen}
+                    defaultValue={defaultValue}
+                    open={open}
+                    value={value as never}
+                    children={node.children}
+                />
+            );
+        }
 
-    if (node.name === 'ToggleGroupItem') {
-        const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
-        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
-        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+        if (node.name === 'SelectTrigger') {
+            return <SelectTrigger children={node.children} />;
+        }
 
-        return (
-            <ToggleGroupItem
-                size={size as 'sm' | 'default' | 'lg'}
-                value={value}
-                variant={variant as 'default' | 'outline'}
-                children={node.children}
-            />
-        );
-    }
+        if (node.name === 'SelectValue') {
+            const placeholder = node.params?.placeholder
+                ? String(evaluate(node.params.placeholder, ctx) ?? '')
+                : undefined;
 
-    if (node.name === 'Select') {
-        const defaultOpenValue = node.params?.defaultOpen ? evaluate(node.params.defaultOpen, ctx) : undefined;
-        const openValue = node.params?.open ? evaluate(node.params.open, ctx) : undefined;
-        const defaultOpen =
-            defaultOpenValue === true || defaultOpenValue === 'true'
-                ? true
-                : defaultOpenValue === false || defaultOpenValue === 'false'
-                  ? false
-                  : undefined;
-        const open =
-            openValue === true || openValue === 'true'
-                ? true
-                : openValue === false || openValue === 'false'
-                  ? false
-                  : undefined;
-        const defaultValue = node.params?.defaultValue
-            ? String(evaluate(node.params.defaultValue, ctx) ?? '')
-            : undefined;
-        const value = node.params?.value ? evaluate(node.params.value, ctx) : undefined;
+            return <SelectValue placeholder={placeholder} />;
+        }
 
-        return (
-            <Select
-                defaultOpen={defaultOpen}
-                defaultValue={defaultValue}
-                open={open}
-                value={value as never}
-                children={node.children}
-            />
-        );
-    }
+        if (node.name === 'SelectContent') {
+            return <SelectContent children={node.children} />;
+        }
 
-    if (node.name === 'SelectTrigger') {
-        return <SelectTrigger children={node.children} />;
-    }
+        if (node.name === 'SelectGroup') {
+            return <SelectGroup children={node.children} />;
+        }
 
-    if (node.name === 'SelectValue') {
-        const placeholder = node.params?.placeholder ? String(evaluate(node.params.placeholder, ctx) ?? '') : undefined;
+        if (node.name === 'SelectLabel') {
+            return <SelectLabel children={node.children} />;
+        }
 
-        return <SelectValue placeholder={placeholder} />;
-    }
+        if (node.name === 'SelectItem') {
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
-    if (node.name === 'SelectContent') {
-        return <SelectContent children={node.children} />;
-    }
+            return <SelectItem value={value} children={node.children} />;
+        }
 
-    if (node.name === 'SelectGroup') {
-        return <SelectGroup children={node.children} />;
-    }
+        if (node.name === 'SelectSeparator') {
+            return <SelectSeparator />;
+        }
 
-    if (node.name === 'SelectLabel') {
-        return <SelectLabel children={node.children} />;
-    }
+        if (node.name === 'Table') {
+            return <Table children={node.children} />;
+        }
 
-    if (node.name === 'SelectItem') {
-        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+        if (node.name === 'TableHeader') {
+            return <TableHeader children={node.children} />;
+        }
 
-        return <SelectItem value={value} children={node.children} />;
-    }
+        if (node.name === 'TableBody') {
+            return <TableBody children={node.children} />;
+        }
 
-    if (node.name === 'SelectSeparator') {
-        return <SelectSeparator />;
-    }
+        if (node.name === 'TableFooter') {
+            return <TableFooter children={node.children} />;
+        }
 
-    if (node.name === 'Table') {
-        return <Table children={node.children} />;
-    }
+        if (node.name === 'TableRow') {
+            return <TableRow children={node.children} />;
+        }
 
-    if (node.name === 'TableHeader') {
-        return <TableHeader children={node.children} />;
-    }
+        if (node.name === 'TableHead') {
+            return <TableHead children={node.children} />;
+        }
 
-    if (node.name === 'TableBody') {
-        return <TableBody children={node.children} />;
-    }
+        if (node.name === 'TableCell') {
+            return <TableCell children={node.children} />;
+        }
 
-    if (node.name === 'TableFooter') {
-        return <TableFooter children={node.children} />;
-    }
-
-    if (node.name === 'TableRow') {
-        return <TableRow children={node.children} />;
-    }
-
-    if (node.name === 'TableHead') {
-        return <TableHead children={node.children} />;
-    }
-
-    if (node.name === 'TableCell') {
-        return <TableCell children={node.children} />;
-    }
-
-    throw new Error(`Unknown component "${node.name}"`);
+        throw new Error(`Unknown component "${node.name}"`);
     });
 }
