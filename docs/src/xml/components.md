@@ -87,6 +87,17 @@ TODO: Component description
 </Card>
 ```
 
+## Stack
+
+TODO: Component description
+
+```xml
+<Stack>
+  <p>First</p>
+  <p>Second</p>
+</Stack>
+```
+
 ## Checkbox
 
 TODO: Component description

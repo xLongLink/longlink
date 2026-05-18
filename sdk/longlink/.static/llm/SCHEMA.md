@@ -383,6 +383,28 @@ Behavior:
 
 - `Column` content renders inside its own width box.
 
+## Stack
+
+### `<Stack>`
+
+Renders children in a vertical stack.
+
+Attributes:
+
+Behavior:
+
+- Children render in a vertical column with spacing.
+- Supports the global `if` attribute.
+
+Example:
+
+```xml
+<Stack>
+  <p>First</p>
+  <p>Second</p>
+</Stack>
+```
+
 ## Grid
 
 ### `<Grid>`

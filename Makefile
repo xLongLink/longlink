@@ -53,4 +53,5 @@ web:
 
 docs:
 	bun i --cwd docs
+	bun run --cwd docs prebuild
 	bun run --cwd docs dev

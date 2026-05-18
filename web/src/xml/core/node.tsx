@@ -74,6 +74,7 @@ import {
     SelectValue,
 } from '@xml/react/Select';
 import { Slider } from '@xml/react/Slider';
+import { Stack } from '@xml/react/Stack';
 import { Switch } from '@xml/react/Switch';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
@@ -417,6 +418,10 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const columns = node.params?.columns != null ? evaluate(node.params.columns, ctx) : undefined;
 
         return <Grid columns={columns == null ? undefined : String(columns)} children={node.children} />;
+    }
+
+    if (node.name === 'Stack') {
+        return <Stack children={node.children} />;
     }
 
     if (node.name === 'Card') {

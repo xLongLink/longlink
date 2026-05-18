@@ -32,6 +32,7 @@ import {
     SelectTrigger,
     SelectValue,
     Slider,
+    Stack,
     Ol,
     Tooltip,
     TooltipContent,
@@ -96,6 +97,7 @@ describe('xml index', () => {
         expect(SelectTrigger).toBeDefined();
         expect(SelectValue).toBeDefined();
         expect(Slider).toBeDefined();
+        expect(Stack).toBeDefined();
         expect(Ol).toBeDefined();
         expect(Tooltip).toBeDefined();
         expect(TooltipContent).toBeDefined();

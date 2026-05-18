@@ -35,6 +35,7 @@ export {
     FieldTitle,
 } from './react/Field';
 export { Grid } from './react/Grid';
+export { Stack } from './react/Stack';
 export { Icon } from './react/Icon';
 export {
     InputGroup,
