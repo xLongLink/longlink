@@ -64,7 +64,8 @@ export function RadioGroup({
               : undefined;
 
     return (
-        <UIRadioGroup defaultValue={resolvedDefaultValue}
+        <UIRadioGroup
+            defaultValue={resolvedDefaultValue}
             disabled={disabled}
             form={form}
             name={name}
@@ -84,7 +85,7 @@ export function RadioGroupItem({ children, disabled, readOnly, required, value }
     if (!value) throw new Error('RadioGroupItem requires a value');
 
     return (
-        <label>
+        <label className="inline-flex items-center gap-2">
             <UIRadioGroupItem disabled={disabled} readOnly={readOnly} required={required} value={value} />
             {renderNode(children ?? [], ctx)}
         </label>
