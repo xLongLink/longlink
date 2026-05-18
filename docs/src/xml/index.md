@@ -4,104 +4,63 @@ LongLink XML pages define the UI for backoffice software, including CRUD screens
 Each `.xml` file is the source of truth for layout, bindings, and actions.
 The runtime parses XML, resolves expressions, renders React-backed components, and refreshes data after invalidation.
 
-## Introduction
-
-Use XML pages when you need a predictable, declarative UI model for operational software.
-The XML layer is optimized for forms, tables, dashboards, and other repeatable workflows where consistency matters more than custom UI logic.
-
-Every page starts with a `<longlink>` root element.
-Use `if="..."` on supported elements to conditionally render content.
-
-## Documentation
-
-Use these pages to find the XML authoring surface.
-
-- `Field.md` for accessible form field composition.
-- `layout.md` for layout components such as `Columns`, `Grid`, `Dialog`, and `Tabs`.
-- `components.md` for visible UI components.
-- `html.md` for lowercase HTML bridge elements.
-
-## `longlink`
-
-Use `longlink` as the root page shell.
+Use `<longlink>` as the root page shell.
 
 ```xml
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink>
   <p>Hello world</p>
 </longlink>
 ```
 
-Put the full page body inside `longlink`.
-The root element owns the rendered page structure.
+## State
 
-## `State`
-
-Use `State` to create a local reactive slot.
+Use `<State />` to create a local reactive slot, where the `id` attribute to name and `value` to seed the initial state.
 
 ```xml
-<State id="cart" value="[]" />
+<State id="user" value="name" />
 ```
 
-Use `id` to name the state slot.
-The `id` attribute must be literal text.
-Use `value` to seed the initial state.
-`value` is evaluated as an expression.
+## Query
 
-## `Query`
-
-Use `Query` to fetch JSON into a named slot.
+Use `<Query />` to fetch JSON into a named slot, where the `id` attribute to name the query slot and the `path` attribute to point at the JSON endpoint or absolute URL.
 
 ```xml
 <Query id="products" path="/api/products" />
 ```
 
-Use the `id` attribute to name the query slot.
-Use the `path` attribute to point at the JSON endpoint or absolute URL.
-Both attributes must be literal text.
+## Expressions
 
-## `For`
+Use `${count}` for wrapped expressions that return typed values.
+
+```xml
+<p>Current products, ${products.total}</p>
+```
+
+
+## References
+
+Use `$name` for direct references.
+
+```xml
+<Input value="$user">
+```
+
+## For
 
 Use `For` to render one child scope for each item in an array.
 
 ```xml
-<For each="products.items" as="product">
+<For each="${products.items}" as="product">
   <p>${product.name}</p>
 </For>
 ```
 
-Use `each` to select the array.
-Use `as` to name the current item in the child scope.
-The child scope also exposes `index`.
-The `each` expression must resolve to an array.
 
-## `if`
+## if
 
 Use `if` on any supported XML element to render the element only when the expression is truthy.
 
 ```xml
 <p if="${order.active}">Active</p>
 ```
-
-## `Expressions`
-
-Use expressions in text nodes and attribute values to read runtime state.
-
-```xml
-<p>Hello, ${user.name}</p>
-```
-
-Use `$name` for direct references.
-Use `${count + 1}` for wrapped expressions that return typed values.
-Use object literal expressions for `json` attributes, such as a `fullName` field mapped to `fullName`.
-Use mixed text interpolation like `Hello ${name}` when plain text and runtime values need to share a string.
-Do not use bare brace syntax or double-brace authoring syntax.
-LongLink only supports `${...}` expressions and `$name` references.
-
-Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.
-Unsupported expressions include statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, and globals.
-
-See `Field.md` for form field composition.
-See `layout.md` for layout components.
-See `components.md` for the React-backed component surface.
-See `html.md` for the lowercase HTML bridge elements.
-See `sdk/longlink/.static/llm/SCHEMA.md` for the XML authoring reference.

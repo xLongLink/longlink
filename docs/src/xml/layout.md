@@ -1,10 +1,13 @@
 # Layout
 
-LongLink layout components arrange page sections, switch panels, and modal flows.
+TODO: Introduction
+
 
 ## Columns
 
-Use `Columns` with `Column` children for side-by-side layout rows.
+
+TODO: Component description
+
 
 ```xml
 <Columns>
@@ -13,17 +16,9 @@ Use `Columns` with `Column` children for side-by-side layout rows.
 </Columns>
 ```
 
-`Column.width` is required and uses the percentage share of the row.
-
-### Column
-
-`Column` renders one percentage-based slot inside `Columns`.
-
-`width` is required.
-
 ## Grid
 
-Use `Grid` for full-width grid layouts.
+TODO: Component description
 
 ```xml
 <Grid columns="3">
@@ -33,11 +28,9 @@ Use `Grid` for full-width grid layouts.
 </Grid>
 ```
 
-`columns` sets the number of equal-width grid columns.
-
 ## Dialog
 
-Use `Dialog` with `DialogContent` and `DialogTrigger` for modal workflows and confirmations.
+TODO: Component description
 
 ```xml
 <Dialog open="${true}">
@@ -57,38 +50,9 @@ Use `Dialog` with `DialogContent` and `DialogTrigger` for modal workflows and co
 </Dialog>
 ```
 
-`DialogContent` renders in a portal and includes the standard close affordance.
-`DialogFooter` holds actions for the dialog body.
-`DialogHeader` groups the title and description.
-`open` and `defaultOpen` control dialog visibility.
-
-### DialogTrigger
-
-Use `DialogTrigger` to open the dialog.
-
-### DialogContent
-
-`DialogContent` renders the modal body surface.
-
-### DialogHeader
-
-`DialogHeader` groups the title and description inside the dialog body.
-
-### DialogTitle
-
-`DialogTitle` renders the dialog title slot.
-
-### DialogDescription
-
-`DialogDescription` renders the dialog description slot.
-
-### DialogFooter
-
-`DialogFooter` renders the action row for the dialog body.
-
 ## Tabs
 
-Use `Tabs` with `TabsContent`, `TabsList`, and `TabsTrigger` to switch between related panels.
+TODO: Component description
 
 ```xml
 <Tabs defaultValue="overview">
@@ -100,19 +64,3 @@ Use `Tabs` with `TabsContent`, `TabsList`, and `TabsTrigger` to switch between r
   <TabsContent value="settings">Settings panel</TabsContent>
 </Tabs>
 ```
-
-`TabsContent` and `TabsTrigger` require a matching `value`.
-`TabsList` supports the shadcn `variant` prop.
-Only the active `TabsContent` is rendered.
-
-### TabsList
-
-`TabsList` renders the tab button row.
-
-### TabsTrigger
-
-`TabsTrigger` renders one tab button and requires a `value`.
-
-### TabsContent
-
-`TabsContent` renders one tab panel and requires a matching `value`.

@@ -1,14 +1,10 @@
 # Components
 
-Components handle visible content and user actions.
-Use them when a page needs navigation or form input.
-This page documents the current XML element surface.
-
-The parser also emits internal raw text nodes for raw text content. Do not author them directly.
+TODO: Intoduction
 
 ## Avatar
 
-Use `Avatar` with `AvatarBadge`, `AvatarFallback`, and `AvatarImage` for user identity chips.
+TODO: Component description
 
 ```xml
 <AvatarGroup>
@@ -25,23 +21,17 @@ Use `Avatar` with `AvatarBadge`, `AvatarFallback`, and `AvatarImage` for user id
 </AvatarGroup>
 ```
 
-`Avatar.size` accepts `default`, `sm`, or `lg`.
-`AvatarGroup` stacks multiple avatars with shared spacing.
-`AvatarGroupCount` renders the trailing count chip.
-
 ## Badge
 
-Use the `Badge` component for compact status labels and tags.
+TODO: Component description
 
 ```xml
 <Badge variant="secondary">New</Badge>
 ```
 
-`variant` is optional.
-
 ## Button
 
-Use the `Button` component to navigate or trigger an action.
+TODO: Component description
 
 ```xml
 <Button action="/issues/new" method="GET" variant="default">
@@ -49,20 +39,9 @@ Use the `Button` component to navigate or trigger an action.
 </Button>
 ```
 
-`action` is the target path.
-`method="GET"` renders a navigation link to `action`.
-`method="POST"`, `PUT`, and `DELETE` send a data-changing request to `action`.
-If `action` is empty, the button only runs invalidation.
-`json` is evaluated at click time.
-If `json` is omitted, the request is sent without a JSON body.
-`invalidate` accepts an array expression of slot ids to rerun after success.
-`submit` renders a native submit button and skips action requests.
-
-`method` defaults to `POST`.
-
 ## ButtonGroup
 
-Use `ButtonGroup` with `Button`, `Input`, `ButtonGroupText`, and `ButtonGroupSeparator` to build compact action strips.
+TODO: Component description
 
 ```xml
 <ButtonGroup orientation="horizontal">
@@ -72,14 +51,9 @@ Use `ButtonGroup` with `Button`, `Input`, `ButtonGroupText`, and `ButtonGroupSep
 </ButtonGroup>
 ```
 
-`orientation` accepts `horizontal` or `vertical`.
-`ButtonGroup` also accepts `Input` children.
-`ButtonGroupText` renders inline text inside the group.
-`ButtonGroupSeparator` renders a visual split between group segments.
-
 ## InputGroup
 
-Use `InputGroup` with `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `InputGroupInput`, and `InputGroupTextarea` to build grouped form controls.
+TODO: Component description
 
 ```xml
 <InputGroup>
@@ -93,15 +67,9 @@ Use `InputGroup` with `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `
 </InputGroup>
 ```
 
-`InputGroupInput` behaves like `Input`, but renders inside the grouped chrome.
-`InputGroupTextarea` behaves like `Textarea`, but renders inside the grouped chrome.
-`InputGroupAddon` renders prefix or suffix content.
-`InputGroupButton` renders a compact button inside the group.
-`InputGroupText` renders inline helper text.
-
 ## Card
 
-Use the `Card` component for grouped content blocks and simple dashboard panels.
+TODO: Component description
 
 ```xml
 <Card>
@@ -119,24 +87,18 @@ Use the `Card` component for grouped content blocks and simple dashboard panels.
 </Card>
 ```
 
-`CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, and `CardTitle` compose the shadcn card layout.
-`size="sm"` keeps the compact card density.
-
 ## Checkbox
 
-Use `Checkbox` for binary form toggles.
+TODO: Component description
 
 ```xml
 <Checkbox checked="settings.enabled" id="enabled" />
 ```
 
-`checked` can bind to a reactive state slot.
-`defaultChecked` seeds the initial value when `checked` is not bound.
-`disabled` and `id` are supported.
-
 ## Divider
 
-Use the `Divider` component to separate sections with a horizontal rule.
+TODO: Component description
+
 
 ```xml
 <Divider />
@@ -144,9 +106,8 @@ Use the `Divider` component to separate sections with a horizontal rule.
 
 ## Hero
 
-Use the `Hero` shell for page headers with title, description, and action content.
-`HeroContent` renders in a separate right-side slot.
-All other children render in the main hero body.
+TODO: Component description
+
 
 ```xml
 <Hero icon="layout-grid">
@@ -158,46 +119,35 @@ All other children render in the main hero body.
 </Hero>
 ```
 
-`HeroContent`, `HeroDescription`, and `HeroTitle` are the three supported hero slots.
-`Hero.icon` uses the same Lucide icon names as `<Icon>`.
-
 ## Icon
 
-Use `Icon` for standalone Lucide icons in cards, buttons, and inline layout chrome.
+TODO: Component description
 
 ```xml
 <Icon name="layout-grid" />
 ```
 
-`name` is required.
-
 ## Input
 
-Use the `Input` component for single-line text entry.
+TODO: Component description
 
 ```xml
 <Input label="Issue title" value="user.name" />
 ```
 
-`label` is optional and is used as the placeholder when `placeholder` is omitted.
-`id`, `autoComplete`, `disabled`, and `aria-invalid` are also supported.
-
-When `value` resolves to a reactive Valtio-backed state slot, the input stays in sync and writes back to `state.value`.
-Otherwise, `value` only initializes the field.
 
 ## Label
 
-Use `Label` for form labels.
+TODO: Component description
 
 ```xml
 <Label htmlFor="enabled">Enabled</Label>
 ```
 
-`htmlFor` points at the control id.
-
 ## RadioGroup
 
-Use `RadioGroup` with `RadioGroupItem` for single-choice form controls.
+TODO: Component description
+
 
 ```xml
 <RadioGroup name="priority" defaultValue="medium">
@@ -207,13 +157,9 @@ Use `RadioGroup` with `RadioGroupItem` for single-choice form controls.
 </RadioGroup>
 ```
 
-`defaultValue` and `value` can seed or bind the selected option.
-`name`, `form`, `required`, `readOnly`, and `disabled` are supported.
-`ToggleGroupItem.value` is required.
-
 ## Select
 
-Use `Select` with `SelectContent`, `SelectGroup`, `SelectItem`, `SelectLabel`, `SelectSeparator`, `SelectTrigger`, and `SelectValue` for single-choice menus.
+TODO: Component description
 
 ```xml
 <Select defaultValue="overview">
@@ -236,26 +182,17 @@ Use `Select` with `SelectContent`, `SelectGroup`, `SelectItem`, `SelectLabel`, `
 </Select>
 ```
 
-`SelectItem` requires a `value`.
-`open` and `defaultOpen` control menu visibility.
-`value` can bind to a reactive state slot; otherwise `defaultValue` seeds the initial selection.
-
 ## Slider
 
-Use `Slider` for single-value and range controls.
+TODO: Component description
 
 ```xml
 <Slider value="volume" min="0" max="100" step="5" />
 ```
 
-`value` can bind to a reactive state slot or seed the initial thumb position.
-`defaultValue` is an explicit fallback when you do not want to use `value`.
-Use wrapped expressions like `${[25]}` when you need multiple thumb values.
-`min`, `max`, `step`, `orientation`, `disabled`, `id`, and `name` are supported.
-
 ## Switch
 
-Use `Switch` for binary on/off controls.
+TODO: Component description
 
 ```xml
 <Switch checked="settings.enabled" id="enabled" size="sm" />
@@ -267,7 +204,7 @@ Use `Switch` for binary on/off controls.
 
 ## Table
 
-Use `Table` with `TableBody`, `TableFooter`, and `TableHeader` for tabular data.
+TODO: Component description
 
 ```xml
 <Table>
@@ -290,25 +227,17 @@ Use `Table` with `TableBody`, `TableFooter`, and `TableHeader` for tabular data.
 </Table>
 ```
 
-`TableCell` is for body cells.
-`TableHead` is for column headers.
-`TableRow` groups cells in each section.
-
 ## Textarea
 
-Use `Textarea` for multi-line text entry.
+TODO: Component description
 
 ```xml
 <Textarea label="Notes" value="Draft notes" rows="4" />
 ```
 
-`label` is optional and falls back to the placeholder when `placeholder` is omitted.
-`value` can bind to a reactive state slot.
-`disabled`, `id`, `rows`, and `cols` are supported.
-
 ## Toggle
 
-Use `Toggle` for button-style on/off controls.
+TODO: Component description
 
 ```xml
 <Toggle pressed="settings.enabled" id="enabled" size="sm">
@@ -316,14 +245,9 @@ Use `Toggle` for button-style on/off controls.
 </Toggle>
 ```
 
-`pressed` can bind to a reactive state slot.
-`defaultPressed` seeds the initial value when `pressed` is not bound.
-`variant` accepts `default` or `outline`.
-`size` accepts `sm`, `default`, or `lg`.
-
 ## ToggleGroup
 
-Use `ToggleGroup` with `ToggleGroupItem` for segmented single- or multi-select controls.
+TODO: Component description
 
 ```xml
 <ToggleGroup type="single">
@@ -333,13 +257,9 @@ Use `ToggleGroup` with `ToggleGroupItem` for segmented single- or multi-select c
 </ToggleGroup>
 ```
 
-`type` accepts `single` or `multiple`.
-`defaultValue` and `value` can be used to seed or bind the selected item set.
-`orientation`, `size`, `variant`, `spacing`, `disabled`, and `loopFocus` are supported.
-
 ## Tooltip
 
-Use `TooltipProvider` with `Tooltip`, `TooltipContent`, and `TooltipTrigger` for hover or focus help.
+TODO: Component description
 
 ```xml
 <TooltipProvider>
@@ -349,7 +269,3 @@ Use `TooltipProvider` with `Tooltip`, `TooltipContent`, and `TooltipTrigger` for
   </Tooltip>
 </TooltipProvider>
 ```
-
-`Tooltip` supports `open` and `defaultOpen`.
-`TooltipContent` supports `align`, `alignOffset`, `hidden`, `side`, and `sideOffset`.
-Wrap multiple tooltips in `TooltipProvider`.

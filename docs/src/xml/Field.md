@@ -1,27 +1,6 @@
 # Field
 
-LongLink `Field` components compose accessible form rows, helper text, and validation states.
-
-Use `FieldSet` for semantic grouping, `FieldGroup` for stacked fields, and `FieldSeparator` to divide related sections.
-Use `Field` for one control row, `FieldContent` when the label and control need separate alignment, and `FieldError` for validation messages.
-
-## Compatible Components
-
-These controls work inside the `Field` family:
-
-- `Input`
-- `Textarea`
-- `Select`
-- `Slider`
-- `Checkbox`
-- `RadioGroup`
-- `Switch`
-
-Use `FieldLabel` with these controls to connect the visible label to the input.
-Use `FieldDescription` for helper text.
-Use `FieldTitle` when the label slot needs title styling.
-
-## Usage
+TODO: Introduction
 
 ```xml
 <FieldSet>
@@ -46,52 +25,99 @@ Use `FieldTitle` when the label slot needs title styling.
 </FieldSet>
 ```
 
-## Components
 
-### `FieldSet`
+## Input
 
-Renders a semantic field group container.
+TODO: Component description
 
-### `FieldLegend`
+```xml
+<Field>
+  <FieldLabel htmlFor="name">Full name</FieldLabel>
+  <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
+  <FieldDescription>This appears on invoices and emails.</FieldDescription>
+</Field>
+```
 
-Renders the legend for a `FieldSet`.
 
-`variant` accepts `legend` or `label`.
+## Textarea
 
-### `FieldGroup`
+TODO: Component description
 
-Stacks related `Field` rows.
+```xml
+<Field>
+  <FieldLabel htmlFor="notes">Notes</FieldLabel>
+  <Textarea id="notes" rows="4" placeholder="Add notes here" />
+  <FieldDescription>Keep the note short and clear.</FieldDescription>
+</Field>
+```
 
-### `Field`
 
-Renders one field row.
+## Select
 
-`orientation` accepts `vertical`, `horizontal`, or `responsive`.
+TODO: Component description
 
-### `FieldContent`
+```xml
+<Field>
+  <FieldLabel htmlFor="department">Department</FieldLabel>
+  <Select id="department" defaultValue="design">
+    <SelectTrigger>
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="design">Design</SelectItem>
+      <SelectItem value="engineering">Engineering</SelectItem>
+    </SelectContent>
+  </Select>
+  <FieldDescription>Select the team this user belongs to.</FieldDescription>
+</Field>
+```
 
-Groups the control, description, and error content.
+## Slider
 
-### `FieldLabel`
+TODO: Component description
 
-Renders the label slot for a field.
+```xml
+<Field>
+  <FieldLabel htmlFor="budget">Budget</FieldLabel>
+  <Slider id="budget" min="0" max="100" step="5" value="50" />
+  <FieldDescription>Set the allowed budget range.</FieldDescription>
+</Field>
+```
 
-`htmlFor` points at the control id.
+## Checkbox
 
-### `FieldTitle`
+TODO: Component description
 
-Renders title-styled field text.
+```xml
+<Field orientation="horizontal">
+  <Checkbox id="newsletter" />
+  <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
+</Field>
+```
 
-### `FieldDescription`
+## RadioGroup
 
-Renders helper text for a field.
+TODO: Component description
 
-### `FieldSeparator`
+```xml
+<Field>
+  <FieldLabel>Priority</FieldLabel>
+  <RadioGroup name="priority" defaultValue="medium">
+    <RadioGroupItem value="low">Low</RadioGroupItem>
+    <RadioGroupItem value="medium">Medium</RadioGroupItem>
+    <RadioGroupItem value="high">High</RadioGroupItem>
+  </RadioGroup>
+  <FieldDescription>Choose the default handling priority.</FieldDescription>
+</Field>
+```
 
-Renders a visual divider between field sections.
+## Switch
 
-### `FieldError`
+TODO: Component description
 
-Renders validation messages.
-
-`errors` accepts an array of validation errors or a string.
+```xml
+<Field orientation="horizontal">
+  <Switch id="notifications" />
+  <FieldLabel htmlFor="notifications">Enable notifications</FieldLabel>
+</Field>
+```
