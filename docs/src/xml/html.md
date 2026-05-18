@@ -24,7 +24,7 @@ Renders bold inline text.
 
 ## `Br`
 
-Renders a spacer block for visual separation.
+Renders a line break for visual separation.
 
 ```xml
 <Br />
@@ -96,7 +96,7 @@ Renders an ordered list.
 
 Renders a standard paragraph.
 
-- None.
+- No attributes.
 
 ```xml
 <P>Use explicit paragraph text.</P>

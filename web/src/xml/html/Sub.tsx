@@ -10,5 +10,5 @@ export interface SubProps {
 export function Sub({ children }: SubProps) {
     const { ctx } = useXmlContext();
 
-    return <sub>{renderNode(children ?? [], ctx)}</sub>;
+    return <sub className="text-[0.8em]">{renderNode(children ?? [], ctx)}</sub>;
 }

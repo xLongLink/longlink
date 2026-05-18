@@ -1,5 +1,6 @@
 import type { ASTNode } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
+import { Heading } from '@/components/ui/heading';
 
 /** Props accepted by the XML h2 bridge component. */
 export interface H2Props {
@@ -10,5 +11,9 @@ export interface H2Props {
 export function H2({ children }: H2Props) {
     const { ctx } = useXmlContext();
 
-    return <h2>{renderNode(children ?? [], ctx)}</h2>;
+    return (
+        <Heading anchorClassName="-translate-x-7" level="h2" source={children ?? []}>
+            {renderNode(children ?? [], ctx)}
+        </Heading>
+    );
 }

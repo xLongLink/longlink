@@ -401,16 +401,6 @@
                     <TooltipContent side="top">Tooltip text</TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <ButtonGroup>
-                <Button variant="outline">Cancel</Button>
-                <Input placeholder="Search" value="Quick search" />
-                <Button>Search</Button>
-            </ButtonGroup>
-            <ButtonGroup>
-                <Button>Save</Button>
-                <ButtonGroupSeparator />
-                <ButtonGroupText>Quick actions</ButtonGroupText>
-            </ButtonGroup>
         </TabsContent>
     </Tabs>
 </longlink>

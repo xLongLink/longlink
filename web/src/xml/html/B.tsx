@@ -10,5 +10,5 @@ export interface BProps {
 export function B({ children }: BProps) {
     const { ctx } = useXmlContext();
 
-    return <b>{renderNode(children ?? [], ctx)}</b>;
+    return <b className="font-semibold text-foreground">{renderNode(children ?? [], ctx)}</b>;
 }

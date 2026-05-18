@@ -23,7 +23,7 @@ describe('P', () => {
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
-            '<p>Paragraph text</p>'
+            '<p class="leading-7 [&amp;:not(:first-child)]:mt-6">Paragraph text</p>'
         );
     });
 });

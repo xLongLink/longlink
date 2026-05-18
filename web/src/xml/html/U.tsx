@@ -10,5 +10,5 @@ export interface UProps {
 export function U({ children }: UProps) {
     const { ctx } = useXmlContext();
 
-    return <u>{renderNode(children ?? [], ctx)}</u>;
+    return <u className="underline underline-offset-4">{renderNode(children ?? [], ctx)}</u>;
 }

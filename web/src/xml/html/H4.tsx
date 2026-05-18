@@ -1,5 +1,6 @@
 import type { ASTNode } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
+import { Heading } from '@/components/ui/heading';
 
 /** Props accepted by the XML h4 bridge component. */
 export interface H4Props {
@@ -10,5 +11,9 @@ export interface H4Props {
 export function H4({ children }: H4Props) {
     const { ctx } = useXmlContext();
 
-    return <h4>{renderNode(children ?? [], ctx)}</h4>;
+    return (
+        <Heading anchorClassName="-translate-x-5" level="h4" source={children ?? []}>
+            {renderNode(children ?? [], ctx)}
+        </Heading>
+    );
 }

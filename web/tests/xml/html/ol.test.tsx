@@ -25,6 +25,8 @@ describe('Ol', () => {
         const ast = parseXML('<Ol><Li>First item</Li><Li>Second item</Li></Ol>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
-        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<ol><li>First item</li><li>Second item</li></ol>');
+        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
+            '<ol class="my-6 ml-6 list-decimal space-y-2"><li class="leading-7">First item</li><li class="leading-7">Second item</li></ol>'
+        );
     });
 });

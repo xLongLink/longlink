@@ -10,5 +10,5 @@ export interface SProps {
 export function S({ children }: SProps) {
     const { ctx } = useXmlContext();
 
-    return <s>{renderNode(children ?? [], ctx)}</s>;
+    return <s className="line-through">{renderNode(children ?? [], ctx)}</s>;
 }

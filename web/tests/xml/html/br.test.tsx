@@ -18,6 +18,7 @@ describe('Br', () => {
         const output = renderXmlToMarkup(parseXML('<Br />'));
 
         expect(output).toContain('aria-hidden="true"');
+        expect(output).toContain('class="block h-4"');
         expect(output).toContain('<div');
     });
 });

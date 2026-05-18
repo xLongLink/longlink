@@ -96,11 +96,6 @@ longlink/
 - `Query.id` must be literal text.
 - `Query.path` must be literal text.
 
-## Root Metadata
-
-- `longlink` does not support `name` metadata.
-- SDK page metadata exposes explicit paths only; do not infer names from filenames.
-
 ## Global XML Patterns
 
 - Any element may use `if="..."` for conditional rendering.
@@ -122,11 +117,10 @@ Allowed:
 
 1. Plain text values like `hello` or `"hello"`.
 2. `$` references like `$user.name`.
-3. Dotted runtime lookups like `user.name`.
-4. Wrapped expressions like `${count + 1}`.
-5. Arrays, objects, and template literals.
-6. Basic arithmetic with `+`, `-`, `*`, and `/`.
-7. Mixed text interpolation like `Hello ${name}`.
+3. Wrapped expressions like `${count + 1}`.
+4. Arrays, objects, and template literals.
+5. Basic arithmetic with `+`, `-`, `*`, and `/`.
+6. Mixed text interpolation like `Hello ${name}`.
 
 Not allowed:
 

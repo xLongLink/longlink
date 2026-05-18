@@ -1005,7 +1005,7 @@ Behavior:
 Example:
 
 ```xml
-<Input label="Your name" value="user.name" />
+<Input label="Your name" value="$user.name" />
 ```
 
 ### `<Textarea>`

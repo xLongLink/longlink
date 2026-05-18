@@ -10,5 +10,5 @@ export interface OlProps {
 export function Ol({ children }: OlProps) {
     const { ctx } = useXmlContext();
 
-    return <ol>{renderNode(children ?? [], ctx)}</ol>;
+    return <ol className="my-6 ml-6 list-decimal space-y-2">{renderNode(children ?? [], ctx)}</ol>;
 }

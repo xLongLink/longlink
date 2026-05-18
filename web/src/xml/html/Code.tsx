@@ -10,5 +10,5 @@ export interface CodeProps {
 export function Code({ children }: CodeProps) {
     const { ctx } = useXmlContext();
 
-    return <code>{renderNode(children ?? [], ctx)}</code>;
+    return <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground">{renderNode(children ?? [], ctx)}</code>;
 }

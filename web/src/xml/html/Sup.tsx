@@ -10,5 +10,5 @@ export interface SupProps {
 export function Sup({ children }: SupProps) {
     const { ctx } = useXmlContext();
 
-    return <sup>{renderNode(children ?? [], ctx)}</sup>;
+    return <sup className="text-[0.8em]">{renderNode(children ?? [], ctx)}</sup>;
 }
