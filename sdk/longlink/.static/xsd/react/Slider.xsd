@@ -12,7 +12,6 @@
   <xsd:complexType name="SliderType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="SliderChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />

@@ -12,7 +12,6 @@
   <xsd:complexType name="LabelType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="LabelChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="htmlFor" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

@@ -12,7 +12,6 @@
   <xsd:complexType name="H3Type" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="H3ChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

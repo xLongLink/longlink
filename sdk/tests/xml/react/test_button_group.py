@@ -15,7 +15,7 @@ def test_button_group_validation() -> None:
     """Validate a compound `ButtonGroup` fragment."""
 
     element = Element.from_content(
-        '<ButtonGroup orientation="horizontal" className="gap-2"><Button variant="outline">Cancel</Button><Input value="Search" /><ButtonGroupSeparator orientation="vertical" /><ButtonGroupText>Quick actions</ButtonGroupText></ButtonGroup>',
+        '<ButtonGroup orientation="horizontal"><Button variant="outline">Cancel</Button><Input value="Search" /><ButtonGroupSeparator orientation="vertical" /><ButtonGroupText>Quick actions</ButtonGroupText></ButtonGroup>',
         schema=SCHEMA,
     )
     element.validate()
@@ -33,7 +33,7 @@ def test_button_group_rejects_unknown_attributes() -> None:
 def test_button_group_text_validation() -> None:
     """Validate a minimal `ButtonGroupText` fragment."""
 
-    element = Element.from_content('<ButtonGroupText className="text-muted">Quick actions</ButtonGroupText>', schema=TEXT_SCHEMA)
+    element = Element.from_content('<ButtonGroupText>Quick actions</ButtonGroupText>', schema=TEXT_SCHEMA)
     element.validate()
 
 

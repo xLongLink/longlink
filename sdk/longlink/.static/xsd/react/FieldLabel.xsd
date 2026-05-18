@@ -12,7 +12,6 @@
   <xsd:complexType name="FieldLabelType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldLabelChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="htmlFor" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

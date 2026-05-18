@@ -12,7 +12,6 @@
   <xsd:complexType name="FieldErrorType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldErrorChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="errors" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

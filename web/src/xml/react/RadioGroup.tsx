@@ -89,8 +89,15 @@ export function RadioGroupItem({ children, className, disabled, readOnly, requir
     if (!value) throw new Error('RadioGroupItem requires a value');
 
     return (
-        <UIRadioGroupItem className={className} disabled={disabled} readOnly={readOnly} required={required} value={value}>
+        <label className="inline-flex items-center gap-2">
+            <UIRadioGroupItem
+                className={className}
+                disabled={disabled}
+                readOnly={readOnly}
+                required={required}
+                value={value}
+            />
             {renderNode(children ?? null, ctx)}
-        </UIRadioGroupItem>
+        </label>
     );
 }

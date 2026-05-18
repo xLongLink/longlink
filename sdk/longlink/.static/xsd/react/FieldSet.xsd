@@ -22,7 +22,6 @@
   <xsd:complexType name="FieldSetType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldSetChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

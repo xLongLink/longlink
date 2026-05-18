@@ -2,7 +2,6 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:complexType name="BrType">
     <xsd:attribute name="if" type="xsd:string" use="optional" />
-    <xsd:attribute name="className" type="xsd:string" use="optional" />
   </xsd:complexType>
 
   <xsd:element name="br" type="BrType" />

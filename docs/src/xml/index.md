@@ -1,92 +1,31 @@
 # XML Pages
 
-LongLink XML pages define the user interface for backoffice applications, admin panels, and internal tools.
-The runtime parses each `.xml` file, resolves expressions, and renders the supported tags as React components.
+LongLink XML pages define the UI for backoffice software, including CRUD screens, admin panels, dashboards, and internal tools.
+Each `.xml` file is the source of truth for layout, bindings, and actions.
+The runtime parses XML, resolves expressions, renders React-backed components, and refreshes data after invalidation.
 
-Use XML pages for CRUD screens, forms, tables, dashboards, and operational workflows.
+## Introduction
 
-## Core Model
+Use XML pages when you need a predictable, declarative UI model for operational software.
+The XML layer is optimized for forms, tables, dashboards, and other repeatable workflows where consistency matters more than custom UI logic.
 
-Every XML document starts with a `<longlink>` root element.
-Use `<State>` for local reactive state slots, `<Query>` for JSON fetch slots, and `<For>` to render arrays in a child scope.
-Use `Input`, `Textarea`, `Select`, `RadioGroup`, `Toggle`, `Checkbox`, `Switch`, and `Slider` for form controls.
-Use `Button`, `Badge`, `Divider`, `Icon`, `Hero`, `Card`, `Dialog`, `Tooltip`, `Avatar`, `Columns`, `Table`, `Tabs`, `Field`, `Label`, `p`, and `a` for the rest of the documented surface.
+Every page starts with a `<longlink>` root element.
+Use `if="..."` on supported elements to conditionally render content.
 
-`<State value="...">` uses an expression and can seed objects, arrays, or scalar values.
-`<Query id="..." path="...">` requires literal text for both attributes.
-Any documented XML element may also use `if="..."` for conditional rendering.
+## `longlink`
 
-The parser also emits internal raw text nodes for raw text content. Do not author them directly.
-
-## Document Loading
-
-```python
-from longlink import LongLink, page
-
-app = LongLink(env=env)
-
-
-@page("/pages/dashboard/overview.xml")
-def dashboard_page():
-    return None
-```
-
-Pages are declared directly with the `page` decorator.
-The `url` points at the XML page path.
-
-See `sdk/longlink/.static/llm/SCHEMA.md` for the XML authoring reference.
-See `components.md` for the component surface.
-
-## Context
-
-`useXmlContext` reads the active XML runtime state from React context.
-`ContextProvider` exposes a runtime context to rendered XML children.
-`createContext` returns a blank execution context.
-`setupContext` walks the AST, seeds `State` and `Query` nodes, and stores their re-run hooks for invalidation.
-
-## Component Surface
-
-See `components.md` for the full component reference.
-
-The current XML surface includes:
-
-- Root: `longlink`
-- Primitives: `State`, `Query`, `For`
-- Hero: `Hero`, `HeroTitle`, `HeroDescription`, `HeroContent`
-- Field: `FieldSet`, `FieldLegend`, `FieldGroup`, `Field`, `FieldContent`, `FieldLabel`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError`
-- Layout: `Columns`, `Column`, `Divider`, `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
-- Surface: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`, `Table`, `TableCaption`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
-- Identity: `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
-- Form controls: `Button`, `Label`, `Badge`, `Checkbox`, `Switch`, `Slider`, `Input`, `Textarea`, `RadioGroup`, `RadioGroupItem`, `Toggle`, `ToggleGroup`, `ToggleGroupItem`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
-- HTML bridge: `p`, `a`, `br`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ol`, `ul`, `li`
-
-### Conditional Rendering
-
-Use `if="..."` on any documented XML element to skip rendering when the expression is false.
+Use `longlink` as the root page shell.
 
 ```xml
-<p if="{order.active}">Active</p>
+<longlink>
+  <p>Hello world</p>
+</longlink>
 ```
 
-### Expressions
+Put the full page body inside `longlink`.
+The root element owns the rendered page structure.
 
-Use brace expressions in text nodes and attribute values to read runtime values.
-
-```xml
-<p>Hello, {user.name}</p>
-```
-
-Use `$name` for direct references.
-Use `{count + 1}` for wrapped expressions that return typed values.
-Use `\{\{ fullName: fullName \}\}` for object payloads in `json` attributes.
-Use mixed text interpolation like `Hello {name}` when plain text and runtime values need to share a string.
-
-Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.
-Unsupported expressions include statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, and globals.
-
-## Primitives
-
-### `State`
+## `State`
 
 Use `State` to create a local reactive slot.
 
@@ -94,10 +33,11 @@ Use `State` to create a local reactive slot.
 <State id="cart" value="[]" />
 ```
 
-`id` must be literal text.
+Use `id` to name the state slot.
+Use `value` to seed the initial state.
 `value` is evaluated as an expression.
 
-### `Query`
+## `Query`
 
 Use `Query` to fetch JSON into a named slot.
 
@@ -105,11 +45,13 @@ Use `Query` to fetch JSON into a named slot.
 <Query id="products" path="/api/products" />
 ```
 
-`id` and `path` must be literal text.
+Use the `id` attribute to name the query slot.
+Use the `path` attribute to point at the JSON endpoint.
+Both attributes must be literal text.
 
-### `For`
+## `For`
 
-Use `For` to render a child scope for each item in an array.
+Use `For` to render one child scope for each item in an array.
 
 ```xml
 <For each="products.items" as="product">
@@ -117,7 +59,34 @@ Use `For` to render a child scope for each item in an array.
 </For>
 ```
 
-`each` resolves to an array.
-`as` names the current item in the child scope.
+Use `each` to select the array.
+Use `as` to name the current item in the child scope.
+The `each` expression must resolve to an array.
 
-Use only the elements and attributes documented in this page and in `sdk/longlink/.static/llm/SCHEMA.md`.
+## `if`
+
+Use `if` on any supported XML element to render the element only when the expression is truthy.
+
+```xml
+<p if="{order.active}">Active</p>
+```
+
+## `Expressions`
+
+Use expressions in text nodes and attribute values to read runtime state.
+
+```xml
+<p>Hello, {user.name}</p>
+```
+
+Use `$name` for direct references.
+Use `{count + 1}` for wrapped expressions that return typed values.
+Use `&#123;&#123; fullName: fullName &#125;&#125;` for object payloads in `json` attributes.
+Use mixed text interpolation like `Hello {name}` when plain text and runtime values need to share a string.
+
+Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.
+Unsupported expressions include statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, and globals.
+
+See `components.md` for the React-backed component surface.
+See `html.md` for the lowercase HTML bridge elements.
+See `sdk/longlink/.static/llm/SCHEMA.md` for the XML authoring reference.

@@ -2,7 +2,6 @@
 
 The lowercase HTML bridge elements exposed in XML pages are `a`, `b`, `br`, `code`, `h1`, `h2`, `h3`, `h4`, `li`, `ol`, `p`, `s`, `sub`, `sup`, `u`, and `ul`.
 
-All of these tags accept `className`.
 All of these tags support the global `if` attribute.
 
 ## `a`
@@ -12,7 +11,6 @@ Use `a` for standard links.
 Attributes:
 
 - `href` required. Link target.
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -21,16 +19,12 @@ Behavior:
 Example:
 
 ```xml
-<a href="/settings" className="link">Open settings</a>
+<a href="/settings">Open settings</a>
 ```
 
 ## `b`
 
 Use `b` for bold text.
-
-Attributes:
-
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -46,10 +40,6 @@ Example:
 
 Use `code` for inline code text.
 
-Attributes:
-
-- `className` optional. Extra classes for styling.
-
 Behavior:
 
 - Renders inline monospace text.
@@ -63,10 +53,6 @@ Example:
 ## `h1`
 
 Use `h1` for the page title.
-
-Attributes:
-
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -82,10 +68,6 @@ Example:
 
 Use `h2` for the next heading level.
 
-Attributes:
-
-- `className` optional. Extra classes for styling.
-
 Behavior:
 
 - Renders a secondary heading.
@@ -99,10 +81,6 @@ Example:
 ## `h3`
 
 Use `h3` for section headings.
-
-Attributes:
-
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -120,7 +98,6 @@ Use `h4` for small subsection headings.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -134,15 +111,14 @@ Example:
 
 ## `br`
 
-Use `br` for a spacer break.
+Use `br` for a line break.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
-- Renders a normal HTML horizontal rule.
+- Renders a normal HTML line break.
 
 Example:
 
@@ -156,7 +132,6 @@ Use `li` for list items inside `ul`.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -177,7 +152,6 @@ Use `ol` for ordered lists.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -198,7 +172,6 @@ Use `p` for paragraph text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -216,7 +189,6 @@ Use `s` for strikethrough text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -234,7 +206,6 @@ Use `sub` for subscript text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -252,7 +223,6 @@ Use `sup` for superscript text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -270,7 +240,6 @@ Use `u` for underlined text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -288,7 +257,6 @@ Use `ul` for unordered lists.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 

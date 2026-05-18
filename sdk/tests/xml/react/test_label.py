@@ -12,7 +12,7 @@ SCHEMA = ROOT / ".static" / "xsd" / "react" / "Label.xsd"
 def test_label_validation() -> None:
     """Validate a minimal `Label` fragment."""
 
-    element = Element.from_content('<Label htmlFor="newsletter" className="text-sm" if="canEdit">Newsletter</Label>', schema=SCHEMA)
+    element = Element.from_content('<Label htmlFor="newsletter" if="canEdit">Newsletter</Label>', schema=SCHEMA)
     element.validate()
 
 

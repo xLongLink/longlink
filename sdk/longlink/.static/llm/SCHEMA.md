@@ -151,7 +151,6 @@ Renders a Lucide icon.
 Attributes:
 
 - `name` required. Lucide icon name such as `layout-grid`.
-- `className` optional. Extra SVG classes for sizing and styling.
 
 Behavior:
 
@@ -166,7 +165,6 @@ Groups a form section.
 
 Attributes:
 
-- `className` optional. Extra fieldset classes.
 
 ### `<FieldLegend>`
 
@@ -174,7 +172,6 @@ Renders the fieldset legend.
 
 Attributes:
 
-- `className` optional. Extra legend classes.
 - `variant` optional. Use `legend` or `label`.
 
 ### `<FieldGroup>`
@@ -183,7 +180,6 @@ Groups related fields inside a fieldset.
 
 Attributes:
 
-- `className` optional. Extra group classes.
 
 ### `<Field>`
 
@@ -191,7 +187,6 @@ Renders one field row.
 
 Attributes:
 
-- `className` optional. Extra field classes.
 - `orientation` optional. Use `vertical`, `horizontal`, or `responsive`.
 
 ### `<FieldContent>`
@@ -200,7 +195,6 @@ Field content slot.
 
 Attributes:
 
-- `className` optional. Extra content classes.
 
 ### `<FieldLabel>`
 
@@ -208,7 +202,6 @@ Field label slot.
 
 Attributes:
 
-- `className` optional. Extra label classes.
 - `htmlFor` optional. Target control id.
 
 ### `<FieldTitle>`
@@ -217,7 +210,6 @@ Field title slot.
 
 Attributes:
 
-- `className` optional. Extra title classes.
 
 ### `<FieldDescription>`
 
@@ -225,7 +217,6 @@ Field description slot.
 
 Attributes:
 
-- `className` optional. Extra description classes.
 
 ### `<FieldSeparator>`
 
@@ -233,7 +224,6 @@ Separates field sections.
 
 Attributes:
 
-- `className` optional. Extra separator classes.
 
 Children:
 
@@ -245,7 +235,6 @@ Field error slot.
 
 Attributes:
 
-- `className` optional. Extra error classes.
 - `errors` optional. Error list expression.
 
 Children:
@@ -294,7 +283,6 @@ Renders a single user avatar shell.
 Attributes:
 
 - `size` optional. Avatar size variant.
-- `className` optional. Extra avatar classes.
 
 Behavior:
 
@@ -319,7 +307,6 @@ Attributes:
 
 - `src` optional. Image source URL.
 - `alt` optional. Image alt text.
-- `className` optional. Extra image classes.
 
 ### `<AvatarFallback>`
 
@@ -327,7 +314,6 @@ Renders fallback content when the image is unavailable.
 
 Attributes:
 
-- `className` optional. Extra fallback classes.
 
 ### `<AvatarBadge>`
 
@@ -335,7 +321,6 @@ Renders the badge overlay on top of an avatar.
 
 Attributes:
 
-- `className` optional. Extra badge classes.
 
 ### `<AvatarGroup>`
 
@@ -343,7 +328,6 @@ Renders a stacked row of avatars.
 
 Attributes:
 
-- `className` optional. Extra group classes.
 
 Behavior:
 
@@ -356,7 +340,6 @@ Renders the trailing count chip for an avatar group.
 
 Attributes:
 
-- `className` optional. Extra count classes.
 
 Behavior:
 
@@ -370,7 +353,6 @@ Renders a full-width column row.
 
 Attributes:
 
-- `className` optional. Extra layout classes.
 
 Behavior:
 
@@ -394,7 +376,6 @@ Renders one percentage-based column.
 Attributes:
 
 - `width` required. Percentage of the row, such as `70`.
-- `className` optional. Extra layout classes.
 
 Behavior:
 
@@ -415,7 +396,6 @@ Behavior:
 - Renders content using the shared shadcn card base.
 - Supports the global `if` attribute.
 - Use `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, and `CardFooter` inside `Card`.
-- All card parts accept optional `className` for local styling.
 
 Example: `<Card><CardHeader><CardTitle>Card Title</CardTitle></CardHeader><CardContent><p>Card Content</p></CardContent></Card>`
 
@@ -451,7 +431,6 @@ Renders a scrollable shadcn table shell.
 
 Attributes:
 
-- `className` optional. Extra classes for the table element.
 
 Behavior:
 
@@ -459,7 +438,6 @@ Behavior:
 - Use `TableCaption`, `TableHeader`, `TableBody`, and `TableFooter` inside `Table`.
 - Use `TableRow` inside header, body, and footer sections.
 - Use `TableHead` for header cells and `TableCell` for body cells.
-- All table parts accept optional `className` for local styling.
 
 Example:
 
@@ -615,7 +593,6 @@ Attributes:
 
 - `align` optional. Popup alignment.
 - `alignOffset` optional. Alignment offset.
-- `className` optional. Extra popup classes.
 - `hidden` optional. Hide the popup.
 - `side` optional. Popup placement side.
 - `sideOffset` optional. Distance from the trigger.
@@ -644,7 +621,6 @@ Attributes:
 
 - `defaultValue` optional. Initial active tab value.
 - `orientation` optional. Tabs orientation.
-- `className` optional. Root class override.
 
 Children:
 
@@ -683,12 +659,14 @@ Attributes:
 - `method` optional. HTTP method. `GET` navigates to `action`; `POST`, `PUT`, and `DELETE` send a request. Defaults to `POST`.
 - `json` optional. Request body value or JSON string.
 - `invalidate` optional. Array expression of slot ids to rerun.
+- `submit` optional. When truthy, renders a native submit button.
 
 Behavior:
 
 - If `action` is empty, the button only reruns invalidation targets.
 - If `method` is `GET`, the button renders as a link to `action`.
 - If `method` is `POST`, `PUT`, or `DELETE`, the button sends the configured action request.
+- If `submit` is truthy, the button renders as a native submit control and skips action requests.
 - If `json` is omitted, the request is sent without a JSON body.
 - `invalidate` refetches the named query slots after the request succeeds.
 
@@ -700,7 +678,6 @@ Groups buttons and inputs into a shared action strip.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 - `orientation` optional. Use `horizontal` or `vertical`.
 
 Children:
@@ -732,7 +709,6 @@ Inline text segment inside a button group.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 ### `<ButtonGroupSeparator>`
 
@@ -740,7 +716,6 @@ Visual separator between button group segments.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 - `orientation` optional. Use `horizontal` or `vertical`.
 
 ### `<Label>`
@@ -749,7 +724,6 @@ Form label for controls.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 - `htmlFor` optional. Target control id.
 
 Behavior:
@@ -765,7 +739,6 @@ Attributes:
 
 - `checked` optional. Reactive state slot or current checked value.
 - `defaultChecked` optional. Initial checked state.
-- `className` optional. Extra classes for styling.
 - `disabled` optional. Disables interaction.
 - `id` optional. Control id for associated labels.
 
@@ -783,7 +756,6 @@ Attributes:
 
 - `pressed` optional. Reactive state slot or current pressed value.
 - `defaultPressed` optional. Initial pressed state.
-- `className` optional. Extra classes for styling.
 - `disabled` optional. Disables interaction.
 - `id` optional. Control id for associated labels.
 - `size` optional. Toggle size variant. Use `sm`, `default`, or `lg`.
@@ -802,7 +774,6 @@ Group of toggle buttons.
 Attributes:
 
 - `type` optional. Use `single` or `multiple`.
-- `className` optional. Extra classes for styling.
 - `defaultValue` optional. Initial selected value or values.
 - `disabled` optional. Disables interaction.
 - `loopFocus` optional. Enables arrow-key looping.
@@ -819,7 +790,6 @@ Toggle button within a group.
 Attributes:
 
 - `value` required. Unique item value.
-- `className` optional. Extra classes for styling.
 - `size` optional. Item size variant.
 - `variant` optional. Item style variant.
 
@@ -829,7 +799,6 @@ Group of radio buttons.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 - `defaultValue` optional. Initial selected value.
 - `disabled` optional. Disables interaction.
 - `form` optional. Owning form id.
@@ -845,7 +814,6 @@ Radio button within a group.
 Attributes:
 
 - `value` required. Unique item value.
-- `className` optional. Extra classes for styling.
 - `disabled` optional. Disables interaction.
 - `readOnly` optional. Prevents selection changes.
 - `required` optional. Requires a selection.
@@ -858,7 +826,6 @@ Attributes:
 
 - `checked` optional. Reactive state slot or current checked value.
 - `defaultChecked` optional. Initial checked state.
-- `className` optional. Extra classes for styling.
 - `disabled` optional. Disables interaction.
 - `id` optional. Control id for associated labels.
 - `size` optional. Switch size variant. Use `sm` or `default`.
@@ -877,7 +844,6 @@ Attributes:
 
 - `value` optional. Reactive state slot or current slider value(s).
 - `defaultValue` optional. Initial slider value(s).
-- `className` optional. Extra classes for styling.
 - `disabled` optional. Disables interaction.
 - `id` optional. Control id for associated labels.
 - `min` optional. Minimum slider value.
@@ -904,7 +870,6 @@ Attributes:
 - `value` optional. Expression for the displayed text.
 - `placeholder` optional.
 - `id` optional. Control id for associated labels.
-- `className` optional. Extra classes for styling.
 - `autoComplete` optional. Browser autocomplete hint.
 - `disabled` optional. Disables interaction.
 - `aria-invalid` optional. Marks the field invalid.
@@ -931,7 +896,6 @@ Attributes:
 - `label` optional. Fallback placeholder text.
 - `value` optional. Expression for the displayed text.
 - `placeholder` optional.
-- `className` optional. Extra classes for styling.
 - `disabled` optional. Disables interaction.
 - `id` optional. Control id for associated labels.
 - `rows` optional. Visible row count.
@@ -966,7 +930,6 @@ Behavior:
 - `SelectContent` renders grouped menu items in a portal.
 - `SelectGroup` contains `SelectLabel`, `SelectItem`, and `SelectSeparator`.
 - `SelectItem` requires a `value` attribute.
-- `className` is available on the trigger, value, content, group, label, item, and separator slots.
 
 Example:
 
@@ -1045,7 +1008,6 @@ Renders a paragraph element.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1059,7 +1021,6 @@ Renders a standard anchor link.
 Attributes:
 
 - `href` required. Link target.
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1072,7 +1033,6 @@ Renders a spacer break.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1084,7 +1044,6 @@ Renders bold text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1096,7 +1055,6 @@ Renders a primary heading.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1108,7 +1066,6 @@ Renders a secondary heading.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1120,7 +1077,6 @@ Renders a tertiary heading.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1132,7 +1088,6 @@ Renders a quaternary heading.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1144,7 +1099,6 @@ Renders inline code.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1156,7 +1110,6 @@ Renders strikethrough text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1168,7 +1121,6 @@ Renders superscript text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1180,7 +1132,6 @@ Renders subscript text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1192,7 +1143,6 @@ Renders underlined text.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1204,7 +1154,6 @@ Renders an unordered list.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 
@@ -1216,7 +1165,6 @@ Renders a list item.
 
 Attributes:
 
-- `className` optional. Extra classes for styling.
 
 Behavior:
 

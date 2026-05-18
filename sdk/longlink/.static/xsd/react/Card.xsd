@@ -7,7 +7,6 @@
       </xsd:choice>
     </xsd:sequence>
     <xsd:attribute name="if" type="xsd:string" use="optional" />
-    <xsd:attribute name="className" type="xsd:string" use="optional" />
   </xsd:complexType>
 
   <xsd:complexType name="CardType" mixed="true">

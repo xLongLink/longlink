@@ -20,7 +20,6 @@
   <xsd:complexType name="ButtonGroupType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ButtonGroupChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="orientation" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

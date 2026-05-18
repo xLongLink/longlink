@@ -16,6 +16,7 @@
         <xsd:attribute name="json" type="xsd:string" use="optional" />
         <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
         <xsd:attribute name="method" type="xsd:string" use="optional" />
+        <xsd:attribute name="submit" type="xsd:string" use="optional" />
         <xsd:attribute name="size" type="xsd:string" use="optional" />
         <xsd:attribute name="variant" type="xsd:string" use="optional" />
       </xsd:extension>

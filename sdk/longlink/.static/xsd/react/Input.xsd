@@ -14,7 +14,6 @@
       <xsd:extension base="InputChildrenOnlyType">
         <xsd:attribute name="aria-invalid" type="xsd:string" use="optional" />
         <xsd:attribute name="autoComplete" type="xsd:string" use="optional" />
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
         <xsd:attribute name="label" type="xsd:string" use="optional" />

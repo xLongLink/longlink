@@ -12,7 +12,7 @@ SCHEMA = ROOT / ".static" / "xsd" / "react" / "Checkbox.xsd"
 def test_checkbox_validation() -> None:
     """Validate a minimal `Checkbox` fragment."""
 
-    element = Element.from_content('<Checkbox checked="true" defaultChecked="false" className="gap-2" disabled="true" if="canEdit" />', schema=SCHEMA)
+    element = Element.from_content('<Checkbox checked="true" defaultChecked="false" disabled="true" if="canEdit" />', schema=SCHEMA)
     element.validate()
 
 

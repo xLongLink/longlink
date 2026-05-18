@@ -12,7 +12,6 @@
   <xsd:complexType name="FieldType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="orientation" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

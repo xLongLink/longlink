@@ -12,7 +12,6 @@
   <xsd:complexType name="FieldLegendType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldLegendChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="variant" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

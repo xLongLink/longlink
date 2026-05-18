@@ -14,7 +14,7 @@ def test_tabs_validation() -> None:
 
     element = Element.from_content(
         """
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="overview">
           <TabsList variant="line">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>

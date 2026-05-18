@@ -12,7 +12,6 @@
   <xsd:complexType name="FieldDescriptionType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldDescriptionChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

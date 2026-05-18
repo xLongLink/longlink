@@ -14,7 +14,6 @@
       <xsd:extension base="ToggleChildrenOnlyType">
         <xsd:attribute name="pressed" type="xsd:string" use="optional" />
         <xsd:attribute name="defaultPressed" type="xsd:string" use="optional" />
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
         <xsd:attribute name="size" type="xsd:string" use="optional" />

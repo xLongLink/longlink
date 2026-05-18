@@ -12,7 +12,6 @@
   <xsd:complexType name="BType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="BChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

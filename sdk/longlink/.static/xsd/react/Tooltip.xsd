@@ -26,7 +26,6 @@
       <xsd:extension base="TooltipChildrenOnlyType">
         <xsd:attribute name="align" type="xsd:string" use="optional" />
         <xsd:attribute name="alignOffset" type="xsd:string" use="optional" />
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="hidden" type="xsd:string" use="optional" />
         <xsd:attribute name="side" type="xsd:string" use="optional" />
         <xsd:attribute name="sideOffset" type="xsd:string" use="optional" />

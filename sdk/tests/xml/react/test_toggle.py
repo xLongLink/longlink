@@ -13,7 +13,7 @@ def test_toggle_validation() -> None:
     """Validate a minimal `Toggle` fragment."""
 
     element = Element.from_content(
-        '<Toggle pressed="true" defaultPressed="false" className="gap-2" disabled="true" size="sm" variant="outline" if="canEdit" />',
+        '<Toggle pressed="true" defaultPressed="false" disabled="true" size="sm" variant="outline" if="canEdit" />',
         schema=SCHEMA,
     )
     element.validate()

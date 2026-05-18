@@ -12,7 +12,6 @@
   <xsd:complexType name="ToggleGroupType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ToggleGroupChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="loopFocus" type="xsd:string" use="optional" />
@@ -29,7 +28,6 @@
   <xsd:complexType name="ToggleGroupItemType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ToggleGroupChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="size" type="xsd:string" use="optional" />
         <xsd:attribute name="value" type="xsd:string" use="required" />
         <xsd:attribute name="variant" type="xsd:string" use="optional" />

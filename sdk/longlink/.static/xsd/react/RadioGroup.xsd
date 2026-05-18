@@ -12,7 +12,6 @@
   <xsd:complexType name="RadioGroupType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="RadioGroupChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="form" type="xsd:string" use="optional" />
@@ -27,7 +26,6 @@
   <xsd:complexType name="RadioGroupItemType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="RadioGroupChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="readOnly" type="xsd:string" use="optional" />
         <xsd:attribute name="required" type="xsd:string" use="optional" />

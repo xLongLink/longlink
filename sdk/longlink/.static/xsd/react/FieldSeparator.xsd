@@ -12,7 +12,6 @@
   <xsd:complexType name="FieldSeparatorType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldSeparatorChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

@@ -5,12 +5,12 @@ import { renderXmlToMarkup } from '../helpers';
 describe('a', () => {
     /* The compiler should preserve lowercase anchor bridges. */
     it('preserves the anchor bridge in compiled xml', () => {
-        expect(parseXML('<a href="/icons"><Icon name="sparkles" className="size-5" />Open icons</a>')).toEqual([
+        expect(parseXML('<a href="/icons"><Icon name="sparkles" />Open icons</a>')).toEqual([
             {
                 name: 'a',
                 params: { href: '/icons' },
                 children: [
-                    { name: 'Icon', params: { className: 'size-5', name: 'sparkles' } },
+                    { name: 'Icon', params: { name: 'sparkles' } },
                     { name: 'Text', params: { value: 'Open icons' } },
                 ],
             },
@@ -19,7 +19,7 @@ describe('a', () => {
 
     /* The runtime should render an anchor with an inline icon. */
     it('renders the anchor bridge with the icon', () => {
-        const output = renderXmlToMarkup(parseXML('<a href="/icons"><Icon name="sparkles" className="size-5" />Open icons</a>'));
+        const output = renderXmlToMarkup(parseXML('<a href="/icons"><Icon name="sparkles" />Open icons</a>'));
 
         expect(output).toContain('href="/icons"');
         expect(output).toContain('inline-flex');

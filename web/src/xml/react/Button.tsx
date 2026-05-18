@@ -14,6 +14,7 @@ export interface ButtonProps {
     method?: string;
     size?: string;
     variant?: string;
+    submit?: boolean;
 }
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
@@ -24,6 +25,7 @@ export function Button({
     method = 'POST',
     size = 'default',
     variant = 'default',
+    submit = false,
     children,
 }: ButtonProps) {
     const { ctx } = useXmlContext();
@@ -64,6 +66,14 @@ export function Button({
         toast.success(`Request completed with status ${response.status}`);
     }
 
+    if (submit) {
+        return (
+            <UIButton size={size as never} type="submit" variant={variant as never}>
+                {renderNode(children ?? null, ctx)}
+            </UIButton>
+        );
+    }
+
     if (actionUrl && normalizedMethod === 'GET') {
         return (
             <a className={cn(buttonVariants({ variant: variant as never, size: size as never }))} href={requestUrl}>
@@ -73,7 +83,7 @@ export function Button({
     }
 
     return (
-        <UIButton size={size as never} variant={variant as never} onClick={handleClick}>
+        <UIButton size={size as never} type="button" variant={variant as never} onClick={handleClick}>
             {renderNode(children ?? null, ctx)}
         </UIButton>
     );

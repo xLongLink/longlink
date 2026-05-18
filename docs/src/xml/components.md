@@ -59,6 +59,22 @@ If `json` is omitted, the request is sent without a JSON body.
 
 `method` defaults to `POST`.
 
+## ButtonGroup
+
+Use `ButtonGroup` with `ButtonGroupText` and `ButtonGroupSeparator` to build compact action strips.
+
+```xml
+<ButtonGroup orientation="horizontal">
+  <Button variant="outline">Cancel</Button>
+  <ButtonGroupText>or</ButtonGroupText>
+  <Button>Save</Button>
+</ButtonGroup>
+```
+
+`orientation` accepts `horizontal` or `vertical`.
+`ButtonGroupText` renders inline text inside the group.
+`ButtonGroupSeparator` renders a visual split between group segments.
+
 ## Card
 
 Use the `Card` component for grouped content blocks and simple dashboard panels.
@@ -81,7 +97,6 @@ Use the `Card` component for grouped content blocks and simple dashboard panels.
 
 `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, and `CardTitle` compose the shadcn card layout.
 `size="sm"` keeps the compact card density.
-Each card part also accepts `className` for local styling.
 
 ## Checkbox
 
@@ -107,7 +122,6 @@ Use `Columns` with `Column` children for side-by-side layout rows.
 ```
 
 `Column.width` is required and uses the percentage share of the row.
-`Columns` and `Column` both accept `className`.
 
 ### Column
 
@@ -206,7 +220,7 @@ Use lowercase HTML tags for simple bridges.
 
 ```xml
 <a href="/icons">
-  <Icon name="sparkles" className="size-5" />
+  <Icon name="sparkles" />
   Open icons
 </a>
 
@@ -237,11 +251,10 @@ Use `ul` and `li` for simple lists.
 Use `Icon` for standalone Lucide icons in cards, buttons, and inline layout chrome.
 
 ```xml
-<Icon name="layout-grid" className="size-5" />
+<Icon name="layout-grid" />
 ```
 
 `name` is required.
-`className` is optional and can be used to tune size or color.
 
 ## Input
 
@@ -252,7 +265,7 @@ Use the `Input` component for single-line text entry.
 ```
 
 `label` is optional and is used as the placeholder when `placeholder` is omitted.
-`id`, `className`, `autoComplete`, `disabled`, and `aria-invalid` are also supported.
+`id`, `autoComplete`, `disabled`, and `aria-invalid` are also supported.
 
 When `value` resolves to a reactive Valtio-backed state slot, the input stays in sync and writes back to `state.value`.
 Otherwise, `value` only initializes the field.
@@ -266,7 +279,6 @@ Use `Label` for form labels.
 ```
 
 `htmlFor` points at the control id.
-`className` is optional.
 
 ## RadioGroup
 
@@ -310,7 +322,6 @@ Use `Select` with `SelectContent`, `SelectGroup`, `SelectItem`, `SelectLabel`, `
 ```
 
 `SelectItem` requires a `value`.
-`className` is available on the select slots for local styling.
 `open` and `defaultOpen` control menu visibility.
 `value` can bind to a reactive state slot; otherwise `defaultValue` seeds the initial selection.
 
@@ -368,7 +379,6 @@ Use `Table` with `TableBody`, `TableCaption`, `TableFooter`, and `TableHeader` f
 `TableCell` is for body cells.
 `TableHead` is for column headers.
 `TableRow` groups cells in each section.
-`className` is available on every table part.
 
 ## Tabs
 
@@ -386,7 +396,7 @@ Use `Tabs` with `TabsContent`, `TabsList`, and `TabsTrigger` to switch between r
 ```
 
 `TabsContent` and `TabsTrigger` require a matching `value`.
-`TabsList` supports the shadcn `variant` prop, and all tabs parts accept `className`.
+`TabsList` supports the shadcn `variant` prop.
 Only the active `TabsContent` is rendered.
 
 ## Textarea
@@ -399,7 +409,7 @@ Use `Textarea` for multi-line text entry.
 
 `label` is optional and falls back to the placeholder when `placeholder` is omitted.
 `value` can bind to a reactive state slot.
-`className`, `disabled`, `id`, `rows`, and `cols` are supported.
+`disabled`, `id`, `rows`, and `cols` are supported.
 
 ## Toggle
 
@@ -446,5 +456,5 @@ Use `TooltipProvider` with `Tooltip`, `TooltipContent`, and `TooltipTrigger` for
 ```
 
 `Tooltip` supports `open` and `defaultOpen`.
-`TooltipContent` supports `align`, `alignOffset`, `className`, `hidden`, `side`, and `sideOffset`.
+`TooltipContent` supports `align`, `alignOffset`, `hidden`, `side`, and `sideOffset`.
 Wrap multiple tooltips in `TooltipProvider`.

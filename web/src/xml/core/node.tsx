@@ -3,12 +3,12 @@ import { compile, evaluate, isText } from '@xml/core/expressions';
 import { state } from '@xml/core/state';
 import { A } from '@xml/html/A';
 import { B } from '@xml/html/B';
+import { Br } from '@xml/html/Br';
 import { Code } from '@xml/html/Code';
 import { H1 } from '@xml/html/H1';
 import { H2 } from '@xml/html/H2';
 import { H3 } from '@xml/html/H3';
 import { H4 } from '@xml/html/H4';
-import { Br } from '@xml/html/Br';
 import { Li } from '@xml/html/Li';
 import { Ol } from '@xml/html/Ol';
 import { P } from '@xml/html/P';
@@ -49,6 +49,7 @@ import {
     FieldSet,
     FieldTitle,
 } from '@xml/react/Field';
+import { Grid } from '@xml/react/Grid';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
 import { Icon } from '@xml/react/Icon';
 import { Input } from '@xml/react/Input';
@@ -164,13 +165,10 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
     if (node.name === 'Icon') {
         const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : '';
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Icon className={className} name={name} />;
+        return <Icon name={name} />;
     }
 
     if (node.name === 'Tabs') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const defaultValue = node.params?.defaultValue
             ? String(evaluate(node.params.defaultValue, ctx) ?? '')
             : undefined;
@@ -180,7 +178,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
         return (
             <Tabs
-                className={className}
                 defaultValue={defaultValue}
                 orientation={orientation}
                 children={node.children}
@@ -189,24 +186,21 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'TabsList') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
-        return <TabsList className={className} variant={variant} children={node.children} />;
+        return <TabsList variant={variant} children={node.children} />;
     }
 
     if (node.name === 'TabsTrigger') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
-        return <TabsTrigger className={className} value={value} children={node.children} />;
+        return <TabsTrigger value={value} children={node.children} />;
     }
 
     if (node.name === 'TabsContent') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
-        return <TabsContent className={className} value={value} children={node.children} />;
+        return <TabsContent value={value} children={node.children} />;
     }
 
     if (node.name === 'Hero') {
@@ -232,94 +226,64 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'br') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Br className={className} />;
+        return <Br />;
     }
 
     if (node.name === 'b') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <B className={className} children={node.children} />;
+        return <B children={node.children} />;
     }
 
     if (node.name === 'h1') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <H1 className={className} children={node.children} />;
+        return <H1 children={node.children} />;
     }
 
     if (node.name === 'h2') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <H2 className={className} children={node.children} />;
+        return <H2 children={node.children} />;
     }
 
     if (node.name === 'h3') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <H3 className={className} children={node.children} />;
+        return <H3 children={node.children} />;
     }
 
     if (node.name === 'h4') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <H4 className={className} children={node.children} />;
+        return <H4 children={node.children} />;
     }
 
     if (node.name === 'code') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Code className={className} children={node.children} />;
+        return <Code children={node.children} />;
     }
 
     if (node.name === 's') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <S className={className} children={node.children} />;
+        return <S children={node.children} />;
     }
 
     if (node.name === 'sup') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Sup className={className} children={node.children} />;
+        return <Sup children={node.children} />;
     }
 
     if (node.name === 'sub') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Sub className={className} children={node.children} />;
+        return <Sub children={node.children} />;
     }
 
     if (node.name === 'u') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <U className={className} children={node.children} />;
+        return <U children={node.children} />;
     }
 
     if (node.name === 'ul') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Ul className={className} children={node.children} />;
+        return <Ul children={node.children} />;
     }
 
     if (node.name === 'li') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Li className={className} children={node.children} />;
+        return <Li children={node.children} />;
     }
 
     if (node.name === 'ol') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Ol className={className} children={node.children} />;
+        return <Ol children={node.children} />;
     }
 
     if (node.name === 'a') {
         const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <A className={className} href={href} children={node.children} />;
+        return <A href={href} children={node.children} />;
     }
 
     if (node.name === 'Button') {
@@ -330,6 +294,8 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const method = node.params?.method ? String(evaluate(node.params.method, ctx) ?? 'POST') : 'POST';
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+        const submitValue = node.params?.submit != null ? evaluate(node.params.submit, ctx) : undefined;
+        const submit = submitValue === false || submitValue === 'false' ? false : submitValue != null ? true : false;
 
         return (
             <Button
@@ -339,20 +305,19 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                 method={method}
                 size={size}
                 variant={variant}
+                submit={submit}
                 children={node.children}
             />
         );
     }
 
     if (node.name === 'ButtonGroup') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const orientation = node.params?.orientation
             ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
             : 'horizontal';
 
         return (
             <ButtonGroup
-                className={className}
                 orientation={orientation as 'horizontal' | 'vertical'}
                 children={node.children}
             />
@@ -360,18 +325,15 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'ButtonGroupText') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <ButtonGroupText className={className} children={node.children} />;
+        return <ButtonGroupText children={node.children} />;
     }
 
     if (node.name === 'ButtonGroupSeparator') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const orientation = node.params?.orientation
             ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
             : 'vertical';
 
-        return <ButtonGroupSeparator className={className} orientation={orientation as 'horizontal' | 'vertical'} />;
+        return <ButtonGroupSeparator orientation={orientation as 'horizontal' | 'vertical'} />;
     }
 
     if (node.name === 'Badge') {
@@ -381,100 +343,79 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'Avatar') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
 
-        return <Avatar className={className} size={size} children={node.children} />;
+        return <Avatar size={size} children={node.children} />;
     }
 
     if (node.name === 'AvatarImage') {
         const alt = node.params?.alt ? String(evaluate(node.params.alt, ctx) ?? '') : undefined;
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const src = node.params?.src ? String(evaluate(node.params.src, ctx) ?? '') : undefined;
 
-        return <AvatarImage alt={alt} className={className} src={src} />;
+        return <AvatarImage alt={alt} src={src} />;
     }
 
     if (node.name === 'AvatarFallback') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <AvatarFallback className={className} children={node.children} />;
+        return <AvatarFallback children={node.children} />;
     }
 
     if (node.name === 'AvatarBadge') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <AvatarBadge className={className} children={node.children} />;
+        return <AvatarBadge children={node.children} />;
     }
 
     if (node.name === 'AvatarGroup') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <AvatarGroup className={className} children={node.children} />;
+        return <AvatarGroup children={node.children} />;
     }
 
     if (node.name === 'AvatarGroupCount') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <AvatarGroupCount className={className} children={node.children} />;
+        return <AvatarGroupCount children={node.children} />;
     }
 
     if (node.name === 'Columns') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Columns className={className} children={node.children} />;
+        return <Columns children={node.children} />;
     }
 
     if (node.name === 'Column') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const width = node.params?.width ? evaluate(node.params.width, ctx) : undefined;
 
-        return (
-            <Column className={className} width={width == null ? undefined : String(width)} children={node.children} />
-        );
+        return <Column width={width == null ? undefined : String(width)} children={node.children} />;
+    }
+
+    if (node.name === 'Grid') {
+        const templateColumns =
+            node.params?.templateColumns != null ? String(evaluate(node.params.templateColumns, ctx) ?? '') : undefined;
+
+        return <Grid templateColumns={templateColumns} children={node.children} />;
     }
 
     if (node.name === 'Card') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
 
-        return <Card className={className} size={size} children={node.children} />;
+        return <Card size={size} children={node.children} />;
     }
 
     if (node.name === 'CardHeader') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <CardHeader className={className} children={node.children} />;
+        return <CardHeader children={node.children} />;
     }
 
     if (node.name === 'CardTitle') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <CardTitle className={className} children={node.children} />;
+        return <CardTitle children={node.children} />;
     }
 
     if (node.name === 'CardDescription') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <CardDescription className={className} children={node.children} />;
+        return <CardDescription children={node.children} />;
     }
 
     if (node.name === 'CardAction') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <CardAction className={className} children={node.children} />;
+        return <CardAction children={node.children} />;
     }
 
     if (node.name === 'CardContent') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <CardContent className={className} children={node.children} />;
+        return <CardContent children={node.children} />;
     }
 
     if (node.name === 'CardFooter') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <CardFooter className={className} children={node.children} />;
+        return <CardFooter children={node.children} />;
     }
 
     if (node.name === 'Dialog') {
@@ -550,7 +491,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     if (node.name === 'TooltipContent') {
         const align = node.params?.align ? String(evaluate(node.params.align, ctx) ?? 'center') : 'center';
         const alignOffset = node.params?.alignOffset != null ? evaluate(node.params.alignOffset, ctx) : 0;
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const hiddenValue = node.params?.hidden != null ? evaluate(node.params.hidden, ctx) : undefined;
         const side = node.params?.side ? String(evaluate(node.params.side, ctx) ?? 'top') : 'top';
         const sideOffset = node.params?.sideOffset != null ? evaluate(node.params.sideOffset, ctx) : 4;
@@ -559,7 +499,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             <TooltipContent
                 align={align}
                 alignOffset={alignOffset == null ? undefined : String(alignOffset)}
-                className={className}
                 hidden={
                     hiddenValue === true || hiddenValue === 'true'
                         ? true
@@ -583,7 +522,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
             : undefined;
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const autoComplete = node.params?.autoComplete
             ? String(evaluate(node.params.autoComplete, ctx) ?? '')
             : undefined;
@@ -604,7 +542,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
             <Input
                 aria-invalid={ariaInvalid}
                 autoComplete={autoComplete}
-                className={className}
                 disabled={disabled}
                 id={id}
                 label={label}
@@ -623,7 +560,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const value = node.params?.value
             ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
             : undefined;
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
         const rowsValue = node.params?.rows != null ? evaluate(node.params.rows, ctx) : undefined;
@@ -637,7 +573,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
         return (
             <Textarea
-                className={className}
                 cols={colsValue == null ? undefined : String(colsValue)}
                 disabled={disabled}
                 id={id}
@@ -650,81 +585,53 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'FieldSet') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <FieldSet className={className} children={node.children} />;
+        return <FieldSet children={node.children} />;
     }
 
     if (node.name === 'FieldLegend') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'legend') : 'legend';
 
-        return <FieldLegend className={className} variant={variant as 'legend' | 'label'} children={node.children} />;
+        return <FieldLegend variant={variant as 'legend' | 'label'} children={node.children} />;
     }
 
     if (node.name === 'FieldGroup') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <FieldGroup className={className} children={node.children} />;
+        return <FieldGroup children={node.children} />;
     }
 
     if (node.name === 'Field') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const orientation = node.params?.orientation
             ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
             : 'vertical';
 
-        return (
-            <Field
-                className={className}
-                orientation={orientation as 'vertical' | 'horizontal' | 'responsive'}
-                children={node.children}
-            />
-        );
+        return <Field orientation={orientation as 'vertical' | 'horizontal' | 'responsive'} children={node.children} />;
     }
 
     if (node.name === 'FieldContent') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <FieldContent className={className} children={node.children} />;
+        return <FieldContent children={node.children} />;
     }
 
     if (node.name === 'FieldLabel') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
 
-        return <FieldLabel className={className} htmlFor={htmlFor} children={node.children} />;
+        return <FieldLabel htmlFor={htmlFor} children={node.children} />;
     }
 
     if (node.name === 'FieldTitle') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <FieldTitle className={className} children={node.children} />;
+        return <FieldTitle children={node.children} />;
     }
 
     if (node.name === 'FieldDescription') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <FieldDescription className={className} children={node.children} />;
+        return <FieldDescription children={node.children} />;
     }
 
     if (node.name === 'FieldSeparator') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <FieldSeparator className={className} children={node.children} />;
+        return <FieldSeparator children={node.children} />;
     }
 
     if (node.name === 'FieldError') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const errors = node.params?.errors != null ? evaluate(node.params.errors, ctx) : undefined;
 
-        return (
-            <FieldError
-                className={className}
-                errors={errors as Array<{ message?: string } | undefined> | string | undefined}
-                children={node.children}
-            />
-        );
+        return <FieldError errors={errors as Array<{ message?: string } | undefined> | string | undefined} children={node.children} />;
     }
 
     if (node.name === 'Checkbox') {
@@ -732,7 +639,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
         const defaultCheckedValue =
             node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const checked =
             checkedValue && typeof checkedValue === 'object' ? (checkedValue as Record<string, unknown>) : undefined;
@@ -765,7 +671,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return (
             <Checkbox
                 checked={checked}
-                className={className}
                 defaultChecked={defaultChecked}
                 disabled={disabled}
                 id={id}
@@ -774,7 +679,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'RadioGroup') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const defaultValueValue =
             node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
@@ -804,7 +708,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
         return (
             <RadioGroup
-                className={className}
                 defaultValue={defaultValueValue as string | Record<string, unknown> | undefined}
                 disabled={disabled}
                 form={form}
@@ -818,7 +721,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'RadioGroupItem') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const readOnlyValue = node.params?.readOnly != null ? evaluate(node.params.readOnly, ctx) : undefined;
         const requiredValue = node.params?.required != null ? evaluate(node.params.required, ctx) : undefined;
@@ -844,7 +746,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
         return (
             <RadioGroupItem
-                className={className}
                 disabled={disabled}
                 readOnly={readOnly}
                 required={required}
@@ -855,10 +756,9 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'Label') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
 
-        return <Label className={className} htmlFor={htmlFor} children={node.children} />;
+        return <Label htmlFor={htmlFor} children={node.children} />;
     }
 
     if (node.name === 'Switch') {
@@ -866,7 +766,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const checkedValue = node.params?.checked != null ? evaluate(node.params.checked, ctx) : undefined;
         const defaultCheckedValue =
             node.params?.defaultChecked != null ? evaluate(node.params.defaultChecked, ctx) : undefined;
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
         const checked =
@@ -900,7 +799,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return (
             <Switch
                 checked={checked}
-                className={className}
                 defaultChecked={defaultChecked}
                 disabled={disabled}
                 id={id}
@@ -910,7 +808,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'Slider') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const defaultValue = node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
@@ -931,7 +828,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
         return (
             <Slider
-                className={className}
                 defaultValue={
                     defaultValue as number[] | number | string | boolean | Record<string, unknown> | undefined
                 }
@@ -952,7 +848,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const pressedValue = node.params?.pressed != null ? evaluate(node.params.pressed, ctx) : undefined;
         const defaultPressedValue =
             node.params?.defaultPressed != null ? evaluate(node.params.defaultPressed, ctx) : undefined;
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
@@ -986,7 +881,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
         return (
             <Toggle
-                className={className}
                 defaultPressed={defaultPressed}
                 disabled={disabled}
                 id={id}
@@ -999,7 +893,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'ToggleGroup') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const defaultValue = node.params?.defaultValue != null ? evaluate(node.params.defaultValue, ctx) : undefined;
         const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
         const loopFocusValue = node.params?.loopFocus != null ? evaluate(node.params.loopFocus, ctx) : undefined;
@@ -1027,7 +920,6 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
 
         return (
             <ToggleGroup
-                className={className}
                 defaultValue={defaultValue as string | string[] | Record<string, unknown> | undefined}
                 disabled={disabled}
                 loopFocus={loopFocus}
@@ -1043,14 +935,12 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'ToggleGroupItem') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
         const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
         return (
             <ToggleGroupItem
-                className={className}
                 size={size as 'sm' | 'default' | 'lg'}
                 value={value}
                 variant={variant as 'default' | 'outline'}
@@ -1091,95 +981,67 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'SelectTrigger') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <SelectTrigger className={className} children={node.children} />;
+        return <SelectTrigger children={node.children} />;
     }
 
     if (node.name === 'SelectValue') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const placeholder = node.params?.placeholder ? String(evaluate(node.params.placeholder, ctx) ?? '') : undefined;
 
-        return <SelectValue className={className} placeholder={placeholder} />;
+        return <SelectValue placeholder={placeholder} />;
     }
 
     if (node.name === 'SelectContent') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <SelectContent className={className} children={node.children} />;
+        return <SelectContent children={node.children} />;
     }
 
     if (node.name === 'SelectGroup') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <SelectGroup className={className} children={node.children} />;
+        return <SelectGroup children={node.children} />;
     }
 
     if (node.name === 'SelectLabel') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <SelectLabel className={className} children={node.children} />;
+        return <SelectLabel children={node.children} />;
     }
 
     if (node.name === 'SelectItem') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
-        return <SelectItem className={className} value={value} children={node.children} />;
+        return <SelectItem value={value} children={node.children} />;
     }
 
     if (node.name === 'SelectSeparator') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <SelectSeparator className={className} />;
+        return <SelectSeparator />;
     }
 
     if (node.name === 'Table') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <Table className={className} children={node.children} />;
+        return <Table children={node.children} />;
     }
 
     if (node.name === 'TableHeader') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <TableHeader className={className} children={node.children} />;
+        return <TableHeader children={node.children} />;
     }
 
     if (node.name === 'TableBody') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <TableBody className={className} children={node.children} />;
+        return <TableBody children={node.children} />;
     }
 
     if (node.name === 'TableFooter') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <TableFooter className={className} children={node.children} />;
+        return <TableFooter children={node.children} />;
     }
 
     if (node.name === 'TableRow') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <TableRow className={className} children={node.children} />;
+        return <TableRow children={node.children} />;
     }
 
     if (node.name === 'TableHead') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <TableHead className={className} children={node.children} />;
+        return <TableHead children={node.children} />;
     }
 
     if (node.name === 'TableCell') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <TableCell className={className} children={node.children} />;
+        return <TableCell children={node.children} />;
     }
 
     if (node.name === 'TableCaption') {
-        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-        return <TableCaption className={className} children={node.children} />;
+        return <TableCaption children={node.children} />;
     }
 
     throw new Error(`Unknown component "${node.name}"`);

@@ -1,25 +1,23 @@
+<?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink>
     <Tabs defaultValue="text">
         <TabsList variant="line">
             <TabsTrigger value="text">Text</TabsTrigger>
             <TabsTrigger value="form">Form</TabsTrigger>
+            <TabsTrigger value="grid">Grid</TabsTrigger>
             <TabsTrigger value="other">Other</TabsTrigger>
         </TabsList>
 
         <TabsContent value="text">
-            <Hero icon="sparkles">
-                <HeroTitle>Release note summary</HeroTitle>
-                <HeroDescription>Shows the HTML tags working together in one readable story.</HeroDescription>
-                <HeroContent>
-                    <Button action="/icons" method="GET" variant="outline">Open icons</Button>
-                </HeroContent>
-            </Hero>
-
-            <h1>Ops digest for Tuesday</h1>
-            <p>The import pipeline is now stable. We finished the retry fix for <code>customer_sync</code>, and the nightly run completed without manual intervention.</p>
-            <h2>What changed</h2>
-            <p>The team tightened validation on <b>customer IDs</b>, removed one <s>temporary bypass</s>, and kept the rollout limited to the staging workspace. The result is a cleaner path from source data to <u>dashboard output</u>.</p>
             <br />
+
+            <h1>Basic Html Elements are Supported</h1>
+            <p>The import pipeline is now stable. We finished the retry fix for <code>customer_sync</code>,
+                and the nightly run completed without manual intervention.</p>
+            <h2>What changed</h2>
+            <p>The team tightened validation on <b>customer IDs</b>, removed one <s>temporary bypass</s>,
+                and kept the rollout limited to the staging workspace. The result is a cleaner path
+                from source data to <u>dashboard output</u>.</p>
             <h3>Today’s checklist</h3>
             <ul>
                 <li>Confirm the summary totals match the warehouse export.</li>
@@ -33,7 +31,8 @@
                 <li>Close the ticket after the report refreshes.</li>
             </ol>
             <h4>Notes</h4>
-            <p>For the deeper walkthrough, open <a href="/icons">the icon catalog</a> or inspect the generated report after the next sync.</p>
+            <p>For the deeper walkthrough, open <a href="/icons">the icon catalog</a> or inspect the
+                generated report after the next sync.</p>
         </TabsContent>
 
         <TabsContent value="form">
@@ -68,7 +67,8 @@
                     </Field>
                     <Field>
                         <FieldLabel htmlFor="notifications">Notifications</FieldLabel>
-                        <Toggle id="notifications" defaultPressed="true" size="sm" variant="outline">Notifications</Toggle>
+                        <Toggle id="notifications" defaultPressed="true" size="sm" variant="outline">
+                            Notifications</Toggle>
                     </Field>
                     <Field>
                         <FieldLabel htmlFor="volume">Priority</FieldLabel>
@@ -100,7 +100,9 @@
                     <Field>
                         <FieldLabel htmlFor="view">Select</FieldLabel>
                         <Select defaultValue="overview">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
                                     <SelectLabel>Views</SelectLabel>
@@ -119,10 +121,100 @@
                     <FieldSeparator>or</FieldSeparator>
                     <Field orientation="horizontal">
                         <Button variant="outline">Cancel</Button>
-                        <Button>Save</Button>
+                        <Button submit="true">Save</Button>
                     </Field>
                 </FieldGroup>
             </FieldSet>
+        </TabsContent>
+
+        <TabsContent value="grid">
+            <Field>
+                <FieldLabel htmlFor="grid-search">Search</FieldLabel>
+                <Input id="grid-search" autoComplete="off"
+                    placeholder="Search cards, alerts, and revenue" />
+            </Field>
+
+            <Columns>
+                <Column width="70">
+                    <Grid templateColumns="repeat(2, minmax(0, 1fr))">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Revenue overview</CardTitle>
+                                <CardDescription>Weekly performance snapshot</CardDescription>
+                                <CardAction>
+                                    <Button action="/reports/revenue" method="GET" variant="outline">Open
+                                        report</Button>
+                                </CardAction>
+                            </CardHeader>
+                            <CardContent>
+                                <p>Revenue is trending up, with 88% of the weekly target already
+                                    complete.</p>
+                            </CardContent>
+                            <CardFooter>
+                                <Badge variant="outline">On track</Badge>
+                            </CardFooter>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Usage</CardTitle>
+                                <CardDescription>Active sessions</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p>Traffic increased by 14% over the last seven days.</p>
+                            </CardContent>
+                            <CardFooter>
+                                <p>Updated 12 minutes ago.</p>
+                            </CardFooter>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Pipeline</CardTitle>
+                                <CardDescription>Open work</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p>Three items are blocked and awaiting review.</p>
+                            </CardContent>
+                            <CardFooter>
+                                <Badge variant="outline">3 open</Badge>
+                            </CardFooter>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Alerts</CardTitle>
+                                <CardDescription>Recent signals</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p>Two new notifications were raised this morning.</p>
+                            </CardContent>
+                            <CardFooter>
+                                <Button variant="outline">Review alerts</Button>
+                            </CardFooter>
+                        </Card>
+                    </Grid>
+                </Column>
+                <Column width="30">
+                    <FieldSet>
+                        <FieldLegend>Repository</FieldLegend>
+                        <FieldDescription>Quick links in the same style as a GitHub repo sidebar.</FieldDescription>
+                        <FieldGroup>
+                            <a href="/code">
+                                <Icon name="code-2" /> Code </a>
+                            <a href="/issues">
+                                <Icon name="circle-alert" /> Issues </a>
+                            <a href="/pulls">
+                                <Icon name="git-pull-request" /> Pull requests </a>
+                            <a href="/actions">
+                                <Icon name="play-circle" /> Actions </a>
+                            <a href="/projects">
+                                <Icon name="layout-grid" /> Projects </a>
+                            <a href="/security">
+                                <Icon name="shield" /> Security </a>
+                            <a href="/insights">
+                                <Icon name="chart-column" /> Insights </a>
+                        </FieldGroup>
+                    </FieldSet>
+                </Column>
+            </Columns>
         </TabsContent>
 
         <TabsContent value="other">
@@ -148,30 +240,6 @@
             </AvatarGroup>
 
             <Divider />
-
-            <Columns>
-                <Column width="70">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Revenue</CardTitle>
-                            <CardDescription>Monthly performance snapshot</CardDescription>
-                            <CardAction>
-                                <Button action="/reports/revenue" method="GET" variant="outline">View report</Button>
-                            </CardAction>
-                        </CardHeader>
-                        <CardContent>
-                            <p>Card content</p>
-                        </CardContent>
-                        <CardFooter>
-                            <p>Card footer</p>
-                        </CardFooter>
-                    </Card>
-                </Column>
-                <Column width="30">
-                    <p>Sidebar content</p>
-                    <Badge variant="outline">Preview</Badge>
-                </Column>
-            </Columns>
 
             <Table>
                 <TableCaption>Revenue by quarter</TableCaption>

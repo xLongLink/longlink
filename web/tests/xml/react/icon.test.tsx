@@ -8,10 +8,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('Icon', () => {
     /* The compiler should preserve icon attributes as raw strings. */
     it('compiles icon xml into an icon ast node', () => {
-        expect(parseXML('<Icon name="layout-grid" className="size-4" />')).toEqual([
+        expect(parseXML('<Icon name="layout-grid" />')).toEqual([
             {
                 name: 'Icon',
-                params: { className: 'size-4', name: 'layout-grid' },
+                params: { name: 'layout-grid' },
             },
         ]);
     });
@@ -19,13 +19,13 @@ describe('Icon', () => {
     /* The runtime should render Icon XML into a lucide svg. */
     it('renders icon xml end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<Icon name="layout-grid" className="size-4" />');
+        const ast = parseXML('<Icon name="layout-grid" />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         const output = renderToStaticMarkup(createElement('div', null, renderedTree));
 
         expect(output).toContain('<svg');
         expect(output).toContain('aria-hidden="true"');
-        expect(output).toContain('size-4');
+        expect(output).toContain('size-5');
     });
 });

@@ -13,7 +13,7 @@ def test_table_validation() -> None:
     """Validate a compound `Table` fragment."""
 
     element = Element.from_content(
-        '<Table className="text-sm"><TableCaption>Revenue by quarter</TableCaption><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>',
+        '<Table><TableCaption>Revenue by quarter</TableCaption><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>',
         schema=SCHEMA,
     )
 

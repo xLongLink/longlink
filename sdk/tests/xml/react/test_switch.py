@@ -12,7 +12,7 @@ SCHEMA = ROOT / ".static" / "xsd" / "react" / "Switch.xsd"
 def test_switch_validation() -> None:
     """Validate a minimal `Switch` fragment."""
 
-    element = Element.from_content('<Switch checked="true" defaultChecked="false" className="gap-2" disabled="true" size="sm" if="canEdit" />', schema=SCHEMA)
+    element = Element.from_content('<Switch checked="true" defaultChecked="false" disabled="true" size="sm" if="canEdit" />', schema=SCHEMA)
     element.validate()
 
 

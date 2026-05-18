@@ -53,7 +53,18 @@ describe('Button', () => {
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
+        expect(output).toContain('type="button"');
         expect(output).toContain('Save');
+    });
+
+    /* Submit mode should render a native submit control. */
+    it('renders a submit button when submit is enabled', () => {
+        const ast = parseXML('<Button submit="true">Submit</Button>');
+        const output = renderXmlToMarkup(ast);
+
+        expect(output).toContain('<button');
+        expect(output).toContain('type="submit"');
+        expect(output).toContain('Submit');
     });
 
     /* Disabled should mark the rendered button as inactive. */

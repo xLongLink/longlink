@@ -12,7 +12,6 @@
   <xsd:complexType name="ButtonGroupTextType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ButtonGroupTextChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

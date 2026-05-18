@@ -12,7 +12,6 @@
   <xsd:complexType name="TextareaType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="TextareaChildrenOnlyType">
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
         <xsd:attribute name="cols" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
