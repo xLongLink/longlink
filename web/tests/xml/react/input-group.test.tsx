@@ -16,17 +16,18 @@ describe('InputGroup', () => {
                 children: [
                     {
                         name: 'InputGroupAddon',
-                        children: [{ name: 'Icon', params: { name: 'search' } }],
+                        children: [{ name: 'Icon', params: { name: 'search' }, children: [] }],
                     },
                     {
                         name: 'InputGroupInput',
                         params: { label: 'Handle', value: 'user.handle' },
+                        children: [],
                     },
                     {
                         name: 'InputGroupButton',
                         children: [
                             { name: 'Text', params: { value: 'Search ' } },
-                            { name: 'Icon', params: { name: 'arrow-right' } },
+                            { name: 'Icon', params: { name: 'arrow-right' }, children: [] },
                         ],
                     },
                     {

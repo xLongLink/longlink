@@ -13,20 +13,20 @@ import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML InputGroup component. */
 export interface InputGroupProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML InputGroupAddon component. */
 export interface InputGroupAddonProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end';
 }
 
 /** Props accepted by the XML InputGroupButton component. */
 export interface InputGroupButtonProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     size?: 'xs' | 'sm' | 'icon-xs' | 'icon-sm';
     type?: 'button' | 'submit' | 'reset';
@@ -36,7 +36,7 @@ export interface InputGroupButtonProps {
 
 /** Props accepted by the XML InputGroupText component. */
 export interface InputGroupTextProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
@@ -66,27 +66,23 @@ export interface InputGroupTextareaProps {
 }
 
 /** Renders the shared input group shell. */
-export function InputGroup({ children, className }: InputGroupProps) {
+export function InputGroup({ children, className: _className }: InputGroupProps) {
     const { ctx } = useXmlContext();
 
-    return <UIInputGroup className={className}>{renderNode(children ?? null, ctx)}</UIInputGroup>;
+    return <UIInputGroup>{renderNode(children ?? [], ctx)}</UIInputGroup>;
 }
 
 /** Renders an input group addon slot. */
-export function InputGroupAddon({ children, className, align = 'inline-start' }: InputGroupAddonProps) {
+export function InputGroupAddon({ children, className: _className, align = 'inline-start' }: InputGroupAddonProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UIInputGroupAddon align={align} className={className}>
-            {renderNode(children ?? null, ctx)}
-        </UIInputGroupAddon>
-    );
+    return <UIInputGroupAddon align={align}>{renderNode(children ?? [], ctx)}</UIInputGroupAddon>;
 }
 
 /** Renders a button inside an input group. */
 export function InputGroupButton({
     children,
-    className,
+    className: _className,
     disabled,
     size = 'xs',
     type = 'button',
@@ -94,29 +90,21 @@ export function InputGroupButton({
 }: InputGroupButtonProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UIInputGroupButton className={className} disabled={disabled} size={size} type={type} variant={variant}>
-            {renderNode(children ?? null, ctx)}
-        </UIInputGroupButton>
-    );
+    return <UIInputGroupButton disabled={disabled} size={size} type={type} variant={variant}>{renderNode(children ?? [], ctx)}</UIInputGroupButton>;
 }
 
 /** Renders inline text inside an input group. */
-export function InputGroupText({ children, className }: InputGroupTextProps) {
+export function InputGroupText({ children, className: _className }: InputGroupTextProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UIInputGroupText className={className} data-slot="input-group-text">
-            {renderNode(children ?? null, ctx)}
-        </UIInputGroupText>
-    );
+    return <UIInputGroupText data-slot="input-group-text">{renderNode(children ?? [], ctx)}</UIInputGroupText>;
 }
 
 /** Renders a reactive input control inside an input group. */
 export function InputGroupInput({
     'aria-invalid': ariaInvalid,
     autoComplete,
-    className,
+    className: _className,
     disabled,
     id,
     value = '',
@@ -136,7 +124,6 @@ export function InputGroupInput({
             <UIInputGroupInput
                 aria-invalid={ariaInvalid}
                 autoComplete={autoComplete}
-                className={className}
                 disabled={disabled}
                 id={id}
                 type={type}
@@ -160,7 +147,6 @@ export function InputGroupInput({
         <UIInputGroupInput
             aria-invalid={ariaInvalid}
             autoComplete={autoComplete}
-            className={className}
             disabled={disabled}
             id={id}
             type={type}
@@ -172,7 +158,7 @@ export function InputGroupInput({
 
 /** Renders a reactive textarea control inside an input group. */
 export function InputGroupTextarea({
-    className,
+    className: _className,
     cols,
     disabled,
     id,
@@ -194,7 +180,6 @@ export function InputGroupTextarea({
 
         return (
             <UIInputGroupTextarea
-                className={className}
                 cols={Number.isNaN(resolvedCols ?? Number.NaN) ? undefined : resolvedCols}
                 disabled={disabled}
                 id={id}
@@ -215,7 +200,6 @@ export function InputGroupTextarea({
 
     return (
         <UIInputGroupTextarea
-            className={className}
             cols={Number.isNaN(resolvedCols ?? Number.NaN) ? undefined : resolvedCols}
             disabled={disabled}
             id={id}

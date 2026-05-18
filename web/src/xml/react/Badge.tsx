@@ -4,7 +4,7 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Badge component. */
 export interface BadgeProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     variant?: string;
 }
 
@@ -12,5 +12,5 @@ export interface BadgeProps {
 export function Badge({ children, variant = 'default' }: BadgeProps) {
     const { ctx } = useXmlContext();
 
-    return <UIBadge variant={variant as never}>{renderNode(children ?? null, ctx)}</UIBadge>;
+    return <UIBadge variant={variant as never}>{renderNode(children ?? [], ctx)}</UIBadge>;
 }

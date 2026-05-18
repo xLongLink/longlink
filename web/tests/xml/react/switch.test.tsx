@@ -9,6 +9,7 @@ describe('Switch', () => {
             {
                 name: 'Switch',
                 params: { defaultChecked: 'true', size: 'sm' },
+                children: [],
             },
         ]);
     });

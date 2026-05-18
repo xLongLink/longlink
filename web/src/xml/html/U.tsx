@@ -3,13 +3,13 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML u bridge component. */
 export interface UProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Renders underlined text. */
-export function U({ children, className }: UProps) {
+export function U({ children, className: _className }: UProps) {
     const { ctx } = useXmlContext();
 
-    return <u className={className}>{renderNode(children ?? null, ctx)}</u>;
+    return <u>{renderNode(children ?? [], ctx)}</u>;
 }

@@ -12,7 +12,6 @@ describe('Hero', () => {
         );
 
         expect(output).toContain('data-slot="hero-content"');
-        expect(output).toContain('flex-row');
         expect(output).toContain('One');
         expect(output).toContain('Two');
     });

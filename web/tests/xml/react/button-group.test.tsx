@@ -21,10 +21,12 @@ describe('ButtonGroup', () => {
                     {
                         name: 'Input',
                         params: { value: 'Search' },
+                        children: [],
                     },
                     {
                         name: 'ButtonGroupSeparator',
                         params: { orientation: 'horizontal' },
+                        children: [],
                     },
                     {
                         name: 'ButtonGroupText',

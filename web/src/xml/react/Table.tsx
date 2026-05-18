@@ -12,91 +12,91 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Table component. */
 export interface TableProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML TableHeader component. */
 export interface TableHeaderProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML TableBody component. */
 export interface TableBodyProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML TableFooter component. */
 export interface TableFooterProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML TableRow component. */
 export interface TableRowProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML TableHead component. */
 export interface TableHeadProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML TableCell component. */
 export interface TableCellProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Renders the shadcn-backed table shell. */
-export function Table({ children, className }: TableProps) {
+export function Table({ children, className: _className }: TableProps) {
     const { ctx } = useXmlContext();
 
-    return <UITable className={className}>{renderNode(children ?? null, ctx)}</UITable>;
+    return <UITable>{renderNode(children ?? [], ctx)}</UITable>;
 }
 
 /** Renders the table header slot. */
-export function TableHeader({ children, className }: TableHeaderProps) {
+export function TableHeader({ children, className: _className }: TableHeaderProps) {
     const { ctx } = useXmlContext();
 
-    return <UITableHeader className={className}>{renderNode(children ?? null, ctx)}</UITableHeader>;
+    return <UITableHeader>{renderNode(children ?? [], ctx)}</UITableHeader>;
 }
 
 /** Renders the table body slot. */
-export function TableBody({ children, className }: TableBodyProps) {
+export function TableBody({ children, className: _className }: TableBodyProps) {
     const { ctx } = useXmlContext();
 
-    return <UITableBody className={className}>{renderNode(children ?? null, ctx)}</UITableBody>;
+    return <UITableBody>{renderNode(children ?? [], ctx)}</UITableBody>;
 }
 
 /** Renders the table footer slot. */
-export function TableFooter({ children, className }: TableFooterProps) {
+export function TableFooter({ children, className: _className }: TableFooterProps) {
     const { ctx } = useXmlContext();
 
-    return <UITableFooter className={className}>{renderNode(children ?? null, ctx)}</UITableFooter>;
+    return <UITableFooter>{renderNode(children ?? [], ctx)}</UITableFooter>;
 }
 
 /** Renders a single table row. */
-export function TableRow({ children, className }: TableRowProps) {
+export function TableRow({ children, className: _className }: TableRowProps) {
     const { ctx } = useXmlContext();
 
-    return <UITableRow className={className}>{renderNode(children ?? null, ctx)}</UITableRow>;
+    return <UITableRow>{renderNode(children ?? [], ctx)}</UITableRow>;
 }
 
 /** Renders a table header cell. */
-export function TableHead({ children, className }: TableHeadProps) {
+export function TableHead({ children, className: _className }: TableHeadProps) {
     const { ctx } = useXmlContext();
 
-    return <UITableHead className={className}>{renderNode(children ?? null, ctx)}</UITableHead>;
+    return <UITableHead>{renderNode(children ?? [], ctx)}</UITableHead>;
 }
 
 /** Renders a table body cell. */
-export function TableCell({ children, className }: TableCellProps) {
+export function TableCell({ children, className: _className }: TableCellProps) {
     const { ctx } = useXmlContext();
 
-    return <UITableCell className={className}>{renderNode(children ?? null, ctx)}</UITableCell>;
+    return <UITableCell>{renderNode(children ?? [], ctx)}</UITableCell>;
 }

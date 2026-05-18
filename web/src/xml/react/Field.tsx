@@ -15,151 +15,135 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML FieldSet component. */
 export interface FieldSetProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML FieldLegend component. */
 export interface FieldLegendProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     variant?: 'legend' | 'label';
 }
 
 /** Props accepted by the XML FieldGroup component. */
 export interface FieldGroupProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML Field component. */
 export interface FieldProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     orientation?: 'vertical' | 'horizontal' | 'responsive';
 }
 
 /** Props accepted by the XML FieldContent component. */
 export interface FieldContentProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML FieldLabel component. */
 export interface FieldLabelProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     htmlFor?: string;
 }
 
 /** Props accepted by the XML FieldTitle component. */
 export interface FieldTitleProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML FieldDescription component. */
 export interface FieldDescriptionProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML FieldSeparator component. */
 export interface FieldSeparatorProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML FieldError component. */
 export interface FieldErrorProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     errors?: Array<{ message?: string } | undefined> | string;
 }
 
 /** Renders a grouped fieldset shell. */
-export function FieldSet({ children, className }: FieldSetProps) {
+export function FieldSet({ children, className: _className }: FieldSetProps) {
     const { ctx } = useXmlContext();
 
-    return <UIFieldSet className={className}>{renderNode(children ?? null, ctx)}</UIFieldSet>;
+    return <UIFieldSet>{renderNode(children ?? [], ctx)}</UIFieldSet>;
 }
 
 /** Renders the fieldset legend slot. */
-export function FieldLegend({ children, className, variant = 'legend' }: FieldLegendProps) {
+export function FieldLegend({ children, className: _className, variant = 'legend' }: FieldLegendProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UIFieldLegend className={className} variant={variant}>
-            {renderNode(children ?? null, ctx)}
-        </UIFieldLegend>
-    );
+    return <UIFieldLegend variant={variant}>{renderNode(children ?? [], ctx)}</UIFieldLegend>;
 }
 
 /** Renders a field group container. */
-export function FieldGroup({ children, className }: FieldGroupProps) {
+export function FieldGroup({ children, className: _className }: FieldGroupProps) {
     const { ctx } = useXmlContext();
 
-    return <UIFieldGroup className={className}>{renderNode(children ?? null, ctx)}</UIFieldGroup>;
+    return <UIFieldGroup>{renderNode(children ?? [], ctx)}</UIFieldGroup>;
 }
 
 /** Renders an individual field row. */
-export function Field({ children, className, orientation = 'vertical' }: FieldProps) {
+export function Field({ children, className: _className, orientation = 'vertical' }: FieldProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UIField className={className} orientation={orientation}>
-            {renderNode(children ?? null, ctx)}
-        </UIField>
-    );
+    return <UIField orientation={orientation}>{renderNode(children ?? [], ctx)}</UIField>;
 }
 
 /** Renders the field content slot. */
-export function FieldContent({ children, className }: FieldContentProps) {
+export function FieldContent({ children, className: _className }: FieldContentProps) {
     const { ctx } = useXmlContext();
 
-    return <UIFieldContent className={className}>{renderNode(children ?? null, ctx)}</UIFieldContent>;
+    return <UIFieldContent>{renderNode(children ?? [], ctx)}</UIFieldContent>;
 }
 
 /** Renders the field label slot. */
-export function FieldLabel({ children, className, htmlFor }: FieldLabelProps) {
+export function FieldLabel({ children, className: _className, htmlFor }: FieldLabelProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UIFieldLabel className={className} htmlFor={htmlFor}>
-            {renderNode(children ?? null, ctx)}
-        </UIFieldLabel>
-    );
+    return <UIFieldLabel htmlFor={htmlFor}>{renderNode(children ?? [], ctx)}</UIFieldLabel>;
 }
 
 /** Renders the field title slot. */
-export function FieldTitle({ children, className }: FieldTitleProps) {
+export function FieldTitle({ children, className: _className }: FieldTitleProps) {
     const { ctx } = useXmlContext();
 
-    return <UIFieldTitle className={className}>{renderNode(children ?? null, ctx)}</UIFieldTitle>;
+    return <UIFieldTitle>{renderNode(children ?? [], ctx)}</UIFieldTitle>;
 }
 
 /** Renders the field description slot. */
-export function FieldDescription({ children, className }: FieldDescriptionProps) {
+export function FieldDescription({ children, className: _className }: FieldDescriptionProps) {
     const { ctx } = useXmlContext();
 
-    return <UIFieldDescription className={className}>{renderNode(children ?? null, ctx)}</UIFieldDescription>;
+    return <UIFieldDescription>{renderNode(children ?? [], ctx)}</UIFieldDescription>;
 }
 
 /** Renders a separator between field sections. */
-export function FieldSeparator({ children, className }: FieldSeparatorProps) {
+export function FieldSeparator({ children, className: _className }: FieldSeparatorProps) {
     const { ctx } = useXmlContext();
 
-    return <UIFieldSeparator className={className}>{renderNode(children ?? null, ctx)}</UIFieldSeparator>;
+    return <UIFieldSeparator>{renderNode(children ?? [], ctx)}</UIFieldSeparator>;
 }
 
 /** Renders the field error slot. */
-export function FieldError({ children, className, errors }: FieldErrorProps) {
+export function FieldError({ children, className: _className, errors }: FieldErrorProps) {
     const { ctx } = useXmlContext();
     const normalizedErrors = typeof errors === 'string' ? [{ message: errors }] : errors;
 
-    return (
-        <UIFieldError className={className} errors={normalizedErrors}>
-            {renderNode(children ?? null, ctx)}
-        </UIFieldError>
-    );
+    return <UIFieldError errors={normalizedErrors}>{renderNode(children ?? [], ctx)}</UIFieldError>;
 }

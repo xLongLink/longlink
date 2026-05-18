@@ -5,7 +5,7 @@ import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML RadioGroup component. */
 export interface RadioGroupProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     defaultValue?: string | Record<string, unknown>;
     disabled?: boolean;
@@ -18,7 +18,7 @@ export interface RadioGroupProps {
 
 /** Props accepted by the XML RadioGroupItem component. */
 export interface RadioGroupItemProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     disabled?: boolean;
     readOnly?: boolean;
@@ -29,7 +29,7 @@ export interface RadioGroupItemProps {
 /** Renders a radio group shell with XML-rendered children. */
 export function RadioGroup({
     children,
-    className,
+    className: _className,
     defaultValue,
     disabled,
     form,
@@ -67,9 +67,7 @@ export function RadioGroup({
               : undefined;
 
     return (
-        <UIRadioGroup
-            className={className}
-            defaultValue={resolvedDefaultValue}
+        <UIRadioGroup defaultValue={resolvedDefaultValue}
             disabled={disabled}
             form={form}
             name={name}
@@ -77,27 +75,21 @@ export function RadioGroup({
             required={required}
             value={resolvedValue}
         >
-            {renderNode(children ?? null, ctx)}
+            {renderNode(children ?? [], ctx)}
         </UIRadioGroup>
     );
 }
 
 /** Renders a radio group item with XML-rendered children. */
-export function RadioGroupItem({ children, className, disabled, readOnly, required, value }: RadioGroupItemProps) {
+export function RadioGroupItem({ children, className: _className, disabled, readOnly, required, value }: RadioGroupItemProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('RadioGroupItem requires a value');
 
     return (
-        <label className="inline-flex items-center gap-2">
-            <UIRadioGroupItem
-                className={className}
-                disabled={disabled}
-                readOnly={readOnly}
-                required={required}
-                value={value}
-            />
-            {renderNode(children ?? null, ctx)}
+        <label>
+            <UIRadioGroupItem disabled={disabled} readOnly={readOnly} required={required} value={value} />
+            {renderNode(children ?? [], ctx)}
         </label>
     );
 }

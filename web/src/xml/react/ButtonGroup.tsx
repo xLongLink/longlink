@@ -8,14 +8,14 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML ButtonGroup component. */
 export interface ButtonGroupProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     orientation?: 'horizontal' | 'vertical';
 }
 
 /** Props accepted by the XML ButtonGroupText component. */
 export interface ButtonGroupTextProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
@@ -26,24 +26,20 @@ export interface ButtonGroupSeparatorProps {
 }
 
 /** Renders a grouped action shell for buttons and inputs. */
-export function ButtonGroup({ children, className, orientation = 'horizontal' }: ButtonGroupProps) {
+export function ButtonGroup({ children, className: _className, orientation = 'horizontal' }: ButtonGroupProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UIButtonGroup className={className} orientation={orientation}>
-            {renderNode(children ?? null, ctx)}
-        </UIButtonGroup>
-    );
+    return <UIButtonGroup orientation={orientation}>{renderNode(children ?? [], ctx)}</UIButtonGroup>;
 }
 
 /** Renders an inline text segment inside a button group. */
-export function ButtonGroupText({ children, className }: ButtonGroupTextProps) {
+export function ButtonGroupText({ children, className: _className }: ButtonGroupTextProps) {
     const { ctx } = useXmlContext();
 
-    return <UIButtonGroupText className={className}>{renderNode(children ?? null, ctx)}</UIButtonGroupText>;
+    return <UIButtonGroupText>{renderNode(children ?? [], ctx)}</UIButtonGroupText>;
 }
 
 /** Renders a separator between grouped button segments. */
-export function ButtonGroupSeparator({ className, orientation = 'vertical' }: ButtonGroupSeparatorProps) {
-    return <UIButtonGroupSeparator className={className} orientation={orientation} />;
+export function ButtonGroupSeparator({ className: _className, orientation = 'vertical' }: ButtonGroupSeparatorProps) {
+    return <UIButtonGroupSeparator orientation={orientation} />;
 }

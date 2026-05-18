@@ -1,16 +1,12 @@
 import * as LucideIcons from 'lucide-react';
 import * as React from 'react';
 
-import { cn } from '@/lib/utils';
-
 type LucideIconComponent = React.ComponentType<{
     'aria-hidden'?: boolean;
-    className?: string;
 }>;
 
 /** Props accepted by the XML Icon component. */
 export interface IconProps {
-    className?: string;
     name?: string;
 }
 
@@ -26,7 +22,7 @@ function resolveIconComponent(name: string): LucideIconComponent | null {
 }
 
 /** Renders a Lucide icon by XML name. */
-export function Icon({ className, name = '' }: IconProps) {
+export function Icon({ name = '' }: IconProps) {
     const iconName = String(name ?? '');
 
     // Fail fast when the caller omits the required icon name.
@@ -41,5 +37,5 @@ export function Icon({ className, name = '' }: IconProps) {
         throw new Error(`Unknown icon "${iconName}"`);
     }
 
-    return <IconComponent aria-hidden={true} className={cn('mr-1.5 size-4 shrink-0', className)} />;
+    return <IconComponent aria-hidden={true} />;
 }

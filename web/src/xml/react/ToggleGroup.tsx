@@ -5,7 +5,7 @@ import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML ToggleGroup component. */
 export interface ToggleGroupProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     defaultValue?: string | string[] | Record<string, unknown>;
     disabled?: boolean;
@@ -20,7 +20,7 @@ export interface ToggleGroupProps {
 
 /** Props accepted by the XML ToggleGroupItem component. */
 export interface ToggleGroupItemProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     size?: 'sm' | 'default' | 'lg';
     value?: string;
@@ -30,7 +30,7 @@ export interface ToggleGroupItemProps {
 /** Renders a toggle group shell with XML-rendered children. */
 export function ToggleGroup({
     children,
-    className,
+    className: _className,
     defaultValue,
     disabled,
     loopFocus,
@@ -82,7 +82,6 @@ export function ToggleGroup({
 
     return (
         <UIToggleGroup
-            className={className}
             defaultValue={resolvedDefaultValue}
             disabled={disabled}
             loopFocus={loopFocus}
@@ -93,7 +92,7 @@ export function ToggleGroup({
             value={resolvedValue}
             variant={variant}
         >
-            {renderNode(children ?? null, ctx)}
+            {renderNode(children ?? [], ctx)}
         </UIToggleGroup>
     );
 }
@@ -101,7 +100,7 @@ export function ToggleGroup({
 /** Renders a toggle group item with XML-rendered children. */
 export function ToggleGroupItem({
     children,
-    className,
+    className: _className,
     size = 'default',
     value,
     variant = 'default',
@@ -111,8 +110,8 @@ export function ToggleGroupItem({
     if (!value) throw new Error('ToggleGroupItem requires a value');
 
     return (
-        <UIToggleGroupItem className={className} size={size} value={value} variant={variant}>
-            {renderNode(children ?? null, ctx)}
+        <UIToggleGroupItem size={size} value={value} variant={variant}>
+            {renderNode(children ?? [], ctx)}
         </UIToggleGroupItem>
     );
 }

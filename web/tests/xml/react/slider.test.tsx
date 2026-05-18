@@ -9,6 +9,7 @@ describe('Slider', () => {
             {
                 name: 'Slider',
                 params: { defaultValue: '${[25]}', max: '100', min: '0', step: '5' },
+                children: [],
             },
         ]);
     });

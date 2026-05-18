@@ -1,5 +1,4 @@
-import { cn } from '@/lib/utils';
-import { Button as UIButton, buttonVariants } from '@ui/button';
+import { Button as UIButton } from '@ui/button';
 import type { ASTNode } from '@xml';
 import { renderNode, useUrl, useXmlContext } from '@xml';
 import type { ExpressionResolver } from '@xml/core/expressions';
@@ -9,7 +8,7 @@ import { toast } from 'sonner';
 export interface ButtonProps {
     action?: string;
     invalidate?: string[];
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     json?: ExpressionResolver | null;
     method?: string;
     size?: string;
@@ -69,22 +68,18 @@ export function Button({
     if (submit) {
         return (
             <UIButton size={size as never} type="submit" variant={variant as never}>
-                {renderNode(children ?? null, ctx)}
+                {renderNode(children ?? [], ctx)}
             </UIButton>
         );
     }
 
     if (actionUrl && normalizedMethod === 'GET') {
-        return (
-            <a className={cn(buttonVariants({ variant: variant as never, size: size as never }))} href={requestUrl}>
-                {renderNode(children ?? null, ctx)}
-            </a>
-        );
+        return <a href={requestUrl}>{renderNode(children ?? [], ctx)}</a>;
     }
 
     return (
         <UIButton size={size as never} type="button" variant={variant as never} onClick={handleClick}>
-            {renderNode(children ?? null, ctx)}
+            {renderNode(children ?? [], ctx)}
         </UIButton>
     );
 }

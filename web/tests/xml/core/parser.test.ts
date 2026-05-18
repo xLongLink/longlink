@@ -4,7 +4,7 @@ import { describe, expect, it } from 'bun:test';
 describe('parseXML', () => {
     /* A single XML root should compile into the matching AST element. */
     it('parses a root element', () => {
-        expect(parseXML('<longlink />')).toEqual([{ name: 'longlink' }]);
+        expect(parseXML('<longlink />')).toEqual([{ name: 'longlink', children: [] }]);
     });
 
     /* XML attributes are component props and must stay as strings for runtime resolution. */
@@ -17,6 +17,7 @@ describe('parseXML', () => {
                     disabled: 'false',
                     label: 'Save',
                 },
+                children: [],
             },
         ]);
     });
@@ -30,6 +31,7 @@ describe('parseXML', () => {
                     placeholder: 'user.placeholder',
                     value: 'user.name',
                 },
+                children: [],
             },
         ]);
     });
@@ -50,8 +52,8 @@ describe('parseXML', () => {
             {
                 name: 'longlink',
                 children: [
-                    { name: 'State', params: { id: 'first' } },
-                    { name: 'State', params: { id: 'second' } },
+                    { name: 'State', params: { id: 'first' }, children: [] },
+                    { name: 'State', params: { id: 'second' }, children: [] },
                 ],
             },
         ]);

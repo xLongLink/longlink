@@ -8,6 +8,7 @@ describe('Br', () => {
         expect(parseXML('<Br />')).toEqual([
             {
                 name: 'Br',
+                children: [],
             },
         ]);
     });
@@ -17,7 +18,6 @@ describe('Br', () => {
         const output = renderXmlToMarkup(parseXML('<Br />'));
 
         expect(output).toContain('aria-hidden="true"');
-        expect(output).toContain('h-6 w-full');
         expect(output).toContain('<div');
     });
 });

@@ -4,18 +4,14 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Label component. */
 export interface LabelProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     htmlFor?: string;
 }
 
 /** Renders a shadcn-backed label element for form controls. */
-export function Label({ children, className, htmlFor }: LabelProps) {
+export function Label({ children, className: _className, htmlFor }: LabelProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UILabel className={className} htmlFor={htmlFor}>
-            {renderNode(children ?? null, ctx)}
-        </UILabel>
-    );
+    return <UILabel htmlFor={htmlFor}>{renderNode(children ?? [], ctx)}</UILabel>;
 }

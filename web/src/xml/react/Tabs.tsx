@@ -9,7 +9,7 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Tabs component. */
 export interface TabsProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     defaultValue?: string;
     orientation?: string;
@@ -17,69 +17,53 @@ export interface TabsProps {
 
 /** Props accepted by the XML TabsList component. */
 export interface TabsListProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     variant?: string;
 }
 
 /** Props accepted by the XML TabsTrigger component. */
 export interface TabsTriggerProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     value?: string;
 }
 
 /** Props accepted by the XML TabsContent component. */
 export interface TabsContentProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     value?: string;
 }
 
 /** Renders a shadcn-backed tabs shell. */
-export function Tabs({ children, className, defaultValue, orientation = 'horizontal' }: TabsProps) {
+export function Tabs({ children, className: _className, defaultValue, orientation = 'horizontal' }: TabsProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UITabs className={className} defaultValue={defaultValue} orientation={orientation as never}>
-            {renderNode(children ?? null, ctx)}
-        </UITabs>
-    );
+    return <UITabs defaultValue={defaultValue} orientation={orientation as never}>{renderNode(children ?? [], ctx)}</UITabs>;
 }
 
 /** Renders the tabs list slot. */
-export function TabsList({ children, className, variant = 'default' }: TabsListProps) {
+export function TabsList({ children, className: _className, variant = 'default' }: TabsListProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UITabsList className={className} variant={variant as never}>
-            {renderNode(children ?? null, ctx)}
-        </UITabsList>
-    );
+    return <UITabsList variant={variant as never}>{renderNode(children ?? [], ctx)}</UITabsList>;
 }
 
 /** Renders an individual tabs trigger. */
-export function TabsTrigger({ children, className, value }: TabsTriggerProps) {
+export function TabsTrigger({ children, className: _className, value }: TabsTriggerProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('TabsTrigger requires a value');
 
-    return (
-        <UITabsTrigger className={className} value={value}>
-            {renderNode(children ?? null, ctx)}
-        </UITabsTrigger>
-    );
+    return <UITabsTrigger value={value}>{renderNode(children ?? [], ctx)}</UITabsTrigger>;
 }
 
 /** Renders a tabs content panel. */
-export function TabsContent({ children, className, value }: TabsContentProps) {
+export function TabsContent({ children, className: _className, value }: TabsContentProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('TabsContent requires a value');
 
-    return (
-        <UITabsContent className={className} value={value}>
-            {renderNode(children ?? null, ctx)}
-        </UITabsContent>
-    );
+    return <UITabsContent value={value}>{renderNode(children ?? [], ctx)}</UITabsContent>;
 }

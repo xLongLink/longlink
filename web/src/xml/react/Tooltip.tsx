@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils';
 import {
     Tooltip as UITooltip,
     TooltipContent as UITooltipContent,
@@ -10,26 +9,26 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML TooltipProvider component. */
 export interface TooltipProviderProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
 }
 
 /** Props accepted by the XML Tooltip component. */
 export interface TooltipProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     defaultOpen?: boolean;
     open?: boolean;
 }
 
 /** Props accepted by the XML TooltipTrigger component. */
 export interface TooltipTriggerProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
 }
 
 /** Props accepted by the XML TooltipContent component. */
 export interface TooltipContentProps {
     align?: string;
     alignOffset?: string | number;
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     hidden?: boolean;
     side?: string;
@@ -40,7 +39,7 @@ export interface TooltipContentProps {
 export function TooltipProvider({ children }: TooltipProviderProps) {
     const { ctx } = useXmlContext();
 
-    return <UITooltipProvider>{renderNode(children ?? null, ctx)}</UITooltipProvider>;
+    return <UITooltipProvider>{renderNode(children ?? [], ctx)}</UITooltipProvider>;
 }
 
 /** Renders the tooltip root shell. */
@@ -49,7 +48,7 @@ export function Tooltip({ children, defaultOpen, open }: TooltipProps) {
 
     return (
         <UITooltip defaultOpen={defaultOpen} open={open}>
-            {renderNode(children ?? null, ctx)}
+            {renderNode(children ?? [], ctx)}
         </UITooltip>
     );
 }
@@ -58,7 +57,7 @@ export function Tooltip({ children, defaultOpen, open }: TooltipProps) {
 export function TooltipTrigger({ children }: TooltipTriggerProps) {
     const { ctx } = useXmlContext();
 
-    return <UITooltipTrigger>{renderNode(children ?? null, ctx)}</UITooltipTrigger>;
+    return <UITooltipTrigger>{renderNode(children ?? [], ctx)}</UITooltipTrigger>;
 }
 
 /** Renders the tooltip content popup. */
@@ -66,7 +65,7 @@ export function TooltipContent({
     align = 'center',
     alignOffset = 0,
     children,
-    className,
+    className: _className,
     hidden,
     side = 'top',
     sideOffset = 4,
@@ -74,15 +73,8 @@ export function TooltipContent({
     const { ctx } = useXmlContext();
 
     return (
-        <UITooltipContent
-            align={align as never}
-            alignOffset={alignOffset as never}
-            className={cn(className)}
-            hidden={hidden}
-            side={side as never}
-            sideOffset={sideOffset as never}
-        >
-            {renderNode(children ?? null, ctx)}
+        <UITooltipContent align={align as never} alignOffset={alignOffset as never} hidden={hidden} side={side as never} sideOffset={sideOffset as never}>
+            {renderNode(children ?? [], ctx)}
         </UITooltipContent>
     );
 }

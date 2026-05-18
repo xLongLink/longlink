@@ -2,11 +2,10 @@
 export type ASTNode = {
     name: string;
     params?: Record<string, string>;
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
 };
 
 /** Cached setup entry used to recreate runtime sources during invalidation. */
-
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     parent?: ExecutionContext;

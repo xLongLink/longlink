@@ -93,7 +93,7 @@ function toNodes(input: unknown): ASTNode[] {
             {
                 name: key,
                 ...(Object.keys(attributes).length > 0 && { params: attributes }),
-                ...(children.length > 0 && { children }),
+                children,
             },
         ];
     });

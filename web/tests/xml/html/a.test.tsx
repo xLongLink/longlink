@@ -10,7 +10,7 @@ describe('A', () => {
                 name: 'A',
                 params: { href: '/icons' },
                 children: [
-                    { name: 'Icon', params: { name: 'sparkles' } },
+                    { name: 'Icon', params: { name: 'sparkles' }, children: [] },
                     { name: 'Text', params: { value: 'Open icons' } },
                 ],
             },
@@ -22,8 +22,6 @@ describe('A', () => {
         const output = renderXmlToMarkup(parseXML('<A href="/icons"><Icon name="sparkles" />Open icons</A>'));
 
         expect(output).toContain('href="/icons"');
-        expect(output).toContain('inline-flex');
-        expect(output).toContain('hover:text-accent');
         expect(output).toContain('Open icons');
         expect(output).toContain('<svg');
     });

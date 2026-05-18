@@ -4,6 +4,6 @@ export interface BrProps {
 }
 
 /** Renders a spacer block for visual separation. */
-export function Br({ className }: BrProps) {
-    return <div aria-hidden="true" className={['h-6 w-full', className].filter(Boolean).join(' ')} />;
+export function Br({ className: _className }: BrProps) {
+    return <div aria-hidden="true" />;
 }

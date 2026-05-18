@@ -6,7 +6,6 @@ import { getVersion, useSnapshot } from 'valtio';
 export interface InputProps {
     'aria-invalid'?: boolean;
     autoComplete?: string;
-    className?: string;
     disabled?: boolean;
     id?: string;
     label?: string;
@@ -19,7 +18,6 @@ export interface InputProps {
 export function Input({
     'aria-invalid': ariaInvalid,
     autoComplete,
-    className,
     disabled,
     id,
     value = '',
@@ -38,7 +36,6 @@ export function Input({
             <UIInput
                 aria-invalid={ariaInvalid}
                 autoComplete={autoComplete}
-                className={className}
                 disabled={disabled}
                 id={id}
                 type={type}
@@ -61,7 +58,6 @@ export function Input({
         <UIInput
             aria-invalid={ariaInvalid}
             autoComplete={autoComplete}
-            className={className}
             disabled={disabled}
             id={id}
             type={type}

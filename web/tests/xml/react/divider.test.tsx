@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('Divider', () => {
     /* The compiler should preserve the Divider element without attributes. */
     it('compiles divider xml into a divider ast node', () => {
-        expect(parseXML('<Divider />')).toEqual([{ name: 'Divider' }]);
+        expect(parseXML('<Divider />')).toEqual([{ name: 'Divider', children: [] }]);
     });
 
     /* The runtime should render Divider XML into the shadcn separator output. */

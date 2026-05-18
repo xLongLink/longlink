@@ -16,7 +16,7 @@ describe('Select', () => {
                 children: [
                     {
                         name: 'SelectTrigger',
-                        children: [{ name: 'SelectValue' }],
+                        children: [{ name: 'SelectValue', children: [] }],
                     },
                     {
                         name: 'SelectContent',
@@ -42,6 +42,7 @@ describe('Select', () => {
                             },
                             {
                                 name: 'SelectSeparator',
+                                children: [],
                             },
                             {
                                 name: 'SelectGroup',

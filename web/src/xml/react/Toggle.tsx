@@ -5,7 +5,7 @@ import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML Toggle component. */
 export interface ToggleProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     defaultPressed?: boolean;
     disabled?: boolean;
@@ -18,7 +18,7 @@ export interface ToggleProps {
 /** Renders a shadcn-backed toggle with optional reactive state binding. */
 export function Toggle({
     children,
-    className,
+    className: _className,
     defaultPressed,
     disabled,
     id,
@@ -34,9 +34,7 @@ export function Toggle({
         const currentPressed = 'value' in snapshot ? snapshot.value : snapshot;
 
         return (
-            <UIToggle
-                className={className}
-                defaultPressed={defaultPressed}
+            <UIToggle defaultPressed={defaultPressed}
                 disabled={disabled}
                 id={id}
                 onPressedChange={(nextPressed) => {
@@ -48,21 +46,19 @@ export function Toggle({
                 size={size}
                 variant={variant}
             >
-                {renderNode(children ?? null, ctx)}
+                {renderNode(children ?? [], ctx)}
             </UIToggle>
         );
     }
 
     return (
-        <UIToggle
-            className={className}
-            defaultPressed={defaultPressed}
+        <UIToggle defaultPressed={defaultPressed}
             disabled={disabled}
             id={id}
             size={size}
             variant={variant}
         >
-            {renderNode(children ?? null, ctx)}
+            {renderNode(children ?? [], ctx)}
         </UIToggle>
     );
 }

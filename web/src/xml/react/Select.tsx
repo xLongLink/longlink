@@ -14,7 +14,7 @@ import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML Select component. */
 export interface SelectProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     defaultOpen?: boolean;
     defaultValue?: string;
     open?: boolean;
@@ -23,7 +23,7 @@ export interface SelectProps {
 
 /** Props accepted by the XML SelectTrigger component. */
 export interface SelectTriggerProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
@@ -35,25 +35,25 @@ export interface SelectValueProps {
 
 /** Props accepted by the XML SelectContent component. */
 export interface SelectContentProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML SelectGroup component. */
 export interface SelectGroupProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML SelectLabel component. */
 export interface SelectLabelProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML SelectItem component. */
 export interface SelectItemProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     value?: string;
 }
@@ -84,7 +84,7 @@ export function Select({ children, defaultOpen, defaultValue, open, value }: Sel
                     }
                 }}
             >
-                {renderNode(children ?? null, ctx)}
+                {renderNode(children ?? [], ctx)}
             </UISelect>
         );
     }
@@ -93,58 +93,54 @@ export function Select({ children, defaultOpen, defaultValue, open, value }: Sel
 
     return (
         <UISelect defaultOpen={defaultOpen} defaultValue={initialValue} open={open}>
-            {renderNode(children ?? null, ctx)}
+            {renderNode(children ?? [], ctx)}
         </UISelect>
     );
 }
 
 /** Renders the select trigger slot. */
-export function SelectTrigger({ children, className }: SelectTriggerProps) {
+export function SelectTrigger({ children, className: _className }: SelectTriggerProps) {
     const { ctx } = useXmlContext();
 
-    return <UISelectTrigger className={className}>{renderNode(children ?? null, ctx)}</UISelectTrigger>;
+    return <UISelectTrigger>{renderNode(children ?? [], ctx)}</UISelectTrigger>;
 }
 
 /** Renders the selected value placeholder or active choice. */
-export function SelectValue({ className, placeholder }: SelectValueProps) {
-    return <UISelectValue className={className} placeholder={placeholder} />;
+export function SelectValue({ className: _className, placeholder }: SelectValueProps) {
+    return <UISelectValue placeholder={placeholder} />;
 }
 
 /** Renders the select content portal and list surface. */
-export function SelectContent({ children, className }: SelectContentProps) {
+export function SelectContent({ children, className: _className }: SelectContentProps) {
     const { ctx } = useXmlContext();
 
-    return <UISelectContent className={className}>{renderNode(children ?? null, ctx)}</UISelectContent>;
+    return <UISelectContent>{renderNode(children ?? [], ctx)}</UISelectContent>;
 }
 
 /** Renders a grouped section inside the select menu. */
-export function SelectGroup({ children, className }: SelectGroupProps) {
+export function SelectGroup({ children, className: _className }: SelectGroupProps) {
     const { ctx } = useXmlContext();
 
-    return <UISelectGroup className={className}>{renderNode(children ?? null, ctx)}</UISelectGroup>;
+    return <UISelectGroup>{renderNode(children ?? [], ctx)}</UISelectGroup>;
 }
 
 /** Renders the label for a grouped select section. */
-export function SelectLabel({ children, className }: SelectLabelProps) {
+export function SelectLabel({ children, className: _className }: SelectLabelProps) {
     const { ctx } = useXmlContext();
 
-    return <UISelectLabel className={className}>{renderNode(children ?? null, ctx)}</UISelectLabel>;
+    return <UISelectLabel>{renderNode(children ?? [], ctx)}</UISelectLabel>;
 }
 
 /** Renders a selectable option in the menu. */
-export function SelectItem({ children, className, value }: SelectItemProps) {
+export function SelectItem({ children, className: _className, value }: SelectItemProps) {
     const { ctx } = useXmlContext();
 
     if (!value) throw new Error('SelectItem requires a value');
 
-    return (
-        <UISelectItem className={className} value={value}>
-            {renderNode(children ?? null, ctx)}
-        </UISelectItem>
-    );
+    return <UISelectItem value={value}>{renderNode(children ?? [], ctx)}</UISelectItem>;
 }
 
 /** Renders a visual separator between select groups. */
-export function SelectSeparator({ className }: SelectSeparatorProps) {
-    return <UISelectSeparator className={className} />;
+export function SelectSeparator({ className: _className }: SelectSeparatorProps) {
+    return <UISelectSeparator />;
 }

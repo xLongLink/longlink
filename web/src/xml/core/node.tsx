@@ -1,4 +1,5 @@
 import { compile, evaluate, isText } from '@xml/core/expressions';
+import { query } from '@xml/core/query';
 import { state } from '@xml/core/state';
 import { A } from '@xml/html/A';
 import { B } from '@xml/html/B';
@@ -86,177 +87,170 @@ import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
 
 /** Renders XML AST nodes using the active runtime context. */
-export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionContext): ReactNode {
-    // Handle null/undefined early to avoid unnecessary component resolution and error boundaries.
-    if (!node) return null;
-
-    // Handle arrays of nodes as fragments with stable keys.
-    if (Array.isArray(node)) {
-        return node.map((child, index) => <Fragment key={index}>{renderNode(child, ctx)}</Fragment>);
-    }
-
-    // Handle conditional rendering with "if" parameter.
-    if (node.params?.if != null) {
-        if (!evaluate(node.params.if, ctx)) {
-            return <></>;
+export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
+    return nodes.map((node, index) => {
+        // Handle conditional rendering with "if" parameter.
+        if (node.params?.if != null) {
+            if (!evaluate(node.params.if, ctx)) {
+                return <Fragment key={index} />;
+            }
         }
-    }
 
-    // State nodes seed a scoped child context so descendants can resolve initial values immediately.
-    if (node.name === 'State') {
-        if (!node.params?.id) throw new Error('State requires a string id');
-        if (node.params.value == null) throw new Error('State requires a value');
-        if (!isText(node.params.id)) throw new Error('State id must be literal text');
-        if (node.children != null) throw new Error('State cannot have children');
+        if (node.name === 'State') {
+            if (!node.params?.id) throw new Error('State requires a string id');
+            if (node.params.value == null) throw new Error('State requires a value');
+            if (!isText(node.params.id)) throw new Error('State id must be literal text');
+            if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
 
-        state(ctx, node.params.id.trim(), evaluate(node.params.value, ctx));
+            state(ctx, node.params.id.trim(), evaluate(node.params.value, ctx));
 
-        return <></>;
-    }
+            return <Fragment key={index} />;
+        }
 
-    // Query nodes are validated here and resolved by the runtime setup pass.
-    if (node.name === 'Query') {
-        if (!node.params?.id) throw new Error('Query requires a string id');
-        if (!node.params?.path) throw new Error('Query requires a string path');
-        if (node.children != null) throw new Error('Query cannot have children');
+        if (node.name === 'Query') {
+            if (!node.params?.id) throw new Error('Query requires a string id');
+            if (!node.params?.path) throw new Error('Query requires a string path');
+            if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
+            if (!isText(node.params.id)) throw new Error('Query id must be literal text');
+            if (!isText(node.params.path)) throw new Error('Query path must be literal text');
 
-        return <></>;
-    }
+            query(ctx, node.params.id.trim(), node.params.path.trim(), '');
 
-    if (node.name === 'For') {
-        // Ensure that the parameters are defined
-        if (!node.params?.as) throw new Error(`For requires an "as" parameter`);
-        if (!node.params?.each) throw new Error(`For requires an "each" parameter`);
+            return <Fragment key={index} />;
+        }
 
-        // If there are no children, there's nothing to render, so we can skip the "For" component entirely.
-        if (!node.children) return <></>;
+        if (node.name === 'For') {
+            // Ensure that the parameters are defined
+            if (!node.params?.as) throw new Error(`For requires an "as" parameter`);
+            if (!node.params?.each) throw new Error(`For requires an "each" parameter`);
 
-        const each = evaluate(node.params.each, ctx);
+            const each = evaluate(node.params.each, ctx);
 
-        if (!Array.isArray(each)) return <></>;
-        return <For each={each} as={node.params.as} children={node.children} />;
-    }
+            if (!Array.isArray(each)) return <Fragment key={index} />;
+            return <For key={index} each={each} as={node.params.as} children={node.children ?? []} />;
+        }
 
-    if (node.name === 'Text') {
-        if (!node.params?.value) return <></>;
+        if (node.name === 'Text') {
+            if (!node.params?.value) return <Fragment key={index} />;
 
-        const value = evaluate(node.params.value, ctx);
-        if (typeof value !== 'string') throw new Error(`Text.value must evaluate to a string, but got ${typeof value}`);
+            const value = evaluate(node.params.value, ctx);
+            if (typeof value !== 'string') throw new Error(`Text.value must evaluate to a string, but got ${typeof value}`);
 
-        return <Text value={value} />;
-    }
+            return <Text key={index} value={value} />;
+        }
 
-    if (node.name === 'longlink') {
-        return <Longlink children={node.children} />;
-    }
+        if (node.name === 'longlink') {
+            return <Longlink key={index} children={node.children ?? []} />;
+        }
 
-    if (node.name === 'Divider') {
-        return <Divider />;
-    }
+        if (node.name === 'Divider') {
+            return <Divider key={index} />;
+        }
 
-    if (node.name === 'Icon') {
-        const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : '';
-        return <Icon name={name} />;
-    }
+        if (node.name === 'Icon') {
+            const name = node.params?.name ? String(evaluate(node.params.name, ctx) ?? '') : '';
 
-    if (node.name === 'Tabs') {
-        const defaultValue = node.params?.defaultValue
-            ? String(evaluate(node.params.defaultValue, ctx) ?? '')
-            : undefined;
-        const orientation = node.params?.orientation
-            ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
-            : 'horizontal';
+            return <Icon key={index} name={name} />;
+        }
 
-        return <Tabs defaultValue={defaultValue} orientation={orientation} children={node.children} />;
-    }
+        if (node.name === 'Tabs') {
+            const defaultValue = node.params?.defaultValue
+                ? String(evaluate(node.params.defaultValue, ctx) ?? '')
+                : undefined;
+            const orientation = node.params?.orientation
+                ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
+                : 'horizontal';
 
-    if (node.name === 'TabsList') {
-        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
+            return <Tabs key={index} defaultValue={defaultValue} orientation={orientation} children={node.children} />;
+        }
 
-        return <TabsList variant={variant} children={node.children} />;
-    }
+        if (node.name === 'TabsList') {
+            const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
-    if (node.name === 'TabsTrigger') {
-        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+            return <TabsList key={index} variant={variant} children={node.children} />;
+        }
 
-        return <TabsTrigger value={value} children={node.children} />;
-    }
+        if (node.name === 'TabsTrigger') {
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
-    if (node.name === 'TabsContent') {
-        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
+            return <TabsTrigger key={index} value={value} children={node.children} />;
+        }
 
-        return <TabsContent value={value} children={node.children} />;
-    }
+        if (node.name === 'TabsContent') {
+            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
-    if (node.name === 'Hero') {
-        const icon = node.params?.icon ? String(node.params.icon) : undefined;
+            return <TabsContent key={index} value={value} children={node.children} />;
+        }
 
-        return <Hero icon={icon} children={node.children} />;
-    }
+        if (node.name === 'Hero') {
+            const icon = node.params?.icon ? String(node.params.icon) : undefined;
 
-    if (node.name === 'HeroTitle') {
-        return <HeroTitle children={node.children} />;
-    }
+            return <Hero key={index} icon={icon} children={node.children} />;
+        }
 
-    if (node.name === 'HeroDescription') {
-        return <HeroDescription children={node.children} />;
-    }
+        if (node.name === 'HeroTitle') {
+            return <HeroTitle key={index} children={node.children} />;
+        }
 
-    if (node.name === 'HeroContent') {
-        return <HeroContent children={node.children} />;
-    }
+        if (node.name === 'HeroDescription') {
+            return <HeroDescription key={index} children={node.children} />;
+        }
 
-    if (node.name === 'P') {
-        return <P children={node.children} />;
-    }
+        if (node.name === 'HeroContent') {
+            return <HeroContent key={index} children={node.children} />;
+        }
 
-    if (node.name === 'Br') {
-        return <Br />;
-    }
+        if (node.name === 'P') {
+            return <P key={index} children={node.children} />;
+        }
 
-    if (node.name === 'B') {
-        return <B children={node.children} />;
-    }
+        if (node.name === 'Br') {
+            return <Br key={index} />;
+        }
 
-    if (node.name === 'H1') {
-        return <H1 children={node.children} />;
-    }
+        if (node.name === 'B') {
+            return <B key={index} children={node.children} />;
+        }
 
-    if (node.name === 'H2') {
-        return <H2 children={node.children} />;
-    }
+        if (node.name === 'H1') {
+            return <H1 key={index} children={node.children} />;
+        }
 
-    if (node.name === 'H3') {
-        return <H3 children={node.children} />;
-    }
+        if (node.name === 'H2') {
+            return <H2 key={index} children={node.children} />;
+        }
 
-    if (node.name === 'H4') {
-        return <H4 children={node.children} />;
-    }
+        if (node.name === 'H3') {
+            return <H3 key={index} children={node.children} />;
+        }
 
-    if (node.name === 'Code') {
-        return <Code children={node.children} />;
-    }
+        if (node.name === 'H4') {
+            return <H4 key={index} children={node.children} />;
+        }
 
-    if (node.name === 'S') {
-        return <S children={node.children} />;
-    }
+        if (node.name === 'Code') {
+            return <Code key={index} children={node.children} />;
+        }
 
-    if (node.name === 'Sup') {
-        return <Sup children={node.children} />;
-    }
+        if (node.name === 'S') {
+            return <S key={index} children={node.children} />;
+        }
 
-    if (node.name === 'Sub') {
-        return <Sub children={node.children} />;
-    }
+        if (node.name === 'Sup') {
+            return <Sup key={index} children={node.children} />;
+        }
 
-    if (node.name === 'U') {
-        return <U children={node.children} />;
-    }
+        if (node.name === 'Sub') {
+            return <Sub key={index} children={node.children} />;
+        }
 
-    if (node.name === 'Ul') {
-        return <Ul children={node.children} />;
-    }
+        if (node.name === 'U') {
+            return <U key={index} children={node.children} />;
+        }
+
+        if (node.name === 'Ul') {
+            return <Ul key={index} children={node.children} />;
+        }
 
     if (node.name === 'Li') {
         return <Li children={node.children} />;
@@ -1141,4 +1135,5 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     throw new Error(`Unknown component "${node.name}"`);
+    });
 }

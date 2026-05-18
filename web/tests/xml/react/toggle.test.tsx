@@ -9,6 +9,7 @@ describe('Toggle', () => {
             {
                 name: 'Toggle',
                 params: { defaultPressed: 'true', size: 'sm', variant: 'outline' },
+                children: [],
             },
         ]);
     });

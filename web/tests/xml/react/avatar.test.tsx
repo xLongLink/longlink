@@ -17,7 +17,7 @@ describe('Avatar', () => {
                         name: 'Avatar',
                         params: { size: 'sm' },
                         children: [
-                            { name: 'AvatarImage', params: { src: '/ada.png', alt: 'Ada Lovelace' } },
+                            { name: 'AvatarImage', params: { src: '/ada.png', alt: 'Ada Lovelace' }, children: [] },
                             { name: 'AvatarFallback', children: [{ name: 'Text', params: { value: 'AL' } }] },
                             { name: 'AvatarBadge', children: [{ name: 'Text', params: { value: '1' } }] },
                         ],

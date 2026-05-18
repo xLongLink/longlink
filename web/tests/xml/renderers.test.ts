@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('renderNode', () => {
     it('returns null for missing node input', () => {
-        expect(renderNode(null, { setups: {}, invalidate: async () => {}, values: {} })).toBeNull();
+        expect(renderNode([], { setups: {}, invalidate: async () => {}, values: {} })).toEqual([]);
     });
 
     it('resolves text nodes from full expressions', () => {

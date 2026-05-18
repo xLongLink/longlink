@@ -12,6 +12,7 @@ describe('Input', () => {
             {
                 name: 'Input',
                 params: { value: 'user.name', placeholder: 'user.placeholder' },
+                children: [],
             },
         ]);
     });

@@ -3,13 +3,13 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML li bridge component. */
 export interface LiProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Renders a list item and preserves nested XML children. */
-export function Li({ children, className }: LiProps) {
+export function Li({ children, className: _className }: LiProps) {
     const { ctx } = useXmlContext();
 
-    return <li className={className}>{renderNode(children ?? null, ctx)}</li>;
+    return <li>{renderNode(children ?? [], ctx)}</li>;
 }

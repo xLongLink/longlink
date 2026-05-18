@@ -3,7 +3,6 @@ import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML Slider component. */
 export interface SliderProps {
-    className?: string;
     defaultValue?: number[] | number | string | boolean | Record<string, unknown>;
     disabled?: boolean;
     id?: string;
@@ -17,7 +16,6 @@ export interface SliderProps {
 
 /** Renders a shadcn-backed slider with optional reactive state binding. */
 export function Slider({
-    className,
     defaultValue,
     disabled,
     id,
@@ -49,7 +47,6 @@ export function Slider({
 
         return (
             <UISlider
-                className={className}
                 disabled={disabled}
                 id={id}
                 max={resolvedMax}
@@ -84,7 +81,6 @@ export function Slider({
 
     return (
         <UISlider
-            className={className}
             defaultValue={initialValue}
             disabled={disabled}
             id={id}

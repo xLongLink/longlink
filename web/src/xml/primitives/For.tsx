@@ -6,7 +6,7 @@ import { Fragment } from 'react';
 export interface ForProps {
     as: string;
     each: unknown[];
-    children: ASTNode | ASTNode[];
+    children: ASTNode[];
 }
 
 /** Iterates over an array and renders children in a scoped context. */
@@ -28,7 +28,7 @@ export function For({ each, as, children }: ForProps) {
         return (
             <Fragment key={index}>
                 <ContextProvider value={childCtx}>
-                    <RenderXML ast={Array.isArray(children) ? children : [children]} ctx={childCtx} baseUrl={baseUrl} />
+                    <RenderXML ast={children} ctx={childCtx} baseUrl={baseUrl} />
                 </ContextProvider>
             </Fragment>
         );

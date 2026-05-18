@@ -4,7 +4,6 @@ import { getVersion, useSnapshot } from 'valtio';
 /** Props accepted by the XML Switch component. */
 export interface SwitchProps {
     checked?: boolean | Record<string, unknown>;
-    className?: string;
     defaultChecked?: boolean;
     disabled?: boolean;
     id?: string;
@@ -12,7 +11,7 @@ export interface SwitchProps {
 }
 
 /** Renders a shadcn-backed switch with optional reactive state binding. */
-export function Switch({ checked, className, defaultChecked, disabled, id, size = 'default' }: SwitchProps) {
+export function Switch({ checked, defaultChecked, disabled, id, size = 'default' }: SwitchProps) {
     if (checked && typeof checked === 'object' && getVersion(checked) !== undefined) {
         const state = checked as Record<string, unknown> & { value?: unknown };
         const snapshot = useSnapshot(state);
@@ -21,7 +20,6 @@ export function Switch({ checked, className, defaultChecked, disabled, id, size 
         return (
             <UISwitch
                 checked={Boolean(currentChecked)}
-                className={className}
                 disabled={disabled}
                 id={id}
                 onCheckedChange={(nextChecked) => {
@@ -34,5 +32,5 @@ export function Switch({ checked, className, defaultChecked, disabled, id, size 
         );
     }
 
-    return <UISwitch className={className} defaultChecked={defaultChecked} disabled={disabled} id={id} size={size} />;
+    return <UISwitch defaultChecked={defaultChecked} disabled={disabled} id={id} size={size} />;
 }

@@ -9,6 +9,7 @@ describe('Checkbox', () => {
             {
                 name: 'Checkbox',
                 params: { defaultChecked: 'true', disabled: 'true' },
+                children: [],
             },
         ]);
     });

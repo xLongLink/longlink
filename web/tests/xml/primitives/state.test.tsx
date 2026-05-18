@@ -12,6 +12,7 @@ describe('State', () => {
             {
                 name: 'State',
                 params: { id: 'filter', value: 'day' },
+                children: [],
             },
         ]);
     });
@@ -22,9 +23,7 @@ describe('State', () => {
         const ast = parseXML('<longlink><State id="filter" value="day" /><P>${filter}</P></longlink>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
-        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
-            '<div class="space-y-6"><p class="leading-7 [&amp;:not(:first-child)]:mt-4">day</p></div>'
-        );
+        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<div><p>day</p></div>');
     });
 
     /* State nodes must reject nested children so the runtime contract stays declarative. */
@@ -32,9 +31,9 @@ describe('State', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<State id="filter" value="day"><P>Ready</P></State>');
 
-        expect(() =>
-            renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))
-        ).toThrow('State cannot have children');
+        expect(() => renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))).toThrow(
+            'State cannot have children'
+        );
     });
 
     /* Missing ids should fail fast so XML authors get a clear runtime error. */
@@ -42,8 +41,8 @@ describe('State', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<State value="x" />');
 
-        expect(() =>
-            renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))
-        ).toThrow('State requires a string id');
+        expect(() => renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))).toThrow(
+            'State requires a string id'
+        );
     });
 });

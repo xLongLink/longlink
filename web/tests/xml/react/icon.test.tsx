@@ -12,6 +12,7 @@ describe('Icon', () => {
             {
                 name: 'Icon',
                 params: { name: 'layout-grid' },
+                children: [],
             },
         ]);
     });
@@ -26,7 +27,5 @@ describe('Icon', () => {
 
         expect(output).toContain('<svg');
         expect(output).toContain('aria-hidden="true"');
-        expect(output).toContain('size-4');
-        expect(output).toContain('mr-1.5');
     });
 });

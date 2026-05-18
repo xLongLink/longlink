@@ -3,17 +3,13 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML ul bridge component. */
 export interface UlProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Renders an unordered list with typographic defaults. */
-export function Ul({ children, className }: UlProps) {
+export function Ul({ children, className: _className }: UlProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <ul className={['my-6 ml-6 list-disc [&>li]:mt-2', className].filter(Boolean).join(' ')}>
-            {renderNode(children ?? null, ctx)}
-        </ul>
-    );
+    return <ul>{renderNode(children ?? [], ctx)}</ul>;
 }

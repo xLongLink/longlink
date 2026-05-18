@@ -6,13 +6,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('renderNode', () => {
     it('returns null for missing node input', () => {
-        expect(renderNode(null, { setups: {}, invalidate: async () => {}, values: {} })).toBeNull();
+        expect(renderNode([], { setups: {}, invalidate: async () => {}, values: {} })).toEqual([]);
     });
 
     it('renders plain text nodes', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const node: ASTNode = { name: 'Text', params: { value: 'Hello' } };
 
-        expect(renderToStaticMarkup(createElement('div', null, renderNode(node, ctx)))).toBe('<div>Hello</div>');
+        expect(renderToStaticMarkup(createElement('div', null, renderNode([node], ctx)))).toBe('<div>Hello</div>');
     });
 });

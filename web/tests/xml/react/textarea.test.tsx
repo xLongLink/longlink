@@ -9,6 +9,7 @@ describe('Textarea', () => {
             {
                 name: 'Textarea',
                 params: { placeholder: 'Notes', rows: '4', value: 'Draft notes' },
+                children: [],
             },
         ]);
     });

@@ -11,6 +11,7 @@ describe('Longlink', () => {
         expect(parseXML('<longlink />')).toEqual([
             {
                 name: 'longlink',
+                children: [],
             },
         ]);
     });
@@ -25,6 +26,6 @@ describe('Longlink', () => {
         const ast = parseXML('<longlink />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
-        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<div class="space-y-6"></div>');
+        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<div></div>');
     });
 });

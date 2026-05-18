@@ -45,7 +45,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 if (!node.params?.id) throw new Error('State requires a string id');
                 if (node.params.value == null) throw new Error('State requires a value');
                 if (!isText(node.params.id)) throw new Error('State id must be literal text');
-                if (node.children != null) throw new Error('State cannot have children');
+                if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
 
                 const id = node.params.id.trim();
                 const value = node.params.value;
@@ -58,7 +58,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
             if (node.name === 'Query') {
                 if (!node.params?.id) throw new Error('Query requires a string id');
                 if (!node.params?.path) throw new Error('Query requires a string path');
-                if (node.children != null) throw new Error('Query cannot have children');
+                if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
 
                 if (!isText(node.params.id)) throw new Error('Query id must be literal text');
                 if (!isText(node.params.path)) throw new Error('Query path must be literal text');
@@ -71,9 +71,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 await setups[id]();
             }
 
-            if (Array.isArray(node.children)) {
-                await walk(node.children);
-            }
+            await walk(node.children ?? []);
         }
     }
 

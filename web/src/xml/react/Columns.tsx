@@ -4,19 +4,19 @@ import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Columns component. */
 export interface ColumnsProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
 }
 
 /** Props accepted by the XML Column component. */
 export interface ColumnProps {
-    children?: ASTNode | ASTNode[] | null;
+    children?: ASTNode[];
     className?: string;
     width?: string | number;
 }
 
 /** Renders a full-width columns row. */
-export function Columns({ children, className }: ColumnsProps) {
+export function Columns({ children, className: _className }: ColumnsProps) {
     const { ctx } = useXmlContext();
     const nodes = Array.isArray(children) ? children : children ? [children] : [];
     const widths = nodes
@@ -35,20 +35,12 @@ export function Columns({ children, className }: ColumnsProps) {
         ? widths.map((width) => `minmax(0, calc((100% - ${gapWidth}) * ${width / totalWidth}))`).join(' ')
         : undefined;
 
-    return (
-        <ColumnsShell className={className} templateColumns={templateColumns}>
-            {renderNode(children ?? null, ctx)}
-        </ColumnsShell>
-    );
+    return <ColumnsShell templateColumns={templateColumns}>{renderNode(children ?? [], ctx)}</ColumnsShell>;
 }
 
 /** Renders a single width-managed column. */
-export function Column({ children, className, width }: ColumnProps) {
+export function Column({ children, className: _className, width }: ColumnProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <ColumnShell className={className} width={width}>
-            {renderNode(children ?? null, ctx)}
-        </ColumnShell>
-    );
+    return <ColumnShell width={width}>{renderNode(children ?? [], ctx)}</ColumnShell>;
 }
