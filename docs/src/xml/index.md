@@ -12,6 +12,15 @@ The XML layer is optimized for forms, tables, dashboards, and other repeatable w
 Every page starts with a `<longlink>` root element.
 Use `if="..."` on supported elements to conditionally render content.
 
+## Documentation
+
+Use these pages to find the XML authoring surface.
+
+- `Field.md` for accessible form field composition.
+- `layout.md` for layout components such as `Columns`, `Grid`, `Dialog`, and `Tabs`.
+- `components.md` for visible UI components.
+- `html.md` for lowercase HTML bridge elements.
+
 ## `longlink`
 
 Use `longlink` as the root page shell.
@@ -91,6 +100,8 @@ LongLink only supports `${...}` expressions and `$name` references.
 Supported expressions are literals, dotted lookups, arrays, objects, template literals, and basic arithmetic.
 Unsupported expressions include statements, function calls, assignments, comparisons, logical operators, ternaries, optional chaining, and globals.
 
+See `Field.md` for form field composition.
+See `layout.md` for layout components.
 See `components.md` for the React-backed component surface.
 See `html.md` for the lowercase HTML bridge elements.
 See `sdk/longlink/.static/llm/SCHEMA.md` for the XML authoring reference.

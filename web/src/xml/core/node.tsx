@@ -414,10 +414,9 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
     }
 
     if (node.name === 'Grid') {
-        const templateColumns =
-            node.params?.templateColumns != null ? String(evaluate(node.params.templateColumns, ctx) ?? '') : undefined;
+        const columns = node.params?.columns != null ? evaluate(node.params.columns, ctx) : undefined;
 
-        return <Grid templateColumns={templateColumns} children={node.children} />;
+        return <Grid columns={columns == null ? undefined : String(columns)} children={node.children} />;
     }
 
     if (node.name === 'Card') {

@@ -6,18 +6,15 @@ import { renderNode, useXmlContext } from '@xml';
 export interface GridProps {
     children?: ASTNode | ASTNode[] | null;
     className?: string;
-    templateColumns?: string | number;
+    columns?: string | number;
 }
 
 /** Renders a full-width grid row. */
-export function Grid({ children, className, templateColumns }: GridProps) {
+export function Grid({ children, className, columns }: GridProps) {
     const { ctx } = useXmlContext();
 
     return (
-        <GridShell
-            className={className}
-            templateColumns={templateColumns == null ? undefined : String(templateColumns)}
-        >
+        <GridShell className={className} columns={columns == null ? undefined : String(columns)}>
             {renderNode(children ?? null, ctx)}
         </GridShell>
     );

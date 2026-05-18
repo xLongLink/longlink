@@ -383,6 +383,31 @@ Behavior:
 
 - `Column` content renders inside its own width box.
 
+## Grid
+
+### `<Grid>`
+
+Renders a full-width grid shell.
+
+Attributes:
+
+- `columns` optional. Number of equal-width columns.
+
+Behavior:
+
+- `columns` expands to a CSS grid template with equal tracks.
+- Use `Card`, `FieldSet`, or other layout children inside `Grid`.
+
+Example:
+
+```xml
+<Grid columns="3">
+  <Card>One</Card>
+  <Card>Two</Card>
+  <Card>Three</Card>
+</Grid>
+```
+
 ## Card
 
 ### `<Card>`

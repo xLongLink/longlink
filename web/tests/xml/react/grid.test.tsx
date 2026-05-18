@@ -5,10 +5,10 @@ import { renderXmlToMarkup } from '../helpers';
 describe('Grid', () => {
     /* The compiler should preserve the grid container and its children. */
     it('preserves the grid structure in compiled xml', () => {
-        expect(parseXML('<Grid templateColumns="repeat(3, minmax(0, 1fr))">One Two</Grid>')).toEqual([
+        expect(parseXML('<Grid columns="3">One Two</Grid>')).toEqual([
             {
                 name: 'Grid',
-                params: { templateColumns: 'repeat(3, minmax(0, 1fr))' },
+                params: { columns: '3' },
                 children: [{ name: 'Text', params: { value: 'One Two' } }],
             },
         ]);
@@ -16,7 +16,7 @@ describe('Grid', () => {
 
     /* The runtime should render the shadcn grid shell and content. */
     it('renders the full grid composition', () => {
-        const output = renderXmlToMarkup(parseXML('<Grid templateColumns="repeat(3, minmax(0, 1fr))">One Two</Grid>'));
+        const output = renderXmlToMarkup(parseXML('<Grid columns="3">One Two</Grid>'));
 
         expect(output).toContain('data-slot="grid"');
         expect(output).toContain('grid-template-columns');

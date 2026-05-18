@@ -233,7 +233,7 @@
 
             <Columns>
                 <Column width="70">
-                    <Grid templateColumns="repeat(2, minmax(0, 1fr))">
+                    <Grid columns="2">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Revenue overview</CardTitle>

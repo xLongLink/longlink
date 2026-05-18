@@ -134,51 +134,6 @@ Use `Checkbox` for binary form toggles.
 `defaultChecked` seeds the initial value when `checked` is not bound.
 `disabled` and `id` are supported.
 
-## Columns
-
-Use `Columns` with `Column` children for side-by-side layout rows.
-
-```xml
-<Columns>
-  <Column width="70">Main content</Column>
-  <Column width="30">Sidebar</Column>
-</Columns>
-```
-
-`Column.width` is required and uses the percentage share of the row.
-
-### Column
-
-`Column` renders one percentage-based slot inside `Columns`.
-`width` is required.
-
-## Dialog
-
-Use `Dialog` with `DialogContent` and `DialogTrigger` for modal workflows and confirmations.
-
-```xml
-<Dialog open="${true}">
-  <DialogTrigger>
-    <Button variant="outline">Open dialog</Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Delete issue</DialogTitle>
-      <DialogDescription>This cannot be undone.</DialogDescription>
-    </DialogHeader>
-    <DialogFooter>
-      <Button variant="outline">Cancel</Button>
-      <Button>Delete</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-```
-
-`DialogContent` renders in a portal and includes the standard close affordance.
-`DialogFooter` holds actions for the dialog body.
-`DialogHeader` groups the title and description.
-`open` and `defaultOpen` control dialog visibility.
-
 ## Divider
 
 Use the `Divider` component to separate sections with a horizontal rule.
@@ -186,38 +141,6 @@ Use the `Divider` component to separate sections with a horizontal rule.
 ```xml
 <Divider />
 ```
-
-## Field
-
-Use `Field`, `FieldContent`, `FieldDescription`, `FieldError`, `FieldGroup`, `FieldLabel`, `FieldLegend`, `FieldSeparator`, `FieldSet`, and `FieldTitle` to build grouped form layouts.
-
-```xml
-<FieldSet>
-  <FieldLegend>Profile</FieldLegend>
-  <FieldDescription>This appears on invoices and emails.</FieldDescription>
-  <FieldGroup>
-    <Field>
-      <FieldLabel htmlFor="name">Full name</FieldLabel>
-      <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
-      <FieldDescription>This appears on invoices and emails.</FieldDescription>
-    </Field>
-    <Field>
-      <FieldLabel htmlFor="username">Username</FieldLabel>
-      <Input id="username" autoComplete="off" aria-invalid />
-      <FieldError>Choose another username.</FieldError>
-    </Field>
-    <Field orientation="horizontal">
-      <Switch id="newsletter" />
-      <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
-    </Field>
-  </FieldGroup>
-</FieldSet>
-```
-
-`Field` supports `vertical`, `horizontal`, and `responsive` orientations.
-`FieldError` can render children or an `errors` expression.
-`FieldLabel` and `FieldTitle` both render the field label slot.
-`FieldLegend` accepts `variant="legend"` or `variant="label"`.
 
 ## Hero
 
@@ -237,38 +160,6 @@ All other children render in the main hero body.
 
 `HeroContent`, `HeroDescription`, and `HeroTitle` are the three supported hero slots.
 `Hero.icon` uses the same Lucide icon names as `<Icon>`.
-
-## HTML Bridge
-
-Use lowercase HTML tags for simple bridges.
-
-```xml
-<a href="/icons">
-  <Icon name="sparkles" />
-  Open icons
-</a>
-
-<h2>Team</h2>
-
-<code>dashboard_id</code>
-
-<ol>
-  <li>Projects</li>
-  <li>Users</li>
-</ol>
-```
-
-`a`, `b`, `br`, `code`, `h1`, `h2`, `h3`, `h4`, `li`, `ol`, `p`, `s`, `sub`, `sup`, `u`, and `ul` are the current HTML bridge elements.
-Use `a` with `href` for links.
-Use `br` for separators.
-Use heading tags for document structure.
-Use `b` for bold text.
-Use `code` for inline code.
-Use `s` for strikethrough text.
-Use `sup` and `sub` for inline annotations.
-Use `u` for underlined text.
-Use `ol` and `li` for ordered lists.
-Use `ul` and `li` for simple lists.
 
 ## Icon
 
@@ -402,25 +293,6 @@ Use `Table` with `TableBody`, `TableFooter`, and `TableHeader` for tabular data.
 `TableCell` is for body cells.
 `TableHead` is for column headers.
 `TableRow` groups cells in each section.
-
-## Tabs
-
-Use `Tabs` with `TabsContent`, `TabsList`, and `TabsTrigger` to switch between related panels.
-
-```xml
-<Tabs defaultValue="overview">
-  <TabsList variant="line">
-    <TabsTrigger value="overview">Overview</TabsTrigger>
-    <TabsTrigger value="settings">Settings</TabsTrigger>
-  </TabsList>
-  <TabsContent value="overview">Overview panel</TabsContent>
-  <TabsContent value="settings">Settings panel</TabsContent>
-</Tabs>
-```
-
-`TabsContent` and `TabsTrigger` require a matching `value`.
-`TabsList` supports the shadcn `variant` prop.
-Only the active `TabsContent` is rendered.
 
 ## Textarea
 
