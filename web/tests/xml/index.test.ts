@@ -32,6 +32,7 @@ import {
     SelectTrigger,
     SelectValue,
     Slider,
+    Ol,
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -49,6 +50,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    Br,
     compileExpression,
     evaluate,
     fromXml,
@@ -95,6 +97,7 @@ describe('xml index', () => {
         expect(SelectTrigger).toBeDefined();
         expect(SelectValue).toBeDefined();
         expect(Slider).toBeDefined();
+        expect(Ol).toBeDefined();
         expect(Tooltip).toBeDefined();
         expect(TooltipContent).toBeDefined();
         expect(TooltipProvider).toBeDefined();
@@ -112,5 +115,6 @@ describe('xml index', () => {
         expect(TableHead).toBeDefined();
         expect(TableCell).toBeDefined();
         expect(TableCaption).toBeDefined();
+        expect(Br).toBeDefined();
     });
 });

@@ -8,8 +8,9 @@ import { H1 } from '@xml/html/H1';
 import { H2 } from '@xml/html/H2';
 import { H3 } from '@xml/html/H3';
 import { H4 } from '@xml/html/H4';
-import { Hr } from '@xml/html/Hr';
+import { Br } from '@xml/html/Br';
 import { Li } from '@xml/html/Li';
+import { Ol } from '@xml/html/Ol';
 import { P } from '@xml/html/P';
 import { S } from '@xml/html/S';
 import { Sub } from '@xml/html/Sub';
@@ -230,10 +231,10 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         return <P children={node.children} />;
     }
 
-    if (node.name === 'hr') {
+    if (node.name === 'br') {
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
 
-        return <Hr className={className} />;
+        return <Br className={className} />;
     }
 
     if (node.name === 'b') {
@@ -306,6 +307,12 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
         const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
 
         return <Li className={className} children={node.children} />;
+    }
+
+    if (node.name === 'ol') {
+        const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
+
+        return <Ol className={className} children={node.children} />;
     }
 
     if (node.name === 'a') {

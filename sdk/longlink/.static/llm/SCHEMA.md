@@ -1025,7 +1025,7 @@ The following HTML tags are exposed directly in XML:
 
 - `<p>`
 - `<a>`
-- `<hr>`
+- `<br>`
 - `<b>`
 - `<h1>`
 - `<h2>`
@@ -1066,9 +1066,9 @@ Behavior:
 - Renders as a normal HTML anchor.
 - Supports the global `if` attribute.
 
-### `<hr>`
+### `<br>`
 
-Renders a horizontal rule.
+Renders a spacer break.
 
 Attributes:
 

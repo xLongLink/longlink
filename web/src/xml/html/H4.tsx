@@ -12,7 +12,7 @@ export function H4({ children, className }: H4Props) {
     const { ctx } = useXmlContext();
 
     return (
-        <h4 className={['scroll-m-20 text-xl font-semibold tracking-tight', className].filter(Boolean).join(' ')}>
+        <h4 className={['scroll-m-20 mt-4 mb-2 text-xl font-semibold tracking-tight', className].filter(Boolean).join(' ')}>
             {renderNode(children ?? null, ctx)}
         </h4>
     );

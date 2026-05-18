@@ -72,6 +72,8 @@ longlink/
 
 ## Components
 
+The current runtime component surface is:
+
 Primitives:
 
 - `longlink` - root page shell.
@@ -80,19 +82,36 @@ Primitives:
 - `For` - array iteration in scoped child context.
 - `Text` - internal only; produced by the parser for raw text.
 
-React:
+React-backed components:
 
-- `Button` - action button and link adapter.
-- `Divider` - horizontal separator.
-- `Input` - single-line input control.
-- `Hero` - hero shell.
-- `HeroTitle` - hero title slot.
-- `HeroDescription` - hero description slot.
-- `HeroContent` - hero content slot.
+- `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
+- `Badge`
+- `Button`
+- `ButtonGroup`, `ButtonGroupText`, `ButtonGroupSeparator`
+- `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`
+- `Checkbox`
+- `Columns`, `Column`
+- `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`
+- `Divider`
+- `FieldSet`, `FieldLegend`, `FieldGroup`, `Field`, `FieldContent`, `FieldLabel`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError`
+- `Hero`, `HeroTitle`, `HeroDescription`, `HeroContent`
+- `Icon`
+- `Input`
+- `Label`
+- `RadioGroup`, `RadioGroupItem`
+- `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
+- `Slider`
+- `Switch`
+- `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption`
+- `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
+- `Textarea`
+- `Toggle`
+- `ToggleGroup`, `ToggleGroupItem`
+- `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
 
-HTML:
+HTML bridge:
 
-- `p` - paragraph bridge element. Lowercase only.
+- `a`, `b`, `code`, `h1`, `h2`, `h3`, `h4`, `hr`, `li`, `ol`, `p`, `s`, `sub`, `sup`, `u`, `ul`
 
 ## Parser (web/src/xml/core/parser.ts)
 

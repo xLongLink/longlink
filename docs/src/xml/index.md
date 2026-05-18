@@ -16,7 +16,7 @@ Use `Button`, `Badge`, `Divider`, `Icon`, `Hero`, `Card`, `Dialog`, `Tooltip`, `
 `<Query id="..." path="...">` requires literal text for both attributes.
 Any documented XML element may also use `if="..."` for conditional rendering.
 
-The parser also emits internal `Text` nodes for raw text content. Do not author `Text` directly.
+The parser also emits internal raw text nodes for raw text content. Do not author them directly.
 
 ## Document Loading
 
@@ -58,7 +58,7 @@ The current XML surface includes:
 - Surface: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`, `Table`, `TableCaption`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
 - Identity: `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
 - Form controls: `Button`, `Label`, `Badge`, `Checkbox`, `Switch`, `Slider`, `Input`, `Textarea`, `RadioGroup`, `RadioGroupItem`, `Toggle`, `ToggleGroup`, `ToggleGroupItem`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
-- HTML bridge: `p`, `a`, `hr`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ul`, `li`
+- HTML bridge: `p`, `a`, `br`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ol`, `ul`, `li`
 
 ### Conditional Rendering
 

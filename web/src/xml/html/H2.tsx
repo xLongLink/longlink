@@ -13,7 +13,7 @@ export function H2({ children, className }: H2Props) {
 
     return (
         <h2
-            className={['scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0', className]
+            className={['scroll-m-20 mt-8 mb-3 text-3xl font-semibold tracking-tight first:mt-0', className]
                 .filter(Boolean)
                 .join(' ')}
         >

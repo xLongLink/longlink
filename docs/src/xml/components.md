@@ -4,49 +4,96 @@ Components handle visible content and user actions.
 Use them when a page needs navigation or form input.
 This page documents the current XML element surface.
 
-Supported elements:
+The parser also emits internal raw text nodes for raw text content. Do not author them directly.
 
-- Root: `longlink`
-- Primitives: `State`, `Query`, `For`
-- Hero: `Hero`, `HeroTitle`, `HeroDescription`, `HeroContent`, `Icon`
-- Field: `FieldSet`, `FieldLegend`, `FieldGroup`, `Field`, `FieldContent`, `FieldLabel`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError`
-- Layout: `Columns`, `Column`, `Divider`, `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
-- Surface: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter`, `Table`, `TableCaption`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `TooltipProvider`, `Tooltip`, `TooltipTrigger`, `TooltipContent`
-- Identity: `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`
-- Form controls: `Button`, `Label`, `Badge`, `Checkbox`, `Switch`, `Slider`, `Input`, `Textarea`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`
-- HTML bridge: `p`, `a`, `hr`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ul`, `li`
+## Avatar
 
-The parser also emits internal `Text` nodes for raw text content. Do not author `Text` directly.
-
-## Hero
-
-Use the `Hero` shell for page headers with title, description, and action content.
-`HeroContent` renders in a separate right-side slot.
-All other children render in the main hero body.
+Use `Avatar` with `AvatarBadge`, `AvatarFallback`, and `AvatarImage` for user identity chips.
 
 ```xml
-<Hero icon="layout-grid">
-  <HeroTitle>Organizations</HeroTitle>
-  <HeroDescription>Browse the organizations you belong to.</HeroDescription>
-  <HeroContent>
-    <Button action="/organizations/new">Create organization</Button>
-  </HeroContent>
-</Hero>
+<AvatarGroup>
+  <Avatar size="sm">
+    <AvatarImage src="/ada.png" alt="Ada Lovelace" />
+    <AvatarFallback>AL</AvatarFallback>
+    <AvatarBadge>1</AvatarBadge>
+  </Avatar>
+  <Avatar>
+    <AvatarImage src="/grace.png" alt="Grace Hopper" />
+    <AvatarFallback>GH</AvatarFallback>
+  </Avatar>
+  <AvatarGroupCount>+2</AvatarGroupCount>
+</AvatarGroup>
 ```
 
-`HeroTitle`, `HeroDescription`, and `HeroContent` are the three supported hero slots.
-`Hero.icon` uses the same Lucide icon names as `<Icon>`.
+`Avatar.size` accepts `default`, `sm`, or `lg`.
+`AvatarGroup` stacks multiple avatars with shared spacing.
+`AvatarGroupCount` renders the trailing count chip.
 
-## Icon
+## Badge
 
-Use `Icon` for standalone Lucide icons in cards, buttons, and inline layout chrome.
+Use the `Badge` component for compact status labels and tags.
 
 ```xml
-<Icon name="layout-grid" className="size-5" />
+<Badge variant="secondary">New</Badge>
 ```
 
-`name` is required.
-`className` is optional and can be used to tune size or color.
+`variant` is optional.
+
+## Button
+
+Use the `Button` component to navigate or trigger an action.
+
+```xml
+<Button action="/issues/new" method="GET" variant="default">
+  Create issue
+</Button>
+```
+
+`action` is the target path.
+`method="GET"` renders a navigation link to `action`.
+`method="POST"`, `PUT`, and `DELETE` send a data-changing request to `action`.
+If `action` is empty, the button only runs invalidation.
+`json` is evaluated at click time.
+If `json` is omitted, the request is sent without a JSON body.
+`invalidate` accepts an array expression of slot ids to rerun after success.
+
+`method` defaults to `POST`.
+
+## Card
+
+Use the `Card` component for grouped content blocks and simple dashboard panels.
+
+```xml
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card Description</CardDescription>
+    <CardAction>Card Action</CardAction>
+  </CardHeader>
+  <CardContent>
+    <p>Card Content</p>
+  </CardContent>
+  <CardFooter>
+    <p>Card Footer</p>
+  </CardFooter>
+</Card>
+```
+
+`CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, and `CardTitle` compose the shadcn card layout.
+`size="sm"` keeps the compact card density.
+Each card part also accepts `className` for local styling.
+
+## Checkbox
+
+Use `Checkbox` for binary form toggles.
+
+```xml
+<Checkbox checked="settings.enabled" id="enabled" />
+```
+
+`checked` can bind to a reactive state slot.
+`defaultChecked` seeds the initial value when `checked` is not bound.
+`disabled` and `id` are supported.
 
 ## Columns
 
@@ -67,9 +114,234 @@ Use `Columns` with `Column` children for side-by-side layout rows.
 `Column` renders one percentage-based slot inside `Columns`.
 `width` is required.
 
+## Dialog
+
+Use `Dialog` with `DialogContent` and `DialogTrigger` for modal workflows and confirmations.
+
+```xml
+<Dialog open="{true}">
+  <DialogTrigger>
+    <Button variant="outline">Open dialog</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Delete issue</DialogTitle>
+      <DialogDescription>This cannot be undone.</DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <Button variant="outline">Cancel</Button>
+      <Button>Delete</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+`DialogContent` renders in a portal and includes the standard close affordance.
+`DialogFooter` holds actions for the dialog body.
+`DialogHeader` groups the title and description.
+`open` and `defaultOpen` control dialog visibility.
+
+## Divider
+
+Use the `Divider` component to separate sections with a horizontal rule.
+
+```xml
+<Divider />
+```
+
+## Field
+
+Use `Field`, `FieldContent`, `FieldDescription`, `FieldError`, `FieldGroup`, `FieldLabel`, `FieldLegend`, `FieldSeparator`, `FieldSet`, and `FieldTitle` to build grouped form layouts.
+
+```xml
+<FieldSet>
+  <FieldLegend>Profile</FieldLegend>
+  <FieldDescription>This appears on invoices and emails.</FieldDescription>
+  <FieldGroup>
+    <Field>
+      <FieldLabel htmlFor="name">Full name</FieldLabel>
+      <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
+      <FieldDescription>This appears on invoices and emails.</FieldDescription>
+    </Field>
+    <Field>
+      <FieldLabel htmlFor="username">Username</FieldLabel>
+      <Input id="username" autoComplete="off" aria-invalid />
+      <FieldError>Choose another username.</FieldError>
+    </Field>
+    <Field orientation="horizontal">
+      <Switch id="newsletter" />
+      <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
+    </Field>
+  </FieldGroup>
+</FieldSet>
+```
+
+`Field` supports `vertical`, `horizontal`, and `responsive` orientations.
+`FieldError` can render children or an `errors` expression.
+`FieldLabel` and `FieldTitle` both render the field label slot.
+`FieldLegend` accepts `variant="legend"` or `variant="label"`.
+
+## Hero
+
+Use the `Hero` shell for page headers with title, description, and action content.
+`HeroContent` renders in a separate right-side slot.
+All other children render in the main hero body.
+
+```xml
+<Hero icon="layout-grid">
+  <HeroTitle>Organizations</HeroTitle>
+  <HeroDescription>Browse the organizations you belong to.</HeroDescription>
+  <HeroContent>
+    <Button action="/organizations/new">Create organization</Button>
+  </HeroContent>
+</Hero>
+```
+
+`HeroContent`, `HeroDescription`, and `HeroTitle` are the three supported hero slots.
+`Hero.icon` uses the same Lucide icon names as `<Icon>`.
+
+## HTML Bridge
+
+Use lowercase HTML tags for simple bridges.
+
+```xml
+<a href="/icons">
+  <Icon name="sparkles" className="size-5" />
+  Open icons
+</a>
+
+<h2>Team</h2>
+
+<code>dashboard_id</code>
+
+<ol>
+  <li>Projects</li>
+  <li>Users</li>
+</ol>
+```
+
+`a`, `b`, `br`, `code`, `h1`, `h2`, `h3`, `h4`, `li`, `ol`, `p`, `s`, `sub`, `sup`, `u`, and `ul` are the current HTML bridge elements.
+Use `a` with `href` for links.
+Use `br` for separators.
+Use heading tags for document structure.
+Use `b` for bold text.
+Use `code` for inline code.
+Use `s` for strikethrough text.
+Use `sup` and `sub` for inline annotations.
+Use `u` for underlined text.
+Use `ol` and `li` for ordered lists.
+Use `ul` and `li` for simple lists.
+
+## Icon
+
+Use `Icon` for standalone Lucide icons in cards, buttons, and inline layout chrome.
+
+```xml
+<Icon name="layout-grid" className="size-5" />
+```
+
+`name` is required.
+`className` is optional and can be used to tune size or color.
+
+## Input
+
+Use the `Input` component for single-line text entry.
+
+```xml
+<Input label="Issue title" value="user.name" />
+```
+
+`label` is optional and is used as the placeholder when `placeholder` is omitted.
+`id`, `className`, `autoComplete`, `disabled`, and `aria-invalid` are also supported.
+
+When `value` resolves to a reactive Valtio-backed state slot, the input stays in sync and writes back to `state.value`.
+Otherwise, `value` only initializes the field.
+
+## Label
+
+Use `Label` for form labels.
+
+```xml
+<Label htmlFor="enabled">Enabled</Label>
+```
+
+`htmlFor` points at the control id.
+`className` is optional.
+
+## RadioGroup
+
+Use `RadioGroup` with `RadioGroupItem` for single-choice form controls.
+
+```xml
+<RadioGroup name="priority" defaultValue="medium">
+  <RadioGroupItem value="low">Low</RadioGroupItem>
+  <RadioGroupItem value="medium">Medium</RadioGroupItem>
+  <RadioGroupItem value="high">High</RadioGroupItem>
+</RadioGroup>
+```
+
+`defaultValue` and `value` can seed or bind the selected option.
+`name`, `form`, `required`, `readOnly`, and `disabled` are supported.
+`ToggleGroupItem.value` is required.
+
+## Select
+
+Use `Select` with `SelectContent`, `SelectGroup`, `SelectItem`, `SelectLabel`, `SelectSeparator`, `SelectTrigger`, and `SelectValue` for single-choice menus.
+
+```xml
+<Select defaultValue="overview">
+  <SelectTrigger>
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Views</SelectLabel>
+      <SelectItem value="overview">Overview</SelectItem>
+      <SelectItem value="settings">Settings</SelectItem>
+    </SelectGroup>
+    <SelectSeparator />
+    <SelectGroup>
+      <SelectLabel>Status</SelectLabel>
+      <SelectItem value="active">Active</SelectItem>
+      <SelectItem value="archived">Archived</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
+```
+
+`SelectItem` requires a `value`.
+`className` is available on the select slots for local styling.
+`open` and `defaultOpen` control menu visibility.
+`value` can bind to a reactive state slot; otherwise `defaultValue` seeds the initial selection.
+
+## Slider
+
+Use `Slider` for single-value and range controls.
+
+```xml
+<Slider value="volume" min="0" max="100" step="5" />
+```
+
+`value` can bind to a reactive state slot or seed the initial thumb position.
+`defaultValue` is an explicit fallback when you do not want to use `value`.
+Use wrapped expressions like `{[25]}` when you need multiple thumb values.
+`min`, `max`, `step`, `orientation`, `disabled`, `id`, and `name` are supported.
+
+## Switch
+
+Use `Switch` for binary on/off controls.
+
+```xml
+<Switch checked="settings.enabled" id="enabled" size="sm" />
+```
+
+`checked` can bind to a reactive state slot.
+`defaultChecked` seeds the initial value when `checked` is not bound.
+`size` accepts `sm` or `default`.
+
 ## Table
 
-Use `Table` with `TableCaption`, `TableHeader`, `TableBody`, and `TableFooter` for tabular data.
+Use `Table` with `TableBody`, `TableCaption`, `TableFooter`, and `TableHeader` for tabular data.
 
 ```xml
 <Table>
@@ -93,174 +365,41 @@ Use `Table` with `TableCaption`, `TableHeader`, `TableBody`, and `TableFooter` f
 </Table>
 ```
 
-`TableHead` is for column headers.
 `TableCell` is for body cells.
+`TableHead` is for column headers.
 `TableRow` groups cells in each section.
 `className` is available on every table part.
 
-## HTML Bridge
+## Tabs
 
-Use lowercase HTML tags for simple bridges.
-
-```xml
-<a href="/icons">
-  <Icon name="sparkles" className="size-5" />
-  Open icons
-</a>
-
-<h2>Team</h2>
-
-<code>dashboard_id</code>
-
-<ul>
-  <li>Projects</li>
-  <li>Users</li>
-</ul>
-```
-
-`p`, `a`, `hr`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ul`, and `li` are the current HTML bridge elements.
-Use `a` with `href` for links.
-Use `hr` for separators.
-Use heading tags for document structure.
-Use `b` for bold text.
-Use `code` for inline code.
-Use `s` for strikethrough text.
-Use `sup` and `sub` for inline annotations.
-Use `u` for underlined text.
-Use `ul` and `li` for simple lists.
-
-## Card
-
-Use the `Card` component for grouped content blocks and simple dashboard panels.
+Use `Tabs` with `TabsContent`, `TabsList`, and `TabsTrigger` to switch between related panels.
 
 ```xml
-<Card>
-  <CardHeader>
-    <CardTitle>Card Title</CardTitle>
-    <CardDescription>Card Description</CardDescription>
-    <CardAction>Card Action</CardAction>
-  </CardHeader>
-  <CardContent>
-    <p>Card Content</p>
-  </CardContent>
-  <CardFooter>
-    <p>Card Footer</p>
-  </CardFooter>
-</Card>
+<Tabs defaultValue="overview">
+  <TabsList variant="line">
+    <TabsTrigger value="overview">Overview</TabsTrigger>
+    <TabsTrigger value="settings">Settings</TabsTrigger>
+  </TabsList>
+  <TabsContent value="overview">Overview panel</TabsContent>
+  <TabsContent value="settings">Settings panel</TabsContent>
+</Tabs>
 ```
 
-`CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, and `CardFooter` compose the shadcn card layout.
-`size="sm"` keeps the compact card density.
-Each card part also accepts `className` for local styling.
+`TabsContent` and `TabsTrigger` require a matching `value`.
+`TabsList` supports the shadcn `variant` prop, and all tabs parts accept `className`.
+Only the active `TabsContent` is rendered.
 
-## Dialog
+## Textarea
 
-Use `Dialog` with `DialogTrigger` and `DialogContent` for modal workflows and confirmations.
+Use `Textarea` for multi-line text entry.
 
 ```xml
-<Dialog open="{true}">
-  <DialogTrigger>
-    <Button variant="outline">Open dialog</Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Delete issue</DialogTitle>
-      <DialogDescription>This cannot be undone.</DialogDescription>
-    </DialogHeader>
-    <DialogFooter>
-      <Button variant="outline">Cancel</Button>
-      <Button>Delete</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+<Textarea label="Notes" value="Draft notes" rows="4" />
 ```
 
-`DialogHeader` groups the title and description.
-`DialogFooter` holds actions for the dialog body.
-`DialogContent` renders in a portal and includes the standard close affordance.
-`open` and `defaultOpen` control dialog visibility.
-
-## Tooltip
-
-Use `TooltipProvider` with `Tooltip`, `TooltipTrigger`, and `TooltipContent` for hover or focus help.
-
-```xml
-<TooltipProvider>
-  <Tooltip>
-    <TooltipTrigger>Hover me</TooltipTrigger>
-    <TooltipContent side="top">Tooltip text</TooltipContent>
-  </Tooltip>
-</TooltipProvider>
-```
-
-`Tooltip` supports `open` and `defaultOpen`.
-`TooltipContent` supports `align`, `alignOffset`, `className`, `hidden`, `side`, and `sideOffset`.
-Wrap multiple tooltips in `TooltipProvider`.
-
-## Button
-
-Use the `Button` component to navigate or trigger an action.
-
-```xml
-<Button action="/issues/new" method="GET" variant="default">
-  Create issue
-</Button>
-```
-
-`action` is the target path.
-`method="GET"` renders a navigation link to `action`.
-`method="POST"`, `PUT`, and `DELETE` send a data-changing request to `action`.
-If `action` is empty, the button only runs invalidation.
-`json` is evaluated at click time.
-If `json` is omitted, the request is sent without a JSON body.
-`invalidate` accepts an array expression of slot ids to rerun after success.
-
-`method` defaults to `POST`.
-
-## Badge
-
-Use the `Badge` component for compact status labels and tags.
-
-```xml
-<Badge variant="secondary">New</Badge>
-```
-
-`variant` is optional.
-
-## Avatar
-
-Use `Avatar` with `AvatarImage`, `AvatarFallback`, and `AvatarBadge` for user identity chips.
-
-```xml
-<AvatarGroup>
-  <Avatar size="sm">
-    <AvatarImage src="/ada.png" alt="Ada Lovelace" />
-    <AvatarFallback>AL</AvatarFallback>
-    <AvatarBadge>1</AvatarBadge>
-  </Avatar>
-  <Avatar>
-    <AvatarImage src="/grace.png" alt="Grace Hopper" />
-    <AvatarFallback>GH</AvatarFallback>
-  </Avatar>
-  <AvatarGroupCount>+2</AvatarGroupCount>
-</AvatarGroup>
-```
-
-`Avatar.size` accepts `default`, `sm`, or `lg`.
-`AvatarGroup` stacks multiple avatars with shared spacing.
-`AvatarGroupCount` renders the trailing count chip.
-
-## Checkbox
-
-Use `Checkbox` for binary form toggles.
-
-```xml
-<Checkbox checked="settings.enabled" id="enabled" />
-```
-
-`checked` can bind to a reactive state slot.
-`defaultChecked` seeds the initial value when `checked` is not bound.
-`disabled` and `id` are supported.
+`label` is optional and falls back to the placeholder when `placeholder` is omitted.
+`value` can bind to a reactive state slot.
+`className`, `disabled`, `id`, `rows`, and `cols` are supported.
 
 ## Toggle
 
@@ -293,169 +432,19 @@ Use `ToggleGroup` with `ToggleGroupItem` for segmented single- or multi-select c
 `defaultValue` and `value` can be used to seed or bind the selected item set.
 `orientation`, `size`, `variant`, `spacing`, `disabled`, and `loopFocus` are supported.
 
-## RadioGroup
+## Tooltip
 
-Use `RadioGroup` with `RadioGroupItem` for single-choice form controls.
-
-```xml
-<RadioGroup name="priority" defaultValue="medium">
-  <RadioGroupItem value="low">Low</RadioGroupItem>
-  <RadioGroupItem value="medium">Medium</RadioGroupItem>
-  <RadioGroupItem value="high">High</RadioGroupItem>
-</RadioGroup>
-```
-
-`defaultValue` and `value` can seed or bind the selected option.
-`name`, `form`, `required`, `readOnly`, and `disabled` are supported.
-`ToggleGroupItem.value` is required.
-
-## Label
-
-Use `Label` for form labels.
+Use `TooltipProvider` with `Tooltip`, `TooltipContent`, and `TooltipTrigger` for hover or focus help.
 
 ```xml
-<Label htmlFor="enabled">Enabled</Label>
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger>Hover me</TooltipTrigger>
+    <TooltipContent side="top">Tooltip text</TooltipContent>
+  </Tooltip>
+</TooltipProvider>
 ```
 
-`htmlFor` points at the control id.
-`className` is optional.
-
-## Switch
-
-Use `Switch` for binary on/off controls.
-
-```xml
-<Switch checked="settings.enabled" id="enabled" size="sm" />
-```
-
-`checked` can bind to a reactive state slot.
-`defaultChecked` seeds the initial value when `checked` is not bound.
-`size` accepts `sm` or `default`.
-
-## Slider
-
-Use `Slider` for single-value and range controls.
-
-```xml
-<Slider value="volume" min="0" max="100" step="5" />
-```
-
-`value` can bind to a reactive state slot or seed the initial thumb position.
-`defaultValue` is an explicit fallback when you do not want to use `value`.
-Use wrapped expressions like `{[25]}` when you need multiple thumb values.
-`min`, `max`, `step`, `orientation`, `disabled`, `id`, and `name` are supported.
-
-## Textarea
-
-Use `Textarea` for multi-line text entry.
-
-```xml
-<Textarea label="Notes" value="Draft notes" rows="4" />
-```
-
-`label` is optional and falls back to the placeholder when `placeholder` is omitted.
-`value` can bind to a reactive state slot.
-`className`, `disabled`, `id`, `rows`, and `cols` are supported.
-
-## Input
-
-Use the `Input` component for single-line text entry.
-
-```xml
-<Input label="Issue title" value="user.name" />
-```
-
-`label` is optional and is used as the placeholder when `placeholder` is omitted.
-`id`, `className`, `autoComplete`, `disabled`, and `aria-invalid` are also supported.
-
-When `value` resolves to a reactive Valtio-backed state slot, the input stays in sync and writes back to `state.value`.
-Otherwise, `value` only initializes the field.
-
-## Field
-
-Use `FieldSet`, `FieldLegend`, `FieldDescription`, `FieldGroup`, `Field`, `FieldContent`, `FieldTitle`, `FieldLabel`, `FieldError`, and `FieldSeparator` to build grouped form layouts.
-
-```xml
-<FieldSet>
-  <FieldLegend>Profile</FieldLegend>
-  <FieldDescription>This appears on invoices and emails.</FieldDescription>
-  <FieldGroup>
-    <Field>
-      <FieldLabel htmlFor="name">Full name</FieldLabel>
-      <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
-      <FieldDescription>This appears on invoices and emails.</FieldDescription>
-    </Field>
-    <Field>
-      <FieldLabel htmlFor="username">Username</FieldLabel>
-      <Input id="username" autoComplete="off" aria-invalid />
-      <FieldError>Choose another username.</FieldError>
-    </Field>
-    <Field orientation="horizontal">
-      <Switch id="newsletter" />
-      <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
-    </Field>
-  </FieldGroup>
-</FieldSet>
-```
-
-`Field` supports `vertical`, `horizontal`, and `responsive` orientations.
-`FieldLegend` accepts `variant="legend"` or `variant="label"`.
-`FieldError` can render children or an `errors` expression.
-`FieldLabel` and `FieldTitle` both render the field label slot.
-
-## Select
-
-Use `Select` with `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, and `SelectSeparator` for single-choice menus.
-
-```xml
-<Select defaultValue="overview">
-  <SelectTrigger>
-    <SelectValue />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectGroup>
-      <SelectLabel>Views</SelectLabel>
-      <SelectItem value="overview">Overview</SelectItem>
-      <SelectItem value="settings">Settings</SelectItem>
-    </SelectGroup>
-    <SelectSeparator />
-    <SelectGroup>
-      <SelectLabel>Status</SelectLabel>
-      <SelectItem value="active">Active</SelectItem>
-      <SelectItem value="archived">Archived</SelectItem>
-    </SelectGroup>
-  </SelectContent>
-</Select>
-```
-
-`SelectItem` requires a `value`.
-`value` can bind to a reactive state slot; otherwise `defaultValue` seeds the initial selection.
-`open` and `defaultOpen` control menu visibility.
-`className` is available on the select slots for local styling.
-
-## Divider
-
-Use the `Divider` component to separate sections with a horizontal rule.
-
-```xml
-<Divider />
-```
-
-## Tabs
-
-Use `Tabs` with `TabsList`, `TabsTrigger`, and `TabsContent` to switch between related panels.
-
-```xml
-<Tabs defaultValue="overview">
-  <TabsList variant="line">
-    <TabsTrigger value="overview">Overview</TabsTrigger>
-    <TabsTrigger value="settings">Settings</TabsTrigger>
-  </TabsList>
-  <TabsContent value="overview">Overview panel</TabsContent>
-  <TabsContent value="settings">Settings panel</TabsContent>
-</Tabs>
-```
-
-`TabsTrigger` and `TabsContent` require a matching `value`.
-`TabsList` supports the shadcn `variant` prop, and all tabs parts accept `className`.
-Only the active `TabsContent` is rendered.
+`Tooltip` supports `open` and `defaultOpen`.
+`TooltipContent` supports `align`, `alignOffset`, `className`, `hidden`, `side`, and `sideOffset`.
+Wrap multiple tooltips in `TooltipProvider`.

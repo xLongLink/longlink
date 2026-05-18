@@ -44,4 +44,6 @@ export { ToggleGroup, ToggleGroupItem } from './react/ToggleGroup';
 export { Textarea } from './react/Textarea';
 export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './react/Table';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';
+export { Br } from './html/Br';
+export { Ol } from './html/Ol';
 export { RenderXML } from './renderers.tsx';

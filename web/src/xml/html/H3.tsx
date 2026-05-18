@@ -12,7 +12,7 @@ export function H3({ children, className }: H3Props) {
     const { ctx } = useXmlContext();
 
     return (
-        <h3 className={['scroll-m-20 text-2xl font-semibold tracking-tight', className].filter(Boolean).join(' ')}>
+        <h3 className={['scroll-m-20 mt-6 mb-2 text-2xl font-semibold tracking-tight', className].filter(Boolean).join(' ')}>
             {renderNode(children ?? null, ctx)}
         </h3>
     );

@@ -1,27 +1,9 @@
 # HTML
 
-The lowercase HTML bridge elements exposed in XML pages are `p`, `a`, `hr`, `b`, `h1`, `h2`, `h3`, `h4`, `code`, `s`, `sup`, `sub`, `u`, `ul`, and `li`.
+The lowercase HTML bridge elements exposed in XML pages are `a`, `b`, `br`, `code`, `h1`, `h2`, `h3`, `h4`, `li`, `ol`, `p`, `s`, `sub`, `sup`, `u`, and `ul`.
 
 All of these tags accept `className`.
 All of these tags support the global `if` attribute.
-
-## `p`
-
-Use `p` for paragraph text.
-
-Attributes:
-
-- `className` optional. Extra classes for styling.
-
-Behavior:
-
-- Renders as a normal HTML paragraph.
-
-Example:
-
-```xml
-<p>Use explicit paragraph text.</p>
-```
 
 ## `a`
 
@@ -42,24 +24,6 @@ Example:
 <a href="/settings" className="link">Open settings</a>
 ```
 
-## `hr`
-
-Use `hr` for a horizontal separator.
-
-Attributes:
-
-- `className` optional. Extra classes for styling.
-
-Behavior:
-
-- Renders a normal HTML horizontal rule.
-
-Example:
-
-```xml
-<hr />
-```
-
 ## `b`
 
 Use `b` for bold text.
@@ -76,6 +40,24 @@ Example:
 
 ```xml
 <b>Important</b>
+```
+
+## `code`
+
+Use `code` for inline code text.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Renders inline monospace text.
+
+Example:
+
+```xml
+<code>@radix-ui/react-alert-dialog</code>
 ```
 
 ## `h1`
@@ -150,9 +132,9 @@ Example:
 <h4>Activity</h4>
 ```
 
-## `code`
+## `br`
 
-Use `code` for inline code text.
+Use `br` for a spacer break.
 
 Attributes:
 
@@ -160,12 +142,72 @@ Attributes:
 
 Behavior:
 
-- Renders inline monospace text.
+- Renders a normal HTML horizontal rule.
 
 Example:
 
 ```xml
-<code>@radix-ui/react-alert-dialog</code>
+<br />
+```
+
+## `li`
+
+Use `li` for list items inside `ul`.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Renders a normal HTML list item.
+
+Example:
+
+```xml
+<ul>
+  <li>First item</li>
+  <li>Second item</li>
+</ul>
+```
+
+## `ol`
+
+Use `ol` for ordered lists.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Renders a normal HTML ordered list.
+
+Example:
+
+```xml
+<ol>
+  <li>First item</li>
+  <li>Second item</li>
+</ol>
+```
+
+## `p`
+
+Use `p` for paragraph text.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Renders as a normal HTML paragraph.
+
+Example:
+
+```xml
+<p>Use explicit paragraph text.</p>
 ```
 
 ## `s`
@@ -186,24 +228,6 @@ Example:
 <s>Deprecated</s>
 ```
 
-## `sup`
-
-Use `sup` for superscript text.
-
-Attributes:
-
-- `className` optional. Extra classes for styling.
-
-Behavior:
-
-- Renders a normal HTML superscript element.
-
-Example:
-
-```xml
-<sup>2</sup>
-```
-
 ## `sub`
 
 Use `sub` for subscript text.
@@ -220,6 +244,24 @@ Example:
 
 ```xml
 <sub>n</sub>
+```
+
+## `sup`
+
+Use `sup` for superscript text.
+
+Attributes:
+
+- `className` optional. Extra classes for styling.
+
+Behavior:
+
+- Renders a normal HTML superscript element.
+
+Example:
+
+```xml
+<sup>2</sup>
 ```
 
 ## `u`
@@ -251,27 +293,6 @@ Attributes:
 Behavior:
 
 - Renders a normal HTML unordered list.
-
-Example:
-
-```xml
-<ul>
-  <li>First item</li>
-  <li>Second item</li>
-</ul>
-```
-
-## `li`
-
-Use `li` for list items inside `ul`.
-
-Attributes:
-
-- `className` optional. Extra classes for styling.
-
-Behavior:
-
-- Renders a normal HTML list item.
 
 Example:
 

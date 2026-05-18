@@ -1,235 +1,246 @@
 <longlink>
-    <Hero icon="sparkles">
-        <HeroTitle>Component Playground</HeroTitle>
-        <HeroDescription>Live XML sample for testing web components without touching the API.</HeroDescription>
-        <HeroContent>
-            <Icon name="sparkles" className="size-5" />
-            <a href="/icons">
-                <Icon name="sparkles" className="size-5" />
-                Open icons
-            </a>
-            <Badge variant="secondary">New</Badge>
-            <Button action="/pricing" method="GET" variant="outline">Open pricing</Button>
-        </HeroContent>
-    </Hero>
-
-    <AvatarGroup>
-        <Avatar size="sm">
-            <AvatarImage src="/avatars/ada.png" alt="Ada Lovelace" />
-            <AvatarFallback>AL</AvatarFallback>
-            <AvatarBadge>1</AvatarBadge>
-        </Avatar>
-        <Avatar>
-            <AvatarImage src="/avatars/grace.png" alt="Grace Hopper" />
-            <AvatarFallback>GH</AvatarFallback>
-        </Avatar>
-        <AvatarGroupCount>+2</AvatarGroupCount>
-    </AvatarGroup>
-
-    <p>This page is loaded from and rendered at</p>
-    <Divider />
-    <Columns>
-        <Column width="70">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Revenue</CardTitle>
-                    <CardDescription>Monthly performance snapshot</CardDescription>
-                    <CardAction>
-                        <Button action="/reports/revenue" method="GET" variant="outline">View report</Button>
-                    </CardAction>
-                </CardHeader>
-                <CardContent>
-                    <p>Card content</p>
-                </CardContent>
-                <CardFooter>
-                    <p>Card footer</p>
-                </CardFooter>
-            </Card>
-        </Column>
-        <Column width="30">
-            <p>Sidebar content</p>
-            <Badge variant="outline">Preview</Badge>
-        </Column>
-    </Columns>
-    <Tabs defaultValue="overview">
+    <Tabs defaultValue="text">
         <TabsList variant="line">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="text">Text</TabsTrigger>
+            <TabsTrigger value="form">Form</TabsTrigger>
+            <TabsTrigger value="other">Other</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview">
-            <p>Overview content</p>
+
+        <TabsContent value="text">
+            <Hero icon="sparkles">
+                <HeroTitle>Release note summary</HeroTitle>
+                <HeroDescription>Shows the HTML tags working together in one readable story.</HeroDescription>
+                <HeroContent>
+                    <Button action="/icons" method="GET" variant="outline">Open icons</Button>
+                </HeroContent>
+            </Hero>
+
+            <h1>Ops digest for Tuesday</h1>
+            <p>The import pipeline is now stable. We finished the retry fix for <code>customer_sync</code>, and the nightly run completed without manual intervention.</p>
+            <h2>What changed</h2>
+            <p>The team tightened validation on <b>customer IDs</b>, removed one <s>temporary bypass</s>, and kept the rollout limited to the staging workspace. The result is a cleaner path from source data to <u>dashboard output</u>.</p>
+            <br />
+            <h3>Today’s checklist</h3>
+            <ul>
+                <li>Confirm the summary totals match the warehouse export.</li>
+                <li>Review any records marked with H<sub>2</sub>O-style test labels.</li>
+                <li>Watch the next deploy window at 10<sup>30</sup> for regressions.</li>
+            </ul>
+            <h3>Follow-up steps</h3>
+            <ol>
+                <li>Share the digest with ops and support.</li>
+                <li>Validate the next sync against the staging workspace.</li>
+                <li>Close the ticket after the report refreshes.</li>
+            </ol>
+            <h4>Notes</h4>
+            <p>For the deeper walkthrough, open <a href="/icons">the icon catalog</a> or inspect the generated report after the next sync.</p>
         </TabsContent>
-        <TabsContent value="activity">
-            <p>Activity content</p>
+
+        <TabsContent value="form">
+            <FieldSet>
+                <FieldLegend>Profile</FieldLegend>
+                <FieldDescription>All form controls are grouped here.</FieldDescription>
+                <FieldGroup>
+                    <Field>
+                        <FieldContent>
+                            <FieldTitle>Full name</FieldTitle>
+                            <FieldDescription>This appears on invoices and emails.</FieldDescription>
+                        </FieldContent>
+                        <FieldLabel htmlFor="name">Full name</FieldLabel>
+                        <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="username">Username</FieldLabel>
+                        <Input id="username" autoComplete="off" aria-invalid="true" />
+                        <FieldError>Choose another username.</FieldError>
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="notes">Notes</FieldLabel>
+                        <Textarea id="notes" label="Notes" rows="4" value="Draft notes" />
+                    </Field>
+                    <Field orientation="horizontal">
+                        <Checkbox id="newsletter" defaultChecked="true" />
+                        <FieldLabel htmlFor="newsletter">Newsletter</FieldLabel>
+                    </Field>
+                    <Field orientation="horizontal">
+                        <Switch id="marketing" defaultChecked="false" size="sm" />
+                        <FieldLabel htmlFor="marketing">Marketing updates</FieldLabel>
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="notifications">Notifications</FieldLabel>
+                        <Toggle id="notifications" defaultPressed="true" size="sm" variant="outline">Notifications</Toggle>
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="volume">Priority</FieldLabel>
+                        <Slider id="volume" defaultValue="{[35]}" min="0" max="100" step="5" />
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="range">Range</FieldLabel>
+                        <Slider id="range" defaultValue="{[25, 75]}" min="0" max="100" step="5" />
+                    </Field>
+                    <Field>
+                        <FieldLabel>View mode</FieldLabel>
+                        <ToggleGroup type="single">
+                            <ToggleGroupItem value="a">A</ToggleGroupItem>
+                            <ToggleGroupItem value="b">B</ToggleGroupItem>
+                            <ToggleGroupItem value="c">C</ToggleGroupItem>
+                        </ToggleGroup>
+                    </Field>
+                    <FieldSet>
+                        <FieldLegend>Priority</FieldLegend>
+                        <FieldDescription>Choose one level for this item.</FieldDescription>
+                        <FieldGroup>
+                            <RadioGroup name="priority" defaultValue="medium">
+                                <RadioGroupItem value="low">Low</RadioGroupItem>
+                                <RadioGroupItem value="medium">Medium</RadioGroupItem>
+                                <RadioGroupItem value="high">High</RadioGroupItem>
+                            </RadioGroup>
+                        </FieldGroup>
+                    </FieldSet>
+                    <Field>
+                        <FieldLabel htmlFor="view">Select</FieldLabel>
+                        <Select defaultValue="overview">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectLabel>Views</SelectLabel>
+                                    <SelectItem value="overview">Overview</SelectItem>
+                                    <SelectItem value="settings">Settings</SelectItem>
+                                </SelectGroup>
+                                <SelectSeparator />
+                                <SelectGroup>
+                                    <SelectLabel>Status</SelectLabel>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="archived">Archived</SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </Field>
+                    <FieldSeparator>or</FieldSeparator>
+                    <Field orientation="horizontal">
+                        <Button variant="outline">Cancel</Button>
+                        <Button>Save</Button>
+                    </Field>
+                </FieldGroup>
+            </FieldSet>
+        </TabsContent>
+
+        <TabsContent value="other">
+            <Hero icon="sparkles">
+                <HeroTitle>Other components</HeroTitle>
+                <HeroDescription>Layout, media, feedback, and data display components live here.</HeroDescription>
+                <HeroContent>
+                    <Button action="/pricing" method="GET" variant="outline">Open pricing</Button>
+                </HeroContent>
+            </Hero>
+
+            <AvatarGroup>
+                <Avatar size="sm">
+                    <AvatarImage src="/avatars/ada.png" alt="Ada Lovelace" />
+                    <AvatarFallback>AL</AvatarFallback>
+                    <AvatarBadge>1</AvatarBadge>
+                </Avatar>
+                <Avatar>
+                    <AvatarImage src="/avatars/grace.png" alt="Grace Hopper" />
+                    <AvatarFallback>GH</AvatarFallback>
+                </Avatar>
+                <AvatarGroupCount>+2</AvatarGroupCount>
+            </AvatarGroup>
+
+            <Divider />
+
+            <Columns>
+                <Column width="70">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Revenue</CardTitle>
+                            <CardDescription>Monthly performance snapshot</CardDescription>
+                            <CardAction>
+                                <Button action="/reports/revenue" method="GET" variant="outline">View report</Button>
+                            </CardAction>
+                        </CardHeader>
+                        <CardContent>
+                            <p>Card content</p>
+                        </CardContent>
+                        <CardFooter>
+                            <p>Card footer</p>
+                        </CardFooter>
+                    </Card>
+                </Column>
+                <Column width="30">
+                    <p>Sidebar content</p>
+                    <Badge variant="outline">Preview</Badge>
+                </Column>
+            </Columns>
+
+            <Table>
+                <TableCaption>Revenue by quarter</TableCaption>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Quarter</TableHead>
+                        <TableHead>Revenue</TableHead>
+                        <TableHead>Growth</TableHead>
+                        <TableHead>Status</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow>
+                        <TableCell>Q1</TableCell>
+                        <TableCell>$120k</TableCell>
+                        <TableCell>12%</TableCell>
+                        <TableCell>On track</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Q2</TableCell>
+                        <TableCell>$154k</TableCell>
+                        <TableCell>28%</TableCell>
+                        <TableCell>On track</TableCell>
+                    </TableRow>
+                </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TableCell>Total</TableCell>
+                        <TableCell>$274k</TableCell>
+                        <TableCell>20%</TableCell>
+                        <TableCell>Projected</TableCell>
+                    </TableRow>
+                </TableFooter>
+            </Table>
+
+            <Dialog>
+                <DialogTrigger>
+                    <Button variant="outline">Open dialog</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete issue</DialogTitle>
+                        <DialogDescription>This cannot be undone.</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline">Cancel</Button>
+                        <Button>Delete</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger>Hover tooltip</TooltipTrigger>
+                    <TooltipContent side="top">Tooltip text</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
+            <ButtonGroup>
+                <Button variant="outline">Cancel</Button>
+                <Input placeholder="Search" value="Quick search" />
+                <Button>Search</Button>
+            </ButtonGroup>
+
+            <ButtonGroup>
+                <Button>Save</Button>
+                <ButtonGroupSeparator />
+                <ButtonGroupText>Quick actions</ButtonGroupText>
+            </ButtonGroup>
         </TabsContent>
     </Tabs>
-    <Table>
-        <TableCaption>Revenue by quarter</TableCaption>
-        <TableHeader>
-            <TableRow>
-                <TableHead>Quarter</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>Growth</TableHead>
-                <TableHead>Status</TableHead>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            <TableRow>
-                <TableCell>Q1</TableCell>
-                <TableCell>$120k</TableCell>
-                <TableCell>12%</TableCell>
-                <TableCell>On track</TableCell>
-            </TableRow>
-            <TableRow>
-                <TableCell>Q2</TableCell>
-                <TableCell>$154k</TableCell>
-                <TableCell>28%</TableCell>
-                <TableCell>On track</TableCell>
-            </TableRow>
-        </TableBody>
-        <TableFooter>
-            <TableRow>
-                <TableCell>Total</TableCell>
-                <TableCell>$274k</TableCell>
-                <TableCell>20%</TableCell>
-                <TableCell>Projected</TableCell>
-            </TableRow>
-        </TableFooter>
-    </Table>
-    <Dialog>
-        <DialogTrigger>
-            <Button variant="outline">Open dialog</Button>
-        </DialogTrigger>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Delete issue</DialogTitle>
-                <DialogDescription>This cannot be undone.</DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-                <Button variant="outline">Cancel</Button>
-                <Button>Delete</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-    <TooltipProvider>
-        <Tooltip>
-            <TooltipTrigger>Hover tooltip</TooltipTrigger>
-            <TooltipContent side="top">Tooltip text</TooltipContent>
-        </Tooltip>
-    </TooltipProvider>
-    <p>
-        <Button action="/pricing" method="GET" variant="outline">Open pricing</Button>
-    </p>
-    <ButtonGroup>
-        <Button variant="outline">Cancel</Button>
-        <Input placeholder="Search" value="Quick search" />
-        <Button>Search</Button>
-    </ButtonGroup>
-    <ButtonGroup>
-        <Button>Save</Button>
-        <ButtonGroupSeparator />
-        <ButtonGroupText>Quick actions</ButtonGroupText>
-    </ButtonGroup>
-    <p>
-        <Input placeholder="Type to test the input" value="Live preview" />
-    </p>
-    <p>
-        <Input placeholder="Number input" type="number" value="42" />
-    </p>
-    <p>
-        <Label htmlFor="notes">Notes</Label>
-    </p>
-    <p>
-        <Textarea id="notes" label="Notes" rows="4" value="Draft notes" />
-    </p>
-    <p>Form controls:</p>
-    <p>
-        <Label htmlFor="newsletter">Newsletter</Label>
-        <Checkbox id="newsletter" defaultChecked="true" />
-    </p>
-    <p>
-        <Label htmlFor="marketing">Marketing</Label>
-        <Switch id="marketing" defaultChecked="false" size="sm" />
-    </p>
-    <p>
-        <Toggle id="notifications" defaultPressed="true" size="sm" variant="outline">Notifications</Toggle>
-    </p>
-    <p>
-        <Slider defaultValue="{[35]}" min="0" max="100" step="5" />
-    </p>
-    <p>
-        <ToggleGroup type="single">
-            <ToggleGroupItem value="a">A</ToggleGroupItem>
-            <ToggleGroupItem value="b">B</ToggleGroupItem>
-            <ToggleGroupItem value="c">C</ToggleGroupItem>
-        </ToggleGroup>
-    </p>
-    <FieldSet>
-        <FieldLegend>Priority</FieldLegend>
-        <FieldDescription>Choose one level for this item.</FieldDescription>
-        <FieldGroup>
-            <RadioGroup name="priority" defaultValue="medium">
-                <RadioGroupItem value="low">Low</RadioGroupItem>
-                <RadioGroupItem value="medium">Medium</RadioGroupItem>
-                <RadioGroupItem value="high">High</RadioGroupItem>
-            </RadioGroup>
-        </FieldGroup>
-    </FieldSet>
-    <p>
-        <Select defaultValue="overview">
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-                <SelectGroup>
-                    <SelectLabel>Views</SelectLabel>
-                    <SelectItem value="overview">Overview</SelectItem>
-                    <SelectItem value="settings">Settings</SelectItem>
-                </SelectGroup>
-                <SelectSeparator />
-                <SelectGroup>
-                    <SelectLabel>Status</SelectLabel>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                </SelectGroup>
-            </SelectContent>
-        </Select>
-    </p>
-    <p>
-        <Badge variant="outline">Preview</Badge>
-    </p>
-
-    <FieldSet>
-        <FieldLegend>Profile</FieldLegend>
-        <FieldDescription>This appears on invoices and emails.</FieldDescription>
-        <FieldGroup>
-            <Field>
-                <FieldContent>
-                    <FieldTitle>Full name</FieldTitle>
-                    <FieldDescription>This appears on invoices and emails.</FieldDescription>
-                </FieldContent>
-                <FieldLabel htmlFor="name">Full name</FieldLabel>
-                <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
-            </Field>
-            <Field>
-                <FieldLabel htmlFor="username">Username</FieldLabel>
-                <Input id="username" autoComplete="off" aria-invalid="true" />
-                <FieldError>Choose another username.</FieldError>
-            </Field>
-            <Field orientation="horizontal">
-                <Switch id="newsletter" />
-                <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
-            </Field>
-            <FieldSeparator>or</FieldSeparator>
-        </FieldGroup>
-    </FieldSet>
-
-    <p>Rendered components:</p>
-    <For each='["Hero", "AvatarGroup", "Avatar", "AvatarImage", "AvatarFallback", "AvatarBadge", "AvatarGroupCount", "Badge", "Columns", "Column", "Card", "CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Dialog", "DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent", "Button", "ButtonGroup", "ButtonGroupText", "ButtonGroupSeparator", "Divider", "Input", "Textarea", "Checkbox", "Toggle", "Slider", "ToggleGroup", "ToggleGroupItem", "RadioGroup", "RadioGroupItem", "Label", "Switch", "FieldSet", "FieldLegend", "FieldDescription", "FieldGroup", "Field", "FieldContent", "FieldTitle", "FieldLabel", "FieldError", "FieldSeparator", "Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectGroup", "SelectLabel", "SelectItem", "SelectSeparator", "a"]' as="name">
-        <p>{index + 1}. {name}</p>
-    </For>
-
-    <p>Table parts:</p>
-    <For each='["Table", "TableCaption", "TableHeader", "TableBody", "TableFooter", "TableRow", "TableHead", "TableCell", "Icon"]' as="name">
-        <p>{index + 1}. {name}</p>
-    </For>
-
 </longlink>
