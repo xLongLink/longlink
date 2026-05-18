@@ -12,7 +12,18 @@
   <xsd:complexType name="BadgeType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="BadgeChildrenOnlyType">
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="variant" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="secondary" />
+              <xsd:enumeration value="destructive" />
+              <xsd:enumeration value="outline" />
+              <xsd:enumeration value="ghost" />
+              <xsd:enumeration value="link" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

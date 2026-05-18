@@ -16,7 +16,14 @@
         <xsd:attribute name="defaultChecked" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="sm" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

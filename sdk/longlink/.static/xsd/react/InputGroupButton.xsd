@@ -13,9 +13,37 @@
     <xsd:complexContent>
       <xsd:extension base="InputGroupButtonChildrenOnlyType">
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
-        <xsd:attribute name="type" type="xsd:string" use="optional" />
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="xs">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="xs" />
+              <xsd:enumeration value="sm" />
+              <xsd:enumeration value="icon-xs" />
+              <xsd:enumeration value="icon-sm" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="type" use="optional" default="button">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="button" />
+              <xsd:enumeration value="submit" />
+              <xsd:enumeration value="reset" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="variant" use="optional" default="ghost">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="outline" />
+              <xsd:enumeration value="secondary" />
+              <xsd:enumeration value="ghost" />
+              <xsd:enumeration value="destructive" />
+              <xsd:enumeration value="link" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

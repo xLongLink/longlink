@@ -267,7 +267,7 @@ Renders a compact status label.
 
 Attributes:
 
-- `variant` optional. Badge style variant.
+- `variant` optional. Badge style variant. Use `default`, `secondary`, `destructive`, `outline`, `ghost`, or `link`.
 
 Behavior:
 
@@ -284,7 +284,7 @@ Renders a single user avatar shell.
 
 Attributes:
 
-- `size` optional. Avatar size variant.
+- `size` optional. Avatar size variant. Use `default`, `sm`, or `lg`.
 
 Behavior:
 
@@ -412,7 +412,7 @@ Renders a grouped content shell.
 
 Attributes:
 
-- `size` optional. Card density variant.
+- `size` optional. Card density variant. Use `default` or `sm`.
 
 Behavior:
 
@@ -637,7 +637,8 @@ Renders a shadcn-backed tab shell.
 Attributes:
 
 - `defaultValue` optional. Initial active tab value.
-- `orientation` optional. Tabs orientation.
+- `orientation` optional. Tabs orientation. Use `horizontal` or `vertical`.
+- `TabsList` variant optional. Use `default` or `line`.
 
 Children:
 
@@ -713,16 +714,18 @@ Actionable button.
 Attributes:
 
 - `action` optional. Target path to call or navigate to.
-- `method` optional. HTTP method. `GET` navigates to `action`; `POST`, `PUT`, and `DELETE` send a request. Defaults to `POST`.
+- `method` optional. HTTP method string. `GET` navigates to `action`; other methods send a request. Defaults to `POST`.
 - `json` optional. Request body value or JSON string.
 - `invalidate` optional. Array expression of slot ids to rerun.
 - `submit` optional. When truthy, renders a native submit button.
+- `size` optional. Button size variant. Use `default`, `xs`, `sm`, `lg`, `icon`, `icon-xs`, `icon-sm`, or `icon-lg`.
+- `variant` optional. Button style variant. Use `default`, `outline`, `secondary`, `ghost`, `destructive`, or `link`.
 
 Behavior:
 
 - If `action` is empty, the button only reruns invalidation targets.
 - If `method` is `GET`, the button renders as a link to `action`.
-- If `method` is `POST`, `PUT`, or `DELETE`, the button sends the configured action request.
+- If `method` is not `GET`, the button sends the configured action request.
 - If `submit` is truthy, the button renders as a native submit control and skips action requests.
 - If `json` is omitted, the request is sent without a JSON body.
 - `invalidate` refetches the named query slots after the request succeeds.
@@ -823,7 +826,7 @@ Attributes:
 - `disabled` optional. Disables interaction.
 - `size` optional. Use `xs`, `sm`, `icon-xs`, or `icon-sm`.
 - `type` optional. Use `button`, `submit`, or `reset`.
-- `variant` optional. Button variant string.
+- `variant` optional. Button variant. Use `default`, `outline`, `secondary`, `ghost`, `destructive`, or `link`.
 
 ### `<InputGroupText>`
 
@@ -930,8 +933,8 @@ Toggle button within a group.
 Attributes:
 
 - `value` required. Unique item value.
-- `size` optional. Item size variant.
-- `variant` optional. Item style variant.
+- `size` optional. Item size variant. Use `sm`, `default`, or `lg`.
+- `variant` optional. Item style variant. Use `default` or `outline`.
 
 ### `<RadioGroup>`
 
@@ -1160,12 +1163,15 @@ Renders a standard anchor link.
 
 Attributes:
 
-- `href` required. Link target.
+- `href` optional. Link target.
+- `active` optional. Visual state behavior. Use `always` or `hover`. Defaults to `hover`.
 
 Behavior:
 
 - Renders as a normal HTML anchor.
 - Supports the global `if` attribute.
+
+Example: `<A href="/settings" active="always">Open settings</A>`
 
 ### `<Br>`
 

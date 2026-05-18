@@ -65,12 +65,12 @@ const menuItemVariants = cva(
     {
         variants: {
             active: {
-                true: 'bg-white/10 text-white shadow-[inset_3px_0_0_0_rgba(255,255,255,0.75)]',
+                true: 'border-l-4 border-l-accent bg-white/10 text-white',
                 false: 'text-white/70 hover:bg-white/5 hover:text-white',
             },
             level: {
                 root: '',
-                sub: 'gap-2 px-2.5 py-1.5 text-[0.9375rem] font-medium',
+                sub: 'gap-1 rounded-md px-2 py-1 text-xs font-normal',
             },
         },
         defaultVariants: {
@@ -102,7 +102,8 @@ function parseMenuSections(listChildren?: React.ReactNode): ResolvedMenuSection[
 
     return sectionNodes.map((sectionNode) => {
         const subSectionNodes = React.Children.toArray(sectionNode.props.children).filter(
-            (child): child is React.ReactElement<MenuSubSectionProps> => React.isValidElement(child) && 'value' in child.props
+            (child): child is React.ReactElement<MenuSubSectionProps> =>
+                React.isValidElement(child) && 'value' in child.props
         );
 
         return {
@@ -142,11 +143,9 @@ export function MenuSection(_props: MenuSectionProps) {
     return null;
 }
 
-
 export function MenuSubSection(_props: MenuSubSectionProps) {
     return null;
 }
-
 
 export function MenuList({ className, children }: MenuListProps) {
     const menuContext = React.useContext(MenuContext);
@@ -161,7 +160,8 @@ export function MenuList({ className, children }: MenuListProps) {
     const [expandedSectionIds, setExpandedSectionIds] = React.useState<Set<string>>(() => {
         const activeSection = sections.find(
             (section) =>
-                section.value === activeValue || section.subSections.some((subSection) => subSection.value === activeValue)
+                section.value === activeValue ||
+                section.subSections.some((subSection) => subSection.value === activeValue)
         );
 
         return activeSection ? new Set([activeSection.value]) : new Set();
@@ -174,7 +174,8 @@ export function MenuList({ className, children }: MenuListProps) {
 
         const activeSection = sections.find(
             (section) =>
-                section.value === activeValue || section.subSections.some((subSection) => subSection.value === activeValue)
+                section.value === activeValue ||
+                section.subSections.some((subSection) => subSection.value === activeValue)
         );
 
         if (!activeSection || !activeSection.subSections.length) {
@@ -325,7 +326,6 @@ export function MenuList({ className, children }: MenuListProps) {
     );
 }
 
-
 export function MenuContent({ value, className, children }: MenuContentProps) {
     const menuContext = React.useContext(MenuContext);
 
@@ -339,7 +339,6 @@ export function MenuContent({ value, className, children }: MenuContentProps) {
 
     return <section className={className}>{children}</section>;
 }
-
 
 export function Menu({
     value,
@@ -356,7 +355,9 @@ export function Menu({
     const sections = React.useMemo(() => parseMenuSections(menuList?.props.children), [menuList?.props.children]);
 
     const isControlled = value !== undefined;
-    const [internalValue, setInternalValue] = React.useState<string | undefined>(defaultValue ?? getInitialValue(sections));
+    const [internalValue, setInternalValue] = React.useState<string | undefined>(
+        defaultValue ?? getInitialValue(sections)
+    );
 
     const activeValue = isControlled ? value : internalValue;
 
@@ -372,7 +373,8 @@ export function Menu({
 
         const hasValue = sections.some(
             (section) =>
-                section.value === internalValue || section.subSections.some((subSection) => subSection.value === internalValue)
+                section.value === internalValue ||
+                section.subSections.some((subSection) => subSection.value === internalValue)
         );
 
         if (!hasValue) {

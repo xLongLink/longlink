@@ -20,7 +20,14 @@
   <xsd:complexType name="ButtonGroupType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ButtonGroupChildrenOnlyType">
-        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" use="optional" default="horizontal">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="horizontal" />
+              <xsd:enumeration value="vertical" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

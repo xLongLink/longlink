@@ -12,7 +12,14 @@
   <xsd:complexType name="CardType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="CardChildrenOnlyType">
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="sm" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

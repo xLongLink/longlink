@@ -1,3 +1,8 @@
+import {
+    MenuContent as UIMenuContent,
+    MenuSection as UIMenuSection,
+    MenuSubSection as UIMenuSubSection,
+} from '@ui/menu';
 import { compile, evaluate, isText } from '@xml/core/expressions';
 import { query } from '@xml/core/query';
 import { state } from '@xml/core/state';
@@ -63,8 +68,7 @@ import {
     InputGroupTextarea,
 } from '@xml/react/InputGroup';
 import { Label } from '@xml/react/Label';
-import { Menu, MenuContent, MenuList } from '@xml/react/Menu';
-import { MenuContent as UIMenuContent, MenuSection as UIMenuSection, MenuSubSection as UIMenuSubSection } from '@ui/menu';
+import { Menu, MenuList } from '@xml/react/Menu';
 import { RadioGroup, RadioGroupItem } from '@xml/react/RadioGroup';
 import {
     Select,
@@ -317,7 +321,9 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
         if (node.name === 'A') {
             const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
-            return <A href={href} children={node.children} />;
+            const active = node.params?.active ? String(evaluate(node.params.active, ctx) ?? '') : undefined;
+
+            return <A active={active as 'always' | 'hover' | undefined} href={href} children={node.children} />;
         }
 
         if (node.name === 'Button') {

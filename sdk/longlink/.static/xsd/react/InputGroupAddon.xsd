@@ -12,7 +12,16 @@
   <xsd:complexType name="InputGroupAddonType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="InputGroupAddonChildrenOnlyType">
-        <xsd:attribute name="align" type="xsd:string" use="optional" />
+        <xsd:attribute name="align" use="optional" default="inline-start">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="inline-start" />
+              <xsd:enumeration value="inline-end" />
+              <xsd:enumeration value="block-start" />
+              <xsd:enumeration value="block-end" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

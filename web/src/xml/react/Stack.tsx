@@ -10,5 +10,9 @@ export interface StackProps {
 export function Stack({ children }: StackProps) {
     const { ctx } = useXmlContext();
 
-    return <div data-slot="stack" className="flex flex-col gap-2">{renderNode(children ?? [], ctx)}</div>;
+    return (
+        <div data-slot="stack" className="flex flex-col gap-4">
+            {renderNode(children ?? [], ctx)}
+        </div>
+    );
 }

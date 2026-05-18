@@ -12,7 +12,15 @@
   <xsd:complexType name="AType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="AChildrenOnlyType">
-        <xsd:attribute name="href" type="xsd:string" use="required" />
+        <xsd:attribute name="href" type="xsd:string" use="optional" />
+        <xsd:attribute name="active" use="optional" default="hover">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="always" />
+              <xsd:enumeration value="hover" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

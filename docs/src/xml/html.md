@@ -9,9 +9,10 @@ These tags share the same conditional rendering model through the global `if` at
 Links to another page or resource.
 
 - `href` required. Link target.
+- `active` optional. Use `always` or `hover`. Defaults to `hover`.
 
 ```xml
-<A href="/settings">Open settings</A>
+<A href="/settings" active="always">Open settings</A>
 ```
 
 ## `B`

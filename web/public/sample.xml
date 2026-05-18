@@ -1,16 +1,14 @@
 <?xml-model href="https://docs.longlink.dev/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink>
     <Tabs defaultValue="text">
-        <TabsList variant="line">
-            <TabsTrigger value="text">Text</TabsTrigger>
-            <TabsTrigger value="form">Form</TabsTrigger>
-            <TabsTrigger value="item">Item</TabsTrigger>
-            <TabsTrigger value="menu">Menu</TabsTrigger>
-            <TabsTrigger value="grid">Grid</TabsTrigger>
-            <TabsTrigger value="other">Other</TabsTrigger>
-        </TabsList>
+            <TabsList variant="line">
+                <TabsTrigger value="text">Text</TabsTrigger>
+                <TabsTrigger value="form">Form</TabsTrigger>
+                <TabsTrigger value="item">Item</TabsTrigger>
+                <TabsTrigger value="menu">Menu</TabsTrigger>
+                <TabsTrigger value="grid">Grid</TabsTrigger>
+            </TabsList>
         <TabsContent value="text">
-            <Br />
             <H1>Basic Html Elements are Supported</H1>
             <P>
                 The import pipeline is now stable. We finished the retry fix for
@@ -26,21 +24,23 @@
                 <S>temporary bypass</S>
                 , and kept the
                 rollout limited to the staging workspace. The result is a cleaner path from source data to
-                <U>dashboard output</U>
-                .
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <U>dashboard output</U>.
+                        </TooltipTrigger>
+                        <TooltipContent side="top">This output powers the dashboard summary.</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </P>
             <H3>Today’s checklist</H3>
             <Ul>
                 <Li>Confirm the summary totals match the warehouse export.</Li>
                 <Li>
-                    Review any records marked with H
-                    <Sub>2</Sub>
-                    O-style test labels.
+                    Review any records marked with H<Sub>2</Sub>O-style test labels.
                 </Li>
                 <Li>
-                    Watch the next deploy window at 10
-                    <Sup>30</Sup>
-                    for regressions.
+                    Watch the next deploy window at 10<Sup>30</Sup> for regressions.
                 </Li>
             </Ul>
             <H3>Follow-up steps</H3>
@@ -52,7 +52,7 @@
             <H4>Notes</H4>
             <P>
                 For the deeper walkthrough, open
-                <A href="/icons">the icon catalog</A>
+                <A href="/icons" active="hover">the icon catalog</A>
                 or inspect the generated report
                 after the next sync.
             </P>
@@ -179,6 +179,11 @@
                     </Field>
                 </FieldGroup>
             </FieldSet>
+
+            <Br />
+            <Br />
+            <Br />
+
             <FieldSet>
                 <FieldLegend>More form chrome</FieldLegend>
                 <FieldDescription>Extra field and control primitives used by the runtime.</FieldDescription>
@@ -256,7 +261,7 @@
                 </HeroContent>
             </Hero>
             <Columns>
-                <Column width="70">
+                <Column width="75">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -296,16 +301,16 @@
                         </TableFooter>
                     </Table>
                 </Column>
-                <Column width="30">
+                <Column width="25">
                     <Stack>
                         Actions for the current invoice and quote.
                         <Badge variant="outline">Pending approval</Badge>
                         <Divider />
-                        <A href="/orders/new"><Icon name="shopping-cart" /> Create order</A>
-                        <A href="/invoices/new"><Icon name="file-text" /> Create invoice</A>
+                        <A href="/orders/new" active="hover"><Icon name="shopping-cart" /> Create order</A>
+                        <A href="/invoices/new" active="hover"><Icon name="file-text" /> Create invoice</A>
                         <Dialog>
                             <DialogTrigger>
-                                <A><Icon name="pencil" /> Edit quote</A>
+                                <A active="hover"><Icon name="pencil" /> Edit quote</A>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
@@ -319,9 +324,9 @@
                             </DialogContent>
                         </Dialog>
                         <Divider />
-                        <A href="/quotes/email"><Icon name="mail" /> Email quote</A>
+                        <A href="/quotes/email" active="hover"><Icon name="mail" /> Email quote</A>
                         <Divider />
-                        <A href="/actions"><Icon name="layout-grid" /> More actions</A>
+                        <A href="/actions" active="hover"><Icon name="layout-grid" /> More actions</A>
                         <Divider />
                         <Field orientation="horizontal">
                             <Avatar size="sm">
@@ -370,7 +375,7 @@
                 </InputGroupButton>
             </InputGroup>
             <Columns>
-                <Column width="70">
+                <Column width="75">
                     <Grid columns="2">
                         <Card>
                             <CardHeader>
@@ -425,27 +430,19 @@
                         </Card>
                     </Grid>
                 </Column>
-                <Column width="30">
+                <Column width="25">
                     <Stack>
                         <P>Quick links in the same style as a GitHub repo sidebar.</P>
-                        <A href="/code"><Icon name="code-2" /> Code</A>
-                        <A href="/issues"><Icon name="circle-alert" /> Issues</A>
-                        <A href="/pulls"><Icon name="git-pull-request" /> Pull requests</A>
-                        <A href="/actions"><Icon name="play-circle" /> Actions</A>
-                        <A href="/projects"><Icon name="layout-grid" /> Projects</A>
-                        <A href="/security"><Icon name="shield" /> Security</A>
-                        <A href="/insights"><Icon name="chart-column" /> Insights</A>
+                        <A href="/code" active="hover"><Icon name="code-2" /> Code</A>
+                        <A href="/issues" active="hover"><Icon name="circle-alert" /> Issues</A>
+                        <A href="/pulls" active="hover"><Icon name="git-pull-request" /> Pull requests</A>
+                        <A href="/actions" active="hover"><Icon name="play-circle" /> Actions</A>
+                        <A href="/projects" active="hover"><Icon name="layout-grid" /> Projects</A>
+                        <A href="/security" active="hover"><Icon name="shield" /> Security</A>
+                        <A href="/insights" active="hover"><Icon name="chart-column" /> Insights</A>
                     </Stack>
                 </Column>
             </Columns>
-        </TabsContent>
-        <TabsContent value="other">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger>Hover tooltip</TooltipTrigger>
-                    <TooltipContent side="top">Tooltip text</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
         </TabsContent>
     </Tabs>
 </longlink>
