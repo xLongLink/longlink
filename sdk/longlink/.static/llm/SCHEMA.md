@@ -167,7 +167,6 @@ Groups a form section.
 
 Attributes:
 
-
 ### `<FieldLegend>`
 
 Renders the fieldset legend.
@@ -181,7 +180,6 @@ Attributes:
 Groups related fields inside a fieldset.
 
 Attributes:
-
 
 ### `<Field>`
 
@@ -197,7 +195,6 @@ Field content slot.
 
 Attributes:
 
-
 ### `<FieldLabel>`
 
 Field label slot.
@@ -212,20 +209,17 @@ Field title slot.
 
 Attributes:
 
-
 ### `<FieldDescription>`
 
 Field description slot.
 
 Attributes:
 
-
 ### `<FieldSeparator>`
 
 Separates field sections.
 
 Attributes:
-
 
 Children:
 
@@ -316,20 +310,17 @@ Renders fallback content when the image is unavailable.
 
 Attributes:
 
-
 ### `<AvatarBadge>`
 
 Renders the badge overlay on top of an avatar.
 
 Attributes:
 
-
 ### `<AvatarGroup>`
 
 Renders a stacked row of avatars.
 
 Attributes:
-
 
 Behavior:
 
@@ -342,7 +333,6 @@ Renders the trailing count chip for an avatar group.
 
 Attributes:
 
-
 Behavior:
 
 - Usually follows one or more `Avatar` children inside `AvatarGroup`.
@@ -354,7 +344,6 @@ Behavior:
 Renders a full-width column row.
 
 Attributes:
-
 
 Behavior:
 
@@ -479,7 +468,6 @@ Footer slot for the card.
 Renders a scrollable shadcn table shell.
 
 Attributes:
-
 
 Behavior:
 
@@ -752,7 +740,6 @@ Example:
 Inline text segment inside a button group.
 
 Attributes:
-
 
 ### `<ButtonGroupSeparator>`
 
@@ -1136,7 +1123,6 @@ Renders a paragraph element.
 
 Attributes:
 
-
 Behavior:
 
 - Renders as a normal HTML paragraph.
@@ -1161,7 +1147,6 @@ Renders a spacer break.
 
 Attributes:
 
-
 Behavior:
 
 - Supports the global `if` attribute.
@@ -1171,7 +1156,6 @@ Behavior:
 Renders bold text.
 
 Attributes:
-
 
 Behavior:
 
@@ -1183,7 +1167,6 @@ Renders a primary heading.
 
 Attributes:
 
-
 Behavior:
 
 - Supports the global `if` attribute.
@@ -1193,7 +1176,6 @@ Behavior:
 Renders a secondary heading.
 
 Attributes:
-
 
 Behavior:
 
@@ -1205,7 +1187,6 @@ Renders a tertiary heading.
 
 Attributes:
 
-
 Behavior:
 
 - Supports the global `if` attribute.
@@ -1215,7 +1196,6 @@ Behavior:
 Renders a quaternary heading.
 
 Attributes:
-
 
 Behavior:
 
@@ -1227,7 +1207,6 @@ Renders inline code.
 
 Attributes:
 
-
 Behavior:
 
 - Supports the global `if` attribute.
@@ -1237,7 +1216,6 @@ Behavior:
 Renders strikethrough text.
 
 Attributes:
-
 
 Behavior:
 
@@ -1249,7 +1227,6 @@ Renders superscript text.
 
 Attributes:
 
-
 Behavior:
 
 - Supports the global `if` attribute.
@@ -1259,7 +1236,6 @@ Behavior:
 Renders subscript text.
 
 Attributes:
-
 
 Behavior:
 
@@ -1271,7 +1247,6 @@ Renders underlined text.
 
 Attributes:
 
-
 Behavior:
 
 - Supports the global `if` attribute.
@@ -1282,7 +1257,6 @@ Renders an unordered list.
 
 Attributes:
 
-
 Behavior:
 
 - Supports the global `if` attribute.
@@ -1292,7 +1266,6 @@ Behavior:
 Renders a list item.
 
 Attributes:
-
 
 Behavior:
 

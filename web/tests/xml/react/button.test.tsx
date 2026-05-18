@@ -91,9 +91,7 @@ describe('Button', () => {
     it('preserves action parameters in compiled xml', () => {
         expect(
             parseXML(
-                '<Button action="/issues" json=' +
-                    '\'${{ title: issue.title }}\'' +
-                    ' invalidate="issues">Save</Button>'
+                '<Button action="/issues" json=' + "'${{ title: issue.title }}'" + ' invalidate="issues">Save</Button>'
             )
         ).toEqual([
             {

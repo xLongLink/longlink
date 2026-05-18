@@ -21,12 +21,9 @@ function resolveIconComponent(name: string): LucideIconComponent | null {
         .replace(/(?:^|[-_\s]+)([a-zA-Z0-9])/g, (_match, char: string) => char.toUpperCase())
         .replace(/[^a-zA-Z0-9]/g, '');
 
-    return (
-        LucideIcons[name as keyof typeof LucideIcons] ??
-        LucideIcons[normalizedName as keyof typeof LucideIcons]
-    ) as LucideIconComponent | null;
+    return (LucideIcons[name as keyof typeof LucideIcons] ??
+        LucideIcons[normalizedName as keyof typeof LucideIcons]) as LucideIconComponent | null;
 }
-
 
 /** Renders a Lucide icon by XML name. */
 export function Icon({ className, name = '' }: IconProps) {

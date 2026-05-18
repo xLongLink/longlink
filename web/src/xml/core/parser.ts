@@ -99,7 +99,6 @@ function toNodes(input: unknown): ASTNode[] {
     });
 }
 
-
 /** Collects parser attributes into plain XML params. */
 function collectParams(input: unknown): Record<string, string> {
     if (!input || typeof input !== 'object' || Array.isArray(input)) {

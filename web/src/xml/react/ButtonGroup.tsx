@@ -1,4 +1,8 @@
-import { ButtonGroup as UIButtonGroup, ButtonGroupSeparator as UIButtonGroupSeparator, ButtonGroupText as UIButtonGroupText } from '@/components/ui/button-group';
+import {
+    ButtonGroup as UIButtonGroup,
+    ButtonGroupSeparator as UIButtonGroupSeparator,
+    ButtonGroupText as UIButtonGroupText,
+} from '@/components/ui/button-group';
 import type { ASTNode } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
@@ -32,14 +36,12 @@ export function ButtonGroup({ children, className, orientation = 'horizontal' }:
     );
 }
 
-
 /** Renders an inline text segment inside a button group. */
 export function ButtonGroupText({ children, className }: ButtonGroupTextProps) {
     const { ctx } = useXmlContext();
 
     return <UIButtonGroupText className={className}>{renderNode(children ?? null, ctx)}</UIButtonGroupText>;
 }
-
 
 /** Renders a separator between grouped button segments. */
 export function ButtonGroupSeparator({ className, orientation = 'vertical' }: ButtonGroupSeparatorProps) {

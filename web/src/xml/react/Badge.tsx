@@ -12,9 +12,5 @@ export interface BadgeProps {
 export function Badge({ children, variant = 'default' }: BadgeProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UIBadge variant={variant as never}>
-            {renderNode(children ?? null, ctx)}
-        </UIBadge>
-    );
+    return <UIBadge variant={variant as never}>{renderNode(children ?? null, ctx)}</UIBadge>;
 }

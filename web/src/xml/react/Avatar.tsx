@@ -58,12 +58,10 @@ export function Avatar({ children, className, size = 'default' }: AvatarProps) {
     );
 }
 
-
 /** Renders the avatar image slot. */
 export function AvatarImage({ alt, className, src }: AvatarImageProps) {
     return <UIAvatarImage alt={alt} className={className} src={src} />;
 }
-
 
 /** Renders the avatar fallback slot. */
 export function AvatarFallback({ children, className }: AvatarFallbackProps) {
@@ -72,7 +70,6 @@ export function AvatarFallback({ children, className }: AvatarFallbackProps) {
     return <UIAvatarFallback className={className}>{renderNode(children ?? null, ctx)}</UIAvatarFallback>;
 }
 
-
 /** Renders the avatar badge overlay. */
 export function AvatarBadge({ children, className }: AvatarBadgeProps) {
     const { ctx } = useXmlContext();
@@ -80,14 +77,12 @@ export function AvatarBadge({ children, className }: AvatarBadgeProps) {
     return <UIAvatarBadge className={className}>{renderNode(children ?? null, ctx)}</UIAvatarBadge>;
 }
 
-
 /** Renders the avatar group shell for stacked avatars. */
 export function AvatarGroup({ children, className }: AvatarGroupProps) {
     const { ctx } = useXmlContext();
 
     return <UIAvatarGroup className={className}>{renderNode(children ?? null, ctx)}</UIAvatarGroup>;
 }
-
 
 /** Renders the trailing count chip inside an avatar group. */
 export function AvatarGroupCount({ children, className }: AvatarGroupCountProps) {

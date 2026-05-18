@@ -2,12 +2,9 @@
 
 TODO: Introduction
 
-
 ## Columns
 
-
 TODO: Component description
-
 
 ```xml
 <Columns>

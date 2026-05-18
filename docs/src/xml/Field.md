@@ -25,7 +25,6 @@ TODO: Introduction
 </FieldSet>
 ```
 
-
 ## Input
 
 TODO: Component description
@@ -38,7 +37,6 @@ TODO: Component description
 </Field>
 ```
 
-
 ## Textarea
 
 TODO: Component description
@@ -50,7 +48,6 @@ TODO: Component description
   <FieldDescription>Keep the note short and clear.</FieldDescription>
 </Field>
 ```
-
 
 ## Select
 

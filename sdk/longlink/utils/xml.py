@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
-
 import xmltodict
 from lxml import etree
+from typing import Any
+from pathlib import Path
 from longlink.constants import ROOT
 
 

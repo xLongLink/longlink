@@ -35,7 +35,6 @@ export {
     FieldTitle,
 } from './react/Field';
 export { Grid } from './react/Grid';
-export { Stack } from './react/Stack';
 export { Icon } from './react/Icon';
 export {
     InputGroup,
@@ -58,6 +57,7 @@ export {
     SelectValue,
 } from './react/Select';
 export { Slider } from './react/Slider';
+export { Stack } from './react/Stack';
 export { Switch } from './react/Switch';
 export { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './react/Table';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';

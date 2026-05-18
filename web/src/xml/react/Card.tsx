@@ -64,14 +64,12 @@ export function Card({ children, className, size = 'default' }: CardProps) {
     );
 }
 
-
 /** Renders the card header slot. */
 export function CardHeader({ children, className }: CardHeaderProps) {
     const { ctx } = useXmlContext();
 
     return <UICardHeader className={className}>{renderNode(children ?? null, ctx)}</UICardHeader>;
 }
-
 
 /** Renders the card title slot. */
 export function CardTitle({ children, className }: CardTitleProps) {
@@ -80,14 +78,12 @@ export function CardTitle({ children, className }: CardTitleProps) {
     return <UICardTitle className={className}>{renderNode(children ?? null, ctx)}</UICardTitle>;
 }
 
-
 /** Renders the card description slot. */
 export function CardDescription({ children, className }: CardDescriptionProps) {
     const { ctx } = useXmlContext();
 
     return <UICardDescription className={className}>{renderNode(children ?? null, ctx)}</UICardDescription>;
 }
-
 
 /** Renders the card action slot. */
 export function CardAction({ children, className }: CardActionProps) {
@@ -96,14 +92,12 @@ export function CardAction({ children, className }: CardActionProps) {
     return <UICardAction className={className}>{renderNode(children ?? null, ctx)}</UICardAction>;
 }
 
-
 /** Renders the card content slot. */
 export function CardContent({ children, className }: CardContentProps) {
     const { ctx } = useXmlContext();
 
     return <UICardContent className={className}>{renderNode(children ?? null, ctx)}</UICardContent>;
 }
-
 
 /** Renders the card footer slot. */
 export function CardFooter({ children, className }: CardFooterProps) {

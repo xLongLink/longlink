@@ -1,10 +1,8 @@
-from contextlib import contextmanager
 from io import BytesIO
-
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from src.api import sample as sample_api
+from contextlib import contextmanager
+from fastapi.testclient import TestClient
 
 
 class FakeSessionContext:

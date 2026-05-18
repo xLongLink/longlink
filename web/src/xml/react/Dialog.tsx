@@ -1,3 +1,4 @@
+import { buttonVariants } from '@/components/ui/button';
 import {
     Dialog as UIDialog,
     DialogContent as UIDialogContent,
@@ -7,11 +8,10 @@ import {
     DialogTitle as UIDialogTitle,
     DialogTrigger as UIDialogTrigger,
 } from '@/components/ui/dialog';
-import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { evaluate } from '@xml/core/expressions';
 import type { ASTNode } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
+import { evaluate } from '@xml/core/expressions';
 
 /** Props accepted by the XML Dialog component. */
 export interface DialogProps {
@@ -61,20 +61,26 @@ export function Dialog({ children, defaultOpen, open }: DialogProps) {
     );
 }
 
-
 /** Renders the dialog trigger slot. */
 export function DialogTrigger({ children }: DialogTriggerProps) {
     const { ctx } = useXmlContext();
     const triggerChildren = Array.isArray(children) ? children : children ? [children] : [];
-    const buttonChild = triggerChildren.length === 1 && triggerChildren[0]?.name === 'Button' ? triggerChildren[0] : null;
+    const buttonChild =
+        triggerChildren.length === 1 && triggerChildren[0]?.name === 'Button' ? triggerChildren[0] : null;
 
     if (buttonChild) {
-        const className = buttonChild.params?.className ? String(evaluate(buttonChild.params.className, ctx) ?? '') : undefined;
+        const className = buttonChild.params?.className
+            ? String(evaluate(buttonChild.params.className, ctx) ?? '')
+            : undefined;
         const size = buttonChild.params?.size ? String(evaluate(buttonChild.params.size, ctx) ?? '') : undefined;
-        const variant = buttonChild.params?.variant ? String(evaluate(buttonChild.params.variant, ctx) ?? '') : undefined;
+        const variant = buttonChild.params?.variant
+            ? String(evaluate(buttonChild.params.variant, ctx) ?? '')
+            : undefined;
 
         return (
-            <UIDialogTrigger className={cn(buttonVariants({ className, size: size as never, variant: variant as never }))}>
+            <UIDialogTrigger
+                className={cn(buttonVariants({ className, size: size as never, variant: variant as never }))}
+            >
                 {renderNode(buttonChild.children ?? null, ctx)}
             </UIDialogTrigger>
         );
@@ -83,14 +89,12 @@ export function DialogTrigger({ children }: DialogTriggerProps) {
     return <UIDialogTrigger>{renderNode(children ?? null, ctx)}</UIDialogTrigger>;
 }
 
-
 /** Renders the dialog content surface. */
 export function DialogContent({ children }: DialogContentProps) {
     const { ctx } = useXmlContext();
 
     return <UIDialogContent>{renderNode(children ?? null, ctx)}</UIDialogContent>;
 }
-
 
 /** Renders the dialog header slot. */
 export function DialogHeader({ children }: DialogHeaderProps) {
@@ -99,7 +103,6 @@ export function DialogHeader({ children }: DialogHeaderProps) {
     return <UIDialogHeader>{renderNode(children ?? null, ctx)}</UIDialogHeader>;
 }
 
-
 /** Renders the dialog title slot. */
 export function DialogTitle({ children }: DialogTitleProps) {
     const { ctx } = useXmlContext();
@@ -107,14 +110,12 @@ export function DialogTitle({ children }: DialogTitleProps) {
     return <UIDialogTitle>{renderNode(children ?? null, ctx)}</UIDialogTitle>;
 }
 
-
 /** Renders the dialog description slot. */
 export function DialogDescription({ children }: DialogDescriptionProps) {
     const { ctx } = useXmlContext();
 
     return <UIDialogDescription>{renderNode(children ?? null, ctx)}</UIDialogDescription>;
 }
-
 
 /** Renders the dialog footer slot. */
 export function DialogFooter({ children }: DialogFooterProps) {

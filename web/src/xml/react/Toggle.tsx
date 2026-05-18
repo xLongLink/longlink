@@ -16,7 +16,16 @@ export interface ToggleProps {
 }
 
 /** Renders a shadcn-backed toggle with optional reactive state binding. */
-export function Toggle({ children, className, defaultPressed, disabled, id, pressed, size = 'default', variant = 'default' }: ToggleProps) {
+export function Toggle({
+    children,
+    className,
+    defaultPressed,
+    disabled,
+    id,
+    pressed,
+    size = 'default',
+    variant = 'default',
+}: ToggleProps) {
     const { ctx } = useXmlContext();
 
     if (pressed && typeof pressed === 'object' && getVersion(pressed) !== undefined) {
@@ -45,7 +54,14 @@ export function Toggle({ children, className, defaultPressed, disabled, id, pres
     }
 
     return (
-        <UIToggle className={className} defaultPressed={defaultPressed} disabled={disabled} id={id} size={size} variant={variant}>
+        <UIToggle
+            className={className}
+            defaultPressed={defaultPressed}
+            disabled={disabled}
+            id={id}
+            size={size}
+            variant={variant}
+        >
             {renderNode(children ?? null, ctx)}
         </UIToggle>
     );

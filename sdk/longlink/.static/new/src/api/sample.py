@@ -1,10 +1,8 @@
-from fastapi import Depends
-
-from longlink import Router, db, fs
-
 from ..envs import env
-from ..models import Project
+from fastapi import Depends
 from ..types import UserModel
+from longlink import Router, db, fs
+from ..models import Project
 
 router = Router()
 

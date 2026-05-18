@@ -110,7 +110,6 @@ TODO: Component description
 
 TODO: Component description
 
-
 ```xml
 <Divider />
 ```
@@ -118,7 +117,6 @@ TODO: Component description
 ## Hero
 
 TODO: Component description
-
 
 ```xml
 <Hero icon="layout-grid">
@@ -146,7 +144,6 @@ TODO: Component description
 <Input label="Issue title" value="user.name" />
 ```
 
-
 ## Label
 
 TODO: Component description
@@ -158,7 +155,6 @@ TODO: Component description
 ## RadioGroup
 
 TODO: Component description
-
 
 ```xml
 <RadioGroup name="priority" defaultValue="medium">

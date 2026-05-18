@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import uuid
-from contextlib import suppress
-
 import boto3
-
 from src.env import env
-
 from .__root__ import Root
+from contextlib import suppress
 
 
 class Storage(Root):

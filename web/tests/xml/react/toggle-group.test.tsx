@@ -32,7 +32,9 @@ describe('ToggleGroup', () => {
     /* The runtime should render the toggle group shell and items. */
     it('renders toggle group markup end to end', () => {
         const output = renderXmlToMarkup(
-            parseXML('<ToggleGroup type="single"><ToggleGroupItem value="a">A</ToggleGroupItem><ToggleGroupItem value="b">B</ToggleGroupItem><ToggleGroupItem value="c">C</ToggleGroupItem></ToggleGroup>')
+            parseXML(
+                '<ToggleGroup type="single"><ToggleGroupItem value="a">A</ToggleGroupItem><ToggleGroupItem value="b">B</ToggleGroupItem><ToggleGroupItem value="c">C</ToggleGroupItem></ToggleGroup>'
+            )
         );
 
         expect(output).toContain('data-slot="toggle-group"');

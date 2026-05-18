@@ -1,6 +1,5 @@
-from pydantic import Field
-
 from longlink import Environments
+from pydantic import Field
 
 
 class Env(Environments):

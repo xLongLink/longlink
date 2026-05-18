@@ -98,7 +98,6 @@ export function Select({ children, defaultOpen, defaultValue, open, value }: Sel
     );
 }
 
-
 /** Renders the select trigger slot. */
 export function SelectTrigger({ children, className }: SelectTriggerProps) {
     const { ctx } = useXmlContext();
@@ -106,12 +105,10 @@ export function SelectTrigger({ children, className }: SelectTriggerProps) {
     return <UISelectTrigger className={className}>{renderNode(children ?? null, ctx)}</UISelectTrigger>;
 }
 
-
 /** Renders the selected value placeholder or active choice. */
 export function SelectValue({ className, placeholder }: SelectValueProps) {
     return <UISelectValue className={className} placeholder={placeholder} />;
 }
-
 
 /** Renders the select content portal and list surface. */
 export function SelectContent({ children, className }: SelectContentProps) {
@@ -120,7 +117,6 @@ export function SelectContent({ children, className }: SelectContentProps) {
     return <UISelectContent className={className}>{renderNode(children ?? null, ctx)}</UISelectContent>;
 }
 
-
 /** Renders a grouped section inside the select menu. */
 export function SelectGroup({ children, className }: SelectGroupProps) {
     const { ctx } = useXmlContext();
@@ -128,14 +124,12 @@ export function SelectGroup({ children, className }: SelectGroupProps) {
     return <UISelectGroup className={className}>{renderNode(children ?? null, ctx)}</UISelectGroup>;
 }
 
-
 /** Renders the label for a grouped select section. */
 export function SelectLabel({ children, className }: SelectLabelProps) {
     const { ctx } = useXmlContext();
 
     return <UISelectLabel className={className}>{renderNode(children ?? null, ctx)}</UISelectLabel>;
 }
-
 
 /** Renders a selectable option in the menu. */
 export function SelectItem({ children, className, value }: SelectItemProps) {
@@ -149,7 +143,6 @@ export function SelectItem({ children, className, value }: SelectItemProps) {
         </UISelectItem>
     );
 }
-
 
 /** Renders a visual separator between select groups. */
 export function SelectSeparator({ className }: SelectSeparatorProps) {

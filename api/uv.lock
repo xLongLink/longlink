@@ -616,12 +616,13 @@ requires-dist = [
     { name = "fastapi" },
     { name = "fsspec" },
     { name = "httpx" },
-    { name = "isort", marker = "extra == 'dev'", specifier = "==8.0.1" },
+    { name = "isort", marker = "extra == 'dev'" },
     { name = "lxml" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = "==8.4.2" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==0.24.0" },
+    { name = "pytest", marker = "extra == 'dev'" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'" },
+    { name = "pytest-mock", marker = "extra == 'dev'" },
     { name = "rich", marker = "extra == 'cli'" },
     { name = "sqlmodel" },
     { name = "uvicorn" },
@@ -631,9 +632,10 @@ provides-extras = ["cli", "dev"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "isort", specifier = "==8.0.1" },
-    { name = "pytest", specifier = "==8.4.2" },
-    { name = "pytest-asyncio", specifier = "==0.24.0" },
+    { name = "isort" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-mock" },
 ]
 
 [[package]]

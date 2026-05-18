@@ -37,7 +37,6 @@ Use `${count}` for wrapped expressions that return typed values.
 <p>Current products, ${products.total}</p>
 ```
 
-
 ## References
 
 Use `$name` for direct references.
@@ -55,7 +54,6 @@ Use `For` to render one child scope for each item in an array.
   <p>${product.name}</p>
 </For>
 ```
-
 
 ## if
 

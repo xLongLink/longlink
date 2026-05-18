@@ -44,7 +44,6 @@ function Hero({ className, icon, children, ...props }: HeroProps) {
     );
 }
 
-
 /** Renders the hero title block. */
 function HeroTitle({ className, ...props }: React.ComponentProps<'div'>) {
     return (
@@ -56,7 +55,6 @@ function HeroTitle({ className, ...props }: React.ComponentProps<'div'>) {
     );
 }
 
-
 /** Renders the hero description block. */
 function HeroDescription({ className, ...props }: React.ComponentProps<'div'>) {
     return (
@@ -67,7 +65,6 @@ function HeroDescription({ className, ...props }: React.ComponentProps<'div'>) {
         />
     );
 }
-
 
 /** Renders the right-side hero content block. */
 function HeroContent({ className, ...props }: React.ComponentProps<'div'>) {

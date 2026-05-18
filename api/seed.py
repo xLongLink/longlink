@@ -1,7 +1,5 @@
-import asyncio
-
 import src.db as db
-
+import asyncio
 
 DEFAULT_ORGANIZATIONS = ("default",)
 

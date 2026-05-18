@@ -16,7 +16,17 @@ export interface InputProps {
 }
 
 /** Renders a minimal XML input control. */
-export function Input({ 'aria-invalid': ariaInvalid, autoComplete, className, disabled, id, value = '', label, placeholder, type = 'text' }: InputProps) {
+export function Input({
+    'aria-invalid': ariaInvalid,
+    autoComplete,
+    className,
+    disabled,
+    id,
+    value = '',
+    label,
+    placeholder,
+    type = 'text',
+}: InputProps) {
     const placeholderText = String(placeholder ?? label ?? '');
 
     if (value && typeof value === 'object' && getVersion(value) !== undefined) {
@@ -47,5 +57,16 @@ export function Input({ 'aria-invalid': ariaInvalid, autoComplete, className, di
 
     const [initialValue] = useState(String(value ?? ''));
 
-    return <UIInput aria-invalid={ariaInvalid} autoComplete={autoComplete} className={className} disabled={disabled} id={id} type={type} placeholder={placeholderText} defaultValue={initialValue} />;
+    return (
+        <UIInput
+            aria-invalid={ariaInvalid}
+            autoComplete={autoComplete}
+            className={className}
+            disabled={disabled}
+            id={id}
+            type={type}
+            placeholder={placeholderText}
+            defaultValue={initialValue}
+        />
+    );
 }

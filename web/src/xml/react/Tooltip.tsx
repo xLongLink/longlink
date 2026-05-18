@@ -43,7 +43,6 @@ export function TooltipProvider({ children }: TooltipProviderProps) {
     return <UITooltipProvider>{renderNode(children ?? null, ctx)}</UITooltipProvider>;
 }
 
-
 /** Renders the tooltip root shell. */
 export function Tooltip({ children, defaultOpen, open }: TooltipProps) {
     const { ctx } = useXmlContext();
@@ -55,7 +54,6 @@ export function Tooltip({ children, defaultOpen, open }: TooltipProps) {
     );
 }
 
-
 /** Renders the tooltip trigger slot. */
 export function TooltipTrigger({ children }: TooltipTriggerProps) {
     const { ctx } = useXmlContext();
@@ -63,9 +61,16 @@ export function TooltipTrigger({ children }: TooltipTriggerProps) {
     return <UITooltipTrigger>{renderNode(children ?? null, ctx)}</UITooltipTrigger>;
 }
 
-
 /** Renders the tooltip content popup. */
-export function TooltipContent({ align = 'center', alignOffset = 0, children, className, hidden, side = 'top', sideOffset = 4 }: TooltipContentProps) {
+export function TooltipContent({
+    align = 'center',
+    alignOffset = 0,
+    children,
+    className,
+    hidden,
+    side = 'top',
+    sideOffset = 4,
+}: TooltipContentProps) {
     const { ctx } = useXmlContext();
 
     return (

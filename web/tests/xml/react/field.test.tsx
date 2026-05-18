@@ -47,7 +47,9 @@ describe('Field', () => {
                                     },
                                     {
                                         name: 'FieldDescription',
-                                        children: [{ name: 'Text', params: { value: 'This appears on invoices and emails.' } }],
+                                        children: [
+                                            { name: 'Text', params: { value: 'This appears on invoices and emails.' } },
+                                        ],
                                     },
                                 ],
                             },

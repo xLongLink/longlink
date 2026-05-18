@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-import asyncio
-from contextlib import suppress
 import uuid
-
+import asyncio
 import psycopg
 from psycopg import sql
-
 from src.env import env
-
 from .__root__ import Database
+from contextlib import suppress
 
 
 class Postgre(Database):

@@ -1,7 +1,6 @@
 from pathlib import Path
-
-from longlink import LongLink, page
 from src.api import routers
+from longlink import LongLink, page
 from src.envs import env
 
 app = LongLink(env=env)

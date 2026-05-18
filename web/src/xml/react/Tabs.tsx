@@ -1,4 +1,9 @@
-import { Tabs as UITabs, TabsContent as UITabsContent, TabsList as UITabsList, TabsTrigger as UITabsTrigger } from '@ui/tabs';
+import {
+    Tabs as UITabs,
+    TabsContent as UITabsContent,
+    TabsList as UITabsList,
+    TabsTrigger as UITabsTrigger,
+} from '@ui/tabs';
 import type { ASTNode } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
@@ -42,14 +47,16 @@ export function Tabs({ children, className, defaultValue, orientation = 'horizon
     );
 }
 
-
 /** Renders the tabs list slot. */
 export function TabsList({ children, className, variant = 'default' }: TabsListProps) {
     const { ctx } = useXmlContext();
 
-    return <UITabsList className={className} variant={variant as never}>{renderNode(children ?? null, ctx)}</UITabsList>;
+    return (
+        <UITabsList className={className} variant={variant as never}>
+            {renderNode(children ?? null, ctx)}
+        </UITabsList>
+    );
 }
-
 
 /** Renders an individual tabs trigger. */
 export function TabsTrigger({ children, className, value }: TabsTriggerProps) {
@@ -63,7 +70,6 @@ export function TabsTrigger({ children, className, value }: TabsTriggerProps) {
         </UITabsTrigger>
     );
 }
-
 
 /** Renders a tabs content panel. */
 export function TabsContent({ children, className, value }: TabsContentProps) {

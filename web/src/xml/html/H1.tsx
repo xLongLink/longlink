@@ -13,7 +13,10 @@ export function H1({ children, className }: H1Props) {
 
     return (
         <h1
-            className={['scroll-m-20 mt-8 mb-4 text-4xl font-extrabold tracking-tight text-balance first:mt-0', className]
+            className={[
+                'scroll-m-20 mt-8 mb-4 text-4xl font-extrabold tracking-tight text-balance first:mt-0',
+                className,
+            ]
                 .filter(Boolean)
                 .join(' ')}
         >

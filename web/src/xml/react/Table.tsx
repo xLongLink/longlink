@@ -56,13 +56,8 @@ export interface TableCellProps {
 export function Table({ children, className }: TableProps) {
     const { ctx } = useXmlContext();
 
-    return (
-        <UITable className={className}>
-            {renderNode(children ?? null, ctx)}
-        </UITable>
-    );
+    return <UITable className={className}>{renderNode(children ?? null, ctx)}</UITable>;
 }
-
 
 /** Renders the table header slot. */
 export function TableHeader({ children, className }: TableHeaderProps) {
@@ -71,14 +66,12 @@ export function TableHeader({ children, className }: TableHeaderProps) {
     return <UITableHeader className={className}>{renderNode(children ?? null, ctx)}</UITableHeader>;
 }
 
-
 /** Renders the table body slot. */
 export function TableBody({ children, className }: TableBodyProps) {
     const { ctx } = useXmlContext();
 
     return <UITableBody className={className}>{renderNode(children ?? null, ctx)}</UITableBody>;
 }
-
 
 /** Renders the table footer slot. */
 export function TableFooter({ children, className }: TableFooterProps) {
@@ -87,7 +80,6 @@ export function TableFooter({ children, className }: TableFooterProps) {
     return <UITableFooter className={className}>{renderNode(children ?? null, ctx)}</UITableFooter>;
 }
 
-
 /** Renders a single table row. */
 export function TableRow({ children, className }: TableRowProps) {
     const { ctx } = useXmlContext();
@@ -95,14 +87,12 @@ export function TableRow({ children, className }: TableRowProps) {
     return <UITableRow className={className}>{renderNode(children ?? null, ctx)}</UITableRow>;
 }
 
-
 /** Renders a table header cell. */
 export function TableHead({ children, className }: TableHeadProps) {
     const { ctx } = useXmlContext();
 
     return <UITableHead className={className}>{renderNode(children ?? null, ctx)}</UITableHead>;
 }
-
 
 /** Renders a table body cell. */
 export function TableCell({ children, className }: TableCellProps) {

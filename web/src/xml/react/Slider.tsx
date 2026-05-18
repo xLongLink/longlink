@@ -64,7 +64,7 @@ export function Slider({
                     if (Array.isArray(state)) {
                         state.splice(0, state.length, ...nextValues);
                     } else if ('value' in state) {
-                        state.value = nextValues.length <= 1 ? nextValues[0] ?? resolvedMin : nextValues;
+                        state.value = nextValues.length <= 1 ? (nextValues[0] ?? resolvedMin) : nextValues;
                     }
                 }}
             />

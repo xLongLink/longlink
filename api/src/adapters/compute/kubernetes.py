@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
-
 import src.db as db
-from src.constants import TEMPLATES
 from src.env import env
-from src.utils.utils import knames
-from src.utils.utils import yaml as template_yaml
-
 from .__root__ import Root
+from kubernetes import client, config
+from urllib.parse import urlparse
+from src.constants import TEMPLATES
+from src.utils.utils import yaml as template_yaml
+from src.utils.utils import knames
+from kubernetes.client.rest import ApiException
 
 
 class Compute(Root):

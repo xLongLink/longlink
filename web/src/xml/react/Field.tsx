@@ -84,7 +84,6 @@ export function FieldSet({ children, className }: FieldSetProps) {
     return <UIFieldSet className={className}>{renderNode(children ?? null, ctx)}</UIFieldSet>;
 }
 
-
 /** Renders the fieldset legend slot. */
 export function FieldLegend({ children, className, variant = 'legend' }: FieldLegendProps) {
     const { ctx } = useXmlContext();
@@ -96,14 +95,12 @@ export function FieldLegend({ children, className, variant = 'legend' }: FieldLe
     );
 }
 
-
 /** Renders a field group container. */
 export function FieldGroup({ children, className }: FieldGroupProps) {
     const { ctx } = useXmlContext();
 
     return <UIFieldGroup className={className}>{renderNode(children ?? null, ctx)}</UIFieldGroup>;
 }
-
 
 /** Renders an individual field row. */
 export function Field({ children, className, orientation = 'vertical' }: FieldProps) {
@@ -116,14 +113,12 @@ export function Field({ children, className, orientation = 'vertical' }: FieldPr
     );
 }
 
-
 /** Renders the field content slot. */
 export function FieldContent({ children, className }: FieldContentProps) {
     const { ctx } = useXmlContext();
 
     return <UIFieldContent className={className}>{renderNode(children ?? null, ctx)}</UIFieldContent>;
 }
-
 
 /** Renders the field label slot. */
 export function FieldLabel({ children, className, htmlFor }: FieldLabelProps) {
@@ -136,14 +131,12 @@ export function FieldLabel({ children, className, htmlFor }: FieldLabelProps) {
     );
 }
 
-
 /** Renders the field title slot. */
 export function FieldTitle({ children, className }: FieldTitleProps) {
     const { ctx } = useXmlContext();
 
     return <UIFieldTitle className={className}>{renderNode(children ?? null, ctx)}</UIFieldTitle>;
 }
-
 
 /** Renders the field description slot. */
 export function FieldDescription({ children, className }: FieldDescriptionProps) {
@@ -152,14 +145,12 @@ export function FieldDescription({ children, className }: FieldDescriptionProps)
     return <UIFieldDescription className={className}>{renderNode(children ?? null, ctx)}</UIFieldDescription>;
 }
 
-
 /** Renders a separator between field sections. */
 export function FieldSeparator({ children, className }: FieldSeparatorProps) {
     const { ctx } = useXmlContext();
 
     return <UIFieldSeparator className={className}>{renderNode(children ?? null, ctx)}</UIFieldSeparator>;
 }
-
 
 /** Renders the field error slot. */
 export function FieldError({ children, className, errors }: FieldErrorProps) {

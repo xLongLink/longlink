@@ -1,12 +1,11 @@
 import time
-from contextlib import suppress
-
 import src.db as db
 from fastapi import Response, APIRouter, HTTPException
 from src.env import env
+from contextlib import suppress
 from src.models.apps import AppCreate, AppResponse
-from src.adapters.compute import root as compute
 from src.utils.utils import app_url as compute_app_url
+from src.adapters.compute import root as compute
 
 router = APIRouter(prefix="/api/orgs/{organization}")
 
