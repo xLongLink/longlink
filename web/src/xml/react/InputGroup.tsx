@@ -30,7 +30,7 @@ export interface InputGroupButtonProps {
     className?: string;
     size?: 'xs' | 'sm' | 'icon-xs' | 'icon-sm';
     type?: 'button' | 'submit' | 'reset';
-    variant?: string;
+    variant?: React.ComponentProps<typeof UIInputGroupButton>['variant'];
     disabled?: boolean;
 }
 

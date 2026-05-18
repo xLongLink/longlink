@@ -59,10 +59,12 @@ export function Slider({
                 step={resolvedStep}
                 value={normalizedValue}
                 onValueChange={(nextValue) => {
+                    const nextValues = Array.isArray(nextValue) ? nextValue : [nextValue];
+
                     if (Array.isArray(state)) {
-                        state.splice(0, state.length, ...nextValue);
+                        state.splice(0, state.length, ...nextValues);
                     } else if ('value' in state) {
-                        state.value = nextValue.length <= 1 ? nextValue[0] ?? resolvedMin : nextValue;
+                        state.value = nextValues.length <= 1 ? nextValues[0] ?? resolvedMin : nextValues;
                     }
                 }}
             />

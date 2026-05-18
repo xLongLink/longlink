@@ -57,6 +57,7 @@ import {
     InputGroup,
     InputGroupAddon,
     InputGroupButton,
+    type InputGroupButtonProps,
     InputGroupInput,
     InputGroupText,
     InputGroupTextarea,
@@ -352,7 +353,8 @@ export function renderNode(node: ASTNode | ASTNode[] | null, ctx: ExecutionConte
                   : undefined;
         const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'xs') : 'xs';
         const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'button') : 'button';
-        const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'ghost') : 'ghost';
+        const variant = (node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'ghost') : 'ghost') as
+            InputGroupButtonProps['variant'];
 
         return (
             <InputGroupButton
