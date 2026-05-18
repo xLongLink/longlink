@@ -179,11 +179,84 @@
                     </Field>
                 </FieldGroup>
             </FieldSet>
+            <FieldSet>
+                <FieldLegend>More form chrome</FieldLegend>
+                <FieldDescription>Extra field and control primitives used by the runtime.</FieldDescription>
+                <FieldGroup>
+                    <Field>
+                        <FieldContent>
+                            <FieldTitle>Email routing</FieldTitle>
+                            <FieldDescription>Use a dedicated inbox for high-priority alerts.</FieldDescription>
+                            <FieldSeparator>Validation</FieldSeparator>
+                            <FieldError errors="${[{ message: 'Email routing is not configured yet' }]}" />
+                        </FieldContent>
+                    </Field>
+                    <Field orientation="horizontal">
+                        <Label htmlFor="digest-toggle">Daily digest</Label>
+                        <Toggle id="digest-toggle" defaultPressed="true">On</Toggle>
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="theme-mode">Theme mode</FieldLabel>
+                        <ToggleGroup defaultValue="system">
+                            <ToggleGroupItem value="system">System</ToggleGroupItem>
+                            <ToggleGroupItem value="light">Light</ToggleGroupItem>
+                            <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+                        </ToggleGroup>
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="region">Region</FieldLabel>
+                        <Select defaultValue="us">
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a region" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectLabel>North America</SelectLabel>
+                                    <SelectItem value="us">United States</SelectItem>
+                                    <SelectItem value="ca">Canada</SelectItem>
+                                </SelectGroup>
+                                <SelectSeparator />
+                                <SelectGroup>
+                                    <SelectLabel>Europe</SelectLabel>
+                                    <SelectItem value="uk">United Kingdom</SelectItem>
+                                    <SelectItem value="de">Germany</SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="endpoint">Endpoint</FieldLabel>
+                        <InputGroup>
+                            <InputGroupText>https://</InputGroupText>
+                            <InputGroupInput id="endpoint" placeholder="api.longlink.dev" />
+                            <InputGroupButton>Copy</InputGroupButton>
+                        </InputGroup>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Actions</FieldLabel>
+                        <ButtonGroup>
+                            <Button variant="outline">Cancel</Button>
+                            <ButtonGroupSeparator />
+                            <Button>Save changes</Button>
+                            <ButtonGroupText>Ctrl+S also works</ButtonGroupText>
+                        </ButtonGroup>
+                    </Field>
+                </FieldGroup>
+            </FieldSet>
         </TabsContent>
         <TabsContent value="item">
+            <Hero icon="file-text">
+                <HeroTitle>Invoice #INV-2048-0192</HeroTitle>
+                <HeroDescription>Items, quantities, and totals for the current quote.</HeroDescription>
+                <HeroContent>
+                    <Button variant="outline" size="sm">
+                        <Icon name="copy" />
+                        Copy
+                    </Button>
+                </HeroContent>
+            </Hero>
             <Columns>
                 <Column width="70">
-                    Items, quantities, and totals for the current quote.
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -246,10 +319,6 @@
             </Columns>
         </TabsContent>
         <TabsContent value="menu">
-            <Hero icon="menu">
-                <HeroTitle>Menu navigation</HeroTitle>
-                <HeroDescription>A sidebar-style menu with expandable subsections.</HeroDescription>
-            </Hero>
             <Menu defaultValue="overview">
                 <MenuList>
                     <MenuSection value="overview">Overview</MenuSection>
@@ -355,27 +424,21 @@
             </Columns>
         </TabsContent>
         <TabsContent value="other">
-            <Hero icon="sparkles">
-                <HeroTitle>Other components</HeroTitle>
-                <HeroDescription>Layout, media, feedback, and data display components live here.</HeroDescription>
-                <HeroContent>
-                    <Dialog>
-                        <DialogTrigger>
-                            <Button variant="outline">Open dialog</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Delete issue</DialogTitle>
-                                <DialogDescription>This cannot be undone.</DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                                <Button variant="outline">Cancel</Button>
-                                <Button>Delete</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </HeroContent>
-            </Hero>
+            <Dialog>
+                <DialogTrigger>
+                    <Button variant="outline">Open dialog</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete issue</DialogTitle>
+                        <DialogDescription>This cannot be undone.</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline">Cancel</Button>
+                        <Button>Delete</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             <AvatarGroup>
                 <Avatar size="sm">
                     <AvatarImage src="/avatars/ada.png" alt="Ada Lovelace" />

@@ -65,5 +65,9 @@ export function TabsContent({ children, value }: TabsContentProps) {
 
     if (!value) throw new Error('TabsContent requires a value');
 
-    return <UITabsContent value={value}>{renderNode(children ?? [], ctx)}</UITabsContent>;
+    return (
+        <UITabsContent value={value} className="flex flex-1 flex-col gap-6 text-sm outline-none">
+            {renderNode(children ?? [], ctx)}
+        </UITabsContent>
+    );
 }

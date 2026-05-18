@@ -57,6 +57,7 @@ describe('Tabs', () => {
         expect(output).toContain('data-slot="tabs-list"');
         expect(output).toContain('data-slot="tabs-trigger"');
         expect(output).toContain('data-slot="tabs-content"');
+        expect(output).toContain('gap-6');
         expect(output).toContain('Overview');
         expect(output).toContain('Settings');
         expect(output).toContain('Overview panel');
