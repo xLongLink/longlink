@@ -50,8 +50,8 @@ If the expression is false, the element is not rendered.
 
 `<State>` and `<Query>` both create a slot identified by `id`.
 
-- `<State id="user" value="John Doe" />` creates local state. `value` is evaluated as an expression.
-- `<State id="cart" value="${[]}" />` creates an array state slot.
+- `<State id="user" value="John Doe" />` creates a state object with a `value` field.
+- `<State id="filters" search="Revenue" page="1" />` creates an object state slot.
 - `<Query id="user" path="/endpoint" />` fetches data into the slot. `id` and `path` must be literal text.
 - Both elements are self-closing and do not allow children.
 
@@ -94,13 +94,16 @@ Declares local reactive state.
 Attributes:
 
 - `id` required. State key.
-- `value` required. Initial state value. Evaluated as an expression.
+- `value` optional. A normal field on the seeded state object.
+- Any other attribute becomes a field on the seeded state object.
 
 Behavior:
 
 - The state is exposed as `ctx.values[id]`.
-- Scalar values are stored as a proxied object with a `value` property.
-- Array values are stored as proxied arrays.
+- State values are stored as proxied objects.
+- Arrays and nested objects remain proxied through Valtio.
+- The state starts as an object seeded from the declared attributes.
+- Object fields are parsed as JSON literals when possible and otherwise evaluated as expressions.
 - `State` must not contain child elements.
 
 ### `<Query>`
@@ -717,32 +720,45 @@ Example:
 
 ### `<Button>`
 
-Actionable button.
+Styled trigger shell.
 
 Attributes:
 
-- `action` optional. Target path to call or navigate to.
-- `method` optional. HTTP method string. `GET` navigates to `action`; other methods send a request. Defaults to `POST`.
-- `json` optional. Request body value or JSON string.
-- `invalidate` optional. Array expression of slot ids to rerun.
 - `submit` optional. When truthy, renders a native submit button.
+- `disabled` optional. Disables the rendered trigger.
 - `size` optional. Button size variant. Use `default`, `xs`, `sm`, `lg`, `icon`, `icon-xs`, `icon-sm`, or `icon-lg`.
 - `variant` optional. Button style variant. Use `default`, `outline`, `secondary`, `ghost`, `destructive`, or `link`.
 
 Behavior:
 
-- If `action` is empty, the button only reruns invalidation targets.
-- If `method` is `GET`, the button renders as a link to `action`.
-- If `method` is not `GET`, the button sends the configured action request.
-- If `submit` is truthy, the button renders as a native submit control and skips action requests.
-- If `json` is omitted, the request is sent without a JSON body.
-- `invalidate` refetches the named query slots after the request succeeds.
+- Use `Button` for plain triggers and submit controls.
+- `Button` does not send requests or navigate.
 
-Example: `<Button action="/issues" json='${{ title: issue.title }}'>Save</Button>`
+Example: `<Button variant="outline">Open dialog</Button>`
+
+### `<Action>`
+
+Request action trigger.
+
+Attributes:
+
+- `action` optional. Target path to call.
+- `method` optional. HTTP method string. Defaults to `POST`.
+- `json` optional. Request body value or JSON string.
+- `invalidate` optional. Array expression of slot ids to rerun.
+
+Behavior:
+
+- If `action` is empty, the action only reruns invalidation targets.
+- The request body is resolved at click time so it sees the latest runtime state.
+- `invalidate` refetches the named query slots after the request succeeds.
+- The trigger content comes from the element children.
+
+Example: `<Action action="/issues" json='${{ title: issue.title }}'>Save</Action>`
 
 ### `<ButtonGroup>`
 
-Groups buttons and inputs into a shared action strip.
+Groups buttons, actions, and inputs into a shared action strip.
 
 Attributes:
 
@@ -751,13 +767,14 @@ Attributes:
 Children:
 
 - `Button`
+- `Action`
 - `Input`
 - `ButtonGroupText`
 - `ButtonGroupSeparator`
 
 Behavior:
 
-- Buttons and inputs share the group chrome from the runtime component.
+- Buttons, actions, and inputs share the group chrome from the runtime component.
 - Use `ButtonGroupText` for inline labels or hints.
 - Use `ButtonGroupSeparator` to split grouped actions.
 

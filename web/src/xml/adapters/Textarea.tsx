@@ -16,12 +16,11 @@ export function Textarea({ props, nodes }: Props) {
     const label = resolveXmlString(props, 'label', ctx);
     const placeholder = resolveXmlValue(props, 'placeholder', ctx);
     const rows = resolveXmlString(props, 'rows', ctx);
-    const value = resolveXmlValue(props, 'value', ctx);
     const placeholderText = String(placeholder ?? label ?? '');
     // Normalize XML string attributes to the numeric textarea props expected by React.
     const resolvedCols = typeof cols === 'string' ? Number(cols) : cols;
     const resolvedRows = typeof rows === 'string' ? Number(rows) : rows;
-    const binding = useBindableValue(value);
+    const binding = useBindableValue(props, 'value', ctx);
 
     if (binding.bound) {
         return (

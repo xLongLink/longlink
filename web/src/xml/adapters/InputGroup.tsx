@@ -69,12 +69,11 @@ export function InputGroupInput({ props, nodes }: Props) {
     const autoComplete = resolveXmlString(props, 'autoComplete', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);
-    const value = resolveXmlValue(props, 'value', ctx);
     const label = resolveXmlString(props, 'label', ctx);
     const placeholder = resolveXmlValue(props, 'placeholder', ctx);
     const type = resolveXmlString(props, 'type', ctx, 'text');
     const placeholderText = String(placeholder ?? label ?? '');
-    const binding = useBindableValue(value, type);
+    const binding = useBindableValue(props, 'value', ctx, type);
 
     if (binding.bound) {
         return (
@@ -112,7 +111,6 @@ export function InputGroupTextarea({ props, nodes }: Props) {
     const cols = resolveXmlString(props, 'cols', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);
-    const value = resolveXmlValue(props, 'value', ctx);
     const label = resolveXmlString(props, 'label', ctx);
     const placeholder = resolveXmlValue(props, 'placeholder', ctx);
     const rows = resolveXmlString(props, 'rows', ctx);
@@ -120,7 +118,7 @@ export function InputGroupTextarea({ props, nodes }: Props) {
     // Normalize XML string attributes to the numeric textarea props expected by React.
     const resolvedCols = typeof cols === 'string' ? Number(cols) : cols;
     const resolvedRows = typeof rows === 'string' ? Number(rows) : rows;
-    const binding = useBindableValue(value);
+    const binding = useBindableValue(props, 'value', ctx);
 
     if (binding.bound) {
         return (

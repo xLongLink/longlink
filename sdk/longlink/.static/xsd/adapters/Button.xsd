@@ -9,14 +9,11 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="ButtonActionableType" mixed="true">
+  <xsd:complexType name="ButtonType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ButtonChildrenOnlyType">
-        <xsd:attribute name="action" type="xsd:string" use="optional" />
-        <xsd:attribute name="json" type="xsd:string" use="optional" />
-        <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
-        <xsd:attribute name="method" type="xsd:string" use="optional" />
         <xsd:attribute name="submit" type="xsd:string" use="optional" />
+        <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="size" use="optional" default="default">
           <xsd:simpleType>
             <xsd:restriction base="xsd:string">
@@ -47,6 +44,5 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="ButtonType" mixed="true"><xsd:complexContent><xsd:extension base="ButtonActionableType" /></xsd:complexContent></xsd:complexType>
   <xsd:element name="Button" type="ButtonType" />
 </xsd:schema>

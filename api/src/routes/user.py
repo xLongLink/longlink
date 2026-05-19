@@ -6,17 +6,10 @@ router = APIRouter(prefix="/api")
 
 
 @router.get("/user/metadata.json")
-async def users_metadata() -> dict[str, list[dict[str, str | None]]]:
-    """Return the example page metadata document for the users view."""
+async def users_metadata() -> dict[str, str]:
+    """Return the metadata document for the users view."""
 
-    return {
-        "pages": [
-            {"name": "Overview", "path": "/pages/example.xml", "icon": "layout-grid"},
-            {"name": "Organizations", "path": "/pages/organizations.xml", "icon": "layout-grid"},
-            {"name": "Settings", "path": "/pages/example.xml", "icon": "layout-grid"},
-            {"name": "Example", "path": "/pages/example.xml", "icon": "layout-grid"},
-        ]
-    }
+    return {"name": "Users"}
 
 
 @router.get("/user/organizations")

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="Button.xsd" />
+  <xsd:include schemaLocation="Action.xsd" />
   <xsd:include schemaLocation="Input.xsd" />
   <xsd:include schemaLocation="ButtonGroupText.xsd" />
   <xsd:include schemaLocation="ButtonGroupSeparator.xsd" />
@@ -9,6 +10,7 @@
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:element ref="Button" />
+        <xsd:element ref="Action" />
         <xsd:element ref="Input" />
         <xsd:element ref="ButtonGroupText" />
         <xsd:element ref="ButtonGroupSeparator" />

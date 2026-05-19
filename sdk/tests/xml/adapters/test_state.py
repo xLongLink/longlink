@@ -6,13 +6,20 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "primitives" / "State.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "State.xsd"
 
 
 def test_state_layout_validation() -> None:
     """Validate a minimal `State` layout fragment."""
 
     element = Element.from_content('<State id="filters" value="[]" />', schema=SCHEMA)
+    element.validate()
+
+
+def test_state_layout_allows_multiple_initial_fields() -> None:
+    """Allow multi-field state definitions."""
+
+    element = Element.from_content('<State id="filters" value1="first value" score="10" list="[]" />', schema=SCHEMA)
     element.validate()
 
 
@@ -34,10 +41,8 @@ def test_state_layout_requires_id() -> None:
         element.validate()
 
 
-def test_state_layout_requires_value() -> None:
-    """Reject a `State` fragment missing its required value."""
+def test_state_layout_allows_empty_state() -> None:
+    """Allow an empty `State` fragment so the runtime can seed an empty proxy."""
 
     element = Element.from_content('<State id="filters" />', schema=SCHEMA)
-
-    with pytest.raises(ValueError):
-        element.validate()
+    element.validate()

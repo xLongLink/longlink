@@ -46,12 +46,31 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
                 const params = node.params!;
                 const id = params.id.trim();
-                const value = params.value;
+                const entries = Object.entries(params).filter(([key]) => key !== 'id');
 
                 // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
                 setups[id] = () => {
                     if (!(id in ctx.values)) {
-                        state(ctx, id, evaluate(value, ctx));
+                        // Seed a proxied object from all attributes except `id`.
+                        const initialValue: Record<string, unknown> = {};
+
+                        for (const [key, rawValue] of entries) {
+                            const input = rawValue.trim();
+
+                            if (input === '') {
+                                initialValue[key] = '';
+                                continue;
+                            }
+
+                            try {
+                                initialValue[key] = JSON.parse(input);
+                                continue;
+                            } catch {
+                                initialValue[key] = evaluate(rawValue, ctx);
+                            }
+                        }
+
+                        state(ctx, id, initialValue);
                     }
                 };
                 await setups[id]();
@@ -93,7 +112,6 @@ export function validateSetupNodes(nodes: ASTNode[]): void {
 function validateSetupNode(node: ASTNode): void {
     if (node.name === 'State') {
         if (!node.params?.id) throw new Error('State requires a string id');
-        if (node.params.value == null) throw new Error('State requires a value');
         if (!isText(node.params.id)) throw new Error('State id must be literal text');
         if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
     }

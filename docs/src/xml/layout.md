@@ -41,7 +41,7 @@ TODO: Component description
     </DialogHeader>
     <DialogFooter>
       <Button variant="outline">Cancel</Button>
-      <Button>Delete</Button>
+      <Action action="/issues/1" method="DELETE">Delete</Action>
     </DialogFooter>
   </DialogContent>
 </Dialog>

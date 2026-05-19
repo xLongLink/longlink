@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import {
     A,
+    Action,
     Avatar,
     AvatarBadge,
     AvatarFallback,
@@ -136,6 +137,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<any>> = {
     Li,
     Ol,
     A,
+    Action,
     Button,
     ButtonGroup,
     ButtonGroupText,

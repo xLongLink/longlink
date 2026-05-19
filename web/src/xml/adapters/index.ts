@@ -1,4 +1,5 @@
 export { A } from './A';
+export { Action } from './Action';
 export { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from './Avatar';
 export { B } from './B';
 export { Badge } from './Badge';

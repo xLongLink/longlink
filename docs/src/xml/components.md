@@ -27,9 +27,19 @@ TODO: Component description
 TODO: Component description
 
 ```xml
-<Button action="/issues/new" method="GET" variant="default">
+<Button variant="default">
   Create issue
 </Button>
+```
+
+## Action
+
+TODO: Component description
+
+```xml
+<Action action="/issues" json='${{ title: issue.title }}'>
+  Save issue
+</Action>
 ```
 
 ## ButtonGroup
@@ -108,7 +118,7 @@ TODO: Component description
   <HeroTitle>Organizations</HeroTitle>
   <HeroDescription>Browse the organizations you belong to.</HeroDescription>
   <HeroContent>
-    <Button action="/organizations/new">Create organization</Button>
+    <Action action="/organizations/new">Create organization</Action>
   </HeroContent>
 </Hero>
 ```

@@ -58,6 +58,20 @@
             </P>
         </TabsContent>
         <TabsContent value="form">
+            <State
+                id="profile"
+                name="Evil Rabbit"
+                username="evil.rabbit"
+                email="ada@longlink.dev"
+                team="ops"
+                password=""
+                timezone="utc"
+                notes="Draft notes for the account review."
+                newsletter="true"
+                autosave="true"
+                priority="medium"
+            />
+            <State id="budget" value="50" />
             <FieldSet>
                 <FieldLegend>Account profile</FieldLegend>
                 <FieldDescription>A denser backoffice form with inline controls and grouped actions.</FieldDescription>
@@ -65,7 +79,7 @@
                     <Grid columns="2">
                         <Field>
                             <FieldLabel htmlFor="name">Full name</FieldLabel>
-                            <Input id="name" autoComplete="name" placeholder="Evil Rabbit" />
+                            <Input id="name" autoComplete="name" placeholder="Evil Rabbit" value="$profile.name" />
                             <FieldDescription>This appears on invoices and emails.</FieldDescription>
                         </Field>
                         <Field>
@@ -74,7 +88,7 @@
                                 <InputGroupAddon>
                                     <Icon name="user" />
                                 </InputGroupAddon>
-                                <InputGroupInput id="username" autoComplete="username" placeholder="evil.rabbit" />
+                                <InputGroupInput id="username" autoComplete="username" placeholder="evil.rabbit" value="$profile.username" />
                                 <InputGroupButton>Check</InputGroupButton>
                             </InputGroup>
                         </Field>
@@ -86,13 +100,13 @@
                                 <InputGroupAddon>
                                     <Icon name="mail" />
                                 </InputGroupAddon>
-                                <InputGroupInput id="email" autoComplete="email" placeholder="ada@longlink.dev" />
+                                <InputGroupInput id="email" autoComplete="email" placeholder="ada@longlink.dev" value="$profile.email" />
                                 <InputGroupButton>Invite</InputGroupButton>
                             </InputGroup>
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="team">Team</FieldLabel>
-                            <Select defaultValue="ops">
+                            <Select value="$profile.team">
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a team" />
                                 </SelectTrigger>
@@ -110,11 +124,11 @@
                     <Grid columns="2">
                         <Field>
                             <FieldLabel htmlFor="password">Password</FieldLabel>
-                            <Input id="password" type="password" autoComplete="new-password" placeholder="••••••••" />
+                            <Input id="password" type="password" autoComplete="new-password" placeholder="••••••••" value="$profile.password" />
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
-                            <Select defaultValue="utc">
+                            <Select value="$profile.timezone">
                                 <SelectTrigger>
                                     <SelectValue placeholder="Choose a timezone" />
                                 </SelectTrigger>
@@ -131,7 +145,7 @@
                     </Grid>
                     <Field>
                         <FieldLabel htmlFor="notes">Notes</FieldLabel>
-                        <Textarea id="notes" label="Notes" rows="4" value="Draft notes for the account review." />
+                        <Textarea id="notes" label="Notes" rows="4" value="$profile.notes" />
                         <FieldDescription>Keep the note short and clear.</FieldDescription>
                     </Field>
                     <FieldSet>
@@ -139,17 +153,17 @@
                         <FieldDescription>These controls are designed to stay compact and readable.</FieldDescription>
                         <Grid columns="2">
                             <Field orientation="horizontal">
-                                <Checkbox id="newsletter" defaultChecked="true" />
+                                <Checkbox id="newsletter" checked="$profile.newsletter" />
                                 <FieldLabel htmlFor="newsletter">Email digest</FieldLabel>
                             </Field>
                             <Field orientation="horizontal">
-                                <Switch id="autosave" defaultChecked="true" size="sm" />
+                                <Switch id="autosave" checked="$profile.autosave" size="sm" />
                                 <FieldLabel htmlFor="autosave">Auto-save drafts</FieldLabel>
                             </Field>
                         </Grid>
                         <Field>
                             <FieldLabel>Priority</FieldLabel>
-                            <RadioGroup name="priority" defaultValue="medium">
+                            <RadioGroup name="priority" value="$profile.priority">
                                 <RadioGroupItem value="low">Low</RadioGroupItem>
                                 <RadioGroupItem value="medium">Medium</RadioGroupItem>
                                 <RadioGroupItem value="high">High</RadioGroupItem>
@@ -166,15 +180,20 @@
                     </FieldSet>
                     <Field>
                         <FieldLabel htmlFor="budget">Budget</FieldLabel>
-                        <Slider id="budget" min="0" max="100" step="5" value="50" />
+                        <Slider id="budget" min="0" max="100" step="5" value="$budget" />
                         <FieldDescription>Set the allowed budget range.</FieldDescription>
                     </Field>
                     <Field>
                         <FieldLabel>Actions</FieldLabel>
                         <ButtonGroup>
-                            <Button variant="outline">Cancel</Button>
-                            <Button variant="outline">Save draft</Button>
-                            <Button>Save profile</Button>
+                            <Action invalidate='["profile", "budget"]'>Cancel</Action>
+                            <ButtonGroupSeparator />
+                            <Action
+                                action="/profiles/account"
+                                json='${{ name: profile.name, username: profile.username, email: profile.email, team: profile.team, password: profile.password, timezone: profile.timezone, notes: profile.notes, newsletter: profile.newsletter, autosave: profile.autosave, priority: profile.priority, budget: budget.value }}'
+                            >
+                                Save profile
+                            </Action>
                         </ButtonGroup>
                     </Field>
                 </FieldGroup>
@@ -369,7 +388,7 @@
                 <InputGroupAddon>
                     <Icon name="search" />
                 </InputGroupAddon>
-                <InputGroupInput id="grid-search" value="$gridSearch" autoComplete="off" placeholder="Search cards, alerts, and revenue" />
+                <InputGroupInput id="grid-search" value="$gridSearch.value" autoComplete="off" placeholder="Search cards, alerts, and revenue" />
                 <InputGroupButton>
                     Search
                     <Icon name="arrow-right" />
@@ -378,12 +397,12 @@
             <Columns>
                 <Column width="75">
                     <Grid columns="2">
-                        <Card if="${gridSearch in 'Revenue overview'}">
+                        <Card if="${gridSearch.value in 'Revenue overview'}">
                             <CardHeader>
                                 <CardTitle>Revenue overview</CardTitle>
                                 <CardDescription>Weekly performance snapshot</CardDescription>
                                 <CardAction>
-                                    <Button action="/reports/revenue" method="GET" variant="outline">Open report</Button>
+                                    <A href="/reports/revenue" variant="outline">Open report</A>
                                 </CardAction>
                             </CardHeader>
                             <CardContent>
@@ -393,7 +412,7 @@
                                 <Badge variant="outline">On track</Badge>
                             </CardFooter>
                         </Card>
-                        <Card if="${gridSearch in 'Usage'}">
+                        <Card if="${gridSearch.value in 'Usage'}">
                             <CardHeader>
                                 <CardTitle>Usage</CardTitle>
                                 <CardDescription>Active sessions</CardDescription>
@@ -405,7 +424,7 @@
                                 <P>Updated 12 minutes ago.</P>
                             </CardFooter>
                         </Card>
-                        <Card if="${gridSearch in 'Pipeline'}">
+                        <Card if="${gridSearch.value in 'Pipeline'}">
                             <CardHeader>
                                 <CardTitle>Pipeline</CardTitle>
                                 <CardDescription>Open work</CardDescription>
@@ -417,7 +436,7 @@
                                 <Badge variant="outline">3 open</Badge>
                             </CardFooter>
                         </Card>
-                        <Card if="${gridSearch in 'Alerts'}">
+                        <Card if="${gridSearch.value in 'Alerts'}">
                             <CardHeader>
                                 <CardTitle>Alerts</CardTitle>
                                 <CardDescription>Recent signals</CardDescription>

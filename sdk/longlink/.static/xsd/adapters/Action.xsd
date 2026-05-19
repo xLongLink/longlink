@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="ActionChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="ActionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="ActionChildrenOnlyType">
+        <xsd:attribute name="action" type="xsd:string" use="optional" />
+        <xsd:attribute name="json" type="xsd:string" use="optional" />
+        <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
+        <xsd:attribute name="method" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Action" type="ActionType" />
+</xsd:schema>

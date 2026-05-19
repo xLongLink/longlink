@@ -1,6 +1,7 @@
 import { parseXML } from '@xml/core/parser';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
+import { proxy } from 'valtio';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('InputGroup', () => {
@@ -57,6 +58,19 @@ describe('InputGroup', () => {
         expect(output).toContain('Public');
         expect(output).toContain('ada');
         expect(output).toContain('<svg');
+    });
+
+    /* Dotted state bindings should resolve and render the current field value. */
+    it('renders dotted value bindings', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: { gridSearch: proxy({ value: 'Revenue' }) },
+        };
+
+        const output = renderXmlToMarkup(parseXML('<InputGroup><InputGroupInput value="$gridSearch.value" /></InputGroup>'), ctx);
+
+        expect(output).toContain('value="Revenue"');
     });
 
     /* The runtime should render the textarea variant inside the same shell. */

@@ -21,3 +21,4 @@ longlink/
 - Python functions must have docstrings, and non-trivial logic blocks must have preceding `# ...` comments.
 - JavaScript functions must have JSDoc comments, and non-trivial logic blocks must have preceding `// ...` comments.
 - Project is in MVP mode: prefer the current model over backward compatibility, remove obsolete code when replacing old flows
+- Always check at the end of the implementation, for potential simplifications.

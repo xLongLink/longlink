@@ -19,15 +19,30 @@ describe('State', () => {
         ]);
     });
 
-    /* State values should still be visible to sibling nodes after initialization. */
+    /* State object fields should be visible to sibling nodes after initialization. */
     it('renders state values for sibling nodes', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<longlink><State id="filter" value="day" /><P>${filter}</P></longlink>');
+        const ast = parseXML('<longlink><State id="filter" value="day" /><P>${filter.value}</P></longlink>');
         await setupContext(ast, ctx, '');
         const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
             '<div><p class="leading-7">day</p></div>'
+        );
+    });
+
+    /* Multiple state attributes should seed a proxied object slot. */
+    it('renders multi-field state values', async () => {
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const ast = parseXML(
+            '<longlink><State id="state1" value1="first value" score="10" list="[]" /><P>${state1.value1} ${state1.score} ${state1.list.length}</P></longlink>'
+        );
+
+        await setupContext(ast, ctx, '');
+        const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
+
+        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
+            '<div><p class="leading-7">first value 10 0</p></div>'
         );
     });
 

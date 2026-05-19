@@ -14,12 +14,11 @@ export function Input({ props, nodes }: Props) {
     const autoComplete = resolveXmlString(props, 'autoComplete', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);
-    const value = resolveXmlValue(props, 'value', ctx);
     const label = resolveXmlString(props, 'label', ctx);
     const placeholder = resolveXmlValue(props, 'placeholder', ctx);
     const type = resolveXmlString(props, 'type', ctx, 'text');
     const placeholderText = String(placeholder ?? label ?? '');
-    const binding = useBindableValue(value, type);
+    const binding = useBindableValue(props, 'value', ctx, type);
 
     if (binding.bound) {
         return (

@@ -1,4 +1,4 @@
-import { getVersion, snapshot } from 'valtio';
+import { getVersion } from 'valtio';
 
 import type { ExecutionContext } from '../types';
 
@@ -15,24 +15,11 @@ function resolveRawValue(ctx: ExecutionContext | null | undefined, key: string):
     return undefined;
 }
 
-/** Unwraps scalar Valtio state objects into plain values when possible. */
-function unwrapValue(value: unknown): unknown {
-    if (!value || typeof value !== 'object' || getVersion(value) === undefined) return value;
-
-    const data = snapshot(value as object) as Record<string, unknown>;
-
-    if (Object.keys(data).length === 1 && 'value' in data) {
-        return data.value;
-    }
-
-    return value;
-}
-
 /** Resolves a value from the current XML runtime scope chain. */
 export function resolveValue(ctx: ExecutionContext | null | undefined, key: string): unknown {
     if (!ctx) return undefined;
 
-    return unwrapValue(resolveRawValue(ctx, key));
+    return resolveRawValue(ctx, key);
 }
 
 /** Creates a proxy that resolves identifiers through lexical parent contexts. */

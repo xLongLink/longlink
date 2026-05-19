@@ -15,11 +15,15 @@ Use `<longlink>` as the root page shell.
 
 ## State
 
-Use `<State />` to create a local reactive slot, where the `id` attribute to name and `value` to seed the initial state.
+Use `<State />` to create a local reactive slot. Use `id` to name the slot and add any attributes you want seeded into the state object.
 `<State>` does not accept children.
 
 ```xml
 <State id="user" value="name" />
+```
+
+```xml
+<State id="filters" search="Revenue" page="1" />
 ```
 
 ## Query
