@@ -1,28 +1,14 @@
-import { compile, evaluate } from '@xml/core/expressions';
-import { A } from '@xml/html/A';
-import { B } from '@xml/html/B';
-import { Br } from '@xml/html/Br';
-import { Code } from '@xml/html/Code';
-import { H1 } from '@xml/html/H1';
-import { H2 } from '@xml/html/H2';
-import { H3 } from '@xml/html/H3';
-import { H4 } from '@xml/html/H4';
-import { Li } from '@xml/html/Li';
-import { Ol } from '@xml/html/Ol';
-import { P } from '@xml/html/P';
-import { S } from '@xml/html/S';
-import { Sub } from '@xml/html/Sub';
-import { Sup } from '@xml/html/Sup';
-import { U } from '@xml/html/U';
-import { Ul } from '@xml/html/Ul';
-import { Longlink } from '@xml/primitives/Longlink';
-import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from '@xml/react/Avatar';
-import { Badge } from '@xml/react/Badge';
-import { Button } from '@xml/react/Button';
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@xml/react/ButtonGroup';
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/react/Card';
-import { Checkbox } from '@xml/react/Checkbox';
-import { Column, Columns } from '@xml/react/Columns';
+import { A } from '@xml/adapters/A';
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from '@xml/adapters/Avatar';
+import { B } from '@xml/adapters/B';
+import { Badge } from '@xml/adapters/Badge';
+import { Br } from '@xml/adapters/Br';
+import { Button } from '@xml/adapters/Button';
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@xml/adapters/ButtonGroup';
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@xml/adapters/Card';
+import { Checkbox } from '@xml/adapters/Checkbox';
+import { Code } from '@xml/adapters/Code';
+import { Column, Columns } from '@xml/adapters/Columns';
 import {
     Dialog,
     DialogContent,
@@ -31,8 +17,8 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@xml/react/Dialog';
-import { Divider } from '@xml/react/Divider';
+} from '@xml/adapters/Dialog';
+import { Divider } from '@xml/adapters/Divider';
 import {
     Field,
     FieldContent,
@@ -44,11 +30,15 @@ import {
     FieldSeparator,
     FieldSet,
     FieldTitle,
-} from '@xml/react/Field';
-import { Grid } from '@xml/react/Grid';
-import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/react/Hero';
-import { Icon } from '@xml/react/Icon';
-import { Input } from '@xml/react/Input';
+} from '@xml/adapters/Field';
+import { Grid } from '@xml/adapters/Grid';
+import { H1 } from '@xml/adapters/H1';
+import { H2 } from '@xml/adapters/H2';
+import { H3 } from '@xml/adapters/H3';
+import { H4 } from '@xml/adapters/H4';
+import { Hero, HeroContent, HeroDescription, HeroTitle } from '@xml/adapters/Hero';
+import { Icon } from '@xml/adapters/Icon';
+import { Input } from '@xml/adapters/Input';
 import {
     InputGroup,
     InputGroupAddon,
@@ -56,10 +46,15 @@ import {
     InputGroupInput,
     InputGroupText,
     InputGroupTextarea,
-} from '@xml/react/InputGroup';
-import { Label } from '@xml/react/Label';
-import { Menu, MenuContent, MenuList, MenuSection, MenuSubSection } from '@xml/react/Menu';
-import { RadioGroup, RadioGroupItem } from '@xml/react/RadioGroup';
+} from '@xml/adapters/InputGroup';
+import { Label } from '@xml/adapters/Label';
+import { Li } from '@xml/adapters/Li';
+import { Longlink } from '@xml/adapters/Longlink';
+import { Menu, MenuContent, MenuList, MenuSection, MenuSubSection } from '@xml/adapters/Menu';
+import { Ol } from '@xml/adapters/Ol';
+import { P } from '@xml/adapters/P';
+import { RadioGroup, RadioGroupItem } from '@xml/adapters/RadioGroup';
+import { S } from '@xml/adapters/S';
 import {
     Select,
     SelectContent,
@@ -69,19 +64,22 @@ import {
     SelectSeparator,
     SelectTrigger,
     SelectValue,
-} from '@xml/react/Select';
-import { Slider } from '@xml/react/Slider';
-import { Stack } from '@xml/react/Stack';
-import { Switch } from '@xml/react/Switch';
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/react/Table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/react/Tabs';
-import { Textarea } from '@xml/react/Textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@xml/react/Tooltip';
-import { Toggle } from '@xml/react/Toggle';
-import { ToggleGroup, ToggleGroupItem } from '@xml/react/ToggleGroup';
+} from '@xml/adapters/Select';
+import { Slider } from '@xml/adapters/Slider';
+import { Stack } from '@xml/adapters/Stack';
+import { Sub } from '@xml/adapters/Sub';
+import { Sup } from '@xml/adapters/Sup';
+import { Switch } from '@xml/adapters/Switch';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@xml/adapters/Table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@xml/adapters/Tabs';
+import { Textarea } from '@xml/adapters/Textarea';
+import { Toggle } from '@xml/adapters/Toggle';
+import { ToggleGroup, ToggleGroupItem } from '@xml/adapters/ToggleGroup';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@xml/adapters/Tooltip';
+import { U } from '@xml/adapters/U';
+import { Ul } from '@xml/adapters/Ul';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ComponentType, type Key, type ReactNode } from 'react';
-import { getVersion, useSnapshot } from 'valtio';
 
 type XmlPropKind = 'boolean' | 'compiledExpression' | 'enum' | 'number' | 'string' | 'stringArray' | 'value';
 
@@ -99,283 +97,49 @@ type XmlComponentDefinition = {
 
 type XmlRenderAdapter = (node: ASTNode, ctx: ExecutionContext, key: Key) => ReactNode;
 
-type XmlValueState = Record<string, unknown> & { value?: unknown };
-
 /** Defines a string XML prop that is evaluated against the runtime context. */
 function stringProp(defaultValue?: string): XmlPropDefinition {
     return { kind: 'string', defaultValue };
 }
-
 
 /** Defines a boolean XML prop that accepts true/false strings or expression values. */
 function booleanProp(defaultValue?: boolean): XmlPropDefinition {
     return { kind: 'boolean', defaultValue };
 }
 
-
 /** Defines an enum XML prop and keeps the accepted values visible in the registry. */
 function enumProp(enumValues: readonly string[], defaultValue?: string): XmlPropDefinition {
     return { kind: 'enum', enumValues, defaultValue };
 }
-
 
 /** Defines a number XML prop that accepts numeric text or expression values. */
 function numberProp(defaultValue?: number): XmlPropDefinition {
     return { kind: 'number', defaultValue };
 }
 
-
 /** Defines a raw evaluated XML prop for values that should not be stringified. */
 function valueProp(defaultValue?: unknown): XmlPropDefinition {
     return { kind: 'value', defaultValue };
 }
-
 
 /** Defines a compiled expression prop resolved later by the target component. */
 function compiledExpressionProp(): XmlPropDefinition {
     return { kind: 'compiledExpression' };
 }
 
-
 /** Defines a string array prop that ignores non-array values. */
 function stringArrayProp(defaultValue: string[] = []): XmlPropDefinition {
     return { kind: 'stringArray', defaultValue };
 }
 
-
-/** Coerces XML boolean-like attributes into React boolean props. */
-function coerceBoolean(value: unknown, defaultValue: unknown): boolean | undefined {
-    if (value === true || value === 'true') return true;
-    if (value === false || value === 'false') return false;
-    if (value == null || value === '') return defaultValue as boolean | undefined;
-
-    return true;
-}
-
-
-/** Evaluates and coerces one XML prop based on the component registry schema. */
-function parseProp(
-    tagName: string,
-    propName: string,
-    definition: XmlPropDefinition,
-    params: Record<string, string> | undefined,
-    ctx: ExecutionContext,
-): unknown {
-    const rawValue = params?.[propName];
-    const hasValue = rawValue != null && rawValue !== '';
-    const evaluated = hasValue ? evaluate(rawValue, ctx) : definition.defaultValue;
-
-    if (definition.kind === 'boolean') {
-        return coerceBoolean(evaluated, definition.defaultValue);
-    }
-
-    if (definition.kind === 'value') {
-        return evaluated;
-    }
-
-    if (definition.kind === 'compiledExpression') {
-        return rawValue == null || rawValue === '' ? undefined : compile(String(rawValue));
-    }
-
-    if (definition.kind === 'stringArray') {
-        return Array.isArray(evaluated) ? evaluated.map((entry) => String(entry)) : definition.defaultValue;
-    }
-
-    if (definition.kind === 'number') {
-        const numberValue = Number(evaluated);
-
-        return Number.isNaN(numberValue) ? definition.defaultValue : numberValue;
-    }
-
-    const stringValue = evaluated == null ? undefined : String(evaluated);
-
-    if (definition.kind === 'enum' && stringValue != null) {
-        if (!definition.enumValues?.includes(stringValue)) {
-            throw new Error(
-                `${tagName}.${propName} must be one of ${definition.enumValues?.join(', ')}, but got ${stringValue}`,
-            );
-        }
-    }
-
-    return stringValue;
-}
-
-
-/** Converts XML attributes into React props using the registry metadata. */
-function parseProps(
-    tagName: string,
-    propDefinitions: Record<string, XmlPropDefinition> | undefined,
-    node: ASTNode,
-    ctx: ExecutionContext,
-): Record<string, unknown> {
-    const props: Record<string, unknown> = {};
-
-    for (const [propName, definition] of Object.entries(propDefinitions ?? {})) {
-        const value = parseProp(tagName, propName, definition, node.params, ctx);
-        if (value !== undefined) props[propName] = value;
-    }
-
-    return props;
-}
-
-
 /** Creates a render adapter from a declarative XML component definition. */
-function createComponentAdapter(tagName: string, definition: XmlComponentDefinition): XmlRenderAdapter {
-    const Component = definition.component;
-
+function createComponentAdapter(_tagName: string, definition: XmlComponentDefinition): XmlRenderAdapter {
     return (node, ctx, key) => {
-        const props = parseProps(tagName, definition.props, node, ctx);
-        if (definition.children !== false) props.children = node.children;
+        void ctx;
 
-        return <Component key={key} {...props} />;
+        return <definition.component key={key} props={node.params ?? {}} nodes={node.children ?? []} />;
     };
 }
-
-
-/** Returns true when an evaluated XML value is a Valtio-backed state binding. */
-function isXmlValueState(value: unknown): value is XmlValueState {
-    return value !== null && typeof value === 'object' && getVersion(value as object) !== undefined;
-}
-
-
-/** Reads a boolean from a primitive state wrapper or object state snapshot. */
-function readBooleanState(snapshot: Record<string, unknown>): boolean {
-    return Boolean('value' in snapshot ? snapshot.value : snapshot);
-}
-
-
-/** Writes a boolean into the primitive state wrapper used by XML State. */
-function writeBooleanState(state: XmlValueState, value: boolean): void {
-    if ('value' in state) {
-        state.value = value;
-    }
-}
-
-
-/** Adapts XML checkbox bindings into plain boolean props and change handlers. */
-function XmlCheckbox({
-    checked,
-    defaultChecked,
-    disabled,
-    id,
-}: {
-    checked?: unknown;
-    defaultChecked?: boolean;
-    disabled?: boolean;
-    id?: string;
-}) {
-    if (isXmlValueState(checked)) {
-        const snapshot = useSnapshot(checked);
-
-        return (
-            <Checkbox
-                checked={readBooleanState(snapshot)}
-                disabled={disabled}
-                id={id}
-                onCheckedChange={(nextChecked) => {
-                    writeBooleanState(checked, nextChecked);
-                }}
-            />
-        );
-    }
-
-    return <Checkbox checked={coerceBoolean(checked, undefined)} defaultChecked={defaultChecked} disabled={disabled} id={id} />;
-}
-
-
-/** Adapts XML switch bindings into plain boolean props and change handlers. */
-function XmlSwitch({
-    checked,
-    defaultChecked,
-    disabled,
-    id,
-    size,
-}: {
-    checked?: unknown;
-    defaultChecked?: boolean;
-    disabled?: boolean;
-    id?: string;
-    size?: 'sm' | 'default';
-}) {
-    if (isXmlValueState(checked)) {
-        const snapshot = useSnapshot(checked);
-
-        return (
-            <Switch
-                checked={readBooleanState(snapshot)}
-                disabled={disabled}
-                id={id}
-                onCheckedChange={(nextChecked) => {
-                    writeBooleanState(checked, nextChecked);
-                }}
-                size={size}
-            />
-        );
-    }
-
-    return (
-        <Switch
-            checked={coerceBoolean(checked, undefined)}
-            defaultChecked={defaultChecked}
-            disabled={disabled}
-            id={id}
-            size={size}
-        />
-    );
-}
-
-
-/** Adapts XML toggle bindings into plain boolean props and change handlers. */
-function XmlToggle({
-    children,
-    defaultPressed,
-    disabled,
-    id,
-    pressed,
-    size,
-    variant,
-}: {
-    children?: ASTNode[];
-    defaultPressed?: boolean;
-    disabled?: boolean;
-    id?: string;
-    pressed?: unknown;
-    size?: 'sm' | 'default' | 'lg';
-    variant?: 'default' | 'outline';
-}) {
-    if (isXmlValueState(pressed)) {
-        const snapshot = useSnapshot(pressed);
-
-        return (
-            <Toggle
-                disabled={disabled}
-                id={id}
-                onPressedChange={(nextPressed) => {
-                    writeBooleanState(pressed, nextPressed);
-                }}
-                pressed={readBooleanState(snapshot)}
-                size={size}
-                variant={variant}
-            >
-                {children}
-            </Toggle>
-        );
-    }
-
-    return (
-        <Toggle
-            defaultPressed={defaultPressed}
-            disabled={disabled}
-            id={id}
-            pressed={coerceBoolean(pressed, undefined)}
-            size={size}
-            variant={variant}
-        >
-            {children}
-        </Toggle>
-    );
-}
-
 
 /** Registry of XML components, their React targets, prop types, and enum values. */
 const xmlComponents: Record<string, XmlComponentDefinition> = {
@@ -590,7 +354,7 @@ const xmlComponents: Record<string, XmlComponentDefinition> = {
         },
     },
     Checkbox: {
-        component: XmlCheckbox,
+        component: Checkbox,
         children: false,
         props: {
             checked: valueProp(),
@@ -600,7 +364,7 @@ const xmlComponents: Record<string, XmlComponentDefinition> = {
         },
     },
     Switch: {
-        component: XmlSwitch,
+        component: Switch,
         children: false,
         props: {
             checked: valueProp(),
@@ -626,7 +390,7 @@ const xmlComponents: Record<string, XmlComponentDefinition> = {
         },
     },
     Toggle: {
-        component: XmlToggle,
+        component: Toggle,
         props: {
             defaultPressed: booleanProp(),
             disabled: booleanProp(),
@@ -947,18 +711,15 @@ for (const [tagName, definition] of Object.entries(xmlComponents)) {
     xmlComponentRegistry[tagName] = createComponentAdapter(tagName, definition);
 }
 
-
 /** Renders a registered XML component, returning undefined for tags still handled by the legacy renderer. */
 export function renderRegisteredNode(node: ASTNode, ctx: ExecutionContext, key: Key): ReactNode | undefined {
     return xmlComponentRegistry[node.name]?.(node, ctx, key);
 }
 
-
 /** Returns the names currently owned by the central XML component registry. */
 export function getRegisteredXmlComponentNames(): string[] {
     return Object.keys(xmlComponentRegistry);
 }
-
 
 /** Returns the component registry definitions for tests and schema maintenance. */
 export function getXmlComponentDefinitions(): Record<string, XmlComponentDefinition> {

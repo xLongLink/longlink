@@ -1,7 +1,7 @@
+import { For } from '@xml/adapters/For';
+import { Text } from '@xml/adapters/Text';
 import { evaluate } from '@xml/core/expressions';
 import { renderRegisteredNode } from '@xml/core/registry';
-import { For } from '@xml/primitives/For';
-import { Text } from '@xml/primitives/Text';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
 
@@ -26,7 +26,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             const each = evaluate(node.params.each, ctx);
 
             if (!Array.isArray(each)) return <Fragment key={index} />;
-            return <For key={index} each={each} as={node.params.as} children={node.children ?? []} />;
+            return <For key={index} props={node.params} nodes={node.children ?? []} />;
         }
 
         if (node.name === 'Text') {
@@ -36,7 +36,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             if (typeof value !== 'string')
                 throw new Error(`Text.value must evaluate to a string, but got ${typeof value}`);
 
-            return <Text key={index} value={value} />;
+            return <Text key={index} props={node.params} nodes={node.children ?? []} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

@@ -3,15 +3,14 @@ export { compile as compileExpression, evaluate } from '@xml/core/expressions';
 export { renderNode } from '@xml/core/node';
 export { parseXML as fromXml } from '@xml/core/parser';
 export { BaseUrlContext, resolveUrl, useUrl } from '@xml/core/url';
-export type { ASTNode, ExecutionContext } from '@xml/types';
-export { Br } from './html/Br';
-export { Ol } from './html/Ol';
-export { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from './react/Avatar';
-export { Badge } from './react/Badge';
-export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from './react/ButtonGroup';
-export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './react/Card';
-export { Checkbox } from './react/Checkbox';
-export { Column, Columns } from './react/Columns';
+export type { ASTNode, ASTProps, ExecutionContext, Props } from '@xml/types';
+export { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from './adapters/Avatar';
+export { Badge } from './adapters/Badge';
+export { Br } from './adapters/Br';
+export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from './adapters/ButtonGroup';
+export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './adapters/Card';
+export { Checkbox } from './adapters/Checkbox';
+export { Column, Columns } from './adapters/Columns';
 export {
     Dialog,
     DialogContent,
@@ -20,8 +19,8 @@ export {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from './react/Dialog';
-export { Divider } from './react/Divider';
+} from './adapters/Dialog';
+export { Divider } from './adapters/Divider';
 export {
     Field,
     FieldContent,
@@ -33,9 +32,9 @@ export {
     FieldSeparator,
     FieldSet,
     FieldTitle,
-} from './react/Field';
-export { Grid } from './react/Grid';
-export { Icon } from './react/Icon';
+} from './adapters/Field';
+export { Grid } from './adapters/Grid';
+export { Icon } from './adapters/Icon';
 export {
     InputGroup,
     InputGroupAddon,
@@ -43,10 +42,11 @@ export {
     InputGroupInput,
     InputGroupText,
     InputGroupTextarea,
-} from './react/InputGroup';
-export { Label } from './react/Label';
-export { Menu, MenuContent, MenuList, MenuSection, MenuSubSection } from './react/Menu';
-export { RadioGroup, RadioGroupItem } from './react/RadioGroup';
+} from './adapters/InputGroup';
+export { Label } from './adapters/Label';
+export { Menu, MenuContent, MenuList, MenuSection, MenuSubSection } from './adapters/Menu';
+export { Ol } from './adapters/Ol';
+export { RadioGroup, RadioGroupItem } from './adapters/RadioGroup';
 export {
     Select,
     SelectContent,
@@ -56,14 +56,14 @@ export {
     SelectSeparator,
     SelectTrigger,
     SelectValue,
-} from './react/Select';
-export { Slider } from './react/Slider';
-export { Stack } from './react/Stack';
-export { Switch } from './react/Switch';
-export { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './react/Table';
-export { Tabs, TabsContent, TabsList, TabsTrigger } from './react/Tabs';
-export { Textarea } from './react/Textarea';
-export { Toggle } from './react/Toggle';
-export { ToggleGroup, ToggleGroupItem } from './react/ToggleGroup';
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './react/Tooltip';
+} from './adapters/Select';
+export { Slider } from './adapters/Slider';
+export { Stack } from './adapters/Stack';
+export { Switch } from './adapters/Switch';
+export { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './adapters/Table';
+export { Tabs, TabsContent, TabsList, TabsTrigger } from './adapters/Tabs';
+export { Textarea } from './adapters/Textarea';
+export { Toggle } from './adapters/Toggle';
+export { ToggleGroup, ToggleGroupItem } from './adapters/ToggleGroup';
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './adapters/Tooltip';
 export { RenderXML } from './renderers.tsx';
