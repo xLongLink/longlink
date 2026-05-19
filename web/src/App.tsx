@@ -6,6 +6,7 @@ import Features from './pages/Features';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
+import Playground from './pages/Playground';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Sample from './pages/Sample';
@@ -25,6 +26,14 @@ function getRoutes() {
     return [
         { path: '/', element: <Home /> },
         { path: 'sample', element: <Sample /> },
+        {
+            path: 'playground',
+            element: (
+                <Layout>
+                    <Playground />
+                </Layout>
+            ),
+        },
         { path: 'features', element: <Features /> },
         { path: 'pricing', element: <Pricing /> },
         {
