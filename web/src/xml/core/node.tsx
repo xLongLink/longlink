@@ -233,18 +233,18 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         if (node.name === 'Li') {
-            return <Li children={node.children} />;
+            return <Li key={index} children={node.children} />;
         }
 
         if (node.name === 'Ol') {
-            return <Ol children={node.children} />;
+            return <Ol key={index} children={node.children} />;
         }
 
         if (node.name === 'A') {
             const href = node.params?.href ? String(evaluate(node.params.href, ctx) ?? '') : '';
             const active = node.params?.active ? String(evaluate(node.params.active, ctx) ?? '') : undefined;
 
-            return <A active={active as 'always' | 'hover' | undefined} href={href} children={node.children} />;
+            return <A key={index} active={active as 'always' | 'hover' | undefined} href={href} children={node.children} />;
         }
 
         if (node.name === 'Button') {
@@ -261,6 +261,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <Button
+                    key={index}
                     action={action}
                     invalidate={invalidate}
                     json={json}
@@ -278,11 +279,11 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                 ? String(evaluate(node.params.orientation, ctx) ?? 'horizontal')
                 : 'horizontal';
 
-            return <ButtonGroup orientation={orientation as 'horizontal' | 'vertical'} children={node.children} />;
+            return <ButtonGroup key={index} orientation={orientation as 'horizontal' | 'vertical'} children={node.children} />;
         }
 
         if (node.name === 'ButtonGroupText') {
-            return <ButtonGroupText children={node.children} />;
+            return <ButtonGroupText key={index} children={node.children} />;
         }
 
         if (node.name === 'ButtonGroupSeparator') {
@@ -290,12 +291,12 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                 ? String(evaluate(node.params.orientation, ctx) ?? 'vertical')
                 : 'vertical';
 
-            return <ButtonGroupSeparator orientation={orientation as 'horizontal' | 'vertical'} />;
+            return <ButtonGroupSeparator key={index} orientation={orientation as 'horizontal' | 'vertical'} />;
         }
 
         // Input group tags reuse the shared input-group chrome from the UI layer.
         if (node.name === 'InputGroup') {
-            return <InputGroup children={node.children} />;
+            return <InputGroup key={index} children={node.children} />;
         }
 
         if (node.name === 'InputGroupAddon') {
@@ -305,6 +306,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <InputGroupAddon
+                    key={index}
                     align={align as 'inline-start' | 'inline-end' | 'block-start' | 'block-end'}
                     children={node.children}
                 />
@@ -328,6 +330,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <InputGroupButton
+                    key={index}
                     disabled={disabled}
                     size={size as 'xs' | 'sm' | 'icon-xs' | 'icon-sm'}
                     type={type as 'button' | 'submit' | 'reset'}
@@ -338,84 +341,84 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         if (node.name === 'InputGroupText') {
-            return <InputGroupText children={node.children} />;
+            return <InputGroupText key={index} children={node.children} />;
         }
 
         if (node.name === 'Badge') {
             const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'default') : 'default';
 
-            return <Badge variant={variant} children={node.children} />;
+            return <Badge key={index} variant={variant} children={node.children} />;
         }
 
         if (node.name === 'Avatar') {
             const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
 
-            return <Avatar size={size} children={node.children} />;
+            return <Avatar key={index} size={size} children={node.children} />;
         }
 
         if (node.name === 'AvatarImage') {
             const alt = node.params?.alt ? String(evaluate(node.params.alt, ctx) ?? '') : undefined;
             const src = node.params?.src ? String(evaluate(node.params.src, ctx) ?? '') : undefined;
 
-            return <AvatarImage alt={alt} src={src} />;
+            return <AvatarImage key={index} alt={alt} src={src} />;
         }
 
         if (node.name === 'AvatarFallback') {
-            return <AvatarFallback children={node.children} />;
+            return <AvatarFallback key={index} children={node.children} />;
         }
 
         if (node.name === 'AvatarBadge') {
-            return <AvatarBadge children={node.children} />;
+            return <AvatarBadge key={index} children={node.children} />;
         }
 
         if (node.name === 'Columns') {
-            return <Columns children={node.children} />;
+            return <Columns key={index} children={node.children} />;
         }
 
         if (node.name === 'Column') {
             const width = node.params?.width ? evaluate(node.params.width, ctx) : undefined;
 
-            return <Column width={width == null ? undefined : String(width)} children={node.children} />;
+            return <Column key={index} width={width == null ? undefined : String(width)} children={node.children} />;
         }
 
         if (node.name === 'Grid') {
             const columns = node.params?.columns != null ? evaluate(node.params.columns, ctx) : undefined;
 
-            return <Grid columns={columns == null ? undefined : String(columns)} children={node.children} />;
+            return <Grid key={index} columns={columns == null ? undefined : String(columns)} children={node.children} />;
         }
 
         if (node.name === 'Stack') {
-            return <Stack children={node.children} />;
+            return <Stack key={index} children={node.children} />;
         }
 
         if (node.name === 'Card') {
             const size = node.params?.size ? String(evaluate(node.params.size, ctx) ?? 'default') : 'default';
 
-            return <Card size={size} children={node.children} />;
+            return <Card key={index} size={size} children={node.children} />;
         }
 
         if (node.name === 'CardHeader') {
-            return <CardHeader children={node.children} />;
+            return <CardHeader key={index} children={node.children} />;
         }
 
         if (node.name === 'CardTitle') {
-            return <CardTitle children={node.children} />;
+            return <CardTitle key={index} children={node.children} />;
         }
 
         if (node.name === 'CardDescription') {
-            return <CardDescription children={node.children} />;
+            return <CardDescription key={index} children={node.children} />;
         }
 
         if (node.name === 'CardAction') {
-            return <CardAction children={node.children} />;
+            return <CardAction key={index} children={node.children} />;
         }
 
         if (node.name === 'CardContent') {
-            return <CardContent children={node.children} />;
+            return <CardContent key={index} children={node.children} />;
         }
 
         if (node.name === 'CardFooter') {
-            return <CardFooter children={node.children} />;
+            return <CardFooter key={index} children={node.children} />;
         }
 
         if (node.name === 'Dialog') {
@@ -434,35 +437,35 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                       ? false
                       : undefined;
 
-            return <Dialog defaultOpen={defaultOpen} open={open} children={node.children} />;
+            return <Dialog key={index} defaultOpen={defaultOpen} open={open} children={node.children} />;
         }
 
         if (node.name === 'DialogTrigger') {
-            return <DialogTrigger children={node.children} />;
+            return <DialogTrigger key={index} children={node.children} />;
         }
 
         if (node.name === 'DialogContent') {
-            return <DialogContent children={node.children} />;
+            return <DialogContent key={index} children={node.children} />;
         }
 
         if (node.name === 'DialogHeader') {
-            return <DialogHeader children={node.children} />;
+            return <DialogHeader key={index} children={node.children} />;
         }
 
         if (node.name === 'DialogTitle') {
-            return <DialogTitle children={node.children} />;
+            return <DialogTitle key={index} children={node.children} />;
         }
 
         if (node.name === 'DialogDescription') {
-            return <DialogDescription children={node.children} />;
+            return <DialogDescription key={index} children={node.children} />;
         }
 
         if (node.name === 'DialogFooter') {
-            return <DialogFooter children={node.children} />;
+            return <DialogFooter key={index} children={node.children} />;
         }
 
         if (node.name === 'TooltipProvider') {
-            return <TooltipProvider children={node.children} />;
+            return <TooltipProvider key={index} children={node.children} />;
         }
 
         if (node.name === 'Tooltip') {
@@ -481,11 +484,11 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                       ? false
                       : undefined;
 
-            return <Tooltip defaultOpen={defaultOpen} open={open} children={node.children} />;
+            return <Tooltip key={index} defaultOpen={defaultOpen} open={open} children={node.children} />;
         }
 
         if (node.name === 'TooltipTrigger') {
-            return <TooltipTrigger children={node.children} />;
+            return <TooltipTrigger key={index} children={node.children} />;
         }
 
         if (node.name === 'TooltipContent') {
@@ -497,6 +500,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <TooltipContent
+                    key={index}
                     align={align}
                     alignOffset={alignOffset == null ? undefined : String(alignOffset)}
                     hidden={
@@ -540,6 +544,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <Input
+                    key={index}
                     aria-invalid={ariaInvalid}
                     autoComplete={autoComplete}
                     disabled={disabled}
@@ -580,6 +585,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <InputGroupInput
+                    key={index}
                     aria-invalid={ariaInvalid}
                     autoComplete={autoComplete}
                     disabled={disabled}
@@ -613,6 +619,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <Textarea
+                    key={index}
                     cols={colsValue == null ? undefined : String(colsValue)}
                     disabled={disabled}
                     id={id}
@@ -646,6 +653,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <InputGroupTextarea
+                    key={index}
                     cols={colsValue == null ? undefined : String(colsValue)}
                     disabled={disabled}
                     id={id}
@@ -658,17 +666,17 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         if (node.name === 'FieldSet') {
-            return <FieldSet children={node.children} />;
+            return <FieldSet key={index} children={node.children} />;
         }
 
         if (node.name === 'FieldLegend') {
             const variant = node.params?.variant ? String(evaluate(node.params.variant, ctx) ?? 'legend') : 'legend';
 
-            return <FieldLegend variant={variant as 'legend' | 'label'} children={node.children} />;
+            return <FieldLegend key={index} variant={variant as 'legend' | 'label'} children={node.children} />;
         }
 
         if (node.name === 'FieldGroup') {
-            return <FieldGroup children={node.children} />;
+            return <FieldGroup key={index} children={node.children} />;
         }
 
         if (node.name === 'Field') {
@@ -677,30 +685,34 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                 : 'vertical';
 
             return (
-                <Field orientation={orientation as 'vertical' | 'horizontal' | 'responsive'} children={node.children} />
+                <Field
+                    key={index}
+                    orientation={orientation as 'vertical' | 'horizontal' | 'responsive'}
+                    children={node.children}
+                />
             );
         }
 
         if (node.name === 'FieldContent') {
-            return <FieldContent children={node.children} />;
+            return <FieldContent key={index} children={node.children} />;
         }
 
         if (node.name === 'FieldLabel') {
             const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
 
-            return <FieldLabel htmlFor={htmlFor} children={node.children} />;
+            return <FieldLabel key={index} htmlFor={htmlFor} children={node.children} />;
         }
 
         if (node.name === 'FieldTitle') {
-            return <FieldTitle children={node.children} />;
+            return <FieldTitle key={index} children={node.children} />;
         }
 
         if (node.name === 'FieldDescription') {
-            return <FieldDescription children={node.children} />;
+            return <FieldDescription key={index} children={node.children} />;
         }
 
         if (node.name === 'FieldSeparator') {
-            return <FieldSeparator children={node.children} />;
+            return <FieldSeparator key={index} children={node.children} />;
         }
 
         if (node.name === 'FieldError') {
@@ -708,6 +720,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <FieldError
+                    key={index}
                     errors={errors as Array<{ message?: string } | undefined> | string | undefined}
                     children={node.children}
                 />
@@ -750,7 +763,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                       ? false
                       : undefined;
 
-            return <Checkbox checked={checked} defaultChecked={defaultChecked} disabled={disabled} id={id} />;
+            return <Checkbox key={index} checked={checked} defaultChecked={defaultChecked} disabled={disabled} id={id} />;
         }
 
         if (node.name === 'RadioGroup') {
@@ -783,6 +796,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <RadioGroup
+                    key={index}
                     defaultValue={defaultValueValue as string | Record<string, unknown> | undefined}
                     disabled={disabled}
                     form={form}
@@ -821,6 +835,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <RadioGroupItem
+                    key={index}
                     disabled={disabled}
                     readOnly={readOnly}
                     required={required}
@@ -833,7 +848,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         if (node.name === 'Label') {
             const htmlFor = node.params?.htmlFor ? String(evaluate(node.params.htmlFor, ctx) ?? '') : undefined;
 
-            return <Label htmlFor={htmlFor} children={node.children} />;
+            return <Label key={index} htmlFor={htmlFor} children={node.children} />;
         }
 
         if (node.name === 'Switch') {
@@ -875,6 +890,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <Switch
+                    key={index}
                     checked={checked}
                     defaultChecked={defaultChecked}
                     disabled={disabled}
@@ -906,6 +922,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <Slider
+                    key={index}
                     defaultValue={
                         defaultValue as number[] | number | string | boolean | Record<string, unknown> | undefined
                     }
@@ -961,6 +978,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <Toggle
+                    key={index}
                     defaultPressed={defaultPressed}
                     disabled={disabled}
                     id={id}
@@ -1001,6 +1019,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <ToggleGroup
+                    key={index}
                     defaultValue={defaultValue as string | string[] | Record<string, unknown> | undefined}
                     disabled={disabled}
                     loopFocus={loopFocus}
@@ -1022,6 +1041,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <ToggleGroupItem
+                    key={index}
                     size={size as 'sm' | 'default' | 'lg'}
                     value={value}
                     variant={variant as 'default' | 'outline'}
@@ -1052,6 +1072,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             return (
                 <Select
+                    key={index}
                     defaultOpen={defaultOpen}
                     defaultValue={defaultValue}
                     open={open}
@@ -1062,7 +1083,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         if (node.name === 'SelectTrigger') {
-            return <SelectTrigger children={node.children} />;
+            return <SelectTrigger key={index} children={node.children} />;
         }
 
         if (node.name === 'SelectValue') {
@@ -1070,57 +1091,57 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                 ? String(evaluate(node.params.placeholder, ctx) ?? '')
                 : undefined;
 
-            return <SelectValue placeholder={placeholder} />;
+            return <SelectValue key={index} placeholder={placeholder} />;
         }
 
         if (node.name === 'SelectContent') {
-            return <SelectContent children={node.children} />;
+            return <SelectContent key={index} children={node.children} />;
         }
 
         if (node.name === 'SelectGroup') {
-            return <SelectGroup children={node.children} />;
+            return <SelectGroup key={index} children={node.children} />;
         }
 
         if (node.name === 'SelectLabel') {
-            return <SelectLabel children={node.children} />;
+            return <SelectLabel key={index} children={node.children} />;
         }
 
         if (node.name === 'SelectItem') {
             const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
-            return <SelectItem value={value} children={node.children} />;
+            return <SelectItem key={index} value={value} children={node.children} />;
         }
 
         if (node.name === 'SelectSeparator') {
-            return <SelectSeparator />;
+            return <SelectSeparator key={index} />;
         }
 
         if (node.name === 'Table') {
-            return <Table children={node.children} />;
+            return <Table key={index} children={node.children} />;
         }
 
         if (node.name === 'TableHeader') {
-            return <TableHeader children={node.children} />;
+            return <TableHeader key={index} children={node.children} />;
         }
 
         if (node.name === 'TableBody') {
-            return <TableBody children={node.children} />;
+            return <TableBody key={index} children={node.children} />;
         }
 
         if (node.name === 'TableFooter') {
-            return <TableFooter children={node.children} />;
+            return <TableFooter key={index} children={node.children} />;
         }
 
         if (node.name === 'TableRow') {
-            return <TableRow children={node.children} />;
+            return <TableRow key={index} children={node.children} />;
         }
 
         if (node.name === 'TableHead') {
-            return <TableHead children={node.children} />;
+            return <TableHead key={index} children={node.children} />;
         }
 
         if (node.name === 'TableCell') {
-            return <TableCell children={node.children} />;
+            return <TableCell key={index} children={node.children} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

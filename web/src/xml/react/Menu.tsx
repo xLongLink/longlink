@@ -137,7 +137,7 @@ function renderMenuListNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode
         }
 
         if (node.name !== 'MenuSection') {
-            return renderNode([node], ctx);
+            return <Fragment key={index}>{renderNode([node], ctx)}</Fragment>;
         }
 
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
@@ -161,7 +161,7 @@ function renderMenuSectionChildren(nodes: ASTNode[], ctx: ExecutionContext): Rea
         }
 
         if (node.name !== 'MenuSubSection') {
-            return renderNode([node], ctx);
+            return <Fragment key={index}>{renderNode([node], ctx)}</Fragment>;
         }
 
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
