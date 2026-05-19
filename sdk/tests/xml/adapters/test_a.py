@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "html" / "a.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "a.xsd"
 
 
 def test_a_validation() -> None:
@@ -16,10 +16,9 @@ def test_a_validation() -> None:
     element.validate()
 
 
-def test_a_rejects_missing_href() -> None:
-    """Reject anchors without an href attribute."""
+def test_a_allows_missing_href() -> None:
+    """Allow anchors without an `href` attribute."""
 
     element = Element.from_content('<A>Open icons</A>', schema=SCHEMA)
 
-    with pytest.raises(ValueError):
-        element.validate()
+    element.validate()

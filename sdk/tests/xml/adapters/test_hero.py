@@ -5,7 +5,7 @@ from __future__ import annotations
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Hero.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Hero.xsd"
 
 
 def test_hero_validation() -> None:

@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "primitives" / "Query.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Query.xsd"
 
 
 def test_query_layout_validation() -> None:

@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Textarea.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Textarea.xsd"
 
 
 def test_textarea_validation() -> None:

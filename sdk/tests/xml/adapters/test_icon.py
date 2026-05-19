@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Icon.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Icon.xsd"
 
 
 def test_icon_validation() -> None:

@@ -27,7 +27,7 @@ describe('State', () => {
         const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
-            '<div><p class="leading-7">day</p></div>'
+            '<div class="flex flex-col gap-6 text-sm"><p class="leading-7">day</p></div>'
         );
     });
 
@@ -42,7 +42,7 @@ describe('State', () => {
         const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
-            '<div><p class="leading-7">first value 10 0</p></div>'
+            '<div class="flex flex-col gap-6 text-sm"><p class="leading-7">first value 10 0</p></div>'
         );
     });
 

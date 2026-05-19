@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Checkbox.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Checkbox.xsd"
 
 
 def test_checkbox_validation() -> None:

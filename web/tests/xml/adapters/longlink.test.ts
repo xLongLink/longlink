@@ -26,6 +26,8 @@ describe('Longlink', () => {
         const ast = parseXML('<longlink />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
-        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<div></div>');
+        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
+            '<div class="flex flex-col gap-6 text-sm"></div>'
+        );
     });
 });

@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Dialog.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Dialog.xsd"
 
 
 def test_dialog_validation() -> None:

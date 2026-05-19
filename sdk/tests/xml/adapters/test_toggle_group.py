@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "ToggleGroup.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "ToggleGroup.xsd"
 
 
 def test_toggle_group_validation() -> None:

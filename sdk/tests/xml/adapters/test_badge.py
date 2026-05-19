@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Badge.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Badge.xsd"
 
 
 def test_badge_validation() -> None:

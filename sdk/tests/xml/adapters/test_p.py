@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "html" / "p.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "p.xsd"
 
 
 def test_p_page_validation() -> None:

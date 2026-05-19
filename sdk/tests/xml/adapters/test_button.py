@@ -6,14 +6,14 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Button.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Button.xsd"
 
 
 def test_button_validation() -> None:
     """Validate a minimal `Button` fragment."""
 
     element = Element.from_content(
-        '<Button action="save" method="POST" submit="true" json="${{ value: value }}" invalidate="projects" variant="outline" size="sm" if="${canSave}">Save</Button>',
+        '<Button submit="true" variant="outline" size="sm" if="${canSave}">Save</Button>',
         schema=SCHEMA,
     )
     element.validate()

@@ -12,7 +12,7 @@ describe('Typography', () => {
         );
 
         expect(output).toContain('class="group relative scroll-m-20 text-4xl font-semibold tracking-tight"');
-        expect(output).toContain('class="group relative scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight"');
+        expect(output).toContain('class="group relative scroll-m-20 text-3xl font-semibold tracking-tight"');
         expect(output).toContain('class="group relative scroll-m-20 text-2xl font-semibold tracking-tight"');
         expect(output).toContain('class="group relative scroll-m-20 text-xl font-semibold tracking-tight"');
         expect(output).toContain(

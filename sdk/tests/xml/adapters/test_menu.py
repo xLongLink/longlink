@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Menu.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Menu.xsd"
 
 
 def test_menu_validation() -> None:

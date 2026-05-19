@@ -7,7 +7,7 @@ from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
 FIELD_SET_SCHEMA = ROOT / ".static" / "xsd" / "schema.xsd"
-FIELD_SCHEMA = ROOT / ".static" / "xsd" / "react" / "Field.xsd"
+FIELD_SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Field.xsd"
 
 
 def test_field_validation() -> None:

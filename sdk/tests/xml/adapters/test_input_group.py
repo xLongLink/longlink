@@ -6,12 +6,12 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "InputGroup.xsd"
-ADDON_SCHEMA = ROOT / ".static" / "xsd" / "react" / "InputGroupAddon.xsd"
-BUTTON_SCHEMA = ROOT / ".static" / "xsd" / "react" / "InputGroupButton.xsd"
-TEXT_SCHEMA = ROOT / ".static" / "xsd" / "react" / "InputGroupText.xsd"
-INPUT_SCHEMA = ROOT / ".static" / "xsd" / "react" / "InputGroupInput.xsd"
-TEXTAREA_SCHEMA = ROOT / ".static" / "xsd" / "react" / "InputGroupTextarea.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "InputGroup.xsd"
+ADDON_SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "InputGroupAddon.xsd"
+BUTTON_SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "InputGroupButton.xsd"
+TEXT_SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "InputGroupText.xsd"
+INPUT_SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "InputGroupInput.xsd"
+TEXTAREA_SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "InputGroupTextarea.xsd"
 
 
 def test_input_group_validation() -> None:

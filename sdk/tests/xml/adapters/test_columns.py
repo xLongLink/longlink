@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Columns.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Columns.xsd"
 
 
 def test_columns_validation() -> None:

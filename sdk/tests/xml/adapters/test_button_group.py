@@ -6,9 +6,9 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "ButtonGroup.xsd"
-TEXT_SCHEMA = ROOT / ".static" / "xsd" / "react" / "ButtonGroupText.xsd"
-SEPARATOR_SCHEMA = ROOT / ".static" / "xsd" / "react" / "ButtonGroupSeparator.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "ButtonGroup.xsd"
+TEXT_SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "ButtonGroupText.xsd"
+SEPARATOR_SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "ButtonGroupSeparator.xsd"
 
 
 def test_button_group_validation() -> None:

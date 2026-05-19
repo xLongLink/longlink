@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Label.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Label.xsd"
 
 
 def test_label_validation() -> None:

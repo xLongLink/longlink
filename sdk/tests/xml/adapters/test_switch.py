@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Switch.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Switch.xsd"
 
 
 def test_switch_validation() -> None:

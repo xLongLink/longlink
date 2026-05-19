@@ -5,7 +5,7 @@ from __future__ import annotations
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "html" / "br.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "br.xsd"
 
 
 def test_br_validation() -> None:

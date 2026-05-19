@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Tooltip.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Tooltip.xsd"
 
 
 def test_tooltip_validation() -> None:

@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Select.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Select.xsd"
 
 
 def test_select_validation() -> None:

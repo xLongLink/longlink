@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "primitives" / "Longlink.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Longlink.xsd"
 
 
 def test_longlink_layout_validation() -> None:

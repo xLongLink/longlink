@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Divider.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Divider.xsd"
 
 
 def test_divider_validation() -> None:

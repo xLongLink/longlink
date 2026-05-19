@@ -6,7 +6,7 @@ import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
-SCHEMA = ROOT / ".static" / "xsd" / "react" / "Table.xsd"
+SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Table.xsd"
 
 
 def test_table_validation() -> None:
