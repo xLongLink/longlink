@@ -7,64 +7,57 @@ import {
     CardHeader as UICardHeader,
     CardTitle as UICardTitle,
 } from '@ui/card';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
 
 /** Renders the shadcn card shell. */
 export function Card({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const size = resolveXmlString(props, 'size', ctx, 'default');
 
-    return <UICard size={size as 'default' | 'sm'}>{renderNode(children ?? [], ctx)}</UICard>;
+    return <UICard size={size as 'default' | 'sm'}>{renderNode(nodes, ctx)}</UICard>;
 }
 
 /** Renders the card header slot. */
 export function CardHeader({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UICardHeader>{renderNode(children ?? [], ctx)}</UICardHeader>;
+    return <UICardHeader>{renderNode(nodes, ctx)}</UICardHeader>;
 }
 
 /** Renders the card title slot. */
 export function CardTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UICardTitle>{renderNode(children ?? [], ctx)}</UICardTitle>;
+    return <UICardTitle>{renderNode(nodes, ctx)}</UICardTitle>;
 }
 
 /** Renders the card description slot. */
 export function CardDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UICardDescription>{renderNode(children ?? [], ctx)}</UICardDescription>;
+    return <UICardDescription>{renderNode(nodes, ctx)}</UICardDescription>;
 }
 
 /** Renders the card action slot. */
 export function CardAction({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UICardAction>{renderNode(children ?? [], ctx)}</UICardAction>;
+    return <UICardAction>{renderNode(nodes, ctx)}</UICardAction>;
 }
 
 /** Renders the card content slot. */
 export function CardContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UICardContent>{renderNode(children ?? [], ctx)}</UICardContent>;
+    return <UICardContent>{renderNode(nodes, ctx)}</UICardContent>;
 }
 
 /** Renders the card footer slot. */
 export function CardFooter({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UICardFooter>{renderNode(children ?? [], ctx)}</UICardFooter>;
+    return <UICardFooter>{renderNode(nodes, ctx)}</UICardFooter>;
 }

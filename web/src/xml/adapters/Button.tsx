@@ -1,9 +1,9 @@
 import { Button as UIButton } from '@ui/button';
 import { toast } from 'sonner';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import { useUrl } from '../core/url';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import { useUrl } from '@xml/core/url';
+import type { Props } from '@xml/types';
 import { resolveXmlBoolean, resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
@@ -16,7 +16,6 @@ export function Button({ props, nodes }: Props) {
     const size = resolveXmlString(props, 'size', ctx, 'default');
     const variant = resolveXmlString(props, 'variant', ctx, 'default');
     const submit = resolveXmlBoolean(props, 'submit', ctx, false);
-    const children = nodes;
     const actionUrl = String(action ?? '');
     const requestUrl = useUrl(actionUrl);
     const invalidateRuntime = ctx.invalidate ?? (async () => {});
@@ -57,18 +56,18 @@ export function Button({ props, nodes }: Props) {
     if (submit) {
         return (
             <UIButton size={size as never} type="submit" variant={variant as never}>
-                {renderNode(children ?? [], ctx)}
+                {renderNode(nodes, ctx)}
             </UIButton>
         );
     }
 
     if (actionUrl && normalizedMethod === 'GET') {
-        return <a href={requestUrl}>{renderNode(children ?? [], ctx)}</a>;
+        return <a href={requestUrl}>{renderNode(nodes, ctx)}</a>;
     }
 
     return (
         <UIButton size={size as never} type="button" variant={variant as never} onClick={handleClick}>
-            {renderNode(children ?? [], ctx)}
+            {renderNode(nodes, ctx)}
         </UIButton>
     );
 }

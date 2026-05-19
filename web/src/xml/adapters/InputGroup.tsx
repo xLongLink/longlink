@@ -6,9 +6,9 @@ import {
     InputGroupText as UIInputGroupText,
     InputGroupTextarea as UIInputGroupTextarea,
 } from '@/components/ui/input-group';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import type { Props } from '@xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 import { useBindableValue } from './binding';
@@ -28,24 +28,21 @@ import { useBindableValue } from './binding';
 /** Renders the shared input group shell. */
 export function InputGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UIInputGroup>{renderNode(children ?? [], ctx)}</UIInputGroup>;
+    return <UIInputGroup>{renderNode(nodes, ctx)}</UIInputGroup>;
 }
 
 /** Renders an input group addon slot. */
 export function InputGroupAddon({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const align = resolveXmlString(props, 'align', ctx, 'inline-start');
 
-    return <UIInputGroupAddon align={align}>{renderNode(children ?? [], ctx)}</UIInputGroupAddon>;
+    return <UIInputGroupAddon align={align}>{renderNode(nodes, ctx)}</UIInputGroupAddon>;
 }
 
 /** Renders a button inside an input group. */
 export function InputGroupButton({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const size = resolveXmlString(props, 'size', ctx, 'xs');
     const type = resolveXmlString(props, 'type', ctx, 'button');
@@ -53,7 +50,7 @@ export function InputGroupButton({ props, nodes }: Props) {
 
     return (
         <UIInputGroupButton disabled={disabled} size={size} type={type} variant={variant}>
-            {renderNode(children ?? [], ctx)}
+            {renderNode(nodes, ctx)}
         </UIInputGroupButton>
     );
 }
@@ -61,9 +58,8 @@ export function InputGroupButton({ props, nodes }: Props) {
 /** Renders inline text inside an input group. */
 export function InputGroupText({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UIInputGroupText data-slot="input-group-text">{renderNode(children ?? [], ctx)}</UIInputGroupText>;
+    return <UIInputGroupText data-slot="input-group-text">{renderNode(nodes, ctx)}</UIInputGroupText>;
 }
 
 /** Renders a reactive input control inside an input group. */

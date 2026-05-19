@@ -66,6 +66,17 @@ describe('evaluate', () => {
         expect(evaluate('${{ next: value + 1 }}', ctx)).toEqual({ next: 6 });
     });
 
+    /* Brace characters inside strings should not break wrapped-expression detection. */
+    it('evaluates wrapped expressions containing brace characters in strings', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+        };
+
+        expect(evaluate('${"{"}', ctx)).toBe('{');
+    });
+
     /* `${...}` expressions should resolve directly to nested values. */
     it('resolves nested value expression', () => {
         const ctx: ExecutionContext = {

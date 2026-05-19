@@ -7,62 +7,55 @@ import {
     TableHeader as UITableHeader,
     TableRow as UITableRow,
 } from '@ui/table';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import type { Props } from '@xml/types';
 
 /** Renders the shadcn-backed table shell. */
 export function Table({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UITable>{renderNode(children ?? [], ctx)}</UITable>;
+    return <UITable>{renderNode(nodes, ctx)}</UITable>;
 }
 
 /** Renders the table header slot. */
 export function TableHeader({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UITableHeader>{renderNode(children ?? [], ctx)}</UITableHeader>;
+    return <UITableHeader>{renderNode(nodes, ctx)}</UITableHeader>;
 }
 
 /** Renders the table body slot. */
 export function TableBody({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UITableBody>{renderNode(children ?? [], ctx)}</UITableBody>;
+    return <UITableBody>{renderNode(nodes, ctx)}</UITableBody>;
 }
 
 /** Renders the table footer slot. */
 export function TableFooter({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UITableFooter>{renderNode(children ?? [], ctx)}</UITableFooter>;
+    return <UITableFooter>{renderNode(nodes, ctx)}</UITableFooter>;
 }
 
 /** Renders a single table row. */
 export function TableRow({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UITableRow>{renderNode(children ?? [], ctx)}</UITableRow>;
+    return <UITableRow>{renderNode(nodes, ctx)}</UITableRow>;
 }
 
 /** Renders a table header cell. */
 export function TableHead({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UITableHead>{renderNode(children ?? [], ctx)}</UITableHead>;
+    return <UITableHead>{renderNode(nodes, ctx)}</UITableHead>;
 }
 
 /** Renders a table body cell. */
 export function TableCell({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UITableCell>{renderNode(children ?? [], ctx)}</UITableCell>;
+    return <UITableCell>{renderNode(nodes, ctx)}</UITableCell>;
 }

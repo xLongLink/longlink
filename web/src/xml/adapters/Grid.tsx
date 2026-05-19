@@ -1,7 +1,7 @@
 import { Grid as GridShell } from '@ui/grid';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
 
 /** Props accepted by the XML Grid component. */
@@ -9,10 +9,9 @@ import { resolveXmlString } from './props';
 /** Renders a full-width grid row. */
 export function Grid({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const columns = resolveXmlString(props, 'columns', ctx);
 
     return (
-        <GridShell columns={columns == null ? undefined : String(columns)}>{renderNode(children ?? [], ctx)}</GridShell>
+        <GridShell columns={columns == null ? undefined : String(columns)}>{renderNode(nodes, ctx)}</GridShell>
     );
 }

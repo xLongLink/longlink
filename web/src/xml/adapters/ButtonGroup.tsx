@@ -3,26 +3,24 @@ import {
     ButtonGroupSeparator as UIButtonGroupSeparator,
     ButtonGroupText as UIButtonGroupText,
 } from '@/components/ui/button-group';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
 
 /** Renders a grouped action shell for buttons and inputs. */
 export function ButtonGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const orientation = resolveXmlString(props, 'orientation', ctx, 'horizontal');
 
-    return <UIButtonGroup orientation={orientation}>{renderNode(children ?? [], ctx)}</UIButtonGroup>;
+    return <UIButtonGroup orientation={orientation}>{renderNode(nodes, ctx)}</UIButtonGroup>;
 }
 
 /** Renders an inline text segment inside a button group. */
 export function ButtonGroupText({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
 
-    return <UIButtonGroupText>{renderNode(children ?? [], ctx)}</UIButtonGroupText>;
+    return <UIButtonGroupText>{renderNode(nodes, ctx)}</UIButtonGroupText>;
 }
 
 /** Renders a separator between grouped button segments. */

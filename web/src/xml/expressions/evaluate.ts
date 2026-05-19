@@ -111,7 +111,6 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
 export function evaluate(expr: string, ctx: ExecutionContext): unknown {
     const input = expr.trim();
     const values = createScopeProxy(ctx);
-    let isWrappedExpression = false;
 
     /** Runs an expression with XML values exposed as local variables. */
     function run(expression: string, currentValues: Record<string, unknown>): unknown {
@@ -127,35 +126,17 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
 
     /* Treat values that are fully wrapped in `${...}` as expressions. */
     if (input.startsWith('${') && input.endsWith('}')) {
-        let depth = 0;
-        isWrappedExpression = true;
+        const inner = input.slice(2, -1).trim();
 
-        for (let index = 0; index < input.length; index += 1) {
-            const char = input[index];
-
-            if (char === '{') {
-                depth += 1;
-            } else if (char === '}') {
-                depth -= 1;
-
-                if (depth < 0) {
-                    isWrappedExpression = false;
-                    break;
-                }
-
-                if (depth === 0 && index < input.length - 1) {
-                    isWrappedExpression = false;
-                    break;
-                }
-            }
-        }
-
-        isWrappedExpression = isWrappedExpression && depth === 0;
-
-        if (isWrappedExpression) {
-            const inner = input.slice(2, -1).trim();
+        try {
+            parse(`(${inner})`, {
+                ecmaVersion: 'latest',
+                sourceType: 'script',
+            });
 
             return run(inner, values);
+        } catch {
+            // Fall through to mixed-text interpolation when the wrapped value is not a standalone expression.
         }
     }
 
@@ -170,7 +151,7 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
     }
 
     /* Interpolate `${...}` expressions inside mixed text values. */
-    if (input.includes('${') && !isWrappedExpression && !isReference(input)) {
+    if (input.includes('${') && !isReference(input)) {
         return expr.replace(/\$\{([^{}]+)\}/g, (_match, expression: string) => String(run(expression, values) ?? ''));
     }
 

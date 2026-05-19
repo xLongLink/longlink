@@ -1,8 +1,8 @@
 import { RadioGroup as UIRadioGroup, RadioGroupItem as UIRadioGroupItem } from '@/components/ui/radio-group';
 import { getVersion, useSnapshot } from 'valtio';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import type { Props } from '@xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML RadioGroup component. */
@@ -12,7 +12,6 @@ import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 /** Renders a radio group shell with XML-rendered children. */
 export function RadioGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const defaultValue = resolveXmlValue(props, 'defaultValue', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const form = resolveXmlString(props, 'form', ctx);
@@ -57,7 +56,7 @@ export function RadioGroup({ props, nodes }: Props) {
             required={required}
             value={resolvedValue}
         >
-            {renderNode(children ?? [], ctx)}
+            {renderNode(nodes, ctx)}
         </UIRadioGroup>
     );
 }
@@ -65,7 +64,6 @@ export function RadioGroup({ props, nodes }: Props) {
 /** Renders a radio group item with XML-rendered children. */
 export function RadioGroupItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const readOnly = resolveXmlBoolean(props, 'readOnly', ctx);
     const required = resolveXmlBoolean(props, 'required', ctx);
@@ -76,7 +74,7 @@ export function RadioGroupItem({ props, nodes }: Props) {
     return (
         <label className="inline-flex items-center gap-2">
             <UIRadioGroupItem disabled={disabled} readOnly={readOnly} required={required} value={value} />
-            {renderNode(children ?? [], ctx)}
+            {renderNode(nodes, ctx)}
         </label>
     );
 }

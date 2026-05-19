@@ -1,8 +1,8 @@
 import { Fragment } from 'react';
-import { ContextProvider, useXmlContext } from '../core/context';
-import { useUrl } from '../core/url';
-import { RenderXML } from '../renderers.tsx';
-import type { Props } from '../types';
+import { ContextProvider, useXmlContext } from '@xml/core/context';
+import { useUrl } from '@xml/core/url';
+import { RenderXML } from '@xml/renderers.tsx';
+import type { Props } from '@xml/types';
 import { resolveXmlString, resolveXmlValue } from './props';
 
 /** Iterates over an array and renders children in a scoped context. */
@@ -10,7 +10,6 @@ export function For({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const each = resolveXmlValue(props, 'each', ctx);
     const as = resolveXmlString(props, 'as', ctx);
-    const children = nodes;
     const baseUrl = useUrl('');
 
     return (Array.isArray(each) ? each : []).map((item, index) => {
@@ -27,7 +26,7 @@ export function For({ props, nodes }: Props) {
         return (
             <Fragment key={index}>
                 <ContextProvider value={childCtx}>
-                    <RenderXML ast={children} ctx={childCtx} baseUrl={baseUrl} />
+                    <RenderXML ast={nodes} ctx={childCtx} baseUrl={baseUrl} />
                 </ContextProvider>
             </Fragment>
         );

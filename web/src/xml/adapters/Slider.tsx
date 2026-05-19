@@ -1,7 +1,7 @@
 import { Slider as UISlider } from '@/components/ui/slider';
 import { getVersion, useSnapshot } from 'valtio';
-import { useXmlContext } from '../core/context';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import type { Props } from '@xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML Slider component. */

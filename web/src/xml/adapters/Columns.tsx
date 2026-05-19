@@ -1,14 +1,13 @@
 import { Column as ColumnShell, Columns as ColumnsShell } from '@ui/columns';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
 
 /** Renders a full-width columns row. */
 export function Columns({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
-    const columnNodes = Array.isArray(children) ? children : children ? [children] : [];
+    const columnNodes = nodes;
     const widths = columnNodes
         .filter((node) => node.name === 'Column')
         .map((node) => {
@@ -25,14 +24,13 @@ export function Columns({ props, nodes }: Props) {
         ? widths.map((width) => `minmax(0, calc((100% - ${gapWidth}) * ${width / totalWidth}))`).join(' ')
         : undefined;
 
-    return <ColumnsShell templateColumns={templateColumns}>{renderNode(children ?? [], ctx)}</ColumnsShell>;
+    return <ColumnsShell templateColumns={templateColumns}>{renderNode(nodes, ctx)}</ColumnsShell>;
 }
 
 /** Renders a single width-managed column. */
 export function Column({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const width = resolveXmlString(props, 'width', ctx);
 
-    return <ColumnShell width={width}>{renderNode(children ?? [], ctx)}</ColumnShell>;
+    return <ColumnShell width={width}>{renderNode(nodes, ctx)}</ColumnShell>;
 }

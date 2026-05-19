@@ -1,8 +1,8 @@
 import { Toggle as UIToggle } from '@/components/ui/toggle';
 import { useSnapshot } from 'valtio';
-import { useXmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import type { Props } from '../types';
+import { useXmlContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
+import type { Props } from '@xml/types';
 import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML Toggle component. */
@@ -10,7 +10,6 @@ import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue }
 /** Renders a shadcn-backed toggle. */
 export function Toggle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const children = nodes;
     const defaultPressed = resolveXmlBoolean(props, 'defaultPressed', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);
@@ -32,7 +31,7 @@ export function Toggle({ props, nodes }: Props) {
                 size={size}
                 variant={variant}
             >
-                {renderNode(children ?? [], ctx)}
+                {renderNode(nodes, ctx)}
             </UIToggle>
         );
     }
@@ -47,14 +46,14 @@ export function Toggle({ props, nodes }: Props) {
                 size={size}
                 variant={variant}
             >
-                {renderNode(children ?? [], ctx)}
+                {renderNode(nodes, ctx)}
             </UIToggle>
         );
     }
 
     return (
         <UIToggle defaultPressed={defaultPressed} disabled={disabled} id={id} size={size} variant={variant}>
-            {renderNode(children ?? [], ctx)}
+            {renderNode(nodes, ctx)}
         </UIToggle>
     );
 }
