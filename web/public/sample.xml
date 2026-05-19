@@ -364,11 +364,12 @@
             </Menu>
         </TabsContent>
         <TabsContent value="grid">
+            <State id="gridSearch" value="" />
             <InputGroup>
                 <InputGroupAddon>
                     <Icon name="search" />
                 </InputGroupAddon>
-                <InputGroupInput id="grid-search" autoComplete="off" placeholder="Search cards, alerts, and revenue" />
+                <InputGroupInput id="grid-search" value="$gridSearch" autoComplete="off" placeholder="Search cards, alerts, and revenue" />
                 <InputGroupButton>
                     Search
                     <Icon name="arrow-right" />
@@ -377,7 +378,7 @@
             <Columns>
                 <Column width="75">
                     <Grid columns="2">
-                        <Card>
+                        <Card if="${gridSearch in 'Revenue overview'}">
                             <CardHeader>
                                 <CardTitle>Revenue overview</CardTitle>
                                 <CardDescription>Weekly performance snapshot</CardDescription>
@@ -392,7 +393,7 @@
                                 <Badge variant="outline">On track</Badge>
                             </CardFooter>
                         </Card>
-                        <Card>
+                        <Card if="${gridSearch in 'Usage'}">
                             <CardHeader>
                                 <CardTitle>Usage</CardTitle>
                                 <CardDescription>Active sessions</CardDescription>
@@ -404,7 +405,7 @@
                                 <P>Updated 12 minutes ago.</P>
                             </CardFooter>
                         </Card>
-                        <Card>
+                        <Card if="${gridSearch in 'Pipeline'}">
                             <CardHeader>
                                 <CardTitle>Pipeline</CardTitle>
                                 <CardDescription>Open work</CardDescription>
@@ -416,7 +417,7 @@
                                 <Badge variant="outline">3 open</Badge>
                             </CardFooter>
                         </Card>
-                        <Card>
+                        <Card if="${gridSearch in 'Alerts'}">
                             <CardHeader>
                                 <CardTitle>Alerts</CardTitle>
                                 <CardDescription>Recent signals</CardDescription>

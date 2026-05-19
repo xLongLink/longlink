@@ -49,6 +49,23 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
                 case '/':
                     return Number(left as any) / Number(right as any);
 
+                case 'in': {
+                    // Support pythonic membership checks against strings, arrays, and objects.
+                    if (typeof right === 'string') {
+                        return right.includes(String(left ?? ''));
+                    }
+
+                    if (Array.isArray(right)) {
+                        return right.includes(left);
+                    }
+
+                    if (right != null && typeof right === 'object') {
+                        return String(left) in (right as Record<string, unknown>);
+                    }
+
+                    return false;
+                }
+
                 default:
                     throw new Error('Operator not allowed');
             }

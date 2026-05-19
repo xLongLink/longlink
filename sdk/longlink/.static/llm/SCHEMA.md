@@ -29,6 +29,7 @@ LongLink evaluates JavaScript-like expressions inside `${...}`.
 - Strings wrapped in `${...}` can resolve to non-string values.
 - Nested objects and arrays in `json` values are resolved recursively.
 - Scope is lexical: child elements read from their nearest parent scope first, then walk outward.
+- Membership checks like `${gridSearch in 'Revenue overview'}` are supported for strings, arrays, and objects.
 - Do not use bare `{name}` or `{{...}}` authoring syntax.
 - Use `${...}` expressions and `$name` references only.
 
@@ -397,10 +398,17 @@ Behavior:
 Example:
 
 ```xml
+<State id="gridSearch" value="" />
+<InputGroup>
+  <InputGroupAddon>
+    <Icon name="search" />
+  </InputGroupAddon>
+  <InputGroupInput value="$gridSearch" placeholder="Search cards" />
+</InputGroup>
 <Grid columns="3">
-  <Card>One</Card>
-  <Card>Two</Card>
-  <Card>Three</Card>
+  <Card if="${gridSearch.value}">One</Card>
+  <Card if="${gridSearch.value}">Two</Card>
+  <Card if="${gridSearch.value}">Three</Card>
 </Grid>
 ```
 
