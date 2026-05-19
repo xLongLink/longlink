@@ -7,17 +7,8 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString } from './props';
 
-/** Props accepted by the XML ButtonGroup component. */
-export interface ButtonGroupProps extends Props {}
-
-/** Props accepted by the XML ButtonGroupText component. */
-export interface ButtonGroupTextProps extends Props {}
-
-/** Props accepted by the XML ButtonGroupSeparator component. */
-export interface ButtonGroupSeparatorProps extends Props {}
-
 /** Renders a grouped action shell for buttons and inputs. */
-export function ButtonGroup({ props, nodes }: ButtonGroupProps) {
+export function ButtonGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -28,7 +19,7 @@ export function ButtonGroup({ props, nodes }: ButtonGroupProps) {
 }
 
 /** Renders an inline text segment inside a button group. */
-export function ButtonGroupText({ props, nodes }: ButtonGroupTextProps) {
+export function ButtonGroupText({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -38,7 +29,7 @@ export function ButtonGroupText({ props, nodes }: ButtonGroupTextProps) {
 }
 
 /** Renders a separator between grouped button segments. */
-export function ButtonGroupSeparator({ props, nodes }: ButtonGroupSeparatorProps) {
+export function ButtonGroupSeparator({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

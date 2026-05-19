@@ -3,11 +3,8 @@ import { ContextProvider, RenderXML, useUrl, useXmlContext } from '@xml';
 import { Fragment } from 'react';
 import { resolveXmlString, resolveXmlValue } from './props';
 
-/** Props accepted by the XML For component. */
-export interface ForProps extends Props {}
-
 /** Iterates over an array and renders children in a scoped context. */
-export function For({ props, nodes }: ForProps) {
+export function For({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

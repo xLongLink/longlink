@@ -4,10 +4,9 @@ import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString } from './props';
 
 /** Props accepted by the XML Grid component. */
-export interface GridProps extends Props {}
 
 /** Renders a full-width grid row. */
-export function Grid({ props, nodes }: GridProps) {
+export function Grid({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

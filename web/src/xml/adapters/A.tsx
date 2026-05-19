@@ -2,11 +2,8 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString } from './props';
 
-/** Props accepted by the XML anchor bridge component. */
-export interface AProps extends Props {}
-
 /** Renders a linked anchor with standard styling. */
-export function A({ props, nodes }: AProps) {
+export function A({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

@@ -2,10 +2,9 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML sup bridge component. */
-export interface SupProps extends Props {}
 
 /** Renders superscript text. */
-export function Sup({ props, nodes }: SupProps) {
+export function Sup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

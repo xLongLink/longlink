@@ -11,29 +11,8 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString } from './props';
 
-/** Props accepted by the XML Card component. */
-export interface CardProps extends Props {}
-
-/** Props accepted by the XML CardHeader component. */
-export interface CardHeaderProps extends Props {}
-
-/** Props accepted by the XML CardTitle component. */
-export interface CardTitleProps extends Props {}
-
-/** Props accepted by the XML CardDescription component. */
-export interface CardDescriptionProps extends Props {}
-
-/** Props accepted by the XML CardAction component. */
-export interface CardActionProps extends Props {}
-
-/** Props accepted by the XML CardContent component. */
-export interface CardContentProps extends Props {}
-
-/** Props accepted by the XML CardFooter component. */
-export interface CardFooterProps extends Props {}
-
 /** Renders the shadcn card shell. */
-export function Card({ props, nodes }: CardProps) {
+export function Card({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -44,7 +23,7 @@ export function Card({ props, nodes }: CardProps) {
 }
 
 /** Renders the card header slot. */
-export function CardHeader({ props, nodes }: CardHeaderProps) {
+export function CardHeader({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -54,7 +33,7 @@ export function CardHeader({ props, nodes }: CardHeaderProps) {
 }
 
 /** Renders the card title slot. */
-export function CardTitle({ props, nodes }: CardTitleProps) {
+export function CardTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -64,7 +43,7 @@ export function CardTitle({ props, nodes }: CardTitleProps) {
 }
 
 /** Renders the card description slot. */
-export function CardDescription({ props, nodes }: CardDescriptionProps) {
+export function CardDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -74,7 +53,7 @@ export function CardDescription({ props, nodes }: CardDescriptionProps) {
 }
 
 /** Renders the card action slot. */
-export function CardAction({ props, nodes }: CardActionProps) {
+export function CardAction({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -84,7 +63,7 @@ export function CardAction({ props, nodes }: CardActionProps) {
 }
 
 /** Renders the card content slot. */
-export function CardContent({ props, nodes }: CardContentProps) {
+export function CardContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -94,7 +73,7 @@ export function CardContent({ props, nodes }: CardContentProps) {
 }
 
 /** Renders the card footer slot. */
-export function CardFooter({ props, nodes }: CardFooterProps) {
+export function CardFooter({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

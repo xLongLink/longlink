@@ -6,10 +6,9 @@ import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 import { useBindableValue } from './binding';
 
 /** Props accepted by the XML Textarea component. */
-export interface TextareaProps extends Props {}
 
 /** Renders a shadcn-backed textarea with optional reactive state binding. */
-export function Textarea({ props, nodes }: TextareaProps) {
+export function Textarea({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

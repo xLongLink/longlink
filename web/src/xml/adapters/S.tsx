@@ -2,10 +2,9 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML s bridge component. */
-export interface SProps extends Props {}
 
 /** Renders strikethrough text. */
-export function S({ props, nodes }: SProps) {
+export function S({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

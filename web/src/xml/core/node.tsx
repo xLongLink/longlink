@@ -1,7 +1,6 @@
-import { For } from '@xml/adapters/For';
-import { Text } from '@xml/adapters/Text';
+import { For, Text } from '@xml/adapters';
 import { evaluate } from '@xml/core/expressions';
-import { renderRegisteredNode } from '@xml/core/registry';
+import { xmlComponentRegistry } from '@xml/core/registry';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
 
@@ -15,8 +14,14 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             }
         }
 
-        const registeredNode = renderRegisteredNode(node, ctx, index);
-        if (registeredNode !== undefined) return registeredNode;
+        if (node.name === 'State' || node.name === 'Query') {
+            return <Fragment key={index} />;
+        }
+
+        const RegisteredComponent = xmlComponentRegistry[node.name];
+        if (RegisteredComponent) {
+            return <RegisteredComponent key={index} props={node.params ?? {}} nodes={node.children ?? []} />;
+        }
 
         if (node.name === 'For') {
             // Ensure that the parameters are defined

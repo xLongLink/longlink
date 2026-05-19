@@ -2,10 +2,9 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML paragraph bridge component. */
-export interface PProps extends Props {}
 
 /** Renders a paragraph with standard styling. */
-export function P({ props, nodes }: PProps) {
+export function P({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

@@ -5,10 +5,9 @@ import { useSnapshot } from 'valtio';
 import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML Checkbox component. */
-export interface CheckboxProps extends Props {}
 
 /** Renders a shadcn-backed checkbox. */
-export function Checkbox({ props, nodes }: CheckboxProps) {
+export function Checkbox({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

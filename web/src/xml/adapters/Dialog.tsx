@@ -13,29 +13,8 @@ import { renderNode, useXmlContext } from '@xml';
 import { evaluate } from '@xml/core/expressions';
 import { resolveXmlBoolean } from './props';
 
-/** Props accepted by the XML Dialog component. */
-export interface DialogProps extends Props {}
-
-/** Props accepted by the XML DialogTrigger component. */
-export interface DialogTriggerProps extends Props {}
-
-/** Props accepted by the XML DialogContent component. */
-export interface DialogContentProps extends Props {}
-
-/** Props accepted by the XML DialogHeader component. */
-export interface DialogHeaderProps extends Props {}
-
-/** Props accepted by the XML DialogTitle component. */
-export interface DialogTitleProps extends Props {}
-
-/** Props accepted by the XML DialogDescription component. */
-export interface DialogDescriptionProps extends Props {}
-
-/** Props accepted by the XML DialogFooter component. */
-export interface DialogFooterProps extends Props {}
-
 /** Renders a dialog root that groups trigger and content slots. */
-export function Dialog({ props, nodes }: DialogProps) {
+export function Dialog({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -51,7 +30,7 @@ export function Dialog({ props, nodes }: DialogProps) {
 }
 
 /** Renders the dialog trigger slot. */
-export function DialogTrigger({ props, nodes }: DialogTriggerProps) {
+export function DialogTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -97,7 +76,7 @@ export function DialogTrigger({ props, nodes }: DialogTriggerProps) {
 }
 
 /** Renders the dialog content surface. */
-export function DialogContent({ props, nodes }: DialogContentProps) {
+export function DialogContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -107,7 +86,7 @@ export function DialogContent({ props, nodes }: DialogContentProps) {
 }
 
 /** Renders the dialog header slot. */
-export function DialogHeader({ props, nodes }: DialogHeaderProps) {
+export function DialogHeader({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -117,7 +96,7 @@ export function DialogHeader({ props, nodes }: DialogHeaderProps) {
 }
 
 /** Renders the dialog title slot. */
-export function DialogTitle({ props, nodes }: DialogTitleProps) {
+export function DialogTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -127,7 +106,7 @@ export function DialogTitle({ props, nodes }: DialogTitleProps) {
 }
 
 /** Renders the dialog description slot. */
-export function DialogDescription({ props, nodes }: DialogDescriptionProps) {
+export function DialogDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -137,7 +116,7 @@ export function DialogDescription({ props, nodes }: DialogDescriptionProps) {
 }
 
 /** Renders the dialog footer slot. */
-export function DialogFooter({ props, nodes }: DialogFooterProps) {
+export function DialogFooter({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

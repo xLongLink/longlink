@@ -13,22 +13,17 @@ import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Props accepted by the XML Menu component. */
-export interface MenuProps extends Props {}
 
 /** Props accepted by the XML MenuList component. */
-export interface MenuListProps extends Props {}
 
 /** Props accepted by the XML MenuSection component. */
-export interface MenuSectionProps extends Props {}
 
 /** Props accepted by the XML MenuSubSection component. */
-export interface MenuSubSectionProps extends Props {}
 
 /** Props accepted by the XML MenuContent component. */
-export interface MenuContentProps extends Props {}
 
 /** Renders the sidebar-style menu shell. */
-export function Menu({ props, nodes }: MenuProps) {
+export function Menu({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -52,7 +47,7 @@ export function Menu({ props, nodes }: MenuProps) {
 }
 
 /** Renders the menu list slot. */
-export function MenuList({ props, nodes }: MenuListProps) {
+export function MenuList({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -62,7 +57,7 @@ export function MenuList({ props, nodes }: MenuListProps) {
 }
 
 /** Renders a root menu section. */
-export function MenuSection({ props, nodes }: MenuSectionProps) {
+export function MenuSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -81,7 +76,7 @@ export function MenuSection({ props, nodes }: MenuSectionProps) {
 }
 
 /** Renders a nested menu subsection. */
-export function MenuSubSection({ props, nodes }: MenuSubSectionProps) {
+export function MenuSubSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -100,7 +95,7 @@ export function MenuSubSection({ props, nodes }: MenuSubSectionProps) {
 }
 
 /** Renders the active menu content panel. */
-export function MenuContent({ props, nodes }: MenuContentProps) {
+export function MenuContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

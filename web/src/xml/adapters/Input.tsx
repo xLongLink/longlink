@@ -6,10 +6,9 @@ import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 import { useBindableValue } from './binding';
 
 /** Props accepted by the XML Input component. */
-export interface InputProps extends Props {}
 
 /** Renders a minimal XML input control. */
-export function Input({ props, nodes }: InputProps) {
+export function Input({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

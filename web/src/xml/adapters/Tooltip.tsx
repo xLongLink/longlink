@@ -8,20 +8,8 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlBoolean, resolveXmlString } from './props';
 
-/** Props accepted by the XML TooltipProvider component. */
-export interface TooltipProviderProps extends Props {}
-
-/** Props accepted by the XML Tooltip component. */
-export interface TooltipProps extends Props {}
-
-/** Props accepted by the XML TooltipTrigger component. */
-export interface TooltipTriggerProps extends Props {}
-
-/** Props accepted by the XML TooltipContent component. */
-export interface TooltipContentProps extends Props {}
-
 /** Renders the tooltip provider wrapper around descendant tooltips. */
-export function TooltipProvider({ props, nodes }: TooltipProviderProps) {
+export function TooltipProvider({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -31,7 +19,7 @@ export function TooltipProvider({ props, nodes }: TooltipProviderProps) {
 }
 
 /** Renders the tooltip root shell. */
-export function Tooltip({ props, nodes }: TooltipProps) {
+export function Tooltip({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -47,7 +35,7 @@ export function Tooltip({ props, nodes }: TooltipProps) {
 }
 
 /** Renders the tooltip trigger slot. */
-export function TooltipTrigger({ props, nodes }: TooltipTriggerProps) {
+export function TooltipTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -57,7 +45,7 @@ export function TooltipTrigger({ props, nodes }: TooltipTriggerProps) {
 }
 
 /** Renders the tooltip content popup. */
-export function TooltipContent({ props, nodes }: TooltipContentProps) {
+export function TooltipContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

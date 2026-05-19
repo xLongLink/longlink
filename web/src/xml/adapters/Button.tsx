@@ -4,11 +4,8 @@ import { renderNode, useUrl, useXmlContext } from '@xml';
 import { toast } from 'sonner';
 import { resolveXmlBoolean, resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
-/** Props accepted by the XML Button component. */
-export interface ButtonProps extends Props {}
-
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
-export function Button({ props, nodes }: ButtonProps) {
+export function Button({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

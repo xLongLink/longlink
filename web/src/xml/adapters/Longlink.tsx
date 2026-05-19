@@ -2,10 +2,9 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML Longlink component. */
-export interface LonglinkProps extends Props {}
 
 /** Renders the root shell. */
-export function Longlink({ props, nodes }: LonglinkProps) {
+export function Longlink({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

@@ -10,7 +10,6 @@ type LucideIconComponent = React.ComponentType<{
 }>;
 
 /** Props accepted by the XML Icon component. */
-export interface IconProps extends Props {}
 
 /** Resolves a Lucide icon component from an XML icon name. */
 function resolveIconComponent(name: string): LucideIconComponent | null {
@@ -24,7 +23,7 @@ function resolveIconComponent(name: string): LucideIconComponent | null {
 }
 
 /** Renders a Lucide icon by XML name. */
-export function Icon({ props, nodes }: IconProps) {
+export function Icon({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

@@ -13,29 +13,8 @@ import { renderNode, useXmlContext } from '@xml';
 import { getVersion, useSnapshot } from 'valtio';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
-/** Props accepted by the XML Select component. */
-export interface SelectProps extends Props {}
-
-/** Props accepted by the XML SelectTrigger component. */
-export interface SelectTriggerProps extends Props {}
-
-/** Props accepted by the XML SelectValue component. */
-export interface SelectValueProps extends Props {}
-
-/** Props accepted by the XML SelectContent component. */
-export interface SelectContentProps extends Props {}
-
-/** Props accepted by the XML SelectGroup component. */
-export interface SelectGroupProps extends Props {}
-
-/** Props accepted by the XML SelectLabel component. */
-export interface SelectLabelProps extends Props {}
-
-/** Props accepted by the XML SelectItem component. */
-export interface SelectItemProps extends Props {}
-
 /** Renders a shadcn-backed select shell with optional reactive value binding. */
-export function Select({ props, nodes }: SelectProps) {
+export function Select({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -77,7 +56,7 @@ export function Select({ props, nodes }: SelectProps) {
 }
 
 /** Renders the select trigger slot. */
-export function SelectTrigger({ props, nodes }: SelectTriggerProps) {
+export function SelectTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -87,7 +66,7 @@ export function SelectTrigger({ props, nodes }: SelectTriggerProps) {
 }
 
 /** Renders the selected value placeholder or active choice. */
-export function SelectValue({ props, nodes }: SelectValueProps) {
+export function SelectValue({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -96,7 +75,7 @@ export function SelectValue({ props, nodes }: SelectValueProps) {
 }
 
 /** Renders the select content portal and list surface. */
-export function SelectContent({ props, nodes }: SelectContentProps) {
+export function SelectContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -106,7 +85,7 @@ export function SelectContent({ props, nodes }: SelectContentProps) {
 }
 
 /** Renders a grouped section inside the select menu. */
-export function SelectGroup({ props, nodes }: SelectGroupProps) {
+export function SelectGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -116,7 +95,7 @@ export function SelectGroup({ props, nodes }: SelectGroupProps) {
 }
 
 /** Renders the label for a grouped select section. */
-export function SelectLabel({ props, nodes }: SelectLabelProps) {
+export function SelectLabel({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -126,7 +105,7 @@ export function SelectLabel({ props, nodes }: SelectLabelProps) {
 }
 
 /** Renders a selectable option in the menu. */
-export function SelectItem({ props, nodes }: SelectItemProps) {
+export function SelectItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

@@ -3,14 +3,8 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString } from './props';
 
-/** Props accepted by the XML Columns component. */
-export interface ColumnsProps extends Props {}
-
-/** Props accepted by the XML Column component. */
-export interface ColumnProps extends Props {}
-
 /** Renders a full-width columns row. */
-export function Columns({ props, nodes }: ColumnsProps) {
+export function Columns({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -36,7 +30,7 @@ export function Columns({ props, nodes }: ColumnsProps) {
 }
 
 /** Renders a single width-managed column. */
-export function Column({ props, nodes }: ColumnProps) {
+export function Column({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

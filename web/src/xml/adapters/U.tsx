@@ -2,10 +2,9 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML u bridge component. */
-export interface UProps extends Props {}
 
 /** Renders underlined text. */
-export function U({ props, nodes }: UProps) {
+export function U({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

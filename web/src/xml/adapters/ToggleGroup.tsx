@@ -5,13 +5,11 @@ import { getVersion, useSnapshot } from 'valtio';
 import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML ToggleGroup component. */
-export interface ToggleGroupProps extends Props {}
 
 /** Props accepted by the XML ToggleGroupItem component. */
-export interface ToggleGroupItemProps extends Props {}
 
 /** Renders a toggle group shell with XML-rendered children. */
-export function ToggleGroup({ props, nodes }: ToggleGroupProps) {
+export function ToggleGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -81,7 +79,7 @@ export function ToggleGroup({ props, nodes }: ToggleGroupProps) {
 }
 
 /** Renders a toggle group item with XML-rendered children. */
-export function ToggleGroupItem({ props, nodes }: ToggleGroupItemProps) {
+export function ToggleGroupItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

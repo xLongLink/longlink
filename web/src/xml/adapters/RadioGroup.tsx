@@ -5,13 +5,11 @@ import { getVersion, useSnapshot } from 'valtio';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML RadioGroup component. */
-export interface RadioGroupProps extends Props {}
 
 /** Props accepted by the XML RadioGroupItem component. */
-export interface RadioGroupItemProps extends Props {}
 
 /** Renders a radio group shell with XML-rendered children. */
-export function RadioGroup({ props, nodes }: RadioGroupProps) {
+export function RadioGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -66,7 +64,7 @@ export function RadioGroup({ props, nodes }: RadioGroupProps) {
 }
 
 /** Renders a radio group item with XML-rendered children. */
-export function RadioGroupItem({ props, nodes }: RadioGroupItemProps) {
+export function RadioGroupItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

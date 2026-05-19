@@ -8,20 +8,8 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString } from './props';
 
-/** Props accepted by the XML Tabs component. */
-export interface TabsProps extends Props {}
-
-/** Props accepted by the XML TabsList component. */
-export interface TabsListProps extends Props {}
-
-/** Props accepted by the XML TabsTrigger component. */
-export interface TabsTriggerProps extends Props {}
-
-/** Props accepted by the XML TabsContent component. */
-export interface TabsContentProps extends Props {}
-
 /** Renders a shadcn-backed tabs shell. */
-export function Tabs({ props, nodes }: TabsProps) {
+export function Tabs({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -37,7 +25,7 @@ export function Tabs({ props, nodes }: TabsProps) {
 }
 
 /** Renders the tabs list slot. */
-export function TabsList({ props, nodes }: TabsListProps) {
+export function TabsList({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -48,7 +36,7 @@ export function TabsList({ props, nodes }: TabsListProps) {
 }
 
 /** Renders an individual tabs trigger. */
-export function TabsTrigger({ props, nodes }: TabsTriggerProps) {
+export function TabsTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -61,7 +49,7 @@ export function TabsTrigger({ props, nodes }: TabsTriggerProps) {
 }
 
 /** Renders a tabs content panel. */
-export function TabsContent({ props, nodes }: TabsContentProps) {
+export function TabsContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

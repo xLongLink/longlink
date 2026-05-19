@@ -5,10 +5,9 @@ import { useSnapshot } from 'valtio';
 import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML Toggle component. */
-export interface ToggleProps extends Props {}
 
 /** Renders a shadcn-backed toggle. */
-export function Toggle({ props, nodes }: ToggleProps) {
+export function Toggle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

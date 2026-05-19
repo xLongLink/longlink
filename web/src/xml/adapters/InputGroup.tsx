@@ -13,25 +13,19 @@ import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 import { useBindableValue } from './binding';
 
 /** Props accepted by the XML InputGroup component. */
-export interface InputGroupProps extends Props {}
 
 /** Props accepted by the XML InputGroupAddon component. */
-export interface InputGroupAddonProps extends Props {}
 
 /** Props accepted by the XML InputGroupButton component. */
-export interface InputGroupButtonProps extends Props {}
 
 /** Props accepted by the XML InputGroupText component. */
-export interface InputGroupTextProps extends Props {}
 
 /** Props accepted by the XML InputGroupInput component. */
-export interface InputGroupInputProps extends Props {}
 
 /** Props accepted by the XML InputGroupTextarea component. */
-export interface InputGroupTextareaProps extends Props {}
 
 /** Renders the shared input group shell. */
-export function InputGroup({ props, nodes }: InputGroupProps) {
+export function InputGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -41,7 +35,7 @@ export function InputGroup({ props, nodes }: InputGroupProps) {
 }
 
 /** Renders an input group addon slot. */
-export function InputGroupAddon({ props, nodes }: InputGroupAddonProps) {
+export function InputGroupAddon({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -52,7 +46,7 @@ export function InputGroupAddon({ props, nodes }: InputGroupAddonProps) {
 }
 
 /** Renders a button inside an input group. */
-export function InputGroupButton({ props, nodes }: InputGroupButtonProps) {
+export function InputGroupButton({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -70,7 +64,7 @@ export function InputGroupButton({ props, nodes }: InputGroupButtonProps) {
 }
 
 /** Renders inline text inside an input group. */
-export function InputGroupText({ props, nodes }: InputGroupTextProps) {
+export function InputGroupText({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -80,7 +74,7 @@ export function InputGroupText({ props, nodes }: InputGroupTextProps) {
 }
 
 /** Renders a reactive input control inside an input group. */
-export function InputGroupInput({ props, nodes }: InputGroupInputProps) {
+export function InputGroupInput({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -126,7 +120,7 @@ export function InputGroupInput({ props, nodes }: InputGroupInputProps) {
 }
 
 /** Renders a reactive textarea control inside an input group. */
-export function InputGroupTextarea({ props, nodes }: InputGroupTextareaProps) {
+export function InputGroupTextarea({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

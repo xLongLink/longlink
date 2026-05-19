@@ -14,38 +14,8 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString, resolveXmlValue } from './props';
 
-/** Props accepted by the XML FieldSet component. */
-export interface FieldSetProps extends Props {}
-
-/** Props accepted by the XML FieldLegend component. */
-export interface FieldLegendProps extends Props {}
-
-/** Props accepted by the XML FieldGroup component. */
-export interface FieldGroupProps extends Props {}
-
-/** Props accepted by the XML Field component. */
-export interface FieldProps extends Props {}
-
-/** Props accepted by the XML FieldContent component. */
-export interface FieldContentProps extends Props {}
-
-/** Props accepted by the XML FieldLabel component. */
-export interface FieldLabelProps extends Props {}
-
-/** Props accepted by the XML FieldTitle component. */
-export interface FieldTitleProps extends Props {}
-
-/** Props accepted by the XML FieldDescription component. */
-export interface FieldDescriptionProps extends Props {}
-
-/** Props accepted by the XML FieldSeparator component. */
-export interface FieldSeparatorProps extends Props {}
-
-/** Props accepted by the XML FieldError component. */
-export interface FieldErrorProps extends Props {}
-
 /** Renders a grouped fieldset shell. */
-export function FieldSet({ props, nodes }: FieldSetProps) {
+export function FieldSet({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -55,7 +25,7 @@ export function FieldSet({ props, nodes }: FieldSetProps) {
 }
 
 /** Renders the fieldset legend slot. */
-export function FieldLegend({ props, nodes }: FieldLegendProps) {
+export function FieldLegend({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -66,7 +36,7 @@ export function FieldLegend({ props, nodes }: FieldLegendProps) {
 }
 
 /** Renders a field group container. */
-export function FieldGroup({ props, nodes }: FieldGroupProps) {
+export function FieldGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -76,7 +46,7 @@ export function FieldGroup({ props, nodes }: FieldGroupProps) {
 }
 
 /** Renders an individual field row. */
-export function Field({ props, nodes }: FieldProps) {
+export function Field({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -87,7 +57,7 @@ export function Field({ props, nodes }: FieldProps) {
 }
 
 /** Renders the field content slot. */
-export function FieldContent({ props, nodes }: FieldContentProps) {
+export function FieldContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -97,7 +67,7 @@ export function FieldContent({ props, nodes }: FieldContentProps) {
 }
 
 /** Renders the field label slot. */
-export function FieldLabel({ props, nodes }: FieldLabelProps) {
+export function FieldLabel({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -108,7 +78,7 @@ export function FieldLabel({ props, nodes }: FieldLabelProps) {
 }
 
 /** Renders the field title slot. */
-export function FieldTitle({ props, nodes }: FieldTitleProps) {
+export function FieldTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -118,7 +88,7 @@ export function FieldTitle({ props, nodes }: FieldTitleProps) {
 }
 
 /** Renders the field description slot. */
-export function FieldDescription({ props, nodes }: FieldDescriptionProps) {
+export function FieldDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -128,7 +98,7 @@ export function FieldDescription({ props, nodes }: FieldDescriptionProps) {
 }
 
 /** Renders a separator between field sections. */
-export function FieldSeparator({ props, nodes }: FieldSeparatorProps) {
+export function FieldSeparator({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -138,7 +108,7 @@ export function FieldSeparator({ props, nodes }: FieldSeparatorProps) {
 }
 
 /** Renders the field error slot. */
-export function FieldError({ props, nodes }: FieldErrorProps) {
+export function FieldError({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

@@ -5,10 +5,9 @@ import { useSnapshot } from 'valtio';
 import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML Switch component. */
-export interface SwitchProps extends Props {}
 
 /** Renders a shadcn-backed switch. */
-export function Switch({ props, nodes }: SwitchProps) {
+export function Switch({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

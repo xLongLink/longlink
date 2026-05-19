@@ -2,10 +2,9 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML ul bridge component. */
-export interface UlProps extends Props {}
 
 /** Renders an unordered list with typographic defaults. */
-export function Ul({ props, nodes }: UlProps) {
+export function Ul({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

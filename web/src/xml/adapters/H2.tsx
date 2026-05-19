@@ -3,10 +3,9 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML h2 bridge component. */
-export interface H2Props extends Props {}
 
 /** Renders a secondary heading with typographic defaults. */
-export function H2({ props, nodes }: H2Props) {
+export function H2({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

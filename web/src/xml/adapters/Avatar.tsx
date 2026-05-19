@@ -9,19 +9,15 @@ import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString } from './props';
 
 /** Props accepted by the XML Avatar component. */
-export interface AvatarProps extends Props {}
 
 /** Props accepted by the XML AvatarImage component. */
-export interface AvatarImageProps extends Props {}
 
 /** Props accepted by the XML AvatarFallback component. */
-export interface AvatarFallbackProps extends Props {}
 
 /** Props accepted by the XML AvatarBadge component. */
-export interface AvatarBadgeProps extends Props {}
 
 /** Renders the avatar shell used for a single user or record. */
-export function Avatar({ props, nodes }: AvatarProps) {
+export function Avatar({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -32,7 +28,7 @@ export function Avatar({ props, nodes }: AvatarProps) {
 }
 
 /** Renders the avatar image slot. */
-export function AvatarImage({ props, nodes }: AvatarImageProps) {
+export function AvatarImage({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -42,7 +38,7 @@ export function AvatarImage({ props, nodes }: AvatarImageProps) {
 }
 
 /** Renders the avatar fallback slot. */
-export function AvatarFallback({ props, nodes }: AvatarFallbackProps) {
+export function AvatarFallback({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -52,7 +48,7 @@ export function AvatarFallback({ props, nodes }: AvatarFallbackProps) {
 }
 
 /** Renders the avatar badge overlay. */
-export function AvatarBadge({ props, nodes }: AvatarBadgeProps) {
+export function AvatarBadge({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

@@ -8,20 +8,8 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 import { resolveXmlString } from './props';
 
-/** Props accepted by the XML Hero component. */
-export interface HeroProps extends Props {}
-
-/** Props accepted by the XML HeroTitle component. */
-export interface HeroTitleProps extends Props {}
-
-/** Props accepted by the XML HeroDescription component. */
-export interface HeroDescriptionProps extends Props {}
-
-/** Props accepted by the XML HeroContent component. */
-export interface HeroContentProps extends Props {}
-
 /** Renders the hero shell. */
-export function Hero({ props, nodes }: HeroProps) {
+export function Hero({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -42,7 +30,7 @@ export function Hero({ props, nodes }: HeroProps) {
 }
 
 /** Renders the hero title slot. */
-export function HeroTitle({ props, nodes }: HeroTitleProps) {
+export function HeroTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -52,7 +40,7 @@ export function HeroTitle({ props, nodes }: HeroTitleProps) {
 }
 
 /** Renders the hero description slot. */
-export function HeroDescription({ props, nodes }: HeroDescriptionProps) {
+export function HeroDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
@@ -62,7 +50,7 @@ export function HeroDescription({ props, nodes }: HeroDescriptionProps) {
 }
 
 /** Renders the hero content slot. */
-export function HeroContent({ props, nodes }: HeroContentProps) {
+export function HeroContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;

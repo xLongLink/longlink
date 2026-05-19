@@ -2,10 +2,9 @@ import type { Props } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
 
 /** Props accepted by the XML ol bridge component. */
-export interface OlProps extends Props {}
 
 /** Renders an ordered list with typographic defaults. */
-export function Ol({ props, nodes }: OlProps) {
+export function Ol({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     void props;
     void nodes;
