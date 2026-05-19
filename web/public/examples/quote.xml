@@ -1,0 +1,171 @@
+<longlink>
+    <Hero icon="file-text">
+        <HeroTitle>Quote #Q-2048-0192</HeroTitle>
+        <HeroDescription>Items, conditions, address, texts, and settings for the current quote.</HeroDescription>
+        <HeroContent>
+            <Button variant="outline" size="sm">
+                <Icon name="copy" />
+                Copy quote
+            </Button>
+        </HeroContent>
+    </Hero>
+
+    <Columns>
+        <Column width="75">
+            <Tabs defaultValue="items">
+                <TabsList variant="line">
+                    <TabsTrigger value="items">Items</TabsTrigger>
+                    <TabsTrigger value="conditions">Conditions</TabsTrigger>
+                    <TabsTrigger value="address">Address</TabsTrigger>
+                    <TabsTrigger value="texts">Texts</TabsTrigger>
+                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="items">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Item</TableHead>
+                                <TableHead>Qty</TableHead>
+                                <TableHead>Rate</TableHead>
+                                <TableHead>Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell>Discovery workshop</TableCell>
+                                <TableCell>1</TableCell>
+                                <TableCell>$1,200</TableCell>
+                                <TableCell>$1,200</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Implementation support</TableCell>
+                                <TableCell>3</TableCell>
+                                <TableCell>$900</TableCell>
+                                <TableCell>$2,700</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Review and revisions</TableCell>
+                                <TableCell>2</TableCell>
+                                <TableCell>$450</TableCell>
+                                <TableCell>$900</TableCell>
+                            </TableRow>
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TableCell>Total</TableCell>
+                                <TableCell>6</TableCell>
+                                <TableCell />
+                                <TableCell>$4,800</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </TabsContent>
+
+                <TabsContent value="conditions">
+                    <Stack>
+                        <Badge variant="outline">Pending approval</Badge>
+                        <P>Net 30 payment terms apply after the final revision is accepted.</P>
+                        <Ul>
+                            <Li>Pricing is valid for 14 days.</Li>
+                            <Li>Work begins after deposit confirmation.</Li>
+                            <Li>Scope changes are quoted separately.</Li>
+                        </Ul>
+                    </Stack>
+                </TabsContent>
+
+                <TabsContent value="address">
+                    <FieldSet>
+                        <FieldLegend>Billing address</FieldLegend>
+                        <FieldGroup>
+                            <Field>
+                                <FieldLabel htmlFor="company">Company</FieldLabel>
+                                <Input id="company" value="Ada Labs" />
+                            </Field>
+                            <Field>
+                                <FieldLabel htmlFor="street">Street</FieldLabel>
+                                <Input id="street" value="123 Longlink Ave" />
+                            </Field>
+                            <Grid columns="2">
+                                <Field>
+                                    <FieldLabel htmlFor="city">City</FieldLabel>
+                                    <Input id="city" value="Berlin" />
+                                </Field>
+                                <Field>
+                                    <FieldLabel htmlFor="postal">Postal code</FieldLabel>
+                                    <Input id="postal" value="10115" />
+                                </Field>
+                            </Grid>
+                        </FieldGroup>
+                    </FieldSet>
+                </TabsContent>
+
+                <TabsContent value="texts">
+                    <Stack>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Intro text</CardTitle>
+                                <CardDescription>Shown at the top of the quote email.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea rows="4" value="Thanks for reviewing the quote. The summary below reflects the current scope and pricing." />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Footer text</CardTitle>
+                                <CardDescription>Used for the approval reminder.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea rows="3" value="Reply with approval or change requests before the end of the week." />
+                            </CardContent>
+                        </Card>
+                    </Stack>
+                </TabsContent>
+
+                <TabsContent value="settings">
+                    <FieldSet>
+                        <FieldLegend>Quote settings</FieldLegend>
+                        <FieldGroup>
+                            <Grid columns="2">
+                                <Field orientation="horizontal">
+                                    <Switch id="tax" defaultChecked="true" />
+                                    <FieldLabel htmlFor="tax">Include tax</FieldLabel>
+                                </Field>
+                                <Field orientation="horizontal">
+                                    <Switch id="discount" defaultChecked="false" />
+                                    <FieldLabel htmlFor="discount">Allow discount</FieldLabel>
+                                </Field>
+                            </Grid>
+                            <Field>
+                                <FieldLabel>Quote status</FieldLabel>
+                                <RadioGroup name="status" defaultValue="draft">
+                                    <RadioGroupItem value="draft">Draft</RadioGroupItem>
+                                    <RadioGroupItem value="sent">Sent</RadioGroupItem>
+                                    <RadioGroupItem value="approved">Approved</RadioGroupItem>
+                                </RadioGroup>
+                            </Field>
+                        </FieldGroup>
+                    </FieldSet>
+                </TabsContent>
+            </Tabs>
+        </Column>
+
+        <Column width="25">
+            <Stack>
+                <P>Quick actions for the current quote.</P>
+                <A href="/quotes/send" active="hover">
+                    <Icon name="mail" /> Send quote
+                </A>
+                <A href="/quotes/pdf" active="hover">
+                    <Icon name="download" /> Download PDF
+                </A>
+                <A href="/quotes/duplicate" active="hover">
+                    <Icon name="copy" /> Duplicate
+                </A>
+                <Divider />
+                <Badge variant="outline">Awaiting client review</Badge>
+            </Stack>
+        </Column>
+    </Columns>
+</longlink>

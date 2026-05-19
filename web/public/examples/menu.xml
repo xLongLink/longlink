@@ -1,0 +1,25 @@
+<longlink>
+    <Menu defaultValue="overview">
+        <MenuList>
+            <MenuSection value="overview">Overview</MenuSection>
+            <MenuSection value="settings">
+                Settings
+                <MenuSubSection value="profile">Profile</MenuSubSection>
+                <MenuSubSection value="billing">Billing</MenuSubSection>
+            </MenuSection>
+        </MenuList>
+
+        <MenuContent value="overview">
+            <P>Overview content for the active menu item.</P>
+        </MenuContent>
+        <MenuContent value="settings">
+            <P>Settings content for the active menu item.</P>
+        </MenuContent>
+        <MenuContent value="profile">
+            <P>Profile submenu content.</P>
+        </MenuContent>
+        <MenuContent value="billing">
+            <P>Billing submenu content.</P>
+        </MenuContent>
+    </Menu>
+</longlink>

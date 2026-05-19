@@ -1,0 +1,100 @@
+<longlink>
+    <InputGroup>
+        <InputGroupAddon>
+            <Icon name="search" />
+        </InputGroupAddon>
+        <InputGroupInput id="grid-search" autoComplete="off" placeholder="Search cards, alerts, and revenue" />
+        <InputGroupButton>
+            Search
+            <Icon name="arrow-right" />
+        </InputGroupButton>
+    </InputGroup>
+
+    <Columns>
+        <Column width="75">
+            <Grid columns="2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Revenue overview</CardTitle>
+                        <CardDescription>Weekly performance snapshot</CardDescription>
+                        <CardAction>
+                            <A href="/reports/revenue" variant="outline">Open report</A>
+                        </CardAction>
+                    </CardHeader>
+                    <CardContent>
+                        <P>Revenue is trending up, with 88% of the weekly target already complete.</P>
+                    </CardContent>
+                    <CardFooter>
+                        <Badge variant="outline">On track</Badge>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Usage</CardTitle>
+                        <CardDescription>Active sessions</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <P>Traffic increased by 14% over the last seven days.</P>
+                    </CardContent>
+                    <CardFooter>
+                        <P>Updated 12 minutes ago.</P>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Pipeline</CardTitle>
+                        <CardDescription>Open work</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <P>Three items are blocked and awaiting review.</P>
+                    </CardContent>
+                    <CardFooter>
+                        <Badge variant="outline">3 open</Badge>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Alerts</CardTitle>
+                        <CardDescription>Recent signals</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <P>Two new notifications were raised this morning.</P>
+                    </CardContent>
+                    <CardFooter>
+                        <Button variant="outline">Review alerts</Button>
+                    </CardFooter>
+                </Card>
+            </Grid>
+        </Column>
+
+        <Column width="25">
+            <Stack>
+                <P>Quick links in the same style as a GitHub repo sidebar.</P>
+                <A href="/code" active="hover">
+                    <Icon name="code-2" /> Code
+                </A>
+                <A href="/issues" active="hover">
+                    <Icon name="circle-alert" /> Issues
+                </A>
+                <A href="/pulls" active="hover">
+                    <Icon name="git-pull-request" /> Pull requests
+                </A>
+                <A href="/actions" active="hover">
+                    <Icon name="play-circle" /> Actions
+                </A>
+                <A href="/projects" active="hover">
+                    <Icon name="layout-grid" /> Projects
+                </A>
+                <A href="/security" active="hover">
+                    <Icon name="shield" /> Security
+                </A>
+                <A href="/insights" active="hover">
+                    <Icon name="chart-column" /> Insights
+                </A>
+            </Stack>
+        </Column>
+    </Columns>
+</longlink>

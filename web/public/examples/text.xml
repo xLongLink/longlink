@@ -1,0 +1,28 @@
+<longlink>
+    <Stack>
+        <H1>Basic text elements</H1>
+        <P>
+            The import pipeline is now stable. We finished the retry fix for <Code>customer_sync</Code>, and the
+            nightly run completed without manual intervention.
+        </P>
+
+        <H2>What changed</H2>
+        <P>
+            The team tightened validation on <B>customer IDs</B>, removed one <S>temporary bypass</S>, and kept the
+            rollout limited to staging. The result is a cleaner path to <U>dashboard output</U>.
+        </P>
+
+        <H3>Today’s checklist</H3>
+        <Ul>
+            <Li>Confirm the summary totals match the warehouse export.</Li>
+            <Li>Review any records marked with H<Sub>2</Sub>O-style test labels.</Li>
+            <Li>Watch the next deploy window at 10<Sup>30</Sup> for regressions.</Li>
+        </Ul>
+
+        <H4>Notes</H4>
+        <P>
+            For the deeper walkthrough, open <A href="/icons" active="hover">the icon catalog</A> or inspect the
+            generated report after the next sync.
+        </P>
+    </Stack>
+</longlink>
