@@ -1,30 +1,24 @@
 import { Checkbox as UICheckbox } from '@/components/ui/checkbox';
-import { getVersion, useSnapshot } from 'valtio';
 
 /** Props accepted by the XML Checkbox component. */
 export interface CheckboxProps {
-    checked?: boolean | Record<string, unknown>;
+    checked?: boolean;
     defaultChecked?: boolean;
     disabled?: boolean;
     id?: string;
+    onCheckedChange?: (checked: boolean) => void;
 }
 
-/** Renders a shadcn-backed checkbox with optional reactive state binding. */
-export function Checkbox({ checked, defaultChecked, disabled, id }: CheckboxProps) {
-    if (checked && typeof checked === 'object' && getVersion(checked) !== undefined) {
-        const state = checked as Record<string, unknown> & { value?: unknown };
-        const snapshot = useSnapshot(state);
-        const currentChecked = 'value' in snapshot ? snapshot.value : snapshot;
-
+/** Renders a shadcn-backed checkbox. */
+export function Checkbox({ checked, defaultChecked, disabled, id, onCheckedChange }: CheckboxProps) {
+    if (checked !== undefined) {
         return (
             <UICheckbox
-                checked={Boolean(currentChecked)}
+                checked={checked}
                 disabled={disabled}
                 id={id}
                 onCheckedChange={(nextChecked) => {
-                    if ('value' in state) {
-                        state.value = nextChecked === true;
-                    }
+                    onCheckedChange?.(nextChecked === true);
                 }}
             />
         );
