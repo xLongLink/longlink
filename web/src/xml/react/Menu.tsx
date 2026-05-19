@@ -6,8 +6,10 @@ import {
     MenuSubSection as UIMenuSubSection,
 } from '@ui/menu';
 import type { ASTNode } from '@xml';
+import { evaluate } from '@xml/core/expressions';
 import { renderNode, useXmlContext } from '@xml';
-import { useEffect, useState } from 'react';
+import type { ExecutionContext } from '@xml/types';
+import { Fragment, type ReactNode, useEffect, useState } from 'react';
 
 /** Props accepted by the XML Menu component. */
 export interface MenuProps {
@@ -72,7 +74,7 @@ export function Menu({ children, defaultValue, value }: MenuProps) {
 export function MenuList({ children }: MenuListProps) {
     const { ctx } = useXmlContext();
 
-    return <UIMenuList>{renderNode(children ?? [], ctx)}</UIMenuList>;
+    return <UIMenuList>{renderMenuListNodes(children ?? [], ctx)}</UIMenuList>;
 }
 
 
@@ -115,4 +117,61 @@ export function MenuContent({ children, value, className }: MenuContentProps) {
             {renderNode(children ?? [], ctx)}
         </UIMenuContent>
     );
+}
+
+
+/** Coerces XML boolean-like attributes into React boolean props. */
+function booleanAttribute(value: unknown): boolean | undefined {
+    if (value === false || value === 'false') return false;
+    if (value == null) return undefined;
+
+    return true;
+}
+
+
+/** Renders AST menu section markers for the underlying UI menu parser. */
+function renderMenuListNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
+    return nodes.map((node, index) => {
+        if (node.params?.if != null && !evaluate(node.params.if, ctx)) {
+            return <Fragment key={index} />;
+        }
+
+        if (node.name !== 'MenuSection') {
+            return renderNode([node], ctx);
+        }
+
+        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
+        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+        const disabled = booleanAttribute(node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined);
+
+        return (
+            <UIMenuSection key={index} disabled={disabled} label={label} value={value}>
+                {renderMenuSectionChildren(node.children ?? [], ctx)}
+            </UIMenuSection>
+        );
+    });
+}
+
+
+/** Renders nested menu section children while preserving subsection marker elements. */
+function renderMenuSectionChildren(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
+    return nodes.map((node, index) => {
+        if (node.params?.if != null && !evaluate(node.params.if, ctx)) {
+            return <Fragment key={index} />;
+        }
+
+        if (node.name !== 'MenuSubSection') {
+            return renderNode([node], ctx);
+        }
+
+        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
+        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+        const disabled = booleanAttribute(node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined);
+
+        return (
+            <UIMenuSubSection key={index} disabled={disabled} label={label} value={value}>
+                {renderNode(node.children ?? [], ctx)}
+            </UIMenuSubSection>
+        );
+    });
 }

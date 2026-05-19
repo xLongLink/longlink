@@ -1,3 +1,4 @@
+import { setupContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -16,13 +17,14 @@ describe('renderNode', () => {
         expect(renderToStaticMarkup(createElement('div', null, renderNode([node], ctx)))).toBe('<div>Hello</div>');
     });
 
-    it('preserves existing state when reactive conditions re-render', () => {
+    it('preserves existing state when reactive conditions re-render', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const nodes: ASTNode[] = [
             { name: 'State', params: { id: 'gridSearch', value: 'Revenue' } },
             { name: 'Text', params: { if: "${gridSearch in 'Usage'}", value: 'Visible' } },
         ];
 
+        await setupContext(nodes, ctx, '');
         renderToStaticMarkup(createElement('div', null, renderNode(nodes, ctx)));
         (ctx.values.gridSearch as { value: string }).value = 'Usage';
 

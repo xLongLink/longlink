@@ -1,3 +1,5 @@
+import { ContextProvider, setupContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
 import { parseXML } from '@xml/core/parser';
 import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
@@ -18,12 +20,15 @@ describe('State', () => {
     });
 
     /* State values should still be visible to sibling nodes after initialization. */
-    it('renders state values for sibling nodes', () => {
+    it('renders state values for sibling nodes', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<longlink><State id="filter" value="day" /><P>${filter}</P></longlink>');
-        const renderedTree = createElement(RenderXML, { ast, ctx });
+        await setupContext(ast, ctx, '');
+        const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
 
-        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe('<div><p>day</p></div>');
+        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
+            '<div><p class="leading-7">day</p></div>'
+        );
     });
 
     /* State nodes must reject nested children so the runtime contract stays declarative. */

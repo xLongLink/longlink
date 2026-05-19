@@ -3,6 +3,7 @@ import * as React from 'react';
 
 type LucideIconComponent = React.ComponentType<{
     'aria-hidden'?: boolean;
+    className?: string;
 }>;
 
 /** Props accepted by the XML Icon component. */

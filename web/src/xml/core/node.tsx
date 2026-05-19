@@ -1,11 +1,5 @@
-import {
-    MenuContent as UIMenuContent,
-    MenuSection as UIMenuSection,
-    MenuSubSection as UIMenuSubSection,
-} from '@ui/menu';
-import { compile, evaluate, isText } from '@xml/core/expressions';
-import { query } from '@xml/core/query';
-import { state } from '@xml/core/state';
+import { compile, evaluate } from '@xml/core/expressions';
+import { renderRegisteredNode } from '@xml/core/registry';
 import { A } from '@xml/html/A';
 import { B } from '@xml/html/B';
 import { Br } from '@xml/html/Br';
@@ -68,7 +62,6 @@ import {
     InputGroupTextarea,
 } from '@xml/react/InputGroup';
 import { Label } from '@xml/react/Label';
-import { Menu, MenuList } from '@xml/react/Menu';
 import { RadioGroup, RadioGroupItem } from '@xml/react/RadioGroup';
 import {
     Select,
@@ -102,32 +95,8 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             }
         }
 
-        if (node.name === 'State') {
-            if (!node.params?.id) throw new Error('State requires a string id');
-            if (node.params.value == null) throw new Error('State requires a value');
-            if (!isText(node.params.id)) throw new Error('State id must be literal text');
-            if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
-
-            const id = node.params.id.trim();
-
-            if (!(id in ctx.values)) {
-                state(ctx, id, evaluate(node.params.value, ctx));
-            }
-
-            return <Fragment key={index} />;
-        }
-
-        if (node.name === 'Query') {
-            if (!node.params?.id) throw new Error('Query requires a string id');
-            if (!node.params?.path) throw new Error('Query requires a string path');
-            if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
-            if (!isText(node.params.id)) throw new Error('Query id must be literal text');
-            if (!isText(node.params.path)) throw new Error('Query path must be literal text');
-
-            query(ctx, node.params.id.trim(), node.params.path.trim(), '');
-
-            return <Fragment key={index} />;
-        }
+        const registeredNode = renderRegisteredNode(node, ctx, index);
+        if (registeredNode !== undefined) return registeredNode;
 
         if (node.name === 'For') {
             // Ensure that the parameters are defined
@@ -191,58 +160,6 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
 
             return <TabsContent key={index} value={value} children={node.children} />;
-        }
-
-        if (node.name === 'Menu') {
-            const defaultValue = node.params?.defaultValue
-                ? String(evaluate(node.params.defaultValue, ctx) ?? '')
-                : undefined;
-            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
-
-            return <Menu key={index} defaultValue={defaultValue} value={value} children={node.children} />;
-        }
-
-        if (node.name === 'MenuList') {
-            return <MenuList key={index} children={node.children} />;
-        }
-
-        if (node.name === 'MenuSection') {
-            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
-            const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
-            const disabledValue = node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined;
-            const disabled =
-                disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
-
-            return (
-                <UIMenuSection key={index} value={value} label={label} disabled={disabled}>
-                    {renderNode(node.children ?? [], ctx)}
-                </UIMenuSection>
-            );
-        }
-
-        if (node.name === 'MenuSubSection') {
-            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
-            const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
-            const disabledValue = node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined;
-            const disabled =
-                disabledValue === false || disabledValue === 'false' ? false : disabledValue != null ? true : undefined;
-
-            return (
-                <UIMenuSubSection key={index} value={value} label={label} disabled={disabled}>
-                    {renderNode(node.children ?? [], ctx)}
-                </UIMenuSubSection>
-            );
-        }
-
-        if (node.name === 'MenuContent') {
-            const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : undefined;
-            const className = node.params?.className ? String(evaluate(node.params.className, ctx) ?? '') : undefined;
-
-            return (
-                <UIMenuContent key={index} value={value} className={className}>
-                    {renderNode(node.children ?? [], ctx)}
-                </UIMenuContent>
-            );
         }
 
         if (node.name === 'Hero') {

@@ -42,13 +42,11 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
             // Seed state and queries before rendering the component tree.
             if (node.name === 'State') {
-                if (!node.params?.id) throw new Error('State requires a string id');
-                if (node.params.value == null) throw new Error('State requires a value');
-                if (!isText(node.params.id)) throw new Error('State id must be literal text');
-                if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
+                validateSetupNode(node);
 
-                const id = node.params.id.trim();
-                const value = node.params.value;
+                const params = node.params!;
+                const id = params.id.trim();
+                const value = params.value;
 
                 // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
                 setups[id] = () => {
@@ -60,15 +58,11 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
             }
 
             if (node.name === 'Query') {
-                if (!node.params?.id) throw new Error('Query requires a string id');
-                if (!node.params?.path) throw new Error('Query requires a string path');
-                if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
+                validateSetupNode(node);
 
-                if (!isText(node.params.id)) throw new Error('Query id must be literal text');
-                if (!isText(node.params.path)) throw new Error('Query path must be literal text');
-
-                const id = node.params.id.trim();
-                const path = node.params.path.trim();
+                const params = node.params!;
+                const id = params.id.trim();
+                const path = params.path.trim();
 
                 // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
                 setups[id] = () => query(ctx, id, path, baseUrl);
@@ -82,4 +76,35 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
     await walk(ast);
 
     return ctx;
+}
+
+
+/** Validates setup-only runtime declarations before they are initialized. */
+export function validateSetupNodes(nodes: ASTNode[]): void {
+    for (const node of nodes) {
+        validateSetupNode(node);
+
+        if (node.name !== 'For') {
+            validateSetupNodes(node.children ?? []);
+        }
+    }
+}
+
+
+/** Validates a single setup-only runtime declaration. */
+function validateSetupNode(node: ASTNode): void {
+    if (node.name === 'State') {
+        if (!node.params?.id) throw new Error('State requires a string id');
+        if (node.params.value == null) throw new Error('State requires a value');
+        if (!isText(node.params.id)) throw new Error('State id must be literal text');
+        if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
+    }
+
+    if (node.name === 'Query') {
+        if (!node.params?.id) throw new Error('Query requires a string id');
+        if (!node.params?.path) throw new Error('Query requires a string path');
+        if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
+        if (!isText(node.params.id)) throw new Error('Query id must be literal text');
+        if (!isText(node.params.path)) throw new Error('Query path must be literal text');
+    }
 }

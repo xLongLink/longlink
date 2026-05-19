@@ -97,13 +97,14 @@ function readText(children?: React.ReactNode): string | undefined {
 /** Parses root menu sections and nested subsections from list children. */
 function parseMenuSections(listChildren?: React.ReactNode): ResolvedMenuSection[] {
     const sectionNodes = React.Children.toArray(listChildren).filter(
-        (child): child is React.ReactElement<MenuSectionProps> => React.isValidElement(child) && 'value' in child.props
+        (child): child is React.ReactElement<MenuSectionProps> =>
+            React.isValidElement<MenuSectionProps>(child) && 'value' in child.props
     );
 
     return sectionNodes.map((sectionNode) => {
         const subSectionNodes = React.Children.toArray(sectionNode.props.children).filter(
             (child): child is React.ReactElement<MenuSubSectionProps> =>
-                React.isValidElement(child) && 'value' in child.props
+                React.isValidElement<MenuSubSectionProps>(child) && 'value' in child.props
         );
 
         return {

@@ -1,4 +1,4 @@
-import { ContextProvider, createContext, setupContext } from '@xml/core/context';
+import { ContextProvider, createContext, setupContext, validateSetupNodes } from '@xml/core/context';
 import { XmlErrorBoundary } from '@xml/core/errors';
 import { renderNode } from '@xml/core/node';
 import { BaseUrlContext } from '@xml/core/url';
@@ -17,7 +17,9 @@ type RenderXMLProps = {
  */
 export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
     const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
-
+    const requiresSetup = hasSetupNodes(ast);
+    const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
+    const [setupError, setSetupError] = useState<unknown>(null);
     const [version, setVersion] = useState(0);
 
     useEffect(() => {
@@ -45,6 +47,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
 
         runtimeCtx.setups = {};
         runtimeCtx.values = {};
+        setSetupError(null);
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
         runtimeCtx.invalidate = async (ids) => {
@@ -67,9 +70,12 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             await setupContext(ast, runtimeCtx, baseUrl);
             subscribeToStateValues();
 
-            if (active) setVersion((current) => current + 1);
+            if (active) {
+                setInitializedAst(ast);
+                setVersion((current) => current + 1);
+            }
         })().catch((error) => {
-            if (active) throw error;
+            if (active) setSetupError(error);
         });
 
         return () => {
@@ -81,6 +87,12 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         };
     }, [ast, runtimeCtx, baseUrl]);
 
+    if (setupError) throw setupError;
+
+    validateSetupNodes(ast);
+
+    if (requiresSetup && initializedAst !== ast) return null;
+
     return (
         <XmlErrorBoundary resetKey={`${version}`}>
             <BaseUrlContext.Provider value={baseUrl}>
@@ -88,4 +100,15 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             </BaseUrlContext.Provider>
         </XmlErrorBoundary>
     );
+}
+
+
+/** Returns whether the AST contains setup-only runtime declarations. */
+function hasSetupNodes(nodes: ASTNode[]): boolean {
+    for (const node of nodes) {
+        if (node.name === 'State' || node.name === 'Query') return true;
+        if (hasSetupNodes(node.children ?? [])) return true;
+    }
+
+    return false;
 }
