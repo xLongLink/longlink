@@ -14,7 +14,7 @@ export function A({ children, active = 'hover', href }: AProps) {
     const linkClassName =
         active === 'always'
             ? 'inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80'
-            : 'inline-flex items-center gap-1 text-primary underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80';
+            : 'inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80';
 
     return (
         <a className={linkClassName} {...(href ? { href } : {})}>

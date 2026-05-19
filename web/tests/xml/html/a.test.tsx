@@ -21,7 +21,9 @@ describe('A', () => {
     it('renders the anchor bridge with the icon', () => {
         const output = renderXmlToMarkup(parseXML('<A href="/icons"><Icon name="sparkles" />Open icons</A>'));
 
-        expect(output).toContain('class="inline-flex items-center gap-1 text-primary underline underline-offset-4 hover:opacity-80"');
+        expect(output).toContain(
+            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"',
+        );
         expect(output).toContain('href="/icons"');
         expect(output).toContain('Open icons');
         expect(output).toContain('<svg');
@@ -31,8 +33,20 @@ describe('A', () => {
     it('renders an anchor without href when omitted', () => {
         const output = renderXmlToMarkup(parseXML('<A>Label only</A>'));
 
-        expect(output).toContain('class="inline-flex items-center gap-1 text-primary underline underline-offset-4 hover:opacity-80"');
+        expect(output).toContain(
+            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"',
+        );
         expect(output).not.toContain('href=');
         expect(output).toContain('Label only');
+    });
+
+    /* The active state should support links that are always accent colored. */
+    it('renders always active anchors with accent color', () => {
+        const output = renderXmlToMarkup(parseXML('<A href="/icons" active="always">Open icons</A>'));
+
+        expect(output).toContain(
+            'class="inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80"',
+        );
+        expect(output).not.toContain('hover:text-accent');
     });
 });

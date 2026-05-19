@@ -21,7 +21,7 @@ describe('Stack', () => {
         const output = renderXmlToMarkup(parseXML('<Stack><P>First</P><P>Second</P></Stack>'));
 
         expect(output).toContain('data-slot="stack"');
-        expect(output).toContain('flex flex-col gap-2');
+        expect(output).toContain('flex flex-col gap-4');
         expect(output).toContain('First');
         expect(output).toContain('Second');
     });
