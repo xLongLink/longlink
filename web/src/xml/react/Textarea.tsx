@@ -1,6 +1,7 @@
 import { Textarea as UITextarea } from '@/components/ui/textarea';
-import { useState } from 'react';
-import { getVersion, useSnapshot } from 'valtio';
+import type { XmlBindableValue } from '@xml/types';
+
+import { useBindableValue } from './binding';
 
 /** Props accepted by the XML Textarea component. */
 export interface TextareaProps {
@@ -10,7 +11,7 @@ export interface TextareaProps {
     label?: string;
     placeholder?: string | number | boolean;
     rows?: number | string;
-    value?: string | number | boolean | Record<string, unknown>;
+    value?: XmlBindableValue;
 }
 
 /** Renders a shadcn-backed textarea with optional reactive state binding. */
@@ -19,12 +20,9 @@ export function Textarea({ cols, disabled, id, label, placeholder, rows, value =
     // Normalize XML string attributes to the numeric textarea props expected by React.
     const resolvedCols = typeof cols === 'string' ? Number(cols) : cols;
     const resolvedRows = typeof rows === 'string' ? Number(rows) : rows;
+    const binding = useBindableValue(value);
 
-    if (value && typeof value === 'object' && getVersion(value) !== undefined) {
-        const state = value as Record<string, unknown> & { value?: unknown };
-        const snapshot = useSnapshot(state);
-        const currentValue = 'value' in snapshot ? snapshot.value : snapshot;
-
+    if (binding.bound) {
         return (
             <UITextarea
                 cols={Number.isNaN(resolvedCols ?? Number.NaN) ? undefined : resolvedCols}
@@ -32,17 +30,13 @@ export function Textarea({ cols, disabled, id, label, placeholder, rows, value =
                 id={id}
                 placeholder={placeholderText}
                 rows={Number.isNaN(resolvedRows ?? Number.NaN) ? undefined : resolvedRows}
-                value={String(currentValue ?? '')}
+                value={binding.currentValue}
                 onChange={(event) => {
-                    if ('value' in state) {
-                        state.value = event.target.value;
-                    }
+                    binding.setValue(event.target.value);
                 }}
             />
         );
     }
-
-    const [initialValue] = useState(String(value ?? ''));
 
     return (
         <UITextarea
@@ -51,7 +45,7 @@ export function Textarea({ cols, disabled, id, label, placeholder, rows, value =
             id={id}
             placeholder={placeholderText}
             rows={Number.isNaN(resolvedRows ?? Number.NaN) ? undefined : resolvedRows}
-            defaultValue={initialValue}
+            defaultValue={binding.initialValue}
         />
     );
 }

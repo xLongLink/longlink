@@ -5,7 +5,9 @@ export type ASTNode = {
     children?: ASTNode[];
 };
 
-/** Cached setup entry used to recreate runtime sources during invalidation. */
+/** Value shape accepted by XML form controls. */
+export type XmlBindableValue = string | number | boolean | Record<string, unknown>;
+
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     parent?: ExecutionContext;

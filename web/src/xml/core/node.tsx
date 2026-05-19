@@ -89,7 +89,7 @@ import { Textarea } from '@xml/react/Textarea';
 import { Toggle } from '@xml/react/Toggle';
 import { ToggleGroup, ToggleGroupItem } from '@xml/react/ToggleGroup';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@xml/react/Tooltip';
-import type { ASTNode, ExecutionContext } from '@xml/types';
+import type { ASTNode, ExecutionContext, XmlBindableValue } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
 
 /** Renders XML AST nodes using the active runtime context. */
@@ -108,7 +108,11 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             if (!isText(node.params.id)) throw new Error('State id must be literal text');
             if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
 
-            state(ctx, node.params.id.trim(), evaluate(node.params.value, ctx));
+            const id = node.params.id.trim();
+
+            if (!(id in ctx.values)) {
+                state(ctx, id, evaluate(node.params.value, ctx));
+            }
 
             return <Fragment key={index} />;
         }
@@ -598,7 +602,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                 ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
                 : undefined;
             const value = node.params?.value
-                ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+                ? (evaluate(node.params.value, ctx) as XmlBindableValue | undefined)
                 : undefined;
             const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
             const autoComplete = node.params?.autoComplete
@@ -638,7 +642,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                 ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
                 : undefined;
             const value = node.params?.value
-                ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+                ? (evaluate(node.params.value, ctx) as XmlBindableValue | undefined)
                 : undefined;
             const type = node.params?.type ? String(evaluate(node.params.type, ctx) ?? 'text') : 'text';
             const autoComplete = node.params?.autoComplete
@@ -677,7 +681,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                 ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
                 : undefined;
             const value = node.params?.value
-                ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+                ? (evaluate(node.params.value, ctx) as XmlBindableValue | undefined)
                 : undefined;
             const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
             const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;
@@ -710,7 +714,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
                 ? (evaluate(node.params.placeholder, ctx) as string | number | boolean | undefined)
                 : undefined;
             const value = node.params?.value
-                ? (evaluate(node.params.value, ctx) as string | number | boolean | undefined)
+                ? (evaluate(node.params.value, ctx) as XmlBindableValue | undefined)
                 : undefined;
             const disabledValue = node.params?.disabled != null ? evaluate(node.params.disabled, ctx) : undefined;
             const id = node.params?.id ? String(evaluate(node.params.id, ctx) ?? '') : undefined;

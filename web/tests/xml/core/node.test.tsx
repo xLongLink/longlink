@@ -15,4 +15,17 @@ describe('renderNode', () => {
 
         expect(renderToStaticMarkup(createElement('div', null, renderNode([node], ctx)))).toBe('<div>Hello</div>');
     });
+
+    it('preserves existing state when reactive conditions re-render', () => {
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const nodes: ASTNode[] = [
+            { name: 'State', params: { id: 'gridSearch', value: 'Revenue' } },
+            { name: 'Text', params: { if: "${gridSearch in 'Usage'}", value: 'Visible' } },
+        ];
+
+        renderToStaticMarkup(createElement('div', null, renderNode(nodes, ctx)));
+        (ctx.values.gridSearch as { value: string }).value = 'Usage';
+
+        expect(renderToStaticMarkup(createElement('div', null, renderNode(nodes, ctx)))).toBe('<div>Visible</div>');
+    });
 });

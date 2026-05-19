@@ -8,8 +8,9 @@ import {
 } from '@/components/ui/input-group';
 import type { ASTNode } from '@xml';
 import { renderNode, useXmlContext } from '@xml';
-import { useState } from 'react';
-import { getVersion, useSnapshot } from 'valtio';
+import type { XmlBindableValue } from '@xml/types';
+
+import { useBindableValue } from './binding';
 
 /** Props accepted by the XML InputGroup component. */
 export interface InputGroupProps {
@@ -44,7 +45,7 @@ export interface InputGroupInputProps {
     id?: string;
     label?: string;
     placeholder?: string | number | boolean;
-    value?: string | number | boolean | Record<string, unknown>;
+    value?: XmlBindableValue;
     type?: string;
 }
 
@@ -56,7 +57,7 @@ export interface InputGroupTextareaProps {
     label?: string;
     placeholder?: string | number | boolean;
     rows?: number | string;
-    value?: string | number | boolean | Record<string, unknown>;
+    value?: XmlBindableValue;
 }
 
 /** Renders the shared input group shell. */
@@ -109,13 +110,9 @@ export function InputGroupInput({
     type = 'text',
 }: InputGroupInputProps) {
     const placeholderText = String(placeholder ?? label ?? '');
+    const binding = useBindableValue(value, type);
 
-    // Bind Valtio-backed values so grouped inputs stay reactive.
-    if (value && typeof value === 'object' && getVersion(value) !== undefined) {
-        const state = value as Record<string, unknown> & { value?: unknown };
-        const snapshot = useSnapshot(state);
-        const currentValue = 'value' in snapshot ? snapshot.value : snapshot;
-
+    if (binding.bound) {
         return (
             <UIInputGroupInput
                 aria-invalid={ariaInvalid}
@@ -124,20 +121,13 @@ export function InputGroupInput({
                 id={id}
                 type={type}
                 placeholder={placeholderText}
-                value={String(currentValue ?? '')}
+                value={binding.currentValue}
                 onChange={(event) => {
-                    const nextValue = type === 'number' ? Number(event.target.value) : event.target.value;
-
-                    if ('value' in state) {
-                        state.value = nextValue;
-                    }
+                    binding.setValue(event.target.value);
                 }}
             />
         );
     }
-
-    // Fall back to the initial XML value for uncontrolled usage.
-    const [initialValue] = useState(String(value ?? ''));
 
     return (
         <UIInputGroupInput
@@ -147,7 +137,7 @@ export function InputGroupInput({
             id={id}
             type={type}
             placeholder={placeholderText}
-            defaultValue={initialValue}
+            defaultValue={binding.initialValue}
         />
     );
 }
@@ -166,13 +156,9 @@ export function InputGroupTextarea({
     // Normalize XML string attributes to the numeric textarea props expected by React.
     const resolvedCols = typeof cols === 'string' ? Number(cols) : cols;
     const resolvedRows = typeof rows === 'string' ? Number(rows) : rows;
+    const binding = useBindableValue(value);
 
-    // Bind Valtio-backed values so grouped textareas stay reactive.
-    if (value && typeof value === 'object' && getVersion(value) !== undefined) {
-        const state = value as Record<string, unknown> & { value?: unknown };
-        const snapshot = useSnapshot(state);
-        const currentValue = 'value' in snapshot ? snapshot.value : snapshot;
-
+    if (binding.bound) {
         return (
             <UIInputGroupTextarea
                 cols={Number.isNaN(resolvedCols ?? Number.NaN) ? undefined : resolvedCols}
@@ -180,18 +166,13 @@ export function InputGroupTextarea({
                 id={id}
                 placeholder={placeholderText}
                 rows={Number.isNaN(resolvedRows ?? Number.NaN) ? undefined : resolvedRows}
-                value={String(currentValue ?? '')}
+                value={binding.currentValue}
                 onChange={(event) => {
-                    if ('value' in state) {
-                        state.value = event.target.value;
-                    }
+                    binding.setValue(event.target.value);
                 }}
             />
         );
     }
-
-    // Fall back to the initial XML value for uncontrolled usage.
-    const [initialValue] = useState(String(value ?? ''));
 
     return (
         <UIInputGroupTextarea
@@ -200,7 +181,7 @@ export function InputGroupTextarea({
             id={id}
             placeholder={placeholderText}
             rows={Number.isNaN(resolvedRows ?? Number.NaN) ? undefined : resolvedRows}
-            defaultValue={initialValue}
+            defaultValue={binding.initialValue}
         />
     );
 }

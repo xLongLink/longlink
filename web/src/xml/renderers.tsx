@@ -4,6 +4,7 @@ import { renderNode } from '@xml/core/node';
 import { BaseUrlContext } from '@xml/core/url';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { useEffect, useState, type ReactNode } from 'react';
+import { getVersion, subscribe } from 'valtio';
 
 type RenderXMLProps = {
     ast: ASTNode[];
@@ -21,6 +22,29 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
 
     useEffect(() => {
         let active = true;
+        let unsubscribers: Array<() => void> = [];
+
+        /** Subscribes the renderer to every Valtio-backed state slot in the current page context. */
+        function subscribeToStateValues() {
+            for (const unsubscribe of unsubscribers) {
+                unsubscribe();
+            }
+
+            unsubscribers = [];
+
+            for (const value of Object.values(runtimeCtx.values)) {
+                if (!value || typeof value !== 'object' || getVersion(value) === undefined) continue;
+
+                unsubscribers.push(
+                    subscribe(value, () => {
+                        if (active) setVersion((current) => current + 1);
+                    })
+                );
+            }
+        }
+
+        runtimeCtx.setups = {};
+        runtimeCtx.values = {};
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
         runtimeCtx.invalidate = async (ids) => {
@@ -35,11 +59,13 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
                 await setup();
             }
 
+            subscribeToStateValues();
             setVersion((current) => current + 1);
         };
 
         (async () => {
             await setupContext(ast, runtimeCtx, baseUrl);
+            subscribeToStateValues();
 
             if (active) setVersion((current) => current + 1);
         })().catch((error) => {
@@ -48,6 +74,10 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
 
         return () => {
             active = false;
+
+            for (const unsubscribe of unsubscribers) {
+                unsubscribe();
+            }
         };
     }, [ast, runtimeCtx, baseUrl]);
 

@@ -50,8 +50,12 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 const id = node.params.id.trim();
                 const value = node.params.value;
 
-                // Re-evaluate the initializer on invalidation so expression-based state stays in sync.
-                setups[id] = () => state(ctx, id, evaluate(value, ctx));
+                // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
+                setups[id] = () => {
+                    if (!(id in ctx.values)) {
+                        state(ctx, id, evaluate(value, ctx));
+                    }
+                };
                 await setups[id]();
             }
 
