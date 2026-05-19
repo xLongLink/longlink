@@ -2,7 +2,7 @@ import type { HTMLAttributes, ReactNode } from 'react';
 
 import { cva } from 'class-variance-authority';
 
-import type { ASTNode } from '@xml';
+import type { ASTNode } from '../../xml/types';
 
 import { cn } from '@/lib/utils';
 

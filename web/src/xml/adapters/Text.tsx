@@ -1,5 +1,5 @@
-import type { Props } from '@xml';
-import { useXmlContext } from '@xml';
+import { useXmlContext } from '../core/context';
+import type { Props } from '../types';
 import { resolveXmlString } from './props';
 /** Props accepted by the XML Text component. */
 

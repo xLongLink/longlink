@@ -1,4 +1,4 @@
-import type { Props } from '@xml';
+import type { Props } from '../types';
 /** Renders a spacer block for visual separation. */
 export function Br({ props, nodes }: Props) {
     void props;

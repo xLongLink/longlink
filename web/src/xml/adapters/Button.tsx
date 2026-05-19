@@ -1,7 +1,9 @@
 import { Button as UIButton } from '@ui/button';
-import type { Props } from '@xml';
-import { renderNode, useUrl, useXmlContext } from '@xml';
 import { toast } from 'sonner';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import { useUrl } from '../core/url';
+import type { Props } from '../types';
 import { resolveXmlBoolean, resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
 /** XML button adapter that maps action-layer props to DOM-safe button props. */

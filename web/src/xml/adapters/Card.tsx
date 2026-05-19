@@ -7,8 +7,9 @@ import {
     CardHeader as UICardHeader,
     CardTitle as UICardTitle,
 } from '@ui/card';
-import type { Props } from '@xml';
-import { renderNode, useXmlContext } from '@xml';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import type { Props } from '../types';
 import { resolveXmlString } from './props';
 
 /** Renders the shadcn card shell. */

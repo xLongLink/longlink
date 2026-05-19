@@ -6,8 +6,9 @@ import {
     InputGroupText as UIInputGroupText,
     InputGroupTextarea as UIInputGroupTextarea,
 } from '@/components/ui/input-group';
-import type { Props } from '@xml';
-import { renderNode, useXmlContext } from '@xml';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import type { Props } from '../types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 import { useBindableValue } from './binding';

@@ -7,8 +7,9 @@ import {
     TableHeader as UITableHeader,
     TableRow as UITableRow,
 } from '@ui/table';
-import type { Props } from '@xml';
-import { renderNode, useXmlContext } from '@xml';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import type { Props } from '../types';
 
 /** Renders the shadcn-backed table shell. */
 export function Table({ props, nodes }: Props) {

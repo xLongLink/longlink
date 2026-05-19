@@ -4,8 +4,9 @@ import {
     AvatarFallback as UIAvatarFallback,
     AvatarImage as UIAvatarImage,
 } from '@ui/avatar';
-import type { Props } from '@xml';
-import { renderNode, useXmlContext } from '@xml';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import type { Props } from '../types';
 import { resolveXmlString } from './props';
 
 /** Props accepted by the XML Avatar component. */

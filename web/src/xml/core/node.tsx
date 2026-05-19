@@ -1,8 +1,8 @@
-import { For, Text } from '@xml/adapters';
-import { evaluate } from '@xml/core/expressions';
-import { xmlComponentRegistry } from '@xml/core/registry';
-import type { ASTNode, ExecutionContext } from '@xml/types';
 import { Fragment, type ReactNode } from 'react';
+import { For, Text } from '../adapters';
+import type { ASTNode, ExecutionContext } from '../types';
+import { evaluate } from './expressions';
+import { xmlComponentRegistry } from './registry';
 
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {

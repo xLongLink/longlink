@@ -1,6 +1,6 @@
-import type { XmlBindableValue } from '@xml/types';
 import { useState } from 'react';
 import { getVersion, proxy, useSnapshot } from 'valtio';
+import type { XmlBindableValue } from '../types';
 
 const EMPTY_BINDING = proxy({ value: undefined });
 

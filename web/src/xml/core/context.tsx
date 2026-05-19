@@ -1,8 +1,8 @@
-import { evaluate, isText } from '@xml/core/expressions';
-import { query } from '@xml/core/query';
-import { state } from '@xml/core/state';
-import type { ASTNode, ExecutionContext } from '@xml/types';
 import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
+import type { ASTNode, ExecutionContext } from '../types';
+import { evaluate, isText } from './expressions';
+import { query } from './query';
+import { state } from './state';
 
 export const Context = createReactContext<ExecutionContext | null>(null);
 
@@ -78,7 +78,6 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
     return ctx;
 }
 
-
 /** Validates setup-only runtime declarations before they are initialized. */
 export function validateSetupNodes(nodes: ASTNode[]): void {
     for (const node of nodes) {
@@ -89,7 +88,6 @@ export function validateSetupNodes(nodes: ASTNode[]): void {
         }
     }
 }
-
 
 /** Validates a single setup-only runtime declaration. */
 function validateSetupNode(node: ASTNode): void {

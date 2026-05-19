@@ -1,5 +1,5 @@
-import type { ASTNode } from '@xml/types';
 import { XMLParser } from 'fast-xml-parser';
+import type { ASTNode } from '../types';
 
 const parser = new XMLParser({
     ignoreAttributes: false,

@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import {
     A,
     Avatar,
@@ -104,8 +105,7 @@ import {
     TooltipTrigger,
     U,
     Ul,
-} from '@xml/adapters';
-import type { ComponentType } from 'react';
+} from '../adapters';
 
 /** Plain XML component registry keyed by tag name. */
 export const xmlComponentRegistry: Record<string, ComponentType<any>> = {

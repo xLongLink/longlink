@@ -1,6 +1,6 @@
-import { resolveUrl } from '@xml/core/url';
-import type { ExecutionContext } from '@xml/types';
 import { toast } from 'sonner';
+import type { ExecutionContext } from '../types';
+import { resolveUrl } from './url';
 
 /** Fetches JSON data into a reusable query slot for descendants. */
 export async function query(

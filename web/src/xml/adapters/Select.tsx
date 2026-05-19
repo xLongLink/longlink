@@ -8,9 +8,10 @@ import {
     SelectTrigger as UISelectTrigger,
     SelectValue as UISelectValue,
 } from '@/components/ui/select';
-import type { Props } from '@xml';
-import { renderNode, useXmlContext } from '@xml';
 import { getVersion, useSnapshot } from 'valtio';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import type { Props } from '../types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Renders a shadcn-backed select shell with optional reactive value binding. */

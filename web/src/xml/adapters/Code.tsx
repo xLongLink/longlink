@@ -1,5 +1,6 @@
-import type { Props } from '@xml';
-import { renderNode, useXmlContext } from '@xml';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import type { Props } from '../types';
 
 /** Renders inline code with monospace typography defaults. */
 export function Code({ props, nodes }: Props) {

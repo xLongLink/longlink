@@ -1,5 +1,5 @@
-import type { ExecutionContext } from '@xml/types';
 import { proxy } from 'valtio';
+import type { ExecutionContext } from '../types';
 
 /** Initializes a local reactive state slot for descendant XML nodes. */
 export function state(ctx: ExecutionContext, id: string, value: unknown): void {

@@ -1,6 +1,6 @@
 import { getVersion, snapshot } from 'valtio';
 
-import type { ExecutionContext } from '@xml/types';
+import type { ExecutionContext } from '../../types';
 
 /** Resolves a value from the current XML runtime scope chain. */
 export function resolveValue(ctx: ExecutionContext | null | undefined, key: string): unknown {

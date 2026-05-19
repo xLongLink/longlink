@@ -1,6 +1,7 @@
 import { Badge as UIBadge } from '@ui/badge';
-import type { Props } from '@xml';
-import { renderNode, useXmlContext } from '@xml';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import type { Props } from '../types';
 import { resolveXmlString } from './props';
 
 /** Renders a shadcn-backed badge for short status labels and tags. */

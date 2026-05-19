@@ -1,6 +1,7 @@
 import { Heading } from '@/components/ui/heading';
-import type { Props } from '@xml';
-import { renderNode, useXmlContext } from '@xml';
+import { useXmlContext } from '../core/context';
+import { renderNode } from '../core/node';
+import type { Props } from '../types';
 
 /** Props accepted by the XML h3 bridge component. */
 

@@ -1,6 +1,6 @@
-import { compile, evaluate } from '@xml/core/expressions';
-import type { ASTProps, ExecutionContext, XmlBindableValue } from '@xml/types';
 import { getVersion } from 'valtio';
+import { compile, evaluate } from '../core/expressions';
+import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
 
 /** Resolves a raw XML prop against the runtime context. */
 export function resolveXmlProp(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: unknown): any {

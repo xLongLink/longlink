@@ -1,5 +1,5 @@
-import type { ExecutionContext } from '@xml/types';
 import { parse } from 'acorn';
+import type { ExecutionContext } from '../../types';
 
 import { createScopeProxy, resolvePath } from './resolve';
 import type { ExpressionNode } from './types';

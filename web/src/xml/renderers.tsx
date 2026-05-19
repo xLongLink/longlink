@@ -1,10 +1,10 @@
-import { ContextProvider, createContext, setupContext, validateSetupNodes } from '@xml/core/context';
-import { XmlErrorBoundary } from '@xml/core/errors';
-import { renderNode } from '@xml/core/node';
-import { BaseUrlContext } from '@xml/core/url';
-import type { ASTNode, ExecutionContext } from '@xml/types';
 import { useEffect, useState, type ReactNode } from 'react';
 import { getVersion, subscribe } from 'valtio';
+import { ContextProvider, createContext, setupContext, validateSetupNodes } from './core/context';
+import { XmlErrorBoundary } from './core/errors';
+import { renderNode } from './core/node';
+import { BaseUrlContext } from './core/url';
+import type { ASTNode, ExecutionContext } from './types';
 
 type RenderXMLProps = {
     ast: ASTNode[];
@@ -101,7 +101,6 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         </XmlErrorBoundary>
     );
 }
-
 
 /** Returns whether the AST contains setup-only runtime declarations. */
 function hasSetupNodes(nodes: ASTNode[]): boolean {

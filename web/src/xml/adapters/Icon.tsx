@@ -1,7 +1,7 @@
-import type { Props } from '@xml';
-import { useXmlContext } from '@xml';
 import * as LucideIcons from 'lucide-react';
 import * as React from 'react';
+import { useXmlContext } from '../core/context';
+import type { Props } from '../types';
 import { resolveXmlString } from './props';
 
 type LucideIconComponent = React.ComponentType<{
