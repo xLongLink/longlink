@@ -70,17 +70,17 @@
                 </Field>
 
                 <Field>
-                    <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
-                    <Select defaultValue="utc">
+                    <FieldLabel htmlFor="role">Role</FieldLabel>
+                    <Select defaultValue="operator">
                         <SelectTrigger>
-                            <SelectValue placeholder="Choose a timezone" />
+                            <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectLabel>Regions</SelectLabel>
-                                <SelectItem value="utc">UTC</SelectItem>
-                                <SelectItem value="cet">CET</SelectItem>
-                                <SelectItem value="pst">PST</SelectItem>
+                                <SelectLabel>Roles</SelectLabel>
+                                <SelectItem value="operator">Operator</SelectItem>
+                                <SelectItem value="manager">Manager</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -93,46 +93,12 @@
                 <FieldDescription>Keep the note short and clear.</FieldDescription>
             </Field>
 
-            <FieldSet>
-                <FieldLegend>Preferences</FieldLegend>
-                <FieldDescription>These controls are designed to stay compact and readable.</FieldDescription>
-
-                <Grid columns="2">
-                    <Field orientation="horizontal">
-                        <Checkbox id="newsletter" defaultChecked="true" />
-                        <FieldLabel htmlFor="newsletter">Email digest</FieldLabel>
-                    </Field>
-
-                    <Field orientation="horizontal">
-                        <Switch id="autosave" defaultChecked="true" size="sm" />
-                        <FieldLabel htmlFor="autosave">Auto-save drafts</FieldLabel>
-                    </Field>
-                </Grid>
-
-                <Field>
-                    <FieldLabel>Priority</FieldLabel>
-                    <RadioGroup name="priority" defaultValue="medium">
-                        <RadioGroupItem value="low">Low</RadioGroupItem>
-                        <RadioGroupItem value="medium">Medium</RadioGroupItem>
-                        <RadioGroupItem value="high">High</RadioGroupItem>
-                    </RadioGroup>
-                </Field>
-
-                <Field>
-                    <FieldLabel>Workflow</FieldLabel>
-                    <ButtonGroup>
-                        <Button variant="outline">Draft</Button>
-                        <Button variant="outline">Review</Button>
-                        <Button variant="outline">Publish</Button>
-                    </ButtonGroup>
-                </Field>
-            </FieldSet>
-
-            <Field>
-                <FieldLabel htmlFor="budget">Budget</FieldLabel>
-                <Slider id="budget" min="0" max="100" step="5" defaultValue="50" />
-                <FieldDescription>Set the allowed budget range.</FieldDescription>
+            <Field orientation="horizontal">
+                <FieldLabel></FieldLabel>
+                <Button variant="destructive">Cancel</Button>
+                <Button type="submit">Submit</Button>
             </Field>
+
         </FieldGroup>
     </FieldSet>
 </longlink>

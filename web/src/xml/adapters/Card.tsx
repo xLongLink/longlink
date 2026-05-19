@@ -58,6 +58,7 @@ export function CardContent({ props, nodes }: Props) {
 /** Renders the card footer slot. */
 export function CardFooter({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const className = resolveXmlString(props, 'className', ctx);
 
-    return <UICardFooter>{renderNode(nodes, ctx)}</UICardFooter>;
+    return <UICardFooter className={className}>{renderNode(nodes, ctx)}</UICardFooter>;
 }

@@ -49,7 +49,7 @@ function HeroTitle({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
             data-slot="hero-title"
-            className={cn('text-2xl font-semibold tracking-tight sm:text-3xl', className)}
+            className={cn('text-xl font-semibold tracking-tight sm:text-2xl', className)}
             {...props}
         />
     );

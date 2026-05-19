@@ -2,14 +2,12 @@ import { RequireAuth } from '@/components/Auth';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import Layout from './Layout';
-import Features from './pages/Features';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
 import Playground from './pages/Playground';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
-import Sample from './pages/Sample';
 import Terms from './pages/Terms';
 import View from './pages/View';
 
@@ -25,7 +23,6 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        { path: 'sample', element: <Sample /> },
         {
             path: 'playground',
             element: (
@@ -34,7 +31,6 @@ function getRoutes() {
                 </Layout>
             ),
         },
-        { path: 'features', element: <Features /> },
         { path: 'pricing', element: <Pricing /> },
         {
             path: 'impressum',

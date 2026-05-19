@@ -21,10 +21,10 @@ export function Navbar() {
                     <ul className="hidden items-center justify-center gap-8 md:flex">
                         <li className="font-medium transition-colors hover:text-accent">
                             <Link
-                                to="/features"
+                                to="/playground"
                                 className="whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
                             >
-                                Features
+                                Playground
                             </Link>
                         </li>
                         <li className="font-medium transition-colors hover:text-accent">

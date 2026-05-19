@@ -83,8 +83,8 @@ export default function Pricing() {
                 </section>
 
                 <section className="mt-14 flex flex-wrap items-center justify-center gap-3">
-                    <Link to="/features" className={buttonVariants({ size: 'lg' })}>
-                        Compare features
+                    <Link to="/playground" className={buttonVariants({ size: 'lg' })}>
+                        Open playground
                     </Link>
                     <a
                         href="https://docs.longlink.dev"

@@ -13,5 +13,5 @@ export function Longlink({ props, nodes }: Props) {
         throw new Error('longlink does not accept attributes');
     }
 
-    return <div>{renderNode(nodes, ctx)}</div>;
+    return <div className="flex flex-col gap-6 text-sm">{renderNode(nodes, ctx)}</div>;
 }

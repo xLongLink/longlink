@@ -9,17 +9,25 @@ const exampleFiles = {
     Form: '/examples/form.xml',
     Quote: '/examples/quote.xml',
     Menu: '/examples/menu.xml',
-    Grid: '/examples/grid.xml',
+    Cart: '/examples/cart.xml',
 } as const;
 
 type ExampleName = keyof typeof exampleFiles;
 type ExampleMap = Record<ExampleName, string>;
 
 const starterXml = `<longlink>
-    <Stack>
-        <H1>Loading examples...</H1>
-        <P>The public example files are being loaded.</P>
-    </Stack>
+    <State id="volume" value="[65]" />
+    <FieldSet>
+        <FieldLegend>Playback settings</FieldLegend>
+        <FieldDescription>Use the slider to preview the rendered state by default.</FieldDescription>
+        <FieldGroup>
+            <Field>
+                <FieldLabel htmlFor="volume">Volume</FieldLabel>
+                <Slider id="volume" value="$volume" min="0" max="100" step="5" />
+                <P>Current volume: ${'${'}volume.value}</P>
+            </Field>
+        </FieldGroup>
+    </FieldSet>
 </longlink>`;
 
 const starterExamples: ExampleMap = {
@@ -27,7 +35,7 @@ const starterExamples: ExampleMap = {
     Form: starterXml,
     Quote: starterXml,
     Menu: starterXml,
-    Grid: starterXml,
+    Cart: starterXml,
 };
 
 type ViewMode = 'code' | 'rendered';
@@ -36,7 +44,7 @@ type ViewMode = 'code' | 'rendered';
 export default function Playground() {
     const [examples, setExamples] = useState<ExampleMap>(starterExamples);
     const [xml, setXml] = useState<string>(starterXml);
-    const [viewMode, setViewMode] = useState<ViewMode>('code');
+    const [viewMode, setViewMode] = useState<ViewMode>('rendered');
 
     useEffect(() => {
         let cancelled = false;
@@ -83,7 +91,7 @@ export default function Playground() {
     }
 
     return (
-        <main className="mx-auto flex min-h-[calc(100vh-9rem)] w-full max-w-[1000px] flex-col gap-3 px-6 py-6">
+        <main className="mx-auto flex min-h-[calc(100vh-9rem)] w-full max-w-[1000px] flex-col gap-3 px-6 pt-3 pb-6">
             <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap gap-2">
                     {Object.entries(examples).map(([label, exampleXml]) => (

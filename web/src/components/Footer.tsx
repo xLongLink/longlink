@@ -30,8 +30,8 @@ const navigationLinks = [
         href: '/',
     },
     {
-        label: 'Features',
-        href: '/features',
+        label: 'Playground',
+        href: '/playground',
     },
     {
         label: 'Pricing',

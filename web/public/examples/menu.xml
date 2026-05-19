@@ -1,25 +1,111 @@
 <longlink>
-    <Menu defaultValue="overview">
+    <Menu defaultValue="settings">
         <MenuList>
             <MenuSection value="overview">Overview</MenuSection>
+            <MenuSection value="operations">
+                Operations
+                <MenuSubSection value="orders">Orders</MenuSubSection>
+                <MenuSubSection value="returns">Returns</MenuSubSection>
+            </MenuSection>
+            <MenuSection value="catalog">
+                Catalog
+                <MenuSubSection value="products">Products</MenuSubSection>
+                <MenuSubSection value="categories">Categories</MenuSubSection>
+                <MenuSubSection value="inventory">Inventory</MenuSubSection>
+            </MenuSection>
             <MenuSection value="settings">
                 Settings
                 <MenuSubSection value="profile">Profile</MenuSubSection>
+                <MenuSubSection value="team">Team</MenuSubSection>
                 <MenuSubSection value="billing">Billing</MenuSubSection>
             </MenuSection>
         </MenuList>
 
         <MenuContent value="overview">
-            <P>Overview content for the active menu item.</P>
+            <P>Today&apos;s snapshot: 128 orders, 14 refunds, and 3 alerts need attention.</P>
+        </MenuContent>
+        <MenuContent value="operations">
+            <P>Operations center for live queue management, fulfillment, and support escalations.</P>
+        </MenuContent>
+        <MenuContent value="orders">
+            <P>Open orders waiting on payment capture, packing, or shipment confirmation.</P>
+        </MenuContent>
+        <MenuContent value="returns">
+            <P>Track return requests, inspection results, and refund approvals.</P>
+        </MenuContent>
+        <MenuContent value="catalog">
+            <P>Catalog management for product data, merchandising, and stock health.</P>
+        </MenuContent>
+        <MenuContent value="products">
+            <P>Manage product titles, pricing, variants, and publication status.</P>
+        </MenuContent>
+        <MenuContent value="categories">
+            <P>Organize the storefront taxonomy and featured collections.</P>
+        </MenuContent>
+        <MenuContent value="inventory">
+            <P>Monitor low-stock SKUs, warehouse counts, and replenishment triggers.</P>
         </MenuContent>
         <MenuContent value="settings">
-            <P>Settings content for the active menu item.</P>
+            <FieldSet>
+                <FieldLegend>Workspace settings</FieldLegend>
+                <FieldDescription>Configure the dashboard for the current team and workflow.</FieldDescription>
+
+                <FieldGroup>
+                    <Grid columns="2">
+                        <Field orientation="horizontal">
+                            <Checkbox id="email-digest" defaultChecked="true" />
+                            <FieldLabel htmlFor="email-digest">Email digest</FieldLabel>
+                        </Field>
+
+                        <Field orientation="horizontal">
+                            <Switch id="push-alerts" defaultChecked="true" size="sm" />
+                            <FieldLabel htmlFor="push-alerts">Push alerts</FieldLabel>
+                        </Field>
+                    </Grid>
+
+                    <Field>
+                        <FieldLabel>Sidebar density</FieldLabel>
+                        <RadioGroup name="density" defaultValue="comfortable">
+                            <RadioGroupItem value="compact">Compact</RadioGroupItem>
+                            <RadioGroupItem value="comfortable">Comfortable</RadioGroupItem>
+                            <RadioGroupItem value="spacious">Spacious</RadioGroupItem>
+                        </RadioGroup>
+                    </Field>
+
+                    <Field>
+                        <FieldLabel htmlFor="refresh-rate">Refresh interval</FieldLabel>
+                        <Slider id="refresh-rate" min="5" max="60" step="5" defaultValue="15" />
+                        <FieldDescription>Automatic refresh in minutes.</FieldDescription>
+                    </Field>
+
+                    <Field>
+                        <FieldLabel>Theme</FieldLabel>
+                        <RadioGroup name="theme" defaultValue="system">
+                            <RadioGroupItem value="light">Light</RadioGroupItem>
+                            <RadioGroupItem value="dark">Dark</RadioGroupItem>
+                            <RadioGroupItem value="system">System</RadioGroupItem>
+                        </RadioGroup>
+                    </Field>
+
+                    <Field>
+                        <FieldLabel>Actions</FieldLabel>
+                        <ButtonGroup>
+                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">Reset</Button>
+                            <Button submit="true">Save changes</Button>
+                        </ButtonGroup>
+                    </Field>
+                </FieldGroup>
+            </FieldSet>
         </MenuContent>
         <MenuContent value="profile">
-            <P>Profile submenu content.</P>
+            <P>Update your display name, role, notification preferences, and avatar.</P>
+        </MenuContent>
+        <MenuContent value="team">
+            <P>Invite teammates, assign permissions, and review access history.</P>
         </MenuContent>
         <MenuContent value="billing">
-            <P>Billing submenu content.</P>
+            <P>Review subscription status, invoices, and payment methods.</P>
         </MenuContent>
     </Menu>
 </longlink>
