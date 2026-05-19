@@ -12,7 +12,7 @@ import { getVersion, useSnapshot } from 'valtio';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Renders a shadcn-backed select shell with optional reactive value binding. */
 export function Select({ props, nodes }: Props) {
@@ -91,9 +91,7 @@ export function SelectLabel({ props, nodes }: Props) {
 /** Renders a selectable option in the menu. */
 export function SelectItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const value = resolveXmlString(props, 'value', ctx);
-
-    if (!value) throw new Error('SelectItem requires a value');
+    const value = requireXmlString(props, 'value', ctx, 'SelectItem');
 
     return <UISelectItem value={value}>{renderNode(nodes, ctx)}</UISelectItem>;
 }

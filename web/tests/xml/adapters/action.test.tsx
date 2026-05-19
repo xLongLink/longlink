@@ -60,7 +60,7 @@ describe('Action', () => {
                 props: {
                     action: '/example/profile',
                     json: '${{ fullName: fullName, email: email, notes: notes }}',
-                    invalidate: '["profile"]',
+                    invalidate: '${["profile"]}',
                 },
                 nodes: [{ name: 'Text', params: { value: 'Save profile' } }],
             });
@@ -115,7 +115,7 @@ describe('Action', () => {
         try {
             const element = Action({
                 props: {
-                    invalidate: '["selectedUserId"]',
+                    invalidate: '${["selectedUserId"]}',
                 },
                 nodes: [{ name: 'Text', params: { value: 'Reset' } }],
             });
@@ -127,5 +127,12 @@ describe('Action', () => {
         } finally {
             globalThis.fetch = originalFetch;
         }
+    });
+
+    /* The invalidation list must be an array expression so runtime refreshes stay predictable. */
+    it('throws when invalidate is not an array', () => {
+        expect(() => renderXmlToMarkup(parseXML('<Action invalidate="selectedUsers">Reset</Action>'))).toThrow(
+            'invalidate must evaluate to an array'
+        );
     });
 });

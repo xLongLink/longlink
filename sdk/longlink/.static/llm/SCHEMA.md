@@ -42,7 +42,7 @@ LongLink evaluates JavaScript-like expressions inside `${...}`.
 
 ### Conditional Rendering
 
-Any documented XML element may use `if="condition"`.
+Any documented XML element except `<longlink>` may use `if="condition"`.
 
 If the expression is false, the element is not rendered.
 
@@ -73,7 +73,7 @@ Defines the root shell.
 
 Attributes:
 
-- None.
+- None. The root element does not accept attributes, including `if`.
 
 Children:
 
@@ -105,6 +105,12 @@ Behavior:
 - The state starts as an object seeded from the declared attributes.
 - Object fields are parsed as JSON literals when possible and otherwise evaluated as expressions.
 - `State` must not contain child elements.
+
+Example:
+
+```xml
+<State id="filters" search="Revenue" page="1" />
+```
 
 ### `<Query>`
 

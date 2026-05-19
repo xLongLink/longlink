@@ -186,7 +186,7 @@
                     <Field>
                         <FieldLabel>Actions</FieldLabel>
                         <ButtonGroup>
-                            <Action invalidate='["profile", "budget"]'>Cancel</Action>
+                            <Action invalidate='${["profile", "budget"]}'>Cancel</Action>
                             <ButtonGroupSeparator />
                             <Action
                                 action="/profiles/account"

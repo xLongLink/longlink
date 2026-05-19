@@ -12,7 +12,7 @@ import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { Props } from '@xml/types';
-import { resolveXmlBoolean } from './props';
+import { resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Renders a dialog root that groups trigger and content slots. */
 export function Dialog({ props, nodes }: Props) {
@@ -51,13 +51,18 @@ export function DialogTrigger({ props, nodes }: Props) {
 
     if (anchorChild) {
         // Reuse the XML anchor's label and href for a link-style trigger.
+        const active = resolveXmlString(anchorChild.params ?? {}, 'active', ctx);
         const href = anchorChild.params?.href ? String(evaluate(anchorChild.params.href, ctx) ?? '') : '';
+        const linkClassName =
+            active === 'always'
+                ? 'inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80'
+                : 'inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80';
 
         return (
             <UIDialogTrigger
                 render={
                     <a
-                        className="inline-flex items-center gap-1 text-primary underline underline-offset-4 hover:opacity-80"
+                        className={linkClassName}
                         {...(href ? { href } : {})}
                     />
                 }

@@ -10,7 +10,7 @@ import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { ASTNode, ExecutionContext, Props } from '@xml/types';
-import { resolveXmlBoolean, resolveXmlString } from './props';
+import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Props accepted by the XML Menu component. */
 
@@ -25,8 +25,8 @@ import { resolveXmlBoolean, resolveXmlString } from './props';
 /** Renders the sidebar-style menu shell. */
 export function Menu({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const defaultValue = resolveXmlString(props, 'defaultValue', ctx);
-    const value = resolveXmlString(props, 'value', ctx);
+    const defaultValue = props.defaultValue == null ? undefined : resolveXmlString(props, 'defaultValue', ctx);
+    const value = props.value == null ? undefined : resolveXmlString(props, 'value', ctx);
     const [activeValue, setActiveValue] = useState<string>(value ?? defaultValue ?? '');
 
     // Keep the XML wrapper in sync with an explicit menu value when one is provided.
@@ -53,11 +53,9 @@ export function MenuList({ props, nodes }: Props) {
 /** Renders a root menu section. */
 export function MenuSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const value = resolveXmlString(props, 'value', ctx);
+    const value = requireXmlString(props, 'value', ctx, 'MenuSection');
     const label = resolveXmlString(props, 'label', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
-
-    if (!value) throw new Error('MenuSection requires a value');
 
     return (
         <UIMenuSection disabled={disabled} label={label} value={value}>
@@ -69,11 +67,9 @@ export function MenuSection({ props, nodes }: Props) {
 /** Renders a nested menu subsection. */
 export function MenuSubSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const value = resolveXmlString(props, 'value', ctx);
+    const value = requireXmlString(props, 'value', ctx, 'MenuSubSection');
     const label = resolveXmlString(props, 'label', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
-
-    if (!value) throw new Error('MenuSubSection requires a value');
 
     return (
         <UIMenuSubSection disabled={disabled} label={label} value={value}>
@@ -85,10 +81,8 @@ export function MenuSubSection({ props, nodes }: Props) {
 /** Renders the active menu content panel. */
 export function MenuContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const value = resolveXmlString(props, 'value', ctx);
+    const value = requireXmlString(props, 'value', ctx, 'MenuContent');
     const className = resolveXmlString(props, 'className', ctx);
-
-    if (!value) throw new Error('MenuContent requires a value');
 
     return (
         <UIMenuContent className={className} value={value}>

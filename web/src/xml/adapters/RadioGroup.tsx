@@ -3,7 +3,7 @@ import { getVersion, useSnapshot } from 'valtio';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML RadioGroup component. */
 
@@ -67,9 +67,7 @@ export function RadioGroupItem({ props, nodes }: Props) {
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const readOnly = resolveXmlBoolean(props, 'readOnly', ctx);
     const required = resolveXmlBoolean(props, 'required', ctx);
-    const value = resolveXmlString(props, 'value', ctx);
-
-    if (!value) throw new Error('RadioGroupItem requires a value');
+    const value = requireXmlString(props, 'value', ctx, 'RadioGroupItem');
 
     return (
         <label className="inline-flex items-center gap-2">

@@ -2,7 +2,7 @@
 
 LongLink exposes a small HTML bridge layer for common formatting, layout, and link content inside XML pages.
 
-These tags share the same conditional rendering model through the global `if` attribute.
+These tags share the same conditional rendering model through `if`, which is available on every documented element except `<longlink>`.
 
 ## `A`
 

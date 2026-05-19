@@ -3,7 +3,7 @@ import { getVersion, useSnapshot } from 'valtio';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from './props';
+import { requireXmlString, resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML ToggleGroup component. */
 
@@ -80,10 +80,8 @@ export function ToggleGroup({ props, nodes }: Props) {
 export function ToggleGroupItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const size = resolveXmlString(props, 'size', ctx, 'default');
-    const value = resolveXmlString(props, 'value', ctx);
+    const value = requireXmlString(props, 'value', ctx, 'ToggleGroupItem');
     const variant = resolveXmlString(props, 'variant', ctx, 'default');
-
-    if (!value) throw new Error('ToggleGroupItem requires a value');
 
     return (
         <UIToggleGroupItem size={size} value={value} variant={variant}>

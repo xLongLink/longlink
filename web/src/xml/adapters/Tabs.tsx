@@ -7,7 +7,7 @@ import {
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { resolveXmlString } from './props';
+import { requireXmlString, resolveXmlString } from './props';
 
 /** Renders a shadcn-backed tabs shell. */
 export function Tabs({ props, nodes }: Props) {
@@ -33,9 +33,7 @@ export function TabsList({ props, nodes }: Props) {
 /** Renders an individual tabs trigger. */
 export function TabsTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const value = resolveXmlString(props, 'value', ctx);
-
-    if (!value) throw new Error('TabsTrigger requires a value');
+    const value = requireXmlString(props, 'value', ctx, 'TabsTrigger');
 
     return <UITabsTrigger value={value}>{renderNode(nodes, ctx)}</UITabsTrigger>;
 }
@@ -43,9 +41,7 @@ export function TabsTrigger({ props, nodes }: Props) {
 /** Renders a tabs content panel. */
 export function TabsContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const value = resolveXmlString(props, 'value', ctx);
-
-    if (!value) throw new Error('TabsContent requires a value');
+    const value = requireXmlString(props, 'value', ctx, 'TabsContent');
 
     return (
         <UITabsContent value={value} className="flex flex-1 flex-col gap-6 text-sm outline-none">

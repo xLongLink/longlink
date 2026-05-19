@@ -68,11 +68,14 @@ describe('Dialog', () => {
     it('renders an anchor trigger in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Dialog open="${true}"><DialogTrigger><A href="/quotes/edit">Edit quote</A></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Edit quote</DialogTitle><DialogDescription>Review the quote details before saving the next revision.</DialogDescription></DialogHeader><DialogFooter>Actions</DialogFooter></DialogContent></Dialog>'
+                '<Dialog open="${true}"><DialogTrigger><A href="/quotes/edit" active="hover">Edit quote</A></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Edit quote</DialogTitle><DialogDescription>Review the quote details before saving the next revision.</DialogDescription></DialogHeader><DialogFooter>Actions</DialogFooter></DialogContent></Dialog>'
             )
         );
 
         expect(output).toContain('data-slot="dialog-trigger"');
+        expect(output).toContain(
+            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"',
+        );
         expect(output).toContain('href="/quotes/edit"');
         expect(output).toContain('Edit quote');
     });

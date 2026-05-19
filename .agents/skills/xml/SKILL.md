@@ -3,7 +3,10 @@ name: xml
 description: Guide LongLink XML component creation and maintenance across SDK, web runtime, tests, and docs
 ---
 
-This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards using XML as the single source of truth for the UI. Each `.xml` file defines page structure, layout, data bindings, and actions, while the runtime parses the XML, resolves expressions, maps tags to React components, and manages rendering, state initialization, data fetching, and invalidation-driven refreshes. The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling, prioritizing consistency, maintainability, validation, and development speed through a strictly declarative and predictable architecture.
+This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards.
+XML is the single source of truth for page structure, layout, data bindings, and actions.
+The runtime parses XML, resolves expressions, maps tags to React components, and manages rendering, state initialization, data fetching, and invalidation-driven refreshes.
+The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling through a strictly declarative and predictable architecture.
 
 ## Example
 
@@ -12,11 +15,10 @@ This DSL provides a declarative, schema-driven way to build backoffice applicati
   <State id="cart" value="[]" />
   <Query id="products" path="/api/products" />
   <For each="$products.items" as="product">
-    <Input label="Quantity" value="1" type="number" />
-    <Button action="/cart/add" method="POST" json="${{ productId: product.id, quantity: 1 }}">
-      Add to cart
-    </Button>
     ${product.name}
+    <Action action="/cart/add" method="POST" json="${{ productId: product.id, quantity: 1 }}">
+      Add to cart
+    </Action>
   </For>
   Cart items: ${cart.length}
 </longlink>
@@ -24,59 +26,13 @@ This DSL provides a declarative, schema-driven way to build backoffice applicati
 
 ## Structure
 
-```text
-longlink/
-├── sdk/
-│   ├── longlink/
-│   │   ├── .static/
-│   │   │   ├── llm/SCHEMA.md     # Human-readable schema guide
-│   │   │   ├── web/              # Packaged frontend assets
-│   │   │   └── xsd/              # XML schema definitions
-│   │   ├── app.py                # SDK app entrypoint
-│   │   ├── router.py             # SDK router wiring
-│   │   ├── routes/               # XML page route helpers
-│   │   │   ├── metadata.py
-│   │   │   └── pages.py
-│   │   ├── cli/                  # SDK CLI commands
-│   │   ├── database/             # DB helpers and migrations
-│   │   ├── types/                # Shared SDK types
-│   │   └── utils/                # XML, metadata, and page helpers
-│   │
-│   └── sample/
-│       └── src/pages/            # Sample XML pages and fixtures
-│
-├── web/
-│   └── src/xml/                  # XML runtime, parser, and components
-│       ├── core/
-│       │   ├── parser.ts          # XML parsing and AST conversion
-│       │   ├── context.tsx        # Runtime context setup and provider wiring
-│       │   ├── node.tsx           # Node rendering and prop validation
-│       │   ├── expressions/       # Expression compilation, evaluation, and helpers
-│       │   ├── errors.tsx         # XML error boundary
-│       │   ├── query.ts           # Query slot initialization and refetching
-│       │   ├── state.ts           # Local reactive state setup
-│       │   ├── url.tsx            # Base URL resolution helpers
-│       │   └── types.ts
-│       └── adapters/             # XML tag adapters, shared props, and UI bridges
-│
-├── api/
-│   └── src/pages/                # Control-plane XML pages
-└── docs/
-    └── src/xml/                  # XML documentation pages
-        ├── index.md
-        ├── components.md
-        └── html.md
-
-tests/
-├── web/tests/xml/                # XML runtime tests mirrored from web/src/xml/
-│   ├── core/                     # Core parser, context, state, query, and node tests
-│   ├── expressions/              # Expression compiler and evaluator tests
-│   └── adapters/                 # Adapter-focused web tests
-└── sdk/tests/xml/                # SDK schema tests mirrored from web/src/xml/
-    ├── core/                     # Core parser and runtime contract tests
-    ├── expressions/              # Expression behavior tests
-    └── adapters/                 # Adapter-focused SDK tests
-```
+- `sdk/longlink/.static/` holds the packaged schema docs, web assets, and XSD files.
+- `sdk/longlink/` contains the SDK entrypoint, router, routes, CLI, database helpers, types, and utils.
+- `sdk/sample/src/pages/` contains sample XML pages and fixtures.
+- `web/src/xml/` contains the XML runtime, parser, context, expressions, query, state, URL helpers, and adapters.
+- `api/src/pages/` contains control-plane XML pages.
+- `docs/src/xml/` contains XML documentation pages.
+- `tests/web/tests/xml/` and `tests/sdk/tests/xml/` mirror the runtime and schema test coverage.
 
 ## Parser (web/src/xml/core/parser.ts)
 
@@ -96,6 +52,7 @@ tests/
 - `State` declares local reactive state.
 - `Query` fetches JSON data into a named slot.
 - `For` iterates over arrays in a scoped child context.
+- `Action` submits requests and can invalidate query slots after success.
 - `adapters/` contains the XML tag implementations and shared prop resolvers.
 - `core/registry.tsx` maps XML tag names to adapter components.
 - `Text` is internal only and is produced by the parser for raw text content. Do not author it directly.

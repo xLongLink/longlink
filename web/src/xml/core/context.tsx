@@ -110,6 +110,13 @@ export function validateSetupNodes(nodes: ASTNode[]): void {
 
 /** Validates a single setup-only runtime declaration. */
 function validateSetupNode(node: ASTNode): void {
+    // The root shell is attribute-free by design.
+    if (node.name === 'longlink') {
+        if (node.params && Object.keys(node.params).length > 0) {
+            throw new Error('longlink does not accept attributes');
+        }
+    }
+
     if (node.name === 'State') {
         if (!node.params?.id) throw new Error('State requires a string id');
         if (!isText(node.params.id)) throw new Error('State id must be literal text');

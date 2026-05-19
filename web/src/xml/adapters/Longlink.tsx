@@ -8,5 +8,10 @@ import type { Props } from '@xml/types';
 export function Longlink({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
 
+    // The root element is intentionally attribute-free.
+    if (Object.keys(props).length > 0) {
+        throw new Error('longlink does not accept attributes');
+    }
+
     return <div>{renderNode(nodes, ctx)}</div>;
 }

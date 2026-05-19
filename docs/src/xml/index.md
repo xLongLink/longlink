@@ -15,7 +15,10 @@ Use `<longlink>` as the root page shell.
 
 ## State
 
-Use `<State />` to create a local reactive slot. Use `id` to name the slot and add any attributes you want seeded into the state object.
+Use `<State />` to create a local reactive slot.
+Use `id` to name the slot, and seed the state with any additional attributes.
+The `value` attribute is just one field on that state object.
+Attribute values are parsed as JSON when possible, otherwise they are evaluated as expressions.
 `<State>` does not accept children.
 
 ```xml
@@ -24,6 +27,14 @@ Use `<State />` to create a local reactive slot. Use `id` to name the slot and a
 
 ```xml
 <State id="filters" search="Revenue" page="1" />
+```
+
+## if
+
+Use `if` on any supported XML element except `<longlink>` to render conditionally.
+
+```xml
+<P if="${order.active}">Active</P>
 ```
 
 ## Query
@@ -59,12 +70,4 @@ Use `For` to render one child scope for each item in an array.
 <For each="${products.items}" as="product">
   <P>${product.name}</P>
 </For>
-```
-
-## if
-
-Use `if` on any supported XML element to render the element only when the expression is truthy.
-
-```xml
-<P if="${order.active}">Active</P>
 ```
