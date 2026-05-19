@@ -1,4 +1,4 @@
-import { compile } from '@xml/core/expressions';
+import { compile } from '@xml/expressions';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 

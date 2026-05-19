@@ -1,5 +1,5 @@
 import { getVersion } from 'valtio';
-import { compile, evaluate } from '../core/expressions';
+import { compile, evaluate } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
 
 /** Resolves a raw XML prop against the runtime context. */

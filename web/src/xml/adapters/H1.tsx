@@ -8,8 +8,6 @@ import type { Props } from '../types';
 /** Renders a primary heading with typographic defaults. */
 export function H1({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return (

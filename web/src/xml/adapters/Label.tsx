@@ -9,8 +9,6 @@ import { resolveXmlString } from './props';
 /** Renders a shadcn-backed label element for form controls. */
 export function Label({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const htmlFor = resolveXmlString(props, 'htmlFor', ctx);
 

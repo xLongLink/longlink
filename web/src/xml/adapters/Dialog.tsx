@@ -9,7 +9,7 @@ import {
     DialogTrigger as UIDialogTrigger,
 } from '@/components/ui/dialog';
 import { useXmlContext } from '../core/context';
-import { evaluate } from '../core/expressions';
+import { evaluate } from '../expressions';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
 import { resolveXmlBoolean } from './props';
@@ -17,8 +17,6 @@ import { resolveXmlBoolean } from './props';
 /** Renders a dialog root that groups trigger and content slots. */
 export function Dialog({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const defaultOpen = resolveXmlBoolean(props, 'defaultOpen', ctx);
     const open = resolveXmlBoolean(props, 'open', ctx);
@@ -33,8 +31,6 @@ export function Dialog({ props, nodes }: Props) {
 /** Renders the dialog trigger slot. */
 export function DialogTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const triggerChildren = Array.isArray(children) ? children : children ? [children] : [];
     const buttonChild =
@@ -79,8 +75,6 @@ export function DialogTrigger({ props, nodes }: Props) {
 /** Renders the dialog content surface. */
 export function DialogContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIDialogContent>{renderNode(children ?? [], ctx)}</UIDialogContent>;
@@ -89,8 +83,6 @@ export function DialogContent({ props, nodes }: Props) {
 /** Renders the dialog header slot. */
 export function DialogHeader({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIDialogHeader>{renderNode(children ?? [], ctx)}</UIDialogHeader>;
@@ -99,8 +91,6 @@ export function DialogHeader({ props, nodes }: Props) {
 /** Renders the dialog title slot. */
 export function DialogTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIDialogTitle>{renderNode(children ?? [], ctx)}</UIDialogTitle>;
@@ -109,8 +99,6 @@ export function DialogTitle({ props, nodes }: Props) {
 /** Renders the dialog description slot. */
 export function DialogDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIDialogDescription>{renderNode(children ?? [], ctx)}</UIDialogDescription>;
@@ -119,8 +107,6 @@ export function DialogDescription({ props, nodes }: Props) {
 /** Renders the dialog footer slot. */
 export function DialogFooter({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIDialogFooter>{renderNode(children ?? [], ctx)}</UIDialogFooter>;

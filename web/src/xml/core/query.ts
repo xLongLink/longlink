@@ -7,11 +7,10 @@ export async function query(
     ctx: ExecutionContext,
     id: string,
     path: string,
-    baseUrl = '',
-    resolvedUrl?: string
+    baseUrl = ''
 ): Promise<void> {
     const values = ctx.values;
-    const url = resolvedUrl ?? resolveUrl(baseUrl, path);
+    const url = resolveUrl(baseUrl, path);
 
     /* Start the request during render and suspend until it resolves. */
     try {

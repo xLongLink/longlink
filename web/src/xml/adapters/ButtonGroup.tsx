@@ -11,8 +11,6 @@ import { resolveXmlString } from './props';
 /** Renders a grouped action shell for buttons and inputs. */
 export function ButtonGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const orientation = resolveXmlString(props, 'orientation', ctx, 'horizontal');
 
@@ -22,8 +20,6 @@ export function ButtonGroup({ props, nodes }: Props) {
 /** Renders an inline text segment inside a button group. */
 export function ButtonGroupText({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIButtonGroupText>{renderNode(children ?? [], ctx)}</UIButtonGroupText>;
@@ -32,8 +28,6 @@ export function ButtonGroupText({ props, nodes }: Props) {
 /** Renders a separator between grouped button segments. */
 export function ButtonGroupSeparator({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const orientation = resolveXmlString(props, 'orientation', ctx, 'vertical');
     return <UIButtonGroupSeparator orientation={orientation} />;
 }

@@ -9,8 +9,6 @@ import { resolveXmlBoolean, resolveXmlExpression, resolveXmlString, resolveXmlSt
 /** XML button adapter that maps action-layer props to DOM-safe button props. */
 export function Button({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const action = resolveXmlString(props, 'action', ctx, '');
     const invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
     const json = resolveXmlExpression(props, 'json');

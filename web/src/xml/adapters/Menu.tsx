@@ -7,7 +7,7 @@ import {
 } from '@ui/menu';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { useXmlContext } from '../core/context';
-import { evaluate } from '../core/expressions';
+import { evaluate } from '../expressions';
 import { renderNode } from '../core/node';
 import type { ASTNode, ExecutionContext, Props } from '../types';
 import { resolveXmlBoolean, resolveXmlString } from './props';
@@ -25,8 +25,6 @@ import { resolveXmlBoolean, resolveXmlString } from './props';
 /** Renders the sidebar-style menu shell. */
 export function Menu({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const defaultValue = resolveXmlString(props, 'defaultValue', ctx);
     const value = resolveXmlString(props, 'value', ctx);
@@ -49,8 +47,6 @@ export function Menu({ props, nodes }: Props) {
 /** Renders the menu list slot. */
 export function MenuList({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIMenuList>{renderMenuListNodes(children ?? [], ctx)}</UIMenuList>;
@@ -59,8 +55,6 @@ export function MenuList({ props, nodes }: Props) {
 /** Renders a root menu section. */
 export function MenuSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const value = resolveXmlString(props, 'value', ctx);
     const label = resolveXmlString(props, 'label', ctx);
@@ -78,8 +72,6 @@ export function MenuSection({ props, nodes }: Props) {
 /** Renders a nested menu subsection. */
 export function MenuSubSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const value = resolveXmlString(props, 'value', ctx);
     const label = resolveXmlString(props, 'label', ctx);
@@ -97,8 +89,6 @@ export function MenuSubSection({ props, nodes }: Props) {
 /** Renders the active menu content panel. */
 export function MenuContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const value = resolveXmlString(props, 'value', ctx);
     const className = resolveXmlString(props, 'className', ctx);

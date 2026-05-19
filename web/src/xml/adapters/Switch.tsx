@@ -9,8 +9,6 @@ import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue }
 /** Renders a shadcn-backed switch. */
 export function Switch({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const checked = resolveXmlValue(props, 'checked', ctx);
     const defaultChecked = resolveXmlBoolean(props, 'defaultChecked', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);

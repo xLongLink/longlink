@@ -57,9 +57,7 @@ longlink/
 │       │   ├── state.ts           # Local reactive state setup
 │       │   ├── url.tsx            # Base URL resolution helpers
 │       │   └── types.ts
-│       ├── primitives/           # Core XML components and layout primitives
-│       ├── react/                # Any component that relies on React
-│       └── html/                 # HTML bridge components
+│       └── adapters/             # XML tag adapters, shared props, and UI bridges
 │
 ├── api/
 │   └── src/pages/                # Control-plane XML pages
@@ -68,6 +66,16 @@ longlink/
         ├── index.md
         ├── components.md
         └── html.md
+
+tests/
+├── web/tests/xml/                # XML runtime tests mirrored from web/src/xml/
+│   ├── core/                     # Core parser, context, state, query, and node tests
+│   ├── expressions/              # Expression compiler and evaluator tests
+│   └── adapters/                 # Adapter-focused web tests
+└── sdk/tests/xml/                # SDK schema tests mirrored from web/src/xml/
+    ├── core/                     # Core parser and runtime contract tests
+    ├── expressions/              # Expression behavior tests
+    └── adapters/                 # Adapter-focused SDK tests
 ```
 
 ## Parser (web/src/xml/core/parser.ts)
@@ -82,15 +90,17 @@ longlink/
 - `createContext` returns a blank execution context.
 - `setupContext` walks the AST, seeds `State` and `Query` nodes, and stores their re-run hooks for invalidation.
 
-## Primitives
+## Adapters
 
 - `longlink` is the root page shell.
 - `State` declares local reactive state.
 - `Query` fetches JSON data into a named slot.
 - `For` iterates over arrays in a scoped child context.
+- `adapters/` contains the XML tag implementations and shared prop resolvers.
+- `core/registry.tsx` maps XML tag names to adapter components.
 - `Text` is internal only and is produced by the parser for raw text content. Do not author it directly.
 
-## Primitive Attribute Rules
+## Adapter Attribute Rules
 
 - `State.value` must be literal text.
 - `Query.id` must be literal text.
@@ -100,7 +110,7 @@ longlink/
 
 - Any element may use `if="..."` for conditional rendering.
 
-## Expressions (web/src/xml/core/expressions/)
+## Expressions (web/src/xml/expressions/)
 
 - `"test"` a simple string literal. `isText()`
 - `[]` an array literal. `isArray()`
@@ -132,12 +142,12 @@ Not allowed:
 
 ## Adding a new Component
 
-1. Choose the right layer for the component: `primitives/` for XML building blocks, `react/` for React-backed controls, or `html/` for simple HTML bridges.
+1. Add the component under `web/src/xml/adapters/`.
 2. Add the component file with a clear props interface and a short docstring for the component entry point.
 3. Keep the implementation declarative and predictable, and reuse `useXmlContext`, `renderNode`, or `useUrl` when the component needs runtime state or child rendering.
-4. Wire the component into `web/src/xml/core/node.tsx` so the renderer can resolve the tag, and export it from `web/src/xml/index.ts` if it should be public.
+4. Export the component from `web/src/xml/adapters/index.ts` and register it in `web/src/xml/core/registry.tsx` so the renderer can resolve the tag.
 5. Update the XML schema, parser, or runtime helpers if the new component introduces new attributes, bindings, or execution behavior.
 6. Add or update documentation and examples so the new tag and its props are discoverable.
-7. Add focused tests in both `web/tests/xml/` and `sdk/tests/xml/` for every new component, covering compile-time AST shape, schema validation, and runtime rendering when practical.
+7. Add focused tests in the matching `web/tests/xml/` and `sdk/tests/xml/` subdirectories for every new component, mirroring `web/src/xml/` and covering compile-time AST shape, schema validation, and runtime rendering when practical.
 8. Add the component definition to the SDK schema pack (`sdk/longlink/.static/xsd/`) and human-readable schema docs (`sdk/longlink/.static/llm/SCHEMA.md`).
 9. Verify the component against the existing XML pages or fixtures before shipping it.

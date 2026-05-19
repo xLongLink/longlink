@@ -9,8 +9,6 @@ import { resolveXmlString } from './props';
 /** Renders a full-width grid row. */
 export function Grid({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const columns = resolveXmlString(props, 'columns', ctx);
 

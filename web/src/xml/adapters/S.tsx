@@ -7,8 +7,6 @@ import type { Props } from '../types';
 /** Renders strikethrough text. */
 export function S({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <s className="line-through">{renderNode(children ?? [], ctx)}</s>;

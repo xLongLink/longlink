@@ -20,8 +20,6 @@ import { resolveXmlString } from './props';
 /** Renders the avatar shell used for a single user or record. */
 export function Avatar({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const size = resolveXmlString(props, 'size', ctx, 'default');
 
@@ -31,8 +29,6 @@ export function Avatar({ props, nodes }: Props) {
 /** Renders the avatar image slot. */
 export function AvatarImage({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const alt = resolveXmlString(props, 'alt', ctx);
     const src = resolveXmlString(props, 'src', ctx);
     return <UIAvatarImage alt={alt} src={src} />;
@@ -41,8 +37,6 @@ export function AvatarImage({ props, nodes }: Props) {
 /** Renders the avatar fallback slot. */
 export function AvatarFallback({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIAvatarFallback>{renderNode(children ?? [], ctx)}</UIAvatarFallback>;
@@ -51,8 +45,6 @@ export function AvatarFallback({ props, nodes }: Props) {
 /** Renders the avatar badge overlay. */
 export function AvatarBadge({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIAvatarBadge>{renderNode(children ?? [], ctx)}</UIAvatarBadge>;

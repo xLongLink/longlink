@@ -7,8 +7,6 @@ import type { Props } from '../types';
 /** Renders children in a vertical stack. */
 export function Stack({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return (

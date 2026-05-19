@@ -8,8 +8,6 @@ import { resolveXmlString, resolveXmlValue } from './props';
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const each = resolveXmlValue(props, 'each', ctx);
     const as = resolveXmlString(props, 'as', ctx);
     const children = nodes;

@@ -7,8 +7,6 @@ import type { Props } from '../types';
 /** Renders subscript text. */
 export function Sub({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <sub className="text-[0.8em]">{renderNode(children ?? [], ctx)}</sub>;

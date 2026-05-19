@@ -6,8 +6,6 @@ import { resolveXmlString } from './props';
 /** Renders a linked anchor with standard styling. */
 export function A({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const active = resolveXmlString(props, 'active', ctx);
     const href = resolveXmlString(props, 'href', ctx, '');

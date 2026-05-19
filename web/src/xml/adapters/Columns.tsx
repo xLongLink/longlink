@@ -7,8 +7,6 @@ import { resolveXmlString } from './props';
 /** Renders a full-width columns row. */
 export function Columns({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const columnNodes = Array.isArray(children) ? children : children ? [children] : [];
     const widths = columnNodes
@@ -33,8 +31,6 @@ export function Columns({ props, nodes }: Props) {
 /** Renders a single width-managed column. */
 export function Column({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const width = resolveXmlString(props, 'width', ctx);
 

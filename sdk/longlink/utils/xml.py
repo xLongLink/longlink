@@ -58,12 +58,6 @@ class Element:
 
         return ROOT / self.schema_path
 
-    def _load_schema_bytes(self) -> bytes:
-        """Load schema bytes from the configured path or package resources."""
-
-        return self._schema_file_path().read_bytes()
-
-
 class Longlink(Element):
     """Load and validate LongLink XML documents from disk.
 

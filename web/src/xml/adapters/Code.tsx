@@ -5,8 +5,6 @@ import type { Props } from '../types';
 /** Renders inline code with monospace typography defaults. */
 export function Code({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return (

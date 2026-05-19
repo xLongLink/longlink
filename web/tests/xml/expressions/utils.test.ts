@@ -1,4 +1,4 @@
-import { isExpression, isReference, isText } from '@xml/core/expressions';
+import { isExpression, isReference, isText } from '@xml/expressions';
 import { describe, expect, it } from 'bun:test';
 
 describe('expression utils', () => {

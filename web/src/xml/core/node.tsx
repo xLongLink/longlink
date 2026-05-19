@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import { For, Text } from '../adapters';
+import { evaluate } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
-import { evaluate } from './expressions';
 import { xmlComponentRegistry } from './registry';
 
 /** Renders XML AST nodes using the active runtime context. */

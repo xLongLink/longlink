@@ -12,8 +12,6 @@ import { resolveXmlString } from './props';
 /** Renders the hero shell. */
 export function Hero({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const icon = resolveXmlString(props, 'icon', ctx);
     const children = nodes;
     const heroNodes = Array.isArray(children) ? children : children ? [children] : [];
@@ -33,8 +31,6 @@ export function Hero({ props, nodes }: Props) {
 /** Renders the hero title slot. */
 export function HeroTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <HeroShellTitle>{renderNode(children ?? [], ctx)}</HeroShellTitle>;
@@ -43,8 +39,6 @@ export function HeroTitle({ props, nodes }: Props) {
 /** Renders the hero description slot. */
 export function HeroDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <HeroShellDescription>{renderNode(children ?? [], ctx)}</HeroShellDescription>;
@@ -53,8 +47,6 @@ export function HeroDescription({ props, nodes }: Props) {
 /** Renders the hero content slot. */
 export function HeroContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <HeroShellContent>{renderNode(children ?? [], ctx)}</HeroShellContent>;

@@ -17,8 +17,6 @@ import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 /** Renders a shadcn-backed select shell with optional reactive value binding. */
 export function Select({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const defaultOpen = resolveXmlBoolean(props, 'defaultOpen', ctx);
     const defaultValue = resolveXmlString(props, 'defaultValue', ctx);
@@ -59,8 +57,6 @@ export function Select({ props, nodes }: Props) {
 /** Renders the select trigger slot. */
 export function SelectTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UISelectTrigger>{renderNode(children ?? [], ctx)}</UISelectTrigger>;
@@ -69,8 +65,6 @@ export function SelectTrigger({ props, nodes }: Props) {
 /** Renders the selected value placeholder or active choice. */
 export function SelectValue({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const placeholder = resolveXmlString(props, 'placeholder', ctx);
     return <UISelectValue placeholder={placeholder} />;
 }
@@ -78,8 +72,6 @@ export function SelectValue({ props, nodes }: Props) {
 /** Renders the select content portal and list surface. */
 export function SelectContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UISelectContent>{renderNode(children ?? [], ctx)}</UISelectContent>;
@@ -88,8 +80,6 @@ export function SelectContent({ props, nodes }: Props) {
 /** Renders a grouped section inside the select menu. */
 export function SelectGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UISelectGroup>{renderNode(children ?? [], ctx)}</UISelectGroup>;
@@ -98,8 +88,6 @@ export function SelectGroup({ props, nodes }: Props) {
 /** Renders the label for a grouped select section. */
 export function SelectLabel({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UISelectLabel>{renderNode(children ?? [], ctx)}</UISelectLabel>;
@@ -108,8 +96,6 @@ export function SelectLabel({ props, nodes }: Props) {
 /** Renders a selectable option in the menu. */
 export function SelectItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const value = resolveXmlString(props, 'value', ctx);
 

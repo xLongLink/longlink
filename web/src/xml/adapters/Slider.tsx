@@ -9,8 +9,6 @@ import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 /** Renders a shadcn-backed slider with optional reactive state binding. */
 export function Slider({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const defaultValue = resolveXmlValue(props, 'defaultValue', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);

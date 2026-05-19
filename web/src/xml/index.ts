@@ -1,5 +1,5 @@
 export { Context, ContextProvider, createContext, useXmlContext } from './core/context';
-export { compile as compileExpression, evaluate } from './core/expressions';
+export { compile as compileExpression, evaluate } from './expressions';
 export { renderNode } from './core/node';
 export { parseXML as fromXml } from './core/parser';
 export { BaseUrlContext, resolveUrl, useUrl } from './core/url';

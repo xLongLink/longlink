@@ -7,8 +7,6 @@ import type { Props } from '../types';
 /** Renders a list item and preserves nested XML children. */
 export function Li({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <li>{renderNode(children ?? [], ctx)}</li>;

@@ -12,8 +12,6 @@ import { resolveXmlString } from './props';
 /** Renders a shadcn-backed tabs shell. */
 export function Tabs({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const defaultValue = resolveXmlString(props, 'defaultValue', ctx);
     const orientation = resolveXmlString(props, 'orientation', ctx, 'horizontal');
@@ -28,8 +26,6 @@ export function Tabs({ props, nodes }: Props) {
 /** Renders the tabs list slot. */
 export function TabsList({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const variant = resolveXmlString(props, 'variant', ctx, 'default');
 
@@ -39,8 +35,6 @@ export function TabsList({ props, nodes }: Props) {
 /** Renders an individual tabs trigger. */
 export function TabsTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const value = resolveXmlString(props, 'value', ctx);
 
@@ -52,8 +46,6 @@ export function TabsTrigger({ props, nodes }: Props) {
 /** Renders a tabs content panel. */
 export function TabsContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const value = resolveXmlString(props, 'value', ctx);
 

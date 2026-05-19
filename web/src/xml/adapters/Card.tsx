@@ -15,8 +15,6 @@ import { resolveXmlString } from './props';
 /** Renders the shadcn card shell. */
 export function Card({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const size = resolveXmlString(props, 'size', ctx, 'default');
 
@@ -26,8 +24,6 @@ export function Card({ props, nodes }: Props) {
 /** Renders the card header slot. */
 export function CardHeader({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UICardHeader>{renderNode(children ?? [], ctx)}</UICardHeader>;
@@ -36,8 +32,6 @@ export function CardHeader({ props, nodes }: Props) {
 /** Renders the card title slot. */
 export function CardTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UICardTitle>{renderNode(children ?? [], ctx)}</UICardTitle>;
@@ -46,8 +40,6 @@ export function CardTitle({ props, nodes }: Props) {
 /** Renders the card description slot. */
 export function CardDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UICardDescription>{renderNode(children ?? [], ctx)}</UICardDescription>;
@@ -56,8 +48,6 @@ export function CardDescription({ props, nodes }: Props) {
 /** Renders the card action slot. */
 export function CardAction({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UICardAction>{renderNode(children ?? [], ctx)}</UICardAction>;
@@ -66,8 +56,6 @@ export function CardAction({ props, nodes }: Props) {
 /** Renders the card content slot. */
 export function CardContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UICardContent>{renderNode(children ?? [], ctx)}</UICardContent>;
@@ -76,8 +64,6 @@ export function CardContent({ props, nodes }: Props) {
 /** Renders the card footer slot. */
 export function CardFooter({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UICardFooter>{renderNode(children ?? [], ctx)}</UICardFooter>;

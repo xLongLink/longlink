@@ -12,8 +12,6 @@ import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue 
 /** Renders a toggle group shell with XML-rendered children. */
 export function ToggleGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const defaultValue = resolveXmlValue(props, 'defaultValue', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
@@ -82,8 +80,6 @@ export function ToggleGroup({ props, nodes }: Props) {
 /** Renders a toggle group item with XML-rendered children. */
 export function ToggleGroupItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const size = resolveXmlString(props, 'size', ctx, 'default');
     const value = resolveXmlString(props, 'value', ctx);

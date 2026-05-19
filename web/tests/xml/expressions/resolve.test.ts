@@ -1,4 +1,4 @@
-import { createScopeProxy, resolvePath, resolveValue } from '@xml/core/expressions';
+import { createScopeProxy, resolvePath, resolveValue } from '@xml/expressions';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 

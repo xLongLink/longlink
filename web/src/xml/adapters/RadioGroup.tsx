@@ -12,8 +12,6 @@ import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 /** Renders a radio group shell with XML-rendered children. */
 export function RadioGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const defaultValue = resolveXmlValue(props, 'defaultValue', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
@@ -67,8 +65,6 @@ export function RadioGroup({ props, nodes }: Props) {
 /** Renders a radio group item with XML-rendered children. */
 export function RadioGroupItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const readOnly = resolveXmlBoolean(props, 'readOnly', ctx);

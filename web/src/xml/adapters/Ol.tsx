@@ -7,8 +7,6 @@ import type { Props } from '../types';
 /** Renders an ordered list with typographic defaults. */
 export function Ol({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <ol className="ml-6 list-decimal space-y-2">{renderNode(children ?? [], ctx)}</ol>;

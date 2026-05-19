@@ -1,6 +1,6 @@
 import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
+import { evaluate, isText } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
-import { evaluate, isText } from './expressions';
 import { query } from './query';
 import { state } from './state';
 

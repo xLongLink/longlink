@@ -12,8 +12,6 @@ import { resolveXmlBoolean, resolveXmlString } from './props';
 /** Renders the tooltip provider wrapper around descendant tooltips. */
 export function TooltipProvider({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UITooltipProvider>{renderNode(children ?? [], ctx)}</UITooltipProvider>;
@@ -22,8 +20,6 @@ export function TooltipProvider({ props, nodes }: Props) {
 /** Renders the tooltip root shell. */
 export function Tooltip({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const defaultOpen = resolveXmlBoolean(props, 'defaultOpen', ctx);
     const open = resolveXmlBoolean(props, 'open', ctx);
@@ -38,8 +34,6 @@ export function Tooltip({ props, nodes }: Props) {
 /** Renders the tooltip trigger slot. */
 export function TooltipTrigger({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UITooltipTrigger>{renderNode(children ?? [], ctx)}</UITooltipTrigger>;
@@ -48,8 +42,6 @@ export function TooltipTrigger({ props, nodes }: Props) {
 /** Renders the tooltip content popup. */
 export function TooltipContent({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const align = resolveXmlString(props, 'align', ctx, 'center');
     const alignOffset = resolveXmlString(props, 'alignOffset', ctx, '0');
     const children = nodes;

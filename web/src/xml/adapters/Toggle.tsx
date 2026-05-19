@@ -10,8 +10,6 @@ import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue }
 /** Renders a shadcn-backed toggle. */
 export function Toggle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const defaultPressed = resolveXmlBoolean(props, 'defaultPressed', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);

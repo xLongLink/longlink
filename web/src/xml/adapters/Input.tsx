@@ -10,8 +10,6 @@ import { useBindableValue } from './binding';
 /** Renders a minimal XML input control. */
 export function Input({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const ariaInvalid = resolveXmlBoolean(props, 'aria-invalid', ctx);
     const autoComplete = resolveXmlString(props, 'autoComplete', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);

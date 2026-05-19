@@ -28,8 +28,6 @@ import { useBindableValue } from './binding';
 /** Renders the shared input group shell. */
 export function InputGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIInputGroup>{renderNode(children ?? [], ctx)}</UIInputGroup>;
@@ -38,8 +36,6 @@ export function InputGroup({ props, nodes }: Props) {
 /** Renders an input group addon slot. */
 export function InputGroupAddon({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const align = resolveXmlString(props, 'align', ctx, 'inline-start');
 
@@ -49,8 +45,6 @@ export function InputGroupAddon({ props, nodes }: Props) {
 /** Renders a button inside an input group. */
 export function InputGroupButton({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const size = resolveXmlString(props, 'size', ctx, 'xs');
@@ -67,8 +61,6 @@ export function InputGroupButton({ props, nodes }: Props) {
 /** Renders inline text inside an input group. */
 export function InputGroupText({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const children = nodes;
 
     return <UIInputGroupText data-slot="input-group-text">{renderNode(children ?? [], ctx)}</UIInputGroupText>;
@@ -77,8 +69,6 @@ export function InputGroupText({ props, nodes }: Props) {
 /** Renders a reactive input control inside an input group. */
 export function InputGroupInput({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const ariaInvalid = resolveXmlBoolean(props, 'aria-invalid', ctx);
     const autoComplete = resolveXmlString(props, 'autoComplete', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
@@ -123,8 +113,6 @@ export function InputGroupInput({ props, nodes }: Props) {
 /** Renders a reactive textarea control inside an input group. */
 export function InputGroupTextarea({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    void props;
-    void nodes;
     const cols = resolveXmlString(props, 'cols', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);

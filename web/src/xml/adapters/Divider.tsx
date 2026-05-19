@@ -3,8 +3,6 @@ import type { Props } from '../types';
 
 /** Renders a simple horizontal divider. */
 export function Divider({ props, nodes }: Props) {
-    void props;
-    void nodes;
 
     return <Separator />;
 }
