@@ -66,7 +66,7 @@ async def auth_oidc(request: Request):
     )
 
     request.session["userid"] = user.id
-    return RedirectResponse(env.URL.rstrip("/"))
+    return RedirectResponse(f"{env.URL.rstrip('/')}/organizations")
 
 
 @router.get("/logout")

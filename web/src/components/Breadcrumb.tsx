@@ -20,7 +20,9 @@ export function Breadcrumb() {
         <UIBreadcrumb>
             <BreadcrumbList>
                 <BreadcrumbItem>
-                    <img src="/favicon.ico" alt="LongLink favicon" className="size-8 rounded-md p-0.5" />
+                    <Link to="/" aria-label="LongLink home" className="inline-flex items-center">
+                        <img src="/favicon.ico" alt="LongLink favicon" className="size-8" />
+                    </Link>
                 </BreadcrumbItem>
                 <BreadcrumbItem>
                     <BreadcrumbLink

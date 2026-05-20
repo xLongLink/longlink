@@ -34,10 +34,6 @@ const navigationLinks = [
         href: '/playground',
     },
     {
-        label: 'Pricing',
-        href: '/pricing',
-    },
-    {
         label: 'Docs',
         href: 'https://docs.longlink.dev',
     },
@@ -48,29 +44,34 @@ export function Footer() {
     return (
         <footer className="pt-20 md:pt-32">
             <div>
-                <div className="flex w-full flex-col items-center justify-between gap-10 px-4 text-center sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:text-left">
-                    <div className="flex w-full flex-col items-center justify-between gap-6 lg:items-start">
-                        <Link to="/" className="flex items-center gap-2 lg:justify-start" aria-label="LongLink home">
-                            <img src="/favicon.ico" alt="LongLink logo" className="size-8 rounded-md p-0.5" />
-                            LongLink
-                        </Link>
+                <div className="flex w-full flex-col items-center justify-between gap-10 px-6 text-center lg:flex-row lg:items-start lg:text-left">
+                    <div className="flex w-full flex-col items-center gap-4 lg:items-start lg:self-end">
+                        <div className="flex items-end gap-6">
+                            <Link
+                                to="/"
+                                className="inline-flex items-center leading-none lg:justify-start"
+                                aria-label="LongLink home"
+                            >
+                                <img src="/favicon.ico" alt="LongLink logo" className="block size-8" />
+                            </Link>
 
-                        <ul className="text-muted-foreground flex items-center justify-center space-x-6">
-                            {socialLinks.map(({ href, label, icon: Icon }) => (
-                                <li key={label}>
-                                    <a
-                                        href={href}
-                                        aria-label={label}
-                                        title={label}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="hover:text-accent inline-flex transition-colors"
-                                    >
-                                        <Icon className="h-5 w-5" />
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
+                            <ul className="text-muted-foreground flex items-end justify-center space-x-4">
+                                {socialLinks.map(({ href, label, icon: Icon }) => (
+                                    <li key={label}>
+                                        <a
+                                            href={href}
+                                            aria-label={label}
+                                            title={label}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:text-accent inline-flex transition-colors"
+                                        >
+                                            <Icon className="h-4 w-4" />
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </div>
 
                     <div className="grid w-full gap-3 self-end lg:items-end lg:text-right">
@@ -93,8 +94,8 @@ export function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-5 w-full px-4 sm:px-6 lg:px-8">
-                    <div className="text-muted-foreground flex w-full flex-col items-center gap-3 border-t py-5 text-center text-xs font-medium md:flex-row md:justify-between md:text-left">
+                <div className="mt-3 w-full px-6">
+                    <div className="text-muted-foreground flex w-full flex-col items-center gap-3 border-t py-3 text-center text-xs font-medium md:flex-row md:justify-between md:text-left">
                         <p>LongLink SAGL - All Rights Reserved</p>
                         <ul className="flex items-center gap-4">
                             <li className="transition-colors hover:text-accent">

@@ -1,1 +1,1 @@
-# Placeholder, do not implement anything for now
+"""API tests are intentionally not added in this package."""

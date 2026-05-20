@@ -10,8 +10,10 @@ import { Link, useLocation } from 'react-router';
 export default function NotFound() {
     const location = useLocation();
     const { data: user } = useUser();
-    const primaryLink = user ? '/' : '/';
-    const primaryLabel = user ? 'Back to dashboard' : 'Back to home';
+    const primaryLink = user ? '/organizations' : '/';
+    const primaryLabel = user ? 'Back to organizations' : 'Back to home';
+    const secondaryLink = user ? '/' : '/auth/login/oidc';
+    const secondaryLabel = user ? 'Back to home' : 'Go to login';
 
     return (
         <div className="flex min-h-screen items-center justify-center px-6 py-12 text-white">
@@ -32,9 +34,15 @@ export default function NotFound() {
                         <Link to={primaryLink} className={buttonVariants()}>
                             {primaryLabel}
                         </Link>
-                        <Link to="/login" className={buttonVariants({ variant: 'outline' })}>
-                            Go to login
-                        </Link>
+                        {user ? (
+                            <Link to={secondaryLink} className={buttonVariants({ variant: 'outline' })}>
+                                {secondaryLabel}
+                            </Link>
+                        ) : (
+                            <a href={secondaryLink} className={buttonVariants({ variant: 'outline' })}>
+                                {secondaryLabel}
+                            </a>
+                        )}
                     </div>
                 </CardContent>
             </Card>

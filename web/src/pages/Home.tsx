@@ -1,23 +1,13 @@
-import Layout from '@/Layout';
-import { useUser } from '@/hooks/use-user';
-import View from '@/pages/View';
+import { Footer } from '@/components/Footer';
+import { Navbar } from '@/components/Navbar';
 import { buttonVariants } from '@ui/button';
 import { ArrowRight } from 'lucide-react';
 
-/** Renders the public home page for anonymous users. */
+/** Renders the public home page. */
 export default function Home() {
-    const { data: user, isLoading } = useUser();
-
-    if (isLoading) {
-        return null;
-    }
-
-    if (user) {
-        return <View metadata="/api/user/metadata.json" baseurl="/api" />;
-    }
-
     return (
-        <Layout>
+        <div className="page-shell min-h-screen text-white">
+            <Navbar />
             <main className="mx-auto flex min-h-[calc(100vh-9rem)] w-full max-w-[1000px] items-center px-6 py-16">
                 <div className="grid w-full gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
                     <section className="space-y-8">
@@ -48,6 +38,7 @@ export default function Home() {
                     </section>
                 </div>
             </main>
-        </Layout>
+            <Footer />
+        </div>
     );
 }

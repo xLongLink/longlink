@@ -1,3 +1,5 @@
+import { Footer } from '@/components/Footer';
+import { Navbar } from '@/components/Navbar';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -86,7 +88,13 @@ export default function Playground() {
         navigate({ search: nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : '' }, { replace: true });
     }, [navigate, searchParams, xmlParam]);
 
-    return <PlaygroundCanvas initialXml={initialXml} />;
+    return (
+        <div className="page-shell min-h-screen text-white">
+            <Navbar />
+            <PlaygroundCanvas initialXml={initialXml} />
+            <Footer />
+        </div>
+    );
 }
 
 type PlaygroundCanvasProps = {

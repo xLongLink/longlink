@@ -1,7 +1,5 @@
 from src.env import env
-from src.db.models import Base
-from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
-                                    async_sessionmaker, create_async_engine)
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
@@ -31,10 +29,5 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
         pass
 
     Session = async_sessionmaker(_engine, expire_on_commit=False)
-
-    # Auto-create tables for SQLite only
-    if dburl.startswith('sqlite+'):
-        async with _engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
 
     return Session

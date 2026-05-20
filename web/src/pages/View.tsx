@@ -1,8 +1,7 @@
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { UserProfile } from '@/components/Profile';
-import Tabs from '@/components/Tabs';
+import Layout from '@/Layout';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
+import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 
@@ -84,6 +83,23 @@ export default function View({ metadata, baseurl }: ViewProps) {
         metadataDocument?.pages?.[0];
     const isNotFound = metadataDocument === null;
 
+    /* Build tab links from metadata page names. */
+    const tabs = Object.fromEntries(
+        metadataDocument?.pages?.map((page) => {
+            const tabValue = normalizePath(page.path.replace(/\.xml$/i, ''));
+            const nextSearchParams = new URLSearchParams(searchParams);
+            nextSearchParams.set('tab', tabValue);
+
+            const href = params.app
+                ? `/${params.org}/${params.app}?${nextSearchParams.toString()}`
+                : params.org
+                  ? `/${params.org}?${nextSearchParams.toString()}`
+                  : `?${nextSearchParams.toString()}`;
+
+            return [startCase(tabValue), href] as const;
+        }) ?? []
+    );
+
     /* Load the active page XML from its path. */
     useEffect(() => {
         if (!activePage) {
@@ -146,22 +162,9 @@ export default function View({ metadata, baseurl }: ViewProps) {
 
     if (isNotFound) {
         return (
-            <div className="min-h-screen text-white">
-                <header className="border-b border-white/10">
-                    <div className="mx-auto w-full px-6 pb-2 pt-4">
-                        <div className="flex items-center justify-between gap-4 text-white/80">
-                            <div className="flex items-center gap-4">
-                                <Breadcrumb />
-                            </div>
-                            <UserProfile />
-                        </div>
-                    </div>
-                </header>
-
-                <main className="mx-auto w-full max-w-6xl gap-8 px-6 pb-16 pt-10">
-                    <div>404This page was not found</div>
-                </main>
-            </div>
+            <Layout tabs={{}}>
+                <div>404This page was not found</div>
+            </Layout>
         );
     }
 
@@ -184,25 +187,10 @@ export default function View({ metadata, baseurl }: ViewProps) {
     const ast = fromXml(pageContent);
 
     return (
-        <div className="min-h-screen text-white">
-            <header className="border-b border-white/10">
-                <div className="mx-auto w-full px-6 pb-2 pt-4">
-                    <div className="flex items-center justify-between gap-4 text-white/80">
-                        <div className="flex items-center gap-4">
-                            <Breadcrumb />
-                        </div>
-                        <UserProfile />
-                    </div>
-                </div>
-
-                {metadataDocument ? <Tabs path={resolvedMetadata} /> : null}
-            </header>
-
-            <main className="mx-auto w-full max-w-6xl gap-8 px-6 pb-16 pt-10">
-                <section className="space-y-6">
-                    <RenderXML ast={ast} baseUrl={resolvedBaseUrl} />
-                </section>
-            </main>
-        </div>
+        <Layout tabs={tabs}>
+            <section className="space-y-6">
+                <RenderXML ast={ast} baseUrl={resolvedBaseUrl} />
+            </section>
+        </Layout>
     );
 }

@@ -49,7 +49,14 @@ function Column({ className, style, width = '100', ...props }: ColumnProps) {
               ...style,
           };
 
-    return <div data-slot="column" className={cn('flex min-w-0 w-full flex-col gap-6', className)} style={columnStyle} {...props} />;
+    return (
+        <div
+            data-slot="column"
+            className={cn('flex min-w-0 w-full flex-col gap-6', className)}
+            style={columnStyle}
+            {...props}
+        />
+    );
 }
 
 export { Column, Columns };

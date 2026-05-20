@@ -1,3 +1,4 @@
+import { ExternalLink } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { buttonVariants } from '@ui/button';
@@ -10,11 +11,11 @@ export function Navbar() {
         <header className="py-4">
             <div>
                 <nav
-                    className="grid w-full grid-cols-[1fr_auto] items-center gap-4 px-4 sm:px-6 lg:grid-cols-3 lg:px-8"
+                    className="grid w-full grid-cols-[1fr_auto] items-center gap-4 px-6 lg:grid-cols-3"
                     aria-label="Main navigation"
                 >
                     <Link to="/" className="flex items-center gap-2" aria-label="LongLink home">
-                        <img src="/favicon.ico" alt="LongLink logo" className="size-8 rounded-md p-0.5" />
+                        <img src="/favicon.ico" alt="LongLink logo" className="size-8" />
                         LongLink
                     </Link>
 
@@ -28,28 +29,32 @@ export function Navbar() {
                             </Link>
                         </li>
                         <li className="font-medium transition-colors hover:text-accent">
-                            <Link
-                                to="/pricing"
-                                className="whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                Pricing
-                            </Link>
-                        </li>
-                        <li className="font-medium transition-colors hover:text-accent">
                             <a
                                 href="https://docs.longlink.dev"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
+                                className="inline-flex items-center gap-1 whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
                             >
-                                Docs
+                                <span>Docs</span>
+                                <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                            </a>
+                        </li>
+                        <li className="font-medium transition-colors hover:text-accent">
+                            <a
+                                href="https://github.com/xLongLink/longlink"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                <span>GitHub</span>
+                                <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
                             </a>
                         </li>
                     </ul>
 
-                    <Link to="/login" className={cn(buttonVariants(), 'ml-auto w-24')}>
-                        Login
-                    </Link>
+                    <a href="/auth/login/oidc" className={cn(buttonVariants(), 'ml-auto w-24')}>
+                        Get Started
+                    </a>
                 </nav>
             </div>
         </header>

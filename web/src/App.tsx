@@ -1,14 +1,15 @@
 import { RequireAuth } from '@/components/Auth';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
-import Layout from './Layout';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
+import Organization from './pages/Organization';
+import Organizations from './pages/Organizations';
 import Playground from './pages/Playground';
-import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Sample from './pages/Sample';
+import Settings from './pages/Settings';
 import Terms from './pages/Terms';
 import View from './pages/View';
 
@@ -24,45 +25,32 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        {
-            path: 'playground',
-            element: (
-                <Layout>
-                    <Playground />
-                </Layout>
-            ),
-        },
+        { path: 'playground', element: <Playground /> },
         { path: 'sample', element: <Sample /> },
-        { path: 'pricing', element: <Pricing /> },
+        { path: 'impressum', element: <Impressum /> },
+        { path: 'terms', element: <Terms /> },
+        { path: 'privacy', element: <Privacy /> },
         {
-            path: 'impressum',
+            path: 'organizations',
             element: (
-                <Layout>
-                    <Impressum />
-                </Layout>
+                <RequireAuth>
+                    <Organizations />
+                </RequireAuth>
             ),
         },
         {
-            path: 'terms',
+            path: 'settings',
             element: (
-                <Layout>
-                    <Terms />
-                </Layout>
-            ),
-        },
-        {
-            path: 'privacy',
-            element: (
-                <Layout>
-                    <Privacy />
-                </Layout>
+                <RequireAuth>
+                    <Settings />
+                </RequireAuth>
             ),
         },
         {
             path: ':org',
             element: (
                 <RequireAuth>
-                    <View metadata="/api/:org/metadata.json" baseurl="/api" />
+                    <Organization />
                 </RequireAuth>
             ),
         },

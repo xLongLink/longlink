@@ -1,3 +1,4 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     ChartContainer,
     ChartLegend,
@@ -6,7 +7,6 @@ import {
     ChartTooltipContent,
     type ChartConfig,
 } from '@/components/ui/chart';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Area,
     AreaChart,
@@ -14,17 +14,17 @@ import {
     BarChart,
     CartesianGrid,
     Cell,
-    PolarAngleAxis,
-    PolarGrid,
-    PolarRadiusAxis,
-    RadialBar,
-    RadialBarChart,
     Line,
     LineChart,
     Pie,
     PieChart,
+    PolarAngleAxis,
+    PolarGrid,
+    PolarRadiusAxis,
     Radar,
     RadarChart,
+    RadialBar,
+    RadialBarChart,
     XAxis,
     YAxis,
 } from 'recharts';
@@ -136,16 +136,28 @@ const radarConfig = {
 } satisfies ChartConfig;
 
 const radialData = [
-    { metric: 'North', value: 86 },
-    { metric: 'East', value: 74 },
-    { metric: 'South', value: 91 },
-    { metric: 'West', value: 68 },
+    { metric: 'North', segment: 'north', value: 86, color: 'var(--color-north)' },
+    { metric: 'East', segment: 'east', value: 74, color: 'var(--color-east)' },
+    { metric: 'South', segment: 'south', value: 91, color: 'var(--color-south)' },
+    { metric: 'West', segment: 'west', value: 68, color: 'var(--color-west)' },
 ];
 
 const radialConfig = {
-    value: {
-        label: 'Completion',
+    north: {
+        label: 'North',
         color: 'var(--accent)',
+    },
+    east: {
+        label: 'East',
+        color: 'color-mix(in oklab, var(--accent) 72%, #22c55e)',
+    },
+    south: {
+        label: 'South',
+        color: 'color-mix(in oklab, var(--accent) 72%, #38bdf8)',
+    },
+    west: {
+        label: 'West',
+        color: 'color-mix(in oklab, var(--accent) 70%, #f43f5e)',
     },
 } satisfies ChartConfig;
 
@@ -166,7 +178,13 @@ export default function Sample() {
                                 <YAxis tickLine={false} axisLine={false} />
                                 <ChartTooltip content={<ChartTooltipContent />} />
                                 <ChartLegend content={<ChartLegendContent />} />
-                                <Line type="monotone" dataKey="web" stroke="var(--color-web)" strokeWidth={2.5} dot={false} />
+                                <Line
+                                    type="monotone"
+                                    dataKey="web"
+                                    stroke="var(--color-web)"
+                                    strokeWidth={2.5}
+                                    dot={false}
+                                />
                                 <Line
                                     type="monotone"
                                     dataKey="mobile"
@@ -355,7 +373,13 @@ export default function Sample() {
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={radialConfig} className="min-h-[320px] w-full">
-                            <RadialBarChart data={radialData} innerRadius="28%" outerRadius="88%" startAngle={90} endAngle={-270}>
+                            <RadialBarChart
+                                data={radialData}
+                                innerRadius="28%"
+                                outerRadius="88%"
+                                startAngle={90}
+                                endAngle={-270}
+                            >
                                 <defs>
                                     <filter id="radial-glow" x="-40%" y="-40%" width="180%" height="180%">
                                         <feGaussianBlur stdDeviation="5" result="blur" />
@@ -371,25 +395,33 @@ export default function Sample() {
                                         </feMerge>
                                     </filter>
                                 </defs>
-                                <PolarGrid gridType="circle" strokeDasharray="3 3" />
-                                <PolarAngleAxis dataKey="metric" tickLine={false} axisLine={false} />
-                                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <ChartLegend content={<ChartLegendContent />} />
+                                <PolarGrid gridType="circle" radialLines={false} strokeDasharray="3 3" />
+                                <PolarAngleAxis type="number" dataKey="value" domain={[0, 100]} tick={false} />
+                                <PolarRadiusAxis
+                                    type="category"
+                                    dataKey="metric"
+                                    tick={false}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <ChartTooltip content={<ChartTooltipContent nameKey="segment" />} />
+                                <ChartLegend content={<ChartLegendContent nameKey="segment" />} />
                                 <RadialBar
                                     dataKey="value"
                                     barSize={18}
                                     background
                                     cornerRadius={10}
-                                    fill="var(--color-value)"
                                     fillOpacity={0.85}
                                     filter="url(#radial-glow)"
-                                />
+                                >
+                                    {radialData.map((entry) => (
+                                        <Cell key={entry.metric} fill={entry.color} />
+                                    ))}
+                                </RadialBar>
                             </RadialBarChart>
                         </ChartContainer>
                     </CardContent>
                 </Card>
-
             </div>
         </main>
     );

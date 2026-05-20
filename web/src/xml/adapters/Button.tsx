@@ -35,14 +35,26 @@ export function Button({ props, nodes }: Props) {
 
     if (submit) {
         return (
-            <UIButton disabled={disabled} size={size as never} type="submit" variant={variant as never} onClick={handleClick}>
+            <UIButton
+                disabled={disabled}
+                size={size as never}
+                type="submit"
+                variant={variant as never}
+                onClick={handleClick}
+            >
                 {renderNode(nodes, ctx)}
             </UIButton>
         );
     }
 
     return (
-        <UIButton disabled={disabled} size={size as never} type="button" variant={variant as never} onClick={handleClick}>
+        <UIButton
+            disabled={disabled}
+            size={size as never}
+            type="button"
+            variant={variant as never}
+            onClick={handleClick}
+        >
             {renderNode(nodes, ctx)}
         </UIButton>
     );
