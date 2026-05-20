@@ -68,7 +68,10 @@ describe('InputGroup', () => {
             values: { gridSearch: proxy({ value: 'Revenue' }) },
         };
 
-        const output = renderXmlToMarkup(parseXML('<InputGroup><InputGroupInput value="$gridSearch.value" /></InputGroup>'), ctx);
+        const output = renderXmlToMarkup(
+            parseXML('<InputGroup><InputGroupInput value="$gridSearch.value" /></InputGroup>'),
+            ctx
+        );
 
         expect(output).toContain('value="Revenue"');
     });

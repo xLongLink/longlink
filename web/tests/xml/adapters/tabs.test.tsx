@@ -66,8 +66,8 @@ describe('Tabs', () => {
 
     /* Missing trigger values should fail fast with a tag-specific error. */
     it('throws when a tab trigger value is missing', () => {
-        expect(() => renderXmlToMarkup(parseXML('<Tabs><TabsList><TabsTrigger>Overview</TabsTrigger></TabsList></Tabs>'))).toThrow(
-            'TabsTrigger requires a string value'
-        );
+        expect(() =>
+            renderXmlToMarkup(parseXML('<Tabs><TabsList><TabsTrigger>Overview</TabsTrigger></TabsList></Tabs>'))
+        ).toThrow('TabsTrigger requires a string value');
     });
 });

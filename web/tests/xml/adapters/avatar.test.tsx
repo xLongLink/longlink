@@ -24,7 +24,9 @@ describe('Avatar', () => {
     /* The runtime should render the single avatar and its badge slot. */
     it('renders the avatar composition end to end', () => {
         const output = renderXmlToMarkup(
-            parseXML('<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback>AL</AvatarFallback><AvatarBadge>1</AvatarBadge></Avatar>')
+            parseXML(
+                '<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback>AL</AvatarFallback><AvatarBadge>1</AvatarBadge></Avatar>'
+            )
         );
 
         expect(output).toContain('data-slot="avatar"');

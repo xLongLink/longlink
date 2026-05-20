@@ -1,8 +1,8 @@
 import { Toggle as UIToggle } from '@/components/ui/toggle';
-import { useSnapshot } from 'valtio';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
+import { useSnapshot } from 'valtio';
 import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML Toggle component. */

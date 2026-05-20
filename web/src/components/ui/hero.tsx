@@ -68,13 +68,7 @@ function HeroDescription({ className, ...props }: React.ComponentProps<'div'>) {
 
 /** Renders the right-side hero content block. */
 function HeroContent({ className, ...props }: React.ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot="hero-content"
-            className={cn('flex shrink-0 items-center gap-3', className)}
-            {...props}
-        />
-    );
+    return <div data-slot="hero-content" className={cn('flex shrink-0 items-center gap-3', className)} {...props} />;
 }
 
 export { Hero, HeroContent, HeroDescription, HeroTitle };

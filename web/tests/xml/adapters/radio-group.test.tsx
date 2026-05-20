@@ -42,8 +42,8 @@ describe('RadioGroup', () => {
 
     /* Missing item values should fail fast with a tag-specific error. */
     it('throws when a radio group item value is missing', () => {
-        expect(() => renderXmlToMarkup(parseXML('<RadioGroup name="priority"><RadioGroupItem>Low</RadioGroupItem></RadioGroup>'))).toThrow(
-            'RadioGroupItem requires a string value'
-        );
+        expect(() =>
+            renderXmlToMarkup(parseXML('<RadioGroup name="priority"><RadioGroupItem>Low</RadioGroupItem></RadioGroup>'))
+        ).toThrow('RadioGroupItem requires a string value');
     });
 });

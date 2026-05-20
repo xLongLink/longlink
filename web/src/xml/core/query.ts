@@ -3,12 +3,7 @@ import type { ExecutionContext } from '../types';
 import { resolveUrl } from './url';
 
 /** Fetches JSON data into a reusable query slot for descendants. */
-export async function query(
-    ctx: ExecutionContext,
-    id: string,
-    path: string,
-    baseUrl = ''
-): Promise<void> {
+export async function query(ctx: ExecutionContext, id: string, path: string, baseUrl = ''): Promise<void> {
     const values = ctx.values;
     const url = resolveUrl(baseUrl, path);
 

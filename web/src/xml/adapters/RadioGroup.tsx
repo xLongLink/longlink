@@ -1,8 +1,8 @@
 import { RadioGroup as UIRadioGroup, RadioGroupItem as UIRadioGroupItem } from '@/components/ui/radio-group';
-import { getVersion, useSnapshot } from 'valtio';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
+import { getVersion, useSnapshot } from 'valtio';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML RadioGroup component. */

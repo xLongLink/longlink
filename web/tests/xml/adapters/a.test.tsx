@@ -22,7 +22,7 @@ describe('A', () => {
         const output = renderXmlToMarkup(parseXML('<A href="/icons"><Icon name="sparkles" />Open icons</A>'));
 
         expect(output).toContain(
-            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"',
+            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"'
         );
         expect(output).toContain('href="/icons"');
         expect(output).toContain('Open icons');
@@ -34,7 +34,7 @@ describe('A', () => {
         const output = renderXmlToMarkup(parseXML('<A>Label only</A>'));
 
         expect(output).toContain(
-            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"',
+            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"'
         );
         expect(output).not.toContain('href=');
         expect(output).toContain('Label only');
@@ -45,7 +45,7 @@ describe('A', () => {
         const output = renderXmlToMarkup(parseXML('<A href="/icons" active="always">Open icons</A>'));
 
         expect(output).toContain(
-            'class="inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80"',
+            'class="inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80"'
         );
         expect(output).not.toContain('hover:text-accent');
     });

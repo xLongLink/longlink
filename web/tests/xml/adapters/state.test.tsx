@@ -31,6 +31,21 @@ describe('State', () => {
         );
     });
 
+    /* Single value state declarations should expose array payloads on `.value`. */
+    it('renders array state values through value', async () => {
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const ast = parseXML(
+            '<longlink><State id="cart" value="[]" /><P>Cart size: ${cart.value.length}</P></longlink>'
+        );
+
+        await setupContext(ast, ctx, '');
+        const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
+
+        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
+            '<div class="flex flex-col gap-6 text-sm"><p class="leading-7">Cart size: 0</p></div>'
+        );
+    });
+
     /* Multiple state attributes should seed a proxied object slot. */
     it('renders multi-field state values', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };

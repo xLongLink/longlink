@@ -74,7 +74,7 @@ describe('Dialog', () => {
 
         expect(output).toContain('data-slot="dialog-trigger"');
         expect(output).toContain(
-            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"',
+            'class="inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80"'
         );
         expect(output).toContain('href="/quotes/edit"');
         expect(output).toContain('Edit quote');

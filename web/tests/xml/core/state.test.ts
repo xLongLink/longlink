@@ -3,19 +3,19 @@ import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 
 describe('state', () => {
-    it('stores scalar values under a reactive slot', () => {
+    it('stores object values under a reactive slot', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
 
-        state(ctx, 'name', 'Ada');
+        state(ctx, 'name', { value: 'Ada' });
 
         expect(ctx.values.name).toMatchObject({ value: 'Ada' });
     });
 
-    it('stores arrays as reactive slots', () => {
+    it('stores arbitrary fields as reactive slots', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
 
-        state(ctx, 'items', [1, 2, 3]);
+        state(ctx, 'items', { anything: [1, 2, 3] });
 
-        expect(Array.isArray(ctx.values.items)).toBe(true);
+        expect((ctx.values.items as { anything: number[] }).anything).toEqual([1, 2, 3]);
     });
 });

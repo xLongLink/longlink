@@ -62,7 +62,7 @@ describe('Menu', () => {
                         children: [{ name: 'Text', params: { value: 'Billing content' } }],
                     },
                 ],
-            }
+            },
         ]);
     });
 

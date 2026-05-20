@@ -11,7 +11,5 @@ export function Grid({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const columns = resolveXmlString(props, 'columns', ctx);
 
-    return (
-        <GridShell columns={columns == null ? undefined : String(columns)}>{renderNode(nodes, ctx)}</GridShell>
-    );
+    return <GridShell columns={columns == null ? undefined : String(columns)}>{renderNode(nodes, ctx)}</GridShell>;
 }

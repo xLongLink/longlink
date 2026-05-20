@@ -59,14 +59,7 @@ export function DialogTrigger({ props, nodes }: Props) {
                 : 'inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80';
 
         return (
-            <UIDialogTrigger
-                render={
-                    <a
-                        className={linkClassName}
-                        {...(href ? { href } : {})}
-                    />
-                }
-            >
+            <UIDialogTrigger render={<a className={linkClassName} {...(href ? { href } : {})} />}>
                 {renderNode(anchorChild.children ?? [], ctx)}
             </UIDialogTrigger>
         );

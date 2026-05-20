@@ -8,6 +8,7 @@ import NotFound from './pages/NotFound';
 import Playground from './pages/Playground';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
+import Sample from './pages/Sample';
 import Terms from './pages/Terms';
 import View from './pages/View';
 
@@ -31,6 +32,7 @@ function getRoutes() {
                 </Layout>
             ),
         },
+        { path: 'sample', element: <Sample /> },
         { path: 'pricing', element: <Pricing /> },
         {
             path: 'impressum',

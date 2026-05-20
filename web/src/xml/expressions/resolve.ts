@@ -1,5 +1,3 @@
-import { getVersion } from 'valtio';
-
 import type { ExecutionContext } from '../types';
 
 /** Resolves a raw value from the current XML runtime scope chain. */

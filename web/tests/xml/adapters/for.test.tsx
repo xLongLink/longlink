@@ -1,3 +1,5 @@
+import { ContextProvider, setupContext } from '@xml/core/context';
+import { renderNode } from '@xml/core/node';
 import { parseXML } from '@xml/core/parser';
 import { RenderXML } from '@xml/renderers.tsx';
 import type { ASTNode, ExecutionContext } from '@xml/types';
@@ -31,6 +33,26 @@ describe('For', () => {
         );
 
         expect(output).toBe('');
+    });
+
+    /* Loop children should keep access to the scoped item value. */
+    it('renders children with the scoped item value', async () => {
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const ast = parseXML(
+            '<longlink><State id="items" value="[{&quot;name&quot;:&quot;Alpha&quot;}]" /><For each="${items.value}" as="item"><CardTitle>${item.name}</CardTitle></For></longlink>'
+        );
+
+        await setupContext(ast, ctx, '');
+
+        expect(
+            renderToStaticMarkup(
+                createElement(
+                    Fragment,
+                    null,
+                    createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) })
+                )
+            )
+        ).toContain('Alpha');
     });
 
     /* Missing loop parameters should be rejected immediately. */

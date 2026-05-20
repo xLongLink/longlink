@@ -1,8 +1,9 @@
 <longlink>
     <State
         id="cart"
-        value='[{ name: "Apples", quantity: 2, price: "$4.80" }, { name: "Bananas", quantity: 1, price: "$1.10" }, { name: "Strawberries", quantity: 1, price: "$4.50" }]'
+        value='[{"name":"Apples","quantity":2,"price":"$4.80"},{"name":"Bananas","quantity":1,"price":"$1.10"},{"name":"Strawberries","quantity":1,"price":"$4.50"}]'
     />
+    <State id="search" value='""' />
 
     <Hero icon="shopping-cart">
         <HeroTitle>Fruit cart</HeroTitle>
@@ -11,8 +12,15 @@
 
     <Columns>
         <Column width="75">
+            <InputGroup>
+                <InputGroupAddon>
+                    <Icon name="search" />
+                </InputGroupAddon>
+                <InputGroupInput value="$search.value" placeholder="Search fruit" />
+            </InputGroup>
+
             <Grid columns="2">
-                <Card>
+                <Card if='${search.value in "Apples apples crisp and sweet orchard fruit"}'>
                     <CardHeader>
                         <CardTitle>Apples</CardTitle>
                         <CardDescription>Crisp and sweet orchard fruit</CardDescription>
@@ -30,7 +38,7 @@
                     </CardFooter>
                 </Card>
 
-                <Card>
+                <Card if='${search.value in "Bananas bananas soft sweet and easy to pack"}'>
                     <CardHeader>
                         <CardTitle>Bananas</CardTitle>
                         <CardDescription>Soft, sweet, and easy to pack</CardDescription>
@@ -48,7 +56,7 @@
                     </CardFooter>
                 </Card>
 
-                <Card>
+                <Card if='${search.value in "Strawberries strawberries small berries for fresh desserts"}'>
                     <CardHeader>
                         <CardTitle>Strawberries</CardTitle>
                         <CardDescription>Small berries for fresh desserts</CardDescription>
@@ -66,7 +74,7 @@
                     </CardFooter>
                 </Card>
 
-                <Card>
+                <Card if='${search.value in "Pears pears soft texture with a mellow finish"}'>
                     <CardHeader>
                         <CardTitle>Pears</CardTitle>
                         <CardDescription>Soft texture with a mellow finish</CardDescription>
@@ -90,7 +98,7 @@
             <Stack>
                 <P>Cart</P>
                 <Divider />
-                <For each="$cart.value" as="item">
+                <For each="${cart.value}" as="item">
                     <Card>
                         <CardHeader>
                             <CardTitle>${item.name}</CardTitle>

@@ -1,8 +1,8 @@
 import { ToggleGroup as UIToggleGroup, ToggleGroupItem as UIToggleGroupItem } from '@/components/ui/toggle-group';
-import { getVersion, useSnapshot } from 'valtio';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
+import { getVersion, useSnapshot } from 'valtio';
 import { requireXmlString, resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML ToggleGroup component. */

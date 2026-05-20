@@ -5,11 +5,11 @@ import {
     MenuSection as UIMenuSection,
     MenuSubSection as UIMenuSubSection,
 } from '@ui/menu';
-import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { ASTNode, ExecutionContext, Props } from '@xml/types';
+import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Props accepted by the XML Menu component. */

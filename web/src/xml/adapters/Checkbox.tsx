@@ -1,7 +1,7 @@
 import { Checkbox as UICheckbox } from '@/components/ui/checkbox';
-import { useSnapshot } from 'valtio';
 import { useXmlContext } from '@xml/core/context';
 import type { Props } from '@xml/types';
+import { useSnapshot } from 'valtio';
 import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML Checkbox component. */

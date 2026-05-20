@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { getVersion, proxy, useSnapshot } from 'valtio';
 import { isReference, resolvePath } from '../expressions';
-import { resolveXmlValue } from './props';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
+import { resolveXmlValue } from './props';
 
 const EMPTY_BINDING = proxy({ value: undefined });
 
@@ -54,9 +54,12 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
     };
 }
 
-
 /** Resolves a writable state target from a raw XML binding expression. */
-function resolveBindableTarget(rawValue: string | undefined, value: XmlBindableValue | undefined, ctx: ExecutionContext): BindingTarget | undefined {
+function resolveBindableTarget(
+    rawValue: string | undefined,
+    value: XmlBindableValue | undefined,
+    ctx: ExecutionContext
+): BindingTarget | undefined {
     if (isBindableValue(value)) return { state: value };
 
     if (!rawValue || !isReference(rawValue)) return undefined;

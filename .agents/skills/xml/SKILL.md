@@ -26,13 +26,27 @@ The system is optimized for CRUD workflows, forms, tables, dashboards, and opera
 
 ## Structure
 
-- `sdk/longlink/.static/` holds the packaged schema docs, web assets, and XSD files.
-- `sdk/longlink/` contains the SDK entrypoint, router, routes, CLI, database helpers, types, and utils.
-- `sdk/sample/src/pages/` contains sample XML pages and fixtures.
-- `web/src/xml/` contains the XML runtime, parser, context, expressions, query, state, URL helpers, and adapters.
-- `api/src/pages/` contains control-plane XML pages.
-- `docs/src/xml/` contains XML documentation pages.
-- `tests/web/tests/xml/` and `tests/sdk/tests/xml/` mirror the runtime and schema test coverage.
+```text
+longlink/
+├── web/
+│   └── src/xml/                  # XML runtime, parser, context, expressions, adapters, and renderers
+├── sdk/
+│   └── longlink/
+│       ├── .static/
+│       │   ├── llm/              # Human-readable schema docs for XML components
+│       │   ├── web/              # Packaged runtime assets used by XML rendering
+│       │   └── xsd/              # XML schema definitions and adapter contracts
+│       ├── app.py                # SDK runtime and page loading
+│       ├── router.py             # Route wiring that can serve XML-backed pages
+│       └── cli/                  # SDK commands including init/build/migrations
+├── api/
+│   └── src/pages/                # Control-plane XML pages
+├── docs/
+│   └── src/xml/                  # XML documentation and examples
+└── tests/
+    ├── sdk/tests/xml/            # SDK-side XML schema and helper coverage
+    └── web/tests/xml/            # Runtime XML parser and rendering coverage
+```
 
 ## Parser (web/src/xml/core/parser.ts)
 

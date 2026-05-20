@@ -1,9 +1,9 @@
 import { Button as UIButton } from '@ui/button';
-import { toast } from 'sonner';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import { useUrl } from '@xml/core/url';
 import type { Props } from '@xml/types';
+import { toast } from 'sonner';
 import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
 /** XML action adapter that sends a request when its child trigger is activated. */

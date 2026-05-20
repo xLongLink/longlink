@@ -16,7 +16,11 @@ describe('renderNode', () => {
 
         expect(
             renderToStaticMarkup(
-                createElement('div', null, createElement(ContextProvider, { value: ctx, children: renderNode([node], ctx) }))
+                createElement(
+                    'div',
+                    null,
+                    createElement(ContextProvider, { value: ctx, children: renderNode([node], ctx) })
+                )
             )
         ).toBe('<div>Hello</div>');
     });
@@ -36,7 +40,11 @@ describe('renderNode', () => {
 
         expect(
             renderToStaticMarkup(
-                createElement('div', null, createElement(ContextProvider, { value: ctx, children: renderNode(nodes, ctx) }))
+                createElement(
+                    'div',
+                    null,
+                    createElement(ContextProvider, { value: ctx, children: renderNode(nodes, ctx) })
+                )
             )
         ).toBe('<div>Visible</div>');
     });

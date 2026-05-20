@@ -1,7 +1,7 @@
 import { Switch as UISwitch } from '@/components/ui/switch';
-import { useSnapshot } from 'valtio';
 import { useXmlContext } from '@xml/core/context';
 import type { Props } from '@xml/types';
+import { useSnapshot } from 'valtio';
 import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Props accepted by the XML Switch component. */
