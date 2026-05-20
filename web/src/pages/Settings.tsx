@@ -34,6 +34,15 @@ const ACCENT_OPTIONS = [
 
 type Accent = (typeof ACCENT_OPTIONS)[number]['value'];
 
+const RADIUS_OPTIONS = [
+    { value: 'none', label: 'None' },
+    { value: 'small', label: 'Small' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'large', label: 'Large' },
+] as const;
+
+type Radius = (typeof RADIUS_OPTIONS)[number]['value'];
+
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const { data: user } = useUser();
@@ -42,6 +51,7 @@ export default function Settings() {
 
     const theme = user?.theme ?? 'dark';
     const accent = user?.accent ?? 'amber';
+    const radius = user?.radius ?? 'medium';
 
     return (
         <Layout tabs={{ Organizations: '/organizations', Settings: '/settings' }}>
@@ -115,6 +125,28 @@ export default function Settings() {
                                                     />
                                                     {option.label}
                                                 </span>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-foreground">Radius</p>
+                                <Select
+                                    value={radius}
+                                    disabled={isPending}
+                                    onValueChange={(value) => {
+                                        void updateUser({ radius: value as Radius });
+                                    }}
+                                >
+                                    <SelectTrigger className="w-44">
+                                        <SelectValue placeholder="Choose a radius" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {RADIUS_OPTIONS.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
