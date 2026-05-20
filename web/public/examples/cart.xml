@@ -1,7 +1,7 @@
 <longlink>
     <State
         id="cart"
-        value='[{"name":"Apples","quantity":2,"price":"$4.80"},{"name":"Bananas","quantity":1,"price":"$1.10"},{"name":"Strawberries","quantity":1,"price":"$4.50"}]'
+        value='[]'
     />
     <State id="search" value='""' />
 
@@ -32,7 +32,7 @@
                         <P>Bright red apples with a clean finish for snacks, salads, and lunch boxes.</P>
                     </CardContent>
                     <CardFooter className="justify-end">
-                        <Button variant="outline" size="xs">
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}'>
                             Add to cart
                         </Button>
                     </CardFooter>
@@ -50,7 +50,7 @@
                         <P>Great for breakfast, smoothies, and quick energy on the go.</P>
                     </CardContent>
                     <CardFooter className="justify-end">
-                        <Button variant="outline" size="xs">
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}'>
                             Add to cart
                         </Button>
                     </CardFooter>
@@ -68,7 +68,7 @@
                         <P>Juicy berries that work well with yogurt, cream, and pastries.</P>
                     </CardContent>
                     <CardFooter className="justify-end">
-                        <Button variant="outline" size="xs">
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}'>
                             Add to cart
                         </Button>
                     </CardFooter>
@@ -86,7 +86,7 @@
                         <P>Ideal for a calm dessert plate or a simple afternoon snack.</P>
                     </CardContent>
                     <CardFooter className="justify-end">
-                        <Button variant="outline" size="xs">
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}'>
                             Add to cart
                         </Button>
                     </CardFooter>
@@ -98,20 +98,12 @@
             <Stack>
                 <P>Cart</P>
                 <Divider />
-                <For each="${cart.value}" as="item">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>${item.name}</CardTitle>
-                            <CardDescription>Qty: ${item.quantity}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <P>Selected fruit for checkout.</P>
-                        </CardContent>
-                        <CardFooter>
-                            <Badge variant="outline">${item.price}</Badge>
-                        </CardFooter>
-                    </Card>
-                </For>
+                <P if="${cart.value.length in [0]}">Cart is empty</P>
+                <Ul if="${cart.value.length}">
+                    <For each="${cart.value}" as="item">
+                        <Li>${item.name} · Qty: ${item.quantity} · ${item.price}</Li>
+                    </For>
+                </Ul>
                 <Divider />
                 <Button>Order</Button>
             </Stack>

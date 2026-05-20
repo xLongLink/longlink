@@ -29,14 +29,6 @@ export function Navbar() {
                         </li>
                         <li className="font-medium transition-colors hover:text-accent">
                             <Link
-                                to="/sample"
-                                className="whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                Sample
-                            </Link>
-                        </li>
-                        <li className="font-medium transition-colors hover:text-accent">
-                            <Link
                                 to="/pricing"
                                 className="whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
                             >

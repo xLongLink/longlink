@@ -1,10 +1,23 @@
 import { parseXML } from '@xml/core/parser';
 import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it, mock } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { proxy } from 'valtio';
 import { renderXmlToMarkup } from '../helpers';
+
+let runtimeContext = {
+    setups: {},
+    invalidate: async (_ids: string | string[]) => {},
+    values: {},
+};
+
+mock.module('@xml/core/context', () => ({
+    useXmlContext: () => ({ ctx: runtimeContext }),
+}));
+
+const { Button } = await import('@xml/adapters/Button');
 
 describe('Button', () => {
     /* Variant should flow into the shared button class recipe. */
@@ -43,6 +56,33 @@ describe('Button', () => {
         expect(output).toContain('<button');
         expect(output).toContain('disabled');
         expect(output).toContain('Submit');
+    });
+
+    /* Append mode should push items into a named cart state slot. */
+    it('appends an item to the target cart state', async () => {
+        runtimeContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {
+                cart: proxy([]),
+            },
+        };
+
+        const element = Button({
+            props: {
+                append: 'cart',
+                item: '${{ name: "Apples", quantity: 1, price: "$2.40" }}',
+            },
+            nodes: [{ name: 'Text', params: { value: 'Add to cart' }, children: [] }],
+        });
+
+        const button = renderToStaticMarkup(createElement('div', null, element));
+        expect(button).toContain('Add to cart');
+
+        await element.props.onClick();
+
+        expect(runtimeContext.values.cart).toHaveLength(1);
+        expect(runtimeContext.values.cart[0]).toEqual({ name: 'Apples', quantity: 1, price: '$2.40' });
     });
 
     /* The runtime should honor conditional rendering on button nodes. */

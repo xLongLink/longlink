@@ -3,122 +3,80 @@ name: xml
 description: Guide LongLink XML component creation and maintenance across SDK, web runtime, tests, and docs
 ---
 
-This DSL provides a declarative, schema-driven way to build backoffice applications, admin panels, and internal dashboards.
-XML is the single source of truth for page structure, layout, data bindings, and actions.
-The runtime parses XML, resolves expressions, maps tags to React components, and manages rendering, state initialization, data fetching, and invalidation-driven refreshes.
-The system is optimized for CRUD workflows, forms, tables, dashboards, and operational tooling through a strictly declarative and predictable architecture.
+This skill explains how the XML runtime is built and how to extend it.
+Use it when developing parser behavior, runtime context, component adapters, schema assets, or tests.
 
-## Example
+## How To Use This Skill
 
-```xml
-<longlink>
-  <State id="cart" value="[]" />
-  <Query id="products" path="/api/products" />
-  <For each="$products.items" as="product">
-    ${product.name}
-    <Action action="/cart/add" method="POST" json="${{ productId: product.id, quantity: 1 }}">
-      Add to cart
-    </Action>
-  </For>
-  Cart items: ${cart.length}
-</longlink>
-```
+- Load this skill before making XML runtime changes in `web/`, `sdk/`, `docs/`, or `api/`.
+- Start by reading the relevant local `CONTRIBUTING.md` and the XML files involved.
+- Follow the adapter -> registry -> tests -> docs flow when adding or changing components.
+- Prefer the smallest XML-safe change, then verify with focused XML tests.
+- If the change affects authoring or examples, update docs or samples in the same pass.
+
+## Runtime Model
+
+- XML is parsed into AST nodes.
+- The renderer resolves expressions against a lexical execution context.
+- Tags map to React adapters through the XML registry.
+- State and query setup happens before page rendering.
+- Invalidation reruns stored setup hooks and refreshes subscribed state.
 
 ## Structure
 
+This is the source-of-truth layout for XML work.
+
 ```text
 longlink/
-├── web/
-│   └── src/xml/                  # XML runtime, parser, context, expressions, adapters, and renderers
-├── sdk/
-│   └── longlink/
-│       ├── .static/
-│       │   ├── llm/              # Human-readable schema docs for XML components
-│       │   ├── web/              # Packaged runtime assets used by XML rendering
-│       │   └── xsd/              # XML schema definitions and adapter contracts
-│       ├── app.py                # SDK runtime and page loading
-│       ├── router.py             # Route wiring that can serve XML-backed pages
-│       └── cli/                  # SDK commands including init/build/migrations
 ├── api/
-│   └── src/pages/                # Control-plane XML pages
+│   └── src/pages/        # Control-plane XML pages
 ├── docs/
-│   └── src/xml/                  # XML documentation and examples
-└── tests/
-    ├── sdk/tests/xml/            # SDK-side XML schema and helper coverage
-    └── web/tests/xml/            # Runtime XML parser and rendering coverage
+│   └── src/xml/          # XML docs and examples for users
+├── sdk/
+│   ├── longlink/
+│   │   └── .static/      # Packaged XML schema assets and authoring helpers
+│   └── tests/xml/        # SDK-side XML coverage
+└── web/
+    ├── src/xml/          # Parser, core runtime, adapters, expressions, registry
+    └── tests/xml/        # Runtime parser and adapter coverage
 ```
 
-## Parser (web/src/xml/core/parser.ts)
+## File Areas
 
-- `parseXML` turns an XML string into AST nodes.
-- `Text` nodes are internal parser output for raw text content.
+- `web/src/xml/core/`: parser, context, render pipeline, registry, URL helpers.
+- `web/src/xml/adapters/`: component implementations.
+- `web/tests/xml/`: parser, runtime, and adapter coverage.
+- `sdk/longlink/.static/xsd/`: packaged schema definitions.
+- `docs/src/xml/`: authoring-facing documentation and examples.
 
-## Context (web/src/xml/core/context.tsx)
+## Development Rules
 
-- `useXmlContext` reads the active XML runtime state from React context.
-- `ContextProvider` exposes a runtime context to rendered XML children.
-- `createContext` returns a blank execution context.
-- `setupContext` walks the AST, seeds `State` and `Query` nodes, and stores their re-run hooks for invalidation.
+- Keep the XML model declarative and predictable.
+- Preserve AST shape and runtime scope semantics.
+- Keep `State.value` as a normal object field on the seeded state object.
+- Keep `Query.id` and `Query.path` literal.
+- Keep `Text` internal to parsing and rendering.
+- Use `if` as the shared conditional-rendering attribute.
 
-## Adapters
+## Expressions
 
-- `longlink` is the root page shell.
-- `State` declares local reactive state.
-- `Query` fetches JSON data into a named slot.
-- `For` iterates over arrays in a scoped child context.
-- `Action` submits requests and can invalidate query slots after success.
-- `adapters/` contains the XML tag implementations and shared prop resolvers.
-- `core/registry.tsx` maps XML tag names to adapter components.
-- `Text` is internal only and is produced by the parser for raw text content. Do not author it directly.
+- Support plain text, `$references`, wrapped `${expressions}`, arrays, objects, template literals, arithmetic, and mixed interpolation.
+- Do not introduce unsupported JavaScript syntax or module-scope dependencies.
 
-## Adapter Attribute Rules
+## Adding or Changing a Component
 
-- `State.value` must be literal text.
-- `Query.id` must be literal text.
-- `Query.path` must be literal text.
+1. Add or edit the adapter in `web/src/xml/adapters/`.
+2. Keep the adapter entry point small and documented.
+3. Use `useXmlContext` for runtime scope, `renderNode` for child rendering, and `useUrl` for URL resolution.
+4. Export the adapter from `web/src/xml/adapters/index.ts`.
+5. Register the tag in `web/src/xml/core/registry.tsx`.
+6. Update parser, context, or helper code only when the component needs new runtime behavior.
+7. Add focused tests under `web/tests/xml/`.
+8. Update SDK XSD assets when the schema changes.
+9. Update docs/examples so the new XML shape is discoverable.
 
-## Global XML Patterns
+## Verification
 
-- Any element may use `if="..."` for conditional rendering.
-
-## Expressions (web/src/xml/expressions/)
-
-- `"test"` a simple string literal. `isText()`
-- `[]` an array literal. `isArray()`
-- `${}` an expression literal. `isExpression()`
-- `$value` a reference to a variable in scope. `isReference()`
-- `evaluate(...)` evaluate an expression with the current runtime state.
-- `compile(...)` return a resolver that evaluates an expression string against the current runtime state.
-- `json` payloads use object-literal expressions such as `${{ fullName: fullName }}`.
-- Do not author bare `{name}` or `{{...}}` syntax.
-
-## Expression Rules
-
-Allowed:
-
-1. Plain text values like `hello` or `"hello"`.
-2. `$` references like `$user.name`.
-3. Wrapped expressions like `${count + 1}`.
-4. Arrays, objects, and template literals.
-5. Basic arithmetic with `+`, `-`, `*`, and `/`.
-6. Mixed text interpolation like `Hello ${name}`.
-
-Not allowed:
-
-1. Statements such as `if`, `for`, `return`, `const`, or `function`.
-2. Function calls like `format(name)` or `Math.max(a, b)`.
-3. Assignments, mutations, and other side effects.
-4. Ternaries, logical operators, comparisons, optional chaining, and other unsupported AST nodes.
-5. JavaScript that depends on module scope, imports, or globals not present in XML runtime state.
-
-## Adding a new Component
-
-1. Add the component under `web/src/xml/adapters/`.
-2. Add the component file with a clear props interface and a short docstring for the component entry point.
-3. Keep the implementation declarative and predictable, and reuse `useXmlContext`, `renderNode`, or `useUrl` when the component needs runtime state or child rendering.
-4. Export the component from `web/src/xml/adapters/index.ts` and register it in `web/src/xml/core/registry.tsx` so the renderer can resolve the tag.
-5. Update the XML schema, parser, or runtime helpers if the new component introduces new attributes, bindings, or execution behavior.
-6. Add or update documentation and examples so the new tag and its props are discoverable.
-7. Add focused tests in the matching `web/tests/xml/` and `sdk/tests/xml/` subdirectories for every new component, mirroring `web/src/xml/` and covering compile-time AST shape, schema validation, and runtime rendering when practical.
-8. Add the component definition to the SDK schema pack (`sdk/longlink/.static/xsd/`) and human-readable schema docs (`sdk/longlink/.static/llm/SCHEMA.md`).
-9. Verify the component against the existing XML pages or fixtures before shipping it.
+- Run focused XML tests for parser, context, and the changed adapter.
+- Check that the XML page still renders with the intended scope and invalidation behavior.
+- Prefer the smallest change that keeps the XML contract consistent.

@@ -3,6 +3,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { fromXml, RenderXML, type ASTNode } from '@/xml';
 import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 
 const exampleFiles = {
     Text: '/examples/text.xml',
@@ -15,20 +16,47 @@ const exampleFiles = {
 type ExampleName = keyof typeof exampleFiles;
 type ExampleMap = Record<ExampleName, string>;
 
-const starterXml = `<longlink>
-    <State id="volume" value="[65]" />
-    <FieldSet>
-        <FieldLegend>Playback settings</FieldLegend>
-        <FieldDescription>Use the slider to preview the rendered state by default.</FieldDescription>
-        <FieldGroup>
-            <Field>
-                <FieldLabel htmlFor="volume">Volume</FieldLabel>
-                <Slider id="volume" value="$volume" min="0" max="100" step="5" />
-                <P>Current volume: ${'${'}volume.value}</P>
-            </Field>
-        </FieldGroup>
-    </FieldSet>
+const starterXml = `<State id="volume" value="[65]" />
+<FieldSet>
+    <FieldLegend>Playback settings</FieldLegend>
+    <FieldDescription>Use the slider to preview the rendered state by default.</FieldDescription>
+    <FieldGroup>
+        <Field>
+            <FieldLabel htmlFor="volume">Volume</FieldLabel>
+            <Slider id="volume" value="$volume" min="0" max="100" step="5" />
+            <P>Current volume: ${'${'}volume.value}</P>
+        </Field>
+    </FieldGroup>
+</FieldSet>`;
+
+/** Wraps a playground fragment in a <longlink> document when needed. */
+function wrapPlaygroundXml(xml: string): string {
+    const trimmedXml = xml.trim();
+
+    if (!trimmedXml) {
+        return '<longlink></longlink>';
+    }
+
+    if (/^<longlink(?:\s|>|\/)/i.test(trimmedXml)) {
+        return xml;
+    }
+
+    return `<longlink>
+${xml}
 </longlink>`;
+}
+
+/** Removes a wrapping <longlink> document element from playground XML. */
+function unwrapPlaygroundXml(xml: string): string {
+    const trimmedXml = xml.trim();
+    const match = trimmedXml.match(/^<longlink(?:\s[^>]*)?>([\s\S]*)<\/longlink>$/i);
+
+    if (!match) {
+        return xml;
+    }
+
+    return match[1].trim();
+}
 
 const starterExamples: ExampleMap = {
     Text: starterXml,
@@ -42,9 +70,36 @@ type ViewMode = 'code' | 'rendered';
 
 /** Renders a live XML playground with editable source and preview. */
 export default function Playground() {
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const xmlParam = searchParams.get('xml');
+    const initialXml = unwrapPlaygroundXml(xmlParam ?? starterXml);
+
+    useEffect(() => {
+        if (!xmlParam) {
+            return;
+        }
+
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.delete('xml');
+
+        navigate({ search: nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : '' }, { replace: true });
+    }, [navigate, searchParams, xmlParam]);
+
+    return <PlaygroundCanvas initialXml={initialXml} />;
+}
+
+type PlaygroundCanvasProps = {
+    initialXml: string;
+};
+
+/** Renders the playground state for a single XML payload. */
+function PlaygroundCanvas({ initialXml }: PlaygroundCanvasProps) {
     const [examples, setExamples] = useState<ExampleMap>(starterExamples);
-    const [xml, setXml] = useState<string>(starterXml);
+    const [xml, setXml] = useState<string>(initialXml);
     const [viewMode, setViewMode] = useState<ViewMode>('rendered');
+    const activeXml = xml === starterXml ? examples.Text : xml;
+    const documentXml = wrapPlaygroundXml(activeXml);
 
     useEffect(() => {
         let cancelled = false;
@@ -69,7 +124,6 @@ export default function Playground() {
 
             const nextExamples = Object.fromEntries(entries) as ExampleMap;
             setExamples(nextExamples);
-            setXml((current) => (current === starterXml ? nextExamples.Text : current));
         };
 
         void loadExamples().catch(() => {
@@ -85,7 +139,7 @@ export default function Playground() {
     let parseError: string | null = null;
 
     try {
-        ast = fromXml(xml);
+        ast = fromXml(documentXml);
     } catch (error) {
         parseError = error instanceof Error ? error.message : 'Failed to parse XML';
     }
@@ -97,7 +151,7 @@ export default function Playground() {
                     {Object.entries(examples).map(([label, exampleXml]) => (
                         <Badge
                             key={label}
-                            variant={xml === exampleXml ? 'secondary' : 'outline'}
+                            variant={activeXml === exampleXml ? 'secondary' : 'outline'}
                             className="cursor-pointer select-none"
                             onClick={() => setXml(exampleXml)}
                         >
@@ -131,7 +185,7 @@ export default function Playground() {
                         <div className="pt-10">
                             {viewMode === 'code' ? (
                                 <Textarea
-                                    value={xml}
+                                    value={activeXml}
                                     onChange={(event) => setXml(event.target.value)}
                                     spellCheck={false}
                                     className="min-h-[28rem] resize-none rounded-none border-0 bg-transparent font-mono text-sm leading-6 focus-visible:ring-0"
