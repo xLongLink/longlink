@@ -3,7 +3,7 @@ import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 
 /** Renders bold text. */
-export function B({ props, nodes }: Props) {
+export function B({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <b className="font-semibold text-foreground">{renderNode(nodes, ctx)}</b>;

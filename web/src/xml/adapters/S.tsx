@@ -5,7 +5,7 @@ import type { Props } from '@xml/types';
 /** Props accepted by the XML s bridge component. */
 
 /** Renders strikethrough text. */
-export function S({ props, nodes }: Props) {
+export function S({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <s className="line-through">{renderNode(nodes, ctx)}</s>;

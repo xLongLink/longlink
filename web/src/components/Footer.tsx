@@ -1,4 +1,4 @@
-import { Linkedin, MessageCircle, MessageSquareMore, X } from 'lucide-react';
+import { Github, Linkedin, Package } from 'lucide-react';
 import { Link } from 'react-router';
 
 const socialLinks = [
@@ -8,19 +8,14 @@ const socialLinks = [
         icon: Linkedin,
     },
     {
-        href: 'https://www.reddit.com/r/swissgpu/',
-        label: 'Reddit',
-        icon: MessageCircle,
+        href: 'https://github.com/xLongLink/longlink',
+        label: 'GitHub',
+        icon: Github,
     },
     {
-        href: 'https://discord.gg/ddMcztB3',
-        label: 'Discord',
-        icon: MessageSquareMore,
-    },
-    {
-        href: 'https://x.com',
-        label: 'X',
-        icon: X,
+        href: 'https://pypi.org/project/longlink/',
+        label: 'PyPI',
+        icon: Package,
     },
 ];
 

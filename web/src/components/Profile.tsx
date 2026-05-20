@@ -9,8 +9,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
-import { BookOpen, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { BookOpen, Building2, ExternalLink, LogOut, Settings2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 
 /** Renders a user profile dropdown with authentication actions. */
 export function UserProfile() {
@@ -57,15 +57,28 @@ export function UserProfile() {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuGroup>
-                    <DropdownMenuItem className="cursor-pointer p-2 text-white/80 transition-colors hover:bg-white/10 focus:text-white">
+                    <DropdownMenuItem className="cursor-pointer p-2 text-white/75 transition-colors hover:bg-white/5 hover:text-white focus:text-white">
+                        <Link to="/organizations" className="flex w-full items-center gap-2">
+                            <Building2 className="h-4 w-4" />
+                            Organizations
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer p-2 text-white/75 transition-colors hover:bg-white/5 hover:text-white focus:text-white">
+                        <Link to="/settings" className="flex w-full items-center gap-2">
+                            <Settings2 className="h-4 w-4" />
+                            Settings
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer p-2 text-white/75 transition-colors hover:bg-white/5 hover:text-white focus:text-white">
                         <a
                             href="https://docs.longlink.dev"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex w-full items-center"
+                            className="flex w-full items-center gap-2"
                         >
-                            <BookOpen className="mr-2 h-4 w-4" />
+                            <BookOpen className="h-4 w-4" />
                             Documentation
+                            <ExternalLink className="ml-auto h-3.5 w-3.5 text-white/40" />
                         </a>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>

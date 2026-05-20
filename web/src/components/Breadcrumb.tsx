@@ -6,51 +6,48 @@ import {
     Breadcrumb as UIBreadcrumb,
 } from '@ui/breadcrumb';
 import startCase from 'lodash/startCase';
-import { Link, useParams } from 'react-router';
+import { Fragment } from 'react';
+import { Link, useLocation } from 'react-router';
+
 /**
  * Render the top navigation breadcrumb for organization, app, and profile routes.
  */
 export function Breadcrumb() {
-    const { org, app } = useParams();
+    const { pathname } = useLocation();
+    const segments = pathname.split('/').filter(Boolean);
 
-    const organizationName = org ? startCase(org) : 'Organization';
-    const appName = app ? startCase(app) : undefined;
+    // Build one breadcrumb item per visible path segment.
+    const crumbs = segments.map((segment, index) => ({
+        label: startCase(segment),
+        href: `/${segments.slice(0, index + 1).join('/')}`,
+    }));
 
     return (
         <UIBreadcrumb>
             <BreadcrumbList>
                 <BreadcrumbItem>
-                    <Link to="/" aria-label="LongLink home" className="inline-flex items-center">
+                    <Link to="/" aria-label="LongLink home" className="inline-flex items-center pr-2 hover:underline">
                         <img src="/favicon.ico" alt="LongLink favicon" className="size-8" />
                     </Link>
                 </BreadcrumbItem>
-                <BreadcrumbItem>
-                    <BreadcrumbLink
-                        render={(props) => (
-                            <Link {...props} to="/" className="text-sm font-semibold text-white/70">
-                                {organizationName}
-                            </Link>
-                        )}
-                    />
-                </BreadcrumbItem>
-                {appName && org && app ? (
-                    <>
-                        <BreadcrumbSeparator />
+                {crumbs.map((crumb, index) => (
+                    <Fragment key={crumb.href}>
+                        {index > 0 ? <BreadcrumbSeparator /> : null}
                         <BreadcrumbItem>
                             <BreadcrumbLink
                                 render={(props) => (
                                     <Link
                                         {...props}
-                                        to={`/${org}/${app}`}
-                                        className="text-sm font-semibold text-white/70"
+                                        to={crumb.href}
+                                        className="text-sm font-semibold text-white/70 hover:underline"
                                     >
-                                        {appName}
+                                        {crumb.label}
                                     </Link>
                                 )}
                             />
                         </BreadcrumbItem>
-                    </>
-                ) : null}
+                    </Fragment>
+                ))}
             </BreadcrumbList>
         </UIBreadcrumb>
     );

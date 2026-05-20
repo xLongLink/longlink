@@ -47,7 +47,31 @@ function getRoutes() {
             ),
         },
         {
-            path: ':org',
+            path: ':org/*',
+            element: (
+                <RequireAuth>
+                    <Organization />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org/apps/*',
+            element: (
+                <RequireAuth>
+                    <Organization />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org/people/*',
+            element: (
+                <RequireAuth>
+                    <Organization />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org/settings/*',
             element: (
                 <RequireAuth>
                     <Organization />

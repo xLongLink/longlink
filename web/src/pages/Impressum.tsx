@@ -1,31 +1,59 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { Card, CardContent, CardHeader, CardTitle } from '@ui/card';
+import { Button } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { downloadLegalPdf } from '@/lib/legal-pdf';
+import { Download } from 'lucide-react';
 
 /** Renders the public impressum page. */
 export default function Impressum() {
     return (
-        <div className="page-shell min-h-screen text-white">
-            <Navbar />
-            <main className="mx-auto w-full max-w-[1000px] px-6 py-16">
-                <Card className="border-white/10 bg-white/5 backdrop-blur">
-                    <CardHeader>
-                        <CardTitle className="text-3xl text-white">Impressum</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6 pb-8 text-sm leading-6 text-white/70">
-                        <p>
-                            LongLink SAGL
-                            <br />
-                            Legal entity details to be completed by the operator.
-                        </p>
-                        <p>
-                            This page is reserved for the legally required company and contact information for the
-                            LongLink service.
-                        </p>
-                    </CardContent>
-                </Card>
+        <div className="page-shell flex min-h-screen flex-col text-white">
+            <div className="print:hidden">
+                <div className="mx-auto w-full max-w-[1000px]">
+                    <Navbar />
+                </div>
+            </div>
+            <main className="mx-auto w-full max-w-[1000px] flex-1 px-6 py-16 print:mx-0 print:max-w-none print:px-0 print:py-0">
+                <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-lg shadow-black/20 ring-1 ring-white/5 print:overflow-visible print:border-0 print:bg-transparent print:shadow-none print:ring-0">
+                    <div className="flex items-center gap-2 px-4 pt-2 print:hidden">
+                        <span className="h-3 w-3 rounded-full bg-red-400" />
+                        <span className="h-3 w-3 rounded-full bg-yellow-400" />
+                        <span className="h-3 w-3 rounded-full bg-green-400" />
+                        <div className="ml-auto">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="cursor-pointer"
+                                onClick={() =>
+                                    downloadLegalPdf('impressum.pdf', 'Impressum', [
+                                        'LongLink SAGL\nLegal entity details to be completed by the operator.',
+                                        'This page is reserved for the legally required company and contact information for the LongLink service.',
+                                    ])
+                                }
+                                aria-label="Download Impressum as PDF"
+                            >
+                                <Download />
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="space-y-6 p-6 pt-2 text-sm leading-6 text-white/70 print:p-0 print:text-black">
+                        <Heading level="h1" className="text-3xl text-white print:text-black">
+                            Impressum
+                        </Heading>
+                        <div className="space-y-1 text-sm text-white/60 print:text-black">
+                            <div>Last update: May 20, 2026</div>
+                            <div>TODO: complete this</div>
+                        </div>
+                    </div>
+                </section>
             </main>
-            <Footer />
+            <div className="print:hidden">
+                <div className="mx-auto w-full max-w-[1000px]">
+                    <Footer />
+                </div>
+            </div>
         </div>
     );
 }

@@ -23,7 +23,7 @@ function resolveIconComponent(name: string): LucideIconComponent | null {
 }
 
 /** Renders a Lucide icon by XML name. */
-export function Icon({ props, nodes }: Props) {
+export function Icon({ props }: Props) {
     const { ctx } = useXmlContext();
     const name = resolveXmlString(props, 'name', ctx, '');
     const iconName = String(name ?? '');

@@ -3,7 +3,7 @@ import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 
 /** Renders inline code with monospace typography defaults. */
-export function Code({ props, nodes }: Props) {
+export function Code({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return (

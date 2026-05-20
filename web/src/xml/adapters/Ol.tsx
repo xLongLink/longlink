@@ -5,7 +5,7 @@ import type { Props } from '@xml/types';
 /** Props accepted by the XML ol bridge component. */
 
 /** Renders an ordered list with typographic defaults. */
-export function Ol({ props, nodes }: Props) {
+export function Ol({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <ol className="ml-6 list-decimal space-y-2">{renderNode(nodes, ctx)}</ol>;
