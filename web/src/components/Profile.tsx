@@ -57,24 +57,24 @@ export function UserProfile() {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuGroup>
-                    <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/5 hover:text-foreground focus:text-foreground">
-                        <Link to="/organizations" className="flex w-full items-center gap-2">
+                    <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
+                        <Link to="/organizations" className="flex w-full items-center gap-2 text-inherit">
                             <Building2 className="h-4 w-4" />
                             Organizations
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/5 hover:text-foreground focus:text-foreground">
-                        <Link to="/settings" className="flex w-full items-center gap-2">
+                    <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
+                        <Link to="/settings" className="flex w-full items-center gap-2 text-inherit">
                             <Settings2 className="h-4 w-4" />
                             Settings
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/5 hover:text-foreground focus:text-foreground">
+                    <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
                         <a
                             href="https://docs.longlink.dev"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex w-full items-center gap-2"
+                            className="flex w-full items-center gap-2 text-inherit"
                         >
                             <BookOpen className="h-4 w-4" />
                             Documentation
@@ -84,7 +84,7 @@ export function UserProfile() {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem className="cursor-pointer p-2 text-destructive transition-colors hover:bg-destructive/10 focus:text-destructive">
-                    <button type="button" className="flex w-full items-center" onClick={handleSignOut}>
+                    <button type="button" className="flex w-full items-center text-inherit" onClick={handleSignOut}>
                         <LogOut className="mr-2 h-4 w-4" />
                         Sign out
                     </button>

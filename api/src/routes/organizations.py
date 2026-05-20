@@ -7,13 +7,15 @@ router = APIRouter(prefix="/api/organizations")
 
 @router.get("/{name}")
 async def get_organization(name: str) -> dict:
-    """Return one organization by name."""
+    """Return one organization and its metadata."""
 
     organization = await db.organizations.get(name)
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Organization '{name}' not found")
 
-    return {"organization": organization.model_dump()}
+    payload = organization.model_dump()
+    payload["users"] = [user.model_dump() for user in organization.users]
+    return {"organization": payload}
 
 
 @router.post("")

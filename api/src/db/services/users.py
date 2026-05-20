@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from src.db.models import User
 from src.db.session import get_session
 from src.models.users import Accent, Radius, Theme
@@ -10,7 +11,7 @@ class UsersService:
 
         Session = await get_session()
         async with Session() as session:
-            statement = select(User)
+            statement = select(User).options(selectinload(User.organizations))
             result = await session.execute(statement)
             return list(result.scalars().all())
 
@@ -62,15 +63,18 @@ class UsersService:
 
         Session = await get_session()
         async with Session() as session:
+            # Load memberships so the returned user can be used outside the session.
+            statement = select(User).options(selectinload(User.organizations))
             if by == 'email':
-                result = await session.execute(select(User).where(User.email == param))
+                statement = statement.where(User.email == param)
             elif by == 'oidc_subject':
-                result = await session.execute(select(User).where(User.oidc_subject == param))
+                statement = statement.where(User.oidc_subject == param)
             elif by == 'id':
-                result = await session.execute(select(User).where(User.id == param))
+                statement = statement.where(User.id == param)
             else:
                 raise ValueError('Unknown lookup value for "by".')
 
+            result = await session.execute(statement)
             return result.scalars().first()
 
     async def update(

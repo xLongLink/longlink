@@ -1,5 +1,6 @@
 # Import all models here to ensure they are registered with Base
 from .apps import App
+from .association import user_organizations
 from .compute import ComputeRegistry
 from .database import DatabaseRegistry
 from .envs import Env
@@ -12,6 +13,7 @@ from .users import User
 __all__ = [
     "App",
     "Base",
+    "user_organizations",
     "ComputeRegistry",
     "DatabaseRegistry",
     "Env",

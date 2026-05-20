@@ -1,6 +1,13 @@
-from sqlmodel import Field
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship
+
 from src.db.models.__base__ import Base
+from src.db.models.association import user_organizations
 from src.models.users import Accent, Language, Radius, Theme
+
+if TYPE_CHECKING:
+    from src.db.models.organization import Organization
 
 
 class User(Base, table=True):
@@ -17,3 +24,7 @@ class User(Base, table=True):
     radius: Radius = Field(default=Radius.medium, max_length=6)
     language: Language = Field(default=Language.en, max_length=2)
     oidc_subject: str | None = Field(default=None, unique=True, max_length=255)
+    organizations: list['Organization'] = Relationship(
+        back_populates='users',
+        sa_relationship_kwargs={'secondary': user_organizations},
+    )

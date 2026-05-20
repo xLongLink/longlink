@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 type Organization = {
     name: string;
+    users?: OrganizationPerson[];
 };
 
 type OrganizationApp = {
@@ -45,24 +46,6 @@ export function useOrg(org: string): UseOrgResult {
         retry: false,
     });
 
-    const peopleQuery = useQuery({
-        queryKey: ['api', `/api/orgs/${org}/people`],
-        queryFn: async () => {
-            const response = await fetch(`/api/orgs/${org}/people`, {
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            return (await response.json()) as OrganizationPerson[];
-        },
-        enabled: org.length > 0,
-        retry: false,
-    });
-
     const appsQuery = useQuery({
         queryKey: ['api', `/api/orgs/${org}/apps`],
         queryFn: async () => {
@@ -81,13 +64,13 @@ export function useOrg(org: string): UseOrgResult {
         retry: false,
     });
 
-    const error = organizationQuery.error ?? peopleQuery.error ?? appsQuery.error ?? null;
+    const error = organizationQuery.error ?? appsQuery.error ?? null;
 
     return {
         organization: organizationQuery.data,
-        people: peopleQuery.data ?? [],
+        people: organizationQuery.data?.users ?? [],
         apps: appsQuery.data ?? [],
-        isLoading: organizationQuery.isLoading || peopleQuery.isLoading || appsQuery.isLoading,
+        isLoading: organizationQuery.isLoading || appsQuery.isLoading,
         error,
     };
 }

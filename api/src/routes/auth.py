@@ -80,10 +80,8 @@ async def logout(request: Request):
 async def get_me(user: db.User = Depends(authuser)):
     """Return the authenticated user's details."""
 
-    # Attach the user's visible organizations to the shared session payload.
-    organizations = await db.organizations.list()
     payload = user.model_dump()
-    payload["organizations"] = [{"name": organization.name} for organization in organizations]
+    payload["organizations"] = [{"name": organization.name} for organization in user.organizations]
     return payload
 
 

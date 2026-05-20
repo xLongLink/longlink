@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from src.db.models import Organization
 from sqlalchemy.exc import IntegrityError
 from src.db.session import get_session
@@ -20,7 +21,8 @@ class OrganizationsService:
 
         Session = await get_session()
         async with Session() as session:
-            result = await session.execute(select(Organization).where(Organization.name == name))
+            statement = select(Organization).options(selectinload(Organization.users)).where(Organization.name == name)
+            result = await session.execute(statement)
             return result.scalar_one_or_none()
 
     async def create(self, name: str) -> Organization:
