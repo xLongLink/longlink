@@ -56,8 +56,8 @@ const menuItemVariants = cva(
     {
         variants: {
             active: {
-                true: 'bg-white/10 text-white',
-                false: 'text-white/70 hover:bg-white/5 hover:text-white',
+                true: 'bg-accent/10 text-foreground',
+                false: 'text-muted-foreground hover:bg-accent/5 hover:text-foreground',
             },
             level: {
                 root: '',
@@ -73,7 +73,7 @@ const menuItemVariants = cva(
             {
                 active: false,
                 level: 'root',
-                className: 'border-l-4 border-l-white/10',
+                className: 'border-l-4 border-l-border',
             },
             {
                 active: true,
@@ -103,16 +103,12 @@ function prettifyValue(value: string): string {
 }
 
 /** Returns whether a child is a menu section marker. */
-function isMenuSectionElement(
-    child: React.ReactNode
-): child is React.ReactElement<MenuSectionProps> {
+function isMenuSectionElement(child: React.ReactNode): child is React.ReactElement<MenuSectionProps> {
     return React.isValidElement<MenuSectionProps>(child) && child.type === MenuSection;
 }
 
 /** Returns whether a child is a menu subsection marker. */
-function isMenuSubSectionElement(
-    child: React.ReactNode
-): child is React.ReactElement<MenuSubSectionProps> {
+function isMenuSubSectionElement(child: React.ReactNode): child is React.ReactElement<MenuSubSectionProps> {
     return React.isValidElement<MenuSubSectionProps>(child) && child.type === MenuSubSection;
 }
 
@@ -133,14 +129,12 @@ function parseMenuSections(children?: React.ReactNode): ResolvedMenuSection[] {
                 icon: child.props.icon,
                 disabled: child.props.disabled,
                 content,
-                subSections: sectionChildren
-                    .filter(isMenuSubSectionElement)
-                    .map((subSectionNode) => ({
-                        value: subSectionNode.props.value,
-                        label: subSectionNode.props.label ?? prettifyValue(subSectionNode.props.value),
-                        disabled: subSectionNode.props.disabled,
-                        content: React.Children.toArray(subSectionNode.props.children),
-                    })),
+                subSections: sectionChildren.filter(isMenuSubSectionElement).map((subSectionNode) => ({
+                    value: subSectionNode.props.value,
+                    label: subSectionNode.props.label ?? prettifyValue(subSectionNode.props.value),
+                    disabled: subSectionNode.props.disabled,
+                    content: React.Children.toArray(subSectionNode.props.children),
+                })),
             },
         ];
     });
@@ -162,8 +156,7 @@ function getInitialValue(sections: ResolvedMenuSection[]): string | undefined {
 /** Finds the section that owns the active value. */
 function findActiveSection(sections: ResolvedMenuSection[], value: string): ResolvedMenuSection | undefined {
     return sections.find(
-        (section) =>
-            section.value === value || section.subSections.some((subSection) => subSection.value === value)
+        (section) => section.value === value || section.subSections.some((subSection) => subSection.value === value)
     );
 }
 
@@ -366,7 +359,7 @@ export function Menu({
                                     >
                                         {SectionIcon ? (
                                             <SectionIcon
-                                                className="size-4 text-white/70 group-data-[state=active]/menu-item:text-white"
+                                                className="size-4 text-muted-foreground group-data-[state=active]/menu-item:text-foreground"
                                                 aria-hidden="true"
                                             />
                                         ) : null}
@@ -382,7 +375,7 @@ export function Menu({
 
                                     {hasSubSections && isExpanded ? (
                                         <ul
-                                            className="ml-3 space-y-1 border-l border-white/10 pl-2"
+                                            className="ml-3 space-y-1 border-l border-border pl-2"
                                             role="list"
                                             aria-label={`${section.label} sub-sections`}
                                         >

@@ -1,4 +1,5 @@
 from enum import Enum
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -35,14 +36,6 @@ class Accent(str, Enum):
     fuchsia = "fuchsia"
     pink = "pink"
     rose = "rose"
-
-
-class Contrast(str, Enum):
-    """Supported contrast preferences."""
-
-    system = "system"
-    medium = "medium"
-    increased = "increased"
 
 
 class Radius(str, Enum):
@@ -82,6 +75,5 @@ class UserUpdate(BaseModel):
     avatar: str | None = None
     theme: Theme | None = None
     accent: Accent | None = None
-    contrast: Contrast | None = None
     radius: Radius | None = None
     language: Language | None = None

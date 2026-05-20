@@ -60,7 +60,7 @@ export default function Organizations() {
 
     return (
         <Layout tabs={{ Organizations: '/organizations', Settings: '/settings' }}>
-            <section className="space-y-8">
+            <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 <Hero icon={<Blocks />} className="w-full">
                     <div className="flex w-full items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
@@ -76,7 +76,7 @@ export default function Organizations() {
                     </div>
                 </Hero>
 
-                <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                <div className="w-full overflow-hidden rounded-2xl border border-border bg-card/80">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -87,20 +87,22 @@ export default function Organizations() {
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-white/60">
+                                    <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
                                         Loading organizations...
                                     </TableCell>
                                 </TableRow>
                             ) : error ? (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-red-300">
+                                    <TableCell colSpan={2} className="py-8 text-sm text-destructive">
                                         Failed to load organizations.
                                     </TableCell>
                                 </TableRow>
                             ) : organizations.length ? (
                                 organizations.map((organization) => (
                                     <TableRow key={organization.name}>
-                                        <TableCell className="font-medium text-white">{organization.name}</TableCell>
+                                        <TableCell className="font-medium text-foreground">
+                                            {organization.name}
+                                        </TableCell>
                                         <TableCell>
                                             <Link
                                                 to={`/${organization.name}`}
@@ -113,7 +115,7 @@ export default function Organizations() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-white/60">
+                                    <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
                                         No organizations found.
                                     </TableCell>
                                 </TableRow>
@@ -148,7 +150,7 @@ export default function Organizations() {
                                 />
                             </div>
 
-                            {createError ? <p className="text-sm text-red-300">{createError}</p> : null}
+                            {createError ? <p className="text-sm text-destructive">{createError}</p> : null}
 
                             <DialogFooter>
                                 <Button

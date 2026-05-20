@@ -1,6 +1,5 @@
-import { useTheme } from '@/components/Theme';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { createContext, useContext, useEffect } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -28,12 +27,10 @@ type Accent =
     | 'pink'
     | 'rose';
 
-type Contrast = 'system' | 'medium' | 'increased';
-
 type Radius = 'none' | 'small' | 'medium' | 'large';
 
 type UserUpdate = Partial<
-    Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'contrast' | 'radius' | 'language'>
+    Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>
 >;
 
 type PreferenceToken = {
@@ -80,7 +77,6 @@ export type User = {
     avatar?: string | null;
     theme?: Theme;
     accent?: Accent;
-    contrast?: Contrast;
     radius?: Radius;
     language?: string;
     oauth_github_id?: number | null;
@@ -89,6 +85,10 @@ export type User = {
         name: string;
     }[];
 };
+
+type UserQueryResult = UseQueryResult<User | null, Error>;
+
+const UserContext = createContext<UserQueryResult | undefined>(undefined);
 
 /** Applies user preferences to the document root. */
 function applyUserPreferences(user: User) {
@@ -100,13 +100,24 @@ function applyUserPreferences(user: User) {
     root.style.setProperty('--accent-foreground', accentForeground);
     root.style.setProperty('--primary-foreground', accentForeground);
     root.style.setProperty('--radius', RADIUS_TOKENS[user.radius ?? 'medium']);
-    root.dataset.contrast = user.contrast ?? 'system';
     root.lang = user.language ?? 'en';
 }
 
+/** Resets document preferences back to the shared defaults. */
+function resetUserPreferences() {
+    const root = window.document.documentElement;
+
+    root.style.removeProperty('--accent');
+    root.style.removeProperty('--primary');
+    root.style.removeProperty('--accent-foreground');
+    root.style.removeProperty('--primary-foreground');
+    root.style.removeProperty('--radius');
+    root.lang = 'en';
+}
+
 /** Hook that fetches the current user. */
-export function useUser() {
-    return useQuery({
+function useUserQuery() {
+    return useQuery<User | null, Error>({
         queryKey: ['api', '/auth/me'],
         queryFn: async () => {
             const response = await fetch('/auth/me', {
@@ -122,6 +133,22 @@ export function useUser() {
         },
         retry: false,
     });
+}
+
+/** Provides the authenticated user query to the app tree. */
+export function UserProvider({ children }: { children: React.ReactNode }) {
+    const user = useUserQuery();
+
+    return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
+}
+
+/** Reads the current user query state from context. */
+export function useUser() {
+    const context = useContext(UserContext);
+
+    if (!context) throw new Error('useUser must be used within a UserProvider');
+
+    return context;
 }
 
 /** Updates the current user profile. */
@@ -152,22 +179,22 @@ export function useUpdateUser() {
     });
 }
 
-/** Keeps the document theme and metadata in sync with the authenticated user. */
+/** Keeps document preferences in sync with the authenticated user. */
 export function UserPreferencesSync() {
-    const { data: user } = useUser();
-    const { theme, setTheme } = useTheme();
+    const { data: user, isLoading } = useUser();
 
     useEffect(() => {
-        if (!user) {
+        if (isLoading) {
             return;
         }
 
-        if ((user.theme ?? 'system') !== theme) {
-            setTheme(user.theme ?? 'system');
+        if (!user) {
+            resetUserPreferences();
+            return;
         }
 
         applyUserPreferences(user);
-    }, [setTheme, theme, user]);
+    }, [isLoading, user]);
 
     return null;
 }

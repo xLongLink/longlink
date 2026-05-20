@@ -18,12 +18,18 @@ class Storage(Root):
         secret_access_key: str,
     ) -> None:
         """Initialize the storage adapter."""
+        super().__init__(
+            protocol=protocol,
+            endpoint_url=endpoint_url,
+            access_key_id=access_key_id,
+            secret_access_key=secret_access_key,
+        )
         self._client = boto3.client(
             "s3",
-            use_ssl=protocol == "https",
-            endpoint_url=endpoint_url,
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=secret_access_key,
+            use_ssl=self._protocol == "https",
+            endpoint_url=self._endpoint_url,
+            aws_access_key_id=self._access_key_id,
+            aws_secret_access_key=self._secret_access_key,
         )
 
     def list(self) -> list[str]:

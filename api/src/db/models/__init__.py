@@ -1,9 +1,22 @@
 # Import all models here to ensure they are registered with Base
 from .apps import App
+from .compute import ComputeRegistry
+from .database import DatabaseRegistry
 from .envs import Env
-from .users import User
 from .__base__ import Base
 from .registries import Registry
 from .organization import Organization
+from .storage import StorageRegistry
+from .users import User
 
-__all__ = ["App", "Env", "Organization", "Registry", "User", "Base"]
+__all__ = [
+    "App",
+    "Base",
+    "ComputeRegistry",
+    "DatabaseRegistry",
+    "Env",
+    "Organization",
+    "Registry",
+    "StorageRegistry",
+    "User",
+]

@@ -5,7 +5,7 @@ type Theme = 'dark' | 'light' | 'system';
 type ThemeProviderProps = {
     children: React.ReactNode;
     defaultTheme?: Theme;
-    storageKey?: string;
+    theme?: Theme;
 };
 
 type ThemeProviderState = {
@@ -23,10 +23,15 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
     children,
     defaultTheme = 'system',
-    storageKey = 'vite-ui-theme',
+    theme: themeOverride,
     ...props
 }: ThemeProviderProps) {
-    const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(storageKey) as Theme) || defaultTheme);
+    const [theme, setTheme] = useState<Theme>(() => themeOverride ?? defaultTheme);
+
+    // Keep the document theme aligned with the current override or default theme.
+    useEffect(() => {
+        setTheme(themeOverride ?? defaultTheme);
+    }, [defaultTheme, themeOverride]);
 
     /* Sync the document theme class with the selected theme. */
     useEffect(() => {
@@ -47,10 +52,9 @@ export function ThemeProvider({
     const value = {
         theme,
         /**
-         * Persists the theme and updates the active document theme.
+         * Updates the active document theme.
          */
         setTheme: (theme: Theme) => {
-            localStorage.setItem(storageKey, theme);
             setTheme(theme);
         },
     };

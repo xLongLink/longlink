@@ -1,7 +1,8 @@
 import time
 import src.db as db
-from fastapi import Response, APIRouter, HTTPException
+from fastapi import Depends, Response, APIRouter, HTTPException
 from src.env import env
+from src.auth import authuser
 from contextlib import suppress
 from src.models.apps import AppCreate, AppResponse
 from src.utils.utils import app_url as compute_app_url
@@ -109,6 +110,16 @@ def _wait_for_deployment_ready(organization: str, app_key: str, timeout: int = 3
         f"Conditions: [{last_conditions}]. "
         f"Container logs:\n{logs}"
     )
+
+
+@router.get("/apps")
+async def list_apps(organization: str, _: db.User = Depends(authuser)) -> list[dict]:
+    """Return the apps registered in one organization."""
+
+    apps = await db.apps.list(organization)
+    return [AppResponse(name=app.name, url=compute_app_url(organization, app.name)).model_dump() for app in apps]
+
+
 @router.post("/apps")
 async def create_app(organization: str, payload: AppCreate) -> AppResponse:
     """Create a new app by provisioning its container and registering it."""

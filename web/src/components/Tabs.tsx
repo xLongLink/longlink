@@ -38,7 +38,7 @@ export function Tabs({ path }: TabsProps) {
 
     return (
         <div className="mx-auto w-full px-6">
-            <div className="flex w-full items-center gap-2 border-b border-white/10">
+            <div className="flex w-full items-center gap-2 border-b border-border">
                 {tabs.map((tab) => {
                     const isActive = tab.value === activeTab;
 
@@ -51,10 +51,10 @@ export function Tabs({ path }: TabsProps) {
                             aria-disabled={tab.value === 'loading'}
                             tabIndex={tab.value === 'loading' ? -1 : undefined}
                             className={cn(
-                                'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-3 text-sm font-medium text-white/60 transition-colors hover:border-white/10 hover:bg-white/5 hover:text-white',
+                                'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/5 hover:text-foreground',
                                 tab.value === 'loading' && 'pointer-events-none opacity-50',
                                 isActive &&
-                                    'text-white after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-white'
+                                    'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-accent'
                             )}
                         >
                             <tab.icon className={cn('h-4 w-4', tab.value === 'loading' && 'animate-spin')} />

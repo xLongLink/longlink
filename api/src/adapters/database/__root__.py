@@ -12,9 +12,27 @@ class Database(ABC):
             └── Tables  # Managed by the applications, using an ORM (e.g. Prisma, SQLAlchemy, etc.)
     """
 
-    def __init__(self) -> None:
-        """Initialize the database adapter."""
-        pass
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        user: str,
+        password: str,
+        sslmode: str | None = None,
+        maintenance_database: str = "postgres",
+    ) -> None:
+        """Store the shared database connection settings."""
+        self._kwargs: dict[str, str | int] = {
+            "host": host,
+            "port": port,
+            "user": user,
+            "password": password,
+            "dbname": maintenance_database,
+        }
+        self._maintenance_database = maintenance_database
+
+        if sslmode:
+            self._kwargs["sslmode"] = sslmode
 
     @abstractmethod
     async def list(self, organization: str) -> list[str]:

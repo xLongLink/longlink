@@ -22,17 +22,14 @@ class Postgre(Database):
         maintenance_database: str = "postgres",
     ) -> None:
         """Initialize the PostgreSQL database adapter."""
-        self._kwargs: dict[str, str | int] = {
-            "host": host,
-            "port": port,
-            "user": user,
-            "password": password,
-            "dbname": maintenance_database,
-        }
-        self._maintenance_database = maintenance_database
-
-        if sslmode:
-            self._kwargs["sslmode"] = sslmode
+        super().__init__(
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            sslmode=sslmode,
+            maintenance_database=maintenance_database,
+        )
 
     async def _ensure_organization_database(self, organization: str) -> None:
         """Create the organization database when it is missing."""

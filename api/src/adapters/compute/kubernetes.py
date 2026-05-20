@@ -21,9 +21,11 @@ class Compute(Root):
         ingress_name: str = "control-ingress",
     ) -> None:
         """Initialize the Kubernetes compute adapter."""
-        self._kube_config_path = kube_config_path
-        self.ingress_host = ingress_host
-        self.ingress_name = ingress_name
+        super().__init__(
+            kube_config_path=kube_config_path,
+            ingress_host=ingress_host,
+            ingress_name=ingress_name,
+        )
 
     def _api_client(self) -> client.ApiClient:
         """Return a Kubernetes API client for the configured kubeconfig."""

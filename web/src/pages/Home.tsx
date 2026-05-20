@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
 /** Renders the public home page. */
 export default function Home() {
     return (
-        <div className="page-shell min-h-screen text-white">
+        <div className="page-shell min-h-screen text-foreground">
             <Navbar />
             <main className="mx-auto flex min-h-[calc(100vh-9rem)] w-full max-w-[1000px] items-center px-6 py-16">
                 <div className="grid w-full gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
@@ -15,7 +15,7 @@ export default function Home() {
                             <h1 className="max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
                                 One workspace for apps, metadata, and access.
                             </h1>
-                            <p className="max-w-2xl text-base leading-7 text-white/70 sm:text-lg">
+                            <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
                                 Sign in to open your organization, browse app pages, and manage the shared LongLink
                                 runtime.
                             </p>
@@ -36,6 +36,23 @@ export default function Home() {
                             </a>
                         </div>
                     </section>
+
+                    <aside className="rounded-2xl border border-border bg-card/80 p-6 shadow-sm backdrop-blur-sm">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                                    Quick guide
+                                </p>
+                                <h2 className="text-xl font-semibold text-foreground">How to get started</h2>
+                            </div>
+
+                            <ul className="space-y-3 text-sm text-muted-foreground">
+                                <li>Sign in to access your organization and workspace apps.</li>
+                                <li>Use the playground to preview XML-backed pages before publishing.</li>
+                                <li>Open settings to switch theme and update your preferences.</li>
+                            </ul>
+                        </div>
+                    </aside>
                 </div>
             </main>
             <Footer />

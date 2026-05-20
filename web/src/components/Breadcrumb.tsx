@@ -39,7 +39,7 @@ export function Breadcrumb() {
                                     <Link
                                         {...props}
                                         to={crumb.href}
-                                        className="text-sm font-semibold text-white/70 hover:underline"
+                                        className="text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline"
                                     >
                                         {crumb.label}
                                     </Link>

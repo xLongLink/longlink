@@ -24,7 +24,7 @@ function Hero({ className, icon, children, ...props }: HeroProps) {
             className?: string;
         }> | null;
 
-        iconNode = Icon ? <Icon aria-hidden="true" className="size-5" /> : null;
+        iconNode = Icon ? <Icon aria-hidden="true" className="size-5" strokeWidth={2.5} /> : null;
     } else {
         iconNode = icon;
     }
@@ -34,7 +34,7 @@ function Hero({ className, icon, children, ...props }: HeroProps) {
             {iconNode ? (
                 <div
                     data-slot="hero-icon"
-                    className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent [&_svg]:size-5"
+                    className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent [&_svg]:size-5 [&_svg]:stroke-[2.5]"
                 >
                     {iconNode}
                 </div>
