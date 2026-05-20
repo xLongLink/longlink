@@ -1,7 +1,7 @@
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from src.db.models import Organization
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 from src.db.session import get_session
 
 

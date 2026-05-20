@@ -29,9 +29,7 @@ type Accent =
 
 type Radius = 'none' | 'small' | 'medium' | 'large';
 
-type UserUpdate = Partial<
-    Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>
->;
+type UserUpdate = Partial<Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
 
 type PreferenceToken = {
     accent: string;

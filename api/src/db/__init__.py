@@ -1,9 +1,10 @@
-from .models import (App, Base, ComputeRegistry, DatabaseRegistry, Env,
-                     Organization, Registry, StorageRegistry, User)  # noqa: F401
-from .services import (AppsService, ComputeRegistriesService,
-                       DatabaseRegistriesService, EnvsService,
-                       OrganizationsService, RegistriesService,
-                       StorageRegistriesService, UsersService)
+from .models import (App, Env, Base, User, Registry,  # noqa: F401
+                     Organization, ComputeRegistry, StorageRegistry,
+                     DatabaseRegistry)
+from .services import (AppsService, EnvsService, UsersService,
+                       RegistriesService, OrganizationsService,
+                       ComputeRegistriesService, StorageRegistriesService,
+                       DatabaseRegistriesService)
 
 apps = AppsService()
 envs = EnvsService()

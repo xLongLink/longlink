@@ -1,7 +1,5 @@
-from sqlalchemy import Column, ForeignKey, Table
-
+from sqlalchemy import Table, Column, ForeignKey
 from src.db.models.__base__ import Base
-
 
 user_organizations = Table(
     'user_organizations',

@@ -1,9 +1,8 @@
-import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine
-
 import src.db as db
-from src.db.models import Base
+import asyncio
 from src.env import env
+from src.db.models import Base
+from sqlalchemy.ext.asyncio import create_async_engine
 
 DEFAULT_ORGANIZATIONS = ("default",)
 

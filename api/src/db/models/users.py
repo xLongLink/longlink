@@ -1,10 +1,8 @@
 from typing import TYPE_CHECKING
-
 from sqlmodel import Field, Relationship
-
+from src.models.users import Theme, Accent, Radius, Language
 from src.db.models.__base__ import Base
 from src.db.models.association import user_organizations
-from src.models.users import Accent, Language, Radius, Theme
 
 if TYPE_CHECKING:
     from src.db.models.organization import Organization

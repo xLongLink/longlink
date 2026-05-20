@@ -1,5 +1,4 @@
 from sqlmodel import Field
-
 from src.db.models.__base__ import Base
 
 

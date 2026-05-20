@@ -1,8 +1,4 @@
-import {
-    Menu as UIMenu,
-    MenuSection as UIMenuSection,
-    MenuSubSection as UIMenuSubSection,
-} from '@ui/menu';
+import { Menu as UIMenu, MenuSection as UIMenuSection, MenuSubSection as UIMenuSubSection } from '@ui/menu';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';

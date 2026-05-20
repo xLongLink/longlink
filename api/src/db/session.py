@@ -1,5 +1,6 @@
 from src.env import env
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
+                                    async_sessionmaker, create_async_engine)
 
 _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None

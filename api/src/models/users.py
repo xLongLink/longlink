@@ -1,6 +1,5 @@
 from enum import Enum
-
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr, BaseModel
 
 
 class Theme(str, Enum):

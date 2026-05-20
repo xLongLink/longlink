@@ -1,5 +1,4 @@
 from sqlalchemy import select
-
 from src.db.models import StorageRegistry
 from src.db.session import get_session
 

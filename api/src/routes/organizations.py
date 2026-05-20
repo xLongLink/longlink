@@ -1,5 +1,5 @@
 import src.db as db
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import Response, APIRouter, HTTPException, status
 from src.models.organizations import OrganizationCreate
 
 router = APIRouter(prefix="/api/organizations")

@@ -1,8 +1,8 @@
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from src.db.models import User
+from sqlalchemy.orm import selectinload
 from src.db.session import get_session
-from src.models.users import Accent, Radius, Theme
+from src.models.users import Theme, Accent, Radius
 
 
 class UsersService:
