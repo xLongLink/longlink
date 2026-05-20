@@ -4,7 +4,7 @@ import { isReference, resolvePath } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
 import { resolveXmlValue } from './props';
 
-const EMPTY_BINDING = proxy({ value: undefined });
+const EMPTY_BINDING = proxy({ value: undefined }) as Record<string, unknown>;
 
 type BindingResult = {
     bound: boolean;
@@ -71,12 +71,12 @@ function resolveBindableTarget(
     if (parts.length === 1) {
         const state = resolvePath(ctx, parts);
 
-        return isBindableValue(state) ? { state } : undefined;
+        return isBindableValue(state as XmlBindableValue | undefined) ? { state: state as Record<string, unknown> } : undefined;
     }
 
     const parent = resolvePath(ctx, parts.slice(0, -1));
 
-    if (!parent || typeof parent !== 'object' || getVersion(parent) === undefined) return undefined;
+    if (!parent || typeof parent !== 'object' || getVersion(parent as object) === undefined) return undefined;
 
     return {
         key: parts[parts.length - 1],

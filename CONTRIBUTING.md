@@ -50,4 +50,10 @@ The release workflow runs on `v*` tag pushes and publishes the release automatic
 ```bash
 git tag vX.Y.Z
 git push origin vX.Y.Z
+
+# delete local tag
+git tag -d vX.Y.Z
+git push origin :refs/tags/vX.Y.Z
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```

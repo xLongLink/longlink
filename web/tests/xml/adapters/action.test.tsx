@@ -30,7 +30,7 @@ describe('Action', () => {
             requestInit = init;
 
             return new Response('', { status: 204 });
-        }) as typeof fetch;
+        }) as unknown as typeof fetch;
 
         await executeAction(
             {
@@ -82,7 +82,7 @@ describe('Action', () => {
             fetchCalls += 1;
 
             return new Response('', { status: 204 });
-        }) as typeof fetch;
+        }) as unknown as typeof fetch;
 
         await executeAction(
             {

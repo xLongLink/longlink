@@ -22,6 +22,7 @@ tests:
 	cd sdk && uv sync --extra dev
 	cd sdk && uv run pytest
 	bun test --cwd web
+	bun run --cwd web build:sdk --logLevel warn
 
 
 build: 

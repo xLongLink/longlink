@@ -62,8 +62,10 @@ describe('Button', () => {
             ctx
         );
 
-        expect(ctx.values.cart).toHaveLength(1);
-        expect(ctx.values.cart[0]).toEqual({ name: 'Apples', quantity: 1, price: '$2.40' });
+        const cart = ctx.values.cart as Array<{ name: string; quantity: number; price: string }>;
+
+        expect(cart).toHaveLength(1);
+        expect(cart[0]).toEqual({ name: 'Apples', quantity: 1, price: '$2.40' });
     });
 
     /* The runtime should honor conditional rendering on button nodes. */
