@@ -10,44 +10,11 @@ import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from '.
 export function Action({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const action = resolveXmlString(props, 'action', ctx, '');
-    const invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
-    const json = resolveXmlExpression(props, 'json');
-    const method = resolveXmlString(props, 'method', ctx, 'POST');
-    const actionUrl = String(action ?? '');
-    const requestUrl = useUrl(actionUrl);
-    const invalidateRuntime = ctx.invalidate ?? (async () => {});
-    const normalizedMethod = method.trim().toUpperCase();
+    const requestUrl = useUrl(String(action ?? ''));
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleClick() {
-        // Recreate any invalidated runtime sources after the action succeeds.
-        const ids = invalidate;
-        const jsonValue = json ? json(ctx) : undefined;
-
-        if (!actionUrl) {
-            await invalidateRuntime(ids);
-
-            return;
-        }
-
-        const init: RequestInit = { method: normalizedMethod };
-
-        if (jsonValue !== undefined) {
-            // Resolve the compiled payload at click time so it sees the latest state.
-            init.body = JSON.stringify(jsonValue);
-            init.headers = { 'content-type': 'application/json' };
-        }
-
-        const response = await fetch(requestUrl, init);
-
-        if (!response.ok) {
-            toast.error(`Request failed with status ${response.status}`);
-            return;
-        }
-
-        await invalidateRuntime(ids);
-
-        toast.success(`Request completed with status ${response.status}`);
+        await executeAction(props, ctx, requestUrl, fetch, toast);
     }
 
     return (
@@ -55,4 +22,48 @@ export function Action({ props, nodes }: Props) {
             {renderNode(nodes, ctx)}
         </UIButton>
     );
+}
+
+
+/** Executes the action request and invalidation flow. */
+export async function executeAction(
+    props: Props['props'],
+    ctx: ReturnType<typeof useXmlContext>['ctx'],
+    requestUrl: string,
+    fetchImpl: typeof fetch = fetch,
+    toastApi: { success(message: string): void; error(message: string): void } = toast
+): Promise<void> {
+    const invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
+    const json = resolveXmlExpression(props, 'json');
+    const method = resolveXmlString(props, 'method', ctx, 'POST');
+    const invalidateRuntime = ctx.invalidate ?? (async () => {});
+    const normalizedMethod = method.trim().toUpperCase();
+    const actionUrl = String(resolveXmlString(props, 'action', ctx, '') ?? '');
+
+    // Resolve the compiled payload at click time so it sees the latest state.
+    const jsonValue = json ? json(ctx) : undefined;
+
+    if (!actionUrl) {
+        await invalidateRuntime(invalidate);
+
+        return;
+    }
+
+    const init: RequestInit = { method: normalizedMethod };
+
+    if (jsonValue !== undefined) {
+        init.body = JSON.stringify(jsonValue);
+        init.headers = { 'content-type': 'application/json' };
+    }
+
+    const response = await fetchImpl(requestUrl, init);
+
+    if (!response.ok) {
+        toastApi.error(`Request failed with status ${response.status}`);
+        return;
+    }
+
+    await invalidateRuntime(invalidate);
+
+    toastApi.success(`Request completed with status ${response.status}`);
 }

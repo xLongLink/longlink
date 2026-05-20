@@ -1,40 +1,18 @@
 import { parseXML } from '@xml/core/parser';
-import { describe, expect, it, mock } from 'bun:test';
+import { executeAction } from '@xml/adapters/Action';
+import type { ExecutionContext } from '@xml/types';
+import { describe, expect, it } from 'bun:test';
 import { renderXmlToMarkup } from '../helpers';
-
-let runtimeContext = {
-    setups: {},
-    invalidate: async (_ids: string | string[]) => {},
-    values: {},
-};
-
-mock.module('@xml/core/context', () => ({
-    useXmlContext: () => ({ ctx: runtimeContext }),
-}));
-
-mock.module('@xml/core/url', () => ({
-    useUrl: (value: string) => value,
-}));
-
-mock.module('sonner', () => ({
-    toast: {
-        success: () => {},
-        error: () => {},
-    },
-}));
-
-const { Action } = await import('@xml/adapters/Action');
 
 describe('Action', () => {
     /* The action shell should send a request with a JSON payload. */
     it('sends a request and invalidates after success', async () => {
         let invalidateCalls = 0;
-        const invalidate = async () => {
-            invalidateCalls += 1;
-        };
-        runtimeContext = {
+        const ctx: ExecutionContext = {
             setups: {},
-            invalidate,
+            invalidate: async () => {
+                invalidateCalls += 1;
+            },
             values: {
                 fullName: 'Ada Lovelace',
                 email: 'ada@example.com',
@@ -42,12 +20,11 @@ describe('Action', () => {
             },
         };
 
-        const originalFetch = globalThis.fetch;
         let requestUrl = '';
         let requestInit: RequestInit | undefined;
         let fetchCalls = 0;
 
-        globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+        const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
             fetchCalls += 1;
             requestUrl = String(input);
             requestInit = init;
@@ -55,33 +32,30 @@ describe('Action', () => {
             return new Response('', { status: 204 });
         }) as typeof fetch;
 
-        try {
-            const element = Action({
-                props: {
-                    action: '/example/profile',
-                    json: '${{ fullName: fullName, email: email, notes: notes }}',
-                    invalidate: '${["profile"]}',
-                },
-                nodes: [{ name: 'Text', params: { value: 'Save profile' } }],
-            });
+        await executeAction(
+            {
+                action: '/example/profile',
+                json: '${{ fullName: fullName, email: email, notes: notes }}',
+                invalidate: '${["profile"]}',
+            },
+            ctx,
+            '/example/profile',
+            fetchImpl,
+            { success: () => {}, error: () => {} }
+        );
 
-            await element.props.onClick();
-
-            expect(requestUrl).toBe('/example/profile');
-            expect(requestInit?.method).toBe('POST');
-            expect(requestInit?.headers).toEqual({ 'content-type': 'application/json' });
-            expect(requestInit?.body).toBe(
-                JSON.stringify({
-                    fullName: 'Ada Lovelace',
-                    email: 'ada@example.com',
-                    notes: 'Build the first program',
-                })
-            );
-            expect(fetchCalls).toBe(1);
-            expect(invalidateCalls).toBe(1);
-        } finally {
-            globalThis.fetch = originalFetch;
-        }
+        expect(requestUrl).toBe('/example/profile');
+        expect(requestInit?.method).toBe('POST');
+        expect(requestInit?.headers).toEqual({ 'content-type': 'application/json' });
+        expect(requestInit?.body).toBe(
+            JSON.stringify({
+                fullName: 'Ada Lovelace',
+                email: 'ada@example.com',
+                notes: 'Build the first program',
+            })
+        );
+        expect(fetchCalls).toBe(1);
+        expect(invalidateCalls).toBe(1);
     });
 
     /* The trigger content should come directly from the children. */
@@ -95,44 +69,51 @@ describe('Action', () => {
     /* The action shell should still invalidate without an endpoint. */
     it('invalidates slots when no action is configured', async () => {
         let invalidateCalls = 0;
-        const invalidate = async () => {
-            invalidateCalls += 1;
-        };
-        runtimeContext = {
+        const ctx: ExecutionContext = {
             setups: {},
-            invalidate,
+            invalidate: async () => {
+                invalidateCalls += 1;
+            },
             values: {},
         };
 
-        const originalFetch = globalThis.fetch;
         let fetchCalls = 0;
-        globalThis.fetch = (async () => {
+        const fetchImpl = (async () => {
             fetchCalls += 1;
 
             return new Response('', { status: 204 });
         }) as typeof fetch;
 
-        try {
-            const element = Action({
-                props: {
-                    invalidate: '${["selectedUserId"]}',
-                },
-                nodes: [{ name: 'Text', params: { value: 'Reset' } }],
-            });
+        await executeAction(
+            {
+                invalidate: '${["selectedUserId"]}',
+            },
+            ctx,
+            '',
+            fetchImpl,
+            { success: () => {}, error: () => {} }
+        );
 
-            await element.props.onClick();
-
-            expect(invalidateCalls).toBe(1);
-            expect(fetchCalls).toBe(0);
-        } finally {
-            globalThis.fetch = originalFetch;
-        }
+        expect(invalidateCalls).toBe(1);
+        expect(fetchCalls).toBe(0);
     });
 
     /* The invalidation list must be an array expression so runtime refreshes stay predictable. */
-    it('throws when invalidate is not an array', () => {
-        expect(() => renderXmlToMarkup(parseXML('<Action invalidate="selectedUsers">Reset</Action>'))).toThrow(
-            'invalidate must evaluate to an array'
-        );
+    it('throws when invalidate is not an array', async () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+        };
+
+        await expect(
+            executeAction(
+                {
+                    invalidate: 'selectedUsers',
+                },
+                ctx,
+                ''
+            )
+        ).rejects.toThrow('invalidate must evaluate to an array');
     });
 });

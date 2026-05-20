@@ -14,23 +14,8 @@ export function Button({ props, nodes }: Props) {
     const disabled = resolveXmlBoolean(props, 'disabled', ctx, false);
     const appendTarget = resolveXmlString(props, 'append', ctx);
 
-    /** Appends the resolved item to a cart-style array state slot. */
     function handleClick() {
-        if (!appendTarget) return;
-
-        const target = resolvePath(ctx, appendTarget.split('.').filter(Boolean));
-        if (!target || typeof target !== 'object') return;
-
-        const item = resolveXmlValue(props, 'item', ctx);
-
-        if (Array.isArray(target)) {
-            target.push(item);
-            return;
-        }
-
-        if ('value' in target && Array.isArray(target.value)) {
-            target.value.push(item);
-        }
+        appendButtonItem(props, ctx, appendTarget);
     }
 
     if (submit) {
@@ -58,4 +43,26 @@ export function Button({ props, nodes }: Props) {
             {renderNode(nodes, ctx)}
         </UIButton>
     );
+}
+
+
+/** Appends the resolved item to a cart-style array state slot. */
+export function appendButtonItem(props: Props['props'], ctx: ReturnType<typeof useXmlContext>['ctx'], appendTarget?: string) {
+    const targetPath = appendTarget ?? resolveXmlString(props, 'append', ctx);
+
+    if (!targetPath) return;
+
+    const target = resolvePath(ctx, targetPath.split('.').filter(Boolean));
+    if (!target || typeof target !== 'object') return;
+
+    const item = resolveXmlValue(props, 'item', ctx);
+
+    if (Array.isArray(target)) {
+        target.push(item);
+        return;
+    }
+
+    if ('value' in target && Array.isArray(target.value)) {
+        target.value.push(item);
+    }
 }
