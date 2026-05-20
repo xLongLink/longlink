@@ -53,7 +53,7 @@ export {
 export { Label } from './Label';
 export { Li } from './Li';
 export { Longlink } from './Longlink';
-export { Menu, MenuContent, MenuList, MenuSection, MenuSubSection } from './Menu';
+export { Menu, MenuSection, MenuSubSection } from './Menu';
 export { Ol } from './Ol';
 export { P } from './P';
 export * from './props';

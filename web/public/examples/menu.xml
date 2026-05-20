@@ -1,51 +1,35 @@
 <longlink>
     <Menu defaultValue="settings">
-        <MenuList>
-            <MenuSection value="overview">Overview</MenuSection>
-            <MenuSection value="operations">
-                Operations
-                <MenuSubSection value="orders">Orders</MenuSubSection>
-                <MenuSubSection value="returns">Returns</MenuSubSection>
-            </MenuSection>
-            <MenuSection value="catalog">
-                Catalog
-                <MenuSubSection value="products">Products</MenuSubSection>
-                <MenuSubSection value="categories">Categories</MenuSubSection>
-                <MenuSubSection value="inventory">Inventory</MenuSubSection>
-            </MenuSection>
-            <MenuSection value="settings">
-                Settings
-                <MenuSubSection value="profile">Profile</MenuSubSection>
-                <MenuSubSection value="team">Team</MenuSubSection>
-                <MenuSubSection value="billing">Billing</MenuSubSection>
-            </MenuSection>
-        </MenuList>
-
-        <MenuContent value="overview">
+        <MenuSection value="overview" label="Overview">
             <P>Today&apos;s snapshot: 128 orders, 14 refunds, and 3 alerts need attention.</P>
-        </MenuContent>
-        <MenuContent value="operations">
+        </MenuSection>
+
+        <MenuSection value="operations" label="Operations">
             <P>Operations center for live queue management, fulfillment, and support escalations.</P>
-        </MenuContent>
-        <MenuContent value="orders">
-            <P>Open orders waiting on payment capture, packing, or shipment confirmation.</P>
-        </MenuContent>
-        <MenuContent value="returns">
-            <P>Track return requests, inspection results, and refund approvals.</P>
-        </MenuContent>
-        <MenuContent value="catalog">
+
+            <MenuSubSection value="orders" label="Orders">
+                <P>Open orders waiting on payment capture, packing, or shipment confirmation.</P>
+            </MenuSubSection>
+            <MenuSubSection value="returns" label="Returns">
+                <P>Track return requests, inspection results, and refund approvals.</P>
+            </MenuSubSection>
+        </MenuSection>
+
+        <MenuSection value="catalog" label="Catalog">
             <P>Catalog management for product data, merchandising, and stock health.</P>
-        </MenuContent>
-        <MenuContent value="products">
-            <P>Manage product titles, pricing, variants, and publication status.</P>
-        </MenuContent>
-        <MenuContent value="categories">
-            <P>Organize the storefront taxonomy and featured collections.</P>
-        </MenuContent>
-        <MenuContent value="inventory">
-            <P>Monitor low-stock SKUs, warehouse counts, and replenishment triggers.</P>
-        </MenuContent>
-        <MenuContent value="settings">
+
+            <MenuSubSection value="products" label="Products">
+                <P>Manage product titles, pricing, variants, and publication status.</P>
+            </MenuSubSection>
+            <MenuSubSection value="categories" label="Categories">
+                <P>Organize the storefront taxonomy and featured collections.</P>
+            </MenuSubSection>
+            <MenuSubSection value="inventory" label="Inventory">
+                <P>Monitor low-stock SKUs, warehouse counts, and replenishment triggers.</P>
+            </MenuSubSection>
+        </MenuSection>
+
+        <MenuSection value="settings" label="Settings">
             <FieldSet>
                 <FieldLegend>Workspace settings</FieldLegend>
                 <FieldDescription>Configure the dashboard for the current team and workflow.</FieldDescription>
@@ -97,15 +81,18 @@
                     </Field>
                 </FieldGroup>
             </FieldSet>
-        </MenuContent>
-        <MenuContent value="profile">
+        </MenuSection>
+
+        <MenuSection value="profile" label="Profile">
             <P>Update your display name, role, notification preferences, and avatar.</P>
-        </MenuContent>
-        <MenuContent value="team">
+        </MenuSection>
+
+        <MenuSection value="team" label="Team">
             <P>Invite teammates, assign permissions, and review access history.</P>
-        </MenuContent>
-        <MenuContent value="billing">
+        </MenuSection>
+
+        <MenuSection value="billing" label="Billing">
             <P>Review subscription status, invoices, and payment methods.</P>
-        </MenuContent>
+        </MenuSection>
     </Menu>
 </longlink>

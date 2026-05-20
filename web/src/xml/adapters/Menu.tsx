@@ -1,7 +1,5 @@
 import {
     Menu as UIMenu,
-    MenuContent as UIMenuContent,
-    MenuList as UIMenuList,
     MenuSection as UIMenuSection,
     MenuSubSection as UIMenuSubSection,
 } from '@ui/menu';
@@ -11,16 +9,6 @@ import { evaluate } from '@xml/expressions';
 import type { ASTNode, ExecutionContext, Props } from '@xml/types';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
-
-/** Props accepted by the XML Menu component. */
-
-/** Props accepted by the XML MenuList component. */
-
-/** Props accepted by the XML MenuSection component. */
-
-/** Props accepted by the XML MenuSubSection component. */
-
-/** Props accepted by the XML MenuContent component. */
 
 /** Renders the sidebar-style menu shell. */
 export function Menu({ props, nodes }: Props) {
@@ -38,16 +26,9 @@ export function Menu({ props, nodes }: Props) {
 
     return (
         <UIMenu value={activeValue} onValueChange={setActiveValue}>
-            {renderNode(nodes, ctx)}
+            {renderMenuNodes(nodes, ctx)}
         </UIMenu>
     );
-}
-
-/** Renders the menu list slot. */
-export function MenuList({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-
-    return <UIMenuList>{renderMenuListNodes(nodes, ctx)}</UIMenuList>;
 }
 
 /** Renders a root menu section. */
@@ -78,19 +59,6 @@ export function MenuSubSection({ props, nodes }: Props) {
     );
 }
 
-/** Renders the active menu content panel. */
-export function MenuContent({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-    const value = requireXmlString(props, 'value', ctx, 'MenuContent');
-    const className = resolveXmlString(props, 'className', ctx);
-
-    return (
-        <UIMenuContent className={className} value={value}>
-            {renderNode(nodes, ctx)}
-        </UIMenuContent>
-    );
-}
-
 /** Coerces XML boolean-like attributes into React boolean props. */
 function booleanAttribute(value: unknown): boolean | undefined {
     if (value === false || value === 'false') return false;
@@ -99,8 +67,8 @@ function booleanAttribute(value: unknown): boolean | undefined {
     return true;
 }
 
-/** Renders AST menu section markers for the underlying UI menu parser. */
-function renderMenuListNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
+/** Renders top-level menu section markers for the UI menu parser. */
+function renderMenuNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
     return nodes.map((node, index) => {
         if (node.params?.if != null && !evaluate(node.params.if, ctx)) {
             return <Fragment key={index} />;
@@ -122,7 +90,7 @@ function renderMenuListNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode
     });
 }
 
-/** Renders nested menu section children while preserving subsection marker elements. */
+/** Renders nested menu section children while preserving subsection markers. */
 function renderMenuSectionChildren(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
     return nodes.map((node, index) => {
         if (node.params?.if != null && !evaluate(node.params.if, ctx)) {

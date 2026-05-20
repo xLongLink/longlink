@@ -120,7 +120,7 @@ Registered in `src/routes/__init__.py`.
 - Auth: `src/routes/auth.py`
 - Org metadata: `GET /api/{name}/metadata.json`
 - User metadata: `GET /api/user/metadata.json`
-- User orgs: `GET /api/user/organizations`
+- User orgs: `GET /auth/me` includes `organizations`
 - App list: `GET /api/orgs/{organization}/apps`
 - App metadata: `GET /api/orgs/{organization}/apps/{app_name}/metadata`
 - App proxy: `GET|POST|PUT|PATCH|DELETE /api/orgs/{organization}/apps/{app_name}[/{full_path:path}]`

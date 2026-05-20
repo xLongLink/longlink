@@ -48,6 +48,11 @@
     --ring: oklch(0.556 0 0);
 }
 
+html[data-contrast='increased'] {
+    --border: color-mix(in oklab, var(--foreground) 20%, var(--background));
+    --ring: color-mix(in oklab, var(--foreground) 55%, var(--background));
+}
+
 @theme inline {
     --font-sans: 'Inter Variable', sans-serif;
     --color-ring: var(--ring);

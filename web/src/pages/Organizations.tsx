@@ -1,5 +1,6 @@
 import Layout from '@/Layout';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useUser } from '@/hooks/use-user';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@ui/dialog';
 import { Hero, HeroContent, HeroDescription, HeroTitle } from '@ui/hero';
@@ -9,12 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Blocks } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-
-type OrganizationsResponse = {
-    items: {
-        name: string;
-    }[];
-};
 
 type OrganizationCreateResponse = {
     organization: {
@@ -28,23 +23,10 @@ export default function Organizations() {
     const [createOpen, setCreateOpen] = useState(false);
     const [name, setName] = useState('');
     const [createError, setCreateError] = useState<string | null>(null);
+    const { data: user, isLoading, error } = useUser();
 
-    // Load the organizations visible to the current user.
-    const { data, isLoading, error } = useQuery({
-        queryKey: ['api', '/api/user/organizations'],
-        queryFn: async () => {
-            const response = await fetch('/api/user/organizations', {
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            return (await response.json()) as OrganizationsResponse;
-        },
-    });
+    // Read the organizations already attached to the shared user payload.
+    const organizations = user?.organizations ?? [];
 
     const createOrganization = useMutation({
         mutationFn: async () => {
@@ -69,7 +51,7 @@ export default function Organizations() {
             setCreateOpen(false);
             setName('');
             setCreateError(null);
-            await queryClient.invalidateQueries({ queryKey: ['api', '/api/user/organizations'] });
+            await queryClient.invalidateQueries({ queryKey: ['api', '/auth/me'] });
         },
         onError: (mutationError: Error) => {
             setCreateError(mutationError.message);
@@ -115,8 +97,8 @@ export default function Organizations() {
                                         Failed to load organizations.
                                     </TableCell>
                                 </TableRow>
-                            ) : data?.items?.length ? (
-                                data.items.map((organization) => (
+                            ) : organizations.length ? (
+                                organizations.map((organization) => (
                                     <TableRow key={organization.name}>
                                         <TableCell className="font-medium text-white">{organization.name}</TableCell>
                                         <TableCell>

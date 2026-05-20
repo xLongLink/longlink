@@ -63,8 +63,6 @@ import {
     Li,
     Longlink,
     Menu,
-    MenuContent,
-    MenuList,
     MenuSection,
     MenuSubSection,
     Ol,
@@ -212,8 +210,6 @@ export const xmlComponentRegistry: Record<string, ComponentType<any>> = {
     TableHead,
     TableCell,
     Menu,
-    MenuList,
     MenuSection,
     MenuSubSection,
-    MenuContent,
 };

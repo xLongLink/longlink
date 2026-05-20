@@ -18,13 +18,6 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="MenuListType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="MenuChildrenOnlyType">
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:complexType name="MenuSectionType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="MenuChildrenOnlyType">
@@ -45,18 +38,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="MenuContentType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="MenuChildrenOnlyType">
-        <xsd:attribute name="value" type="xsd:string" use="required" />
-        <xsd:attribute name="className" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:element name="Menu" type="MenuType" />
-  <xsd:element name="MenuList" type="MenuListType" />
   <xsd:element name="MenuSection" type="MenuSectionType" />
   <xsd:element name="MenuSubSection" type="MenuSubSectionType" />
-  <xsd:element name="MenuContent" type="MenuContentType" />
 </xsd:schema>

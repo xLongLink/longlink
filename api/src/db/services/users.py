@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from src.db.models import User
 from src.db.session import get_session
+from src.models.users import Accent, Contrast, Radius, Theme
 
 
 class UsersService:
@@ -72,7 +73,11 @@ class UsersService:
 
             return result.scalars().first()
 
-    async def update(self, user_id: int, **params: str | int | None) -> User | None:
+    async def update(
+        self,
+        user_id: int,
+        **params: str | int | Theme | Accent | Contrast | Radius | None,
+    ) -> User | None:
         '''Update a user and return the updated record.'''
 
         Session = await get_session()

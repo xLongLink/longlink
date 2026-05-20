@@ -79,7 +79,12 @@ async def logout(request: Request):
 @router.get("/me")
 async def get_me(user: db.User = Depends(authuser)):
     """Return the authenticated user's details."""
-    return user
+
+    # Attach the user's visible organizations to the shared session payload.
+    organizations = await db.organizations.list()
+    payload = user.model_dump()
+    payload["organizations"] = [{"name": organization.name} for organization in organizations]
+    return payload
 
 
 @router.patch("/me")

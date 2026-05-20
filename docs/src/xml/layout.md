@@ -66,17 +66,17 @@ TODO: Component description
 
 ```xml
 <Menu defaultValue="first">
-  <MenuList>
-    <MenuSection value="overview">Overview</MenuSection>
-    <MenuSection value="settings">
-      Settings
-      <MenuSubSection value="profile">Profile</MenuSubSection>
-      <MenuSubSection value="billing">Billing</MenuSubSection>
-    </MenuSection>
-  </MenuList>
-  <MenuContent value="overview">Overview content</MenuContent>
-  <MenuContent value="settings">Settings content</MenuContent>
-  <MenuContent value="profile">Profile content</MenuContent>
-  <MenuContent value="billing">Billing content</MenuContent>
+  <MenuSection value="overview" label="Overview">
+    <P>Overview content</P>
+  </MenuSection>
+  <MenuSection value="settings" label="Settings">
+    <P>Settings content</P>
+    <MenuSubSection value="profile" label="Profile">
+      <P>Profile content</P>
+    </MenuSubSection>
+    <MenuSubSection value="billing" label="Billing">
+      <P>Billing content</P>
+    </MenuSubSection>
+  </MenuSection>
 </Menu>
 ```

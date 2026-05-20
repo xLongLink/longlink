@@ -138,10 +138,8 @@ It focuses on authoring complete, valid XML documents and using the runtime comp
 ### Menu and Navigation
 
 - `<Menu>`: sidebar/menu shell.
-- `<MenuList>`: menu list.
-- `<MenuSection>`: top-level section.
-- `<MenuSubSection>`: nested section.
-- `<MenuContent>`: panel for the active menu item.
+- `<MenuSection>`: top-level section with nested content and subsections.
+- `<MenuSubSection>`: nested section with its own content.
 
 ## Common Patterns
 
