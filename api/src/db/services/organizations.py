@@ -2,25 +2,24 @@ from sqlalchemy import select
 from src.db.models import Organization
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.db.session import get_session
+
+from .base import ServiceBase
 
 
-class OrganizationsService:
+class OrganizationsService(ServiceBase):
     """Manage organization records."""
 
     async def list(self) -> list[Organization]:
         """Return all organizations in the database."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             result = await session.execute(select(Organization))
             return list(result.scalars().all())
 
     async def get(self, name: str) -> Organization | None:
         """Return one organization by name."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             statement = select(Organization).options(selectinload(Organization.users)).where(Organization.name == name)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
@@ -28,8 +27,7 @@ class OrganizationsService:
     async def create(self, name: str) -> Organization:
         """Create an organization."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             organization = Organization(name=name)
             session.add(organization)
 
@@ -45,8 +43,7 @@ class OrganizationsService:
     async def delete(self, name: str) -> Organization | None:
         """Delete one organization by name."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             result = await session.execute(select(Organization).where(Organization.name == name))
             organization = result.scalar_one_or_none()
             if organization is None:

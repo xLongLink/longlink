@@ -38,14 +38,14 @@ const navigationLinks = [
 export function Footer() {
     return (
         <footer className="px-4 py-6 md:py-8">
-            <div className="mx-auto w-full max-w-[620px] rounded-lg border border-white/10 bg-black/70 px-4 py-3 text-white shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-md">
+            <div className="mx-auto w-full max-w-[620px] rounded-lg border border-border bg-card/80 px-4 py-3 text-card-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-md dark:shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_18px_60px_rgba(0,0,0,0.35)]">
                 <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
                     <div className="flex items-center gap-5">
                         <Link to="/" className="inline-flex items-center leading-none" aria-label="LongLink home">
                             <img src="/favicon.ico" alt="LongLink logo" className="block size-6" />
                         </Link>
 
-                        <ul className="flex items-center justify-center gap-4 text-white/55">
+                        <ul className="flex items-center justify-center gap-4 text-muted-foreground">
                             {socialLinks.map(({ href, label, icon: Icon }) => (
                                 <li key={label}>
                                     <a
@@ -63,7 +63,7 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-white/55 sm:justify-end">
+                    <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground sm:justify-end">
                         {navigationLinks.map(({ label, href }) => (
                             <li key={label} className="transition-colors hover:text-accent">
                                 {href.startsWith('http') ? (
@@ -78,7 +78,7 @@ export function Footer() {
                     </ul>
                 </div>
 
-                <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-3 text-center text-[11px] font-medium text-white/55 sm:flex-row sm:text-left">
+                <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t border-black/10 pt-3 text-center text-[11px] font-medium text-muted-foreground dark:border-white/10 sm:flex-row sm:text-left">
                     <p>LongLink SAGL - All Rights Reserved</p>
                     <ul className="flex items-center gap-4">
                         <li className="transition-colors hover:text-accent">

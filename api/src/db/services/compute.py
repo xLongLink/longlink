@@ -1,24 +1,23 @@
 from sqlalchemy import select
 from src.db.models import ComputeRegistry
-from src.db.session import get_session
+
+from .base import ServiceBase
 
 
-class ComputeRegistriesService:
+class ComputeRegistriesService(ServiceBase):
     """Manage compute backend registrations."""
 
     async def list(self) -> list[ComputeRegistry]:
         """Return all registered compute backends."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             result = await session.execute(select(ComputeRegistry))
             return list(result.scalars().all())
 
     async def get(self, name: str) -> ComputeRegistry | None:
         """Return one compute backend by name."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.name == name))
             return result.scalar_one_or_none()
 
@@ -31,8 +30,7 @@ class ComputeRegistriesService:
     ) -> ComputeRegistry:
         """Create or update one compute backend registration."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.name == name))
             compute = result.scalar_one_or_none()
 
@@ -57,8 +55,7 @@ class ComputeRegistriesService:
     async def delete(self, name: str) -> ComputeRegistry | None:
         """Delete one compute backend registration."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.name == name))
             compute = result.scalar_one_or_none()
             # Return early when the registration does not exist.

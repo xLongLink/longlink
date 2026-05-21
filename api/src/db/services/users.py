@@ -1,16 +1,16 @@
 from sqlalchemy import select
 from src.db.models import User
 from sqlalchemy.orm import selectinload
-from src.db.session import get_session
 from src.models.users import Theme, Accent, Radius
 
+from .base import ServiceBase
 
-class UsersService:
+
+class UsersService(ServiceBase):
     async def list(self) -> list[User]:
         '''Return all users in the database.'''
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             statement = select(User).options(selectinload(User.organizations))
             result = await session.execute(statement)
             return list(result.scalars().all())
@@ -44,8 +44,7 @@ class UsersService:
                 oidc_subject=oidc_subject,
             ) or user_by_email
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             user = User(
                 name=name,
                 email=email,
@@ -61,8 +60,7 @@ class UsersService:
     async def get(self, param: int | str, *, by: str = 'id') -> User | None:
         '''Retrieve a user by id, email, or OIDC subject.'''
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             # Load memberships so the returned user can be used outside the session.
             statement = select(User).options(selectinload(User.organizations))
             if by == 'email':
@@ -84,8 +82,7 @@ class UsersService:
     ) -> User | None:
         '''Update a user and return the updated record.'''
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             result = await session.execute(select(User).where(User.id == user_id))
             user = result.scalars().first()
             if user is None:

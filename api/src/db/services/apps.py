@@ -3,15 +3,15 @@ from __future__ import annotations
 from sqlalchemy import select
 from src.db.models import App
 from sqlalchemy.exc import IntegrityError
-from src.db.session import get_session
+
+from .base import ServiceBase
 
 
-class AppsService:
+class AppsService(ServiceBase):
     async def list(self, organization: str) -> list[App]:
         '''Return all registered apps for one organization.'''
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             statement = select(App).where(App.organization == organization)
             result = await session.execute(statement)
             return list(result.scalars().all())
@@ -19,8 +19,7 @@ class AppsService:
     async def get(self, organization: str, name: str) -> App | None:
         '''Return a registered app by organization and name.'''
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             statement = select(App).where(
                 App.organization == organization,
                 App.name == name,
@@ -37,9 +36,7 @@ class AppsService:
     ) -> App:
         '''Add a new app to the database for one organization.'''
 
-        Session = await get_session()
-
-        async with Session() as session:
+        async with self.session() as session:
             statement = select(App).where(
                 App.organization == organization,
                 App.url == url,
@@ -65,9 +62,7 @@ class AppsService:
     async def delete(self, organization: str, name: str) -> App | None:
         '''Delete an app by organization and name and return it when found.'''
 
-        Session = await get_session()
-
-        async with Session() as session:
+        async with self.session() as session:
             # Load the app first so callers can still access its identifying fields.
             statement = select(App).where(
                 App.organization == organization,

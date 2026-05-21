@@ -1,14 +1,14 @@
 from sqlalchemy import select
 from src.db.models import Registry
-from src.db.session import get_session
+
+from .base import ServiceBase
 
 
-class RegistriesService:
+class RegistriesService(ServiceBase):
     async def list(self) -> list[Registry]:
         """Return all registered docker registries."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             statement = select(Registry)
             result = await session.execute(statement)
             return list(result.scalars().all())
@@ -16,8 +16,7 @@ class RegistriesService:
     async def get(self, name: str) -> Registry | None:
         """Return one docker registry by name."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             statement = select(Registry).where(Registry.name == name)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
@@ -31,8 +30,7 @@ class RegistriesService:
     ) -> Registry:
         """Add or update a docker registry record."""
 
-        Session = await get_session()
-        async with Session() as session:
+        async with self.session() as session:
             statement = select(Registry).where(Registry.name == name)
             result = await session.execute(statement)
             registry = result.scalar_one_or_none()

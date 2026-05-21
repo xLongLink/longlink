@@ -106,7 +106,9 @@ import {
     Ul,
 } from '../adapters';
 
-/** Plain XML component registry keyed by tag name. */
+/**
+ * This registry is maintained manually to keep tag-to-component mapping explicit and transparent.
+ */
 export const xmlComponentRegistry: Record<string, ComponentType<any>> = {
     longlink: Longlink,
     Divider,

@@ -10,6 +10,9 @@
   </xsd:complexType>
 
   <xsd:complexType name="ButtonType" mixed="true">
+    <xsd:annotation>
+      <xsd:documentation>Use nested XML children as the button label.</xsd:documentation>
+    </xsd:annotation>
     <xsd:complexContent>
       <xsd:extension base="ButtonChildrenOnlyType">
         <xsd:attribute name="submit" type="xsd:string" use="optional" />
@@ -44,5 +47,9 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="Button" type="ButtonType" />
+  <xsd:element name="Button" type="ButtonType">
+    <xsd:annotation>
+      <xsd:documentation>Renders an action button.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
 </xsd:schema>

@@ -52,6 +52,19 @@ It owns the shared UI, XML runtime, and control-plane rendering path.
 - Remove obsolete flows when replacing them end to end.
 - Favor the current MVP model over backward compatibility.
 
+## Adding or Changing a Component
+
+1. Add or edit the adapter in `web/src/xml/adapters/`.
+2. Keep the adapter entry point small and documented.
+3. Use `useXmlContext` for runtime scope, `renderNode` for child rendering, and `useUrl` for URL resolution.
+4. Export the adapter from `web/src/xml/adapters/index.ts`.
+5. Register the tag in `web/src/xml/core/registry.tsx`.
+6. Update parser, context, or helper code only when the component needs new runtime behavior.
+7. Add focused tests under `web/tests/xml/`.
+8. Update SDK XSD assets when the schema changes.
+9. Update docs/examples so the new XML shape is discoverable.
+
+
 ## Formatting
 
 Before PR:
@@ -59,3 +72,4 @@ Before PR:
 ```bash
 bun run format
 ```
+

@@ -170,7 +170,7 @@ function PlaygroundCanvas({ initialXml }: PlaygroundCanvasProps) {
             </section>
 
             <section className="flex-1">
-                <div className="relative h-full min-h-[28rem] overflow-hidden rounded-2xl border border-border bg-background/70 shadow-lg shadow-black/10 ring-1 ring-border/60">
+                <div className="relative h-full min-h-[28rem] overflow-hidden rounded-2xl border border-border bg-card/80 shadow-lg shadow-black/10 ring-1 ring-border/60">
                     <div className="origin-top-left scale-[0.9] w-[111.111%] px-6">
                         <div className="absolute left-4 top-3 z-10 flex items-center gap-2">
                             <button
