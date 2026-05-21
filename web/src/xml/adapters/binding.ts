@@ -71,7 +71,9 @@ function resolveBindableTarget(
     if (parts.length === 1) {
         const state = resolvePath(ctx, parts);
 
-        return isBindableValue(state as XmlBindableValue | undefined) ? { state: state as Record<string, unknown> } : undefined;
+        return isBindableValue(state as XmlBindableValue | undefined)
+            ? { state: state as Record<string, unknown> }
+            : undefined;
     }
 
     const parent = resolvePath(ctx, parts.slice(0, -1));

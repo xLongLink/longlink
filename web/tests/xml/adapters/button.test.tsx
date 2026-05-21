@@ -1,8 +1,8 @@
+import { appendButtonItem } from '@xml/adapters/Button';
 import { parseXML } from '@xml/core/parser';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
 import { proxy } from 'valtio';
-import { appendButtonItem } from '@xml/adapters/Button';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Button', () => {

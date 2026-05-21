@@ -8,7 +8,7 @@ import { Download } from 'lucide-react';
 /** Renders the public terms page. */
 export default function Terms() {
     return (
-        <div className="page-shell flex min-h-screen flex-col text-foreground">
+        <div className="flex min-h-screen flex-col text-foreground">
             <div className="print:hidden">
                 <div className="mx-auto w-full max-w-[1000px]">
                     <Navbar />

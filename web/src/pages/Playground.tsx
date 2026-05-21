@@ -89,7 +89,7 @@ export default function Playground() {
     }, [navigate, searchParams, xmlParam]);
 
     return (
-        <div className="page-shell min-h-screen text-foreground">
+        <div className="min-h-screen text-foreground">
             <Navbar />
             <PlaygroundCanvas initialXml={initialXml} />
             <Footer />

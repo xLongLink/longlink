@@ -24,7 +24,6 @@ export function Action({ props, nodes }: Props) {
     );
 }
 
-
 /** Executes the action request and invalidation flow. */
 export async function executeAction(
     props: Props['props'],

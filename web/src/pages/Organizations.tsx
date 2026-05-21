@@ -20,16 +20,16 @@ type OrganizationCreateResponse = {
 /** Renders the authenticated organizations landing page. */
 export default function Organizations() {
     const queryClient = useQueryClient();
+    const { data: user, isLoading, error } = useUser();
     const [createOpen, setCreateOpen] = useState(false);
     const [name, setName] = useState('');
     const [createError, setCreateError] = useState<string | null>(null);
-    const { data: user, isLoading, error } = useUser();
 
     // Read the organizations already attached to the shared user payload.
     const organizations = user?.organizations ?? [];
 
     const createOrganization = useMutation({
-        mutationFn: async () => {
+        mutationFn: async (organizationName: string) => {
             const response = await fetch('/api/organizations', {
                 method: 'POST',
                 headers: {
@@ -37,11 +37,12 @@ export default function Organizations() {
                     'Content-Type': 'application/json',
                 },
                 credentials: 'same-origin',
-                body: JSON.stringify({ name }),
+                body: JSON.stringify({ name: organizationName }),
             });
 
             if (!response.ok) {
                 const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
+
                 throw new Error(payload?.detail ?? `API request failed (${response.status})`);
             }
 
@@ -70,7 +71,7 @@ export default function Organizations() {
 
                         <HeroContent>
                             <Button type="button" onClick={() => setCreateOpen(true)}>
-                                Create
+                                New Organization
                             </Button>
                         </HeroContent>
                     </div>
@@ -124,11 +125,19 @@ export default function Organizations() {
                     </Table>
                 </div>
 
-                <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                <Dialog
+                    open={createOpen}
+                    onOpenChange={(open) => {
+                        setCreateOpen(open);
+                        if (!open) {
+                            setCreateError(null);
+                        }
+                    }}
+                >
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Create organization</DialogTitle>
-                            <DialogDescription>Enter a name for the new organization.</DialogDescription>
+                            <DialogTitle>New organization</DialogTitle>
+                            <DialogDescription>Create a new workspace for your account.</DialogDescription>
                         </DialogHeader>
 
                         <form
@@ -136,7 +145,7 @@ export default function Organizations() {
                             onSubmit={(event) => {
                                 event.preventDefault();
                                 setCreateError(null);
-                                createOrganization.mutate();
+                                createOrganization.mutate(name.trim());
                             }}
                         >
                             <div className="space-y-2">
