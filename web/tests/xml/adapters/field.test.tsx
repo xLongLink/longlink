@@ -7,7 +7,7 @@ describe('Field', () => {
     it('preserves the full field structure in compiled xml', () => {
         expect(
             parseXML(
-                '<FieldSet><FieldLegend>Profile</FieldLegend><FieldDescription>This appears on invoices and emails.</FieldDescription><FieldGroup><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></FieldGroup></FieldSet>'
+                '<FieldSet><FieldLegend>Profile</FieldLegend><FieldDescription>This appears on invoices and emails.</FieldDescription><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></FieldSet>'
             )
         ).toMatchObject([
             {
@@ -22,75 +22,68 @@ describe('Field', () => {
                         children: [{ name: 'Text', params: { value: 'This appears on invoices and emails.' } }],
                     },
                     {
-                        name: 'FieldGroup',
+                        name: 'Field',
                         children: [
                             {
-                                name: 'Field',
+                                name: 'FieldContent',
                                 children: [
                                     {
-                                        name: 'FieldContent',
-                                        children: [
-                                            {
-                                                name: 'FieldTitle',
-                                                children: [{ name: 'Text', params: { value: 'Full name' } }],
-                                            },
-                                        ],
-                                    },
-                                    {
-                                        name: 'FieldLabel',
-                                        params: { htmlFor: 'name' },
+                                        name: 'FieldTitle',
                                         children: [{ name: 'Text', params: { value: 'Full name' } }],
                                     },
-                                    {
-                                        name: 'Input',
-                                        params: { id: 'name', autoComplete: 'off', placeholder: 'Evil Rabbit' },
-                                    },
-                                    {
-                                        name: 'FieldDescription',
-                                        children: [
-                                            { name: 'Text', params: { value: 'This appears on invoices and emails.' } },
-                                        ],
-                                    },
                                 ],
                             },
                             {
-                                name: 'Field',
-                                children: [
-                                    {
-                                        name: 'FieldLabel',
-                                        params: { htmlFor: 'username' },
-                                        children: [{ name: 'Text', params: { value: 'Username' } }],
-                                    },
-                                    {
-                                        name: 'Input',
-                                        params: { id: 'username', autoComplete: 'off', 'aria-invalid': 'true' },
-                                    },
-                                    {
-                                        name: 'FieldError',
-                                        children: [{ name: 'Text', params: { value: 'Choose another username.' } }],
-                                    },
-                                ],
+                                name: 'FieldLabel',
+                                params: { htmlFor: 'name' },
+                                children: [{ name: 'Text', params: { value: 'Full name' } }],
                             },
                             {
-                                name: 'Field',
-                                params: { orientation: 'horizontal' },
-                                children: [
-                                    {
-                                        name: 'Switch',
-                                        params: { id: 'newsletter' },
-                                    },
-                                    {
-                                        name: 'FieldLabel',
-                                        params: { htmlFor: 'newsletter' },
-                                        children: [{ name: 'Text', params: { value: 'Subscribe to the newsletter' } }],
-                                    },
-                                ],
+                                name: 'Input',
+                                params: { id: 'name', autoComplete: 'off', placeholder: 'Evil Rabbit' },
                             },
                             {
-                                name: 'FieldSeparator',
-                                children: [{ name: 'Text', params: { value: 'or' } }],
+                                name: 'FieldDescription',
+                                children: [{ name: 'Text', params: { value: 'This appears on invoices and emails.' } }],
                             },
                         ],
+                    },
+                    {
+                        name: 'Field',
+                        children: [
+                            {
+                                name: 'FieldLabel',
+                                params: { htmlFor: 'username' },
+                                children: [{ name: 'Text', params: { value: 'Username' } }],
+                            },
+                            {
+                                name: 'Input',
+                                params: { id: 'username', autoComplete: 'off', 'aria-invalid': 'true' },
+                            },
+                            {
+                                name: 'FieldError',
+                                children: [{ name: 'Text', params: { value: 'Choose another username.' } }],
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Field',
+                        params: { orientation: 'horizontal' },
+                        children: [
+                            {
+                                name: 'Switch',
+                                params: { id: 'newsletter' },
+                            },
+                            {
+                                name: 'FieldLabel',
+                                params: { htmlFor: 'newsletter' },
+                                children: [{ name: 'Text', params: { value: 'Subscribe to the newsletter' } }],
+                            },
+                        ],
+                    },
+                    {
+                        name: 'FieldSeparator',
+                        children: [{ name: 'Text', params: { value: 'or' } }],
                     },
                 ],
             },
@@ -101,13 +94,12 @@ describe('Field', () => {
     it('renders the full field composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<FieldSet><FieldLegend>Profile</FieldLegend><FieldDescription>This appears on invoices and emails.</FieldDescription><FieldGroup><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></FieldGroup></FieldSet>'
+                '<FieldSet><FieldLegend>Profile</FieldLegend><FieldDescription>This appears on invoices and emails.</FieldDescription><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></FieldSet>'
             )
         );
 
         expect(output).toContain('data-slot="field-set"');
         expect(output).toContain('data-slot="field-legend"');
-        expect(output).toContain('data-slot="field-group"');
         expect(output).toContain('data-slot="field"');
         expect(output).toContain('data-slot="field-content"');
         expect(output).toContain('data-slot="field-label"');

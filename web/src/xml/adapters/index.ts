@@ -7,7 +7,7 @@ export * from './binding';
 export { Br } from './Br';
 export { Button } from './Button';
 export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from './ButtonGroup';
-export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './Card';
+export { Card, CardAction, CardContent, CardDescription, CardTitle } from './Card';
 export { Checkbox } from './Checkbox';
 export { Code } from './Code';
 export { Column, Columns } from './Columns';
@@ -15,8 +15,6 @@ export {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
-    DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from './Dialog';
@@ -26,7 +24,6 @@ export {
     FieldContent,
     FieldDescription,
     FieldError,
-    FieldGroup,
     FieldLabel,
     FieldLegend,
     FieldSeparator,
@@ -39,7 +36,7 @@ export { H1 } from './H1';
 export { H2 } from './H2';
 export { H3 } from './H3';
 export { H4 } from './H4';
-export { Hero, HeroContent, HeroDescription, HeroTitle } from './Hero';
+export { Hero, HeroAction, HeroDescription, HeroTitle } from './Hero';
 export { Icon } from './Icon';
 export { Input } from './Input';
 export {
@@ -80,6 +77,5 @@ export { Text } from './Text';
 export { Textarea } from './Textarea';
 export { Toggle } from './Toggle';
 export { ToggleGroup, ToggleGroupItem } from './ToggleGroup';
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip';
 export { U } from './U';
 export { Ul } from './Ul';

@@ -33,27 +33,11 @@ function FieldLegend({
     );
 }
 
-function FieldGroup({ className, ...props }: React.ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot="field-group"
-            className={cn(
-                'group/field-group @container/field-group flex w-full flex-col gap-5 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4',
-                className
-            )}
-            {...props}
-        />
-    );
-}
-
 const fieldVariants = cva('group/field flex w-full gap-2 data-[invalid=true]:text-destructive', {
     variants: {
         orientation: {
             vertical: 'flex-col *:w-full [&>.sr-only]:w-auto',
-            horizontal:
-                'flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
-            responsive:
-                'flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
+            horizontal: 'flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
         },
     },
     defaultVariants: {
@@ -140,7 +124,7 @@ function FieldSeparator({
         <div
             data-slot="field-separator"
             data-content={!!children}
-            className={cn('relative -my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2', className)}
+            className={cn('relative -my-2 h-5 text-sm', className)}
             {...props}
         >
             <Separator className="absolute inset-0 top-1/2" />
@@ -207,7 +191,6 @@ export {
     FieldContent,
     FieldDescription,
     FieldError,
-    FieldGroup,
     FieldLabel,
     FieldLegend,
     FieldSeparator,

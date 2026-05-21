@@ -34,52 +34,50 @@
                 <FieldLegend>Workspace settings</FieldLegend>
                 <FieldDescription>Configure the dashboard for the current team and workflow.</FieldDescription>
 
-                <FieldGroup>
-                    <Grid columns="2">
-                        <Field orientation="horizontal">
-                            <Checkbox id="email-digest" defaultChecked="true" />
-                            <FieldLabel htmlFor="email-digest">Email digest</FieldLabel>
-                        </Field>
-
-                        <Field orientation="horizontal">
-                            <Switch id="push-alerts" defaultChecked="true" size="sm" />
-                            <FieldLabel htmlFor="push-alerts">Push alerts</FieldLabel>
-                        </Field>
-                    </Grid>
-
-                    <Field>
-                        <FieldLabel>Sidebar density</FieldLabel>
-                        <RadioGroup name="density" defaultValue="comfortable">
-                            <RadioGroupItem value="compact">Compact</RadioGroupItem>
-                            <RadioGroupItem value="comfortable">Comfortable</RadioGroupItem>
-                            <RadioGroupItem value="spacious">Spacious</RadioGroupItem>
-                        </RadioGroup>
+                <Grid columns="2">
+                    <Field orientation="horizontal">
+                        <Checkbox id="email-digest" defaultChecked="true" />
+                        <FieldLabel htmlFor="email-digest">Email digest</FieldLabel>
                     </Field>
 
-                    <Field>
-                        <FieldLabel htmlFor="refresh-rate">Refresh interval</FieldLabel>
-                        <Slider id="refresh-rate" min="5" max="60" step="5" defaultValue="15" />
-                        <FieldDescription>Automatic refresh in minutes.</FieldDescription>
+                    <Field orientation="horizontal">
+                        <Switch id="push-alerts" defaultChecked="true" size="sm" />
+                        <FieldLabel htmlFor="push-alerts">Push alerts</FieldLabel>
                     </Field>
+                </Grid>
 
-                    <Field>
-                        <FieldLabel>Theme</FieldLabel>
-                        <RadioGroup name="theme" defaultValue="system">
-                            <RadioGroupItem value="light">Light</RadioGroupItem>
-                            <RadioGroupItem value="dark">Dark</RadioGroupItem>
-                            <RadioGroupItem value="system">System</RadioGroupItem>
-                        </RadioGroup>
-                    </Field>
+                <Field>
+                    <FieldLabel>Sidebar density</FieldLabel>
+                    <RadioGroup name="density" defaultValue="comfortable">
+                        <RadioGroupItem value="compact">Compact</RadioGroupItem>
+                        <RadioGroupItem value="comfortable">Comfortable</RadioGroupItem>
+                        <RadioGroupItem value="spacious">Spacious</RadioGroupItem>
+                    </RadioGroup>
+                </Field>
 
-                    <Field>
-                        <FieldLabel>Actions</FieldLabel>
-                        <ButtonGroup>
-                            <Button variant="outline">Cancel</Button>
-                            <Button variant="outline">Reset</Button>
-                            <Button submit="true">Save changes</Button>
-                        </ButtonGroup>
-                    </Field>
-                </FieldGroup>
+                <Field>
+                    <FieldLabel htmlFor="refresh-rate">Refresh interval</FieldLabel>
+                    <Slider id="refresh-rate" min="5" max="60" step="5" defaultValue="15" />
+                    <FieldDescription>Automatic refresh in minutes.</FieldDescription>
+                </Field>
+
+                <Field>
+                    <FieldLabel>Theme</FieldLabel>
+                    <RadioGroup name="theme" defaultValue="system">
+                        <RadioGroupItem value="light">Light</RadioGroupItem>
+                        <RadioGroupItem value="dark">Dark</RadioGroupItem>
+                        <RadioGroupItem value="system">System</RadioGroupItem>
+                    </RadioGroup>
+                </Field>
+
+                <Field>
+                    <FieldLabel>Actions</FieldLabel>
+                    <ButtonGroup>
+                        <Button variant="outline">Cancel</Button>
+                        <Button variant="outline">Reset</Button>
+                        <Button submit="true">Save changes</Button>
+                    </ButtonGroup>
+                </Field>
             </FieldSet>
         </MenuSection>
 

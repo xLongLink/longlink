@@ -2,8 +2,8 @@ import Layout from '@/Layout';
 import { useUser } from '@/hooks/use-user';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@ui/dialog';
-import { Hero, HeroContent, HeroDescription, HeroTitle } from '@ui/hero';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
+import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
 import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
@@ -69,11 +69,11 @@ export default function Organizations() {
                             <HeroDescription>Manage the workspaces connected to your LongLink account.</HeroDescription>
                         </div>
 
-                        <HeroContent>
+                        <HeroAction>
                             <Button type="button" onClick={() => setCreateOpen(true)}>
                                 New Organization
                             </Button>
-                        </HeroContent>
+                        </HeroAction>
                     </div>
                 </Hero>
 
@@ -135,51 +135,53 @@ export default function Organizations() {
                     }}
                 >
                     <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>New organization</DialogTitle>
-                            <DialogDescription>Create a new workspace for your account.</DialogDescription>
-                        </DialogHeader>
-
-                        <form
-                            className="space-y-4"
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                setCreateError(null);
-                                createOrganization.mutate(name.trim());
-                            }}
-                        >
-                            <div className="space-y-2">
-                                <Label htmlFor="organization-name">Name</Label>
-                                <Input
-                                    id="organization-name"
-                                    value={name}
-                                    onChange={(event) => setName(event.target.value)}
-                                    placeholder="Example LongLink"
-                                    autoComplete="off"
-                                />
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <DialogTitle>New organization</DialogTitle>
+                                <DialogDescription>Create a new workspace for your account.</DialogDescription>
                             </div>
 
-                            {createError ? <p className="text-sm text-destructive">{createError}</p> : null}
+                            <form
+                                className="space-y-4"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    setCreateError(null);
+                                    createOrganization.mutate(name.trim());
+                                }}
+                            >
+                                <div className="space-y-2">
+                                    <Label htmlFor="organization-name">Name</Label>
+                                    <Input
+                                        id="organization-name"
+                                        value={name}
+                                        onChange={(event) => setName(event.target.value)}
+                                        placeholder="Example LongLink"
+                                        autoComplete="off"
+                                    />
+                                </div>
 
-                            <DialogFooter>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setCreateOpen(false);
-                                        setCreateError(null);
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={createOrganization.isPending || name.trim().length === 0}
-                                >
-                                    {createOrganization.isPending ? 'Creating...' : 'Create'}
-                                </Button>
-                            </DialogFooter>
-                        </form>
+                                {createError ? <p className="text-sm text-destructive">{createError}</p> : null}
+
+                                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setCreateOpen(false);
+                                            setCreateError(null);
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={createOrganization.isPending || name.trim().length === 0}
+                                    >
+                                        {createOrganization.isPending ? 'Creating...' : 'Create'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
                     </DialogContent>
                 </Dialog>
             </section>

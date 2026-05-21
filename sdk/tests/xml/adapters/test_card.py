@@ -10,10 +10,10 @@ SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Card.xsd"
 
 
 def test_card_validation() -> None:
-    """Validate a compound `Card` fragment."""
+    """Validate a simplified `Card` fragment."""
 
     element = Element.from_content(
-        '<Card><CardHeader><CardTitle>Card Title</CardTitle><CardDescription>Card Description</CardDescription><CardAction>Card Action</CardAction></CardHeader><CardContent><P>Card Content</P></CardContent><CardFooter><P>Card Footer</P></CardFooter></Card>',
+        '<Card><CardContent><CardTitle>Card Title</CardTitle><CardDescription>Card Description</CardDescription><CardAction>Card Action</CardAction><P>Card Content</P></CardContent></Card>',
         schema=SCHEMA,
     )
     element.validate()

@@ -17,7 +17,6 @@
             <xsd:restriction base="xsd:string">
               <xsd:enumeration value="vertical" />
               <xsd:enumeration value="horizontal" />
-              <xsd:enumeration value="responsive" />
             </xsd:restriction>
           </xsd:simpleType>
         </xsd:attribute>

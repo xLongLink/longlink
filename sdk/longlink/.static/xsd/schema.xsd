@@ -37,7 +37,6 @@
   <xsd:include schemaLocation="adapters/Icon.xsd" />
   <xsd:include schemaLocation="adapters/Label.xsd" />
   <xsd:include schemaLocation="adapters/Input.xsd" />
-  <xsd:include schemaLocation="adapters/Tooltip.xsd" />
   <xsd:include schemaLocation="adapters/Textarea.xsd" />
   <xsd:include schemaLocation="adapters/Select.xsd" />
   <xsd:include schemaLocation="adapters/Switch.xsd" />

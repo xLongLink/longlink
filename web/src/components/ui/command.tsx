@@ -3,7 +3,7 @@
 import { Command as CommandPrimitive } from 'cmdk';
 import * as React from 'react';
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group';
 import { cn } from '@/lib/utils';
 import { CheckIcon, SearchIcon } from 'lucide-react';
@@ -37,14 +37,14 @@ function CommandDialog({
 }) {
     return (
         <Dialog {...props}>
-            <DialogHeader className="sr-only">
-                <DialogTitle>{title}</DialogTitle>
-                <DialogDescription>{description}</DialogDescription>
-            </DialogHeader>
             <DialogContent
                 className={cn('top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0', className)}
                 showCloseButton={showCloseButton}
             >
+                <div className="sr-only">
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>{description}</DialogDescription>
+                </div>
                 {children}
             </DialogContent>
         </Dialog>

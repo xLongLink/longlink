@@ -2,12 +2,12 @@
     <Hero icon="file-text">
         <HeroTitle>Quote #Q-2048-0192</HeroTitle>
         <HeroDescription>Items, conditions, address, texts, and settings for the current quote.</HeroDescription>
-        <HeroContent>
+        <HeroAction>
             <Button variant="outline" size="sm">
                 <Icon name="copy" />
                 Copy quote
             </Button>
-        </HeroContent>
+        </HeroAction>
     </Hero>
 
     <Columns>
@@ -77,46 +77,40 @@
                 <TabsContent value="address">
                     <FieldSet>
                         <FieldLegend>Billing address</FieldLegend>
-                        <FieldGroup>
+                        <Field>
+                            <FieldLabel htmlFor="company">Company</FieldLabel>
+                            <Input id="company" value="Ada Labs" />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="street">Street</FieldLabel>
+                            <Input id="street" value="123 Longlink Ave" />
+                        </Field>
+                        <Grid columns="2">
                             <Field>
-                                <FieldLabel htmlFor="company">Company</FieldLabel>
-                                <Input id="company" value="Ada Labs" />
+                                <FieldLabel htmlFor="city">City</FieldLabel>
+                                <Input id="city" value="Berlin" />
                             </Field>
                             <Field>
-                                <FieldLabel htmlFor="street">Street</FieldLabel>
-                                <Input id="street" value="123 Longlink Ave" />
+                                <FieldLabel htmlFor="postal">Postal code</FieldLabel>
+                                <Input id="postal" value="10115" />
                             </Field>
-                            <Grid columns="2">
-                                <Field>
-                                    <FieldLabel htmlFor="city">City</FieldLabel>
-                                    <Input id="city" value="Berlin" />
-                                </Field>
-                                <Field>
-                                    <FieldLabel htmlFor="postal">Postal code</FieldLabel>
-                                    <Input id="postal" value="10115" />
-                                </Field>
-                            </Grid>
-                        </FieldGroup>
+                        </Grid>
                     </FieldSet>
                 </TabsContent>
 
                 <TabsContent value="texts">
                     <Stack>
                         <Card>
-                            <CardHeader>
+                            <CardContent className="flex flex-col gap-2">
                                 <CardTitle>Intro text</CardTitle>
                                 <CardDescription>Shown at the top of the quote email.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
                                 <Textarea rows="4" value="Thanks for reviewing the quote. The summary below reflects the current scope and pricing." />
                             </CardContent>
                         </Card>
                         <Card>
-                            <CardHeader>
+                            <CardContent className="flex flex-col gap-2">
                                 <CardTitle>Footer text</CardTitle>
                                 <CardDescription>Used for the approval reminder.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
                                 <Textarea rows="3" value="Reply with approval or change requests before the end of the week." />
                             </CardContent>
                         </Card>
@@ -126,26 +120,24 @@
                 <TabsContent value="settings">
                     <FieldSet>
                         <FieldLegend>Quote settings</FieldLegend>
-                        <FieldGroup>
-                            <Grid columns="2">
-                                <Field orientation="horizontal">
-                                    <Switch id="tax" defaultChecked="true" />
-                                    <FieldLabel htmlFor="tax">Include tax</FieldLabel>
-                                </Field>
-                                <Field orientation="horizontal">
-                                    <Switch id="discount" defaultChecked="false" />
-                                    <FieldLabel htmlFor="discount">Allow discount</FieldLabel>
-                                </Field>
-                            </Grid>
-                            <Field>
-                                <FieldLabel>Quote status</FieldLabel>
-                                <RadioGroup name="status" defaultValue="draft">
-                                    <RadioGroupItem value="draft">Draft</RadioGroupItem>
-                                    <RadioGroupItem value="sent">Sent</RadioGroupItem>
-                                    <RadioGroupItem value="approved">Approved</RadioGroupItem>
-                                </RadioGroup>
+                        <Grid columns="2">
+                            <Field orientation="horizontal">
+                                <Switch id="tax" defaultChecked="true" />
+                                <FieldLabel htmlFor="tax">Include tax</FieldLabel>
                             </Field>
-                        </FieldGroup>
+                            <Field orientation="horizontal">
+                                <Switch id="discount" defaultChecked="false" />
+                                <FieldLabel htmlFor="discount">Allow discount</FieldLabel>
+                            </Field>
+                        </Grid>
+                        <Field>
+                            <FieldLabel>Quote status</FieldLabel>
+                            <RadioGroup name="status" defaultValue="draft">
+                                <RadioGroupItem value="draft">Draft</RadioGroupItem>
+                                <RadioGroupItem value="sent">Sent</RadioGroupItem>
+                                <RadioGroupItem value="approved">Approved</RadioGroupItem>
+                            </RadioGroup>
+                        </Field>
                     </FieldSet>
                 </TabsContent>
             </Tabs>

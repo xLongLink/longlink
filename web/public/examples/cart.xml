@@ -21,75 +21,51 @@
 
             <Grid columns="2">
                 <Card if='${search.value in "Apples apples crisp and sweet orchard fruit"}'>
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-2">
                         <CardTitle>Apples</CardTitle>
                         <CardDescription>Crisp and sweet orchard fruit</CardDescription>
-                        <CardAction>
-                            <Badge variant="outline">$2.40</Badge>
-                        </CardAction>
-                    </CardHeader>
-                    <CardContent>
                         <P>Bright red apples with a clean finish for snacks, salads, and lunch boxes.</P>
-                    </CardContent>
-                    <CardFooter className="justify-end">
-                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}'>
+                        <Badge className="self-end" variant="outline">$2.40</Badge>
+                        <Button className="self-end" variant="outline" size="xs" append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}'>
                             Add to cart
                         </Button>
-                    </CardFooter>
+                    </CardContent>
                 </Card>
 
                 <Card if='${search.value in "Bananas bananas soft sweet and easy to pack"}'>
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-2">
                         <CardTitle>Bananas</CardTitle>
                         <CardDescription>Soft, sweet, and easy to pack</CardDescription>
-                        <CardAction>
-                            <Badge variant="outline">$1.10</Badge>
-                        </CardAction>
-                    </CardHeader>
-                    <CardContent>
                         <P>Great for breakfast, smoothies, and quick energy on the go.</P>
-                    </CardContent>
-                    <CardFooter className="justify-end">
-                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}'>
+                        <Badge className="self-end" variant="outline">$1.10</Badge>
+                        <Button className="self-end" variant="outline" size="xs" append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}'>
                             Add to cart
                         </Button>
-                    </CardFooter>
+                    </CardContent>
                 </Card>
 
                 <Card if='${search.value in "Strawberries strawberries small berries for fresh desserts"}'>
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-2">
                         <CardTitle>Strawberries</CardTitle>
                         <CardDescription>Small berries for fresh desserts</CardDescription>
-                        <CardAction>
-                            <Badge variant="outline">$4.50</Badge>
-                        </CardAction>
-                    </CardHeader>
-                    <CardContent>
                         <P>Juicy berries that work well with yogurt, cream, and pastries.</P>
-                    </CardContent>
-                    <CardFooter className="justify-end">
-                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}'>
+                        <Badge className="self-end" variant="outline">$4.50</Badge>
+                        <Button className="self-end" variant="outline" size="xs" append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}'>
                             Add to cart
                         </Button>
-                    </CardFooter>
+                    </CardContent>
                 </Card>
 
                 <Card if='${search.value in "Pears pears soft texture with a mellow finish"}'>
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-2">
                         <CardTitle>Pears</CardTitle>
                         <CardDescription>Soft texture with a mellow finish</CardDescription>
-                        <CardAction>
-                            <Badge variant="outline">$3.20</Badge>
-                        </CardAction>
-                    </CardHeader>
-                    <CardContent>
                         <P>Ideal for a calm dessert plate or a simple afternoon snack.</P>
-                    </CardContent>
-                    <CardFooter className="justify-end">
-                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}'>
+                        <Badge className="self-end" variant="outline">$3.20</Badge>
+                        <Button className="self-end" variant="outline" size="xs" append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}'>
                             Add to cart
                         </Button>
-                    </CardFooter>
+                    </CardContent>
                 </Card>
             </Grid>
         </Column>

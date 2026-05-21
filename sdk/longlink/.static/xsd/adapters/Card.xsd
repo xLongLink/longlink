@@ -24,12 +24,6 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="CardHeaderType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:complexType name="CardTitleType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="CardChildrenOnlyType" />
@@ -54,17 +48,9 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="CardFooterType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:element name="Card" type="CardType" />
-  <xsd:element name="CardHeader" type="CardHeaderType" />
   <xsd:element name="CardTitle" type="CardTitleType" />
   <xsd:element name="CardDescription" type="CardDescriptionType" />
   <xsd:element name="CardAction" type="CardActionType" />
   <xsd:element name="CardContent" type="CardContentType" />
-  <xsd:element name="CardFooter" type="CardFooterType" />
 </xsd:schema>

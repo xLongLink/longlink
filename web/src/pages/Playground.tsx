@@ -21,14 +21,19 @@ type ExampleMap = Record<ExampleName, string>;
 const starterXml = `<State id="volume" value="[65]" />
 <FieldSet>
     <FieldLegend>Playback settings</FieldLegend>
-    <FieldDescription>Use the slider to preview the rendered state by default.</FieldDescription>
-    <FieldGroup>
+    <FieldDescription>Use grouped controls to preview the rendered field shell.</FieldDescription>
+    <Grid columns="2">
         <Field>
             <FieldLabel htmlFor="volume">Volume</FieldLabel>
             <Slider id="volume" value="$volume" min="0" max="100" step="5" />
-            <P>Current volume: ${'${'}volume.value}</P>
+            <FieldDescription>Adjust the preview volume.</FieldDescription>
         </Field>
-    </FieldGroup>
+
+        <Field orientation="horizontal">
+            <Switch id="mute" />
+            <FieldLabel htmlFor="mute">Mute</FieldLabel>
+        </Field>
+    </Grid>
 </FieldSet>`;
 
 /** Wraps a playground fragment in a <longlink> document when needed. */

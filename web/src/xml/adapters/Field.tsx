@@ -3,7 +3,6 @@ import {
     FieldContent as UIFieldContent,
     FieldDescription as UIFieldDescription,
     FieldError as UIFieldError,
-    FieldGroup as UIFieldGroup,
     FieldLabel as UIFieldLabel,
     FieldLegend as UIFieldLegend,
     FieldSeparator as UIFieldSeparator,
@@ -28,13 +27,6 @@ export function FieldLegend({ props, nodes }: Props) {
     const variant = resolveXmlString(props, 'variant', ctx, 'legend');
 
     return <UIFieldLegend variant={variant}>{renderNode(nodes, ctx)}</UIFieldLegend>;
-}
-
-/** Renders a field group container. */
-export function FieldGroup({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-
-    return <UIFieldGroup>{renderNode(nodes, ctx)}</UIFieldGroup>;
 }
 
 /** Renders an individual field row. */

@@ -1,6 +1,5 @@
 import {
     Hero as HeroShell,
-    HeroContent as HeroShellContent,
     HeroDescription as HeroShellDescription,
     HeroTitle as HeroShellTitle,
 } from '@ui/hero';
@@ -14,14 +13,14 @@ export function Hero({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const icon = resolveXmlString(props, 'icon', ctx);
     const heroNodes = nodes;
-    const content = heroNodes.filter((node) => node.name === 'HeroContent');
-    const body = heroNodes.filter((node) => node.name !== 'HeroContent');
+    const action = heroNodes.filter((node) => node.name === 'HeroAction');
+    const body = heroNodes.filter((node) => node.name !== 'HeroAction');
 
     return (
         <HeroShell icon={icon}>
             <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">{renderNode(body, ctx)}</div>
-                {content.length ? <div>{renderNode(content, ctx)}</div> : null}
+                {action.length ? renderNode(action, ctx) : null}
             </div>
         </HeroShell>
     );
@@ -41,9 +40,9 @@ export function HeroDescription({ props, nodes }: Props) {
     return <HeroShellDescription>{renderNode(nodes, ctx)}</HeroShellDescription>;
 }
 
-/** Renders the hero content slot. */
-export function HeroContent({ props, nodes }: Props) {
+/** Renders the hero action slot. */
+export function HeroAction({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
 
-    return <HeroShellContent>{renderNode(nodes, ctx)}</HeroShellContent>;
+    return <div data-slot="hero-action">{renderNode(nodes, ctx)}</div>;
 }

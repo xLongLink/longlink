@@ -6,7 +6,6 @@
         <xsd:any processContents="lax" />
       </xsd:choice>
     </xsd:sequence>
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
   <xsd:complexType name="LonglinkChildrenType" mixed="true">
@@ -23,11 +22,9 @@
 
   <xsd:element name="longlink" type="LonglinkType" />
   <xsd:complexType name="StateType">
-    <xsd:sequence>
-      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
-    </xsd:sequence>
     <xsd:attribute name="id" type="xsd:string" use="required" />
-    <xsd:attribute name="value" type="xsd:string" use="required" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
 
   <xsd:element name="State" type="StateType" />
@@ -49,19 +46,7 @@
   </xsd:complexType>
 
   <xsd:element name="For" type="ForType" />
-  <xsd:complexType name="QueryChildrenOnlyType" mixed="true">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
-  </xsd:complexType>
-
   <xsd:complexType name="QueryType">
-    <xsd:sequence>
-      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
-    </xsd:sequence>
     <xsd:attribute name="id" type="xsd:string" use="required" />
     <xsd:attribute name="path" type="xsd:string" use="required" />
   </xsd:complexType>
@@ -77,7 +62,7 @@
   </xsd:complexType>
 
   <xsd:complexType name="PType" mixed="true"><xsd:complexContent><xsd:extension base="PChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:element name="p" type="PType" />
+  <xsd:element name="P" type="PType" />
   <xsd:complexType name="AChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -90,17 +75,25 @@
   <xsd:complexType name="AType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="AChildrenOnlyType">
-        <xsd:attribute name="href" type="xsd:string" use="required" />
+        <xsd:attribute name="href" type="xsd:string" use="optional" />
+        <xsd:attribute name="active" use="optional" default="hover">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="always" />
+              <xsd:enumeration value="hover" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="a" type="AType" />
+  <xsd:element name="A" type="AType" />
   <xsd:complexType name="BrType">
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:element name="br" type="BrType" />
+  <xsd:element name="Br" type="BrType" />
   <xsd:complexType name="BChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -117,7 +110,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="b" type="BType" />
+  <xsd:element name="B" type="BType" />
   <xsd:complexType name="H1ChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -134,7 +127,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="h1" type="H1Type" />
+  <xsd:element name="H1" type="H1Type" />
   <xsd:complexType name="H2ChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -151,7 +144,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="h2" type="H2Type" />
+  <xsd:element name="H2" type="H2Type" />
   <xsd:complexType name="H3ChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -168,7 +161,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="h3" type="H3Type" />
+  <xsd:element name="H3" type="H3Type" />
   <xsd:complexType name="H4ChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -185,7 +178,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="h4" type="H4Type" />
+  <xsd:element name="H4" type="H4Type" />
   <xsd:complexType name="CodeChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -202,7 +195,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="code" type="CodeType" />
+  <xsd:element name="Code" type="CodeType" />
   <xsd:complexType name="SChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -219,7 +212,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="s" type="SType" />
+  <xsd:element name="S" type="SType" />
   <xsd:complexType name="SupChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -236,7 +229,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="sup" type="SupType" />
+  <xsd:element name="Sup" type="SupType" />
   <xsd:complexType name="SubChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -253,7 +246,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="sub" type="SubType" />
+  <xsd:element name="Sub" type="SubType" />
   <xsd:complexType name="UChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -270,7 +263,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="u" type="UType" />
+  <xsd:element name="U" type="UType" />
   <xsd:complexType name="UlChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -287,7 +280,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="ul" type="UlType" />
+  <xsd:element name="Ul" type="UlType" />
   <xsd:complexType name="LiChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -304,7 +297,24 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="li" type="LiType" />
+  <xsd:element name="Li" type="LiType" />
+  <xsd:complexType name="OlChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="OlType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="OlChildrenOnlyType">
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Ol" type="OlType" />
   <xsd:complexType name="ButtonChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -314,23 +324,71 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="ButtonActionableType" mixed="true">
+  <xsd:complexType name="ButtonType" mixed="true">
+    <xsd:annotation>
+      <xsd:documentation>Use nested XML children as the button label.</xsd:documentation>
+    </xsd:annotation>
     <xsd:complexContent>
       <xsd:extension base="ButtonChildrenOnlyType">
-        <xsd:attribute name="action" type="xsd:string" use="optional" />
-        <xsd:attribute name="json" type="xsd:string" use="optional" />
-        <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
-        <xsd:attribute name="method" type="xsd:string" use="optional" />
         <xsd:attribute name="submit" type="xsd:string" use="optional" />
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="disabled" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="xs" />
+              <xsd:enumeration value="sm" />
+              <xsd:enumeration value="lg" />
+              <xsd:enumeration value="icon" />
+              <xsd:enumeration value="icon-xs" />
+              <xsd:enumeration value="icon-sm" />
+              <xsd:enumeration value="icon-lg" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="variant" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="outline" />
+              <xsd:enumeration value="secondary" />
+              <xsd:enumeration value="ghost" />
+              <xsd:enumeration value="destructive" />
+              <xsd:enumeration value="link" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="ButtonType" mixed="true"><xsd:complexContent><xsd:extension base="ButtonActionableType" /></xsd:complexContent></xsd:complexType>
-  <xsd:element name="Button" type="ButtonType" />
-  
+  <xsd:element name="Button" type="ButtonType">
+    <xsd:annotation>
+      <xsd:documentation>Renders an action button.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+
+  <xsd:complexType name="ActionChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="ActionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="ActionChildrenOnlyType">
+        <xsd:attribute name="action" type="xsd:string" use="optional" />
+        <xsd:attribute name="json" type="xsd:string" use="optional" />
+        <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
+        <xsd:attribute name="method" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Action" type="ActionType" />
   <xsd:complexType name="InputChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -374,7 +432,14 @@
   <xsd:element name="ButtonGroupText" type="ButtonGroupTextType" />
   <xsd:complexType name="ButtonGroupSeparatorType">
     <xsd:attribute name="if" type="xsd:string" use="optional" />
-    <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+    <xsd:attribute name="orientation" use="optional" default="vertical">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="horizontal" />
+          <xsd:enumeration value="vertical" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
   </xsd:complexType>
 
   <xsd:element name="ButtonGroupSeparator" type="ButtonGroupSeparatorType" />
@@ -383,6 +448,7 @@
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:element ref="Button" />
+        <xsd:element ref="Action" />
         <xsd:element ref="Input" />
         <xsd:element ref="ButtonGroupText" />
         <xsd:element ref="ButtonGroupSeparator" />
@@ -394,7 +460,14 @@
   <xsd:complexType name="ButtonGroupType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ButtonGroupChildrenOnlyType">
-        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" use="optional" default="horizontal">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="horizontal" />
+              <xsd:enumeration value="vertical" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -412,7 +485,16 @@
   <xsd:complexType name="InputGroupAddonType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="InputGroupAddonChildrenOnlyType">
-        <xsd:attribute name="align" type="xsd:string" use="optional" />
+        <xsd:attribute name="align" use="optional" default="inline-start">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="inline-start" />
+              <xsd:enumeration value="inline-end" />
+              <xsd:enumeration value="block-start" />
+              <xsd:enumeration value="block-end" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -431,9 +513,37 @@
     <xsd:complexContent>
       <xsd:extension base="InputGroupButtonChildrenOnlyType">
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
-        <xsd:attribute name="type" type="xsd:string" use="optional" />
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="xs">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="xs" />
+              <xsd:enumeration value="sm" />
+              <xsd:enumeration value="icon-xs" />
+              <xsd:enumeration value="icon-sm" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="type" use="optional" default="button">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="button" />
+              <xsd:enumeration value="submit" />
+              <xsd:enumeration value="reset" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="variant" use="optional" default="ghost">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="outline" />
+              <xsd:enumeration value="secondary" />
+              <xsd:enumeration value="ghost" />
+              <xsd:enumeration value="destructive" />
+              <xsd:enumeration value="link" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -537,7 +647,15 @@
   <xsd:complexType name="AvatarType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="AvatarChildrenOnlyType">
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="sm" />
+              <xsd:enumeration value="lg" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -553,15 +671,10 @@
 
   <xsd:complexType name="AvatarFallbackType" mixed="true"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
   <xsd:complexType name="AvatarBadgeType" mixed="true"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:complexType name="AvatarGroupType" mixed="true"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:complexType name="AvatarGroupCountType" mixed="true"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-
   <xsd:element name="Avatar" type="AvatarType" />
   <xsd:element name="AvatarImage" type="AvatarImageType" />
   <xsd:element name="AvatarFallback" type="AvatarFallbackType" />
   <xsd:element name="AvatarBadge" type="AvatarBadgeType" />
-  <xsd:element name="AvatarGroup" type="AvatarGroupType" />
-  <xsd:element name="AvatarGroupCount" type="AvatarGroupCountType" />
   <xsd:complexType name="CheckboxChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -595,29 +708,19 @@
   <xsd:complexType name="FieldLegendType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldLegendChildrenOnlyType">
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="variant" use="optional" default="legend">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="legend" />
+              <xsd:enumeration value="label" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
   <xsd:element name="FieldLegend" type="FieldLegendType" />
-  <xsd:complexType name="FieldGroupChildrenOnlyType" mixed="true">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
-  </xsd:complexType>
-
-  <xsd:complexType name="FieldGroupType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="FieldGroupChildrenOnlyType">
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="FieldGroup" type="FieldGroupType" />
   <xsd:complexType name="FieldChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -630,7 +733,14 @@
   <xsd:complexType name="FieldType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldChildrenOnlyType">
-        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" use="optional" default="vertical">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="vertical" />
+              <xsd:enumeration value="horizontal" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -777,12 +887,12 @@
 
   <xsd:complexType name="HeroTitleType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
   <xsd:complexType name="HeroDescriptionType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:complexType name="HeroContentType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="HeroActionType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
 
   <xsd:element name="Hero" type="HeroType" />
   <xsd:element name="HeroTitle" type="HeroTitleType" />
   <xsd:element name="HeroDescription" type="HeroDescriptionType" />
-  <xsd:element name="HeroContent" type="HeroContentType" />
+  <xsd:element name="HeroAction" type="HeroActionType" />
   <xsd:complexType name="BadgeChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -795,7 +905,18 @@
   <xsd:complexType name="BadgeType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="BadgeChildrenOnlyType">
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="variant" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="secondary" />
+              <xsd:enumeration value="destructive" />
+              <xsd:enumeration value="outline" />
+              <xsd:enumeration value="ghost" />
+              <xsd:enumeration value="link" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -844,6 +965,22 @@
   </xsd:complexType>
 
   <xsd:element name="Grid" type="GridType" />
+  <xsd:complexType name="StackChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="StackType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="StackChildrenOnlyType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Stack" type="StackType" />
   <xsd:complexType name="CardChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -856,14 +993,15 @@
   <xsd:complexType name="CardType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="CardChildrenOnlyType">
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="sm" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="CardHeaderType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
@@ -891,19 +1029,11 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="CardFooterType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:element name="Card" type="CardType" />
-  <xsd:element name="CardHeader" type="CardHeaderType" />
   <xsd:element name="CardTitle" type="CardTitleType" />
   <xsd:element name="CardDescription" type="CardDescriptionType" />
   <xsd:element name="CardAction" type="CardActionType" />
   <xsd:element name="CardContent" type="CardContentType" />
-  <xsd:element name="CardFooter" type="CardFooterType" />
   <xsd:complexType name="DialogChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -993,43 +1123,6 @@
 
   <xsd:element name="Label" type="LabelType" />
   
-  <xsd:complexType name="TooltipChildrenOnlyType" mixed="true">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
-  </xsd:complexType>
-
-  <xsd:complexType name="TooltipType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="TooltipChildrenOnlyType">
-        <xsd:attribute name="defaultOpen" type="xsd:string" use="optional" />
-        <xsd:attribute name="open" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="TooltipProviderType" mixed="true"><xsd:complexContent><xsd:extension base="TooltipChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:complexType name="TooltipTriggerType" mixed="true"><xsd:complexContent><xsd:extension base="TooltipChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-
-  <xsd:complexType name="TooltipContentType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="TooltipChildrenOnlyType">
-        <xsd:attribute name="align" type="xsd:string" use="optional" />
-        <xsd:attribute name="alignOffset" type="xsd:string" use="optional" />
-        <xsd:attribute name="hidden" type="xsd:string" use="optional" />
-        <xsd:attribute name="side" type="xsd:string" use="optional" />
-        <xsd:attribute name="sideOffset" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="TooltipProvider" type="TooltipProviderType" />
-  <xsd:element name="Tooltip" type="TooltipType" />
-  <xsd:element name="TooltipTrigger" type="TooltipTriggerType" />
-  <xsd:element name="TooltipContent" type="TooltipContentType" />
   <xsd:complexType name="TextareaChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -1149,7 +1242,14 @@
         <xsd:attribute name="defaultChecked" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="sm" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -1197,8 +1297,23 @@
         <xsd:attribute name="defaultPressed" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="sm" />
+              <xsd:enumeration value="lg" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="variant" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="outline" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -1219,12 +1334,41 @@
         <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="loopFocus" type="xsd:string" use="optional" />
-        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" use="optional" default="horizontal">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="horizontal" />
+              <xsd:enumeration value="vertical" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="sm" />
+              <xsd:enumeration value="lg" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
         <xsd:attribute name="spacing" type="xsd:string" use="optional" />
-        <xsd:attribute name="type" type="xsd:string" use="optional" />
+        <xsd:attribute name="type" use="optional" default="single">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="single" />
+              <xsd:enumeration value="multiple" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
         <xsd:attribute name="value" type="xsd:string" use="optional" />
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="variant" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="outline" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -1232,9 +1376,24 @@
   <xsd:complexType name="ToggleGroupItemType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="ToggleGroupChildrenOnlyType">
-        <xsd:attribute name="size" type="xsd:string" use="optional" />
+        <xsd:attribute name="size" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="sm" />
+              <xsd:enumeration value="lg" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
         <xsd:attribute name="value" type="xsd:string" use="required" />
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="variant" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="outline" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -1348,7 +1507,14 @@
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
-        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" use="optional" default="horizontal">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="horizontal" />
+              <xsd:enumeration value="vertical" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -1356,7 +1522,14 @@
   <xsd:complexType name="TabsListType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
-        <xsd:attribute name="variant" type="xsd:string" use="optional" />
+        <xsd:attribute name="variant" use="optional" default="default">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="default" />
+              <xsd:enumeration value="line" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -1381,4 +1554,45 @@
   <xsd:element name="TabsList" type="TabsListType" />
   <xsd:element name="TabsTrigger" type="TabsTriggerType" />
   <xsd:element name="TabsContent" type="TabsContentType" />
+  <xsd:complexType name="MenuChildrenOnlyType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="MenuType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="MenuChildrenOnlyType">
+        <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
+        <xsd:attribute name="value" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="MenuSectionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="MenuChildrenOnlyType">
+        <xsd:attribute name="value" type="xsd:string" use="required" />
+        <xsd:attribute name="label" type="xsd:string" use="optional" />
+        <xsd:attribute name="disabled" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="MenuSubSectionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="MenuChildrenOnlyType">
+        <xsd:attribute name="value" type="xsd:string" use="required" />
+        <xsd:attribute name="label" type="xsd:string" use="optional" />
+        <xsd:attribute name="disabled" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Menu" type="MenuType" />
+  <xsd:element name="MenuSection" type="MenuSectionType" />
+  <xsd:element name="MenuSubSection" type="MenuSubSectionType" />
 </xsd:schema>

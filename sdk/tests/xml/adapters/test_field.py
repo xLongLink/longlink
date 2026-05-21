@@ -18,25 +18,23 @@ def test_field_validation() -> None:
         <FieldSet>
           <FieldLegend>Profile</FieldLegend>
           <FieldDescription>This appears on invoices and emails.</FieldDescription>
-          <FieldGroup>
-            <Field>
-              <FieldContent>
-                <FieldTitle>Full name</FieldTitle>
-              </FieldContent>
-              <FieldLabel htmlFor="name">Full name</FieldLabel>
-              <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="username">Username</FieldLabel>
-              <Input id="username" autoComplete="off" aria-invalid="true" />
-              <FieldError>Choose another username.</FieldError>
-            </Field>
-            <Field orientation="horizontal">
-              <Switch id="newsletter" />
-              <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
-            </Field>
-            <FieldSeparator>or</FieldSeparator>
-          </FieldGroup>
+          <Field>
+            <FieldContent>
+              <FieldTitle>Full name</FieldTitle>
+            </FieldContent>
+            <FieldLabel htmlFor="name">Full name</FieldLabel>
+            <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="username">Username</FieldLabel>
+            <Input id="username" autoComplete="off" aria-invalid="true" />
+            <FieldError>Choose another username.</FieldError>
+          </Field>
+          <Field orientation="horizontal">
+            <Switch id="newsletter" />
+            <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
+          </Field>
+          <FieldSeparator>or</FieldSeparator>
         </FieldSet>
         """,
         schema=FIELD_SET_SCHEMA,

@@ -46,6 +46,19 @@ Use `<Query />` to fetch JSON into a named slot, where the `id` attribute to nam
 <Query id="products" path="/api/products" />
 ```
 
+## Action
+
+Use `<Action />` to submit a request from an XML page.
+Use `action` to set the target endpoint.
+Use `method` to set the HTTP method when needed.
+`<Action>` can include content as its label.
+
+```xml
+<Action action="/issues" json='${{ title: issue.title }}'>
+  Save issue
+</Action>
+```
+
 ## Expressions
 
 Use `${count}` for wrapped expressions that return typed values.

@@ -54,7 +54,7 @@ export default withMermaid(defineConfig({
         text: 'XML Pages',
         items: [
           { text: 'Overview', link: '/xml/' },
-          { text: 'Field', link: '/xml/Field' },
+          { text: 'Field', link: '/xml/field' },
           { text: 'Layout', link: '/xml/layout' },
           { text: 'HTML', link: '/xml/html' },
           { text: 'Components', link: '/xml/components' }

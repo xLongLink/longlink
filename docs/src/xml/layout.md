@@ -25,12 +25,25 @@ TODO: Component description
 </Grid>
 ```
 
-## Dialog
+## Stack
 
 TODO: Component description
 
 ```xml
-<Dialog open="${true}">
+<Stack>
+  <P>First</P>
+  <P>Second</P>
+</Stack>
+```
+
+## Dialog
+
+TODO: Component description
+
+Use `defaultOpen` to show the dialog open on first render without locking its state.
+
+```xml
+<Dialog defaultOpen="${true}">
   <DialogTrigger>
     <Button variant="outline">Open dialog</Button>
   </DialogTrigger>

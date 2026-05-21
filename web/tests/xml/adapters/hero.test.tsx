@@ -3,15 +3,15 @@ import { describe, expect, it } from 'bun:test';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Hero', () => {
-    /* The hero content slot should flow horizontally. */
-    it('renders hero content in a horizontal row', () => {
+    /* The hero action slot should flow horizontally. */
+    it('renders hero action in a horizontal row', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Hero><HeroTitle>Title</HeroTitle><HeroDescription>Description</HeroDescription><HeroContent><Button>One</Button><Button>Two</Button></HeroContent></Hero>'
+                '<Hero><HeroTitle>Title</HeroTitle><HeroDescription>Description</HeroDescription><HeroAction><Button>One</Button><Button>Two</Button></HeroAction></Hero>'
             )
         );
 
-        expect(output).toContain('data-slot="hero-content"');
+        expect(output).toContain('data-slot="hero-action"');
         expect(output).toContain('One');
         expect(output).toContain('Two');
     });

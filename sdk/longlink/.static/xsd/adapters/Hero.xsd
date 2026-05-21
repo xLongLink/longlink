@@ -19,10 +19,10 @@
 
   <xsd:complexType name="HeroTitleType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
   <xsd:complexType name="HeroDescriptionType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:complexType name="HeroContentType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="HeroActionType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
 
   <xsd:element name="Hero" type="HeroType" />
   <xsd:element name="HeroTitle" type="HeroTitleType" />
   <xsd:element name="HeroDescription" type="HeroDescriptionType" />
-  <xsd:element name="HeroContent" type="HeroContentType" />
+  <xsd:element name="HeroAction" type="HeroActionType" />
 </xsd:schema>

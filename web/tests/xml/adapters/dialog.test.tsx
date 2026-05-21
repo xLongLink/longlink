@@ -7,7 +7,7 @@ describe('Dialog', () => {
     it('preserves the compound dialog structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Dialog open="${true}"><DialogTrigger><Button variant="outline">Open dialog</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Delete issue</DialogTitle><DialogDescription>This cannot be undone.</DialogDescription></DialogHeader><DialogFooter>Actions</DialogFooter></DialogContent></Dialog>'
+                '<Dialog open="${true}"><DialogTrigger><Button variant="outline">Open dialog</Button></DialogTrigger><DialogContent><DialogTitle>Delete issue</DialogTitle><DialogDescription>This cannot be undone.</DialogDescription><Button>Actions</Button></DialogContent></Dialog>'
             )
         ).toEqual([
             {
@@ -28,20 +28,15 @@ describe('Dialog', () => {
                         name: 'DialogContent',
                         children: [
                             {
-                                name: 'DialogHeader',
-                                children: [
-                                    {
-                                        name: 'DialogTitle',
-                                        children: [{ name: 'Text', params: { value: 'Delete issue' } }],
-                                    },
-                                    {
-                                        name: 'DialogDescription',
-                                        children: [{ name: 'Text', params: { value: 'This cannot be undone.' } }],
-                                    },
-                                ],
+                                name: 'DialogTitle',
+                                children: [{ name: 'Text', params: { value: 'Delete issue' } }],
                             },
                             {
-                                name: 'DialogFooter',
+                                name: 'DialogDescription',
+                                children: [{ name: 'Text', params: { value: 'This cannot be undone.' } }],
+                            },
+                            {
+                                name: 'Button',
                                 children: [{ name: 'Text', params: { value: 'Actions' } }],
                             },
                         ],
@@ -55,7 +50,7 @@ describe('Dialog', () => {
     it('renders the dialog trigger in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Dialog open="${true}"><DialogTrigger><Button variant="outline">Open dialog</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Delete issue</DialogTitle><DialogDescription>This cannot be undone.</DialogDescription></DialogHeader><DialogFooter>Actions</DialogFooter></DialogContent></Dialog>'
+                '<Dialog open="${true}"><DialogTrigger><Button variant="outline">Open dialog</Button></DialogTrigger><DialogContent><DialogTitle>Delete issue</DialogTitle><DialogDescription>This cannot be undone.</DialogDescription><Button>Actions</Button></DialogContent></Dialog>'
             )
         );
 
@@ -68,7 +63,7 @@ describe('Dialog', () => {
     it('renders an anchor trigger in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Dialog open="${true}"><DialogTrigger><A href="/quotes/edit" active="hover">Edit quote</A></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Edit quote</DialogTitle><DialogDescription>Review the quote details before saving the next revision.</DialogDescription></DialogHeader><DialogFooter>Actions</DialogFooter></DialogContent></Dialog>'
+                '<Dialog open="${true}"><DialogTrigger><A href="/quotes/edit" active="hover">Edit quote</A></DialogTrigger><DialogContent><DialogTitle>Edit quote</DialogTitle><DialogDescription>Review the quote details before saving the next revision.</DialogDescription><Button>Actions</Button></DialogContent></Dialog>'
             )
         );
 

@@ -3,8 +3,6 @@ import {
     Dialog as UIDialog,
     DialogContent as UIDialogContent,
     DialogDescription as UIDialogDescription,
-    DialogFooter as UIDialogFooter,
-    DialogHeader as UIDialogHeader,
     DialogTitle as UIDialogTitle,
     DialogTrigger as UIDialogTrigger,
 } from '@/components/ui/dialog';
@@ -75,13 +73,6 @@ export function DialogContent({ props, nodes }: Props) {
     return <UIDialogContent>{renderNode(nodes, ctx)}</UIDialogContent>;
 }
 
-/** Renders the dialog header slot. */
-export function DialogHeader({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-
-    return <UIDialogHeader>{renderNode(nodes, ctx)}</UIDialogHeader>;
-}
-
 /** Renders the dialog title slot. */
 export function DialogTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
@@ -94,11 +85,4 @@ export function DialogDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UIDialogDescription>{renderNode(nodes, ctx)}</UIDialogDescription>;
-}
-
-/** Renders the dialog footer slot. */
-export function DialogFooter({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-
-    return <UIDialogFooter>{renderNode(nodes, ctx)}</UIDialogFooter>;
 }

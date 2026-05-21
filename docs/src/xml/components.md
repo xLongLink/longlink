@@ -32,16 +32,6 @@ TODO: Component description
 </Button>
 ```
 
-## Action
-
-TODO: Component description
-
-```xml
-<Action action="/issues" json='${{ title: issue.title }}'>
-  Save issue
-</Action>
-```
-
 ## ButtonGroup
 
 TODO: Component description
@@ -76,29 +66,12 @@ TODO: Component description
 
 ```xml
 <Card>
-  <CardHeader>
+  <CardContent>
     <CardTitle>Card Title</CardTitle>
     <CardDescription>Card Description</CardDescription>
-    <CardAction>Card Action</CardAction>
-  </CardHeader>
-  <CardContent>
     <P>Card Content</P>
   </CardContent>
-  <CardFooter>
-    <P>Card Footer</P>
-  </CardFooter>
 </Card>
-```
-
-## Stack
-
-TODO: Component description
-
-```xml
-<Stack>
-  <P>First</P>
-  <P>Second</P>
-</Stack>
 ```
 
 ## Divider
@@ -117,9 +90,9 @@ TODO: Component description
 <Hero icon="layout-grid">
   <HeroTitle>Organizations</HeroTitle>
   <HeroDescription>Browse the organizations you belong to.</HeroDescription>
-  <HeroContent>
+  <HeroAction>
     <Action action="/organizations/new">Create organization</Action>
-  </HeroContent>
+  </HeroAction>
 </Hero>
 ```
 
@@ -154,17 +127,4 @@ TODO: Component description
     </TableRow>
   </TableBody>
 </Table>
-```
-
-## Tooltip
-
-TODO: Component description
-
-```xml
-<TooltipProvider>
-  <Tooltip>
-    <TooltipTrigger>Hover me</TooltipTrigger>
-    <TooltipContent side="top">Tooltip text</TooltipContent>
-  </Tooltip>
-</TooltipProvider>
 ```

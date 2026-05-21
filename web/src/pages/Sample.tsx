@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import {
     ChartContainer,
     ChartLegend,
@@ -167,10 +167,8 @@ export default function Sample() {
         <main className="mx-auto w-full max-w-[1400px] px-6 py-10">
             <div className="grid gap-6 lg:grid-cols-2">
                 <Card className="border-white/10 bg-white/[0.04]">
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-3">
                         <CardTitle>Line</CardTitle>
-                    </CardHeader>
-                    <CardContent>
                         <ChartContainer config={lineConfig} className="min-h-[300px] w-full">
                             <LineChart data={lineData} margin={{ left: 8, right: 12, top: 12 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -198,10 +196,8 @@ export default function Sample() {
                 </Card>
 
                 <Card className="border-white/10 bg-white/[0.04]">
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-3">
                         <CardTitle>Area</CardTitle>
-                    </CardHeader>
-                    <CardContent>
                         <ChartContainer config={areaConfig} className="min-h-[280px] w-full">
                             <AreaChart data={areaData} margin={{ left: 8, right: 12, top: 12 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -229,10 +225,8 @@ export default function Sample() {
                 </Card>
 
                 <Card className="border-white/10 bg-white/[0.04]">
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-3">
                         <CardTitle>Bar</CardTitle>
-                    </CardHeader>
-                    <CardContent>
                         <ChartContainer config={barConfig} className="min-h-[280px] w-full">
                             <BarChart data={barData} margin={{ left: 8, right: 12, top: 12 }}>
                                 <defs>
@@ -294,10 +288,8 @@ export default function Sample() {
                 </Card>
 
                 <Card className="border-white/10 bg-white/[0.04]">
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-3">
                         <CardTitle>Pie</CardTitle>
-                    </CardHeader>
-                    <CardContent>
                         <ChartContainer config={pieConfig} className="min-h-[280px] w-full">
                             <PieChart>
                                 <defs>
@@ -339,10 +331,8 @@ export default function Sample() {
                 </Card>
 
                 <Card className="border-white/10 bg-white/[0.04]">
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-3">
                         <CardTitle>Radar</CardTitle>
-                    </CardHeader>
-                    <CardContent>
                         <ChartContainer config={radarConfig} className="min-h-[280px] w-full">
                             <RadarChart data={radarData} outerRadius="70%">
                                 <PolarGrid strokeDasharray="3 3" />
@@ -368,10 +358,8 @@ export default function Sample() {
                 </Card>
 
                 <Card className="border-white/10 bg-white/[0.04]">
-                    <CardHeader>
+                    <CardContent className="flex flex-col gap-3">
                         <CardTitle>Radial</CardTitle>
-                    </CardHeader>
-                    <CardContent>
                         <ChartContainer config={radialConfig} className="min-h-[320px] w-full">
                             <RadialBarChart
                                 data={radialData}
