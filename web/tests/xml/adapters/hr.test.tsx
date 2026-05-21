@@ -5,16 +5,16 @@ import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-describe('Divider', () => {
-    /* The compiler should preserve the Divider element without attributes. */
-    it('compiles divider xml into a divider ast node', () => {
-        expect(parseXML('<Divider />')).toEqual([{ name: 'Divider', children: [] }]);
+describe('Hr', () => {
+    /* The compiler should preserve the Hr element without attributes. */
+    it('compiles hr xml into a hr ast node', () => {
+        expect(parseXML('<Hr />')).toEqual([{ name: 'Hr', children: [] }]);
     });
 
-    /* The runtime should render Divider XML into the shadcn separator output. */
-    it('renders raw xml divider content end to end', () => {
+    /* The runtime should render Hr XML into the shadcn separator output. */
+    it('renders raw xml hr content end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<Divider />');
+        const ast = parseXML('<Hr />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(

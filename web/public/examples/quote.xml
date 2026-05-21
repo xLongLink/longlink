@@ -94,22 +94,18 @@
                 <Tab value="texts" label="Texts">
                     <Stack>
                         <Card>
-                            <CardContent>
-                                <Stack>
-                                    <CardTitle>Intro text</CardTitle>
-                                    <CardDescription>Shown at the top of the quote email.</CardDescription>
-                                    <Textarea rows="4" value="Thanks for reviewing the quote. The summary below reflects the current scope and pricing." />
-                                </Stack>
-                            </CardContent>
+                            <Stack>
+                                <P>Intro text</P>
+                                <P>Shown at the top of the quote email.</P>
+                                <Textarea rows="4" value="Thanks for reviewing the quote. The summary below reflects the current scope and pricing." />
+                            </Stack>
                         </Card>
                         <Card>
-                            <CardContent>
-                                <Stack>
-                                    <CardTitle>Footer text</CardTitle>
-                                    <CardDescription>Used for the approval reminder.</CardDescription>
-                                    <Textarea rows="3" value="Reply with approval or change requests before the end of the week." />
-                                </Stack>
-                            </CardContent>
+                            <Stack>
+                                <P>Footer text</P>
+                                <P>Used for the approval reminder.</P>
+                                <Textarea rows="3" value="Reply with approval or change requests before the end of the week." />
+                            </Stack>
                         </Card>
                     </Stack>
                 </Tab>
@@ -153,7 +149,7 @@
                 <A href="/quotes/duplicate" active="hover">
                     <Icon name="copy" /> Duplicate
                 </A>
-                <Divider />
+                <Hr />
                 <Badge variant="outline">Awaiting client review</Badge>
             </Stack>
         </Column>

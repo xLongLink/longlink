@@ -101,29 +101,15 @@ TODO: Component description
 </ButtonGroup>
 ```
 
-## Card
+## Hr
 
 TODO: Component description
 
-```xml
-<Card>
-  <CardContent>
-    <CardTitle>Card Title</CardTitle>
-    <CardDescription>Card Description</CardDescription>
-    <P>Card Content</P>
-  </CardContent>
-</Card>
-```
-
-## Divider
-
-TODO: Component description
-
-- `Divider` renders a visual separator.
+- `Hr` renders a visual separator.
 - `Br` renders a line break for visual separation.
 
 ```xml
-<Divider />
+<Hr />
 <Br />
 ```
 

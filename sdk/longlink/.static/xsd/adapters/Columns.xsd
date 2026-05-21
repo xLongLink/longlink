@@ -24,5 +24,9 @@
   </xsd:complexType>
 
   <xsd:element name="Columns" type="ColumnsType" />
-  <xsd:element name="Column" type="ColumnType" />
+  <xsd:element name="Column" type="ColumnType">
+    <xsd:annotation>
+      <xsd:documentation>Renders a column. Column widths should add up to 100 across the row.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
 </xsd:schema>

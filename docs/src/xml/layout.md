@@ -4,7 +4,7 @@ TODO: Introduction
 
 ## Columns
 
-TODO: Component description
+Columns render side-by-side sections. Column widths should add up to 100 across the row.
 
 ```xml
 <Columns>
@@ -23,6 +23,18 @@ TODO: Component description
   <Card>Two</Card>
   <Card>Three</Card>
 </Grid>
+```
+
+## Card
+
+Cards group related content.
+
+- `Card` renders the card shell.
+
+```xml
+<Card size="sm">
+  <P>Card Content</P>
+</Card>
 ```
 
 ## Stack
@@ -58,11 +70,11 @@ Use `defaultOpen` to show the dialog open on first render without locking its st
 
 ## Tabs
 
-TODO: Component description
+Tabs let users switch between related panels. Tabs can also show an icon per tab.
 
 ```xml
-<Tabs defaultValue="overview">
-  <Tab value="overview" label="Overview">Overview panel</Tab>
+<Tabs default="overview">
+  <Tab value="overview" label="Overview" icon="layout-grid">Overview panel</Tab>
   <Tab value="settings" label="Settings">Settings panel</Tab>
 </Tabs>
 ```

@@ -7,7 +7,7 @@ export * from './binding';
 export { Br } from './Br';
 export { Button } from './Button';
 export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from './ButtonGroup';
-export { Card, CardAction, CardContent, CardDescription, CardTitle } from './Card';
+export { Card } from './Card';
 export { Checkbox } from './Checkbox';
 export { Code } from './Code';
 export { Column, Columns } from './Columns';
@@ -18,7 +18,7 @@ export {
     DialogTitle,
     DialogTrigger,
 } from './Dialog';
-export { Divider } from './Divider';
+export { Hr } from './Hr';
 export {
     Field,
     FieldContent,

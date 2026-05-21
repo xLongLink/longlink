@@ -23,11 +23,14 @@
   <xsd:element name="longlink" type="LonglinkType" />
   <xsd:complexType name="StateType">
     <xsd:attribute name="id" type="xsd:string" use="required" />
-    <xsd:attribute name="value" type="xsd:string" use="optional" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
 
-  <xsd:element name="State" type="StateType" />
+  <xsd:element name="State" type="StateType">
+    <xsd:annotation>
+      <xsd:documentation>Use id to name the slot and any additional attributes as state fields.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
   <xsd:complexType name="ForChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -947,7 +950,11 @@
   </xsd:complexType>
 
   <xsd:element name="Columns" type="ColumnsType" />
-  <xsd:element name="Column" type="ColumnType" />
+  <xsd:element name="Column" type="ColumnType">
+    <xsd:annotation>
+      <xsd:documentation>Renders a column. Column widths should add up to 100 across the row.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
   <xsd:complexType name="GridChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -1006,35 +1013,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="CardTitleType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="CardDescriptionType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="CardActionType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="CardContentType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:element name="Card" type="CardType" />
-  <xsd:element name="CardTitle" type="CardTitleType" />
-  <xsd:element name="CardDescription" type="CardDescriptionType" />
-  <xsd:element name="CardAction" type="CardActionType" />
-  <xsd:element name="CardContent" type="CardContentType" />
   <xsd:complexType name="DialogChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -1082,9 +1061,9 @@
   <xsd:element name="DialogContent" type="DialogContentType" />
   <xsd:element name="DialogTitle" type="DialogTitleType" />
   <xsd:element name="DialogDescription" type="DialogDescriptionType" />
-  <xsd:complexType name="DividerType" />
+  <xsd:complexType name="HrType" />
 
-  <xsd:element name="Divider" type="DividerType" />
+  <xsd:element name="Hr" type="HrType" />
   <xsd:complexType name="IconType">
     <xsd:attribute name="name" type="xsd:string" use="required" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
@@ -1493,15 +1472,7 @@
   <xsd:complexType name="TabsType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
-        <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
-        <xsd:attribute name="orientation" use="optional" default="horizontal">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-              <xsd:enumeration value="horizontal" />
-              <xsd:enumeration value="vertical" />
-            </xsd:restriction>
-          </xsd:simpleType>
-        </xsd:attribute>
+        <xsd:attribute name="default" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -1511,11 +1482,16 @@
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
         <xsd:attribute name="label" type="xsd:string" use="required" />
+        <xsd:attribute name="icon" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="Tabs" type="TabsType" />
+  <xsd:element name="Tabs" type="TabsType">
+    <xsd:annotation>
+      <xsd:documentation>Tabs let users switch between related panels.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
   <xsd:element name="Tab" type="TabType" />
   <xsd:complexType name="MenuChildrenOnlyType" mixed="true">
     <xsd:sequence>

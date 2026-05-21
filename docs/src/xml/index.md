@@ -4,6 +4,18 @@ LongLink XML pages define the UI for backoffice software, including CRUD screens
 Each `.xml` file is the source of truth for layout, bindings, and actions.
 The runtime parses XML, resolves expressions, renders React-backed components, and refreshes data after invalidation.
 
+::: code-group
+
+```bash [uv]
+uv run longlink docs
+```
+
+```bash [pip]
+longlink docs
+```
+
+:::
+
 Use `<longlink>` as the root page shell.
 
 ```xml
@@ -17,7 +29,7 @@ Use `<longlink>` as the root page shell.
 
 Use `<State />` to create a local reactive slot.
 Use `id` to name the slot, and seed the state with any additional attributes.
-The `value` attribute is just one field on that state object.
+Those attributes become fields on that state object.
 Attribute values are parsed as JSON when possible, otherwise they are evaluated as expressions.
 `<State>` does not accept children.
 

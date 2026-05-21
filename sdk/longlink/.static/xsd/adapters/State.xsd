@@ -2,9 +2,12 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:complexType name="StateType">
     <xsd:attribute name="id" type="xsd:string" use="required" />
-    <xsd:attribute name="value" type="xsd:string" use="optional" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
 
-  <xsd:element name="State" type="StateType" />
+  <xsd:element name="State" type="StateType">
+    <xsd:annotation>
+      <xsd:documentation>Use id to name the slot and any additional attributes as state fields.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
 </xsd:schema>

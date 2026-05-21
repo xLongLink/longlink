@@ -9,12 +9,14 @@ import { evaluate } from '@xml/expressions';
 import { renderNode } from '@xml/core/node';
 import type { ASTNode, Props } from '@xml/types';
 import { Fragment } from 'react';
+import { Icon } from './Icon';
 import { requireXmlString, resolveXmlString } from './props';
 
 type TabNode = {
     key: number;
     value: string;
     label: string;
+    icon?: string;
     nodes: ASTNode[];
 };
 
@@ -32,6 +34,7 @@ export function Tabs({ props, nodes }: Props) {
                 <UITabsList>
                     {tabs.map((tab) => (
                         <UITabsTrigger key={tab.key} value={tab.value}>
+                            {tab.icon ? <Icon props={{ name: tab.icon }} nodes={[]} /> : null}
                             {tab.label}
                         </UITabsTrigger>
                     ))}
@@ -78,11 +81,13 @@ function collectTabNodes(nodes: ASTNode[], ctx: ReturnType<typeof useXmlContext>
 
         const value = requireXmlString(node.params, 'value', ctx, 'Tab');
         const label = requireXmlString(node.params, 'label', ctx, 'Tab');
+        const icon = resolveXmlString(node.params, 'icon', ctx);
 
         tabs.push({
             key: index,
             value,
             label,
+            icon: icon.trim() ? icon : undefined,
             nodes: node.children ?? [],
         });
     });

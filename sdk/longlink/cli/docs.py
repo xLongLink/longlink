@@ -20,14 +20,29 @@ def resolve_component_schema(component: str) -> Path:
         if schema_path.stem.casefold() == normalized:
             return schema_path
 
+    for schema_path in adapters.glob("*.xsd"):
+        schema = etree.parse(str(schema_path))
+        for element in schema.findall("xsd:element", namespaces=XSD_NAMESPACE):
+            if element.get("name", "").casefold() == normalized:
+                return schema_path
+
     raise click.ClickException(f"Unknown component: {component}")
 
 
-def summarize_component_schema(schema_path: Path) -> dict[str, object]:
+def summarize_component_schema(schema_path: Path, component: str) -> dict[str, object]:
     """Extract props, children support, and descriptions from a component schema."""
 
     schema = etree.parse(str(schema_path))
-    element = schema.find("xsd:element", namespaces=XSD_NAMESPACE)
+    normalized = component.casefold()
+    element = None
+
+    for candidate in schema.findall("xsd:element", namespaces=XSD_NAMESPACE):
+        if candidate.get("name", "").casefold() == normalized:
+            element = candidate
+            break
+
+    if element is None:
+        element = schema.find("xsd:element", namespaces=XSD_NAMESPACE)
     if element is None:
         raise click.ClickException(f"Schema does not define a root element: {schema_path.name}")
 
@@ -71,13 +86,16 @@ def summarize_component_schema(schema_path: Path) -> dict[str, object]:
             if restriction is not None:
                 values = [entry.get("value") for entry in restriction.findall("xsd:enumeration", namespaces=XSD_NAMESPACE)]
 
+            name = attribute.get("name", "")
+            type_name = attribute.get("type", "xsd:string").replace("xsd:", "")
+
             props.append(
                 {
-                    "name": attribute.get("name", ""),
+                    "name": name,
                     "required": attribute.get("use") == "required",
                     "default": attribute.get("default"),
                     "values": [value for value in values if value],
-                    "type": attribute.get("type", "xsd:string").replace("xsd:", ""),
+                    "type": type_name,
                 }
             )
 
@@ -94,6 +112,8 @@ def summarize_component_schema(schema_path: Path) -> dict[str, object]:
 
     type_info = collect_type_info(complex_type)
     props = type_info["props"]
+    if normalized == "state":
+        props.append({"name": "any", "required": False, "default": None, "values": [], "type": "any"})
     child_support = bool(type_info["children_supported"])
     children_description = ""
     child_annotation = complex_type.find("xsd:annotation/xsd:documentation", namespaces=XSD_NAMESPACE)
@@ -117,18 +137,15 @@ def render_component_docs(component: str) -> str:
     """Render a concise docs summary for a single XML component."""
 
     schema_path = resolve_component_schema(component)
-    details = summarize_component_schema(schema_path)
-
-    lines = [f"{details['name']}", f"Description: {details['description']}"]
+    details = summarize_component_schema(schema_path, component)
 
     if details["children_supported"]:
-        child_description = details["children_description"] or "Accepts nested XML children."
-        lines.append(f"Children: {child_description}")
+        lines = [f"<{details['name']}> </{details['name']}> - {details['description']}"]
     else:
-        lines.append("Children: not supported")
+        lines = [f"<{details['name']} /> - {details['description']}"]
 
     if details["any_attribute"]:
-        lines.append("Attributes: additional arbitrary attributes are allowed")
+        lines.append("Attributes: additional arbitrary fields are allowed")
 
     lines.append("Props:")
     props = details["props"]
@@ -147,8 +164,17 @@ def render_component_docs(component: str) -> str:
 
 
 @click.command(name="docs")
-@click.argument("component")
-def docs_command(component: str) -> None:
-    """Show bundled XML docs for a component."""
+@click.argument("component", required=False)
+def docs_command(component: str | None) -> None:
+    """Show bundled XML docs for one component or all components."""
 
-    click.echo(render_component_docs(component))
+    if component is not None:
+        click.echo(render_component_docs(component))
+        return
+
+    adapters = ROOT / ".static" / "xsd" / "adapters"
+    docs = [
+        render_component_docs(schema_path.stem)
+        for schema_path in sorted(adapters.glob("*.xsd"), key=lambda path: path.stem.casefold())
+    ]
+    click.echo("\n\n".join(docs))

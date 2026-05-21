@@ -12,15 +12,7 @@
   <xsd:complexType name="TabsType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
-        <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
-        <xsd:attribute name="orientation" use="optional" default="horizontal">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-              <xsd:enumeration value="horizontal" />
-              <xsd:enumeration value="vertical" />
-            </xsd:restriction>
-          </xsd:simpleType>
-        </xsd:attribute>
+        <xsd:attribute name="default" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -30,10 +22,15 @@
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
         <xsd:attribute name="label" type="xsd:string" use="required" />
+        <xsd:attribute name="icon" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:element name="Tabs" type="TabsType" />
+  <xsd:element name="Tabs" type="TabsType">
+    <xsd:annotation>
+      <xsd:documentation>Tabs let users switch between related panels.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
   <xsd:element name="Tab" type="TabType" />
 </xsd:schema>

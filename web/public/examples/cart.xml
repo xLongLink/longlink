@@ -21,59 +21,51 @@
 
             <Grid columns="2">
                 <Card if='${search.value in "Apples apples crisp and sweet orchard fruit"}'>
-                    <CardContent>
-                        <Stack>
-                            <CardTitle>Apples</CardTitle>
-                            <CardDescription>Crisp and sweet orchard fruit</CardDescription>
-                            <P>Bright red apples with a clean finish for snacks, salads, and lunch boxes.</P>
-                            <Badge variant="outline">$2.40</Badge>
-                            <Button variant="outline" size="xs" append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}'>
-                                Add to cart
-                            </Button>
-                        </Stack>
-                    </CardContent>
+                    <Stack>
+                        <P>Apples</P>
+                        <P>Crisp and sweet orchard fruit</P>
+                        <P>Bright red apples with a clean finish for snacks, salads, and lunch boxes.</P>
+                        <Badge variant="outline">$2.40</Badge>
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}'>
+                            Add to cart
+                        </Button>
+                    </Stack>
                 </Card>
 
                 <Card if='${search.value in "Bananas bananas soft sweet and easy to pack"}'>
-                    <CardContent>
-                        <Stack>
-                            <CardTitle>Bananas</CardTitle>
-                            <CardDescription>Soft, sweet, and easy to pack</CardDescription>
-                            <P>Great for breakfast, smoothies, and quick energy on the go.</P>
-                            <Badge variant="outline">$1.10</Badge>
-                            <Button variant="outline" size="xs" append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}'>
-                                Add to cart
-                            </Button>
-                        </Stack>
-                    </CardContent>
+                    <Stack>
+                        <P>Bananas</P>
+                        <P>Soft, sweet, and easy to pack</P>
+                        <P>Great for breakfast, smoothies, and quick energy on the go.</P>
+                        <Badge variant="outline">$1.10</Badge>
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}'>
+                            Add to cart
+                        </Button>
+                    </Stack>
                 </Card>
 
                 <Card if='${search.value in "Strawberries strawberries small berries for fresh desserts"}'>
-                    <CardContent>
-                        <Stack>
-                            <CardTitle>Strawberries</CardTitle>
-                            <CardDescription>Small berries for fresh desserts</CardDescription>
-                            <P>Juicy berries that work well with yogurt, cream, and pastries.</P>
-                            <Badge variant="outline">$4.50</Badge>
-                            <Button variant="outline" size="xs" append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}'>
-                                Add to cart
-                            </Button>
-                        </Stack>
-                    </CardContent>
+                    <Stack>
+                        <P>Strawberries</P>
+                        <P>Small berries for fresh desserts</P>
+                        <P>Juicy berries that work well with yogurt, cream, and pastries.</P>
+                        <Badge variant="outline">$4.50</Badge>
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}'>
+                            Add to cart
+                        </Button>
+                    </Stack>
                 </Card>
 
                 <Card if='${search.value in "Pears pears soft texture with a mellow finish"}'>
-                    <CardContent>
-                        <Stack>
-                            <CardTitle>Pears</CardTitle>
-                            <CardDescription>Soft texture with a mellow finish</CardDescription>
-                            <P>Ideal for a calm dessert plate or a simple afternoon snack.</P>
-                            <Badge variant="outline">$3.20</Badge>
-                            <Button variant="outline" size="xs" append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}'>
-                                Add to cart
-                            </Button>
-                        </Stack>
-                    </CardContent>
+                    <Stack>
+                        <P>Pears</P>
+                        <P>Soft texture with a mellow finish</P>
+                        <P>Ideal for a calm dessert plate or a simple afternoon snack.</P>
+                        <Badge variant="outline">$3.20</Badge>
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}'>
+                            Add to cart
+                        </Button>
+                    </Stack>
                 </Card>
             </Grid>
         </Column>
@@ -81,14 +73,14 @@
         <Column width="25">
             <Stack>
                 <P>Cart</P>
-                <Divider />
+                <Hr />
                 <P if="${cart.value.length in [0]}">Cart is empty</P>
                 <Ul if="${cart.value.length}">
                     <For each="${cart.value}" as="item">
                         <Li>${item.name} · Qty: ${item.quantity} · ${item.price}</Li>
                     </For>
                 </Ul>
-                <Divider />
+                <Hr />
                 <Button>Order</Button>
             </Stack>
         </Column>

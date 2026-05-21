@@ -13,7 +13,7 @@ def test_card_validation() -> None:
     """Validate a simplified `Card` fragment."""
 
     element = Element.from_content(
-        '<Card><CardContent><CardTitle>Card Title</CardTitle><CardDescription>Card Description</CardDescription><CardAction>Card Action</CardAction><P>Card Content</P></CardContent></Card>',
+        '<Card><P>Card Content</P></Card>',
         schema=SCHEMA,
     )
     element.validate()

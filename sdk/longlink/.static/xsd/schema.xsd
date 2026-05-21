@@ -32,7 +32,7 @@
   <xsd:include schemaLocation="adapters/Stack.xsd" />
   <xsd:include schemaLocation="adapters/Card.xsd" />
   <xsd:include schemaLocation="adapters/Dialog.xsd" />
-  <xsd:include schemaLocation="adapters/Divider.xsd" />
+  <xsd:include schemaLocation="adapters/Hr.xsd" />
   <xsd:include schemaLocation="adapters/Icon.xsd" />
   <xsd:include schemaLocation="adapters/Label.xsd" />
   <xsd:include schemaLocation="adapters/Input.xsd" />

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="DividerType" />
+  <xsd:complexType name="HrType" />
 
-  <xsd:element name="Divider" type="DividerType" />
+  <xsd:element name="Hr" type="HrType" />
 </xsd:schema>

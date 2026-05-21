@@ -7,7 +7,7 @@ describe('Tabs', () => {
     it('preserves the tab structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Tabs defaultValue="overview"><Tab value="overview" label="Overview">Overview panel</Tab><Tab value="settings" label="Settings">Settings panel</Tab></Tabs>'
+                '<Tabs defaultValue="overview"><Tab value="overview" label="Overview" icon="layout-grid">Overview panel</Tab><Tab value="settings" label="Settings">Settings panel</Tab></Tabs>'
             )
         ).toEqual([
             {
@@ -16,7 +16,7 @@ describe('Tabs', () => {
                 children: [
                     {
                         name: 'Tab',
-                        params: { value: 'overview', label: 'Overview' },
+                        params: { value: 'overview', label: 'Overview', icon: 'layout-grid' },
                         children: [{ name: 'Text', params: { value: 'Overview panel' } }],
                     },
                     {
@@ -33,13 +33,14 @@ describe('Tabs', () => {
     it('renders the tab composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Tabs defaultValue="overview"><Tab value="overview" label="Overview">Overview panel</Tab><Tab value="settings" label="Settings">Settings panel</Tab></Tabs>'
+                '<Tabs defaultValue="overview"><Tab value="overview" label="Overview" icon="layout-grid">Overview panel</Tab><Tab value="settings" label="Settings">Settings panel</Tab></Tabs>'
             )
         );
 
         expect(output).toContain('data-slot="tabs"');
         expect(output).toContain('data-slot="tabs-trigger"');
         expect(output).toContain('data-slot="tabs-content"');
+        expect(output).toContain('size-4');
         expect(output).toContain('gap-6');
         expect(output).toContain('Overview');
         expect(output).toContain('Settings');

@@ -39,7 +39,7 @@ describe('For', () => {
     it('renders children with the scoped item value', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML(
-            '<longlink><State id="items" value="[{&quot;name&quot;:&quot;Alpha&quot;}]" /><For each="${items.value}" as="item"><CardTitle>${item.name}</CardTitle></For></longlink>'
+            '<longlink><State id="items" value="[{&quot;name&quot;:&quot;Alpha&quot;}]" /><For each="${items.value}" as="item"><P>${item.name}</P></For></longlink>'
         );
 
         await setupContext(ast, ctx, '');

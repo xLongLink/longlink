@@ -14,8 +14,8 @@ def test_tabs_validation() -> None:
 
     element = Element.from_content(
         """
-        <Tabs defaultValue="overview">
-          <Tab value="overview" label="Overview">Overview panel</Tab>
+        <Tabs default="overview">
+          <Tab value="overview" label="Overview" icon="layout-grid">Overview panel</Tab>
           <Tab value="settings" label="Settings">Settings panel</Tab>
         </Tabs>
         """,
