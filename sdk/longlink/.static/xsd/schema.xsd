@@ -25,7 +25,6 @@
   <xsd:include schemaLocation="adapters/InputGroup.xsd" />
   <xsd:include schemaLocation="adapters/Avatar.xsd" />
   <xsd:include schemaLocation="adapters/Checkbox.xsd" />
-  <xsd:include schemaLocation="adapters/FieldSet.xsd" />
   <xsd:include schemaLocation="adapters/Hero.xsd" />
   <xsd:include schemaLocation="adapters/Badge.xsd" />
   <xsd:include schemaLocation="adapters/Columns.xsd" />

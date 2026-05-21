@@ -7,20 +7,13 @@ describe('Field', () => {
     it('preserves the full field structure in compiled xml', () => {
         expect(
             parseXML(
-                '<FieldSet><FieldLegend>Profile</FieldLegend><FieldDescription>This appears on invoices and emails.</FieldDescription><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></FieldSet>'
+                '<Grid columns="2"><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></Grid>'
             )
         ).toMatchObject([
             {
-                name: 'FieldSet',
+                name: 'Grid',
+                params: { columns: '2' },
                 children: [
-                    {
-                        name: 'FieldLegend',
-                        children: [{ name: 'Text', params: { value: 'Profile' } }],
-                    },
-                    {
-                        name: 'FieldDescription',
-                        children: [{ name: 'Text', params: { value: 'This appears on invoices and emails.' } }],
-                    },
                     {
                         name: 'Field',
                         children: [
@@ -94,12 +87,11 @@ describe('Field', () => {
     it('renders the full field composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<FieldSet><FieldLegend>Profile</FieldLegend><FieldDescription>This appears on invoices and emails.</FieldDescription><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></FieldSet>'
+                '<Grid columns="2"><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></Grid>'
             )
         );
 
-        expect(output).toContain('data-slot="field-set"');
-        expect(output).toContain('data-slot="field-legend"');
+        expect(output).toContain('data-slot="grid"');
         expect(output).toContain('data-slot="field"');
         expect(output).toContain('data-slot="field-content"');
         expect(output).toContain('data-slot="field-label"');

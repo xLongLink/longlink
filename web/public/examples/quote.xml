@@ -13,56 +13,48 @@
     <Columns>
         <Column width="75">
             <Tabs defaultValue="items">
-                <TabsList variant="line">
-                    <TabsTrigger value="items">Items</TabsTrigger>
-                    <TabsTrigger value="conditions">Conditions</TabsTrigger>
-                    <TabsTrigger value="address">Address</TabsTrigger>
-                    <TabsTrigger value="texts">Texts</TabsTrigger>
-                    <TabsTrigger value="settings">Settings</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="items">
+                <Tab value="items" label="Items">
                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Item</TableHead>
-                                <TableHead>Qty</TableHead>
-                                <TableHead>Rate</TableHead>
-                                <TableHead>Amount</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell>Discovery workshop</TableCell>
-                                <TableCell>1</TableCell>
-                                <TableCell>$1,200</TableCell>
-                                <TableCell>$1,200</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Implementation support</TableCell>
-                                <TableCell>3</TableCell>
-                                <TableCell>$900</TableCell>
-                                <TableCell>$2,700</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Review and revisions</TableCell>
-                                <TableCell>2</TableCell>
-                                <TableCell>$450</TableCell>
-                                <TableCell>$900</TableCell>
-                            </TableRow>
-                        </TableBody>
-                        <TableFooter>
-                            <TableRow>
-                                <TableCell>Total</TableCell>
-                                <TableCell>6</TableCell>
-                                <TableCell />
-                                <TableCell>$4,800</TableCell>
-                            </TableRow>
-                        </TableFooter>
+                        <Thead>
+                            <Tr>
+                                <Th>Item</Th>
+                                <Th>Qty</Th>
+                                <Th>Rate</Th>
+                                <Th>Amount</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            <Tr>
+                                <Td>Discovery workshop</Td>
+                                <Td>1</Td>
+                                <Td>$1,200</Td>
+                                <Td>$1,200</Td>
+                            </Tr>
+                            <Tr>
+                                <Td>Implementation support</Td>
+                                <Td>3</Td>
+                                <Td>$900</Td>
+                                <Td>$2,700</Td>
+                            </Tr>
+                            <Tr>
+                                <Td>Review and revisions</Td>
+                                <Td>2</Td>
+                                <Td>$450</Td>
+                                <Td>$900</Td>
+                            </Tr>
+                        </Tbody>
+                        <Tfoot>
+                            <Tr>
+                                <Td>Total</Td>
+                                <Td>6</Td>
+                                <Td />
+                                <Td>$4,800</Td>
+                            </Tr>
+                        </Tfoot>
                     </Table>
-                </TabsContent>
+                </Tab>
 
-                <TabsContent value="conditions">
+                <Tab value="conditions" label="Conditions">
                     <Stack>
                         <Badge variant="outline">Pending approval</Badge>
                         <P>Net 30 payment terms apply after the final revision is accepted.</P>
@@ -72,11 +64,12 @@
                             <Li>Scope changes are quoted separately.</Li>
                         </Ul>
                     </Stack>
-                </TabsContent>
+                </Tab>
 
-                <TabsContent value="address">
-                    <FieldSet>
-                        <FieldLegend>Billing address</FieldLegend>
+                <Tab value="address" label="Address">
+                    <Stack>
+                        <H3>Billing address</H3>
+                        <P>Where the quote should be sent and billed.</P>
                         <Field>
                             <FieldLabel htmlFor="company">Company</FieldLabel>
                             <Input id="company" value="Ada Labs" />
@@ -95,31 +88,36 @@
                                 <Input id="postal" value="10115" />
                             </Field>
                         </Grid>
-                    </FieldSet>
-                </TabsContent>
+                    </Stack>
+                </Tab>
 
-                <TabsContent value="texts">
+                <Tab value="texts" label="Texts">
                     <Stack>
                         <Card>
-                            <CardContent className="flex flex-col gap-2">
-                                <CardTitle>Intro text</CardTitle>
-                                <CardDescription>Shown at the top of the quote email.</CardDescription>
-                                <Textarea rows="4" value="Thanks for reviewing the quote. The summary below reflects the current scope and pricing." />
+                            <CardContent>
+                                <Stack>
+                                    <CardTitle>Intro text</CardTitle>
+                                    <CardDescription>Shown at the top of the quote email.</CardDescription>
+                                    <Textarea rows="4" value="Thanks for reviewing the quote. The summary below reflects the current scope and pricing." />
+                                </Stack>
                             </CardContent>
                         </Card>
                         <Card>
-                            <CardContent className="flex flex-col gap-2">
-                                <CardTitle>Footer text</CardTitle>
-                                <CardDescription>Used for the approval reminder.</CardDescription>
-                                <Textarea rows="3" value="Reply with approval or change requests before the end of the week." />
+                            <CardContent>
+                                <Stack>
+                                    <CardTitle>Footer text</CardTitle>
+                                    <CardDescription>Used for the approval reminder.</CardDescription>
+                                    <Textarea rows="3" value="Reply with approval or change requests before the end of the week." />
+                                </Stack>
                             </CardContent>
                         </Card>
                     </Stack>
-                </TabsContent>
+                </Tab>
 
-                <TabsContent value="settings">
-                    <FieldSet>
-                        <FieldLegend>Quote settings</FieldLegend>
+                <Tab value="settings" label="Settings">
+                    <Stack>
+                        <H3>Quote settings</H3>
+                        <P>Configure how the quote behaves for the current workflow.</P>
                         <Grid columns="2">
                             <Field orientation="horizontal">
                                 <Switch id="tax" defaultChecked="true" />
@@ -138,8 +136,8 @@
                                 <RadioGroupItem value="approved">Approved</RadioGroupItem>
                             </RadioGroup>
                         </Field>
-                    </FieldSet>
-                </TabsContent>
+                    </Stack>
+                </Tab>
             </Tabs>
         </Column>
 

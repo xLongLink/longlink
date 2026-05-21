@@ -25,39 +25,15 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TabsListType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="TabsChildrenOnlyType">
-        <xsd:attribute name="variant" use="optional" default="default">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-              <xsd:enumeration value="default" />
-              <xsd:enumeration value="line" />
-            </xsd:restriction>
-          </xsd:simpleType>
-        </xsd:attribute>
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="TabsTriggerType" mixed="true">
+  <xsd:complexType name="TabType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="TabsContentType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="TabsChildrenOnlyType">
-        <xsd:attribute name="value" type="xsd:string" use="required" />
+        <xsd:attribute name="label" type="xsd:string" use="required" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
   <xsd:element name="Tabs" type="TabsType" />
-  <xsd:element name="TabsList" type="TabsListType" />
-  <xsd:element name="TabsTrigger" type="TabsTriggerType" />
-  <xsd:element name="TabsContent" type="TabsContentType" />
+  <xsd:element name="Tab" type="TabType" />
 </xsd:schema>

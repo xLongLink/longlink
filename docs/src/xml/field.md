@@ -1,71 +1,37 @@
 # Field
 
 Field components group labels, inputs, controls, and validation text into a single form layout.
-`FieldSet` wraps a related form section.
-Use `Grid` or another layout component for the field arrangement inside the section.
 
 ```xml
-<FieldSet>
-  <FieldLegend>Account profile</FieldLegend>
-  <FieldDescription>A denser backoffice form with inline controls and grouped actions.</FieldDescription>
-  <Grid columns="2">
-    <Field>
-      <FieldLabel htmlFor="name">Full name</FieldLabel>
-      <Input id="name" autoComplete="name" value="Evil Rabbit" placeholder="Evil Rabbit" />
-      <FieldDescription>This appears on invoices and emails.</FieldDescription>
-    </Field>
-
-    <Field>
-      <FieldLabel htmlFor="username">Username</FieldLabel>
-      <InputGroup>
-        <InputGroupAddon>
-          <Icon name="user" />
-        </InputGroupAddon>
-        <InputGroupInput id="username" autoComplete="username" placeholder="evil.rabbit" value="evil.rabbit" />
-        <InputGroupButton>Check</InputGroupButton>
-      </InputGroup>
-    </Field>
-
-    <Field>
-      <FieldLabel htmlFor="email">Email</FieldLabel>
-      <InputGroup>
-        <InputGroupAddon>
-          <Icon name="mail" />
-        </InputGroupAddon>
-        <InputGroupInput id="email" autoComplete="email" placeholder="ada@longlink.dev" value="ada@longlink.dev" />
-        <InputGroupButton>Invite</InputGroupButton>
-      </InputGroup>
-    </Field>
-
-    <Field>
-      <FieldLabel htmlFor="team">Team</FieldLabel>
-      <Select defaultValue="ops">
-        <SelectTrigger>
-          <SelectValue placeholder="Select a team" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Teams</SelectLabel>
-            <SelectItem value="ops">Operations</SelectItem>
-            <SelectItem value="support">Support</SelectItem>
-            <SelectItem value="product">Product</SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-    </Field>
-  </Grid>
-</FieldSet>
+<Field>
+  <FieldLabel htmlFor="name">Full name</FieldLabel>
+  <Input id="name" autoComplete="name" value="Evil Rabbit" placeholder="Evil Rabbit" />
+  <FieldDescription>This appears on invoices and emails.</FieldDescription>
+</Field>
 ```
 
 ## Input
 
 TODO: Component description
 
+Use `InputGroup` when the input needs an icon, addon, or action button.
+
 ```xml
 <Field>
   <FieldLabel htmlFor="name">Full name</FieldLabel>
   <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
   <FieldDescription>This appears on invoices and emails.</FieldDescription>
+</Field>
+
+<Field>
+  <FieldLabel htmlFor="username">Username</FieldLabel>
+  <InputGroup>
+    <InputGroupAddon>
+      <Icon name="user" />
+    </InputGroupAddon>
+    <InputGroupInput id="username" autoComplete="username" placeholder="evil.rabbit" value="evil.rabbit" />
+    <InputGroupButton>Check</InputGroupButton>
+  </InputGroup>
 </Field>
 ```
 

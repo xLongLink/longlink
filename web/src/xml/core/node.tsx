@@ -7,6 +7,11 @@ import { xmlComponentRegistry } from './registry';
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
     return nodes.map((node, index) => {
+        // Reject styling-only XML props so invalid attributes fail fast.
+        if (node.params?.className != null) {
+            throw new Error('className is not supported in XML');
+        }
+
         // Handle conditional rendering with "if" parameter.
         if (node.params?.if != null) {
             if (!evaluate(node.params.if, ctx)) {

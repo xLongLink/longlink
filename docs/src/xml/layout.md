@@ -48,14 +48,10 @@ Use `defaultOpen` to show the dialog open on first render without locking its st
     <Button variant="outline">Open dialog</Button>
   </DialogTrigger>
   <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Delete issue</DialogTitle>
-      <DialogDescription>This cannot be undone.</DialogDescription>
-    </DialogHeader>
-    <DialogFooter>
-      <Button variant="outline">Cancel</Button>
-      <Action action="/issues/1" method="DELETE">Delete</Action>
-    </DialogFooter>
+    <DialogTitle>Delete issue</DialogTitle>
+    <DialogDescription>This cannot be undone.</DialogDescription>
+    <Button variant="outline">Cancel</Button>
+    <Action action="/issues/1" method="DELETE">Delete</Action>
   </DialogContent>
 </Dialog>
 ```
@@ -66,12 +62,8 @@ TODO: Component description
 
 ```xml
 <Tabs defaultValue="overview">
-  <TabsList variant="line">
-    <TabsTrigger value="overview">Overview</TabsTrigger>
-    <TabsTrigger value="settings">Settings</TabsTrigger>
-  </TabsList>
-  <TabsContent value="overview">Overview panel</TabsContent>
-  <TabsContent value="settings">Settings panel</TabsContent>
+  <Tab value="overview" label="Overview">Overview panel</Tab>
+  <Tab value="settings" label="Settings">Settings panel</Tab>
 </Tabs>
 ```
 

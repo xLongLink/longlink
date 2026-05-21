@@ -25,6 +25,14 @@ describe('renderNode', () => {
         ).toBe('<div>Hello</div>');
     });
 
+    it('rejects className on xml nodes', () => {
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+
+        expect(() => renderNode([{ name: 'Button', params: { className: 'hidden' } }], ctx)).toThrow(
+            'className is not supported in XML'
+        );
+    });
+
     it('preserves existing state when reactive conditions re-render', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const nodes: ASTNode[] = [

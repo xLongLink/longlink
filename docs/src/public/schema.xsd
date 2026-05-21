@@ -868,6 +868,7 @@
   </xsd:complexType>
 
   <xsd:element name="FieldSet" type="FieldSetType" />
+
   <xsd:complexType name="HeroChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -1064,12 +1065,6 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="DialogHeaderType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:complexType name="DialogTitleType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType" />
@@ -1082,19 +1077,11 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="DialogFooterType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:element name="Dialog" type="DialogType" />
   <xsd:element name="DialogTrigger" type="DialogTriggerType" />
   <xsd:element name="DialogContent" type="DialogContentType" />
-  <xsd:element name="DialogHeader" type="DialogHeaderType" />
   <xsd:element name="DialogTitle" type="DialogTitleType" />
   <xsd:element name="DialogDescription" type="DialogDescriptionType" />
-  <xsd:element name="DialogFooter" type="DialogFooterType" />
   <xsd:complexType name="DividerType" />
 
   <xsd:element name="Divider" type="DividerType" />
@@ -1519,41 +1506,17 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TabsListType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="TabsChildrenOnlyType">
-        <xsd:attribute name="variant" use="optional" default="default">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-              <xsd:enumeration value="default" />
-              <xsd:enumeration value="line" />
-            </xsd:restriction>
-          </xsd:simpleType>
-        </xsd:attribute>
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="TabsTriggerType" mixed="true">
+  <xsd:complexType name="TabType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="TabsContentType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="TabsChildrenOnlyType">
-        <xsd:attribute name="value" type="xsd:string" use="required" />
+        <xsd:attribute name="label" type="xsd:string" use="required" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
   <xsd:element name="Tabs" type="TabsType" />
-  <xsd:element name="TabsList" type="TabsListType" />
-  <xsd:element name="TabsTrigger" type="TabsTriggerType" />
-  <xsd:element name="TabsContent" type="TabsContentType" />
+  <xsd:element name="Tab" type="TabType" />
   <xsd:complexType name="MenuChildrenOnlyType" mixed="true">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">

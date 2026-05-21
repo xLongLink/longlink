@@ -27,7 +27,6 @@ export {
     FieldLabel,
     FieldLegend,
     FieldSeparator,
-    FieldSet,
     FieldTitle,
 } from './Field';
 export { For } from './For';
@@ -71,8 +70,8 @@ export { Stack } from './Stack';
 export { Sub } from './Sub';
 export { Sup } from './Sup';
 export { Switch } from './Switch';
-export { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './Table';
-export { Tabs, TabsContent, TabsList, TabsTrigger } from './Tabs';
+export { Table, Tbody, Td, Tfoot, Th, Thead, Tr } from './Table';
+export { Tab, Tabs } from './Tabs';
 export { Text } from './Text';
 export { Textarea } from './Textarea';
 export { Toggle } from './Toggle';

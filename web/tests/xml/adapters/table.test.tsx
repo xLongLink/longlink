@@ -7,59 +7,59 @@ describe('Table', () => {
     it('preserves the compound table structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Table><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>'
+                '<Table><Thead><Tr><Th>Quarter</Th><Th>Revenue</Th><Th>Growth</Th><Th>Status</Th></Tr></Thead><Tbody><Tr><Td>Q1</Td><Td>$120k</Td><Td>12%</Td><Td>On track</Td></Tr><Tr><Td>Q2</Td><Td>$154k</Td><Td>28%</Td><Td>On track</Td></Tr></Tbody><Tfoot><Tr><Td>Total</Td><Td>$274k</Td><Td>20%</Td><Td>Projected</Td></Tr></Tfoot></Table>'
             )
         ).toEqual([
             {
                 name: 'Table',
                 children: [
                     {
-                        name: 'TableHeader',
+                        name: 'Thead',
                         children: [
                             {
-                                name: 'TableRow',
+                                name: 'Tr',
                                 children: [
-                                    { name: 'TableHead', children: [{ name: 'Text', params: { value: 'Quarter' } }] },
-                                    { name: 'TableHead', children: [{ name: 'Text', params: { value: 'Revenue' } }] },
-                                    { name: 'TableHead', children: [{ name: 'Text', params: { value: 'Growth' } }] },
-                                    { name: 'TableHead', children: [{ name: 'Text', params: { value: 'Status' } }] },
+                                    { name: 'Th', children: [{ name: 'Text', params: { value: 'Quarter' } }] },
+                                    { name: 'Th', children: [{ name: 'Text', params: { value: 'Revenue' } }] },
+                                    { name: 'Th', children: [{ name: 'Text', params: { value: 'Growth' } }] },
+                                    { name: 'Th', children: [{ name: 'Text', params: { value: 'Status' } }] },
                                 ],
                             },
                         ],
                     },
                     {
-                        name: 'TableBody',
+                        name: 'Tbody',
                         children: [
                             {
-                                name: 'TableRow',
+                                name: 'Tr',
                                 children: [
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: 'Q1' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: '$120k' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: '12%' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: 'On track' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'Q1' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: '$120k' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: '12%' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'On track' } }] },
                                 ],
                             },
                             {
-                                name: 'TableRow',
+                                name: 'Tr',
                                 children: [
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: 'Q2' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: '$154k' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: '28%' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: 'On track' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'Q2' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: '$154k' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: '28%' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'On track' } }] },
                                 ],
                             },
                         ],
                     },
                     {
-                        name: 'TableFooter',
+                        name: 'Tfoot',
                         children: [
                             {
-                                name: 'TableRow',
+                                name: 'Tr',
                                 children: [
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: 'Total' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: '$274k' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: '20%' } }] },
-                                    { name: 'TableCell', children: [{ name: 'Text', params: { value: 'Projected' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'Total' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: '$274k' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: '20%' } }] },
+                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'Projected' } }] },
                                 ],
                             },
                         ],
@@ -73,7 +73,7 @@ describe('Table', () => {
     it('renders the full table composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>'
+                '<Table><Thead><Tr><Th>Quarter</Th><Th>Revenue</Th><Th>Growth</Th><Th>Status</Th></Tr></Thead><Tbody><Tr><Td>Q1</Td><Td>$120k</Td><Td>12%</Td><Td>On track</Td></Tr><Tr><Td>Q2</Td><Td>$154k</Td><Td>28%</Td><Td>On track</Td></Tr></Tbody><Tfoot><Tr><Td>Total</Td><Td>$274k</Td><Td>20%</Td><Td>Projected</Td></Tr></Tfoot></Table>'
             )
         );
 

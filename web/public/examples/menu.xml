@@ -29,10 +29,10 @@
             </MenuSubSection>
         </MenuSection>
 
-        <MenuSection value="settings" label="Settings">
-            <FieldSet>
-                <FieldLegend>Workspace settings</FieldLegend>
-                <FieldDescription>Configure the dashboard for the current team and workflow.</FieldDescription>
+    <MenuSection value="settings" label="Settings">
+            <Stack>
+                <H3>Workspace settings</H3>
+                <P>Configure the dashboard for the current team and workflow.</P>
 
                 <Grid columns="2">
                     <Field orientation="horizontal">
@@ -78,7 +78,7 @@
                         <Button submit="true">Save changes</Button>
                     </ButtonGroup>
                 </Field>
-            </FieldSet>
+            </Stack>
         </MenuSection>
 
         <MenuSection value="profile" label="Profile">

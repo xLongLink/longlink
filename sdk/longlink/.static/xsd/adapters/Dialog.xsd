@@ -30,12 +30,6 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="DialogHeaderType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:complexType name="DialogTitleType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType" />
@@ -48,17 +42,9 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="DialogFooterType" mixed="true">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
   <xsd:element name="Dialog" type="DialogType" />
   <xsd:element name="DialogTrigger" type="DialogTriggerType" />
   <xsd:element name="DialogContent" type="DialogContentType" />
-  <xsd:element name="DialogHeader" type="DialogHeaderType" />
   <xsd:element name="DialogTitle" type="DialogTitleType" />
   <xsd:element name="DialogDescription" type="DialogDescriptionType" />
-  <xsd:element name="DialogFooter" type="DialogFooterType" />
 </xsd:schema>

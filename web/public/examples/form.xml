@@ -1,7 +1,7 @@
 <longlink>
-    <FieldSet>
-        <FieldLegend>Account profile</FieldLegend>
-        <FieldDescription>A denser backoffice form with inline controls and grouped actions.</FieldDescription>
+    <Stack>
+        <H3>Account profile</H3>
+        <P>A denser backoffice form with inline controls and grouped actions.</P>
 
         <Grid columns="2">
             <Field>
@@ -97,5 +97,5 @@
             <Button variant="destructive">Cancel</Button>
             <Button type="submit">Submit</Button>
         </Field>
-    </FieldSet>
+    </Stack>
 </longlink>

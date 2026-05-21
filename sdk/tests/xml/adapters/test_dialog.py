@@ -13,7 +13,7 @@ def test_dialog_validation() -> None:
     """Validate a compound `Dialog` fragment."""
 
     element = Element.from_content(
-        '<Dialog open="true"><DialogTrigger>Open dialog</DialogTrigger><DialogContent><DialogHeader><DialogTitle>Delete issue</DialogTitle><DialogDescription>This cannot be undone.</DialogDescription></DialogHeader><DialogFooter>Actions</DialogFooter></DialogContent></Dialog>',
+        '<Dialog open="true"><DialogTrigger>Open dialog</DialogTrigger><DialogContent><DialogTitle>Delete issue</DialogTitle><DialogDescription>This cannot be undone.</DialogDescription><Button>Actions</Button></DialogContent></Dialog>',
         schema=SCHEMA,
     )
 

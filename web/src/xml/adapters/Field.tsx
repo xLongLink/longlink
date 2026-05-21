@@ -6,7 +6,6 @@ import {
     FieldLabel as UIFieldLabel,
     FieldLegend as UIFieldLegend,
     FieldSeparator as UIFieldSeparator,
-    FieldSet as UIFieldSet,
     FieldTitle as UIFieldTitle,
 } from '@/components/ui/field';
 import { useXmlContext } from '@xml/core/context';
@@ -14,14 +13,7 @@ import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 import { resolveXmlString, resolveXmlValue } from './props';
 
-/** Renders a grouped fieldset shell. */
-export function FieldSet({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-
-    return <UIFieldSet>{renderNode(nodes, ctx)}</UIFieldSet>;
-}
-
-/** Renders the fieldset legend slot. */
+/** Renders the field legend slot. */
 export function FieldLegend({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const variant = resolveXmlString(props, 'variant', ctx, 'legend');

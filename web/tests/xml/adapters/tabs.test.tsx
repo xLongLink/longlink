@@ -3,11 +3,11 @@ import { describe, expect, it } from 'bun:test';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Tabs', () => {
-    /* The compiler should preserve the full tabs composition. */
-    it('preserves the compound tabs structure in compiled xml', () => {
+    /* The compiler should preserve the immediate tab composition. */
+    it('preserves the tab structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Tabs defaultValue="overview"><TabsList variant="line"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="settings">Settings</TabsTrigger></TabsList><TabsContent value="overview">Overview panel</TabsContent><TabsContent value="settings">Settings panel</TabsContent></Tabs>'
+                '<Tabs defaultValue="overview"><Tab value="overview" label="Overview">Overview panel</Tab><Tab value="settings" label="Settings">Settings panel</Tab></Tabs>'
             )
         ).toEqual([
             {
@@ -15,29 +15,13 @@ describe('Tabs', () => {
                 params: { defaultValue: 'overview' },
                 children: [
                     {
-                        name: 'TabsList',
-                        params: { variant: 'line' },
-                        children: [
-                            {
-                                name: 'TabsTrigger',
-                                params: { value: 'overview' },
-                                children: [{ name: 'Text', params: { value: 'Overview' } }],
-                            },
-                            {
-                                name: 'TabsTrigger',
-                                params: { value: 'settings' },
-                                children: [{ name: 'Text', params: { value: 'Settings' } }],
-                            },
-                        ],
-                    },
-                    {
-                        name: 'TabsContent',
-                        params: { value: 'overview' },
+                        name: 'Tab',
+                        params: { value: 'overview', label: 'Overview' },
                         children: [{ name: 'Text', params: { value: 'Overview panel' } }],
                     },
                     {
-                        name: 'TabsContent',
-                        params: { value: 'settings' },
+                        name: 'Tab',
+                        params: { value: 'settings', label: 'Settings' },
                         children: [{ name: 'Text', params: { value: 'Settings panel' } }],
                     },
                 ],
@@ -45,16 +29,15 @@ describe('Tabs', () => {
         ]);
     });
 
-    /* The runtime should render the shadcn tabs shell and its slots. */
-    it('renders the full tabs composition', () => {
+    /* The runtime should render the shadcn tabs shell and its panels. */
+    it('renders the tab composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Tabs defaultValue="overview"><TabsList variant="line"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="settings">Settings</TabsTrigger></TabsList><TabsContent value="overview">Overview panel</TabsContent><TabsContent value="settings">Settings panel</TabsContent></Tabs>'
+                '<Tabs defaultValue="overview"><Tab value="overview" label="Overview">Overview panel</Tab><Tab value="settings" label="Settings">Settings panel</Tab></Tabs>'
             )
         );
 
         expect(output).toContain('data-slot="tabs"');
-        expect(output).toContain('data-slot="tabs-list"');
         expect(output).toContain('data-slot="tabs-trigger"');
         expect(output).toContain('data-slot="tabs-content"');
         expect(output).toContain('gap-6');
@@ -64,10 +47,10 @@ describe('Tabs', () => {
         expect(output).not.toContain('Settings panel');
     });
 
-    /* Missing trigger values should fail fast with a tag-specific error. */
-    it('throws when a tab trigger value is missing', () => {
+    /* Missing tab values should fail fast with a tag-specific error. */
+    it('throws when a tab value is missing', () => {
         expect(() =>
-            renderXmlToMarkup(parseXML('<Tabs><TabsList><TabsTrigger>Overview</TabsTrigger></TabsList></Tabs>'))
-        ).toThrow('TabsTrigger requires a string value');
+            renderXmlToMarkup(parseXML('<Tabs><Tab label="Overview">Overview</Tab></Tabs>'))
+        ).toThrow('Tab requires a string value');
     });
 });

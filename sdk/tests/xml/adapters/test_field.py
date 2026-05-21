@@ -15,9 +15,7 @@ def test_field_validation() -> None:
 
     element = Element.from_content(
         """
-        <FieldSet>
-          <FieldLegend>Profile</FieldLegend>
-          <FieldDescription>This appears on invoices and emails.</FieldDescription>
+        <Grid columns="2">
           <Field>
             <FieldContent>
               <FieldTitle>Full name</FieldTitle>
@@ -35,7 +33,7 @@ def test_field_validation() -> None:
             <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
           </Field>
           <FieldSeparator>or</FieldSeparator>
-        </FieldSet>
+        </Grid>
         """,
         schema=FIELD_SET_SCHEMA,
     )

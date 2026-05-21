@@ -16,8 +16,7 @@ docs/
 │   │   └── testing.md
 │   ├── xml/           # XML page documentation
 │   │   ├── index.md
-│   │   ├── components.md
-│   │   └── html.md
+│   │   └── components.md
 │   ├── public/        # Public assets
 │   │   ├── favicon.ico
 │   │   ├── image.png

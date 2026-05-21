@@ -15,12 +15,8 @@ def test_tabs_validation() -> None:
     element = Element.from_content(
         """
         <Tabs defaultValue="overview">
-          <TabsList variant="line">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-          <TabsContent value="overview">Overview panel</TabsContent>
-          <TabsContent value="settings">Settings panel</TabsContent>
+          <Tab value="overview" label="Overview">Overview panel</Tab>
+          <Tab value="settings" label="Settings">Settings panel</Tab>
         </Tabs>
         """,
         schema=SCHEMA,
@@ -39,9 +35,9 @@ def test_tabs_rejects_unknown_attributes() -> None:
 
 
 def test_tabs_trigger_requires_value() -> None:
-    """Reject tabs triggers without a `value` attribute."""
+    """Reject tabs without a tab `value` attribute."""
 
-    element = Element.from_content('<Tabs><TabsTrigger>Overview</TabsTrigger></Tabs>', schema=SCHEMA)
+    element = Element.from_content('<Tabs><Tab label="Overview">Overview</Tab></Tabs>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

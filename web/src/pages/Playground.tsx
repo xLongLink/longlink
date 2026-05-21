@@ -19,22 +19,18 @@ type ExampleName = keyof typeof exampleFiles;
 type ExampleMap = Record<ExampleName, string>;
 
 const starterXml = `<State id="volume" value="[65]" />
-<FieldSet>
-    <FieldLegend>Playback settings</FieldLegend>
-    <FieldDescription>Use grouped controls to preview the rendered field shell.</FieldDescription>
-    <Grid columns="2">
-        <Field>
-            <FieldLabel htmlFor="volume">Volume</FieldLabel>
-            <Slider id="volume" value="$volume" min="0" max="100" step="5" />
-            <FieldDescription>Adjust the preview volume.</FieldDescription>
-        </Field>
+<Grid columns="2">
+    <Field>
+        <FieldLabel htmlFor="volume">Volume</FieldLabel>
+        <Slider id="volume" value="$volume" min="0" max="100" step="5" />
+        <FieldDescription>Adjust the preview volume.</FieldDescription>
+    </Field>
 
-        <Field orientation="horizontal">
-            <Switch id="mute" />
-            <FieldLabel htmlFor="mute">Mute</FieldLabel>
-        </Field>
-    </Grid>
-</FieldSet>`;
+    <Field orientation="horizontal">
+        <Switch id="mute" />
+        <FieldLabel htmlFor="mute">Mute</FieldLabel>
+    </Field>
+</Grid>`;
 
 /** Wraps a playground fragment in a <longlink> document when needed. */
 function wrapPlaygroundXml(xml: string): string {
