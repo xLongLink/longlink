@@ -29,7 +29,7 @@ export default function XmlComponentsPage() {
                     Badge
                 </Heading>
                 <P className="max-w-3xl text-muted-foreground">TODO: Component description</P>
-                <Window>{`<Badge variant="secondary">New</Badge>`}</Window>
+                <Window>{`<Badge>New</Badge>`}</Window>
             </section>
 
             <section className="space-y-4">

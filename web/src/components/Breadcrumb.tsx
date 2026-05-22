@@ -9,6 +9,8 @@ import startCase from 'lodash/startCase';
 import { Fragment } from 'react';
 import { Link, useLocation } from 'react-router';
 
+import { Wordmark } from '@/components/Wordmark';
+
 /**
  * Render the top navigation breadcrumb for organization, app, and profile routes.
  */
@@ -26,13 +28,18 @@ export function Breadcrumb() {
         <UIBreadcrumb>
             <BreadcrumbList>
                 <BreadcrumbItem>
-                    <Link to="/" aria-label="LongLink home" className="inline-flex items-center pr-2 hover:underline">
-                        <img src="/favicon.ico" alt="LongLink favicon" className="size-8" />
+                    <Link to="/" aria-label="LongLink home" className="inline-flex items-center hover:underline">
+                        <Wordmark />
                     </Link>
                 </BreadcrumbItem>
+                {crumbs.length ? (
+                    <BreadcrumbSeparator className="px-0.5 text-muted-foreground">&gt;</BreadcrumbSeparator>
+                ) : null}
                 {crumbs.map((crumb, index) => (
                     <Fragment key={crumb.href}>
-                        {index > 0 ? <BreadcrumbSeparator /> : null}
+                        {index > 0 ? (
+                            <BreadcrumbSeparator className="px-0.5 text-muted-foreground">&gt;</BreadcrumbSeparator>
+                        ) : null}
                         <BreadcrumbItem>
                             <BreadcrumbLink
                                 render={(props) => (

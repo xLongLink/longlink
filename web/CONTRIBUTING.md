@@ -46,8 +46,6 @@ web/
 --popover-foreground    # Text color inside popovers
 --primary               # Primary brand color
 --primary-foreground    # Text color on primary surfaces
---secondary             # Secondary surface color
---secondary-foreground  # Text color on secondary surfaces
 --muted                 # Muted surface color
 --muted-foreground      # Text color on muted surfaces
 --accent                # Accent surface color

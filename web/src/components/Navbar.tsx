@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 
 import { buttonVariants } from '@ui/button';
 
+import { Wordmark } from '@/components/Wordmark';
 import { cn } from '@/lib/utils';
 
 /** Renders the public landing page navigation. */
@@ -19,10 +20,7 @@ export function Navbar() {
                         className="flex items-center gap-2 text-sm font-semibold text-card-foreground"
                         aria-label="LongLink home"
                     >
-                        <span className="uppercase tracking-[-0.04em]">
-                            <span className="text-accent">LONG</span>
-                            <span className="text-white">LINK</span>
-                        </span>
+                        <Wordmark />
                     </Link>
 
                     <ul className="hidden items-center justify-center gap-7 text-[11px] sm:flex">

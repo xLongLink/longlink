@@ -16,7 +16,6 @@
           <xsd:simpleType>
             <xsd:restriction base="xsd:string">
               <xsd:enumeration value="default" />
-              <xsd:enumeration value="secondary" />
               <xsd:enumeration value="destructive" />
               <xsd:enumeration value="outline" />
               <xsd:enumeration value="ghost" />

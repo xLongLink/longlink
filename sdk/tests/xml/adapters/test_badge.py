@@ -12,7 +12,7 @@ SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Badge.xsd"
 def test_badge_validation() -> None:
     """Validate a minimal `Badge` fragment."""
 
-    element = Element.from_content('<Badge variant="secondary">New</Badge>', schema=SCHEMA)
+    element = Element.from_content('<Badge>New</Badge>', schema=SCHEMA)
     element.validate()
 
 

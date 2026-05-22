@@ -1,6 +1,8 @@
 import { Github, Linkedin, Package } from 'lucide-react';
 import { Link } from 'react-router';
 
+import { Wordmark } from '@/components/Wordmark';
+
 const socialLinks = [
     {
         href: 'https://www.linkedin.com/company/swissgpu',
@@ -42,7 +44,7 @@ export function Footer() {
                 <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
                     <div className="flex items-center gap-5">
                         <Link to="/" className="inline-flex items-center leading-none" aria-label="LongLink home">
-                            <img src="/favicon.ico" alt="LongLink logo" className="block size-6" />
+                            <Wordmark compact />
                         </Link>
 
                         <ul className="flex items-center justify-center gap-4 text-muted-foreground">

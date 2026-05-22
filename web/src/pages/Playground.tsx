@@ -84,7 +84,7 @@ export default function Playground() {
                         {Object.entries(examples).map(([label, exampleXml]) => (
                             <Badge
                                 key={label}
-                                variant={selectedExample === label ? 'secondary' : 'outline'}
+                                variant={selectedExample === label ? 'default' : 'outline'}
                                 className="cursor-pointer select-none"
                                 onClick={() => {
                                     setSelectedExample(label as ExampleName);
