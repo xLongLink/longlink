@@ -87,9 +87,17 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         };
     }, [ast, runtimeCtx, baseUrl]);
 
-    if (setupError) throw setupError;
-
     validateSetupNodes(ast);
+
+    if (setupError) {
+        return (
+            <XmlErrorBoundary resetKey={`${version}`}>
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+                    {setupError instanceof Error ? setupError.message : 'XML setup failed'}
+                </div>
+            </XmlErrorBoundary>
+        );
+    }
 
     if (requiresSetup && initializedAst !== ast) return null;
 

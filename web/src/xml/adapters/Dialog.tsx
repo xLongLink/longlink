@@ -15,14 +15,9 @@ import { resolveXmlBoolean, resolveXmlString } from './props';
 /** Renders a dialog root that groups trigger and content slots. */
 export function Dialog({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const defaultOpen = resolveXmlBoolean(props, 'defaultOpen', ctx);
     const open = resolveXmlBoolean(props, 'open', ctx);
 
-    return (
-        <UIDialog defaultOpen={defaultOpen} open={open}>
-            {renderNode(nodes, ctx)}
-        </UIDialog>
-    );
+    return <UIDialog open={open}>{renderNode(nodes, ctx)}</UIDialog>;
 }
 
 /** Renders the dialog trigger slot. */

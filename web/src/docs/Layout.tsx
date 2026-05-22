@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
 
 import { A } from '@/components/ui/a';
@@ -27,18 +28,69 @@ import {
 import { Ul } from '@/components/ui/ul';
 
 import { DOC_GROUPS } from './nav';
-import { DOC_TOC } from './toc';
+import type { DocItem } from './types';
 
-/** Renders the docs shell with sidebar navigation and routed content. */ export default function DocsLayout() {
+type PageTocItem = {
+    href: string;
+    label: string;
+    level: 1 | 2 | 3;
+};
+
+/** Renders the docs shell with sidebar navigation and routed content. */
+export default function DocsLayout() {
     const location = useLocation();
-    const currentGroup = DOC_GROUPS.find((group) =>
-        group.items.some((item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
-    );
-    const currentItem = currentGroup?.items.find(
-        (item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
-    );
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
+    // Prefer the longest matching path so nested pages do not resolve to their section overview.
+    const currentItem = DOC_GROUPS.flatMap((group) => group.items).reduce<DocItem | undefined>((match, item) => {
+        const isPathMatch = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+
+        if (!isPathMatch) {
+            return match;
+        }
+
+        if (!match || item.path.length > match.path.length) {
+            return item;
+        }
+
+        return match;
+    }, undefined);
+    const currentGroup = DOC_GROUPS.find((group) => group.items.some((item) => item.id === currentItem?.id));
     const pageLabel = currentItem?.title ?? 'Overview';
     const pagePath = currentItem?.path ?? '/docs';
+
+    useEffect(() => {
+        const content = contentRef.current;
+
+        if (!content) {
+            setPageToc([]);
+            return;
+        }
+
+        // Wait for the routed docs content to commit before reading generated heading ids.
+        const frame = window.requestAnimationFrame(() => {
+            const nextPageToc = Array.from(content.querySelectorAll<HTMLHeadingElement>('h1[id], h2[id], h3[id]'))
+                .filter((heading) => heading.id)
+                .map((heading) => {
+                    const label = Array.from(heading.childNodes)
+                        .filter((node) => node.nodeName.toLowerCase() !== 'a')
+                        .map((node) => node.textContent ?? '')
+                        .join(' ')
+                        .trim();
+
+                    return {
+                        href: `#${heading.id}`,
+                        label,
+                        level: Number(heading.tagName.slice(1)) as 1 | 2 | 3,
+                    };
+                })
+                .filter((item) => item.label);
+
+            setPageToc(nextPageToc);
+        });
+
+        return () => window.cancelAnimationFrame(frame);
+    }, [location.pathname]);
 
     return (
         <SidebarProvider defaultOpen>
@@ -49,12 +101,15 @@ import { DOC_TOC } from './toc';
                 className="group-data-[side=left]:border-r-0"
             >
                 <SidebarHeader className="gap-4 p-4">
-                    <div className="flex items-center justify-center gap-2 text-base font-semibold text-card-foreground">
-                        <span className="uppercase tracking-[-0.04em]">
+                    <Link
+                        to="/"
+                        className="flex cursor-pointer items-center justify-center gap-2 text-xl font-semibold text-card-foreground transition-opacity hover:opacity-80"
+                    >
+                        <span className="uppercase tracking-[-0.05em]">
                             <span className="text-accent">LONG</span>
                             <span className="text-white">LINK</span>
                         </span>
-                    </div>
+                    </Link>
                 </SidebarHeader>
 
                 <SidebarSeparator />
@@ -68,7 +123,7 @@ import { DOC_TOC } from './toc';
                             <SidebarGroupContent>
                                 <SidebarMenu>
                                     {group.items.map((item) => {
-                                        const isActive = location.pathname === item.path;
+                                        const isActive = currentItem?.id === item.id;
 
                                         return (
                                             <SidebarMenuItem key={item.id}>
@@ -94,14 +149,14 @@ import { DOC_TOC } from './toc';
                 </SidebarContent>
             </Sidebar>
 
-            <SidebarInset className="bg-background">
-                <div className="w-full p-2 lg:p-3 lg:[--docs-card-left:calc(var(--sidebar-width)+0.75rem)] lg:peer-data-[state=collapsed]:[--docs-card-left:calc(var(--sidebar-width-icon)+0.75rem)]">
-                    <div className="fixed inset-2 flex flex-col overflow-hidden rounded-lg border border-border bg-card/80 shadow-sm backdrop-blur-sm transition-[left] lg:top-3 lg:right-3 lg:bottom-3 lg:left-[var(--docs-card-left)]">
-                        <div className="shrink-0 border-b border-border bg-card/80 px-6 py-4 backdrop-blur-sm lg:px-8">
+            <SidebarInset className="fixed top-1 right-0 bottom-0 left-1 !w-auto bg-background transition-[left] lg:top-2 lg:right-0 lg:bottom-0 lg:left-[calc(var(--sidebar-width)+0.25rem)] lg:peer-data-[state=collapsed]:left-2">
+                <div className="h-full w-full pb-1 pl-1 pt-1 lg:pb-2 lg:pt-0">
+                    <div className="grid h-full min-h-0 rounded-lg border border-border bg-card/80 shadow-sm backdrop-blur-sm lg:grid-cols-[minmax(0,1fr)_14rem]">
+                        <div className="shrink-0 border-b border-border bg-card/80 px-4 py-4 backdrop-blur-sm lg:col-span-2 lg:px-6">
                             <UIBreadcrumb>
                                 <BreadcrumbList>
                                     <BreadcrumbItem>
-                                        <SidebarTrigger className="shrink-0" />
+                                        <SidebarTrigger className="shrink-0 cursor-pointer" />
                                     </BreadcrumbItem>
                                     <BreadcrumbSeparator />
                                     <BreadcrumbItem>
@@ -145,32 +200,38 @@ import { DOC_TOC } from './toc';
                             </UIBreadcrumb>
                         </div>
 
-                        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-8 lg:px-8 lg:py-10 lg:pr-72">
-                            <Outlet />
+                        <div className="min-h-0 overflow-y-auto lg:col-span-2">
+                            <div className="grid min-h-full lg:grid-cols-[minmax(0,1fr)_14rem]">
+                                <div ref={contentRef} className="px-4 py-8 lg:px-6 lg:py-10">
+                                    <div className="mx-auto w-full max-w-[56rem]">
+                                        <Outlet />
+                                    </div>
+                                </div>
+
+                                <aside className="hidden border-l border-border px-5 py-8 lg:block">
+                                    <div className="sticky top-8">
+                                        <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
+                                            On this page
+                                        </div>
+                                        <nav aria-label="On this page" className="mt-4">
+                                            <Ul className="space-y-2 text-sm">
+                                                {pageToc.map((item) => (
+                                                    <Li key={item.href} className={item.level === 3 ? 'pl-4' : ''}>
+                                                        <A
+                                                            href={item.href}
+                                                            className="block text-muted-foreground transition-colors hover:text-foreground"
+                                                        >
+                                                            {item.label}
+                                                        </A>
+                                                    </Li>
+                                                ))}
+                                            </Ul>
+                                        </nav>
+                                    </div>
+                                </aside>
+                            </div>
                         </div>
                     </div>
-
-                    <aside className="fixed top-28 right-8 hidden w-56 lg:block">
-                        <div className="pl-5">
-                            <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
-                                On this page
-                            </div>
-                            <nav aria-label="On this page" className="mt-4">
-                                <Ul className="space-y-2 text-sm">
-                                    {(DOC_TOC[location.pathname] ?? []).map((item) => (
-                                        <Li key={item.href} className={item.level === 3 ? 'pl-4' : ''}>
-                                            <A
-                                                href={item.href}
-                                                className="block text-muted-foreground transition-colors hover:text-foreground"
-                                            >
-                                                {item.label}
-                                            </A>
-                                        </Li>
-                                    ))}
-                                </Ul>
-                            </nav>
-                        </div>
-                    </aside>
                 </div>
             </SidebarInset>
         </SidebarProvider>
