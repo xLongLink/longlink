@@ -4,7 +4,6 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "build": "tsc -b && vite build",
         "build:api": "tsc -b && vite build --mode api",
         "build:sdk": "tsc -b && vite build --mode sdk",
         "lint": "eslint . --fix",

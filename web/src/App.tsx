@@ -1,6 +1,21 @@
 import { RequireAuth } from '@/components/Auth';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
+import DocsLayout from './docs/Layout';
+import ControlPlanePage from './docs/api';
+import SelfHostedControlPlanePage from './docs/api/self-hosted';
+import DocsOverviewPage from './docs';
+import SdkBuildingPage from './docs/sdk/building';
+import SdkDatabasePage from './docs/sdk/database';
+import SdkEnvironmentsPage from './docs/sdk/environments';
+import SdkOverviewPage from './docs/sdk';
+import SdkRoutesPage from './docs/sdk/routes';
+import SdkStoragePage from './docs/sdk/storage';
+import SdkTestingPage from './docs/sdk/testing';
+import XmlComponentsPage from './docs/xml/components';
+import XmlFieldPage from './docs/xml/field';
+import XmlLayoutPage from './docs/xml/layout';
+import XmlOverviewPage from './docs/xml';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
@@ -25,6 +40,26 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
+        {
+            path: 'docs',
+            element: <DocsLayout />,
+            children: [
+                { index: true, element: <DocsOverviewPage /> },
+                { path: 'api', element: <ControlPlanePage /> },
+                { path: 'api/self-hosted', element: <SelfHostedControlPlanePage /> },
+                { path: 'sdk', element: <SdkOverviewPage /> },
+                { path: 'sdk/building', element: <SdkBuildingPage /> },
+                { path: 'sdk/database', element: <SdkDatabasePage /> },
+                { path: 'sdk/environments', element: <SdkEnvironmentsPage /> },
+                { path: 'sdk/routes', element: <SdkRoutesPage /> },
+                { path: 'sdk/storage', element: <SdkStoragePage /> },
+                { path: 'sdk/testing', element: <SdkTestingPage /> },
+                { path: 'xml', element: <XmlOverviewPage /> },
+                { path: 'xml/components', element: <XmlComponentsPage /> },
+                { path: 'xml/field', element: <XmlFieldPage /> },
+                { path: 'xml/layout', element: <XmlLayoutPage /> },
+            ],
+        },
         { path: 'playground', element: <Playground /> },
         { path: 'sample', element: <Sample /> },
         { path: 'impressum', element: <Impressum /> },

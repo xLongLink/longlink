@@ -1,40 +1,53 @@
-# Contributing in `web/`
+# Contributing
 
-Thanks for contributing to the web layer.
+The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, and control-plane rendering path.
 
-## Architecture
+```bash
+bun run dev         # Starts the Vite dev server for live preview.
+bun run build:api   # Builds the control-plane web bundle
+bun run build:sdk   # Builds the sdk web bundle (for development)
+bun run format      # Format the code
+```
 
-```text
+## Code structure
+
+```bash
 web/
 ├── src/
-│   ├── App.tsx
-│   ├── Layout.tsx
-│   ├── main.tsx
 │   ├── components/      # Shared app components
-│   ├── hooks/           # Shared React hooks
-│   ├── lib/             # Shared utilities, API, navigation, query helpers
+│   │   └── ui/          # UI primitives
+│   ├── docs/            # Documentation layout and pages
+│   │   ├── api/         # Control Plane relates
+│   │   ├── sdk/         # Sdk related
+│   │   └── xml/         # XML Pages related
+│   ├── hooks/           # Shared React ooks 
+│   ├── lib/             # Shared Utilities
 │   ├── pages/           # Route-level pages
-│   ├── sdk/             # SDK-specific app shell and page wiring
-│   ├── ui/              # shadcn/ui and shared primitives
-│   └── xml/             # XML compiler, runtime, layouts, primitives, components
+│   ├── xml/             # XML compiler, runtime, layouts, primitives, components
+│   ├── App.tsx
+│   ├── index.css        #
+│   ├── Layout.tsx
+│   └── main.tsx
+├── tests/
 ├── index.html
 ├── vite.config.ts
 └── package.json
 ```
 
-## What this folder owns
 
-The web package is the frontend runtime for LongLink.
+## Theme
 
-It owns the shared UI, XML runtime, and control-plane rendering path.
+```
+TODO: List all the theme variables
+```
 
-## How it works
+## Primitives
 
-- `bun run dev` starts the Vite dev server for live preview.
-- `bun run build:api` builds the control-plane web bundle.
-- `bun run build:sdk` still builds the SDK-targeted bundle.
-- `bun run build` remains the default production build.
-- `src/sdk/` contains the SDK-specific entrypoints that compose the shared runtime differently from the control-plane path.
+
+```
+TODO: List all the primitives
+```
+
 
 ## XML
 
@@ -63,13 +76,4 @@ It owns the shared UI, XML runtime, and control-plane rendering path.
 7. Add focused tests under `web/tests/xml/`.
 8. Update SDK XSD assets when the schema changes.
 9. Update docs/examples so the new XML shape is discoverable.
-
-
-## Formatting
-
-Before PR:
-
-```bash
-bun run format
-```
 

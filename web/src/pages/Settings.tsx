@@ -65,7 +65,7 @@ export default function Settings() {
     const [accountError, setAccountError] = useState<string | null>(null);
 
     const theme = user?.theme ?? 'dark';
-    const accent = user?.accent ?? 'amber';
+    const accent = user?.accent ?? 'neutral';
     const radius = user?.radius ?? 'medium';
 
     // Keep the editable fields aligned with the authenticated user record.

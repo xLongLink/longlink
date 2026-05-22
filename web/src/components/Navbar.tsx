@@ -19,8 +19,10 @@ export function Navbar() {
                         className="flex items-center gap-2 text-sm font-semibold text-card-foreground"
                         aria-label="LongLink home"
                     >
-                        <img src="/favicon.ico" alt="" className="size-5" aria-hidden="true" />
-                        <span className="uppercase tracking-[-0.04em]">LONGLINK</span>
+                        <span className="uppercase tracking-[-0.04em]">
+                            <span className="text-accent">LONG</span>
+                            <span className="text-white">LINK</span>
+                        </span>
                     </Link>
 
                     <ul className="hidden items-center justify-center gap-7 text-[11px] sm:flex">
@@ -33,15 +35,12 @@ export function Navbar() {
                             </Link>
                         </li>
                         <li className="font-medium transition-colors hover:text-accent">
-                            <a
-                                href="https://docs.longlink.dev"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 whitespace-nowrap text-card-foreground/70 transition-colors hover:text-card-foreground"
+                            <Link
+                                to="/docs"
+                                className="whitespace-nowrap text-card-foreground/70 transition-colors hover:text-card-foreground"
                             >
-                                <span>Docs</span>
-                                <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-                            </a>
+                                Docs
+                            </Link>
                         </li>
                         <li className="font-medium transition-colors hover:text-accent">
                             <a

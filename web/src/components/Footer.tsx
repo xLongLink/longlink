@@ -30,7 +30,7 @@ const navigationLinks = [
     },
     {
         label: 'Docs',
-        href: 'https://docs.longlink.dev',
+        href: '/docs',
     },
 ];
 

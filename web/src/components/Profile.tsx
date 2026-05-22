@@ -9,7 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
-import { BookOpen, Building2, ExternalLink, LogOut, Settings2 } from 'lucide-react';
+import { BookOpen, Building2, LogOut, Settings2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 
 /** Renders a user profile dropdown with authentication actions. */
@@ -70,16 +70,10 @@ export function UserProfile() {
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
-                        <a
-                            href="https://docs.longlink.dev"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex w-full items-center gap-2 text-inherit"
-                        >
+                        <Link to="/docs" className="flex w-full items-center gap-2 text-inherit">
                             <BookOpen className="h-4 w-4" />
                             Documentation
-                            <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground/60" />
-                        </a>
+                        </Link>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />

@@ -91,7 +91,7 @@ const UserContext = createContext<UserQueryResult | undefined>(undefined);
 /** Applies user preferences to the document root. */
 function applyUserPreferences(user: User) {
     const root = window.document.documentElement;
-    const { accent, accentForeground } = ACCENT_TOKENS[user.accent ?? 'amber'];
+    const { accent, accentForeground } = ACCENT_TOKENS[user.accent ?? 'neutral'];
 
     root.style.setProperty('--accent', accent);
     root.style.setProperty('--primary', accent);

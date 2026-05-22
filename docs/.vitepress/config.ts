@@ -7,7 +7,6 @@ export default withMermaid(defineConfig({
   srcDir: 'src',
   title: 'LongLink',
   description: 'LongLink documentation',
-  head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
   themeConfig: {
     logo: '/image.png',
     siteTitle: "LongLink",
