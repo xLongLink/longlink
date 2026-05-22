@@ -2,6 +2,7 @@ from sqlalchemy import select
 from src.db.models import Organization
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from src.db.models.users import User
 
 from .base import ServiceBase
 
@@ -24,12 +25,20 @@ class OrganizationsService(ServiceBase):
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def create(self, name: str) -> Organization:
+    async def create(self, name: str, user_id: int | None = None) -> Organization:
         """Create an organization."""
 
         async with self.session() as session:
             organization = Organization(name=name)
             session.add(organization)
+
+            # Link the creator so the new organization appears in their memberships.
+            if user_id is not None:
+                user = await session.get(User, user_id)
+                if user is None:
+                    raise ValueError("User not found")
+
+                organization.users.append(user)
 
             try:
                 await session.commit()

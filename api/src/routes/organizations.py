@@ -1,5 +1,6 @@
 import src.db as db
-from fastapi import Response, APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from src.auth import authuser
 from src.models.organizations import OrganizationCreate
 
 router = APIRouter(prefix="/api/organizations")
@@ -19,11 +20,14 @@ async def get_organization(name: str) -> dict:
 
 
 @router.post("")
-async def create_organization(payload: OrganizationCreate) -> dict:
+async def create_organization(
+    payload: OrganizationCreate,
+    user: db.User = Depends(authuser),
+) -> dict:
     """Create a new organization."""
 
     try:
-        organization = await db.organizations.create(payload.name)
+        organization = await db.organizations.create(payload.name, user.id)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 

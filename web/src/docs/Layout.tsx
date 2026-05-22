@@ -29,8 +29,7 @@ import { Ul } from '@/components/ui/ul';
 import { DOC_GROUPS } from './nav';
 import { DOC_TOC } from './toc';
 
-/** Renders the docs shell with sidebar navigation and routed content. */
-export default function DocsLayout() {
+/** Renders the docs shell with sidebar navigation and routed content. */ export default function DocsLayout() {
     const location = useLocation();
     const currentGroup = DOC_GROUPS.find((group) =>
         group.items.some((item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
@@ -96,9 +95,9 @@ export default function DocsLayout() {
             </Sidebar>
 
             <SidebarInset className="bg-background">
-                <div className="w-full p-2 lg:p-3">
-                    <div className="relative min-h-[calc(100vh-1rem)] rounded-lg border border-border bg-card/80 shadow-sm backdrop-blur-sm lg:min-h-[calc(100vh-1.5rem)] lg:pr-72">
-                        <div className="sticky top-2 z-20 border-b border-border bg-card/95 px-6 py-4 backdrop-blur-sm lg:top-3 lg:px-8">
+                <div className="w-full p-2 lg:p-3 lg:[--docs-card-left:calc(var(--sidebar-width)+0.75rem)] lg:peer-data-[state=collapsed]:[--docs-card-left:calc(var(--sidebar-width-icon)+0.75rem)]">
+                    <div className="fixed inset-2 flex flex-col overflow-hidden rounded-lg border border-border bg-card/80 shadow-sm backdrop-blur-sm transition-[left] lg:top-3 lg:right-3 lg:bottom-3 lg:left-[var(--docs-card-left)]">
+                        <div className="shrink-0 border-b border-border bg-card/80 px-6 py-4 backdrop-blur-sm lg:px-8">
                             <UIBreadcrumb>
                                 <BreadcrumbList>
                                     <BreadcrumbItem>
@@ -146,32 +145,32 @@ export default function DocsLayout() {
                             </UIBreadcrumb>
                         </div>
 
-                        <div className="min-w-0 px-6 py-8 lg:px-8 lg:py-10">
+                        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-8 lg:px-8 lg:py-10 lg:pr-72">
                             <Outlet />
-
-                            <aside className="fixed top-28 right-8 hidden w-56 lg:block">
-                                <div className="pl-5">
-                                    <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
-                                        On this page
-                                    </div>
-                                    <nav aria-label="On this page" className="mt-4">
-                                        <Ul className="space-y-2 text-sm">
-                                            {(DOC_TOC[location.pathname] ?? []).map((item) => (
-                                                <Li key={item.href} className={item.level === 3 ? 'pl-4' : ''}>
-                                                    <A
-                                                        href={item.href}
-                                                        className="block text-muted-foreground transition-colors hover:text-foreground"
-                                                    >
-                                                        {item.label}
-                                                    </A>
-                                                </Li>
-                                            ))}
-                                        </Ul>
-                                    </nav>
-                                </div>
-                            </aside>
                         </div>
                     </div>
+
+                    <aside className="fixed top-28 right-8 hidden w-56 lg:block">
+                        <div className="pl-5">
+                            <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
+                                On this page
+                            </div>
+                            <nav aria-label="On this page" className="mt-4">
+                                <Ul className="space-y-2 text-sm">
+                                    {(DOC_TOC[location.pathname] ?? []).map((item) => (
+                                        <Li key={item.href} className={item.level === 3 ? 'pl-4' : ''}>
+                                            <A
+                                                href={item.href}
+                                                className="block text-muted-foreground transition-colors hover:text-foreground"
+                                            >
+                                                {item.label}
+                                            </A>
+                                        </Li>
+                                    ))}
+                                </Ul>
+                            </nav>
+                        </div>
+                    </aside>
                 </div>
             </SidebarInset>
         </SidebarProvider>

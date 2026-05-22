@@ -37,15 +37,104 @@ web/
 
 ## Theme
 
-```
-TODO: List all the theme variables
+```bash
+--background            # Page background color
+--foreground            # Default text color
+--card                  # Card surface color
+--card-foreground       # Text color inside cards
+--popover               # Popover surface color
+--popover-foreground    # Text color inside popovers
+--primary               # Primary brand color
+--primary-foreground    # Text color on primary surfaces
+--secondary             # Secondary surface color
+--secondary-foreground  # Text color on secondary surfaces
+--muted                 # Muted surface color
+--muted-foreground      # Text color on muted surfaces
+--accent                # Accent surface color
+--accent-foreground     # Text color on accent surfaces
+--destructive           # Destructive action color
+--border                # Border color
+--input                 # Input border color
+--ring                  # Focus ring color
+--radius                # Global corner radius
 ```
 
 ## Primitives
 
-
-```
-TODO: List all the primitives
+```xml
+<A>
+<Accordion>
+<Alert>
+<AlertDialog>
+<AspectRatio>
+<Avatar>
+<B>
+<Badge>
+<Br>
+<Breadcrumb>
+<Button>
+<ButtonGroup>
+<Calendar>
+<Card>
+<Carousel>
+<Chart>
+<Checkbox>
+<Code>
+<Collapsible>
+<Columns>
+<Combobox>
+<Command>
+<ContextMenu>
+<Dialog>
+<Direction>
+<Drawer>
+<DropdownMenu>
+<Empty>
+<Field>
+<Grid>
+<Heading>
+<Hero>
+<HoverCard>
+<Icon>
+<Input>
+<InputGroup>
+<InputOtp>
+<Item>
+<Kbd>
+<Label>
+<Li>
+<Menu>
+<NativeSelect>
+<NavigationMenu>
+<Ol>
+<P>
+<Pagination>
+<Popover>
+<Progress>
+<RadioGroup>
+<Resizable>
+<S>
+<ScrollArea>
+<Select>
+<Separator>
+<Sheet>
+<Sidebar>
+<Skeleton>
+<Slider>
+<Sonner>
+<Spinner>
+<Stack>
+<Sub>
+<Sup>
+<Switch>
+<Table>
+<Tabs>
+<Textarea>
+<Toggle>
+<ToggleGroup>
+<Tooltip>
+<U>
+<Ul>
 ```
 
 
@@ -76,4 +165,3 @@ TODO: List all the primitives
 7. Add focused tests under `web/tests/xml/`.
 8. Update SDK XSD assets when the schema changes.
 9. Update docs/examples so the new XML shape is discoverable.
-
