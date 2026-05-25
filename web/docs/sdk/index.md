@@ -14,13 +14,21 @@ Applications follow a simple model:
 
 ### Install
 
+::: tabs
+
+== pip
+
 ```bash
 pip install longlink
 ```
 
+== uv
+
 ```bash
 uv add longlink
 ```
+
+:::
 
 ### Initialize a Project
 

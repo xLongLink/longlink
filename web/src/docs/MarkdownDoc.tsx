@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 
 import { CodeBlock } from '@/components/CodeBlock';
 import { XmlWindow } from '@/components/XmlWindow';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
@@ -17,6 +18,21 @@ type MarkdownDocProps = {
     content: string;
 };
 
+type MarkdownBlock =
+    | {
+          kind: 'markdown';
+          content: string;
+      }
+    | {
+          kind: 'tabs';
+          tabs: MarkdownTab[];
+      };
+
+type MarkdownTab = {
+    label: string;
+    content: string;
+};
+
 type MarkdownCodeProps = {
     children?: ReactNode;
     className?: string;
@@ -25,9 +41,21 @@ type MarkdownCodeProps = {
 
 /** Renders a markdown-backed docs article. */
 export default function MarkdownDoc({ content }: MarkdownDocProps) {
+    const blocks = splitMarkdownBlocks(content);
+
     return (
         <article className="space-y-8">
-            <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
+            {blocks.map((block, index) => {
+                if (block.kind === 'tabs') {
+                    return <MarkdownTabs key={`tabs-${index}`} tabs={block.tabs} />;
+                }
+
+                return (
+                    <ReactMarkdown key={`markdown-${index}`} components={markdownComponents}>
+                        {block.content}
+                    </ReactMarkdown>
+                );
+            })}
         </article>
     );
 }
@@ -44,6 +72,28 @@ const markdownComponents: Components = {
     a: ({ href, children }) => <MarkdownLink href={href}>{children}</MarkdownLink>,
     code: (props) => <MarkdownCode {...(props as MarkdownCodeProps)} />,
 };
+
+/** Renders a tabbed docs block parsed from ::: tabs markdown. */
+function MarkdownTabs({ tabs }: { tabs: MarkdownTab[] }) {
+    const defaultValue = tabs[0]?.label ?? '';
+
+    return (
+        <Tabs defaultValue={defaultValue} className="!gap-4">
+            <TabsList variant="line">
+                {tabs.map((tab) => (
+                    <TabsTrigger key={tab.label} value={tab.label}>
+                        {tab.label}
+                    </TabsTrigger>
+                ))}
+            </TabsList>
+            {tabs.map((tab) => (
+                <TabsContent key={tab.label} value={tab.label} className="!pt-1">
+                    <ReactMarkdown components={markdownComponents}>{tab.content}</ReactMarkdown>
+                </TabsContent>
+            ))}
+        </Tabs>
+    );
+}
 
 /** Renders a markdown heading with a generated anchor id. */
 function MarkdownHeading({ children, level }: { children: ReactNode; level: 'h1' | 'h2' | 'h3' | 'h4' }) {
@@ -97,6 +147,96 @@ function MarkdownCode({ children, className, inline }: MarkdownCodeProps) {
     }
 
     return <CodeBlock language={language}>{code}</CodeBlock>;
+}
+
+/** Splits markdown into regular blocks and tabs directives. */
+function splitMarkdownBlocks(content: string): MarkdownBlock[] {
+    const lines = content.split('\n');
+    const blocks: MarkdownBlock[] = [];
+    const markdownLines: string[] = [];
+    let tabs: MarkdownTab[] = [];
+    let tabLabel = '';
+    let tabLines: string[] = [];
+    let inTabs = false;
+
+    // Keep regular markdown together, but peel out tabs containers so they can render as interactive UI.
+    const flushMarkdown = () => {
+        const markdown = markdownLines.join('\n').trim();
+
+        if (markdown) {
+            blocks.push({ kind: 'markdown', content: markdown });
+        }
+
+        markdownLines.length = 0;
+    };
+
+    // Tabs are declared as a container with one or more `== label` sections.
+    const flushTab = () => {
+        if (!tabLabel) {
+            tabLines.length = 0;
+            return;
+        }
+
+        const content = tabLines.join('\n').trim();
+
+        tabs.push({ label: tabLabel, content });
+        tabLabel = '';
+        tabLines.length = 0;
+    };
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (!inTabs) {
+            if (trimmed === '::: tabs') {
+                flushMarkdown();
+                inTabs = true;
+                continue;
+            }
+
+            markdownLines.push(line);
+            continue;
+        }
+
+        if (trimmed === ':::') {
+            flushTab();
+
+            if (tabs.length > 0) {
+                blocks.push({ kind: 'tabs', tabs });
+            }
+
+            tabs = [];
+            inTabs = false;
+            continue;
+        }
+
+        if (trimmed.startsWith('== ')) {
+            flushTab();
+            tabLabel = trimmed.slice(3).trim();
+            continue;
+        }
+
+        if (!tabLabel && trimmed === '') {
+            continue;
+        }
+
+        tabLines.push(line);
+    }
+
+    if (inTabs) {
+        markdownLines.push('::: tabs');
+
+        if (tabs.length > 0 || tabLabel || tabLines.length > 0) {
+            if (tabLabel || tabLines.length > 0) {
+                markdownLines.push('');
+                markdownLines.push(...tabs.flatMap((tab) => ['== ' + tab.label, tab.content]));
+            }
+        }
+    }
+
+    flushMarkdown();
+
+    return blocks;
 }
 
 

@@ -1,5 +1,6 @@
 import Layout from '@/Layout';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
+import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
 import { Button } from '@ui/button';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Input } from '@ui/input';
@@ -10,50 +11,6 @@ import { Bell, Building2, Code2, Paintbrush, Settings2, UserRound } from 'lucide
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
-
-const ACCENT_OPTIONS = [
-    { value: 'slate', label: 'Slate', swatch: '#64748b' },
-    { value: 'gray', label: 'Gray', swatch: '#6b7280' },
-    { value: 'zinc', label: 'Zinc', swatch: '#71717a' },
-    { value: 'neutral', label: 'Neutral', swatch: '#737373' },
-    { value: 'stone', label: 'Stone', swatch: '#78716c' },
-    { value: 'red', label: 'Red', swatch: '#ef4444' },
-    { value: 'orange', label: 'Orange', swatch: '#f97316' },
-    { value: 'amber', label: 'Amber', swatch: '#f59e0b' },
-    { value: 'yellow', label: 'Yellow', swatch: '#eab308' },
-    { value: 'lime', label: 'Lime', swatch: '#84cc16' },
-    { value: 'green', label: 'Green', swatch: '#22c55e' },
-    { value: 'emerald', label: 'Emerald', swatch: '#10b981' },
-    { value: 'teal', label: 'Teal', swatch: '#14b8a6' },
-    { value: 'cyan', label: 'Cyan', swatch: '#06b6d4' },
-    { value: 'sky', label: 'Sky', swatch: '#0ea5e9' },
-    { value: 'blue', label: 'Blue', swatch: '#3b82f6' },
-    { value: 'indigo', label: 'Indigo', swatch: '#6366f1' },
-    { value: 'violet', label: 'Violet', swatch: '#8b5cf6' },
-    { value: 'purple', label: 'Purple', swatch: '#a855f7' },
-    { value: 'fuchsia', label: 'Fuchsia', swatch: '#d946ef' },
-    { value: 'pink', label: 'Pink', swatch: '#ec4899' },
-    { value: 'rose', label: 'Rose', swatch: '#f43f5e' },
-] as const;
-
-type Accent = (typeof ACCENT_OPTIONS)[number]['value'];
-
-const RADIUS_OPTIONS = [
-    { value: 'none', label: 'None' },
-    { value: 'small', label: 'Small' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'large', label: 'Large' },
-] as const;
-
-type Radius = (typeof RADIUS_OPTIONS)[number]['value'];
-
-const THEME_OPTIONS = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'system', label: 'System' },
-] as const;
-
-type Theme = (typeof THEME_OPTIONS)[number]['value'];
 
 /** Renders the authenticated settings page. */
 export default function Settings() {
@@ -87,7 +44,7 @@ export default function Settings() {
         accountEmail.length > 0;
 
     return (
-        <Layout tabs={{ Orgs: '/orgs', Settings: '/settings' }}>
+        <Layout brandOnly>
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 <Hero icon={<Settings2 />}>
                     <div>
@@ -275,7 +232,7 @@ export default function Settings() {
                                             className="flex items-center justify-between gap-3"
                                         >
                                             <span className="text-sm text-foreground">{organization.name}</span>
-                                            <Link to="/orgs" className="text-sm text-accent hover:underline">
+                                            <Link to="/organizations" className="text-sm text-accent hover:underline">
                                                 Manage
                                             </Link>
                                         </div>

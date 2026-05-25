@@ -5,18 +5,18 @@ import { RouterProvider, createBrowserRouter } from 'react-router';
 import DocsLayout from './docs/Layout';
 import ControlPlanePage from './docs/api';
 import SelfHostedControlPlanePage from './docs/api/self-hosted';
-import DocsOverviewPage from './docs';
+import SdkOverviewPage from './docs/sdk';
 import SdkBuildingPage from './docs/sdk/building';
 import SdkDatabasePage from './docs/sdk/database';
 import SdkEnvironmentsPage from './docs/sdk/environments';
-import SdkOverviewPage from './docs/sdk';
 import SdkRoutesPage from './docs/sdk/routes';
 import SdkStoragePage from './docs/sdk/storage';
 import SdkTestingPage from './docs/sdk/testing';
+import XmlOverviewPage from './docs/xml';
 import XmlComponentsPage from './docs/xml/components';
 import XmlFieldPage from './docs/xml/field';
 import XmlLayoutPage from './docs/xml/layout';
-import XmlOverviewPage from './docs/xml';
+import AuthOidc from './pages/AuthOidc';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
@@ -45,7 +45,7 @@ function getRoutes() {
             path: 'docs',
             element: <DocsLayout />,
             children: [
-                { index: true, element: <DocsOverviewPage /> },
+                { index: true, element: <XmlOverviewPage /> },
                 { path: 'api', element: <ControlPlanePage /> },
                 { path: 'api/self-hosted', element: <SelfHostedControlPlanePage /> },
                 { path: 'sdk', element: <SdkOverviewPage /> },
@@ -66,8 +66,9 @@ function getRoutes() {
         { path: 'impressum', element: <Impressum /> },
         { path: 'terms', element: <Terms /> },
         { path: 'privacy', element: <Privacy /> },
+        { path: 'auth/oidc', element: <AuthOidc /> },
         {
-            path: 'orgs',
+            path: 'organizations',
             element: (
                 <RequireAuth>
                     <Orgs />
@@ -118,10 +119,7 @@ function getRoutes() {
             path: ':org/:app/*',
             element: (
                 <RequireAuth>
-                    <View
-                        metadata={apiUrl('/api/:org/:app/metadata.json')}
-                        baseurl={apiUrl('/api/apps/:app')}
-                    />
+                    <View metadata={apiUrl('/api/:org/:app/metadata.json')} baseurl={apiUrl('/api/apps/:app')} />
                 </RequireAuth>
             ),
         },

@@ -38,24 +38,15 @@ web/
 ## Theme
 
 ```bash
---background            # Page background color
---foreground            # Default text color
---card                  # Card surface color
---card-foreground       # Text color inside cards
---popover               # Popover surface color
---popover-foreground    # Text color inside popovers
---primary               # Primary brand color
---primary-foreground    # Text color on primary surfaces
---muted                 # Muted surface color
---muted-foreground      # Text color on muted surfaces
---accent                # Accent surface color
---accent-foreground     # Text color on accent surfaces
---destructive           # Destructive action color
---border                # Border color
---input                 # Input border color
---ring                  # Focus ring color
---radius                # Global corner radius
+theme                   # light | dark
+background              # Page background color
+primary                 # Default text color
+accent                  # Accent color
+muted                   # Muted content color
+radius                  # none | small | medium | large
 ```
+
+Theme values are defined in `src/lib/theme.ts` and applied programmatically to the document root.
 
 ## Primitives
 

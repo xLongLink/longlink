@@ -1,5 +1,5 @@
 import Layout from '@/Layout';
-import { useUser } from '@/hooks/use-user';
+import { useUser, type User } from '@/hooks/use-user';
 import { apiUrl } from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@ui/button';
@@ -16,6 +16,12 @@ type OrgCreateResponse = {
     org: {
         name: string;
     };
+};
+
+type ApiUser = User & {
+    orgs?: {
+        name: string;
+    }[];
 };
 
 /** Renders the authenticated orgs landing page. */
@@ -52,6 +58,25 @@ export default function Orgs() {
             return (await response.json()) as OrgCreateResponse;
         },
         onSuccess: async () => {
+            // Add the new org to the cached user so the list updates immediately.
+            queryClient.setQueryData<ApiUser | null>(['api', userUrl], (current) => {
+                if (!current) {
+                    return current;
+                }
+
+                const org = { name: name.trim() };
+                const orgs = current.orgs ?? [];
+
+                if (orgs.some((existingOrg) => existingOrg.name === org.name)) {
+                    return current;
+                }
+
+                return {
+                    ...current,
+                    orgs: [...orgs, org],
+                };
+            });
+
             setCreateOpen(false);
             setName('');
             setCreateError(null);
@@ -63,7 +88,7 @@ export default function Orgs() {
     });
 
     return (
-        <Layout tabs={{ Orgs: '/orgs', Settings: '/settings' }}>
+        <Layout brandOnly>
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 <Hero icon={<Blocks />} className="w-full">
                     <div className="flex w-full items-center justify-between gap-4">

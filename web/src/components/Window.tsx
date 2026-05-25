@@ -29,7 +29,7 @@ export function Window({ children, onRedClick }: WindowProps) {
     }, [sourceXml]);
 
     return (
-        <div className="relative h-full min-h-[28rem] overflow-hidden rounded-2xl border border-border bg-card/80 shadow-lg shadow-black/10 ring-1 ring-border/60">
+        <div className="relative h-fit overflow-hidden rounded-2xl border border-border bg-card/80 shadow-lg shadow-black/10 ring-1 ring-border/60">
             <div className="absolute left-4 top-3 z-10 flex items-center gap-2">
                 <button
                     type="button"
@@ -48,34 +48,37 @@ export function Window({ children, onRedClick }: WindowProps) {
                 />
             </div>
 
-            <div className="origin-top-left scale-[0.9] w-[111.111%] px-6 pt-10">
-                {viewMode === 'rendered' ? (
-                    parseError ? (
+            {viewMode === 'rendered' ? (
+                <div className="origin-top-left scale-[0.9] w-[111.111%] px-6 pt-10">
+                    {parseError ? (
                         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
                             {parseError}
                         </div>
                     ) : ast ? (
                         <RenderXML ast={ast} baseUrl="" />
-                    ) : null
-                ) : (
+                    ) : null}
+                </div>
+            ) : (
+                <div className="overflow-auto px-3 pt-6">
                     <SyntaxHighlighter
                         language="xml"
                         style={oneDark}
                         customStyle={{
                             margin: 0,
-                            padding: '1rem',
+                            padding: '0.5rem 0.25rem 0.5rem 0',
                             background: 'transparent',
                             fontSize: '0.875rem',
                             lineHeight: '1.5rem',
                         }}
                         codeTagProps={{ className: 'font-mono' }}
+                        lineNumberStyle={{ minWidth: '2rem', paddingRight: '0.75rem' }}
                         showLineNumbers
                         wrapLongLines
                     >
                         {sourceXml}
                     </SyntaxHighlighter>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

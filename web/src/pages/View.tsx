@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
+import NotFound from './NotFound';
 
 type ViewProps = {
     metadata: string;
@@ -161,11 +162,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
     }
 
     if (isNotFound) {
-        return (
-            <Layout tabs={{}}>
-                <div>404This page was not found</div>
-            </Layout>
-        );
+        return <NotFound />;
     }
 
     if (pageError && pageErrorPath === activePage?.path) {

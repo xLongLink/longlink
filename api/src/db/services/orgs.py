@@ -1,8 +1,9 @@
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from src.db.models import Org
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.db.models.users import User
+from src.db.models.association import user_organizations
 
 from .base import ServiceBase
 
@@ -32,13 +33,19 @@ class OrgsService(ServiceBase):
             organization = Org(name=name)
             session.add(organization)
 
-            # Link the creator so the new organization appears in their memberships.
+            # Link the creator explicitly to avoid loading the relationship collection.
             if user_id is not None:
                 user = await session.get(User, user_id)
                 if user is None:
                     raise ValueError("User not found")
 
-                organization.users.append(user)
+                await session.flush()
+                await session.execute(
+                    insert(user_organizations).values(
+                        user_id=user.id,
+                        organization_name=organization.name,
+                    )
+                )
 
             try:
                 await session.commit()

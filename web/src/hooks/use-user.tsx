@@ -1,74 +1,11 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
+import { ThemeProviderContext } from '@/components/Theme';
 import { apiUrl } from '@/lib/api';
-
-type Theme = 'dark' | 'light' | 'system';
-
-type Accent =
-    | 'slate'
-    | 'gray'
-    | 'zinc'
-    | 'neutral'
-    | 'stone'
-    | 'red'
-    | 'orange'
-    | 'amber'
-    | 'yellow'
-    | 'lime'
-    | 'green'
-    | 'emerald'
-    | 'teal'
-    | 'cyan'
-    | 'sky'
-    | 'blue'
-    | 'indigo'
-    | 'violet'
-    | 'purple'
-    | 'fuchsia'
-    | 'pink'
-    | 'rose';
-
-type Radius = 'none' | 'small' | 'medium' | 'large';
+import { applyTheme, resetTheme, type Accent, type Radius, type Theme } from '@/lib/theme';
 
 type UserUpdate = Partial<Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
-
-type PreferenceToken = {
-    accent: string;
-    accentForeground: string;
-};
-
-const ACCENT_TOKENS: Record<Accent, PreferenceToken> = {
-    slate: { accent: '#64748b', accentForeground: '#f8fafc' },
-    gray: { accent: '#6b7280', accentForeground: '#f8fafc' },
-    zinc: { accent: '#71717a', accentForeground: '#f8fafc' },
-    neutral: { accent: '#737373', accentForeground: '#f8fafc' },
-    stone: { accent: '#78716c', accentForeground: '#f8fafc' },
-    red: { accent: '#ef4444', accentForeground: '#0f172a' },
-    orange: { accent: '#f97316', accentForeground: '#0f172a' },
-    amber: { accent: '#f59e0b', accentForeground: '#0f172a' },
-    yellow: { accent: '#eab308', accentForeground: '#0f172a' },
-    lime: { accent: '#84cc16', accentForeground: '#0f172a' },
-    green: { accent: '#22c55e', accentForeground: '#0f172a' },
-    emerald: { accent: '#10b981', accentForeground: '#0f172a' },
-    teal: { accent: '#14b8a6', accentForeground: '#0f172a' },
-    cyan: { accent: '#06b6d4', accentForeground: '#0f172a' },
-    sky: { accent: '#0ea5e9', accentForeground: '#0f172a' },
-    blue: { accent: '#3b82f6', accentForeground: '#f8fafc' },
-    indigo: { accent: '#6366f1', accentForeground: '#f8fafc' },
-    violet: { accent: '#8b5cf6', accentForeground: '#f8fafc' },
-    purple: { accent: '#a855f7', accentForeground: '#f8fafc' },
-    fuchsia: { accent: '#d946ef', accentForeground: '#0f172a' },
-    pink: { accent: '#ec4899', accentForeground: '#0f172a' },
-    rose: { accent: '#f43f5e', accentForeground: '#0f172a' },
-};
-
-const RADIUS_TOKENS: Record<Radius, string> = {
-    none: '0rem',
-    small: '0.125rem',
-    medium: '0.25rem',
-    large: '0.5rem',
-};
 
 export type User = {
     id: number;
@@ -93,13 +30,11 @@ const UserContext = createContext<UserQueryResult | undefined>(undefined);
 /** Applies user preferences to the document root. */
 function applyUserPreferences(user: User) {
     const root = window.document.documentElement;
-    const { accent, accentForeground } = ACCENT_TOKENS[user.accent ?? 'neutral'];
 
-    root.style.setProperty('--accent', accent);
-    root.style.setProperty('--primary', accent);
-    root.style.setProperty('--accent-foreground', accentForeground);
-    root.style.setProperty('--primary-foreground', accentForeground);
-    root.style.setProperty('--radius', RADIUS_TOKENS[user.radius ?? 'medium']);
+    applyTheme(root, user.theme ?? 'dark', {
+        accent: user.accent ?? 'neutral',
+        radius: user.radius ?? 'medium',
+    });
     root.lang = user.language ?? 'en';
 }
 
@@ -107,11 +42,7 @@ function applyUserPreferences(user: User) {
 function resetUserPreferences() {
     const root = window.document.documentElement;
 
-    root.style.removeProperty('--accent');
-    root.style.removeProperty('--primary');
-    root.style.removeProperty('--accent-foreground');
-    root.style.removeProperty('--primary-foreground');
-    root.style.removeProperty('--radius');
+    resetTheme(root);
     root.lang = 'en';
 }
 
@@ -218,4 +149,13 @@ export function useSignOut() {
             queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
         },
     });
+}
+
+/** Reads the active theme context. */
+export function useTheme() {
+    const context = useContext(ThemeProviderContext);
+
+    if (context === undefined) throw new Error('useTheme must be used within a ThemeProvider');
+
+    return context;
 }
