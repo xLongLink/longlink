@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-import uuid
-import asyncio
 import psycopg
 from psycopg import sql
-from src.env import env
 from .__root__ import Database
-from contextlib import suppress
 
 
 class Postgre(Database):
@@ -108,72 +104,3 @@ class Postgre(Database):
                 await cursor.execute(
                     sql.SQL("DROP DATABASE IF EXISTS {}").format(sql.Identifier(organization))
                 )
-
-
-root = Postgre(
-    host=env.DATABASE_HOST,
-    port=env.DATABASE_PORT,
-    user=env.DATABASE_USERNAME,
-    password=env.DATABASE_PASSWORD,
-    sslmode=env.DATABASE_SSLMODE,
-)
-
-
-async def _smoke_test() -> None:
-    """Exercise the PostgreSQL adapter against the local database server."""
-    adapter = Postgre(
-        host=env.DATABASE_HOST,
-        port=env.DATABASE_PORT,
-        user=env.DATABASE_USERNAME,
-        password=env.DATABASE_PASSWORD,
-        sslmode=env.DATABASE_SSLMODE,
-    )
-    maintenance_kwargs = {
-        "host": env.DATABASE_HOST,
-        "port": env.DATABASE_PORT,
-        "user": env.DATABASE_USERNAME,
-        "password": env.DATABASE_PASSWORD,
-        "dbname": "postgres",
-    }
-    if env.DATABASE_SSLMODE:
-        maintenance_kwargs["sslmode"] = env.DATABASE_SSLMODE
-
-    organization = f"ll_smoke_{uuid.uuid4().hex[:12]}"
-    application = f"app_{uuid.uuid4().hex[:8]}"
-
-    try:
-        schemas = await adapter.list(organization)
-        assert application not in schemas, "fresh organization database should start empty"
-
-        await adapter.create(organization, application)
-        schemas = await adapter.list(organization)
-        assert application in schemas, "schema should exist after create()"
-
-        await adapter.remove(organization, application)
-        schemas = await adapter.list(organization)
-        assert application not in schemas, "schema should be removed by remove()"
-
-        await adapter.create(organization, application)
-        schemas = await adapter.list(organization)
-        assert application in schemas, "schema should be recreated before delete()"
-
-        await adapter.delete(organization)
-
-        async with await psycopg.AsyncConnection.connect(**maintenance_kwargs) as conn:
-            async with conn.cursor() as cursor:
-                await cursor.execute(
-                    "SELECT 1 FROM pg_database WHERE datname = %s",
-                    (organization,),
-                )
-                row = await cursor.fetchone()
-                assert row is None, "organization database should be deleted"
-
-        print("postgres smoke test passed")
-    finally:
-        # Clean up any leftover database if a check failed before delete() ran.
-        with suppress(Exception):
-            await adapter.delete(organization)
-
-
-if __name__ == "__main__":
-    asyncio.run(_smoke_test())

@@ -58,9 +58,9 @@ export function UserProfile() {
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuGroup>
                     <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
-                        <Link to="/organizations" className="flex w-full items-center gap-2 text-inherit">
+                        <Link to="/orgs" className="flex w-full items-center gap-2 text-inherit">
                             <Building2 className="h-4 w-4" />
-                            Organizations
+                            Orgs
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">

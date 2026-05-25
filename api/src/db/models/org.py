@@ -7,13 +7,13 @@ if TYPE_CHECKING:
     from src.db.models.users import User
 
 
-class Organization(Base, table=True):
-    '''Represent an organization namespace in the control plane.'''
+class Org(Base, table=True):
+    '''Represent an org namespace in the control plane.'''
 
     __tablename__ = 'organizations'
 
     name: str = Field(primary_key=True, max_length=128)
     users: list['User'] = Relationship(
-        back_populates='organizations',
+        back_populates='orgs',
         sa_relationship_kwargs={'secondary': user_organizations},
     )

@@ -19,8 +19,8 @@ import XmlOverviewPage from './docs/xml';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
-import Organization from './pages/Organization';
-import Organizations from './pages/Organizations';
+import Org from './pages/Org';
+import Orgs from './pages/Orgs';
 import Playground from './pages/Playground';
 import Privacy from './pages/Privacy';
 import Sample from './pages/Sample';
@@ -66,10 +66,10 @@ function getRoutes() {
         { path: 'terms', element: <Terms /> },
         { path: 'privacy', element: <Privacy /> },
         {
-            path: 'organizations',
+            path: 'orgs',
             element: (
                 <RequireAuth>
-                    <Organizations />
+                    <Orgs />
                 </RequireAuth>
             ),
         },
@@ -84,32 +84,32 @@ function getRoutes() {
         {
             path: ':org/*',
             element: (
-                <RequireAuth>
-                    <Organization />
+                    <RequireAuth>
+                    <Org />
                 </RequireAuth>
             ),
         },
         {
             path: ':org/apps/*',
             element: (
-                <RequireAuth>
-                    <Organization />
+                    <RequireAuth>
+                    <Org />
                 </RequireAuth>
             ),
         },
         {
             path: ':org/people/*',
             element: (
-                <RequireAuth>
-                    <Organization />
+                    <RequireAuth>
+                    <Org />
                 </RequireAuth>
             ),
         },
         {
             path: ':org/settings/*',
             element: (
-                <RequireAuth>
-                    <Organization />
+                    <RequireAuth>
+                    <Org />
                 </RequireAuth>
             ),
         },

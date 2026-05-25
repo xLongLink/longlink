@@ -201,32 +201,30 @@ export default function DocsLayout() {
 
             <div className="relative z-0 w-full px-1 pb-1 pt-[5.75rem] lg:px-2 lg:pb-2 lg:pt-[6rem]">
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
-                    <div ref={contentRef} className="px-4 py-8 lg:px-6 lg:py-10">
+                    <div ref={contentRef} className="bg-card/80 px-4 py-8 backdrop-blur-sm lg:px-6 lg:py-10">
                         <div className="mx-auto w-full max-w-[56rem]">
                             <Outlet />
                         </div>
                     </div>
 
-                    <aside className="hidden border-l border-border px-5 py-8 lg:block">
-                        <div className="sticky top-8">
-                            <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
-                                On this page
-                            </div>
-                            <nav aria-label="On this page" className="mt-4">
-                                <Ul className="space-y-2 text-sm">
-                                    {pageToc.map((item) => (
-                                        <Li key={item.href} className={item.level === 3 ? 'pl-4' : ''}>
-                                            <A
-                                                href={item.href}
-                                                className="block text-muted-foreground transition-colors hover:text-foreground"
-                                            >
-                                                {item.label}
-                                            </A>
-                                        </Li>
-                                    ))}
-                                </Ul>
-                            </nav>
+                    <aside className="hidden bg-card/80 px-5 py-8 backdrop-blur-sm lg:fixed lg:top-[6rem] lg:right-2 lg:bottom-2 lg:block lg:w-56 lg:overflow-y-auto">
+                        <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
+                            On this page
                         </div>
+                        <nav aria-label="On this page" className="mt-4">
+                            <Ul className="space-y-2 text-sm">
+                                {pageToc.map((item) => (
+                                    <Li key={item.href} className={item.level === 3 ? 'pl-4' : ''}>
+                                        <A
+                                            href={item.href}
+                                            className="block text-muted-foreground transition-colors hover:text-foreground"
+                                        >
+                                            {item.label}
+                                        </A>
+                                    </Li>
+                                ))}
+                            </Ul>
+                        </nav>
                     </aside>
                 </div>
             </div>

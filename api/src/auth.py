@@ -9,7 +9,7 @@ oauth.register(
     client_id=env.OIDC_CLIENT_ID,
     client_secret=env.OIDC_CLIENT_SECRET,
     server_metadata_url=f"{env.OIDC_ISSUER.rstrip('/')}/.well-known/openid-configuration",
-    client_kwargs={"scope": env.OIDC_SCOPES},
+    client_kwargs={"scope": "openid profile email"},
 )
 
 

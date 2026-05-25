@@ -21,6 +21,15 @@ class StorageRegistriesService(ServiceBase):
             result = await session.execute(select(StorageRegistry).where(StorageRegistry.name == name))
             return result.scalar_one_or_none()
 
+    async def first(self) -> StorageRegistry | None:
+        """Return the first registered storage backend."""
+
+        async with self.session() as session:
+            result = await session.execute(
+                select(StorageRegistry).order_by(StorageRegistry.name).limit(1)
+            )
+            return result.scalar_one_or_none()
+
     async def create(
         self,
         name: str,

@@ -11,33 +11,33 @@ import { Blocks } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-type OrganizationCreateResponse = {
-    organization: {
+type OrgCreateResponse = {
+    org: {
         name: string;
     };
 };
 
-/** Renders the authenticated organizations landing page. */
-export default function Organizations() {
+/** Renders the authenticated orgs landing page. */
+export default function Orgs() {
     const queryClient = useQueryClient();
     const { data: user, isLoading, error } = useUser();
     const [createOpen, setCreateOpen] = useState(false);
     const [name, setName] = useState('');
     const [createError, setCreateError] = useState<string | null>(null);
 
-    // Read the organizations already attached to the shared user payload.
-    const organizations = user?.organizations ?? [];
+    // Read the orgs already attached to the shared user payload.
+    const orgs = user?.orgs ?? [];
 
-    const createOrganization = useMutation({
-        mutationFn: async (organizationName: string) => {
-            const response = await fetch('/api/organizations', {
+    const createOrg = useMutation({
+        mutationFn: async (orgName: string) => {
+            const response = await fetch('/api/orgs', {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
                 credentials: 'same-origin',
-                body: JSON.stringify({ name: organizationName }),
+                body: JSON.stringify({ name: orgName }),
             });
 
             if (!response.ok) {
@@ -46,7 +46,7 @@ export default function Organizations() {
                 throw new Error(payload?.detail ?? `API request failed (${response.status})`);
             }
 
-            return (await response.json()) as OrganizationCreateResponse;
+            return (await response.json()) as OrgCreateResponse;
         },
         onSuccess: async () => {
             setCreateOpen(false);
@@ -60,18 +60,18 @@ export default function Organizations() {
     });
 
     return (
-        <Layout tabs={{ Organizations: '/organizations', Settings: '/settings' }}>
+        <Layout tabs={{ Orgs: '/orgs', Settings: '/settings' }}>
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 <Hero icon={<Blocks />} className="w-full">
                     <div className="flex w-full items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
-                            <HeroTitle>Organizations</HeroTitle>
+                            <HeroTitle>Orgs</HeroTitle>
                             <HeroDescription>Manage the workspaces connected to your LongLink account.</HeroDescription>
                         </div>
 
                         <HeroAction>
                             <Button type="button" onClick={() => setCreateOpen(true)}>
-                                New Organization
+                                New Org
                             </Button>
                         </HeroAction>
                     </div>
@@ -89,17 +89,17 @@ export default function Organizations() {
                             {isLoading ? (
                                 <TableRow>
                                     <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
-                                        Loading organizations...
+                                        Loading orgs...
                                     </TableCell>
                                 </TableRow>
                             ) : error ? (
                                 <TableRow>
                                     <TableCell colSpan={2} className="py-8 text-sm text-destructive">
-                                        Failed to load organizations.
+                                        Failed to load orgs.
                                     </TableCell>
                                 </TableRow>
-                            ) : organizations.length ? (
-                                organizations.map((organization) => (
+                            ) : orgs.length ? (
+                                orgs.map((organization) => (
                                     <TableRow key={organization.name}>
                                         <TableCell className="font-medium text-foreground">
                                             {organization.name}
@@ -117,7 +117,7 @@ export default function Organizations() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
-                                        No organizations found.
+                                        No orgs found.
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -137,7 +137,7 @@ export default function Organizations() {
                     <DialogContent>
                         <div className="space-y-4">
                             <div className="space-y-1">
-                                <DialogTitle>New organization</DialogTitle>
+                                <DialogTitle>New org</DialogTitle>
                                 <DialogDescription>Create a new workspace for your account.</DialogDescription>
                             </div>
 
@@ -146,7 +146,7 @@ export default function Organizations() {
                                 onSubmit={(event) => {
                                     event.preventDefault();
                                     setCreateError(null);
-                                    createOrganization.mutate(name.trim());
+                                    createOrg.mutate(name.trim());
                                 }}
                             >
                                 <div className="space-y-2">
@@ -175,9 +175,9 @@ export default function Organizations() {
                                     </Button>
                                     <Button
                                         type="submit"
-                                        disabled={createOrganization.isPending || name.trim().length === 0}
+                                        disabled={createOrg.isPending || name.trim().length === 0}
                                     >
-                                        {createOrganization.isPending ? 'Creating...' : 'Create'}
+                                        {createOrg.isPending ? 'Creating...' : 'Create'}
                                     </Button>
                                 </div>
                             </form>

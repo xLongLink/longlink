@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import src.db as db
-from src.env import env
 from .__root__ import Root
 from kubernetes import client, config
-from urllib.parse import urlparse
 from src.constants import TEMPLATES
 from src.utils.utils import yaml as template_yaml
 from src.utils.utils import knames
@@ -46,7 +44,7 @@ class Compute(Root):
 
     def _namespace_name(self, organization: str) -> str:
         """Normalize the organization name to a Kubernetes namespace name."""
-        knames(organization, "Organization")
+        knames(organization, "Org")
         return organization
 
     def _application_name(self, application: str) -> str:
@@ -263,10 +261,3 @@ class Compute(Root):
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed deleting namespace '{namespace}'") from exc
-
-
-parsed_compute_url = urlparse(env.COMPUTE_URL)
-root = Compute(
-    kube_config_path=env.COMPUTE_KUBE_CONFIG_PATH,
-    ingress_host=parsed_compute_url.hostname or "localhost",
-)

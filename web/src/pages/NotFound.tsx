@@ -10,8 +10,8 @@ import { Link, useLocation } from 'react-router';
 export default function NotFound() {
     const location = useLocation();
     const { data: user } = useUser();
-    const primaryLink = user ? '/organizations' : '/';
-    const primaryLabel = user ? 'Back to organizations' : 'Back to home';
+    const primaryLink = user ? '/orgs' : '/';
+    const primaryLabel = user ? 'Back to orgs' : 'Back to home';
     const secondaryLink = user ? '/' : '/auth/login/oidc';
     const secondaryLabel = user ? 'Back to home' : 'Go to login';
 

@@ -1,0 +1,83 @@
+# Layout
+
+XML layout components organize content into responsive sections and dialog-style surfaces.
+
+## Columns
+
+Columns render side-by-side sections. Column widths should add up to 100 across the row.
+
+```xml
+<Columns>
+  <Column width="70">Main content</Column>
+  <Column width="30">Sidebar</Column>
+</Columns>
+```
+
+## Grid
+
+Grid renders evenly spaced child cards or panels.
+
+```xml
+<Grid columns="3"><Card>One</Card><Card>Two</Card><Card>Three</Card></Grid>
+```
+
+## Card
+
+Cards group related content.
+
+```xml
+<Card size="sm"><P>Card Content</P></Card>
+```
+
+## Stack
+
+Stack arranges content vertically with consistent spacing.
+
+```xml
+<Stack><P>First</P><P>Second</P></Stack>
+```
+
+## Dialog
+
+Dialog renders an overlay for focused actions and confirmations.
+
+Use a trigger to open the dialog. Use `open` only when you need a controlled dialog.
+
+```xml
+<Dialog>
+  <DialogTrigger>
+    <Button variant="outline">Open dialog</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogTitle>Delete issue</DialogTitle>
+    <DialogDescription>This cannot be undone.</DialogDescription>
+  </DialogContent>
+</Dialog>
+```
+
+## Tabs
+
+Tabs let users switch between related panels. Tabs can also show an icon per tab.
+
+```xml
+<Tabs defaultValue="overview">
+  <Tab value="overview" label="Overview">
+    <P>Overview content</P>
+  </Tab>
+  <Tab value="settings" label="Settings">
+    <P>Settings content</P>
+  </Tab>
+</Tabs>
+```
+
+## Menu
+
+Menus expose sectioned navigation and content groups.
+
+```xml
+<Menu defaultValue="first">
+  <MenuSection value="first" label="First">
+    <P>First section</P>
+  </MenuSection>
+</Menu>
+```

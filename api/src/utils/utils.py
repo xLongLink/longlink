@@ -2,7 +2,6 @@ import re
 import yaml as pyyaml
 from string import Template
 from pathlib import Path
-from src.env import env
 from urllib.parse import urlparse
 
 
@@ -47,9 +46,9 @@ def app_path(organization: str, app_key: str, path: str = "") -> str:
     return f"{normalized_org}/{normalized_key}/{normalized_path}"
 
 
-def app_url(organization: str, app_key: str) -> str:
-    """Return the public compute base URL for an organization app."""
-    return f"{env.COMPUTE_URL.rstrip('/')}/{app_path(organization, app_key)}"
+def app_url(base_url: str, organization: str, app_key: str) -> str:
+    """Return the public compute URL for an organization app."""
+    return f"{normalize(base_url).rstrip('/')}/{app_path(organization, app_key)}"
 
 
 def yaml(template_path: str | Path, **context: str) -> dict | list[dict]:

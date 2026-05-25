@@ -5,8 +5,8 @@ import {
     TabsTrigger as UITabsTrigger,
 } from '@ui/tabs';
 import { useXmlContext } from '@xml/core/context';
-import { evaluate } from '@xml/expressions';
 import { renderNode } from '@xml/core/node';
+import { evaluate } from '@xml/expressions';
 import type { ASTNode, Props } from '@xml/types';
 import { Fragment } from 'react';
 import { Icon } from './Icon';
@@ -41,7 +41,11 @@ export function Tabs({ props, nodes }: Props) {
                 </UITabsList>
             )}
             {tabs.map((tab) => (
-                <UITabsContent key={tab.key} value={tab.value} className="flex flex-1 flex-col gap-6 text-sm outline-none">
+                <UITabsContent
+                    key={tab.key}
+                    value={tab.value}
+                    className="flex flex-1 flex-col gap-6 text-sm outline-none"
+                >
                     {renderNode(tab.nodes, ctx)}
                 </UITabsContent>
             ))}
@@ -60,7 +64,10 @@ export function Tab({ nodes }: Props) {
 }
 
 /** Collects tab markers from immediate children. */
-function collectTabNodes(nodes: ASTNode[], ctx: ReturnType<typeof useXmlContext>['ctx']): {
+function collectTabNodes(
+    nodes: ASTNode[],
+    ctx: ReturnType<typeof useXmlContext>['ctx']
+): {
     tabs: TabNode[];
     passthroughNodes: ASTNode[];
     initialValue?: string;
@@ -79,9 +86,10 @@ function collectTabNodes(nodes: ASTNode[], ctx: ReturnType<typeof useXmlContext>
             return;
         }
 
-        const value = requireXmlString(node.params, 'value', ctx, 'Tab');
-        const label = requireXmlString(node.params, 'label', ctx, 'Tab');
-        const icon = resolveXmlString(node.params, 'icon', ctx);
+        const params = node.params ?? {};
+        const value = requireXmlString(params, 'value', ctx, 'Tab');
+        const label = requireXmlString(params, 'label', ctx, 'Tab');
+        const icon = resolveXmlString(params, 'icon', ctx);
 
         tabs.push({
             key: index,

@@ -8,8 +8,8 @@ import { Boxes, Building2, Mail, Settings2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useParams } from 'react-router';
 
-/** Renders the organization page shell and tab-specific hero content. */
-export default function Organization() {
+/** Renders the org page shell and tab-specific hero content. */
+export default function Org() {
     const { org = '' } = useParams();
     const { pathname } = useLocation();
     const section = pathname.split('/')[2] ?? '';

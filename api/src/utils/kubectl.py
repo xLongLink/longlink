@@ -3,15 +3,14 @@ from __future__ import annotations
 import yaml
 import subprocess
 from pathlib import Path
-from src.env import env
 from kubernetes import client, config
 
 
 # kubectl get pods
-def apply(f: str | Path) -> list[dict]:
+def apply(f: str | Path, kube_config_path: str) -> list[dict]:
     """Apply a multi-document YAML state file to Kubernetes like `kubectl apply -f`."""
     file_path = Path(f).expanduser()
-    kpath = Path(env.COMPUTE_KUBE_CONFIG_PATH).expanduser()
+    kpath = Path(kube_config_path).expanduser()
 
     # Parse manifests first so callers can keep working with the exact applied state.
     manifests = [
@@ -41,9 +40,10 @@ def registry(
     username: str,
     password: str,
     email: str,
+    kube_config_path: str,
 ) -> None:
     """Create a Docker registry pull secret like `kubectl create secret docker-registry`."""
-    kpath = Path(env.COMPUTE_KUBE_CONFIG_PATH).expanduser()
+    kpath = Path(kube_config_path).expanduser()
 
     # Use the kubectl CLI so the generated secret matches cluster-native behavior.
     try:
@@ -71,9 +71,9 @@ def registry(
         raise ValueError(f"Failed to create secret {name}{detail}") from exc
 
 
-def logs(name: str, namespace: str) -> str:
+def logs(name: str, namespace: str, kube_config_path: str) -> str:
     """Return the logs for the first pod matching an app label."""
-    config.load_kube_config(config_file=str(Path(env.COMPUTE_KUBE_CONFIG_PATH).expanduser()))
+    config.load_kube_config(config_file=str(Path(kube_config_path).expanduser()))
     core_api = client.CoreV1Api()
 
     try:

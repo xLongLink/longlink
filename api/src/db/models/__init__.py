@@ -8,7 +8,7 @@ from .__base__ import Base
 from .database import DatabaseRegistry
 from .registries import Registry
 from .association import user_organizations
-from .organization import Organization
+from .org import Org
 
 __all__ = [
     "App",
@@ -17,7 +17,7 @@ __all__ = [
     "ComputeRegistry",
     "DatabaseRegistry",
     "Env",
-    "Organization",
+    "Org",
     "Registry",
     "StorageRegistry",
     "User",

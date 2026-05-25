@@ -79,7 +79,7 @@ export type User = {
     language?: string;
     oauth_github_id?: number | null;
     date_creation?: string;
-    organizations?: {
+    orgs?: {
         name: string;
     }[];
 };

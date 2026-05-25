@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 
-type Organization = {
+type Org = {
     name: string;
-    users?: OrganizationPerson[];
+    users?: OrgPerson[];
 };
 
-type OrganizationApp = {
+type OrgApp = {
     name: string;
     url: string;
 };
 
-type OrganizationPerson = {
+type OrgPerson = {
     id: number;
     name: string;
     email: string;
@@ -18,19 +18,19 @@ type OrganizationPerson = {
 };
 
 type UseOrgResult = {
-    organization: Organization | undefined;
-    people: OrganizationPerson[];
-    apps: OrganizationApp[];
+    org: Org | undefined;
+    people: OrgPerson[];
+    apps: OrgApp[];
     isLoading: boolean;
     error: Error | null;
 };
 
-/** Fetches organization details and related collections for the current workspace. */
+/** Fetches org details and related collections for the current workspace. */
 export function useOrg(org: string): UseOrgResult {
     const organizationQuery = useQuery({
-        queryKey: ['api', `/api/organizations/${org}`],
+        queryKey: ['api', `/api/orgs/${org}`],
         queryFn: async () => {
-            const response = await fetch(`/api/organizations/${org}`, {
+            const response = await fetch(`/api/orgs/${org}`, {
                 headers: { Accept: 'application/json' },
                 credentials: 'same-origin',
             });
@@ -39,17 +39,17 @@ export function useOrg(org: string): UseOrgResult {
                 throw new Error(`API request failed (${response.status})`);
             }
 
-            const payload = (await response.json()) as { organization: Organization };
-            return payload.organization;
+            const payload = (await response.json()) as { org: Org };
+            return payload.org;
         },
         enabled: org.length > 0,
         retry: false,
     });
 
     const appsQuery = useQuery({
-        queryKey: ['api', `/api/orgs/${org}/apps`],
+        queryKey: ['api', `/api/apps?organization=${org}`],
         queryFn: async () => {
-            const response = await fetch(`/api/orgs/${org}/apps`, {
+            const response = await fetch(`/api/apps?organization=${encodeURIComponent(org)}`, {
                 headers: { Accept: 'application/json' },
                 credentials: 'same-origin',
             });
@@ -58,7 +58,7 @@ export function useOrg(org: string): UseOrgResult {
                 throw new Error(`API request failed (${response.status})`);
             }
 
-            return (await response.json()) as OrganizationApp[];
+            return (await response.json()) as OrgApp[];
         },
         enabled: org.length > 0,
         retry: false,
@@ -67,7 +67,7 @@ export function useOrg(org: string): UseOrgResult {
     const error = organizationQuery.error ?? appsQuery.error ?? null;
 
     return {
-        organization: organizationQuery.data,
+        org: organizationQuery.data,
         people: organizationQuery.data?.users ?? [],
         apps: appsQuery.data ?? [],
         isLoading: organizationQuery.isLoading || appsQuery.isLoading,

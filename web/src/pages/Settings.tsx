@@ -59,7 +59,7 @@ type Theme = (typeof THEME_OPTIONS)[number]['value'];
 export default function Settings() {
     const { data: user, isLoading } = useUser();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
-    const organizations = user?.organizations ?? [];
+    const orgs = user?.orgs ?? [];
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [accountError, setAccountError] = useState<string | null>(null);
@@ -87,7 +87,7 @@ export default function Settings() {
         accountEmail.length > 0;
 
     return (
-        <Layout tabs={{ Organizations: '/organizations', Settings: '/settings' }}>
+        <Layout tabs={{ Orgs: '/orgs', Settings: '/settings' }}>
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 <Hero icon={<Settings2 />}>
                     <div>
@@ -260,28 +260,28 @@ export default function Settings() {
                         </div>
                     </MenuSection>
 
-                    <MenuSection value="organizations" label="Organizations" icon={Building2}>
+                    <MenuSection value="orgs" label="Orgs" icon={Building2}>
                         <div className="space-y-4">
-                            <h2 className="text-lg font-medium text-foreground">Organizations</h2>
+                            <h2 className="text-lg font-medium text-foreground">Orgs</h2>
                             <p className="text-sm text-muted-foreground">
-                                Review the organizations connected to your personal account.
+                                Review the orgs connected to your personal account.
                             </p>
 
                             <div className="space-y-2">
-                                {organizations.length ? (
-                                    organizations.map((organization) => (
+                                {orgs.length ? (
+                                    orgs.map((organization) => (
                                         <div
                                             key={organization.name}
                                             className="flex items-center justify-between gap-3"
                                         >
                                             <span className="text-sm text-foreground">{organization.name}</span>
-                                            <Link to="/organizations" className="text-sm text-accent hover:underline">
+                                            <Link to="/orgs" className="text-sm text-accent hover:underline">
                                                 Manage
                                             </Link>
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-sm text-muted-foreground">No organizations available.</p>
+                                    <p className="text-sm text-muted-foreground">No orgs available.</p>
                                 )}
                             </div>
                         </div>

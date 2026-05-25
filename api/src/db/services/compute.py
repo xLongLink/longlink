@@ -21,6 +21,15 @@ class ComputeRegistriesService(ServiceBase):
             result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.name == name))
             return result.scalar_one_or_none()
 
+    async def first(self) -> ComputeRegistry | None:
+        """Return the first registered compute backend."""
+
+        async with self.session() as session:
+            result = await session.execute(
+                select(ComputeRegistry).order_by(ComputeRegistry.name).limit(1)
+            )
+            return result.scalar_one_or_none()
+
     async def create(
         self,
         name: str,

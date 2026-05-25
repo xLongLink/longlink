@@ -14,10 +14,10 @@ def test_hero_validation() -> None:
     element = Element.from_content(
         """
         <Hero icon="layout-grid">
-          <HeroTitle>Organizations</HeroTitle>
-          <HeroDescription>Browse the organizations you belong to.</HeroDescription>
+          <HeroTitle>Orgs</HeroTitle>
+          <HeroDescription>Browse the orgs you belong to.</HeroDescription>
           <HeroContent>
-            <Button action="/organizations/new">Create organization</Button>
+            <Button action="/orgs/new">Create org</Button>
           </HeroContent>
         </Hero>
         """,

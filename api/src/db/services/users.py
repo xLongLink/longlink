@@ -11,7 +11,7 @@ class UsersService(ServiceBase):
         '''Return all users in the database.'''
 
         async with self.session() as session:
-            statement = select(User).options(selectinload(User.organizations))
+            statement = select(User).options(selectinload(User.orgs))
             result = await session.execute(statement)
             return list(result.scalars().all())
 
@@ -62,7 +62,7 @@ class UsersService(ServiceBase):
 
         async with self.session() as session:
             # Load memberships so the returned user can be used outside the session.
-            statement = select(User).options(selectinload(User.organizations))
+            statement = select(User).options(selectinload(User.orgs))
             if by == 'email':
                 statement = statement.where(User.email == param)
             elif by == 'oidc_subject':

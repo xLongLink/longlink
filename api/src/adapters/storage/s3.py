@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import uuid
 import boto3
-from src.env import env
 from .__root__ import Root
-from contextlib import suppress
 
 
 class Storage(Root):
@@ -44,40 +41,3 @@ class Storage(Root):
     def delete(self, bucket_name: str) -> None:
         """Delete one storage bucket."""
         self._client.delete_bucket(Bucket=bucket_name)
-
-
-root = Storage(
-    protocol=env.STORAGE_PROTOCOL,
-    endpoint_url=env.STORAGE_ENDPOINT_URL,
-    access_key_id=env.STORAGE_ACCESS_KEY_ID,
-    secret_access_key=env.STORAGE_SECRET_ACCESS_KEY,
-)
-
-
-def _smoke_test() -> None:
-    """Exercise the storage adapter against the local object storage server."""
-    adapter = Storage(
-        protocol=env.STORAGE_PROTOCOL,
-        endpoint_url=env.STORAGE_ENDPOINT_URL,
-        access_key_id=env.STORAGE_ACCESS_KEY_ID,
-        secret_access_key=env.STORAGE_SECRET_ACCESS_KEY,
-    )
-    bucket_name = f"ll-smoke-{uuid.uuid4().hex[:12]}"
-
-    try:
-        adapter.create(bucket_name)
-        buckets = adapter.list()
-        assert bucket_name in buckets, "bucket should exist after create()"
-
-        adapter.delete(bucket_name)
-        buckets = adapter.list()
-        assert bucket_name not in buckets, "bucket should be removed by delete()"
-
-        print("storage smoke test passed")
-    finally:
-        with suppress(Exception):
-            adapter.delete(bucket_name)
-
-
-if __name__ == "__main__":
-    _smoke_test()
