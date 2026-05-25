@@ -28,7 +28,7 @@ export function Breadcrumb() {
         <UIBreadcrumb>
             <BreadcrumbList>
                 <BreadcrumbItem>
-                    <Link to="/" aria-label="LongLink home" className="inline-flex items-center hover:underline">
+                    <Link to="/organizations" aria-label="LongLink home" className="inline-flex items-center">
                         <Wordmark />
                     </Link>
                 </BreadcrumbItem>

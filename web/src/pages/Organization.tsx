@@ -7,14 +7,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Boxes, Building2, Mail, Settings2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useParams } from 'react-router';
+import NotFound from './NotFound';
 
-/** Renders the org page shell and tab-specific hero content. */
-export default function Org() {
+/** Renders the organization page shell and tab-specific hero content. */
+export default function Organization() {
     const { org = '' } = useParams();
     const { pathname } = useLocation();
     const section = pathname.split('/')[2] ?? '';
     const [peopleSection, setPeopleSection] = useState<'members' | 'invitations'>('members');
     const { people, isLoading, error } = useOrg(org);
+
+    // Hide missing or inaccessible orgs behind the shared 404 page.
+    if (error?.status === 404) {
+        return <NotFound />;
+    }
 
     let content = (
         <Hero icon={<Building2 />}>

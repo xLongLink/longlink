@@ -51,7 +51,7 @@ export function Tabs({ path }: TabsProps) {
                             aria-disabled={tab.value === 'loading'}
                             tabIndex={tab.value === 'loading' ? -1 : undefined}
                             className={cn(
-                                'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/5 hover:text-foreground',
+                                'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/5 hover:text-foreground',
                                 tab.value === 'loading' && 'pointer-events-none opacity-50',
                                 isActive &&
                                     'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-accent'

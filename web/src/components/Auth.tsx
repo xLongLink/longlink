@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 /** Redirects unauthenticated users to the OIDC provider. */
 export function RequireAuth({ children }: { children: ReactElement }) {
-    const { data: user, isLoading } = useUser();
+    const { user, isLoading } = useUser();
 
     /* Start the login flow once we know the user is missing. */
     useEffect(() => {

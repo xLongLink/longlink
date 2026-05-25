@@ -1,4 +1,4 @@
-import { useSignOut, useUser } from '@/hooks/use-user';
+import { useUser } from '@/hooks/use-user';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import {
     DropdownMenu,
@@ -15,8 +15,7 @@ import { Link, useNavigate } from 'react-router';
 /** Renders a user profile dropdown with authentication actions. */
 export function UserProfile() {
     const navigate = useNavigate();
-    const { data: user } = useUser();
-    const { mutateAsync: signOut } = useSignOut();
+    const { user, signOut } = useUser();
 
     if (!user) {
         return null;

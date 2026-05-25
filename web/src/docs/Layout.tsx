@@ -101,10 +101,10 @@ export default function DocsLayout() {
                 collapsible="offcanvas"
                 className="group-data-[side=left]:border-r-0"
             >
-                <SidebarHeader className="gap-4 p-4">
+                <SidebarHeader className="h-12 justify-end p-2">
                     <Link
                         to="/"
-                        className="flex cursor-pointer items-center justify-center gap-2 text-xl font-semibold text-card-foreground transition-opacity hover:opacity-80"
+                        className="flex cursor-pointer items-end justify-center gap-2 text-[1.375rem] font-semibold text-card-foreground transition-opacity hover:opacity-80"
                     >
                         <Wordmark />
                     </Link>
@@ -114,12 +114,12 @@ export default function DocsLayout() {
 
                 <SidebarContent>
                     {DOC_GROUPS.map((group) => (
-                        <SidebarGroup key={group.title}>
-                            <SidebarGroupLabel className="text-sidebar-foreground/45 font-normal">
+                        <SidebarGroup key={group.title} className="px-2 py-1">
+                            <SidebarGroupLabel className="text-muted-foreground font-normal">
                                 {group.title}
                             </SidebarGroupLabel>
                             <SidebarGroupContent>
-                                <SidebarMenu>
+                                <SidebarMenu className="space-y-1">
                                     {group.items.map((item) => {
                                         const isActive = currentItem?.id === item.id;
 
@@ -129,7 +129,7 @@ export default function DocsLayout() {
                                                     render={<Link to={item.path} />}
                                                     isActive={isActive}
                                                     variant={isActive ? 'outline' : 'default'}
-                                                    className="text-sidebar-foreground/70"
+                                                    className="text-sidebar-foreground/70 hover:bg-muted hover:text-foreground data-active:bg-muted data-active:text-foreground"
                                                 >
                                                     <item.icon
                                                         className="size-4 shrink-0 text-muted-foreground/70"
@@ -153,9 +153,8 @@ export default function DocsLayout() {
                         <UIBreadcrumb>
                             <BreadcrumbList>
                                 <BreadcrumbItem>
-                                    <SidebarTrigger className="shrink-0 cursor-pointer" />
+                                    <SidebarTrigger className="-ml-2 shrink-0 cursor-pointer" />
                                 </BreadcrumbItem>
-                                <BreadcrumbSeparator />
                                 <BreadcrumbItem>
                                     <BreadcrumbLink
                                         render={(props) => (
@@ -205,7 +204,7 @@ export default function DocsLayout() {
             <div className="pointer-events-none fixed top-[4.25rem] bottom-0 left-0 z-[15] w-1 bg-background lg:top-[4.5rem] lg:left-[var(--sidebar-width)] lg:w-2 lg:peer-data-[state=collapsed]:left-0" />
             <div className="pointer-events-none fixed top-[4.25rem] right-0 bottom-0 z-[15] w-1 bg-background lg:top-[4.5rem] lg:w-2" />
 
-            <div className="relative z-10 w-full px-1 pb-1 pt-[4.25rem] lg:px-2 lg:pb-2 lg:pt-[4.5rem]">
+            <div className="relative z-10 w-full px-1 pb-1 pt-[4.25rem] lg:px-2 lg:pb-2 lg:pt-[4.375rem]">
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
                     <div ref={contentRef} className="px-4 pt-4 pb-8 lg:px-6 lg:pt-6 lg:pb-10">
                         <div className="mx-auto w-full max-w-[56rem]">

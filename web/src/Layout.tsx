@@ -26,7 +26,7 @@ export default function Layout({ tabs, brandOnly = false, children }: LayoutProp
                         <div className="flex items-center justify-between gap-4 text-white/80">
                             <div className="flex items-center gap-4">
                                 {brandOnly ? (
-                                    <Link to="/" aria-label="LongLink home" className="inline-flex items-center hover:underline">
+                                    <Link to="/organizations" aria-label="LongLink home" className="inline-flex items-center">
                                         <Wordmark />
                                     </Link>
                                 ) : (
@@ -51,7 +51,7 @@ export default function Layout({ tabs, brandOnly = false, children }: LayoutProp
                                             replace
                                             aria-current={isActive ? 'page' : undefined}
                                             className={cn(
-                                                'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-3 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white',
+                                                'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white',
                                                 isActive &&
                                                     'text-white after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-white'
                                             )}

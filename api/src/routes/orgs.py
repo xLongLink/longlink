@@ -7,11 +7,11 @@ router = APIRouter(prefix="/api/orgs")
 
 
 @router.get("/{name}")
-async def get_organization(name: str) -> dict:
+async def get_organization(name: str, user: db.User = Depends(authuser)) -> dict:
     """Return one organization and its metadata."""
 
     organization = await db.orgs.get(name)
-    if organization is None:
+    if organization is None or all(org.name != name for org in user.orgs):
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
     payload = organization.model_dump()
@@ -35,11 +35,11 @@ async def create_organization(
 
 
 @router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_organization(name: str) -> Response:
+async def delete_organization(name: str, user: db.User = Depends(authuser)) -> Response:
     """Delete one org by name."""
 
     organization = await db.orgs.get(name)
-    if organization is None:
+    if organization is None or all(org.name != name for org in user.orgs):
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
     await db.orgs.delete(name)

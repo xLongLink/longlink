@@ -128,10 +128,8 @@ export function setThemeMode(root: HTMLElement, theme: Theme) {
 }
 
 /** Applies the resolved theme, palette, and radius to the document root. */
-export function applyTheme(root: HTMLElement, theme: Theme, overrides: Partial<Omit<ThemeConfig, 'theme'>> = {}) {
-    const resolvedTheme = resolveTheme(theme);
-    const preset = THEME_PRESETS[resolvedTheme];
-    const config = { ...preset, ...overrides };
+export function applyTheme(root: HTMLElement, config: ThemeConfig) {
+    const resolvedTheme = resolveTheme(config.theme);
     const accent = ACCENT_TOKENS[config.accent];
 
     root.classList.remove('light', 'dark');

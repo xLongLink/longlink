@@ -1,7 +1,6 @@
 import Layout from '@/Layout';
-import { useUser, type User } from '@/hooks/use-user';
-import { apiUrl } from '@/lib/api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCreateOrg } from '@/hooks/use-org';
+import { useUser } from '@/hooks/use-user';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
@@ -12,80 +11,13 @@ import { Blocks } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-type OrgCreateResponse = {
-    org: {
-        name: string;
-    };
-};
-
-type ApiUser = User & {
-    orgs?: {
-        name: string;
-    }[];
-};
-
-/** Renders the authenticated orgs landing page. */
-export default function Orgs() {
-    const queryClient = useQueryClient();
-    const { data: user, isLoading, error } = useUser();
+/** Renders the authenticated organizations landing page. */
+export default function Organizations() {
+    const { orgs, isLoading, error } = useUser();
+    const createOrg = useCreateOrg();
     const [createOpen, setCreateOpen] = useState(false);
     const [name, setName] = useState('');
     const [createError, setCreateError] = useState<string | null>(null);
-
-    // Read the orgs already attached to the shared user payload.
-    const orgs = user?.orgs ?? [];
-    const orgsUrl = apiUrl('/api/orgs');
-    const userUrl = apiUrl('/api/me');
-
-    const createOrg = useMutation({
-        mutationFn: async (orgName: string) => {
-            const response = await fetch(orgsUrl, {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({ name: orgName }),
-            });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return (await response.json()) as OrgCreateResponse;
-        },
-        onSuccess: async () => {
-            // Add the new org to the cached user so the list updates immediately.
-            queryClient.setQueryData<ApiUser | null>(['api', userUrl], (current) => {
-                if (!current) {
-                    return current;
-                }
-
-                const org = { name: name.trim() };
-                const orgs = current.orgs ?? [];
-
-                if (orgs.some((existingOrg) => existingOrg.name === org.name)) {
-                    return current;
-                }
-
-                return {
-                    ...current,
-                    orgs: [...orgs, org],
-                };
-            });
-
-            setCreateOpen(false);
-            setName('');
-            setCreateError(null);
-            await queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
-        },
-        onError: (mutationError: Error) => {
-            setCreateError(mutationError.message);
-        },
-    });
 
     return (
         <Layout brandOnly>
@@ -171,10 +103,21 @@ export default function Orgs() {
 
                             <form
                                 className="space-y-4"
-                                onSubmit={(event) => {
+                                onSubmit={async (event) => {
                                     event.preventDefault();
                                     setCreateError(null);
-                                    createOrg.mutate(name.trim());
+
+                                    try {
+                                        await createOrg.mutateAsync(name.trim());
+                                        setCreateOpen(false);
+                                        setName('');
+                                    } catch (mutationError) {
+                                        setCreateError(
+                                            mutationError instanceof Error
+                                                ? mutationError.message
+                                                : 'Failed to create org'
+                                        );
+                                    }
                                 }}
                             >
                                 <div className="space-y-2">

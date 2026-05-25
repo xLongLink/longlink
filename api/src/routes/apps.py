@@ -7,8 +7,11 @@ router = APIRouter(prefix="/api/apps")
 
 
 @router.get("")
-async def list_apps(organization: str, _: db.User = Depends(authuser)) -> list[dict]:
+async def list_apps(organization: str, user: db.User = Depends(authuser)) -> list[dict]:
     """Return the apps registered in one organization."""
+
+    if all(org.name != organization for org in user.orgs):
+        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
     apps = await db.apps.list(organization)
     return [AppResponse(name=app.name, url=app.url).model_dump() for app in apps]

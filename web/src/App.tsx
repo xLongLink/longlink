@@ -3,25 +3,28 @@ import { apiUrl } from '@/lib/api';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import DocsLayout from './docs/Layout';
-import ControlPlanePage from './docs/api';
-import SelfHostedControlPlanePage from './docs/api/self-hosted';
-import SdkOverviewPage from './docs/sdk';
-import SdkBuildingPage from './docs/sdk/building';
-import SdkDatabasePage from './docs/sdk/database';
-import SdkEnvironmentsPage from './docs/sdk/environments';
-import SdkRoutesPage from './docs/sdk/routes';
-import SdkStoragePage from './docs/sdk/storage';
-import SdkTestingPage from './docs/sdk/testing';
-import XmlOverviewPage from './docs/xml';
-import XmlComponentsPage from './docs/xml/components';
-import XmlFieldPage from './docs/xml/field';
-import XmlLayoutPage from './docs/xml/layout';
+import {
+    ControlPlanePage,
+    DocsOverviewPage,
+    SdkBuildingPage,
+    SdkDatabasePage,
+    SdkEnvironmentsPage,
+    SdkOverviewPage,
+    SdkRoutesPage,
+    SdkStoragePage,
+    SdkTestingPage,
+    SelfHostedControlPlanePage,
+    XmlComponentsPage,
+    XmlFieldPage,
+    XmlLayoutPage,
+    XmlOverviewPage,
+} from './docs';
 import AuthOidc from './pages/AuthOidc';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
-import Org from './pages/Org';
-import Orgs from './pages/Orgs';
+import Organization from './pages/Organization';
+import Organizations from './pages/Organizations';
 import Playground from './pages/Playground';
 import Privacy from './pages/Privacy';
 import Sample from './pages/Sample';
@@ -45,7 +48,7 @@ function getRoutes() {
             path: 'docs',
             element: <DocsLayout />,
             children: [
-                { index: true, element: <XmlOverviewPage /> },
+                { index: true, element: <DocsOverviewPage /> },
                 { path: 'api', element: <ControlPlanePage /> },
                 { path: 'api/self-hosted', element: <SelfHostedControlPlanePage /> },
                 { path: 'sdk', element: <SdkOverviewPage /> },
@@ -71,7 +74,7 @@ function getRoutes() {
             path: 'organizations',
             element: (
                 <RequireAuth>
-                    <Orgs />
+                    <Organizations />
                 </RequireAuth>
             ),
         },
@@ -87,7 +90,7 @@ function getRoutes() {
             path: ':org/*',
             element: (
                 <RequireAuth>
-                    <Org />
+                    <Organization />
                 </RequireAuth>
             ),
         },
@@ -95,7 +98,7 @@ function getRoutes() {
             path: ':org/apps/*',
             element: (
                 <RequireAuth>
-                    <Org />
+                    <Organization />
                 </RequireAuth>
             ),
         },
@@ -103,7 +106,7 @@ function getRoutes() {
             path: ':org/people/*',
             element: (
                 <RequireAuth>
-                    <Org />
+                    <Organization />
                 </RequireAuth>
             ),
         },
@@ -111,7 +114,7 @@ function getRoutes() {
             path: ':org/settings/*',
             element: (
                 <RequireAuth>
-                    <Org />
+                    <Organization />
                 </RequireAuth>
             ),
         },

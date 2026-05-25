@@ -14,16 +14,11 @@ import { toast } from 'sonner';
 
 /** Renders the authenticated settings page. */
 export default function Settings() {
-    const { data: user, isLoading } = useUser();
+    const { user, orgs, theme, accent, radius, isLoading } = useUser();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
-    const orgs = user?.orgs ?? [];
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [accountError, setAccountError] = useState<string | null>(null);
-
-    const theme = user?.theme ?? 'dark';
-    const accent = user?.accent ?? 'neutral';
-    const radius = user?.radius ?? 'medium';
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {

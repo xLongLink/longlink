@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiUrl } from '@/lib/api';
 
@@ -10,6 +10,18 @@ type Org = {
 type OrgApp = {
     name: string;
     url: string;
+};
+
+type OrgCreateResponse = {
+    org: {
+        name: string;
+    };
+};
+
+type CachedUser = {
+    orgs?: {
+        name: string;
+    }[];
 };
 
 type OrgPerson = {
@@ -24,7 +36,7 @@ type UseOrgResult = {
     people: OrgPerson[];
     apps: OrgApp[];
     isLoading: boolean;
-    error: Error | null;
+    error: (Error & { status?: number }) | null;
 };
 
 /** Fetches org details and related collections for the current workspace. */
@@ -41,7 +53,9 @@ export function useOrg(org: string): UseOrgResult {
             });
 
             if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
+                const error = new Error(`API request failed (${response.status})`) as Error & { status: number };
+                error.status = response.status;
+                throw error;
             }
 
             const payload = (await response.json()) as { org: Org };
@@ -60,7 +74,9 @@ export function useOrg(org: string): UseOrgResult {
             });
 
             if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
+                const error = new Error(`API request failed (${response.status})`) as Error & { status: number };
+                error.status = response.status;
+                throw error;
             }
 
             return (await response.json()) as OrgApp[];
@@ -78,4 +94,55 @@ export function useOrg(org: string): UseOrgResult {
         isLoading: organizationQuery.isLoading || appsQuery.isLoading,
         error,
     };
+}
+
+/** Creates a new organization and keeps the cached user memberships in sync. */
+export function useCreateOrg() {
+    const queryClient = useQueryClient();
+    const orgsUrl = apiUrl('/api/orgs');
+    const userUrl = apiUrl('/api/me');
+
+    return useMutation({
+        mutationFn: async (orgName: string) => {
+            const response = await fetch(orgsUrl, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ name: orgName }),
+            });
+
+            if (!response.ok) {
+                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
+
+                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
+            }
+
+            return (await response.json()) as OrgCreateResponse;
+        },
+        onSuccess: (payload) => {
+            // Merge the new org into the cached user memberships so the list updates immediately.
+            queryClient.setQueryData<CachedUser | null>(['api', userUrl], (current) => {
+                if (!current) {
+                    return current;
+                }
+
+                const org = payload.org;
+                const orgs = current.orgs ?? [];
+
+                if (orgs.some((existingOrg) => existingOrg.name === org.name)) {
+                    return current;
+                }
+
+                return {
+                    ...current,
+                    orgs: [...orgs, org],
+                };
+            });
+
+            queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
+        },
+    });
 }
