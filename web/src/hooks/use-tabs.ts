@@ -38,7 +38,7 @@ export function useTabs(metadataPath: string | null) {
         queryFn: async () => {
             const response = await fetch(metadataPath!, {
                 headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
+                credentials: 'include',
             });
 
             if (!response.ok) {

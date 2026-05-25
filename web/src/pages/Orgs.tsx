@@ -1,5 +1,6 @@
 import Layout from '@/Layout';
 import { useUser } from '@/hooks/use-user';
+import { apiUrl } from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
@@ -27,16 +28,18 @@ export default function Orgs() {
 
     // Read the orgs already attached to the shared user payload.
     const orgs = user?.orgs ?? [];
+    const orgsUrl = apiUrl('/api/orgs');
+    const userUrl = apiUrl('/api/me');
 
     const createOrg = useMutation({
         mutationFn: async (orgName: string) => {
-            const response = await fetch('/api/orgs', {
+            const response = await fetch(orgsUrl, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
-                credentials: 'same-origin',
+                credentials: 'include',
                 body: JSON.stringify({ name: orgName }),
             });
 
@@ -52,7 +55,7 @@ export default function Orgs() {
             setCreateOpen(false);
             setName('');
             setCreateError(null);
-            await queryClient.invalidateQueries({ queryKey: ['api', '/auth/me'] });
+            await queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
         },
         onError: (mutationError: Error) => {
             setCreateError(mutationError.message);

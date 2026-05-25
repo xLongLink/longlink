@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { fromXml, RenderXML } from '@/xml';
+import { useMemo, useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 type WindowProps = {
     children: string;
@@ -40,7 +42,10 @@ export function Window({ children, onRedClick }: WindowProps) {
             </div>
 
             <div className="absolute right-4 top-3 z-10 flex items-center gap-2">
-                <Switch checked={viewMode === 'rendered'} onCheckedChange={(checked) => setViewMode(checked ? 'rendered' : 'source')} />
+                <Switch
+                    checked={viewMode === 'rendered'}
+                    onCheckedChange={(checked) => setViewMode(checked ? 'rendered' : 'source')}
+                />
             </div>
 
             <div className="origin-top-left scale-[0.9] w-[111.111%] px-6 pt-10">
@@ -53,7 +58,22 @@ export function Window({ children, onRedClick }: WindowProps) {
                         <RenderXML ast={ast} baseUrl="" />
                     ) : null
                 ) : (
-                    <pre className="overflow-auto whitespace-pre-wrap font-mono text-sm leading-6 text-foreground">{sourceXml}</pre>
+                    <SyntaxHighlighter
+                        language="xml"
+                        style={oneDark}
+                        customStyle={{
+                            margin: 0,
+                            padding: '1rem',
+                            background: 'transparent',
+                            fontSize: '0.875rem',
+                            lineHeight: '1.5rem',
+                        }}
+                        codeTagProps={{ className: 'font-mono' }}
+                        showLineNumbers
+                        wrapLongLines
+                    >
+                        {sourceXml}
+                    </SyntaxHighlighter>
                 )}
             </div>
         </div>

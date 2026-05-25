@@ -1,4 +1,5 @@
 import { RequireAuth } from '@/components/Auth';
+import { apiUrl } from '@/lib/api';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import DocsLayout from './docs/Layout';
@@ -84,7 +85,7 @@ function getRoutes() {
         {
             path: ':org/*',
             element: (
-                    <RequireAuth>
+                <RequireAuth>
                     <Org />
                 </RequireAuth>
             ),
@@ -92,7 +93,7 @@ function getRoutes() {
         {
             path: ':org/apps/*',
             element: (
-                    <RequireAuth>
+                <RequireAuth>
                     <Org />
                 </RequireAuth>
             ),
@@ -100,7 +101,7 @@ function getRoutes() {
         {
             path: ':org/people/*',
             element: (
-                    <RequireAuth>
+                <RequireAuth>
                     <Org />
                 </RequireAuth>
             ),
@@ -108,7 +109,7 @@ function getRoutes() {
         {
             path: ':org/settings/*',
             element: (
-                    <RequireAuth>
+                <RequireAuth>
                     <Org />
                 </RequireAuth>
             ),
@@ -117,7 +118,10 @@ function getRoutes() {
             path: ':org/:app/*',
             element: (
                 <RequireAuth>
-                    <View metadata="/api/:org/:app/metadata.json" baseurl="/api/apps/:app" />
+                    <View
+                        metadata={apiUrl('/api/:org/:app/metadata.json')}
+                        baseurl={apiUrl('/api/apps/:app')}
+                    />
                 </RequireAuth>
             ),
         },

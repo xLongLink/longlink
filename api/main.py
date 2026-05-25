@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pathlib import Path
+from urllib.parse import urlsplit
 from src.env import env
 from src.routes import routers
 from src.routes.auth import router as auth_router
@@ -37,6 +38,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8000",
+        f"{urlsplit(env.URL).scheme}://{urlsplit(env.URL).netloc}",
     ],
     allow_credentials=True,
     allow_methods=["*"],

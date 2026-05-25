@@ -21,15 +21,6 @@ class DatabaseRegistriesService(ServiceBase):
             result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.name == name))
             return result.scalar_one_or_none()
 
-    async def first(self) -> DatabaseRegistry | None:
-        """Return the first registered database backend."""
-
-        async with self.session() as session:
-            result = await session.execute(
-                select(DatabaseRegistry).order_by(DatabaseRegistry.name).limit(1)
-            )
-            return result.scalar_one_or_none()
-
     async def create(
         self,
         name: str,

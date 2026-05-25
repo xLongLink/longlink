@@ -58,7 +58,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
         queryFn: async () => {
             const response = await fetch(resolvedMetadata, {
                 headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
+                credentials: 'include',
             });
 
             if (response.status === 404) {
@@ -126,7 +126,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
 
         void fetch(pageUrl, {
             headers: { Accept: 'application/xml' },
-            credentials: 'same-origin',
+            credentials: 'include',
             signal: controller.signal,
         })
             .then(async (response) => {

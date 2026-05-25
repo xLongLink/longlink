@@ -9,7 +9,7 @@ export async function query(ctx: ExecutionContext, id: string, path: string, bas
 
     /* Start the request during render and suspend until it resolves. */
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { credentials: 'include' });
 
         if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
 

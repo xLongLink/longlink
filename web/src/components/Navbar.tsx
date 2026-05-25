@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { buttonVariants } from '@ui/button';
 
 import { Wordmark } from '@/components/Wordmark';
+import { apiUrl } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 /** Renders the public landing page navigation. */
@@ -54,7 +55,7 @@ export function Navbar() {
                     </ul>
 
                     <a
-                        href="/auth/login/oidc"
+                        href={apiUrl('/auth/login/oidc')}
                         className={cn(
                             buttonVariants({ size: 'sm' }),
                             'ml-auto h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'

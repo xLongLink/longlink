@@ -1,5 +1,6 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
+import { apiUrl } from '@/lib/api';
 import { buttonVariants } from '@ui/button';
 import { Blocks, Code2, Rocket, ShieldCheck } from 'lucide-react';
 import type { CSSProperties } from 'react';
@@ -144,7 +145,7 @@ export default function Home() {
 
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <a
-                            href="/auth/login/oidc"
+                            href={apiUrl('/auth/login/oidc')}
                             className={buttonVariants({
                                 size: 'lg',
                             })}

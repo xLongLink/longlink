@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { apiUrl } from '@/lib/api';
+
 type Org = {
     name: string;
     users?: OrgPerson[];
@@ -27,12 +29,15 @@ type UseOrgResult = {
 
 /** Fetches org details and related collections for the current workspace. */
 export function useOrg(org: string): UseOrgResult {
+    const orgUrl = apiUrl(`/api/orgs/${org}`);
+    const appsUrl = apiUrl(`/api/apps?organization=${encodeURIComponent(org)}`);
+
     const organizationQuery = useQuery({
-        queryKey: ['api', `/api/orgs/${org}`],
+        queryKey: ['api', orgUrl],
         queryFn: async () => {
-            const response = await fetch(`/api/orgs/${org}`, {
+            const response = await fetch(orgUrl, {
                 headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
+                credentials: 'include',
             });
 
             if (!response.ok) {
@@ -47,11 +52,11 @@ export function useOrg(org: string): UseOrgResult {
     });
 
     const appsQuery = useQuery({
-        queryKey: ['api', `/api/apps?organization=${org}`],
+        queryKey: ['api', appsUrl],
         queryFn: async () => {
-            const response = await fetch(`/api/apps?organization=${encodeURIComponent(org)}`, {
+            const response = await fetch(appsUrl, {
                 headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
+                credentials: 'include',
             });
 
             if (!response.ok) {

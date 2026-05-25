@@ -1,4 +1,5 @@
 import { useUser } from '@/hooks/use-user';
+import { apiUrl } from '@/lib/api';
 import type { ReactElement } from 'react';
 import { useEffect } from 'react';
 
@@ -9,7 +10,7 @@ export function RequireAuth({ children }: { children: ReactElement }) {
     /* Start the login flow once we know the user is missing. */
     useEffect(() => {
         if (!isLoading && !user) {
-            window.location.href = '/auth/login/oidc';
+            window.location.href = apiUrl('/auth/login/oidc');
         }
     }, [isLoading, user]);
 

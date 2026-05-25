@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
+import { apiUrl } from '@/lib/api';
+
 type Theme = 'dark' | 'light' | 'system';
 
 type Accent =
@@ -115,12 +117,14 @@ function resetUserPreferences() {
 
 /** Hook that fetches the current user. */
 function useUserQuery() {
+    const userUrl = apiUrl('/api/me');
+
     return useQuery<User | null, Error>({
-        queryKey: ['api', '/auth/me'],
+        queryKey: ['api', userUrl],
         queryFn: async () => {
-            const response = await fetch('/auth/me', {
+            const response = await fetch(userUrl, {
                 headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
+                credentials: 'include',
             });
 
             if (!response.ok) {
@@ -152,16 +156,17 @@ export function useUser() {
 /** Updates the current user profile. */
 export function useUpdateUser() {
     const queryClient = useQueryClient();
+    const userUrl = apiUrl('/api/me');
 
     return useMutation({
         mutationFn: async (payload: UserUpdate) => {
-            const response = await fetch('/auth/me', {
+            const response = await fetch(userUrl, {
                 method: 'PATCH',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
-                credentials: 'same-origin',
+                credentials: 'include',
                 body: JSON.stringify(payload),
             });
 
@@ -172,7 +177,7 @@ export function useUpdateUser() {
             return (await response.json()) as User;
         },
         onSuccess: (user) => {
-            queryClient.setQueryData(['api', '/auth/me'], user);
+            queryClient.setQueryData(['api', userUrl], user);
         },
     });
 }
@@ -200,15 +205,17 @@ export function UserPreferencesSync() {
 /** Signs the current user out and clears cached session state. */
 export function useSignOut() {
     const queryClient = useQueryClient();
+    const userUrl = apiUrl('/api/me');
+    const logoutUrl = apiUrl('/auth/logout');
 
     return useMutation({
-        mutationFn: () => fetch('/auth/logout', { credentials: 'same-origin' }),
+        mutationFn: () => fetch(logoutUrl, { credentials: 'include' }),
         /**
          * Clears the cached user after a successful sign-out.
          */
         onSuccess: () => {
-            queryClient.setQueryData(['api', '/auth/me'], null);
-            queryClient.invalidateQueries({ queryKey: ['api', '/auth/me'] });
+            queryClient.setQueryData(['api', userUrl], null);
+            queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
         },
     });
 }

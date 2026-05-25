@@ -17,6 +17,8 @@ bun install     # Install dependendices
 bun run dev     # Run the frontend development mode
 ```
 
+Set `VITE_API_URL` to the deployed API origin before running the app.
+
 ## Pre-Commit
 
 ```bash

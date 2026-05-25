@@ -1,4 +1,5 @@
 import { useUser } from '@/hooks/use-user';
+import { apiUrl } from '@/lib/api';
 import { buttonVariants } from '@ui/button';
 import { Card, CardContent } from '@ui/card';
 import { Compass } from 'lucide-react';
@@ -12,7 +13,7 @@ export default function NotFound() {
     const { data: user } = useUser();
     const primaryLink = user ? '/orgs' : '/';
     const primaryLabel = user ? 'Back to orgs' : 'Back to home';
-    const secondaryLink = user ? '/' : '/auth/login/oidc';
+    const secondaryLink = user ? '/' : apiUrl('/auth/login/oidc');
     const secondaryLabel = user ? 'Back to home' : 'Go to login';
 
     return (
