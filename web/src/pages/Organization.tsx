@@ -15,7 +15,7 @@ export default function Organization() {
     const { pathname } = useLocation();
     const section = pathname.split('/')[2] ?? '';
     const [peopleSection, setPeopleSection] = useState<'members' | 'invitations'>('members');
-    const { people, isLoading, error } = useOrg(org);
+    const { people, apps, isLoading, error } = useOrg(org);
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -70,7 +70,7 @@ export default function Organization() {
                 Settings: `/${org}/settings`,
             }}
         >
-            <section className="space-y-8">
+            <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 {content}
 
                 {section === 'people' ? (
@@ -87,18 +87,19 @@ export default function Organization() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>User</TableHead>
+                                            <TableHead className="w-32">Role</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {isLoading ? (
                                             <TableRow>
-                                                <TableCell colSpan={1} className="py-8 text-sm text-muted-foreground">
+                                                <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
                                                     Loading people...
                                                 </TableCell>
                                             </TableRow>
                                         ) : error ? (
                                             <TableRow>
-                                                <TableCell colSpan={1} className="py-8 text-sm text-destructive">
+                                                <TableCell colSpan={2} className="py-8 text-sm text-destructive">
                                                     Failed to load people.
                                                 </TableCell>
                                             </TableRow>
@@ -126,11 +127,12 @@ export default function Organization() {
                                                             </div>
                                                         </div>
                                                     </TableCell>
+                                                    <TableCell className="text-sm text-muted-foreground">{user.role}</TableCell>
                                                 </TableRow>
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={1} className="py-8 text-sm text-muted-foreground">
+                                                <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
                                                     No people found.
                                                 </TableCell>
                                             </TableRow>
@@ -159,6 +161,45 @@ export default function Organization() {
                             </div>
                         </MenuSection>
                     </Menu>
+                ) : section === 'apps' ? (
+                    <div className="w-full overflow-hidden rounded-2xl border border-border bg-card/80">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>App</TableHead>
+                                    <TableHead className="w-32">Role</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
+                                            Loading apps...
+                                        </TableCell>
+                                    </TableRow>
+                                ) : error ? (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="py-8 text-sm text-destructive">
+                                            Failed to load apps.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : apps.length ? (
+                                    apps.map((app) => (
+                                        <TableRow key={app.name}>
+                                            <TableCell className="font-medium text-foreground">{app.name}</TableCell>
+                                            <TableCell className="text-sm text-muted-foreground">{app.role}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
+                                            No apps found.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 ) : null}
             </section>
         </Layout>

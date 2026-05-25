@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.db.models.users import User
 from src.db.models.association import user_organizations
+from src.models.roles import RoleName
 
 from .base import ServiceBase
 
@@ -44,6 +45,7 @@ class OrgsService(ServiceBase):
                     insert(user_organizations).values(
                         user_id=user.id,
                         organization_name=organization.name,
+                        role_name=RoleName.owner,
                     )
                 )
 

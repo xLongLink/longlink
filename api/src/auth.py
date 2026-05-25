@@ -16,10 +16,15 @@ oauth.register(
 async def authuser(request: Request) -> db.User:
     """Authenticate a user from session and return the User object."""
     userid = request.session.get("userid")
-    if not userid:
+    if userid is None:
         raise HTTPException(401, "Not authenticated")
 
-    user = await db.users.get(userid)
+    try:
+        user_id = int(userid)
+    except (TypeError, ValueError):
+        raise HTTPException(401, "Not authenticated") from None
+
+    user = await db.users.get(user_id)
     if not user:
         raise HTTPException(401, "Not authenticated")
     return user

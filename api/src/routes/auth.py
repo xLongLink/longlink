@@ -1,11 +1,13 @@
 import httpx
-import src.db as db
 from typing import cast
-from fastapi import Request, APIRouter, HTTPException
-from src.env import env
-from src.auth import oauth
-from fastapi.responses import RedirectResponse
+
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import RedirectResponse
+
+import src.db as db
+from src.auth import oauth
+from src.env import env
 
 router = APIRouter(prefix="/auth")
 
@@ -64,7 +66,7 @@ async def auth_oidc(request: Request):
         avatar=userinfo.get("picture"),
     )
 
-    request.session["userid"] = user.id
+    request.session["userid"] = str(user.id)
     return RedirectResponse(f"{env.URL.rstrip('/')}/organizations")
 
 

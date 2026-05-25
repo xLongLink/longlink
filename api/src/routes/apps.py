@@ -1,7 +1,11 @@
 import src.db as db
-from fastapi import Depends, Response, APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
+from sqlalchemy import and_, select
 from src.auth import authuser
+from src.db.models.association import user_apps, user_organizations
+from src.db.session import get_session
 from src.models.apps import AppCreate, AppName, AppResponse
+from src.models.roles import RoleName
 
 router = APIRouter(prefix="/api/apps")
 
@@ -13,8 +17,50 @@ async def list_apps(organization: str, user: db.User = Depends(authuser)) -> lis
     if all(org.name != organization for org in user.orgs):
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    apps = await db.apps.list(organization)
-    return [AppResponse(name=app.name, url=app.url).model_dump() for app in apps]
+    Session = await get_session()
+    async with Session() as session:
+        role_order = {role.value: index for index, role in enumerate(RoleName)}
+
+        org_role_statement = select(user_organizations.c.role_name).where(
+            user_organizations.c.user_id == user.id,
+            user_organizations.c.organization_name == organization,
+        )
+        org_role = (await session.execute(org_role_statement)).scalar_one_or_none()
+
+        if org_role is None:
+            raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+
+        org_role_value = org_role.value if hasattr(org_role, 'value') else org_role
+
+        # Resolve any app-specific overrides and fall back to the organization role.
+        statement = (
+            select(db.App, user_apps.c.role_name)
+            .outerjoin(
+                user_apps,
+                and_(
+                    db.App.organization == user_apps.c.organization_name,
+                    db.App.name == user_apps.c.app_name,
+                    user_apps.c.user_id == user.id,
+                ),
+            )
+            .where(db.App.organization == organization)
+        )
+        result = await session.execute(statement)
+
+        return [
+            # Clamp app access to the organization role so app-level grants never exceed org access.
+            AppResponse(
+                name=app.name,
+                url=app.url,
+                role=(
+                    role_name
+                    if role_name is not None
+                    and role_order[role_name.value if hasattr(role_name, 'value') else role_name] <= role_order[org_role_value]
+                    else org_role
+                ),
+            ).model_dump()
+            for app, role_name in result.all()
+        ]
 
 
 @router.post("")

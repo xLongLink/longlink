@@ -5,13 +5,13 @@ import { Link } from 'react-router';
 
 import { CodeBlock } from '@/components/CodeBlock';
 import { XmlWindow } from '@/components/XmlWindow';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
 import { Li } from '@/components/ui/li';
 import { Ol } from '@/components/ui/ol';
 import { P } from '@/components/ui/p';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Ul } from '@/components/ui/ul';
 
 type MarkdownDocProps = {
@@ -107,7 +107,6 @@ function MarkdownHeading({ children, level }: { children: ReactNode; level: 'h1'
     );
 }
 
-
 /** Renders internal docs links with client-side routing. */
 function MarkdownLink({ children, href }: { children: ReactNode; href?: string }) {
     if (!href) {
@@ -130,12 +129,12 @@ function MarkdownLink({ children, href }: { children: ReactNode; href?: string }
     );
 }
 
-
 /** Renders inline code or fenced code blocks. */
 function MarkdownCode({ children, className, inline }: MarkdownCodeProps) {
     const code = String(children).replace(/\n$/, '');
+    const isInline = inline ?? !className?.startsWith('language-');
 
-    if (inline) {
+    if (isInline) {
         return <Code className={className}>{code}</Code>;
     }
 
@@ -239,7 +238,6 @@ function splitMarkdownBlocks(content: string): MarkdownBlock[] {
     return blocks;
 }
 
-
 /** Extracts plain text from markdown heading children for slug generation. */
 function extractText(node: ReactNode): string {
     if (typeof node === 'string' || typeof node === 'number') {
@@ -256,7 +254,6 @@ function extractText(node: ReactNode): string {
 
     return '';
 }
-
 
 /** Converts heading text into a URL-safe slug. */
 function slugifyText(text: string): string {

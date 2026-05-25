@@ -1,40 +1,28 @@
-<div align="center">
+# LongLink Web
 
-# Frontend UI
+Frontend runtime, docs, and control-plane UI for LongLink.
 
-</div>
-
-<br/>
-
-# React + TypeScript + Vite + shadcn/ui
-
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
-
-## Development setup
+## Development
 
 ```bash
-bun install     # Install dependendices
-bun run dev     # Run the frontend development mode
+bun install
+bun run dev
 ```
 
 Set `VITE_API_URL` to the deployed API origin before running the app.
 
-## Pre-Commit
+## Scripts
 
 ```bash
-bun test        # Run the tests cases
-bun format      # Format the code
+bun run build:api
+bun run build:sdk
+bun run lint
+bun run test
+bun run format
 ```
 
-<br />
+## Notes
 
----
-
-<div align="center">
-LongLink 2026
-
-[License](../LICENSE) &nbsp; - &nbsp; [Contributing](../CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.ch)
-
-</div>
-
----
+- `build:api` builds the control-plane bundle.
+- `build:sdk` builds the SDK bundle.
+- The app uses shadcn/ui primitives and the shared XML runtime under `src/xml/`.

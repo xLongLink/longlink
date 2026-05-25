@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, field_validator
+from src.models.roles import RoleName
 
 
 def normalize_app_name(value: str) -> str:
@@ -26,3 +27,4 @@ class AppCreate(BaseModel):
 class AppResponse(BaseModel):
     name: str
     url: str
+    role: RoleName | None = None

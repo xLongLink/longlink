@@ -14,88 +14,53 @@ import xmlFieldMarkdown from '../../docs/xml/field.md?raw';
 import xmlLayoutMarkdown from '../../docs/xml/layout.md?raw';
 import xmlMarkdown from '../../docs/xml/index.md?raw';
 
-/** Renders the LongLink docs introduction page. */
-export function DocsOverviewPage() {
-    return <MarkdownDoc content={markdown} />;
+/** Creates a docs page component for a markdown source. */
+function createMarkdownPage(content: string) {
+    return function MarkdownPage() {
+        return <MarkdownDoc content={content} />;
+    };
 }
 
-
-export default DocsOverviewPage;
-
+/** Renders the LongLink docs introduction page. */
+export const DocsOverviewPage = createMarkdownPage(markdown);
 
 /** Renders the control plane documentation page. */
-export function ControlPlanePage() {
-    return <MarkdownDoc content={controlPlaneMarkdown} />;
-}
-
+export const ControlPlanePage = createMarkdownPage(controlPlaneMarkdown);
 
 /** Renders the self-hosted control plane documentation page. */
-export function SelfHostedControlPlanePage() {
-    return <MarkdownDoc content={selfHostedControlPlaneMarkdown} />;
-}
-
+export const SelfHostedControlPlanePage = createMarkdownPage(selfHostedControlPlaneMarkdown);
 
 /** Renders the SDK overview page. */
-export function SdkOverviewPage() {
-    return <MarkdownDoc content={sdkMarkdown} />;
-}
-
+export const SdkOverviewPage = createMarkdownPage(sdkMarkdown);
 
 /** Renders the SDK environments documentation page. */
-export function SdkEnvironmentsPage() {
-    return <MarkdownDoc content={sdkEnvironmentsMarkdown} />;
-}
-
+export const SdkEnvironmentsPage = createMarkdownPage(sdkEnvironmentsMarkdown);
 
 /** Renders the SDK routes documentation page. */
-export function SdkRoutesPage() {
-    return <MarkdownDoc content={sdkRoutesMarkdown} />;
-}
-
+export const SdkRoutesPage = createMarkdownPage(sdkRoutesMarkdown);
 
 /** Renders the SDK storage documentation page. */
-export function SdkStoragePage() {
-    return <MarkdownDoc content={sdkStorageMarkdown} />;
-}
-
+export const SdkStoragePage = createMarkdownPage(sdkStorageMarkdown);
 
 /** Renders the SDK database documentation page. */
-export function SdkDatabasePage() {
-    return <MarkdownDoc content={sdkDatabaseMarkdown} />;
-}
-
+export const SdkDatabasePage = createMarkdownPage(sdkDatabaseMarkdown);
 
 /** Renders the SDK testing documentation page. */
-export function SdkTestingPage() {
-    return <MarkdownDoc content={sdkTestingMarkdown} />;
-}
-
+export const SdkTestingPage = createMarkdownPage(sdkTestingMarkdown);
 
 /** Renders the SDK building documentation page. */
-export function SdkBuildingPage() {
-    return <MarkdownDoc content={sdkBuildingMarkdown} />;
-}
-
+export const SdkBuildingPage = createMarkdownPage(sdkBuildingMarkdown);
 
 /** Renders the XML pages overview. */
-export function XmlOverviewPage() {
-    return <MarkdownDoc content={xmlMarkdown} />;
-}
-
+export const XmlOverviewPage = createMarkdownPage(xmlMarkdown);
 
 /** Renders the XML components documentation page. */
-export function XmlComponentsPage() {
-    return <MarkdownDoc content={xmlComponentsMarkdown} />;
-}
-
+export const XmlComponentsPage = createMarkdownPage(xmlComponentsMarkdown);
 
 /** Renders the XML field documentation page. */
-export function XmlFieldPage() {
-    return <MarkdownDoc content={xmlFieldMarkdown} />;
-}
-
+export const XmlFieldPage = createMarkdownPage(xmlFieldMarkdown);
 
 /** Renders the XML layout documentation page. */
-export function XmlLayoutPage() {
-    return <MarkdownDoc content={xmlLayoutMarkdown} />;
-}
+export const XmlLayoutPage = createMarkdownPage(xmlLayoutMarkdown);
+
+export default DocsOverviewPage;

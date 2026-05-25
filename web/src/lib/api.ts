@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = 'http://localhost:8000';
+const DEFAULT_API_URL = '';
 
 /** Resolves an API path against the configured API origin. */
 export function apiUrl(path: string): string {

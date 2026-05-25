@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiUrl } from '@/lib/api';
+import type { Role } from '@/lib/roles';
 
 type Org = {
     name: string;
@@ -10,17 +11,20 @@ type Org = {
 type OrgApp = {
     name: string;
     url: string;
+    role: Role;
 };
 
 type OrgCreateResponse = {
     org: {
         name: string;
+        role: Role;
     };
 };
 
 type CachedUser = {
     orgs?: {
         name: string;
+        role: Role;
     }[];
 };
 
@@ -29,6 +33,7 @@ type OrgPerson = {
     name: string;
     email: string;
     avatar?: string | null;
+    role: Role;
 };
 
 type UseOrgResult = {

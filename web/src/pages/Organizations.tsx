@@ -42,19 +42,20 @@ export default function Organizations() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Name</TableHead>
+                                <TableHead className="w-32">Role</TableHead>
                                 <TableHead className="w-32">Open</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
+                                    <TableCell colSpan={3} className="py-8 text-sm text-muted-foreground">
                                         Loading orgs...
                                     </TableCell>
                                 </TableRow>
                             ) : error ? (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-destructive">
+                                    <TableCell colSpan={3} className="py-8 text-sm text-destructive">
                                         Failed to load orgs.
                                     </TableCell>
                                 </TableRow>
@@ -64,6 +65,7 @@ export default function Organizations() {
                                         <TableCell className="font-medium text-foreground">
                                             {organization.name}
                                         </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">{organization.role}</TableCell>
                                         <TableCell>
                                             <Link
                                                 to={`/${organization.name}`}
@@ -76,7 +78,7 @@ export default function Organizations() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
+                                    <TableCell colSpan={3} className="py-8 text-sm text-muted-foreground">
                                         No orgs found.
                                     </TableCell>
                                 </TableRow>

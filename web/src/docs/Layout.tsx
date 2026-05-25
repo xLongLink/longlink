@@ -9,7 +9,6 @@ import {
     BreadcrumbSeparator,
     Breadcrumb as UIBreadcrumb,
 } from '@/components/ui/breadcrumb';
-import { Li } from '@/components/ui/li';
 import {
     Sidebar,
     SidebarContent,
@@ -25,7 +24,6 @@ import {
     SidebarSeparator,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Ul } from '@/components/ui/ul';
 import { Wordmark } from '@/components/Wordmark';
 
 import { DOC_GROUPS } from './nav';
@@ -34,7 +32,6 @@ import type { DocItem } from './types';
 type PageTocItem = {
     href: string;
     label: string;
-    level: 1 | 2 | 3;
 };
 
 /** Renders the docs shell with sidebar navigation and routed content. */
@@ -42,6 +39,7 @@ export default function DocsLayout() {
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
+    const [activePageTocHref, setActivePageTocHref] = useState('');
     // Prefer the longest matching path so nested pages do not resolve to their section overview.
     const currentItem = DOC_GROUPS.flatMap((group) => group.items).reduce<DocItem | undefined>((match, item) => {
         const isPathMatch = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
@@ -62,15 +60,17 @@ export default function DocsLayout() {
 
     useEffect(() => {
         const content = contentRef.current;
+        let removeListeners = () => {};
 
         if (!content) {
             setPageToc([]);
+            setActivePageTocHref('');
             return;
         }
 
         // Wait for the routed docs content to commit before reading generated heading ids.
         const frame = window.requestAnimationFrame(() => {
-            const nextPageToc = Array.from(content.querySelectorAll<HTMLHeadingElement>('h1[id], h2[id], h3[id]'))
+            const headings = Array.from(content.querySelectorAll<HTMLHeadingElement>('h2[id]'))
                 .filter((heading) => heading.id)
                 .map((heading) => {
                     const label = Array.from(heading.childNodes)
@@ -82,15 +82,45 @@ export default function DocsLayout() {
                     return {
                         href: `#${heading.id}`,
                         label,
-                        level: Number(heading.tagName.slice(1)) as 1 | 2 | 3,
                     };
                 })
                 .filter((item) => item.label);
 
-            setPageToc(nextPageToc);
+            setPageToc(headings);
+
+            const updateActivePageTocHref = () => {
+                // Mark the current section from the top-most visible heading.
+                const nextActiveHref =
+                    headings
+                        .map((item) => ({
+                            href: item.href,
+                            top:
+                                document.querySelector(item.href)?.getBoundingClientRect().top ??
+                                Number.POSITIVE_INFINITY,
+                        }))
+                        .filter((item) => item.top <= 120)
+                        .at(-1)?.href ??
+                    headings[0]?.href ??
+                    '';
+
+                setActivePageTocHref(nextActiveHref);
+            };
+
+            updateActivePageTocHref();
+
+            window.addEventListener('scroll', updateActivePageTocHref, { passive: true });
+            window.addEventListener('resize', updateActivePageTocHref);
+
+            removeListeners = () => {
+                window.removeEventListener('scroll', updateActivePageTocHref);
+                window.removeEventListener('resize', updateActivePageTocHref);
+            };
         });
 
-        return () => window.cancelAnimationFrame(frame);
+        return () => {
+            window.cancelAnimationFrame(frame);
+            removeListeners();
+        };
     }, [location.pathname]);
 
     return (
@@ -212,23 +242,34 @@ export default function DocsLayout() {
                         </div>
                     </div>
 
-                    <aside className="hidden px-5 pt-4 pb-8 lg:sticky lg:top-[4.5rem] lg:block lg:h-[calc(100vh-5rem)] lg:overflow-y-auto lg:pt-6">
+                    <aside className="hidden px-5 pt-4 pb-8 lg:fixed lg:top-[4.5rem] lg:right-2 lg:block lg:h-[calc(100vh-5rem)] lg:w-56 lg:overflow-y-auto lg:pt-6">
                         <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
                             On this page
                         </div>
-                        <nav aria-label="On this page" className="mt-4">
-                            <Ul className="space-y-2 text-sm">
+                        <nav aria-label="On this page" className="relative mt-4 pl-4">
+                            <div className="pointer-events-none absolute top-1 bottom-1 left-[0.55rem] w-px bg-border" />
+                            <div className="space-y-2 text-sm">
                                 {pageToc.map((item) => (
-                                    <Li key={item.href} className={item.level === 3 ? 'pl-4' : ''}>
+                                    <div key={item.href} className="relative pl-4">
+                                        <span
+                                            aria-hidden="true"
+                                            className={`absolute left-[-0.4rem] top-2 h-2.5 w-2.5 rounded-full border-2 transition-colors ${
+                                                activePageTocHref === item.href
+                                                    ? 'border-primary bg-primary'
+                                                    : 'border-border bg-background'
+                                            }`}
+                                        />
                                         <A
                                             href={item.href}
-                                            className="block text-muted-foreground transition-colors hover:text-foreground"
+                                            className={`block text-muted-foreground transition-colors hover:text-foreground ${
+                                                activePageTocHref === item.href ? 'text-foreground' : ''
+                                            }`}
                                         >
                                             {item.label}
                                         </A>
-                                    </Li>
+                                    </div>
                                 ))}
-                            </Ul>
+                            </div>
                         </nav>
                     </aside>
                 </div>

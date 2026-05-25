@@ -32,6 +32,10 @@ export default defineConfig(({ mode }) => {
         server: {
             host: '0.0.0.0',
             port: devServerPort,
+            proxy: {
+                '/api': 'http://localhost:8000',
+                '/auth': 'http://localhost:8000',
+            },
         },
     };
 });

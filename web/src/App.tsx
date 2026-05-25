@@ -19,7 +19,6 @@ import {
     XmlLayoutPage,
     XmlOverviewPage,
 } from './docs';
-import AuthOidc from './pages/AuthOidc';
 import Home from './pages/Home';
 import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
@@ -69,7 +68,6 @@ function getRoutes() {
         { path: 'impressum', element: <Impressum /> },
         { path: 'terms', element: <Terms /> },
         { path: 'privacy', element: <Privacy /> },
-        { path: 'auth/oidc', element: <AuthOidc /> },
         {
             path: 'organizations',
             element: (
@@ -88,30 +86,6 @@ function getRoutes() {
         },
         {
             path: ':org/*',
-            element: (
-                <RequireAuth>
-                    <Organization />
-                </RequireAuth>
-            ),
-        },
-        {
-            path: ':org/apps/*',
-            element: (
-                <RequireAuth>
-                    <Organization />
-                </RequireAuth>
-            ),
-        },
-        {
-            path: ':org/people/*',
-            element: (
-                <RequireAuth>
-                    <Organization />
-                </RequireAuth>
-            ),
-        },
-        {
-            path: ':org/settings/*',
             element: (
                 <RequireAuth>
                     <Organization />

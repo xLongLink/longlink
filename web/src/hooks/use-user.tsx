@@ -11,6 +11,7 @@ import {
     type Radius,
     type Theme,
 } from '@/lib/theme';
+import type { Role } from '@/lib/roles';
 
 type UserUpdate = Partial<Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
 
@@ -27,6 +28,7 @@ export type User = {
     date_creation?: string;
     orgs?: {
         name: string;
+        role: Role;
     }[];
 };
 
@@ -121,6 +123,9 @@ function useUserQuery() {
 
             return normalizeUser((await response.json()) as UserResponse);
         },
+        // Auth state must refresh immediately after login/logout redirects.
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         retry: false,
     });
 }
@@ -177,6 +182,7 @@ export function useUser() {
         radius: resolvedUser.radius,
         language: resolvedUser.language,
         isLoading: context.isLoading,
+        isFetching: context.isFetching,
         error: context.error ?? null,
         signOut,
     };

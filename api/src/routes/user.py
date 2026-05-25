@@ -1,16 +1,32 @@
 import src.db as db
+from sqlalchemy import select
 from fastapi import Depends, APIRouter
 from src.auth import authuser
+from src.db.session import get_session
 from src.models import UserUpdate
+from src.db.models.association import user_organizations
 
 router = APIRouter(prefix="/api/me")
 
 
-def serialize_user(user: db.User) -> dict:
+async def serialize_user(user: db.User) -> dict:
     """Return the authenticated user payload with memberships included."""
 
     payload = user.model_dump()
-    payload["orgs"] = [org.model_dump() for org in user.orgs]
+
+    # Load organization roles from the association table so the API can expose the access level.
+    Session = await get_session()
+    async with Session() as session:
+        statement = select(
+            user_organizations.c.organization_name,
+            user_organizations.c.role_name,
+        ).where(user_organizations.c.user_id == user.id)
+        result = await session.execute(statement)
+        payload["orgs"] = [
+            {"name": organization_name, "role": role_name}
+            for organization_name, role_name in result.all()
+        ]
+
     return payload
 
 
@@ -18,7 +34,7 @@ def serialize_user(user: db.User) -> dict:
 async def get_me(user: db.User = Depends(authuser)) -> dict:
     """Return the authenticated user's details."""
 
-    return serialize_user(user)
+    return await serialize_user(user)
 
 
 @router.patch("")
@@ -27,7 +43,7 @@ async def patch_me(payload: UserUpdate, user: db.User = Depends(authuser)):
 
     params = payload.model_dump(exclude_unset=True)
     if not params:
-        return serialize_user(user)
+        return await serialize_user(user)
 
     updated_user = await db.users.update(user.id, **params)
-    return serialize_user(updated_user) if updated_user is not None else serialize_user(user)
+    return await serialize_user(updated_user) if updated_user is not None else await serialize_user(user)

@@ -47,8 +47,10 @@ app.add_middleware(
 app.add_middleware(
     SessionMiddleware,
     secret_key=env.SESSION_KEY,
-    same_site="lax",
-    https_only=False,
+    session_cookie="longlink_session",
+    # Allow the web app to call the API after a cross-origin OIDC round-trip.
+    same_site="none" if env.URL.startswith("https://") else "lax",
+    https_only=env.URL.startswith("https://"),
 )
 
 

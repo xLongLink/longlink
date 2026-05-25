@@ -226,7 +226,9 @@ export default function Settings() {
                                             key={organization.name}
                                             className="flex items-center justify-between gap-3"
                                         >
-                                            <span className="text-sm text-foreground">{organization.name}</span>
+                                            <span className="text-sm text-foreground">
+                                                {organization.name} <span className="text-muted-foreground">({organization.role})</span>
+                                            </span>
                                             <Link to="/organizations" className="text-sm text-accent hover:underline">
                                                 Manage
                                             </Link>
