@@ -199,15 +199,21 @@ export default function DocsLayout() {
                 </div>
             </SidebarInset>
 
-            <div className="relative z-0 w-full px-1 pb-1 pt-[5.75rem] lg:px-2 lg:pb-2 lg:pt-[6rem]">
+            <div className="pointer-events-none fixed top-[4.25rem] right-1 bottom-1 left-1 z-0 rounded-b-lg bg-card/80 backdrop-blur-sm transition-[left] lg:top-[4.5rem] lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed top-0 right-1 left-1 z-[15] h-[4.25rem] bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-[4.5rem] lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed right-1 bottom-0 left-1 z-[15] h-1 bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-2 lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed top-[4.25rem] bottom-0 left-0 z-[15] w-1 bg-background lg:top-[4.5rem] lg:left-[var(--sidebar-width)] lg:w-2 lg:peer-data-[state=collapsed]:left-0" />
+            <div className="pointer-events-none fixed top-[4.25rem] right-0 bottom-0 z-[15] w-1 bg-background lg:top-[4.5rem] lg:w-2" />
+
+            <div className="relative z-10 w-full px-1 pb-1 pt-[4.25rem] lg:px-2 lg:pb-2 lg:pt-[4.5rem]">
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
-                    <div ref={contentRef} className="bg-card/80 px-4 py-8 backdrop-blur-sm lg:px-6 lg:py-10">
+                    <div ref={contentRef} className="px-4 pt-4 pb-8 lg:px-6 lg:pt-6 lg:pb-10">
                         <div className="mx-auto w-full max-w-[56rem]">
                             <Outlet />
                         </div>
                     </div>
 
-                    <aside className="hidden bg-card/80 px-5 py-8 backdrop-blur-sm lg:fixed lg:top-[6rem] lg:right-2 lg:bottom-2 lg:block lg:w-56 lg:overflow-y-auto">
+                    <aside className="hidden px-5 pt-4 pb-8 lg:sticky lg:top-[4.5rem] lg:block lg:h-[calc(100vh-5rem)] lg:overflow-y-auto lg:pt-6">
                         <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
                             On this page
                         </div>
