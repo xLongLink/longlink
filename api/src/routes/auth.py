@@ -57,14 +57,14 @@ async def auth_oidc(request: Request):
         or f"{given_name} {family_name}"
     )
 
-    user = await db.users.create_or_update_oidc_user(
+    await db.users.upsert(
         oidc_subject=subject,
         email=email,
         name=name,
         avatar=userinfo.get("picture"),
     )
 
-    request.session["userid"] = str(user.id)
+    request.session["oidc_subject"] = subject
     return RedirectResponse(f"{env.URL.rstrip('/')}/organizations")
 
 

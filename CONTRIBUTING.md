@@ -7,7 +7,6 @@
 ```
 longlink/
 ├── api/           # Control plane API and XML page sources
-├── docs/          # Platform, API, SDK, and XML documentation
 ├── sdk/           # Python SDK for application development
 └── web/           # Frontend runtime and shared XML renderer
 ```
@@ -36,12 +35,6 @@ The control plane owns authentication, authorization, orchestration, storage, an
 The web package owns the shared frontend runtime and the XML rendering path used by both the control plane and SDK bundles.
 
 The SDK owns application-facing Python helpers, CLI commands, database helpers, and packaged XML schema assets.
-
-### Documentation
-
-```bash
-make docs # Run the documentation site
-```
 
 ## Release
 

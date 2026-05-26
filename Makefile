@@ -1,9 +1,8 @@
-.PHONY: up down format build api web docs install tests
+.PHONY: up down format build api web install tests
 
 
 install:
 	bun i --cwd web
-	bun i --cwd docs
 	cd api && uv sync --extra dev
 	cd sdk && uv sync --extra dev
 
@@ -50,9 +49,3 @@ api:
 web: 
 	bun i --cwd web --extra dev
 	bun run --cwd web dev --host 0.0.0.0 --port 5173
-
-
-docs:
-	bun i --cwd docs
-	bun run --cwd docs prebuild
-	bun run --cwd docs dev

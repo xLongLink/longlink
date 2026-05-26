@@ -35,6 +35,11 @@ web/
 ```
 
 
+## Guidelines
+
+- Use the `Toaster` for the user notifications
+
+
 ## Theme
 
 ```bash

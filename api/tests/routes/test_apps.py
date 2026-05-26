@@ -37,13 +37,17 @@ async def test_list_apps_returns_app_membership_role(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "name": "dashboard",
-            "url": "/api/apps/dashboard",
-            "role": "write",
-        }
-    ]
+    assert response.json() == {
+        "success": True,
+        "message": "Apps fetched",
+        "data": [
+            {
+                "name": "dashboard",
+                "url": "/api/apps/dashboard",
+                "role": "write",
+            }
+        ],
+    }
 
 
 async def test_list_apps_returns_null_role_without_app_membership(
@@ -63,13 +67,17 @@ async def test_list_apps_returns_null_role_without_app_membership(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "name": "dashboard",
-            "url": "/api/apps/dashboard",
-            "role": None,
-        }
-    ]
+    assert response.json() == {
+        "success": True,
+        "message": "Apps fetched",
+        "data": [
+            {
+                "name": "dashboard",
+                "url": "/api/apps/dashboard",
+                "role": None,
+            }
+        ],
+    }
 
 
 async def test_list_apps_returns_404_for_non_member(
@@ -90,3 +98,33 @@ async def test_list_apps_returns_404_for_non_member(
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Org 'acme' not found"}
+
+
+async def test_create_app_returns_envelope(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Create an app and return the shared success envelope."""
+
+    # Arrange
+    user = users[0]
+    await db.orgs.create("acme", user.id)
+    client = clients[0]
+
+    # Act
+    response = client.post(
+        "/api/apps?organization=acme",
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "success": True,
+        "message": "App created",
+        "data": {
+            "name": "dashboard",
+            "url": "/api/apps/dashboard",
+            "role": None,
+        },
+    }

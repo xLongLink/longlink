@@ -1,8 +1,7 @@
 from sqlalchemy import insert, select
-from src.db.models import Org
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.db.models.users import User
+from src.db.models import Org, User
 from src.db.models.association import user_organizations
 
 from .base import ServiceBase
@@ -25,6 +24,18 @@ class OrgsService(ServiceBase):
             statement = select(Org).options(selectinload(Org.users)).where(Org.name == name)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
+
+    async def members(self, name: str) -> list[tuple[User, str | None]]:
+        """Return the members and roles for one org."""
+
+        async with self.session() as session:
+            # Read the role directly from the membership table so the route stays declarative.
+            statement = select(User, user_organizations.c.role_name).join(
+                user_organizations,
+                User.id == user_organizations.c.user_id,
+            ).where(user_organizations.c.organization_name == name)
+            result = await session.execute(statement)
+            return result.all()
 
     async def create(self, name: str, user_id: int | None = None) -> Org:
         """Create an org."""

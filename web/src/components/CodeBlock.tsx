@@ -2,6 +2,7 @@ import { CheckIcon, ClipboardCopyIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -19,11 +20,13 @@ export function CodeBlock({ children, className, language = 'text' }: CodeBlockP
 
     // Trim shared JSX indentation without changing the actual code content.
     const code = children.trim();
+    const isSingleLine = code.split('\n').length === 1;
 
     // Copy the visible snippet to the clipboard and briefly confirm success.
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(code);
+            toast.success('Copied to clipboard');
             setIsCopied(true);
 
             if (resetCopyTimer.current != null) {
@@ -41,7 +44,7 @@ export function CodeBlock({ children, className, language = 'text' }: CodeBlockP
     return (
         <div
             data-slot="code-block"
-            className={cn('overflow-hidden rounded-lg border border-border bg-muted/30', className)}
+            className={cn('w-full max-w-2xl overflow-x-auto rounded-lg border border-border bg-muted/30', className)}
         >
             <div className="relative">
                 <Button
@@ -51,9 +54,12 @@ export function CodeBlock({ children, className, language = 'text' }: CodeBlockP
                     aria-label={isCopied ? 'Copied code' : 'Copy code'}
                     title={isCopied ? 'Copied' : 'Copy'}
                     onClick={handleCopy}
-                    className="absolute right-2 top-2 z-10 bg-transparent text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground"
+                    className={cn(
+                        'absolute right-2 z-10 cursor-pointer bg-transparent text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground',
+                        isSingleLine ? 'top-1/2 -translate-y-1/2' : 'top-2'
+                    )}
                 >
-                    {isCopied ? <CheckIcon /> : <ClipboardCopyIcon />}
+                    {isCopied ? <CheckIcon className="size-4" /> : <ClipboardCopyIcon className="size-4" />}
                 </Button>
 
                 <SyntaxHighlighter
@@ -61,7 +67,7 @@ export function CodeBlock({ children, className, language = 'text' }: CodeBlockP
                     style={oneDark}
                     customStyle={{
                         margin: 0,
-                        padding: '1rem',
+                        padding: '0.75rem',
                         background: 'transparent',
                         fontSize: '0.875rem',
                         lineHeight: '1.5rem',

@@ -1,20 +1,33 @@
 from __future__ import annotations
 
-from sqlalchemy import select
-from src.db.models import App
+from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
+from src.db.models import App
+from src.db.models.association import user_apps
 
 from .base import ServiceBase
 
 
 class AppsService(ServiceBase):
-    async def list(self, organization: str) -> list[App]:
-        '''Return all registered apps for one organization.'''
+    async def list(self, organization: str, user_id: int) -> list[tuple[App, str | None]]:
+        '''Return all registered apps for one organization with membership roles.'''
 
         async with self.session() as session:
-            statement = select(App).where(App.organization == organization)
+            # Join the membership row so the caller can render the app role in one query.
+            statement = (
+                select(App, user_apps.c.role_name)
+                .outerjoin(
+                    user_apps,
+                    and_(
+                        App.organization == user_apps.c.organization_name,
+                        App.name == user_apps.c.app_name,
+                        user_apps.c.user_id == user_id,
+                    ),
+                )
+                .where(App.organization == organization)
+            )
             result = await session.execute(statement)
-            return list(result.scalars().all())
+            return result.all()
 
     async def get(self, organization: str, name: str) -> App | None:
         '''Return a registered app by organization and name.'''
@@ -37,13 +50,19 @@ class AppsService(ServiceBase):
         '''Add a new app to the database for one organization.'''
 
         async with self.session() as session:
-            statement = select(App).where(
+            # Check the primary-key conflict first so the API can report a clear message.
+            name_statement = select(App).where(
                 App.organization == organization,
-                App.url == url,
+                App.name == name,
             )
-            result = await session.execute(statement)
-            existing_app = result.scalar_one_or_none()
-            if existing_app is not None:
+            name_result = await session.execute(name_statement)
+            if name_result.scalar_one_or_none() is not None:
+                raise ValueError('App name already exists')
+
+            # Keep the URL uniqueness check in the service so the route stays thin.
+            url_statement = select(App).where(App.url == url)
+            url_result = await session.execute(url_statement)
+            if url_result.scalar_one_or_none() is not None:
                 raise ValueError('App URL already exists')
 
             app_kwargs: dict[str, str] = {
@@ -59,11 +78,11 @@ class AppsService(ServiceBase):
             await session.refresh(app)
             return app
 
-    async def delete(self, organization: str, name: str) -> App | None:
-        '''Delete an app by organization and name and return it when found.'''
+    async def delete(self, organization: str, name: str) -> App:
+        '''Delete an app by organization and name and return it.'''
 
         async with self.session() as session:
-            # Load the app first so callers can still access its identifying fields.
+            # Load the app first so the delete path can raise a single not-found error.
             statement = select(App).where(
                 App.organization == organization,
                 App.name == name,
@@ -71,7 +90,7 @@ class AppsService(ServiceBase):
             result = await session.execute(statement)
             app = result.scalar_one_or_none()
             if app is None:
-                return None
+                raise ValueError('App not found')
 
             await session.delete(app)
             try:

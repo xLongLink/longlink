@@ -1,61 +1,44 @@
 import src.db as db
-from sqlalchemy import select
 from fastapi import Depends, APIRouter
 from src.auth import authuser
-from src.db.session import get_session
-from src.models import UserUpdate
-from src.db.models.association import user_apps, user_organizations
+from src.models import (
+    APIResponse,
+    UserProfile,
+    UserUpdate,
+)
 
 router = APIRouter(prefix="/api/me")
 
 
-async def serialize_user(user: db.User) -> dict:
+async def serialize_user(user: db.User) -> APIResponse[UserProfile]:
     """Return the authenticated user payload with memberships included."""
 
-    payload = user.model_dump()
+    profile = await db.users.profile(user.id)
+    if profile is None:
+        profile = UserProfile.model_validate({**user.model_dump(), "orgs": []})
 
-    Session = await get_session()
-    async with Session() as session:
-        # Load organization memberships directly from the association table.
-        statement = select(
-            user_organizations.c.organization_name,
-            user_organizations.c.role_name,
-        ).where(user_organizations.c.user_id == user.id)
-        result = await session.execute(statement)
-        payload["orgs"] = [
-            {"name": organization_name, "role": role_name}
-            for organization_name, role_name in result.all()
-        ]
-
-        # Load app memberships separately so app roles stay independent from org roles.
-        statement = select(
-            user_apps.c.organization_name,
-            user_apps.c.app_name,
-            user_apps.c.role_name,
-        ).where(user_apps.c.user_id == user.id)
-        result = await session.execute(statement)
-        payload["apps"] = [
-            {"organization": organization_name, "name": app_name, "role": role_name}
-            for organization_name, app_name, role_name in result.all()
-        ]
-
-    return payload
+    return APIResponse(
+        success=True,
+        message="User profile fetched",
+        data=profile,
+    )
 
 
 @router.get("")
-async def get_me(user: db.User = Depends(authuser)) -> dict:
+async def get_me(user: db.User = Depends(authuser)) -> APIResponse[UserProfile]:
     """Return the authenticated user's details."""
 
     return await serialize_user(user)
 
 
 @router.patch("")
-async def patch_me(payload: UserUpdate, user: db.User = Depends(authuser)):
+async def patch_me(payload: UserUpdate, user: db.User = Depends(authuser)) -> APIResponse[UserProfile]:
     """Update the authenticated user's details."""
 
     params = payload.model_dump(exclude_unset=True)
-    if not params:
-        return await serialize_user(user)
+    updated_user = user if not params else await db.users.update(user.id, **params)
+    profile = await db.users.profile(updated_user.id if updated_user is not None else user.id)
+    if profile is None:
+        profile = UserProfile.model_validate({**(updated_user or user).model_dump(), "orgs": []})
 
-    updated_user = await db.users.update(user.id, **params)
-    return await serialize_user(updated_user) if updated_user is not None else await serialize_user(user)
+    return APIResponse(success=True, message="User profile updated", data=profile)

@@ -44,7 +44,7 @@ export default function MarkdownDoc({ content }: MarkdownDocProps) {
     const blocks = splitMarkdownBlocks(content);
 
     return (
-        <article className="space-y-8">
+        <article className="mx-auto w-full max-w-2xl space-y-6">
             {blocks.map((block, index) => {
                 if (block.kind === 'tabs') {
                     return <MarkdownTabs key={`tabs-${index}`} tabs={block.tabs} />;
@@ -65,9 +65,9 @@ const markdownComponents: Components = {
     h2: ({ children }) => <MarkdownHeading level="h2">{children}</MarkdownHeading>,
     h3: ({ children }) => <MarkdownHeading level="h3">{children}</MarkdownHeading>,
     h4: ({ children }) => <MarkdownHeading level="h4">{children}</MarkdownHeading>,
-    p: ({ children }) => <P className="max-w-3xl text-muted-foreground">{children}</P>,
-    ul: ({ children }) => <Ul className="max-w-3xl text-muted-foreground">{children}</Ul>,
-    ol: ({ children }) => <Ol className="max-w-3xl text-muted-foreground">{children}</Ol>,
+    p: ({ children }) => <P className="max-w-2xl text-muted-foreground">{children}</P>,
+    ul: ({ children }) => <Ul className="max-w-2xl text-muted-foreground">{children}</Ul>,
+    ol: ({ children }) => <Ol className="max-w-2xl text-muted-foreground">{children}</Ol>,
     li: ({ children }) => <Li>{children}</Li>,
     a: ({ href, children }) => <MarkdownLink href={href}>{children}</MarkdownLink>,
     code: (props) => <MarkdownCode {...(props as MarkdownCodeProps)} />,
@@ -78,7 +78,7 @@ function MarkdownTabs({ tabs }: { tabs: MarkdownTab[] }) {
     const defaultValue = tabs[0]?.label ?? '';
 
     return (
-        <Tabs defaultValue={defaultValue} className="!gap-4">
+        <Tabs defaultValue={defaultValue} className="!gap-3">
             <TabsList variant="line">
                 {tabs.map((tab) => (
                     <TabsTrigger key={tab.label} value={tab.label}>
@@ -87,7 +87,7 @@ function MarkdownTabs({ tabs }: { tabs: MarkdownTab[] }) {
                 ))}
             </TabsList>
             {tabs.map((tab) => (
-                <TabsContent key={tab.label} value={tab.label} className="!pt-1">
+                <TabsContent key={tab.label} value={tab.label} className="!pt-0">
                     <ReactMarkdown components={markdownComponents}>{tab.content}</ReactMarkdown>
                 </TabsContent>
             ))}

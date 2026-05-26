@@ -7,7 +7,7 @@ from src.routes.auth import logout
 
 
 async def test_authuser_returns_user_from_session(users: tuple[User, User, User]) -> None:
-    """Return the persisted user when the session contains a valid user id."""
+    """Return the persisted user when the session contains a valid OIDC subject."""
 
     # Arrange
     user = users[0]
@@ -15,7 +15,7 @@ async def test_authuser_returns_user_from_session(users: tuple[User, User, User]
     class RequestStub:
         """Minimal request stub for session-based auth tests."""
 
-        session = {"userid": str(user.id)}
+        session = {"oidc_subject": str(user.oidc_subject)}
 
     request = RequestStub()
 
@@ -29,7 +29,7 @@ async def test_authuser_returns_user_from_session(users: tuple[User, User, User]
 
 
 async def test_authuser_rejects_missing_session_user() -> None:
-    """Reject requests without a session user id."""
+    """Reject requests without a session OIDC subject."""
 
     # Arrange
 
@@ -56,7 +56,7 @@ async def test_logout_clears_session_and_redirects_home() -> None:
     class RequestStub:
         """Minimal request stub for session-based logout tests."""
 
-        session = {"userid": "123"}
+        session = {"oidc_subject": "oidc-subject"}
 
     request = RequestStub()
 

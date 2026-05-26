@@ -1,6 +1,8 @@
 from enum import Enum
 from pydantic import EmailStr, BaseModel
 
+from src.models.roles import RoleName
+
 
 class Theme(str, Enum):
     """Supported user theme preferences."""
@@ -76,3 +78,25 @@ class UserUpdate(BaseModel):
     accent: Accent | None = None
     radius: Radius | None = None
     language: Language | None = None
+
+
+class UserOrgMembership(BaseModel):
+    """Represent one organization membership in the user profile."""
+
+    name: str
+    role: RoleName
+
+
+class UserProfile(BaseModel):
+    """Represent the authenticated user payload returned by the API."""
+
+    id: int | None
+    name: str
+    email: EmailStr
+    avatar: str | None = None
+    theme: Theme
+    accent: Accent
+    radius: Radius
+    language: Language
+    oidc_subject: str | None = None
+    orgs: list[UserOrgMembership]

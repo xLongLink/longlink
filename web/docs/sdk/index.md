@@ -32,15 +32,23 @@ uv add longlink
 
 ### Initialize a Project
 
+::: tabs
+
+== pip
+
 ```bash
 pip install longlink
 longlink init
 ```
 
+== uv
+
 ```bash
 uv add longlink
 uv run longlink init
 ```
+
+:::
 
 ## Applications
 
@@ -68,15 +76,23 @@ uv run longlink init
 
 Install development dependencies:
 
+::: tabs
+
+== pip
+
 ```bash
 pip install .[dev]
 longlink dev
 ```
 
+== uv
+
 ```bash
 uv add .[dev]
 uv run longlink dev
 ```
+
+:::
 
 ## Resources
 

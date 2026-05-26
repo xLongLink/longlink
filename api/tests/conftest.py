@@ -43,10 +43,10 @@ async def reset_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncIter
         await engine.dispose()
 
 
-def session_cookie(user_id: str) -> dict[str, str]:
-    """Build a signed session cookie for the given user id."""
+def session_cookie(oidc_subject: str) -> dict[str, str]:
+    """Build a signed session cookie for the given OIDC subject."""
 
-    payload = b64encode(json.dumps({"userid": user_id}).encode("utf-8"))
+    payload = b64encode(json.dumps({"oidc_subject": oidc_subject}).encode("utf-8"))
     signed = TimestampSigner(str(env.SESSION_KEY)).sign(payload).decode("utf-8")
     return {SESSION_COOKIE: signed}
 
@@ -57,9 +57,9 @@ async def users() -> tuple[User, User, User]:
 
     Session = await db_session.get_session()
     async with Session() as session:
-        user1 = User(name='user1', email='user1@example.com')
-        user2 = User(name='user2', email='user2@example.com')
-        user3 = User(name='user3', email='user3@example.com')
+        user1 = User(name='user1', email='user1@example.com', oidc_subject='oidc-user-1')
+        user2 = User(name='user2', email='user2@example.com', oidc_subject='oidc-user-2')
+        user3 = User(name='user3', email='user3@example.com', oidc_subject='oidc-user-3')
 
         session.add_all([user1, user2, user3])
         await session.commit()
@@ -76,7 +76,7 @@ def clients(users: tuple[User, User, User]) -> tuple[TestClient, TestClient, Tes
     """Build authenticated test clients for all seeded users."""
 
     user1, user2, user3 = users
-    client1 = TestClient(app, cookies=session_cookie(str(user1.id)))
-    client2 = TestClient(app, cookies=session_cookie(str(user2.id)))
-    client3 = TestClient(app, cookies=session_cookie(str(user3.id)))
+    client1 = TestClient(app, cookies=session_cookie(str(user1.oidc_subject)))
+    client2 = TestClient(app, cookies=session_cookie(str(user2.oidc_subject)))
+    client3 = TestClient(app, cookies=session_cookie(str(user3.oidc_subject)))
     return client1, client2, client3

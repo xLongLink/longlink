@@ -1,13 +1,40 @@
 from sqlalchemy import select
 from src.db.models import User
 from sqlalchemy.orm import selectinload
-from src.models.users import Theme, Accent, Radius
+from src.db.models.association import user_organizations
+from src.models import UserOrgMembership, UserProfile
+from src.models.users import Accent, Radius, Theme
 
 from .base import ServiceBase
 
 
 class UsersService(ServiceBase):
-    async def create_or_update_oidc_user(
+    async def profile(self, user_id: int) -> UserProfile | None:
+        """Return one user profile with membership roles included."""
+
+        async with self.session() as session:
+            user_result = await session.execute(select(User).where(User.id == user_id))
+            user = user_result.scalars().first()
+            if user is None:
+                return None
+
+            # Load organization roles from the association table so the profile stays accurate.
+            org_result = await session.execute(
+                select(
+                    user_organizations.c.organization_name,
+                    user_organizations.c.role_name,
+                ).where(user_organizations.c.user_id == user.id)
+            )
+
+            payload = user.model_dump()
+            payload["orgs"] = [
+                UserOrgMembership(name=organization_name, role=role_name)
+                for organization_name, role_name in org_result.all()
+            ]
+
+            return UserProfile.model_validate(payload)
+
+    async def upsert(
         self,
         *,
         oidc_subject: str,
@@ -17,7 +44,7 @@ class UsersService(ServiceBase):
     ) -> User:
         '''Create a new OIDC user or update an existing one.'''
 
-        existing_user = await self.get(oidc_subject, by='oidc_subject')
+        existing_user = await self.get(oidc_subject)
         if existing_user is not None:
             return await self.update(
                 existing_user.id,
@@ -26,15 +53,6 @@ class UsersService(ServiceBase):
                 avatar=avatar,
                 oidc_subject=oidc_subject,
             ) or existing_user
-
-        user_by_email = await self.get(email, by='email')
-        if user_by_email is not None:
-            return await self.update(
-                user_by_email.id,
-                name=name,
-                avatar=avatar,
-                oidc_subject=oidc_subject,
-            ) or user_by_email
 
         async with self.session() as session:
             user = User(
@@ -49,21 +67,12 @@ class UsersService(ServiceBase):
             await session.refresh(user)
             return user
 
-    async def get(self, param: int | str, *, by: str = 'id') -> User | None:
-        '''Retrieve a user by id, email, or OIDC subject.'''
+    async def get(self, oidc_subject: str) -> User | None:
+        '''Retrieve a user by OIDC subject.'''
 
         async with self.session() as session:
             # Load memberships so the returned user can be used outside the session.
-            statement = select(User).options(selectinload(User.orgs))
-            if by == 'email':
-                statement = statement.where(User.email == param)
-            elif by == 'oidc_subject':
-                statement = statement.where(User.oidc_subject == param)
-            elif by == 'id':
-                statement = statement.where(User.id == param)
-            else:
-                raise ValueError('Unknown lookup value for "by".')
-
+            statement = select(User).options(selectinload(User.orgs)).where(User.oidc_subject == oidc_subject)
             result = await session.execute(statement)
             return result.scalars().first()
 

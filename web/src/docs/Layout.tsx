@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
+import { PencilLine } from 'lucide-react';
 
 import { A } from '@/components/ui/a';
 import {
@@ -27,6 +28,7 @@ import {
 import { Wordmark } from '@/components/Wordmark';
 
 import { DOC_GROUPS } from './nav';
+import { getDocsEditUrl, getDocsLastUpdated } from './meta';
 import type { DocItem } from './types';
 
 type PageTocItem = {
@@ -57,6 +59,8 @@ export default function DocsLayout() {
     const currentGroup = DOC_GROUPS.find((group) => group.items.some((item) => item.id === currentItem?.id));
     const pageLabel = currentItem?.title ?? 'Overview';
     const pagePath = currentItem?.path ?? '/docs';
+    const docsEditUrl = getDocsEditUrl(pagePath);
+    const lastUpdated = getDocsLastUpdated(pagePath);
 
     useEffect(() => {
         const content = contentRef.current;
@@ -236,41 +240,62 @@ export default function DocsLayout() {
 
             <div className="relative z-10 w-full px-1 pb-1 pt-[4.25rem] lg:px-2 lg:pb-2 lg:pt-[4.375rem]">
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
-                    <div ref={contentRef} className="px-4 pt-4 pb-8 lg:px-6 lg:pt-6 lg:pb-10">
+                    <div ref={contentRef} className="px-4 pt-4 pb-32 lg:px-6 lg:pt-6 lg:pb-40">
                         <div className="mx-auto w-full max-w-[56rem]">
                             <Outlet />
+
+                            <footer className="mx-auto mt-10 w-full max-w-2xl border-t border-border pt-4 text-xs font-medium text-muted-foreground">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                                    <A
+                                        href={docsEditUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 text-accent no-underline transition-colors hover:opacity-80"
+                                    >
+                                        <PencilLine className="size-3.5" aria-hidden="true" />
+                                        Edit this page in GitHub
+                                    </A>
+                                    <span>Last updated {lastUpdated}</span>
+                                </div>
+                            </footer>
                         </div>
                     </div>
 
                     <aside className="hidden px-5 pt-4 pb-8 lg:fixed lg:top-[4.5rem] lg:right-2 lg:block lg:h-[calc(100vh-5rem)] lg:w-56 lg:overflow-y-auto lg:pt-6">
-                        <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
-                            On this page
-                        </div>
-                        <nav aria-label="On this page" className="relative mt-4 pl-4">
+                        <div className="relative pl-4">
                             <div className="pointer-events-none absolute top-1 bottom-1 left-[0.55rem] w-px bg-border" />
-                            <div className="space-y-2 text-sm">
-                                {pageToc.map((item) => (
-                                    <div key={item.href} className="relative pl-4">
-                                        <span
-                                            aria-hidden="true"
-                                            className={`absolute left-[-0.4rem] top-2 h-2.5 w-2.5 rounded-full border-2 transition-colors ${
-                                                activePageTocHref === item.href
-                                                    ? 'border-primary bg-primary'
-                                                    : 'border-border bg-background'
-                                            }`}
-                                        />
-                                        <A
-                                            href={item.href}
-                                            className={`block text-muted-foreground transition-colors hover:text-foreground ${
-                                                activePageTocHref === item.href ? 'text-foreground' : ''
-                                            }`}
-                                        >
-                                            {item.label}
-                                        </A>
+                            <div className="flex flex-col gap-4">
+                                <div className="pl-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                                    On this page
+                                </div>
+                                <nav aria-label="On this page">
+                                    <div className="space-y-1.5 text-sm">
+                                        {pageToc.map((item) => {
+                                            const isActive = activePageTocHref === item.href;
+
+                                            return (
+                                                <div key={item.href} className="relative">
+                                                    <span
+                                                        aria-hidden="true"
+                                                        className={`absolute left-[-0.55rem] top-1.5 h-5 w-px rounded-full transition-colors ${
+                                                            isActive ? 'bg-primary' : 'bg-transparent'
+                                                        }`}
+                                                    />
+                                                    <A
+                                                        href={item.href}
+                                                        className={`block pl-3 no-underline transition-colors hover:text-foreground ${
+                                                            isActive ? 'text-foreground' : 'text-muted-foreground'
+                                                        }`}
+                                                    >
+                                                        {item.label}
+                                                    </A>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                ))}
+                                </nav>
                             </div>
-                        </nav>
+                        </div>
                     </aside>
                 </div>
             </div>

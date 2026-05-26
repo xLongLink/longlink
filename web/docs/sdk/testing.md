@@ -6,13 +6,21 @@ tools are already included as development dependencies in the `pyproject.toml` f
 
 To install the development dependencies, run:
 
+::: tabs
+
+== pip
+
 ```bash
 pip install .[dev]
 ```
 
+== uv
+
 ```bash
 uv add .[dev]
 ```
+
+:::
 
 ## Usage
 

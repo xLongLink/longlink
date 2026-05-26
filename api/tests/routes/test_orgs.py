@@ -19,17 +19,11 @@ async def test_create_organization_returns_owner_role(
 
     # Assert
     assert response.status_code == 200
-
-    organization = await db.orgs.get("acme")
-    assert organization is not None
-
-    expected_payload = {
-        "org": {
-            **organization.model_dump(mode="json"),
-            "role": "owner",
-        }
+    assert response.json() == {
+        "success": True,
+        "message": "Organization created",
+        "data": None,
     }
-    assert response.json() == expected_payload
 
 
 async def test_get_organization_returns_member_payload(
@@ -54,7 +48,9 @@ async def test_get_organization_returns_member_payload(
     assert organization is not None
 
     expected_payload = {
-        "org": {
+        "success": True,
+        "message": "Organization fetched",
+        "data": {
             **organization.model_dump(mode="json"),
             "users": [
                 {
@@ -62,7 +58,7 @@ async def test_get_organization_returns_member_payload(
                     "role": "owner",
                 },
             ],
-        }
+        },
     }
     assert response.json() == expected_payload
 
@@ -84,6 +80,26 @@ async def test_get_organization_returns_404_for_non_member(
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Org 'acme' not found"}
+
+
+async def test_get_organization_returns_envelope_for_missing_org(
+    clients: tuple[TestClient, TestClient, TestClient],
+) -> None:
+    """Return the shared envelope when the org does not exist."""
+
+    # Arrange
+    client = clients[0]
+
+    # Act
+    response = client.get("/api/orgs/testo")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "success": True,
+        "message": "Org 'testo' not found",
+        "data": [],
+    }
 
 
 async def test_create_organization_returns_409_for_duplicate_name(
