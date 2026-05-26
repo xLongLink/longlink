@@ -188,77 +188,77 @@ export default function DocsLayout() {
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
-                    <div className="pointer-events-auto relative shrink-0 border-b border-border bg-card py-4">
-                        <SidebarTrigger className="absolute top-4 left-4 shrink-0 cursor-pointer lg:left-6" />
-                        <a
-                            href={apiUrl('/auth/login/oidc')}
-                            className={cn(
-                                buttonVariants({ size: 'sm' }),
-                                'absolute top-4 right-4 h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
-                            )}
-                        >
-                            Login
-                        </a>
-                        <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
-                            <div className="px-4 lg:px-6">
-                                <div className="mx-auto w-full max-w-[56rem]">
-                                    <div className="mx-auto w-full max-w-2xl">
-                                        <UIBreadcrumb>
-                                            <BreadcrumbList>
-                                                <BreadcrumbItem>
-                                                    <BreadcrumbLink
-                                                        render={(props) => (
-                                                            <Link
-                                                                {...props}
-                                                                to="/docs"
-                                                                className="transition-colors hover:text-foreground"
-                                                            >
-                                                                Documentation
-                                                            </Link>
-                                                        )}
-                                                    />
-                                                </BreadcrumbItem>
-                                                {!isRootDocsPage ? (
-                                                    <>
-                                                        <BreadcrumbSeparator />
-                                                        <BreadcrumbItem>
-                                                            <BreadcrumbLink
-                                                                render={(props) => (
-                                                                    <Link
-                                                                        {...props}
-                                                                        to={currentGroup?.items[0]?.path ?? '/docs'}
-                                                                        className="transition-colors hover:text-foreground"
-                                                                    >
-                                                                        {currentGroup?.title ?? 'Overview'}
-                                                                    </Link>
-                                                                )}
-                                                            />
-                                                        </BreadcrumbItem>
-                                                        {!isSectionOverviewPage ? (
-                                                            <>
-                                                                <BreadcrumbSeparator />
-                                                                <BreadcrumbItem>
-                                                                    <BreadcrumbLink
-                                                                        render={(props) => (
-                                                                            <Link
-                                                                                {...props}
-                                                                                to={pagePath}
-                                                                                className="font-medium text-foreground"
-                                                                            >
-                                                                                {pageLabel}
-                                                                            </Link>
-                                                                        )}
-                                                                    />
-                                                                </BreadcrumbItem>
-                                                            </>
-                                                        ) : null}
-                                                    </>
-                                                ) : null}
-                                            </BreadcrumbList>
-                                        </UIBreadcrumb>
-                                    </div>
+                    <div className="pointer-events-auto shrink-0 border-b border-border bg-card">
+                        <div className="grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 lg:px-6">
+                            <SidebarTrigger className="shrink-0 cursor-pointer" />
+
+                            <div className="min-w-0 justify-self-center">
+                                <div className="mx-auto w-full max-w-2xl">
+                                    <UIBreadcrumb>
+                                        <BreadcrumbList>
+                                            <BreadcrumbItem>
+                                                <BreadcrumbLink
+                                                    render={(props) => (
+                                                        <Link
+                                                            {...props}
+                                                            to="/docs"
+                                                            className="transition-colors hover:text-foreground"
+                                                        >
+                                                            Documentation
+                                                        </Link>
+                                                    )}
+                                                />
+                                            </BreadcrumbItem>
+                                            {!isRootDocsPage ? (
+                                                <>
+                                                    <BreadcrumbSeparator />
+                                                    <BreadcrumbItem>
+                                                        <BreadcrumbLink
+                                                            render={(props) => (
+                                                                <Link
+                                                                    {...props}
+                                                                    to={currentGroup?.items[0]?.path ?? '/docs'}
+                                                                    className="transition-colors hover:text-foreground"
+                                                                >
+                                                                    {currentGroup?.title ?? 'Overview'}
+                                                                </Link>
+                                                            )}
+                                                        />
+                                                    </BreadcrumbItem>
+                                                    {!isSectionOverviewPage ? (
+                                                        <>
+                                                            <BreadcrumbSeparator />
+                                                            <BreadcrumbItem>
+                                                                <BreadcrumbLink
+                                                                    render={(props) => (
+                                                                        <Link
+                                                                            {...props}
+                                                                            to={pagePath}
+                                                                            className="font-medium text-foreground"
+                                                                        >
+                                                                            {pageLabel}
+                                                                        </Link>
+                                                                    )}
+                                                                />
+                                                            </BreadcrumbItem>
+                                                        </>
+                                                    ) : null}
+                                                </>
+                                            ) : null}
+                                        </BreadcrumbList>
+                                    </UIBreadcrumb>
                                 </div>
                             </div>
+
+                            <a
+                                href={apiUrl('/auth/login/oidc')}
+                                className={cn(
+                                    buttonVariants({ size: 'sm' }),
+                                    'h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'
+                                )}
+                            >
+                                Login
+                            </a>
                         </div>
                     </div>
                 </div>
