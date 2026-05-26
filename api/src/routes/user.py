@@ -19,7 +19,7 @@ async def serialize_user(user: db.User) -> APIResponse[UserProfile]:
 
     return APIResponse(
         success=True,
-        message="User profile fetched",
+        detail="User profile fetched",
         data=profile,
     )
 
@@ -41,4 +41,4 @@ async def patch_me(payload: UserUpdate, user: db.User = Depends(authuser)) -> AP
     if profile is None:
         profile = UserProfile.model_validate({**(updated_user or user).model_dump(), "orgs": []})
 
-    return APIResponse(success=True, message="User profile updated", data=profile)
+    return APIResponse(success=True, detail="User profile updated", data=profile)

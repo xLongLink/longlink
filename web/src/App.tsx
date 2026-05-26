@@ -87,46 +87,6 @@ function getRoutes() {
             ),
         },
         {
-            path: 'org',
-            element: (
-                <RequireAuth>
-                    <Organization sectionName="applications" />
-                </RequireAuth>
-            ),
-        },
-        {
-            path: 'org/applications',
-            element: (
-                <RequireAuth>
-                    <Organization sectionName="applications" />
-                </RequireAuth>
-            ),
-        },
-        {
-            path: 'org/prople',
-            element: (
-                <RequireAuth>
-                    <Organization sectionName="people" />
-                </RequireAuth>
-            ),
-        },
-        {
-            path: 'org/people',
-            element: (
-                <RequireAuth>
-                    <Organization sectionName="people" />
-                </RequireAuth>
-            ),
-        },
-        {
-            path: 'org/settings',
-            element: (
-                <RequireAuth>
-                    <Organization sectionName="settings" />
-                </RequireAuth>
-            ),
-        },
-        {
             path: ':org',
             element: (
                 <RequireAuth>
@@ -136,14 +96,6 @@ function getRoutes() {
         },
         {
             path: ':org/applications',
-            element: (
-                <RequireAuth>
-                    <Organization sectionName="applications" />
-                </RequireAuth>
-            ),
-        },
-        {
-            path: ':org/apps',
             element: (
                 <RequireAuth>
                     <Organization sectionName="applications" />

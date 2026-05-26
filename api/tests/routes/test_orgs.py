@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 import src.db as db
 from src.db.models import User
+from src.models import OrgDetails, OrgMemberResponse
 
 
 async def test_create_organization_returns_owner_role(
@@ -21,7 +22,7 @@ async def test_create_organization_returns_owner_role(
     assert response.status_code == 200
     assert response.json() == {
         "success": True,
-        "message": "Organization created",
+        "detail": "Organization created",
         "data": None,
     }
 
@@ -44,23 +45,31 @@ async def test_get_organization_returns_member_payload(
     # Assert
     assert response.status_code == 200
 
-    organization = await db.orgs.get("acme")
-    assert organization is not None
-
-    expected_payload = {
-        "success": True,
-        "message": "Organization fetched",
-        "data": {
-            **organization.model_dump(mode="json"),
-            "users": [
+    expected_payload = OrgDetails(
+        name="acme",
+        users=[
+            OrgMemberResponse.model_validate(
                 {
-                    **owner.model_dump(mode="json"),
+                    "id": owner.id,
+                    "name": owner.name,
+                    "email": owner.email,
+                    "avatar": owner.avatar,
+                    "theme": owner.theme,
+                    "accent": owner.accent,
+                    "radius": owner.radius,
+                    "language": owner.language,
+                    "oidc_subject": owner.oidc_subject,
                     "role": "owner",
-                },
-            ],
-        },
+                }
+            )
+        ],
+    ).model_dump(mode="json")
+
+    assert response.json() == {
+        "success": True,
+        "detail": "Organization fetched",
+        "data": expected_payload,
     }
-    assert response.json() == expected_payload
 
 
 async def test_get_organization_returns_404_for_non_member(
@@ -79,7 +88,11 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": "Org 'acme' not found"}
+    assert response.json() == {
+        "success": False,
+        "detail": "Org 'acme' not found",
+        "data": None,
+    }
 
 
 async def test_get_organization_returns_envelope_for_missing_org(
@@ -97,7 +110,7 @@ async def test_get_organization_returns_envelope_for_missing_org(
     assert response.status_code == 200
     assert response.json() == {
         "success": True,
-        "message": "Org 'testo' not found",
+        "detail": "Org 'testo' not found",
         "data": [],
     }
 
@@ -118,4 +131,27 @@ async def test_create_organization_returns_409_for_duplicate_name(
 
     # Assert
     assert response.status_code == 409
-    assert response.json() == {"detail": "Org already exists"}
+    assert response.json() == {
+        "success": False,
+        "detail": "Org already exists",
+        "data": None,
+    }
+
+
+async def test_create_organization_wraps_validation_errors(
+    clients: tuple[TestClient, TestClient, TestClient],
+) -> None:
+    """Return the shared error envelope for request validation failures."""
+
+    # Arrange
+    client = clients[0]
+
+    # Act
+    response = client.post("/api/orgs", json={})
+
+    # Assert
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["success"] is False
+    assert payload["data"] is None
+    assert isinstance(payload["detail"], list)

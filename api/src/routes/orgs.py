@@ -18,7 +18,7 @@ async def get_organization(
     if organization is None:
         return APIResponse(
             success=True,
-            message=f"Org '{name}' not found",
+            detail=f"Org '{name}' not found",
             data=[],
         )
 
@@ -28,7 +28,7 @@ async def get_organization(
     members = await db.orgs.members(name)
     return APIResponse(
         success=True,
-        message="Organization fetched",
+        detail="Organization fetched",
         data=OrgDetails(
             name=organization.name,
             users=[
@@ -51,7 +51,7 @@ async def create_organization(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return APIResponse(success=True, message="Organization created", data=None)
+    return APIResponse(success=True, detail="Organization created", data=None)
 
 
 @router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)

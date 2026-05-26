@@ -39,7 +39,7 @@ async def test_list_apps_returns_app_membership_role(
     assert response.status_code == 200
     assert response.json() == {
         "success": True,
-        "message": "Apps fetched",
+        "detail": "Apps fetched",
         "data": [
             {
                 "name": "dashboard",
@@ -69,7 +69,7 @@ async def test_list_apps_returns_null_role_without_app_membership(
     assert response.status_code == 200
     assert response.json() == {
         "success": True,
-        "message": "Apps fetched",
+        "detail": "Apps fetched",
         "data": [
             {
                 "name": "dashboard",
@@ -97,7 +97,11 @@ async def test_list_apps_returns_404_for_non_member(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": "Org 'acme' not found"}
+    assert response.json() == {
+        "success": False,
+        "detail": "Org 'acme' not found",
+        "data": None,
+    }
 
 
 async def test_create_app_returns_envelope(
@@ -121,7 +125,7 @@ async def test_create_app_returns_envelope(
     assert response.status_code == 200
     assert response.json() == {
         "success": True,
-        "message": "App created",
+        "detail": "App created",
         "data": {
             "name": "dashboard",
             "url": "/api/apps/dashboard",

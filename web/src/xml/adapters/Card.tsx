@@ -1,5 +1,6 @@
 import {
     Card as UICard,
+    CardContent as UICardContent,
 } from '@ui/card';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
@@ -11,5 +12,9 @@ export function Card({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const size = resolveXmlString(props, 'size', ctx, 'default');
 
-    return <UICard size={size as 'default' | 'sm'}>{renderNode(nodes, ctx)}</UICard>;
+    return (
+        <UICard size={size as 'default' | 'sm'}>
+            <UICardContent>{renderNode(nodes, ctx)}</UICardContent>
+        </UICard>
+    );
 }

@@ -18,7 +18,7 @@ async def list_apps(organization: str, user: db.User = Depends(authuser)) -> API
 
     return APIResponse(
         success=True,
-        message="Apps fetched",
+        detail="Apps fetched",
         data=[
             AppResponse(
                 name=app.name,
@@ -47,7 +47,7 @@ async def create_app(organization: str, payload: AppCreate) -> APIResponse[AppRe
 
     return APIResponse(
         success=True,
-        message="App created",
+        detail="App created",
         data=AppResponse(name=app.name, url=app.url),
     )
 

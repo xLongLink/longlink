@@ -1,6 +1,6 @@
+import { PencilLine } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
-import { PencilLine } from 'lucide-react';
 
 import { A } from '@/components/ui/a';
 import {
@@ -10,6 +10,7 @@ import {
     BreadcrumbSeparator,
     Breadcrumb as UIBreadcrumb,
 } from '@/components/ui/breadcrumb';
+import { buttonVariants } from '@/components/ui/button';
 import {
     Sidebar,
     SidebarContent,
@@ -26,9 +27,11 @@ import {
     SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Wordmark } from '@/components/Wordmark';
+import { apiUrl } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
-import { DOC_GROUPS } from './nav';
 import { getDocsEditUrl, getDocsLastUpdated } from './meta';
+import { DOC_GROUPS } from './nav';
 import type { DocItem } from './types';
 
 type PageTocItem = {
@@ -183,60 +186,79 @@ export default function DocsLayout() {
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
-                    <div className="pointer-events-auto shrink-0 border-b border-border bg-card/80 px-4 py-4 backdrop-blur-sm lg:px-6">
-                        <UIBreadcrumb>
-                            <BreadcrumbList>
-                                <BreadcrumbItem>
-                                    <SidebarTrigger className="-ml-2 shrink-0 cursor-pointer" />
-                                </BreadcrumbItem>
-                                <BreadcrumbItem>
-                                    <BreadcrumbLink
-                                        render={(props) => (
-                                            <Link
-                                                {...props}
-                                                to="/docs"
-                                                className="transition-colors hover:text-foreground"
-                                            >
-                                                Documentation
-                                            </Link>
-                                        )}
-                                    />
-                                </BreadcrumbItem>
-                                <BreadcrumbSeparator />
-                                <BreadcrumbItem>
-                                    <BreadcrumbLink
-                                        render={(props) => (
-                                            <Link
-                                                {...props}
-                                                to={currentGroup?.items[0]?.path ?? '/docs'}
-                                                className="transition-colors hover:text-foreground"
-                                            >
-                                                {currentGroup?.title ?? 'Overview'}
-                                            </Link>
-                                        )}
-                                    />
-                                </BreadcrumbItem>
-                                <BreadcrumbSeparator />
-                                <BreadcrumbItem>
-                                    <BreadcrumbLink
-                                        render={(props) => (
-                                            <Link {...props} to={pagePath} className="font-medium text-foreground">
-                                                {pageLabel}
-                                            </Link>
-                                        )}
-                                    />
-                                </BreadcrumbItem>
-                            </BreadcrumbList>
-                        </UIBreadcrumb>
+                    <div className="pointer-events-auto relative shrink-0 bg-card/80 py-4 backdrop-blur-sm">
+                        <SidebarTrigger className="absolute top-1/2 left-4 shrink-0 -translate-y-1/2 cursor-pointer lg:left-6" />
+                        <a
+                            href={apiUrl('/auth/login/oidc')}
+                            className={cn(
+                                buttonVariants({ size: 'sm' }),
+                                'absolute top-1/2 right-4 h-7 -translate-y-1/2 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
+                            )}
+                        >
+                            Login
+                        </a>
+                        <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
+                            <div className="px-4 lg:px-6">
+                                <div className="mx-auto w-full max-w-[56rem]">
+                                    <div className="mx-auto w-full max-w-2xl">
+                                        <UIBreadcrumb>
+                                            <BreadcrumbList>
+                                                <BreadcrumbItem>
+                                                    <BreadcrumbLink
+                                                        render={(props) => (
+                                                            <Link
+                                                                {...props}
+                                                                to="/docs"
+                                                                className="transition-colors hover:text-foreground"
+                                                            >
+                                                                Documentation
+                                                            </Link>
+                                                        )}
+                                                    />
+                                                </BreadcrumbItem>
+                                                <BreadcrumbSeparator />
+                                                <BreadcrumbItem>
+                                                    <BreadcrumbLink
+                                                        render={(props) => (
+                                                            <Link
+                                                                {...props}
+                                                                to={currentGroup?.items[0]?.path ?? '/docs'}
+                                                                className="transition-colors hover:text-foreground"
+                                                            >
+                                                                {currentGroup?.title ?? 'Overview'}
+                                                            </Link>
+                                                        )}
+                                                    />
+                                                </BreadcrumbItem>
+                                                <BreadcrumbSeparator />
+                                                <BreadcrumbItem>
+                                                    <BreadcrumbLink
+                                                        render={(props) => (
+                                                            <Link
+                                                                {...props}
+                                                                to={pagePath}
+                                                                className="font-medium text-foreground"
+                                                            >
+                                                                {pageLabel}
+                                                            </Link>
+                                                        )}
+                                                    />
+                                                </BreadcrumbItem>
+                                            </BreadcrumbList>
+                                        </UIBreadcrumb>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </SidebarInset>
 
-            <div className="pointer-events-none fixed top-[4.25rem] right-1 bottom-1 left-1 z-0 rounded-b-lg bg-card/80 backdrop-blur-sm transition-[left] lg:top-[4.5rem] lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2" />
-            <div className="pointer-events-none fixed top-0 right-1 left-1 z-[15] h-[4.25rem] bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-[4.5rem] lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-0 rounded-lg bg-card/80 backdrop-blur-sm transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed top-0 right-1 left-1 z-[15] h-[5px] bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-[9px] lg:peer-data-[state=collapsed]:left-2" />
             <div className="pointer-events-none fixed right-1 bottom-0 left-1 z-[15] h-1 bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-2 lg:peer-data-[state=collapsed]:left-2" />
-            <div className="pointer-events-none fixed top-[4.25rem] bottom-0 left-0 z-[15] w-1 bg-background lg:top-[4.5rem] lg:left-[var(--sidebar-width)] lg:w-2 lg:peer-data-[state=collapsed]:left-0" />
-            <div className="pointer-events-none fixed top-[4.25rem] right-0 bottom-0 z-[15] w-1 bg-background lg:top-[4.5rem] lg:w-2" />
+            <div className="pointer-events-none fixed top-0 bottom-0 left-0 z-[15] w-[5px] bg-background lg:left-[calc(var(--sidebar-width)-1px)] lg:w-[9px] lg:peer-data-[state=collapsed]:left-0" />
+            <div className="pointer-events-none fixed top-0 right-0 bottom-0 z-[15] w-[5px] bg-background lg:w-[9px]" />
 
             <div className="relative z-10 w-full px-1 pb-1 pt-[4.25rem] lg:px-2 lg:pb-2 lg:pt-[4.375rem]">
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">

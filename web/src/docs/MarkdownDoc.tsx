@@ -99,9 +99,10 @@ function MarkdownTabs({ tabs }: { tabs: MarkdownTab[] }) {
 function MarkdownHeading({ children, level }: { children: ReactNode; level: 'h1' | 'h2' | 'h3' | 'h4' }) {
     const text = extractText(children);
     const id = slugifyText(text);
+    const anchorClassName = level === 'h1' || level === 'h2' ? '-translate-x-7' : '-translate-x-5';
 
     return (
-        <Heading id={id} level={level} className="text-foreground">
+        <Heading anchorClassName={anchorClassName} id={id} level={level} className="text-foreground">
             {children}
         </Heading>
     );

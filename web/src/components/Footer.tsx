@@ -72,13 +72,7 @@ export function Footer() {
                     <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground sm:justify-end">
                         {navigationLinks.map(({ label, href }) => (
                             <li key={label} className="transition-colors hover:text-accent">
-                                {href.startsWith('http') ? (
-                                    <a href={href} target="_blank" rel="noopener noreferrer">
-                                        {label}
-                                    </a>
-                                ) : (
-                                    <Link to={href}>{label}</Link>
-                                )}
+                                <Link to={href}>{label}</Link>
                             </li>
                         ))}
                     </ul>

@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pathlib import Path
 from urllib.parse import urlsplit
 from src.env import env
@@ -32,6 +34,28 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None,
 )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    """Wrap FastAPI HTTP errors in the shared API envelope."""
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": False, "detail": exc.detail, "data": None},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Wrap validation errors in the shared API envelope."""
+
+    return JSONResponse(
+        status_code=422,
+        content={"success": False, "detail": exc.errors(), "data": None},
+    )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
