@@ -1,20 +1,28 @@
 import Layout from '@/Layout';
 import { useOrg } from '@/hooks/use-org';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { useUser } from '@/hooks/use-user';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Menu, MenuSection } from '@ui/menu';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
-import { Boxes, Building2, Mail, Settings2, Users } from 'lucide-react';
-import { useState } from 'react';
+import { Boxes, Settings2, Users } from 'lucide-react';
 import { useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
+import Applications from './org/Applications';
+import People from './org/People';
+import OrgSettings from './org/Settings';
+
+type OrganizationSection = 'applications' | 'people' | 'settings';
+
+type OrganizationProps = {
+    sectionName?: OrganizationSection;
+};
 
 /** Renders the organization page shell and tab-specific hero content. */
-export default function Organization() {
-    const { org = '' } = useParams();
+export default function Organization({ sectionName }: OrganizationProps) {
+    const { org: routeOrg = '' } = useParams();
     const { pathname } = useLocation();
-    const section = pathname.split('/')[2] ?? '';
-    const [peopleSection, setPeopleSection] = useState<'members' | 'invitations'>('members');
+    const { orgs } = useUser();
+    const org = routeOrg || orgs[0]?.name || '';
+    const pathSection = pathname.split('/')[2] ?? '';
+    const section = sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
     const { people, apps, isLoading, error } = useOrg(org);
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
@@ -23,25 +31,16 @@ export default function Organization() {
     }
 
     let content = (
-        <Hero icon={<Building2 />}>
+        <Hero icon={<Boxes />}>
             <div>
-                <HeroTitle>Overview</HeroTitle>
-                <HeroDescription>High-level workspace details will live here.</HeroDescription>
+                <HeroTitle>Applications</HeroTitle>
+                <HeroDescription>Manage the apps attached to this organization.</HeroDescription>
             </div>
         </Hero>
     );
 
     // Swap the hero based on the active path segment.
-    if (section === 'apps') {
-        content = (
-            <Hero icon={<Boxes />}>
-                <div>
-                    <HeroTitle>Applications</HeroTitle>
-                    <HeroDescription>Manage the apps attached to this organization.</HeroDescription>
-                </div>
-            </Hero>
-        );
-    } else if (section === 'people') {
+    if (section === 'people') {
         content = (
             <Hero icon={<Users />}>
                 <div>
@@ -64,8 +63,7 @@ export default function Organization() {
     return (
         <Layout
             tabs={{
-                Overview: `/${org}`,
-                Applications: `/${org}/apps`,
+                Applications: `/${org}`,
                 People: `/${org}/people`,
                 Settings: `/${org}/settings`,
             }}
@@ -73,134 +71,9 @@ export default function Organization() {
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 {content}
 
-                {section === 'people' ? (
-                    <Menu
-                        value={peopleSection}
-                        onValueChange={(value) => setPeopleSection(value as 'members' | 'invitations')}
-                        defaultValue="members"
-                        className="items-start"
-                        ariaLabel="People menu"
-                    >
-                        <MenuSection value="members" label="Members" icon={Users}>
-                            <div className="w-full overflow-hidden rounded-2xl border border-border bg-card/80">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>User</TableHead>
-                                            <TableHead className="w-32">Role</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {isLoading ? (
-                                            <TableRow>
-                                                <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
-                                                    Loading people...
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : error ? (
-                                            <TableRow>
-                                                <TableCell colSpan={2} className="py-8 text-sm text-destructive">
-                                                    Failed to load people.
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : people.length ? (
-                                            people.map((user) => (
-                                                <TableRow key={user.id}>
-                                                    <TableCell className="whitespace-normal">
-                                                        <div className="flex items-center gap-3">
-                                                            <Avatar className="size-8">
-                                                                <AvatarImage
-                                                                    src={user.avatar ?? ''}
-                                                                    alt={`${user.name} avatar`}
-                                                                />
-                                                                <AvatarFallback>
-                                                                    {user.name.slice(0, 2).toUpperCase()}
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                            <div className="min-w-0 space-y-0.5">
-                                                                <p className="text-sm font-medium text-foreground">
-                                                                    {user.name}
-                                                                </p>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    {user.email}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">{user.role}</TableCell>
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
-                                                    No people found.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </MenuSection>
-
-                        <MenuSection value="invitations" label="Invitations" icon={Mail}>
-                            <div className="w-full overflow-hidden rounded-2xl border border-border bg-card/80">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Invitation</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell className="py-8 text-sm text-muted-foreground">
-                                                No invitations yet.
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </MenuSection>
-                    </Menu>
-                ) : section === 'apps' ? (
-                    <div className="w-full overflow-hidden rounded-2xl border border-border bg-card/80">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>App</TableHead>
-                                    <TableHead className="w-32">Role</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
-                                            Loading apps...
-                                        </TableCell>
-                                    </TableRow>
-                                ) : error ? (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="py-8 text-sm text-destructive">
-                                            Failed to load apps.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : apps.length ? (
-                                    apps.map((app) => (
-                                        <TableRow key={app.name}>
-                                            <TableCell className="font-medium text-foreground">{app.name}</TableCell>
-                                            <TableCell className="text-sm text-muted-foreground">{app.role}</TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
-                                            No apps found.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                ) : null}
+                {section === 'people' ? <People people={people} isLoading={isLoading} error={error} /> : null}
+                {section === 'applications' ? <Applications apps={apps} isLoading={isLoading} error={error} /> : null}
+                {section === 'settings' ? <OrgSettings /> : null}
             </section>
         </Layout>
     );

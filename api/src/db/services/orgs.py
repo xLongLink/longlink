@@ -4,7 +4,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.db.models.users import User
 from src.db.models.association import user_organizations
-from src.models.roles import RoleName
 
 from .base import ServiceBase
 
@@ -31,25 +30,26 @@ class OrgsService(ServiceBase):
         """Create an org."""
 
         async with self.session() as session:
-            organization = Org(name=name)
-            session.add(organization)
-
             # Link the creator explicitly to avoid loading the relationship collection.
+            user = None
             if user_id is not None:
                 user = await session.get(User, user_id)
                 if user is None:
                     raise ValueError("User not found")
 
-                await session.flush()
-                await session.execute(
-                    insert(user_organizations).values(
-                        user_id=user.id,
-                        organization_name=organization.name,
-                        role_name=RoleName.owner,
-                    )
-                )
+            organization = Org(name=name)
+            session.add(organization)
 
             try:
+                if user is not None:
+                    await session.flush()
+                    await session.execute(
+                        insert(user_organizations).values(
+                            user_id=user.id,
+                            organization_name=organization.name,
+                            role_name='owner',
+                        )
+                    )
                 await session.commit()
             except IntegrityError as exc:
                 await session.rollback()

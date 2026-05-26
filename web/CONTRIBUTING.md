@@ -93,7 +93,6 @@ Theme values are defined in `src/lib/theme.ts` and applied programmatically to t
 <Label>
 <Li>
 <Menu>
-<NativeSelect>
 <NavigationMenu>
 <Ol>
 <P>

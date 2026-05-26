@@ -5,7 +5,6 @@ from src.auth import authuser
 from src.db.models.association import user_organizations
 from src.db.session import get_session
 from src.models.orgs import OrgCreate
-from src.models.roles import RoleName
 
 router = APIRouter(prefix="/api/orgs")
 
@@ -48,7 +47,7 @@ async def create_organization(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return {"org": {**organization.model_dump(), "role": RoleName.owner.value}}
+    return {"org": {**organization.model_dump(), "role": "owner"}}
 
 
 @router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)

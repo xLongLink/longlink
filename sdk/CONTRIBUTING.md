@@ -44,3 +44,8 @@ Before PR:
 ```bash
 uv sync --extra dev
 ```
+
+## XML
+
+- Is not html, but similar. 
+- Check with longlink docs <component>

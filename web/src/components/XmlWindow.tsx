@@ -8,7 +8,7 @@ type XmlWindowProps = {
 export function XmlWindow({ children }: XmlWindowProps) {
     return (
         <div className="w-full max-w-3xl">
-            <Window>{children}</Window>
+            <Window defaultViewMode="source">{children}</Window>
         </div>
     );
 }

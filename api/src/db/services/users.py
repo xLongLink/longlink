@@ -7,14 +7,6 @@ from .base import ServiceBase
 
 
 class UsersService(ServiceBase):
-    async def list(self) -> list[User]:
-        '''Return all users in the database.'''
-
-        async with self.session() as session:
-            statement = select(User).options(selectinload(User.orgs))
-            result = await session.execute(statement)
-            return list(result.scalars().all())
-
     async def create_or_update_oidc_user(
         self,
         *,

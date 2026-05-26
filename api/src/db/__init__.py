@@ -1,6 +1,6 @@
-from .models import (App, Env, Base, User, Permission, Registry,  # noqa: F401
-                     Org, ComputeRegistry, StorageRegistry,
-                     DatabaseRegistry)
+from .models import (App, Env, Base, User, Registry,  # noqa: F401
+                      Org, ComputeRegistry, StorageRegistry,
+                      DatabaseRegistry)
 from .services import (AppsService, EnvsService, UsersService,
                        RegistriesService, OrgsService,
                        ComputeRegistriesService, StorageRegistriesService,

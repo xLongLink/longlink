@@ -7,13 +7,14 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 type WindowProps = {
     children: string;
     onRedClick?: () => void;
+    defaultViewMode?: ViewMode;
 };
 
 type ViewMode = 'rendered' | 'source';
 
 /** Renders a framed XML preview window with a source toggle. */
-export function Window({ children, onRedClick }: WindowProps) {
-    const [viewMode, setViewMode] = useState<ViewMode>('rendered');
+export function Window({ children, defaultViewMode = 'rendered', onRedClick }: WindowProps) {
+    const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode);
     const sourceXml = normalizeXml(children);
     const { ast, parseError } = useMemo(() => {
         const documentXml = wrapWindowXml(sourceXml);

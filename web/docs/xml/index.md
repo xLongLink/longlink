@@ -45,18 +45,32 @@ Use `${count}` for wrapped expressions that return typed values.
 <P>Current products, ${products.total}</P>
 ```
 
-## References
+## State
 
-Use `$name` for direct references.
+Use `<State />` to seed shared runtime values for references and loops.
 
 ```xml
-<Input value="$user" />
+<State id="selectedProduct" name="Alpha" status="Active" />
+<State id="products" value='[{"name":"Alpha","status":"Active"},{"name":"Beta","status":"Paused"}]' />
+```
+
+## References
+
+Use `$name` for direct references to a state value.
+
+```xml
+<State id="selectedProduct" name="Alpha" status="Active" />
+<P>Selected product: $selectedProduct.name (${selectedProduct.status})</P>
 ```
 
 ## For
 
-Use `For` to render one child scope for each item in an array.
+Use `For` to render one child scope for each item in an array state or query result.
 
 ```xml
-<For each="${products.items}" as="product"><P>${product.name}</P></For>
+<State id="products" value='[{"name":"Alpha","status":"Active"},{"name":"Beta","status":"Paused"}]' />
+
+<For each="$products" as="product">
+  <P>${product.name} - ${product.status}</P>
+</For>
 ```

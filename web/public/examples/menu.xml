@@ -29,7 +29,7 @@
             </MenuSubSection>
         </MenuSection>
 
-    <MenuSection value="settings" label="Settings">
+        <MenuSection value="settings" label="Settings">
             <Stack>
                 <H3>Workspace settings</H3>
                 <P>Configure the dashboard for the current team and workflow.</P>

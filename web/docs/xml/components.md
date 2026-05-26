@@ -7,7 +7,10 @@ Reusable UI components and bridge tags for XML pages.
 Avatar renders user or record imagery with fallback and badge slots.
 
 ```xml
-<Avatar size="sm"><AvatarImage /><AvatarFallback>AL</AvatarFallback></Avatar>
+<Avatar size="sm">
+  <AvatarImage />
+  <AvatarFallback>AL</AvatarFallback>
+</Avatar>
 ```
 
 ## Badge
@@ -65,7 +68,10 @@ Lists render ordered and unordered lists.
 - `Li` renders a list item inside `Ol` or `Ul`.
 
 ```xml
-<Ol><Li>First item</Li><Li>Second item</Li></Ol>
+<Ol>
+  <Li>First item</Li>
+  <Li>Second item</Li>
+</Ol>
 ```
 
 ## Buttons
@@ -74,9 +80,24 @@ Buttons trigger actions or navigation.
 
 - `Button` renders a single action.
 - `ButtonGroup` arranges related buttons.
+- Supported variants include `default`, `outline`, `ghost`, `destructive`, and `link`.
 
 ```xml
-<Button>Create issue</Button>
+<Flex space="around">
+  <Button>Create issue</Button>
+  <Button variant="outline">Preview</Button>
+  <Button variant="ghost">Skip</Button>
+  <Button variant="destructive">Delete</Button>
+  <Button variant="link">Learn more</Button>
+</Flex>
+
+<Flex space="center">
+  <ButtonGroup>
+    <Button size="sm" variant="outline">Cancel</Button>
+    <Button size="sm">Save draft</Button>
+    <Button size="sm">Publish</Button>
+  </ButtonGroup>
+</Flex>
 ```
 
 ## Hr
@@ -84,7 +105,8 @@ Buttons trigger actions or navigation.
 `Hr` renders a visual separator and `Br` inserts vertical spacing.
 
 ```xml
-<Hr /><Br />
+<Hr />
+<Br />
 ```
 
 ## Hero
@@ -92,7 +114,13 @@ Buttons trigger actions or navigation.
 Hero renders a prominent introductory section with optional actions.
 
 ```xml
-<Hero icon="layout-grid">Browse orgs</Hero>
+<Hero icon="layout-grid">
+  <HeroTitle>Browse orgs</HeroTitle>
+  <HeroDescription>Manage the workspaces connected to your account.</HeroDescription>
+  <HeroAction>
+    <Button>New Org</Button>
+  </HeroAction>
+</Hero>
 ```
 
 ## Icon
@@ -108,5 +136,25 @@ Icon renders a Lucide icon by XML name.
 Table renders structured tabular content.
 
 ```xml
-<Table><Thead /><Tbody /></Table>
+<Table>
+  <Thead>
+    <Tr>
+      <Th>Name</Th>
+      <Th>Status</Th>
+      <Th>Owner</Th>
+    </Tr>
+  </Thead>
+  <Tbody>
+    <Tr>
+      <Td>Alpha</Td>
+      <Td>Active</Td>
+      <Td>Sam</Td>
+    </Tr>
+    <Tr>
+      <Td>Beta</Td>
+      <Td>Paused</Td>
+      <Td>Lee</Td>
+    </Tr>
+  </Tbody>
+</Table>
 ```

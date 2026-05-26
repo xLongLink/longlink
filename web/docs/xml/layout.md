@@ -18,7 +18,11 @@ Columns render side-by-side sections. Column widths should add up to 100 across 
 Grid renders evenly spaced child cards or panels.
 
 ```xml
-<Grid columns="3"><Card>One</Card><Card>Two</Card><Card>Three</Card></Grid>
+<Grid columns="3">
+  <Card>One</Card>
+  <Card>Two</Card>
+  <Card>Three</Card>
+</Grid>
 ```
 
 ## Card
@@ -26,7 +30,9 @@ Grid renders evenly spaced child cards or panels.
 Cards group related content.
 
 ```xml
-<Card size="sm"><P>Card Content</P></Card>
+<Card size="sm">
+  <P>Card Content</P>
+</Card>
 ```
 
 ## Stack
@@ -34,7 +40,26 @@ Cards group related content.
 Stack arranges content vertically with consistent spacing.
 
 ```xml
-<Stack><P>First</P><P>Second</P></Stack>
+<Stack>
+  <P>First</P>
+  <P>Second</P>
+</Stack>
+```
+
+## Flex
+
+Flex arranges children in a row and can distribute space between them.
+
+- `space="center"` centers the group.
+- `space="around"` adds equal space around each item.
+- `space="between"` pushes items to the edges.
+- `space="evenly"` keeps equal spacing across the row.
+
+```xml
+<Flex space="between">
+  <Button variant="outline">Cancel</Button>
+  <ButtonGroup><Button size="sm" variant="outline">Back</Button><Button size="sm">Next</Button></ButtonGroup>
+</Flex>
 ```
 
 ## Dialog

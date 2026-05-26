@@ -31,6 +31,10 @@ const navigationLinks = [
         href: '/playground',
     },
     {
+        label: 'Theme',
+        href: '/theme',
+    },
+    {
         label: 'Docs',
         href: '/docs',
     },

@@ -11,17 +11,14 @@ from src.env import env
 
 router = APIRouter(prefix="/auth")
 
-
 @router.get("/login/oidc")
 async def login_oidc(request: Request):
     """Initiate OIDC login flow by redirecting to the identity provider."""
+
     oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
 
     try:
-        return await oidc.authorize_redirect(
-            request,
-            redirect_uri=env.OIDC_REDIRECT_URI,
-        )
+        return await oidc.authorize_redirect(request, redirect_uri=env.OIDC_REDIRECT_URI)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=502,
@@ -35,6 +32,7 @@ async def login_oidc(request: Request):
 @router.get("/oidc")
 async def auth_oidc(request: Request):
     """Handle OIDC callback, exchange code for token, and create/update user."""
+
     oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
 
     try:

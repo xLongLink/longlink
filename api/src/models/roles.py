@@ -1,11 +1,6 @@
-from enum import Enum
+from typing import Literal
 
 
-class RoleName(str, Enum):
-    """Supported organization and app access roles."""
+ROLES = ["read", "write", "maintain", "admin", "owner"]
 
-    read = "read"
-    write = "write"
-    maintain = "maintain"
-    admin = "admin"
-    owner = "owner"
+RoleName = Literal["read", "write", "maintain", "admin", "owner"]

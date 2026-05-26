@@ -4,7 +4,7 @@ from fastapi import Depends, APIRouter
 from src.auth import authuser
 from src.db.session import get_session
 from src.models import UserUpdate
-from src.db.models.association import user_organizations
+from src.db.models.association import user_apps, user_organizations
 
 router = APIRouter(prefix="/api/me")
 
@@ -14,9 +14,9 @@ async def serialize_user(user: db.User) -> dict:
 
     payload = user.model_dump()
 
-    # Load organization roles from the association table so the API can expose the access level.
     Session = await get_session()
     async with Session() as session:
+        # Load organization memberships directly from the association table.
         statement = select(
             user_organizations.c.organization_name,
             user_organizations.c.role_name,
@@ -25,6 +25,18 @@ async def serialize_user(user: db.User) -> dict:
         payload["orgs"] = [
             {"name": organization_name, "role": role_name}
             for organization_name, role_name in result.all()
+        ]
+
+        # Load app memberships separately so app roles stay independent from org roles.
+        statement = select(
+            user_apps.c.organization_name,
+            user_apps.c.app_name,
+            user_apps.c.role_name,
+        ).where(user_apps.c.user_id == user.id)
+        result = await session.execute(statement)
+        payload["apps"] = [
+            {"organization": organization_name, "name": app_name, "role": role_name}
+            for organization_name, app_name, role_name in result.all()
         ]
 
     return payload

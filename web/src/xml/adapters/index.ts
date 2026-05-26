@@ -11,6 +11,7 @@ export { Card } from './Card';
 export { Checkbox } from './Checkbox';
 export { Code } from './Code';
 export { Column, Columns } from './Columns';
+export { Flex } from './Flex';
 export {
     Dialog,
     DialogContent,

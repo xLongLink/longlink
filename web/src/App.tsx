@@ -28,6 +28,7 @@ import Playground from './pages/Playground';
 import Privacy from './pages/Privacy';
 import Sample from './pages/Sample';
 import Settings from './pages/Settings';
+import Theme from './pages/Theme';
 import Terms from './pages/Terms';
 import View from './pages/View';
 
@@ -64,6 +65,7 @@ function getRoutes() {
             ],
         },
         { path: 'playground', element: <Playground /> },
+        { path: 'theme', element: <Theme /> },
         { path: 'sample', element: <Sample /> },
         { path: 'impressum', element: <Impressum /> },
         { path: 'terms', element: <Terms /> },
@@ -85,10 +87,82 @@ function getRoutes() {
             ),
         },
         {
-            path: ':org/*',
+            path: 'org',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="applications" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: 'org/applications',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="applications" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: 'org/prople',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="people" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: 'org/people',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="people" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: 'org/settings',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="settings" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org',
             element: (
                 <RequireAuth>
                     <Organization />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org/applications',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="applications" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org/apps',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="applications" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org/people',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="people" />
+                </RequireAuth>
+            ),
+        },
+        {
+            path: ':org/settings',
+            element: (
+                <RequireAuth>
+                    <Organization sectionName="settings" />
                 </RequireAuth>
             ),
         },
