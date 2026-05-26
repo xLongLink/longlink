@@ -7,8 +7,9 @@ from .users import (  # noqa: F401
     Theme,
     UserOrgMembership,
     UserProfile,
+    UserSummary,
     UserUpdate,
 )
 from .compute import DockerRegistryCreate  # noqa: F401
-from .orgs import OrgCreate, OrgDetails, OrgMemberResponse  # noqa: F401
+from .orgs import OrgCreate, OrgDetails  # noqa: F401
 from .roles import ROLES, RoleName  # noqa: F401

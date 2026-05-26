@@ -1,7 +1,8 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field, field_validator
 
-from src.models.roles import RoleName
-from src.models.users import Accent, Language, Radius, Theme
+from src.models.users import UserSummary
 
 
 class OrgCreate(BaseModel):
@@ -16,23 +17,29 @@ class OrgCreate(BaseModel):
         return value.strip()
 
 
-class OrgMemberResponse(BaseModel):
-    """Represent one organization member in API responses."""
+class OrgAppResponse(BaseModel):
+    """Represent one application in an organization payload."""
 
-    id: int | None
+    id: int
     name: str
-    email: str
-    avatar: str | None = None
-    theme: Theme
-    accent: Accent
-    radius: Radius
-    language: Language
-    oidc_subject: str | None = None
-    role: RoleName | None = None
+    url: str
+    created_at: datetime
+    updated_at: datetime
+    created_by: UserSummary
+    updated_by: UserSummary
+    deleted_at: datetime | None = None
+    deleted_by: UserSummary
 
 
 class OrgDetails(BaseModel):
     """Represent an organization with its members."""
 
     name: str
-    users: list[OrgMemberResponse]
+    created_at: datetime
+    updated_at: datetime
+    created_by: UserSummary
+    updated_by: UserSummary
+    deleted_at: datetime | None = None
+    deleted_by: UserSummary
+    users: list[UserSummary]
+    apps: list[OrgAppResponse] = Field(default_factory=list)

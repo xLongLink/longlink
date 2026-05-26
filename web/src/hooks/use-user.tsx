@@ -2,60 +2,23 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tan
 import { createContext, useContext, useEffect } from 'react';
 
 import { apiUrl } from '@/lib/api';
+import type { ApiResponse, ApiUserProfile } from '@/lib/types';
 import {
     applyTheme,
-    resetTheme,
     THEME_PRESETS,
     type Accent,
     type ThemeConfig,
     type Radius,
     type Theme,
 } from '@/lib/theme';
-import type { Role } from '@/lib/roles';
+
+export type User = ApiUserProfile;
 
 type UserUpdate = Partial<Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
-
-export type User = {
-    id: number;
-    name: string;
-    email: string;
-    avatar?: string | null;
-    theme: Theme;
-    accent: Accent;
-    radius: Radius;
-    language: string;
-    oauth_github_id?: number | null;
-    date_creation?: string;
-    orgs?: {
-        name: string;
-        role: Role;
-    }[];
-};
-
-type UserResponse = Omit<User, 'theme' | 'accent' | 'radius' | 'language'> & {
-    theme?: Theme | null;
-    accent?: Accent | null;
-    radius?: Radius | null;
-    language?: string | null;
-};
 
 type UserQueryResult = UseQueryResult<User | null, Error>;
 
 const UserContext = createContext<UserQueryResult | undefined>(undefined);
-
-type UserPreferenceInput = {
-    theme?: Theme | null;
-    accent?: Accent | null;
-    radius?: Radius | null;
-    language?: string | null;
-};
-
-type ResolvedUserPreferences = {
-    theme: Exclude<Theme, 'system'>;
-    accent: Accent;
-    radius: Radius;
-    language: string;
-};
 
 const DEFAULT_USER_PREFERENCES = {
     theme: 'dark' as Exclude<Theme, 'system'>,
@@ -64,45 +27,20 @@ const DEFAULT_USER_PREFERENCES = {
     language: 'en',
 } as const;
 
-/** Resolves missing preference values to the shared defaults. */
-function resolveUserPreferences(user: UserPreferenceInput | null | undefined): ResolvedUserPreferences {
-    return {
-        theme: user?.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : user?.theme ?? DEFAULT_USER_PREFERENCES.theme,
-        accent: user?.accent ?? DEFAULT_USER_PREFERENCES.accent,
-        radius: user?.radius ?? DEFAULT_USER_PREFERENCES.radius,
-        language: user?.language ?? DEFAULT_USER_PREFERENCES.language,
-    };
-}
-
-/** Normalizes a user payload with shared preference defaults. */
-function normalizeUser(user: UserResponse): User {
-    return {
-        ...user,
-        ...resolveUserPreferences(user),
-    };
-}
-
 /** Applies user preferences to the document root. */
 function applyUserPreferences(user: User) {
     const root = window.document.documentElement;
-    const resolvedUserPreferences = resolveUserPreferences(user);
+    const theme = user.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : user.theme;
+
     const config: ThemeConfig = {
-        theme: resolvedUserPreferences.theme,
-        ...THEME_PRESETS[resolvedUserPreferences.theme],
-        accent: resolvedUserPreferences.accent,
-        radius: resolvedUserPreferences.radius,
+        theme,
+        ...THEME_PRESETS[theme],
+        accent: user.accent,
+        radius: user.radius,
     };
 
     applyTheme(root, config);
-    root.lang = resolvedUserPreferences.language;
-}
-
-/** Resets document preferences back to the shared defaults. */
-function resetUserPreferences() {
-    const root = window.document.documentElement;
-
-    resetTheme(root);
-    root.lang = DEFAULT_USER_PREFERENCES.language;
+    root.lang = user.language;
 }
 
 /** Hook that fetches the current user. */
@@ -121,7 +59,13 @@ function useUserQuery() {
                 throw new Error(`API request failed (${response.status})`);
             }
 
-            return normalizeUser((await response.json()) as UserResponse);
+            const responsePayload = (await response.json()) as ApiResponse<User>;
+
+            if (!responsePayload.data) {
+                throw new Error('Unexpected response format');
+            }
+
+            return responsePayload.data;
         },
         // Auth state must refresh immediately after login/logout redirects.
         staleTime: 0,
@@ -139,12 +83,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             return;
         }
 
-        if (!user.data) {
-            resetUserPreferences();
-            return;
+        if (user.data) {
+            applyUserPreferences(user.data);
         }
-
-        applyUserPreferences(user.data);
     }, [user.data, user.isLoading]);
 
     return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
@@ -158,7 +99,6 @@ export function useUser() {
     if (!context) throw new Error('useUser must be used within a UserProvider');
 
     const user = context.data ?? null;
-    const resolvedUser = resolveUserPreferences(user);
     const orgs = user?.orgs ?? [];
     const userUrl = apiUrl('/api/me');
 
@@ -177,10 +117,10 @@ export function useUser() {
     return {
         user,
         orgs,
-        theme: resolvedUser.theme,
-        accent: resolvedUser.accent,
-        radius: resolvedUser.radius,
-        language: resolvedUser.language,
+        theme: user?.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : user?.theme ?? DEFAULT_USER_PREFERENCES.theme,
+        accent: user?.accent ?? DEFAULT_USER_PREFERENCES.accent,
+        radius: user?.radius ?? DEFAULT_USER_PREFERENCES.radius,
+        language: user?.language ?? DEFAULT_USER_PREFERENCES.language,
         isLoading: context.isLoading,
         isFetching: context.isFetching,
         error: context.error ?? null,
@@ -209,7 +149,13 @@ export function useUpdateUser() {
                 throw new Error(`API request failed (${response.status})`);
             }
 
-            return normalizeUser((await response.json()) as UserResponse);
+            const responsePayload = (await response.json()) as ApiResponse<User>;
+
+            if (!responsePayload.data) {
+                throw new Error('Unexpected response format');
+            }
+
+            return responsePayload.data;
         },
         onSuccess: (user) => {
             queryClient.setQueryData(['api', userUrl], user);

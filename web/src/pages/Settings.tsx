@@ -1,12 +1,16 @@
+import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
 import Layout from '@/Layout';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
 import { Button } from '@ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Menu, MenuSection } from '@ui/menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
+import { useDeleteOrg } from '@/hooks/use-org';
 import { Bell, Building2, Code2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
@@ -16,9 +20,12 @@ import { toast } from 'sonner';
 export default function Settings() {
     const { user, orgs, theme, accent, radius, isLoading } = useUser();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
+    const deleteOrg = useDeleteOrg();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [accountError, setAccountError] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {
@@ -51,7 +58,10 @@ export default function Settings() {
                 <Menu defaultValue="account" className="items-start">
                     <MenuSection value="account" label="Account" icon={UserRound}>
                         <div className="space-y-4">
-                            <h2 className="text-lg font-medium text-foreground">Account</h2>
+                            <div>
+                                <h2 className="text-lg font-medium text-foreground">Account</h2>
+                                <p className="text-sm text-muted-foreground">Update your username and email address.</p>
+                            </div>
 
                             <form
                                 className="space-y-4"
@@ -125,7 +135,12 @@ export default function Settings() {
 
                     <MenuSection value="appearance" label="Appearance" icon={Paintbrush}>
                         <div className="space-y-4">
-                            <h2 className="text-lg font-medium text-foreground">Appearance</h2>
+                            <div>
+                                <h2 className="text-lg font-medium text-foreground">Appearance</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Customize the theme, accent color, and radius for the interface.
+                                </p>
+                            </div>
 
                             <div className="grid gap-4 md:grid-cols-3">
                                 <div className="space-y-2">
@@ -205,51 +220,146 @@ export default function Settings() {
 
                     <MenuSection value="notifications" label="Notifications" icon={Bell}>
                         <div className="space-y-4">
-                            <h2 className="text-lg font-medium text-foreground">Notifications</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Choose which updates and alerts you want to receive.
-                            </p>
+                            <div>
+                                <h2 className="text-lg font-medium text-foreground">Notifications</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Choose which updates and alerts you want to receive.
+                                </p>
+                            </div>
                         </div>
                     </MenuSection>
 
-                    <MenuSection value="orgs" label="Orgs" icon={Building2}>
+                    <MenuSection value="orgs" label="Organizations" icon={Building2}>
                         <div className="space-y-4">
-                            <h2 className="text-lg font-medium text-foreground">Orgs</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Review the orgs connected to your personal account.
-                            </p>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h2 className="text-lg font-medium text-foreground">Organizations</h2>
+                                    <p className="text-sm text-muted-foreground">
+                                        Review the organizations connected to your personal account.
+                                    </p>
+                                </div>
 
-                            <div className="space-y-2">
-                                {orgs.length ? (
-                                    orgs.map((organization) => (
-                                        <div
-                                            key={organization.name}
-                                            className="flex items-center justify-between gap-3"
-                                        >
-                                            <span className="text-sm text-foreground">
-                                                {organization.name} <span className="text-muted-foreground">({organization.role})</span>
-                                            </span>
-                                            <Link to="/organizations" className="text-sm text-accent hover:underline">
-                                                Manage
-                                            </Link>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-muted-foreground">No orgs available.</p>
-                                )}
+                                <CreateOrgDialog />
+                            </div>
+
+                            <div className="w-full overflow-hidden rounded-2xl border border-border bg-card/80">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Name</TableHead>
+                                            <TableHead className="w-32">Role</TableHead>
+                                            <TableHead className="w-44">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {orgs.length ? (
+                                            orgs.map((organization) => (
+                                                <TableRow key={organization.name}>
+                                                    <TableCell className="font-medium text-foreground">{organization.name}</TableCell>
+                                                    <TableCell className="text-sm text-muted-foreground">{organization.role}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                            <Link to="/organizations" className="text-sm text-accent hover:underline">
+                                                                Manage
+                                                            </Link>
+                                                            <Button
+                                                                type="button"
+                                                                variant="destructive"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setDeleteTarget(organization.name);
+                                                                    setDeleteError(null);
+                                                                }}
+                                                            >
+                                                                Delete
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={3} className="py-8 text-sm text-muted-foreground">
+                                                    No orgs available.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
                             </div>
                         </div>
                     </MenuSection>
 
                     <MenuSection value="developer-settings" label="Developer Settings" icon={Code2}>
                         <div className="space-y-4">
-                            <h2 className="text-lg font-medium text-foreground">Developer Settings</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Configure developer access, integrations, and API-related preferences.
-                            </p>
+                            <div>
+                                <h2 className="text-lg font-medium text-foreground">Developer Settings</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Configure developer access, integrations, and API-related preferences.
+                                </p>
+                            </div>
                         </div>
                     </MenuSection>
                 </Menu>
+
+                <Dialog
+                    open={deleteTarget !== null}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setDeleteTarget(null);
+                            setDeleteError(null);
+                        }
+                    }}
+                >
+                    <DialogContent>
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <DialogTitle>Delete org</DialogTitle>
+                                <DialogDescription>
+                                    {deleteTarget ? `Delete ${deleteTarget} from your account?` : 'Delete this org?'}
+                                </DialogDescription>
+                            </div>
+
+                            {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
+
+                            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setDeleteTarget(null);
+                                        setDeleteError(null);
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    disabled={deleteOrg.isPending || deleteTarget === null}
+                                    onClick={async () => {
+                                        if (!deleteTarget) {
+                                            return;
+                                        }
+
+                                        // Delete the selected org and close the dialog on success.
+                                        try {
+                                            await deleteOrg.mutateAsync(deleteTarget);
+                                            setDeleteTarget(null);
+                                            setDeleteError(null);
+                                        } catch (mutationError) {
+                                            setDeleteError(
+                                                mutationError instanceof Error ? mutationError.message : 'Failed to delete org'
+                                            );
+                                        }
+                                    }}
+                                >
+                                    {deleteOrg.isPending ? 'Deleting...' : 'Delete'}
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </section>
         </Layout>
     );

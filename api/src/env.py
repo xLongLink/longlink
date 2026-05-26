@@ -4,6 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
+    # Run the API without serving static frontend files by default.
+    HEADLESS: bool = True
+
     SESSION_KEY: str
 
     # Control plane database URL

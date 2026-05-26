@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.exc import IntegrityError
-from src.db.models import App
+from src.db.models import App, Env
 from src.db.models.association import user_apps
 
 from .base import ServiceBase
@@ -46,6 +46,7 @@ class AppsService(ServiceBase):
         name: str,
         url: str,
         image: str,
+        created_by: str | None = None,
     ) -> App:
         '''Add a new app to the database for one organization.'''
 
@@ -73,25 +74,27 @@ class AppsService(ServiceBase):
             }
 
             app = App(**app_kwargs)
+            if created_by is not None:
+                app.created_by = created_by
+                app.updated_by = created_by
             session.add(app)
             await session.commit()
             await session.refresh(app)
             return app
 
-    async def delete(self, organization: str, name: str) -> App:
-        '''Delete an app by organization and name and return it.'''
+    async def delete(self, organization: str, app_id: int) -> App:
+        '''Delete an app by organization and id and return it.'''
 
         async with self.session() as session:
             # Load the app first so the delete path can raise a single not-found error.
-            statement = select(App).where(
-                App.organization == organization,
-                App.name == name,
-            )
+            statement = select(App).where(App.organization == organization, App.id == app_id)
             result = await session.execute(statement)
             app = result.scalar_one_or_none()
             if app is None:
                 raise ValueError('App not found')
 
+            # Remove env rows first so the app row is not blocked by dependent secrets.
+            await session.execute(delete(Env).where(Env.appname == app.name))
             await session.delete(app)
             try:
                 # Surface referential integrity failures as service-level validation errors.

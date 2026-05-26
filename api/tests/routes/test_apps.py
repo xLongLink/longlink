@@ -5,6 +5,7 @@ import src.db as db
 from src.db.models.association import user_apps
 from src.db.models import User
 from src.db.session import get_session
+from src.models import AppResponse, UserSummary
 
 
 async def test_list_apps_returns_app_membership_role(
@@ -16,7 +17,13 @@ async def test_list_apps_returns_app_membership_role(
     # Arrange
     user = users[0]
     await db.orgs.create("acme", user.id)
-    await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
+    app = await db.apps.create(
+        "acme",
+        "dashboard",
+        url="/api/apps/dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        created_by=user.name,
+    )
 
     Session = await get_session()
     async with Session() as session:
@@ -37,16 +44,19 @@ async def test_list_apps_returns_app_membership_role(
 
     # Assert
     assert response.status_code == 200
+    expected_data = AppResponse.model_validate(
+        {
+            **app.model_dump(),
+            "role": "write",
+            "created_by": UserSummary.model_validate(user.model_dump()),
+            "updated_by": UserSummary.model_validate(user.model_dump()),
+            "deleted_by": UserSummary.model_validate(user.model_dump()),
+        }
+    ).model_dump(mode="json")
     assert response.json() == {
         "success": True,
         "detail": "Apps fetched",
-        "data": [
-            {
-                "name": "dashboard",
-                "url": "/api/apps/dashboard",
-                "role": "write",
-            }
-        ],
+        "data": [expected_data],
     }
 
 
@@ -59,7 +69,13 @@ async def test_list_apps_returns_null_role_without_app_membership(
     # Arrange
     user = users[0]
     await db.orgs.create("acme", user.id)
-    await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
+    app = await db.apps.create(
+        "acme",
+        "dashboard",
+        url="/api/apps/dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        created_by=user.name,
+    )
     client = clients[0]
 
     # Act
@@ -67,16 +83,19 @@ async def test_list_apps_returns_null_role_without_app_membership(
 
     # Assert
     assert response.status_code == 200
+    expected_data = AppResponse.model_validate(
+        {
+            **app.model_dump(),
+            "role": None,
+            "created_by": UserSummary.model_validate(user.model_dump()),
+            "updated_by": UserSummary.model_validate(user.model_dump()),
+            "deleted_by": UserSummary.model_validate(user.model_dump()),
+        }
+    ).model_dump(mode="json")
     assert response.json() == {
         "success": True,
         "detail": "Apps fetched",
-        "data": [
-            {
-                "name": "dashboard",
-                "url": "/api/apps/dashboard",
-                "role": None,
-            }
-        ],
+        "data": [expected_data],
     }
 
 
@@ -123,12 +142,33 @@ async def test_create_app_returns_envelope(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {
+    payload = response.json()
+    expected_data = AppResponse.model_validate(payload["data"]).model_dump(mode="json")
+    assert payload["data"]["deleted_by"] == UserSummary.model_validate(user.model_dump()).model_dump(mode="json")
+    assert payload == {
         "success": True,
         "detail": "App created",
-        "data": {
-            "name": "dashboard",
-            "url": "/api/apps/dashboard",
-            "role": None,
-        },
+        "data": expected_data,
     }
+
+
+async def test_delete_app_removes_dependent_env_rows(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Delete an app even when it still has env secrets."""
+
+    # Arrange
+    user = users[0]
+    await db.orgs.create("acme", user.id)
+    app = await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
+    await db.envs.set("TOKEN", "secret", "dashboard")
+    client = clients[0]
+
+    # Act
+    response = client.delete(f"/api/apps/{app.id}?organization=acme")
+
+    # Assert
+    assert response.status_code == 204
+    assert await db.apps.get("acme", "dashboard") is None
+    assert await db.envs.get("TOKEN", "dashboard") is None

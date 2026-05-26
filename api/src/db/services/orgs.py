@@ -1,7 +1,7 @@
-from sqlalchemy import insert, select
+from sqlalchemy import delete, insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.db.models import Org, User
+from src.db.models import App, Org, User
 from src.db.models.association import user_organizations
 
 from .base import ServiceBase
@@ -49,6 +49,9 @@ class OrgsService(ServiceBase):
                     raise ValueError("User not found")
 
             organization = Org(name=name)
+            if user is not None:
+                organization.created_by = user.name
+                organization.updated_by = user.name
             session.add(organization)
 
             try:
@@ -78,6 +81,8 @@ class OrgsService(ServiceBase):
             if organization is None:
                 return None
 
+            # Remove the org apps first because apps are stored in a separate table.
+            await session.execute(delete(App).where(App.organization == name))
             await session.delete(organization)
             await session.commit()
             return organization

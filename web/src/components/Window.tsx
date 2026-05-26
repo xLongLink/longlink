@@ -32,6 +32,13 @@ export function Window({ children, defaultViewMode = 'rendered', onRedClick }: W
     return (
         <div className="relative h-fit overflow-hidden rounded-2xl border border-border bg-card/80 shadow-lg shadow-black/10 ring-1 ring-border/60">
             <div className="absolute left-4 top-3 z-10 flex items-center gap-2">
+                <Switch
+                    checked={viewMode === 'rendered'}
+                    onCheckedChange={(checked) => setViewMode(checked ? 'rendered' : 'source')}
+                />
+            </div>
+
+            <div className="absolute right-4 top-3 z-10 flex items-center gap-2">
                 <button
                     type="button"
                     aria-label="Clear canvas"
@@ -42,15 +49,8 @@ export function Window({ children, defaultViewMode = 'rendered', onRedClick }: W
                 <span className="h-3 w-3 rounded-full bg-green-400" />
             </div>
 
-            <div className="absolute right-4 top-3 z-10 flex items-center gap-2">
-                <Switch
-                    checked={viewMode === 'rendered'}
-                    onCheckedChange={(checked) => setViewMode(checked ? 'rendered' : 'source')}
-                />
-            </div>
-
             {viewMode === 'rendered' ? (
-                <div className="origin-top-left scale-[0.9] w-[111.111%] px-6 pt-10">
+                <div className="origin-top-left scale-[0.9] w-[111.111%] px-6 pt-12">
                     {parseError ? (
                         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
                             {parseError}
@@ -60,7 +60,7 @@ export function Window({ children, defaultViewMode = 'rendered', onRedClick }: W
                     ) : null}
                 </div>
             ) : (
-                <div className="overflow-auto px-3 pt-6">
+                <div className="overflow-auto px-3 pt-8">
                     <SyntaxHighlighter
                         language="xml"
                         style={oneDark}

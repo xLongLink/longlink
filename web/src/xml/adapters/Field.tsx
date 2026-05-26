@@ -2,16 +2,14 @@ import {
     Field as UIField,
     FieldContent as UIFieldContent,
     FieldDescription as UIFieldDescription,
-    FieldError as UIFieldError,
     FieldLabel as UIFieldLabel,
     FieldLegend as UIFieldLegend,
-    FieldSeparator as UIFieldSeparator,
     FieldTitle as UIFieldTitle,
 } from '@/components/ui/field';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { resolveXmlString, resolveXmlValue } from './props';
+import { resolveXmlString } from './props';
 
 /** Renders the field legend slot. */
 export function FieldLegend({ props, nodes }: Props) {
@@ -56,20 +54,4 @@ export function FieldDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UIFieldDescription>{renderNode(nodes, ctx)}</UIFieldDescription>;
-}
-
-/** Renders a separator between field sections. */
-export function FieldSeparator({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-
-    return <UIFieldSeparator>{renderNode(nodes, ctx)}</UIFieldSeparator>;
-}
-
-/** Renders the field error slot. */
-export function FieldError({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-    const errors = resolveXmlValue(props, 'errors', ctx);
-    const normalizedErrors = typeof errors === 'string' ? [{ message: errors }] : errors;
-
-    return <UIFieldError errors={normalizedErrors}>{renderNode(nodes, ctx)}</UIFieldError>;
 }

@@ -23,7 +23,7 @@ export function UserProfile() {
 
     const username = user.name;
     const fullName = user.email;
-    const avatarUrl = user.avatar ?? '';
+    const avatarUrl = user.avatar;
 
     /**
      * Signs the current user out and redirects to home.

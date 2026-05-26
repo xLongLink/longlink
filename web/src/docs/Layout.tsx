@@ -64,6 +64,8 @@ export default function DocsLayout() {
     const pagePath = currentItem?.path ?? '/docs';
     const docsEditUrl = getDocsEditUrl(pagePath);
     const lastUpdated = getDocsLastUpdated(pagePath);
+    const isRootDocsPage = pagePath === '/docs';
+    const isSectionOverviewPage = !isRootDocsPage && currentItem?.id === currentGroup?.items[0]?.id;
 
     useEffect(() => {
         const content = contentRef.current;
@@ -143,7 +145,7 @@ export default function DocsLayout() {
                         to="/"
                         className="flex cursor-pointer items-end justify-center gap-2 text-[1.375rem] font-semibold text-card-foreground transition-opacity hover:opacity-80"
                     >
-                        <Wordmark />
+                        <Wordmark className="text-base" />
                     </Link>
                 </SidebarHeader>
 
@@ -186,13 +188,13 @@ export default function DocsLayout() {
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
-                    <div className="pointer-events-auto relative shrink-0 bg-card/80 py-4 backdrop-blur-sm">
-                        <SidebarTrigger className="absolute top-1/2 left-4 shrink-0 -translate-y-1/2 cursor-pointer lg:left-6" />
+                    <div className="pointer-events-auto relative shrink-0 border-b border-border bg-card py-4">
+                        <SidebarTrigger className="absolute top-4 left-4 shrink-0 cursor-pointer lg:left-6" />
                         <a
                             href={apiUrl('/auth/login/oidc')}
                             className={cn(
                                 buttonVariants({ size: 'sm' }),
-                                'absolute top-1/2 right-4 h-7 -translate-y-1/2 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
+                                'absolute top-4 right-4 h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
                             )}
                         >
                             Login
@@ -216,34 +218,42 @@ export default function DocsLayout() {
                                                         )}
                                                     />
                                                 </BreadcrumbItem>
-                                                <BreadcrumbSeparator />
-                                                <BreadcrumbItem>
-                                                    <BreadcrumbLink
-                                                        render={(props) => (
-                                                            <Link
-                                                                {...props}
-                                                                to={currentGroup?.items[0]?.path ?? '/docs'}
-                                                                className="transition-colors hover:text-foreground"
-                                                            >
-                                                                {currentGroup?.title ?? 'Overview'}
-                                                            </Link>
-                                                        )}
-                                                    />
-                                                </BreadcrumbItem>
-                                                <BreadcrumbSeparator />
-                                                <BreadcrumbItem>
-                                                    <BreadcrumbLink
-                                                        render={(props) => (
-                                                            <Link
-                                                                {...props}
-                                                                to={pagePath}
-                                                                className="font-medium text-foreground"
-                                                            >
-                                                                {pageLabel}
-                                                            </Link>
-                                                        )}
-                                                    />
-                                                </BreadcrumbItem>
+                                                {!isRootDocsPage ? (
+                                                    <>
+                                                        <BreadcrumbSeparator />
+                                                        <BreadcrumbItem>
+                                                            <BreadcrumbLink
+                                                                render={(props) => (
+                                                                    <Link
+                                                                        {...props}
+                                                                        to={currentGroup?.items[0]?.path ?? '/docs'}
+                                                                        className="transition-colors hover:text-foreground"
+                                                                    >
+                                                                        {currentGroup?.title ?? 'Overview'}
+                                                                    </Link>
+                                                                )}
+                                                            />
+                                                        </BreadcrumbItem>
+                                                        {!isSectionOverviewPage ? (
+                                                            <>
+                                                                <BreadcrumbSeparator />
+                                                                <BreadcrumbItem>
+                                                                    <BreadcrumbLink
+                                                                        render={(props) => (
+                                                                            <Link
+                                                                                {...props}
+                                                                                to={pagePath}
+                                                                                className="font-medium text-foreground"
+                                                                            >
+                                                                                {pageLabel}
+                                                                            </Link>
+                                                                        )}
+                                                                    />
+                                                                </BreadcrumbItem>
+                                                            </>
+                                                        ) : null}
+                                                    </>
+                                                ) : null}
                                             </BreadcrumbList>
                                         </UIBreadcrumb>
                                     </div>
@@ -254,7 +264,7 @@ export default function DocsLayout() {
                 </div>
             </SidebarInset>
 
-            <div className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-0 rounded-lg bg-card/80 backdrop-blur-sm transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-0 rounded-lg bg-card transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2" />
             <div className="pointer-events-none fixed top-0 right-1 left-1 z-[15] h-[5px] bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-[9px] lg:peer-data-[state=collapsed]:left-2" />
             <div className="pointer-events-none fixed right-1 bottom-0 left-1 z-[15] h-1 bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-2 lg:peer-data-[state=collapsed]:left-2" />
             <div className="pointer-events-none fixed top-0 bottom-0 left-0 z-[15] w-[5px] bg-background lg:left-[calc(var(--sidebar-width)-1px)] lg:w-[9px] lg:peer-data-[state=collapsed]:left-0" />

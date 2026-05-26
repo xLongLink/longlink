@@ -13,7 +13,6 @@ const DOC_LAST_UPDATED: Record<string, string> = {
     '/docs/sdk/testing': '2026-05-26',
     '/docs/xml': '2026-05-26',
     '/docs/xml/components': '2026-05-26',
-    '/docs/xml/field': '2026-05-26',
     '/docs/xml/layout': '2026-05-26',
 };
 

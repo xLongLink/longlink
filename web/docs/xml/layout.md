@@ -58,7 +58,11 @@ Flex arranges children in a row and can distribute space between them.
 ```xml
 <Flex space="between">
   <Button variant="outline">Cancel</Button>
-  <ButtonGroup><Button size="sm" variant="outline">Back</Button><Button size="sm">Next</Button></ButtonGroup>
+
+  <ButtonGroup>
+    <Button size="sm" variant="outline">Back</Button>
+    <Button size="sm">Next</Button>
+  </ButtonGroup>
 </Flex>
 ```
 
@@ -97,12 +101,24 @@ Tabs let users switch between related panels. Tabs can also show an icon per tab
 
 ## Menu
 
-Menus expose sectioned navigation and content groups.
+Menus expose sectioned navigation, nested subsections, and optional icons.
 
 ```xml
-<Menu defaultValue="first">
-  <MenuSection value="first" label="First">
-    <P>First section</P>
+<Menu defaultValue="settings">
+  <MenuSection value="overview" label="Overview" icon="layout-grid">
+    <P>Today&apos;s snapshot.</P>
+  </MenuSection>
+
+  <MenuSection value="operations" label="Operations" icon="settings">
+    <P>Live queue management.</P>
+
+    <MenuSubSection value="orders" label="Orders">
+      <P>Open orders waiting on fulfillment.</P>
+    </MenuSubSection>
+  </MenuSection>
+
+  <MenuSection value="settings" label="Settings" icon="shield">
+    <P>Workspace settings and permissions.</P>
   </MenuSection>
 </Menu>
 ```

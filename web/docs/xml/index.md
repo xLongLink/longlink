@@ -68,9 +68,9 @@ Use `$name` for direct references to a state value.
 Use `For` to render one child scope for each item in an array state or query result.
 
 ```xml
-<State id="products" value='[{"name":"Alpha","status":"Active"},{"name":"Beta","status":"Paused"}]' />
-
-<For each="$products" as="product">
-  <P>${product.name} - ${product.status}</P>
-</For>
+<Ul if="${cart.value.length}">
+  <For each="${cart.value}" as="item">
+    <Li>${item.name} · Qty: ${item.quantity} · ${item.price}</Li>
+  </For>
+</Ul>
 ```

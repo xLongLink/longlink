@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import EmailStr, BaseModel
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from src.models.roles import RoleName
 
@@ -87,16 +87,39 @@ class UserOrgMembership(BaseModel):
     role: RoleName
 
 
+class UserSummary(BaseModel):
+    """Represent a compact user object in nested responses."""
+
+    id: int
+    name: str
+    email: EmailStr
+    avatar: str = ""
+
+    @field_validator("avatar", mode="before")
+    @classmethod
+    def normalize_avatar(cls, value: str | None) -> str:
+        """Default missing avatar URLs to an empty string."""
+
+        return value or ""
+
+
 class UserProfile(BaseModel):
     """Represent the authenticated user payload returned by the API."""
 
-    id: int | None
+    id: int
     name: str
     email: EmailStr
-    avatar: str | None = None
+    avatar: str = ""
     theme: Theme
     accent: Accent
     radius: Radius
     language: Language
     oidc_subject: str | None = None
-    orgs: list[UserOrgMembership]
+    orgs: list[UserOrgMembership] = Field(default_factory=list)
+
+    @field_validator("avatar", mode="before")
+    @classmethod
+    def normalize_avatar(cls, value: str | None) -> str:
+        """Default missing avatar URLs to an empty string."""
+
+        return value or ""

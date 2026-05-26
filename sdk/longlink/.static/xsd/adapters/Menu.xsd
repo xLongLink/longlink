@@ -23,6 +23,7 @@
       <xsd:extension base="MenuChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
         <xsd:attribute name="label" type="xsd:string" use="optional" />
+        <xsd:attribute name="icon" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

@@ -40,9 +40,11 @@ app = FastAPI(
 async def handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     """Wrap FastAPI HTTP errors in the shared API envelope."""
 
+    detail = "" if exc.detail is None else str(exc.detail)
+
     return JSONResponse(
         status_code=exc.status_code,
-        content={"success": False, "detail": exc.detail, "data": None},
+        content={"success": False, "detail": detail, "data": None},
     )
 
 
@@ -50,9 +52,11 @@ async def handle_http_exception(request: Request, exc: StarletteHTTPException) -
 async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
     """Wrap validation errors in the shared API envelope."""
 
+    detail = "; ".join(error["msg"] for error in exc.errors()) or "Validation error"
+
     return JSONResponse(
         status_code=422,
-        content={"success": False, "detail": exc.errors(), "data": None},
+        content={"success": False, "detail": detail, "data": None},
     )
 
 
@@ -87,7 +91,7 @@ for router in routers:
     app.include_router(router)
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
-if static_dir.exists():
+if not env.HEADLESS and static_dir.exists():
     app.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
 
 

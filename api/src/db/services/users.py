@@ -76,6 +76,15 @@ class UsersService(ServiceBase):
             result = await session.execute(statement)
             return result.scalars().first()
 
+
+    async def get_by_name(self, name: str) -> User | None:
+        """Retrieve a user by display name."""
+
+        async with self.session() as session:
+            statement = select(User).where(User.name == name)
+            result = await session.execute(statement)
+            return result.scalars().first()
+
     async def update(
         self,
         user_id: int,

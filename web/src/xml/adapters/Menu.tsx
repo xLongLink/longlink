@@ -3,6 +3,8 @@ import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { ASTNode, ExecutionContext, Props } from '@xml/types';
+import * as LucideIcons from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 
@@ -32,10 +34,15 @@ export function MenuSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const value = requireXmlString(props, 'value', ctx, 'MenuSection');
     const label = resolveXmlString(props, 'label', ctx);
+    const icon = resolveXmlString(props, 'icon', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
+    const iconName = icon.trim();
+
+    // Resolve the optional icon lazily so menu sections can showcase Lucide icons by XML name.
+    const IconComponent = iconName ? resolveIconComponent(iconName) : null;
 
     return (
-        <UIMenuSection disabled={disabled} label={label} value={value}>
+        <UIMenuSection disabled={disabled} icon={IconComponent ?? undefined} label={label} value={value}>
             {renderNode(nodes, ctx)}
         </UIMenuSection>
     );
@@ -63,6 +70,17 @@ function booleanAttribute(value: unknown): boolean | undefined {
     return true;
 }
 
+/** Resolves a Lucide icon component from an XML icon name. */
+function resolveIconComponent(name: string) {
+    const normalizedName = name
+        .trim()
+        .replace(/(?:^|[-_\s]+)([a-zA-Z0-9])/g, (_match, char: string) => char.toUpperCase())
+        .replace(/[^a-zA-Z0-9]/g, '');
+
+    return (LucideIcons[name as keyof typeof LucideIcons] ??
+        LucideIcons[normalizedName as keyof typeof LucideIcons]) as LucideIcon | null;
+}
+
 /** Renders top-level menu section markers for the UI menu parser. */
 function renderMenuNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
     return nodes.map((node, index) => {
@@ -76,10 +94,12 @@ function renderMenuNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
         const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+        const icon = node.params?.icon ? String(evaluate(node.params.icon, ctx) ?? '') : '';
         const disabled = booleanAttribute(node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined);
+        const IconComponent = icon.trim() ? resolveIconComponent(icon) : null;
 
         return (
-            <UIMenuSection key={index} disabled={disabled} label={label} value={value}>
+            <UIMenuSection key={index} disabled={disabled} icon={IconComponent ?? undefined} label={label} value={value}>
                 {renderMenuSectionChildren(node.children ?? [], ctx)}
             </UIMenuSection>
         );

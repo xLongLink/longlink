@@ -24,10 +24,8 @@ export {
     Field,
     FieldContent,
     FieldDescription,
-    FieldError,
     FieldLabel,
     FieldLegend,
-    FieldSeparator,
     FieldTitle,
 } from './Field';
 export { For } from './For';

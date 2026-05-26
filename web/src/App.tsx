@@ -2,7 +2,9 @@ import { RequireAuth } from '@/components/Auth';
 import { apiUrl } from '@/lib/api';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
-import DocsLayout from './docs/Layout';
+import impressumMarkdown from '../legal/impressum.md?raw';
+import privacyMarkdown from '../legal/privacy.md?raw';
+import termsMarkdown from '../legal/terms.md?raw';
 import {
     ControlPlanePage,
     DocsOverviewPage,
@@ -15,21 +17,19 @@ import {
     SdkTestingPage,
     SelfHostedControlPlanePage,
     XmlComponentsPage,
-    XmlFieldPage,
     XmlLayoutPage,
     XmlOverviewPage,
 } from './docs';
+import DocsLayout from './docs/Layout';
+import { LegalPage } from './pages/LegalPage';
 import Home from './pages/Home';
-import Impressum from './pages/Impressum';
 import NotFound from './pages/NotFound';
 import Organization from './pages/Organization';
 import Organizations from './pages/Organizations';
 import Playground from './pages/Playground';
-import Privacy from './pages/Privacy';
 import Sample from './pages/Sample';
 import Settings from './pages/Settings';
 import Theme from './pages/Theme';
-import Terms from './pages/Terms';
 import View from './pages/View';
 
 /**
@@ -60,16 +60,15 @@ function getRoutes() {
                 { path: 'sdk/testing', element: <SdkTestingPage /> },
                 { path: 'xml', element: <XmlOverviewPage /> },
                 { path: 'xml/components', element: <XmlComponentsPage /> },
-                { path: 'xml/field', element: <XmlFieldPage /> },
                 { path: 'xml/layout', element: <XmlLayoutPage /> },
             ],
         },
         { path: 'playground', element: <Playground /> },
         { path: 'theme', element: <Theme /> },
         { path: 'sample', element: <Sample /> },
-        { path: 'impressum', element: <Impressum /> },
-        { path: 'terms', element: <Terms /> },
-        { path: 'privacy', element: <Privacy /> },
+        { path: 'impressum', element: <LegalPage title="Impressum" content={impressumMarkdown} /> },
+        { path: 'terms', element: <LegalPage title="Terms" content={termsMarkdown} /> },
+        { path: 'privacy', element: <LegalPage title="Privacy" content={privacyMarkdown} /> },
         {
             path: 'organizations',
             element: (

@@ -1,12 +1,8 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
-
-type OrgApplication = {
-    name: string;
-    role: string;
-};
+import type { ApiOrgApp } from '@/lib/types';
 
 type ApplicationsProps = {
-    apps: OrgApplication[];
+    apps: ApiOrgApp[];
     isLoading: boolean;
     error: Error | null;
 };
@@ -19,19 +15,18 @@ export default function Applications({ apps, isLoading, error }: ApplicationsPro
                 <TableHeader>
                     <TableRow>
                         <TableHead>App</TableHead>
-                        <TableHead className="w-32">Role</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {isLoading ? (
                         <TableRow>
-                            <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
+                            <TableCell colSpan={1} className="py-8 text-sm text-muted-foreground">
                                 Loading apps...
                             </TableCell>
                         </TableRow>
                     ) : error ? (
                         <TableRow>
-                            <TableCell colSpan={2} className="py-8 text-sm text-destructive">
+                            <TableCell colSpan={1} className="py-8 text-sm text-destructive">
                                 Failed to load apps.
                             </TableCell>
                         </TableRow>
@@ -39,12 +34,11 @@ export default function Applications({ apps, isLoading, error }: ApplicationsPro
                         apps.map((app) => (
                             <TableRow key={app.name}>
                                 <TableCell className="font-medium text-foreground">{app.name}</TableCell>
-                                <TableCell className="text-sm text-muted-foreground">{app.role}</TableCell>
                             </TableRow>
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
+                            <TableCell colSpan={1} className="py-8 text-sm text-muted-foreground">
                                 No apps found.
                             </TableCell>
                         </TableRow>

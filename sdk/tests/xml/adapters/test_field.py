@@ -26,13 +26,11 @@ def test_field_validation() -> None:
           <Field>
             <FieldLabel htmlFor="username">Username</FieldLabel>
             <Input id="username" autoComplete="off" aria-invalid="true" />
-            <FieldError>Choose another username.</FieldError>
           </Field>
           <Field orientation="horizontal">
             <Switch id="newsletter" />
             <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
           </Field>
-          <FieldSeparator>or</FieldSeparator>
         </Grid>
         """,
         schema=FIELD_SET_SCHEMA,

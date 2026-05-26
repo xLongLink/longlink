@@ -73,7 +73,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
 
                 {section === 'people' ? <People people={people} isLoading={isLoading} error={error} /> : null}
                 {section === 'applications' ? <Applications apps={apps} isLoading={isLoading} error={error} /> : null}
-                {section === 'settings' ? <OrgSettings /> : null}
+                {section === 'settings' ? <OrgSettings org={org} apps={apps} isLoading={isLoading} error={error} /> : null}
             </section>
         </Layout>
     );

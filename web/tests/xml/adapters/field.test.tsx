@@ -7,7 +7,7 @@ describe('Field', () => {
     it('preserves the full field structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Grid columns="2"><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></Grid>'
+                '<Grid columns="2"><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field></Grid>'
             )
         ).toMatchObject([
             {
@@ -53,10 +53,6 @@ describe('Field', () => {
                                 name: 'Input',
                                 params: { id: 'username', autoComplete: 'off', 'aria-invalid': 'true' },
                             },
-                            {
-                                name: 'FieldError',
-                                children: [{ name: 'Text', params: { value: 'Choose another username.' } }],
-                            },
                         ],
                     },
                     {
@@ -74,10 +70,6 @@ describe('Field', () => {
                             },
                         ],
                     },
-                    {
-                        name: 'FieldSeparator',
-                        children: [{ name: 'Text', params: { value: 'or' } }],
-                    },
                 ],
             },
         ]);
@@ -87,7 +79,7 @@ describe('Field', () => {
     it('renders the full field composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Grid columns="2"><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /><FieldError>Choose another username.</FieldError></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field><FieldSeparator>or</FieldSeparator></Grid>'
+                '<Grid columns="2"><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field></Grid>'
             )
         );
 
@@ -96,10 +88,7 @@ describe('Field', () => {
         expect(output).toContain('data-slot="field-content"');
         expect(output).toContain('data-slot="field-label"');
         expect(output).toContain('data-slot="field-description"');
-        expect(output).toContain('data-slot="field-error"');
-        expect(output).toContain('data-slot="field-separator"');
         expect(output).toContain('Full name');
-        expect(output).toContain('Choose another username.');
         expect(output).toContain('data-orientation="horizontal"');
     });
 });

@@ -3,17 +3,10 @@ import { Menu, MenuSection } from '@ui/menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 import { Mail, Users } from 'lucide-react';
 import { useState } from 'react';
-
-type OrgPerson = {
-    id: number;
-    name: string;
-    email: string;
-    avatar?: string | null;
-    role: string;
-};
+import type { ApiUserSummary } from '@/lib/types';
 
 type PeopleProps = {
-    people: OrgPerson[];
+    people: ApiUserSummary[];
     isLoading: boolean;
     error: Error | null;
 };
@@ -36,19 +29,18 @@ export default function People({ people, isLoading, error }: PeopleProps) {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>User</TableHead>
-                                <TableHead className="w-32">Role</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
+                                    <TableCell colSpan={1} className="py-8 text-sm text-muted-foreground">
                                         Loading people...
                                     </TableCell>
                                 </TableRow>
                             ) : error ? (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-destructive">
+                                    <TableCell colSpan={1} className="py-8 text-sm text-destructive">
                                         Failed to load people.
                                     </TableCell>
                                 </TableRow>
@@ -58,7 +50,7 @@ export default function People({ people, isLoading, error }: PeopleProps) {
                                         <TableCell className="whitespace-normal">
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="size-8">
-                                                    <AvatarImage src={user.avatar ?? ''} alt={`${user.name} avatar`} />
+                                                    <AvatarImage src={user.avatar} alt={`${user.name} avatar`} />
                                                     <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                 </Avatar>
                                                 <div className="min-w-0 space-y-0.5">
@@ -67,12 +59,11 @@ export default function People({ people, isLoading, error }: PeopleProps) {
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">{user.role}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
+                                    <TableCell colSpan={1} className="py-8 text-sm text-muted-foreground">
                                         No people found.
                                     </TableCell>
                                 </TableRow>

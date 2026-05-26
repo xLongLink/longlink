@@ -48,7 +48,7 @@ export function Footer() {
                 <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
                     <div className="flex items-center gap-5">
                         <Link to="/" className="inline-flex items-center leading-none" aria-label="LongLink home">
-                            <Wordmark compact />
+                            <Wordmark className="gap-1.5 text-xs" />
                         </Link>
 
                         <ul className="flex items-center justify-center gap-4 text-muted-foreground">

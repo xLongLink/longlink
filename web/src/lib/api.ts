@@ -1,4 +1,5 @@
 const DEFAULT_API_URL = '';
+export type { ApiResponse } from '@/lib/types';
 
 /** Resolves an API path against the configured API origin. */
 export function apiUrl(path: string): string {

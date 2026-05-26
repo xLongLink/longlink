@@ -1,9 +1,15 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
+import MarkdownDoc from '@/docs/MarkdownDoc';
 import { Heading } from '@/components/ui/heading';
 
-/** Renders the public privacy page. */
-export default function Privacy() {
+type LegalPageProps = {
+    title: string;
+    content: string;
+};
+
+/** Renders the shared public legal page shell. */
+export function LegalPage({ title, content }: LegalPageProps) {
     return (
         <div className="flex min-h-screen flex-col text-foreground">
             <div className="print:hidden">
@@ -15,12 +21,9 @@ export default function Privacy() {
                 <section className="relative overflow-hidden rounded-2xl border border-border bg-card/80 shadow-lg shadow-black/10 ring-1 ring-border/60 print:overflow-visible print:border-0 print:bg-transparent print:shadow-none print:ring-0">
                     <div className="space-y-6 p-6 pt-2 text-sm leading-6 text-muted-foreground print:p-0 print:text-black">
                         <Heading level="h1" className="text-3xl text-foreground print:text-black">
-                            Privacy
+                            {title}
                         </Heading>
-                        <div className="space-y-1 text-sm text-muted-foreground print:text-black">
-                            <div>Last update: May 20, 2026</div>
-                            <div>TODO: complete this</div>
-                        </div>
+                        <MarkdownDoc content={content} />
                     </div>
                 </section>
             </main>

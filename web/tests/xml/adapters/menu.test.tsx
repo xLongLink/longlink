@@ -7,7 +7,7 @@ describe('Menu', () => {
     it('preserves the nested menu structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Menu defaultValue="overview"><MenuSection value="overview" label="Overview"><P>Overview content</P></MenuSection><MenuSection value="settings" label="Settings"><P>Settings content</P><MenuSubSection value="profile" label="Profile"><P>Profile content</P></MenuSubSection><MenuSubSection value="billing" label="Billing"><P>Billing content</P></MenuSubSection></MenuSection></Menu>'
+                '<Menu defaultValue="overview"><MenuSection value="overview" label="Overview" icon="layout-grid"><P>Overview content</P></MenuSection><MenuSection value="settings" label="Settings" icon="shield"><P>Settings content</P><MenuSubSection value="profile" label="Profile"><P>Profile content</P></MenuSubSection><MenuSubSection value="billing" label="Billing"><P>Billing content</P></MenuSubSection></MenuSection></Menu>'
             )
         ).toEqual([
             {
@@ -16,7 +16,7 @@ describe('Menu', () => {
                 children: [
                     {
                         name: 'MenuSection',
-                        params: { value: 'overview', label: 'Overview' },
+                        params: { value: 'overview', label: 'Overview', icon: 'layout-grid' },
                         children: [
                             {
                                 name: 'P',
@@ -26,7 +26,7 @@ describe('Menu', () => {
                     },
                     {
                         name: 'MenuSection',
-                        params: { value: 'settings', label: 'Settings' },
+                        params: { value: 'settings', label: 'Settings', icon: 'shield' },
                         children: [
                             {
                                 name: 'P',
@@ -63,7 +63,7 @@ describe('Menu', () => {
     it('renders the menu shell in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Menu defaultValue="overview"><MenuSection value="overview" label="Overview"><P>Overview content</P></MenuSection><MenuSection value="settings" label="Settings"><P>Settings content</P><MenuSubSection value="profile" label="Profile"><P>Profile content</P></MenuSubSection><MenuSubSection value="billing" label="Billing"><P>Billing content</P></MenuSubSection></MenuSection></Menu>'
+                '<Menu defaultValue="overview"><MenuSection value="overview" label="Overview" icon="layout-grid"><P>Overview content</P></MenuSection><MenuSection value="settings" label="Settings" icon="shield"><P>Settings content</P><MenuSubSection value="profile" label="Profile"><P>Profile content</P></MenuSubSection><MenuSubSection value="billing" label="Billing"><P>Billing content</P></MenuSubSection></MenuSection></Menu>'
             )
         );
 
@@ -71,6 +71,8 @@ describe('Menu', () => {
         expect(output).toContain('Overview');
         expect(output).toContain('Settings');
         expect(output).toContain('Overview content');
+        expect(output).toContain('text-foreground');
+        expect(output).toContain('text-muted-foreground');
         expect(output).not.toContain('Settings content');
         expect(output).not.toContain('Profile content');
     });

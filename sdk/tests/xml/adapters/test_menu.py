@@ -15,10 +15,10 @@ def test_menu_validation() -> None:
     element = Element.from_content(
         """
         <Menu defaultValue="overview">
-          <MenuSection value="overview" label="Overview">
+          <MenuSection value="overview" label="Overview" icon="layout-grid">
             <P>Overview content</P>
           </MenuSection>
-          <MenuSection value="settings" label="Settings">
+          <MenuSection value="settings" label="Settings" icon="shield">
             <P>Settings content</P>
             <MenuSubSection value="profile" label="Profile">
               <P>Profile content</P>
@@ -42,6 +42,17 @@ def test_menu_rejects_unknown_attributes() -> None:
 
     with pytest.raises(ValueError):
         element.validate()
+
+
+def test_menu_section_accepts_icon() -> None:
+    """Allow Lucide icon names on `MenuSection`."""
+
+    element = Element.from_content(
+        '<Menu><MenuSection value="overview" icon="layout-grid">Overview</MenuSection></Menu>',
+        schema=SCHEMA,
+    )
+
+    element.validate()
 
 
 def test_menu_section_requires_value() -> None:
