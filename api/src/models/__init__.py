@@ -1,5 +1,7 @@
 from .__base__ import APIResponse  # noqa: F401
 from .apps import AppCreate, AppResponse  # noqa: F401
+from .compute import ComputeRegistryCreate, ComputeRegistryResponse, DockerRegistryCreate  # noqa: F401
+from .database import DatabaseRegistryCreate, DatabaseRegistryResponse  # noqa: F401
 from .users import (  # noqa: F401
     Accent,
     Language,
@@ -10,6 +12,6 @@ from .users import (  # noqa: F401
     UserSummary,
     UserUpdate,
 )
-from .compute import DockerRegistryCreate  # noqa: F401
 from .orgs import OrgCreate, OrgDetails  # noqa: F401
+from .storage import StorageRegistryCreate, StorageRegistryResponse  # noqa: F401
 from .roles import ROLES, RoleName  # noqa: F401

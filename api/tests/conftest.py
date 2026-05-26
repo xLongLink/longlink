@@ -57,7 +57,7 @@ async def users() -> tuple[User, User, User]:
 
     Session = await db_session.get_session()
     async with Session() as session:
-        user1 = User(name='user1', email='user1@example.com', oidc_subject='oidc-user-1')
+        user1 = User(name='user1', email='user1@example.com', oidc_subject='oidc-user-1', admin=True)
         user2 = User(name='user2', email='user2@example.com', oidc_subject='oidc-user-2')
         user3 = User(name='user3', email='user3@example.com', oidc_subject='oidc-user-3')
 

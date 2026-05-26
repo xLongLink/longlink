@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from sqlalchemy import and_, delete, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 from src.db.models import App, Env
 from src.db.models.association import user_apps
+from src.db.models.users import User
 
 from .base import ServiceBase
 
@@ -16,6 +18,11 @@ class AppsService(ServiceBase):
             # Join the membership row so the caller can render the app role in one query.
             statement = (
                 select(App, user_apps.c.role_name)
+                .options(
+                    selectinload(App.created_by),
+                    selectinload(App.updated_by),
+                    selectinload(App.deleted_by),
+                )
                 .outerjoin(
                     user_apps,
                     and_(
@@ -33,10 +40,11 @@ class AppsService(ServiceBase):
         '''Return a registered app by organization and name.'''
 
         async with self.session() as session:
-            statement = select(App).where(
-                App.organization == organization,
-                App.name == name,
-            )
+            statement = select(App).options(
+                selectinload(App.created_by),
+                selectinload(App.updated_by),
+                selectinload(App.deleted_by),
+            ).where(App.organization == organization, App.name == name)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -46,7 +54,7 @@ class AppsService(ServiceBase):
         name: str,
         url: str,
         image: str,
-        created_by: str | None = None,
+        user: User | None = None,
     ) -> App:
         '''Add a new app to the database for one organization.'''
 
@@ -74,9 +82,10 @@ class AppsService(ServiceBase):
             }
 
             app = App(**app_kwargs)
-            if created_by is not None:
-                app.created_by = created_by
-                app.updated_by = created_by
+            if user is not None:
+                app.created_by_id = user.id
+                app.updated_by_id = user.id
+                app.deleted_by_id = user.id
             session.add(app)
             await session.commit()
             await session.refresh(app)

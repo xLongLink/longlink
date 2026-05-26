@@ -1,4 +1,4 @@
-import { RequireAuth } from '@/components/Auth';
+import { Auth } from '@/components/Auth';
 import { apiUrl } from '@/lib/api';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
@@ -29,6 +29,12 @@ import Organizations from './pages/Organizations';
 import Playground from './pages/Playground';
 import Sample from './pages/Sample';
 import Settings from './pages/Settings';
+import Admin from './pages/Admin';
+import AdminOrganization from './pages/admin/Organization';
+import AdminUsers from './pages/admin/Users';
+import AdminCompute from './pages/admin/Compute';
+import AdminDatabase from './pages/admin/Database';
+import AdminStorage from './pages/admin/Storage';
 import Theme from './pages/Theme';
 import View from './pages/View';
 
@@ -72,65 +78,77 @@ function getRoutes() {
         {
             path: 'organizations',
             element: (
-                <RequireAuth>
+                <Auth>
                     <Organizations />
-                </RequireAuth>
+                </Auth>
             ),
         },
         {
             path: 'settings',
             element: (
-                <RequireAuth>
+                <Auth>
                     <Settings />
-                </RequireAuth>
+                </Auth>
             ),
+        },
+        {
+            path: 'admin',
+            element: <Admin />,
+            children: [
+                { index: true, element: <AdminUsers /> },
+                { path: 'users', element: <AdminUsers /> },
+                { path: 'organization', element: <AdminOrganization /> },
+                { path: 'database', element: <AdminDatabase /> },
+                { path: 'storage', element: <AdminStorage /> },
+                { path: 'compute', element: <AdminCompute /> },
+            ],
         },
         {
             path: ':org',
             element: (
-                <RequireAuth>
+                <Auth>
                     <Organization />
-                </RequireAuth>
+                </Auth>
             ),
         },
         {
             path: ':org/applications',
             element: (
-                <RequireAuth>
+                <Auth>
                     <Organization sectionName="applications" />
-                </RequireAuth>
+                </Auth>
             ),
         },
         {
             path: ':org/people',
             element: (
-                <RequireAuth>
+                <Auth>
                     <Organization sectionName="people" />
-                </RequireAuth>
+                </Auth>
             ),
         },
         {
             path: ':org/settings',
             element: (
-                <RequireAuth>
+                <Auth>
                     <Organization sectionName="settings" />
-                </RequireAuth>
+                </Auth>
             ),
         },
         {
             path: ':org/:app/*',
             element: (
-                <RequireAuth>
+                <Auth>
                     <View metadata={apiUrl('/api/:org/:app/metadata.json')} baseurl={apiUrl('/api/apps/:app')} />
-                </RequireAuth>
+                </Auth>
             ),
         },
         {
             path: '*',
             element: (
-                <RequireAuth>
+                <Auth>
                     <NotFound />
-                </RequireAuth>
+                </Auth>
             ),
         },
     ];

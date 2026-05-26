@@ -8,7 +8,12 @@ The runtime parses XML, resolves expressions, renders React-backed components, a
 Use `<longlink>` as the root page shell.
 
 ```xml
-<State id="user" value="name" />
+<State id="filter" value='"day"' />
+<Field>
+    <FieldLabel htmlFor="filter">Filter</FieldLabel>
+    <Input id="filter" value="$filter.value" />
+    <FieldDescription>Current filter: ${filter.value}</FieldDescription>
+</Field>
 ```
 
 ## if
@@ -16,7 +21,12 @@ Use `<longlink>` as the root page shell.
 Use `if` on any supported XML element except `<longlink>` to render conditionally.
 
 ```xml
-<P if="${order.active}">Active</P>
+<State id="filter" value='""' />
+<Field>
+    <FieldLabel htmlFor="filter">Filter</FieldLabel>
+    <Input id="filter" value="$filter.value" />
+    <FieldDescription if="${filter.value in ['if']}">Shown only when the filter is if.</FieldDescription>
+</Field>
 ```
 
 ## Query
@@ -47,11 +57,15 @@ Use `${count}` for wrapped expressions that return typed values.
 
 ## State
 
-Use `<State />` to seed shared runtime values for references and loops.
+Use `<State />` to seed shared runtime values for sibling content, references, and loops.
 
 ```xml
-<State id="selectedProduct" name="Alpha" status="Active" />
-<State id="products" value='[{"name":"Alpha","status":"Active"},{"name":"Beta","status":"Paused"}]' />
+<State id="filter" value='"day"' />
+<Field>
+    <FieldLabel htmlFor="filter">Filter</FieldLabel>
+    <Input id="filter" value="$filter.value" />
+    <FieldDescription>Current filter: ${filter.value}</FieldDescription>
+</Field>
 ```
 
 ## References
@@ -68,9 +82,10 @@ Use `$name` for direct references to a state value.
 Use `For` to render one child scope for each item in an array state or query result.
 
 ```xml
-<Ul if="${cart.value.length}">
-  <For each="${cart.value}" as="item">
-    <Li>${item.name} · Qty: ${item.quantity} · ${item.price}</Li>
-  </For>
+<State id="items" value='["Alpha", "Beta"]' />
+<Ul>
+    <For each="${items.value}" as="item">
+        <Li>${item}</Li>
+    </For>
 </Ul>
 ```

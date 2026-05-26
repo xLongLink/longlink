@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship
@@ -20,6 +20,12 @@ class App(Base, table=True):
     url: str = Field(unique=True, max_length=255)
     name: str = Field(max_length=100)
     image: str = Field(max_length=255)
+    created_by_id: int | None = Field(default=None, foreign_key='users.id')
+    updated_by_id: int | None = Field(default=None, foreign_key='users.id')
+    deleted_by_id: int | None = Field(default=None, foreign_key='users.id')
+    created_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'App.created_by_id'})
+    updated_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'App.updated_by_id'})
+    deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'App.deleted_by_id'})
     users: list['User'] = Relationship(
         back_populates='apps',
         sa_relationship_kwargs={'secondary': user_apps},

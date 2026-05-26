@@ -1,0 +1,8 @@
+<longlink>
+    <State id="filter" value='""' />
+    <Field>
+        <FieldLabel htmlFor="filter">Filter</FieldLabel>
+        <Input id="filter" value="$filter.value" />
+        <FieldDescription if="${filter.value in ['if']}">Shown only when the filter is if.</FieldDescription>
+    </Field>
+</longlink>

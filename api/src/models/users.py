@@ -94,6 +94,7 @@ class UserSummary(BaseModel):
     name: str
     email: EmailStr
     avatar: str = ""
+    admin: bool = False
 
     @field_validator("avatar", mode="before")
     @classmethod
@@ -110,6 +111,7 @@ class UserProfile(BaseModel):
     name: str
     email: EmailStr
     avatar: str = ""
+    admin: bool = False
     theme: Theme
     accent: Accent
     radius: Radius

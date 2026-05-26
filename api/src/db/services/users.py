@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from src.db.models import User
 from sqlalchemy.orm import selectinload
 from src.db.models.association import user_organizations
@@ -52,14 +52,20 @@ class UsersService(ServiceBase):
                 name=name,
                 avatar=avatar,
                 oidc_subject=oidc_subject,
+                admin=existing_user.admin,
             ) or existing_user
 
         async with self.session() as session:
+            # Bootstrap the very first user as admin so the instance starts with one owner.
+            user_result = await session.execute(select(func.count()).select_from(User))
+            is_admin = user_result.scalar_one() == 0
+
             user = User(
                 name=name,
                 email=email,
                 avatar=avatar,
                 oidc_subject=oidc_subject,
+                admin=is_admin,
             )
 
             session.add(user)
@@ -76,14 +82,6 @@ class UsersService(ServiceBase):
             result = await session.execute(statement)
             return result.scalars().first()
 
-
-    async def get_by_name(self, name: str) -> User | None:
-        """Retrieve a user by display name."""
-
-        async with self.session() as session:
-            statement = select(User).where(User.name == name)
-            result = await session.execute(statement)
-            return result.scalars().first()
 
     async def update(
         self,

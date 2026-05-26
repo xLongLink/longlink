@@ -1,0 +1,8 @@
+<longlink>
+    <State id="items" value='["Alpha", "Beta"]' />
+    <Ul>
+        <For each="${items.value}" as="item">
+            <Li>${item}</Li>
+        </For>
+    </Ul>
+</longlink>

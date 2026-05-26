@@ -8,6 +8,7 @@ from src.models import (
 )
 
 router = APIRouter(prefix="/api/me")
+users_router = APIRouter(prefix="/api/users")
 
 
 async def serialize_user(user: db.User) -> APIResponse[UserProfile]:
@@ -25,6 +26,7 @@ async def serialize_user(user: db.User) -> APIResponse[UserProfile]:
 
 
 @router.get("")
+@users_router.get("")
 async def get_me(user: db.User = Depends(authuser)) -> APIResponse[UserProfile]:
     """Return the authenticated user's details."""
 
@@ -32,6 +34,7 @@ async def get_me(user: db.User = Depends(authuser)) -> APIResponse[UserProfile]:
 
 
 @router.patch("")
+@users_router.patch("")
 async def patch_me(payload: UserUpdate, user: db.User = Depends(authuser)) -> APIResponse[UserProfile]:
     """Update the authenticated user's details."""
 

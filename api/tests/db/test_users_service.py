@@ -20,6 +20,50 @@ async def test_upsert_creates_user_when_no_existing_match() -> None:
     assert user.email == "create@example.com"
     assert user.name == "Create User"
     assert user.avatar == "https://example.com/create.png"
+    assert user.admin is True
+
+
+async def test_upsert_marks_first_created_user_as_admin() -> None:
+    """Mark the first created user as admin."""
+
+    # Arrange
+
+    # Act
+    user = await db.users.upsert(
+        oidc_subject="oidc-subject-admin",
+        email="admin@example.com",
+        name="First User",
+        avatar=None,
+    )
+
+    # Assert
+    assert user.id is not None
+    assert user.name == "First User"
+    assert user.admin is True
+
+
+async def test_upsert_does_not_mark_second_user_as_admin() -> None:
+    """Keep later users non-admin by default."""
+
+    # Arrange
+    await db.users.upsert(
+        oidc_subject="oidc-subject-first",
+        email="first@example.com",
+        name="First User",
+        avatar=None,
+    )
+
+    # Act
+    user = await db.users.upsert(
+        oidc_subject="oidc-subject-second",
+        email="second@example.com",
+        name="Second User",
+        avatar=None,
+    )
+
+    # Assert
+    assert user.id is not None
+    assert user.admin is False
 
 
 async def test_upsert_updates_existing_user_by_oidc_subject() -> None:

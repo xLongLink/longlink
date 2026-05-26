@@ -25,39 +25,17 @@ async def get_organization(
     # Load the org apps separately so the detail payload includes the organization inventory.
     apps = await db.apps.list(name, user.id)
     members = await db.orgs.members(name)
-
-    # Resolve audit names once so the response can embed user objects instead of raw strings.
-    audit_names: set[str] = set()
-    for value in (organization.created_by, organization.updated_by, organization.deleted_by):
-        if value:
-            audit_names.add(value)
-    for app, _role_name in apps:
-        for value in (app.created_by, app.updated_by, app.deleted_by):
-            if value:
-                audit_names.add(value)
-
-    audit_users: dict[str, UserSummary] = {}
-    for audit_name in audit_names:
-        audit_user = await db.users.get_by_name(audit_name)
-        if audit_user is not None:
-            audit_users[audit_name] = UserSummary.model_validate(audit_user.model_dump())
-
-    created_by_user = audit_users.get(organization.created_by) or UserSummary.model_validate(user.model_dump())
-    updated_by_user = audit_users.get(organization.updated_by) or created_by_user
-    deleted_by_user = audit_users.get(organization.deleted_by) or updated_by_user
     app_payloads: list[OrgAppResponse] = []
 
+    # Build nested app payloads from the loaded audit relations.
     for app, _role_name in apps:
-        app_created_by = audit_users.get(app.created_by) or created_by_user
-        app_updated_by = audit_users.get(app.updated_by) or app_created_by
-        app_deleted_by = audit_users.get(app.deleted_by) or app_updated_by
         app_payloads.append(
             OrgAppResponse.model_validate(
                 {
                     **app.model_dump(),
-                    "created_by": app_created_by,
-                    "updated_by": app_updated_by,
-                    "deleted_by": app_deleted_by,
+                    "created_by": UserSummary.model_validate((app.created_by or organization.created_by or user).model_dump()),
+                    "updated_by": UserSummary.model_validate((app.updated_by or app.created_by or organization.updated_by or user).model_dump()),
+                    "deleted_by": UserSummary.model_validate((app.deleted_by or app.updated_by or app.created_by or organization.deleted_by or user).model_dump()),
                 }
             )
         )
@@ -69,10 +47,10 @@ async def get_organization(
             name=organization.name,
             created_at=organization.created_at,
             updated_at=organization.updated_at,
-            created_by=created_by_user,
-            updated_by=updated_by_user,
+            created_by=UserSummary.model_validate((organization.created_by or user).model_dump()),
+            updated_by=UserSummary.model_validate((organization.updated_by or organization.created_by or user).model_dump()),
             deleted_at=organization.deleted_at,
-            deleted_by=deleted_by_user,
+            deleted_by=UserSummary.model_validate((organization.deleted_by or organization.updated_by or organization.created_by or user).model_dump()),
             users=[UserSummary.model_validate(member.model_dump()) for member, _role_name in members],
             apps=app_payloads,
         ),
@@ -87,7 +65,7 @@ async def create_organization(
     """Create a new org."""
 
     try:
-        await db.orgs.create(payload.name, user.id)
+        await db.orgs.create(payload.name, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 

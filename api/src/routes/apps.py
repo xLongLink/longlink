@@ -16,39 +16,30 @@ async def list_apps(organization: str, user: db.User = Depends(authuser)) -> API
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
     apps = await db.apps.list(organization, user.id)
+    app_payloads: list[AppResponse] = []
 
-    # Resolve audit users once so the payload can embed nested user objects.
-    audit_names: set[str] = set()
-    for app, _role_name in apps:
-        for value in (app.created_by, app.updated_by, app.deleted_by):
-            if value:
-                audit_names.add(value)
+    # Build the response from the loaded audit relations instead of a name lookup.
+    for app, role_name in apps:
+        created_by = UserSummary.model_validate((app.created_by or user).model_dump())
+        updated_by = UserSummary.model_validate((app.updated_by or app.created_by or user).model_dump())
+        deleted_by = UserSummary.model_validate((app.deleted_by or app.updated_by or app.created_by or user).model_dump())
 
-    audit_users: dict[str, UserSummary] = {}
-    for audit_name in audit_names:
-        audit_user = await db.users.get_by_name(audit_name)
-        if audit_user is not None:
-            audit_users[audit_name] = UserSummary.model_validate(audit_user.model_dump())
-
-    created_by_user = audit_users.get(user.name) or UserSummary.model_validate(user.model_dump())
-    updated_by_user = created_by_user
-    deleted_by_user = created_by_user
+        app_payloads.append(
+            AppResponse.model_validate(
+                {
+                    **app.model_dump(),
+                    "created_by": created_by,
+                    "updated_by": updated_by,
+                    "deleted_by": deleted_by,
+                    "role": role_name,
+                }
+            )
+        )
 
     return APIResponse(
         success=True,
         detail="Apps fetched",
-        data=[
-            AppResponse.model_validate(
-                {
-                    **app.model_dump(),
-                    "role": role_name,
-                    "created_by": audit_users.get(app.created_by) or created_by_user,
-                    "updated_by": audit_users.get(app.updated_by) or updated_by_user,
-                    "deleted_by": audit_users.get(app.deleted_by) or deleted_by_user,
-                }
-            )
-            for app, role_name in apps
-        ],
+        data=app_payloads,
     )
 
 
@@ -67,7 +58,7 @@ async def create_app(
             payload.name,
             url=app_url,
             image=payload.image,
-            created_by=user.name,
+            user=user,
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc

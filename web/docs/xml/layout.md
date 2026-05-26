@@ -2,6 +2,16 @@
 
 XML layout components organize content into responsive sections and dialog-style surfaces.
 
+## Card
+
+Cards group related content.
+
+```xml
+<Card size="sm">
+  <P>Card Content</P>
+</Card>
+```
+
 ## Columns
 
 Columns render side-by-side sections. Column widths should add up to 100 across the row.
@@ -13,37 +23,22 @@ Columns render side-by-side sections. Column widths should add up to 100 across 
 </Columns>
 ```
 
-## Grid
+## Dialog
 
-Grid renders evenly spaced child cards or panels.
+Dialog renders an overlay for focused actions and confirmations.
 
-```xml
-<Grid columns="3">
-  <Card>One</Card>
-  <Card>Two</Card>
-  <Card>Three</Card>
-</Grid>
-```
-
-## Card
-
-Cards group related content.
+Use a trigger to open the dialog. Use `open` only when you need a controlled dialog.
 
 ```xml
-<Card size="sm">
-  <P>Card Content</P>
-</Card>
-```
-
-## Stack
-
-Stack arranges content vertically with consistent spacing.
-
-```xml
-<Stack>
-  <P>First</P>
-  <P>Second</P>
-</Stack>
+<Dialog>
+  <DialogTrigger>
+    <Button variant="outline">Open dialog</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogTitle>Delete issue</DialogTitle>
+    <DialogDescription>This cannot be undone.</DialogDescription>
+  </DialogContent>
+</Dialog>
 ```
 
 ## Flex
@@ -66,37 +61,16 @@ Flex arranges children in a row and can distribute space between them.
 </Flex>
 ```
 
-## Dialog
+## Grid
 
-Dialog renders an overlay for focused actions and confirmations.
-
-Use a trigger to open the dialog. Use `open` only when you need a controlled dialog.
+Grid renders evenly spaced child cards or panels.
 
 ```xml
-<Dialog>
-  <DialogTrigger>
-    <Button variant="outline">Open dialog</Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogTitle>Delete issue</DialogTitle>
-    <DialogDescription>This cannot be undone.</DialogDescription>
-  </DialogContent>
-</Dialog>
-```
-
-## Tabs
-
-Tabs let users switch between related panels. Tabs can also show an icon per tab.
-
-```xml
-<Tabs defaultValue="overview">
-  <Tab value="overview" label="Overview">
-    <P>Overview content</P>
-  </Tab>
-  <Tab value="settings" label="Settings">
-    <P>Settings content</P>
-  </Tab>
-</Tabs>
+<Grid columns="3">
+  <Card>One</Card>
+  <Card>Two</Card>
+  <Card>Three</Card>
+</Grid>
 ```
 
 ## Menu
@@ -121,4 +95,30 @@ Menus expose sectioned navigation, nested subsections, and optional icons.
     <P>Workspace settings and permissions.</P>
   </MenuSection>
 </Menu>
+```
+
+## Stack
+
+Stack arranges content vertically with consistent spacing.
+
+```xml
+<Stack>
+  <P>First</P>
+  <P>Second</P>
+</Stack>
+```
+
+## Tabs
+
+Tabs let users switch between related panels. Tabs can also show an icon per tab.
+
+```xml
+<Tabs defaultValue="overview">
+  <Tab value="overview" label="Overview">
+    <P>Overview content</P>
+  </Tab>
+  <Tab value="settings" label="Settings">
+    <P>Settings content</P>
+  </Tab>
+</Tabs>
 ```

@@ -12,6 +12,7 @@ export type ApiUserSummary = {
     name: string;
     email: string;
     avatar: string;
+    admin: boolean;
 };
 
 export type ApiUserOrgMembership = {

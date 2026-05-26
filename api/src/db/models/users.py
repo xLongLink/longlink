@@ -18,6 +18,7 @@ class User(Base, table=True):
     name: str
     email: str = Field(unique=True, max_length=255)
     avatar: str | None = Field(default=None, max_length=2048)
+    admin: bool = Field(default=False)
     theme: Theme = Field(default=Theme.dark)
     accent: Accent = Field(default=Accent.neutral, max_length=7)
     radius: Radius = Field(default=Radius.medium, max_length=6)

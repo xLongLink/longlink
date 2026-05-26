@@ -9,7 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
-import { BookOpen, Building2, LogOut, Settings2 } from 'lucide-react';
+import { BookOpen, Building2, Cpu, Database, HardDrive, LogOut, Settings2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 
 /** Renders a user profile dropdown with authentication actions. */
@@ -24,6 +24,7 @@ export function UserProfile() {
     const username = user.name;
     const fullName = user.email;
     const avatarUrl = user.avatar;
+    const isAdmin = user.admin;
 
     /**
      * Signs the current user out and redirects to home.
@@ -48,8 +49,15 @@ export function UserProfile() {
                             <AvatarImage src={avatarUrl} alt={`${username} profile`} />
                             <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div className="">
-                            <p className="text-sm font-semibold text-foreground">{username}</p>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-foreground">{username}</p>
+                                {isAdmin ? (
+                                    <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        Admin
+                                    </span>
+                                ) : null}
+                            </div>
                             <p className="text-xs text-muted-foreground">{fullName}</p>
                         </div>
                     </DropdownMenuLabel>
@@ -75,6 +83,31 @@ export function UserProfile() {
                         </Link>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
+                {user.admin ? (
+                    <>
+                        <DropdownMenuSeparator className="my-2" />
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
+                                <Link to="/admin/database" className="flex w-full items-center gap-2 text-inherit">
+                                    <Database className="h-4 w-4" />
+                                    Database
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
+                                <Link to="/admin/storage" className="flex w-full items-center gap-2 text-inherit">
+                                    <HardDrive className="h-4 w-4" />
+                                    Storage
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
+                                <Link to="/admin/compute" className="flex w-full items-center gap-2 text-inherit">
+                                    <Cpu className="h-4 w-4" />
+                                    Compute
+                                </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                    </>
+                ) : null}
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem className="cursor-pointer p-2 text-destructive transition-colors hover:bg-destructive/10 focus:text-destructive">
                     <button type="button" className="flex w-full items-center text-inherit" onClick={handleSignOut}>

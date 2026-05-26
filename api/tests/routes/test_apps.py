@@ -16,13 +16,13 @@ async def test_list_apps_returns_app_membership_role(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user.id)
+    await db.orgs.create("acme", user)
     app = await db.apps.create(
         "acme",
         "dashboard",
         url="/api/apps/dashboard",
         image="ghcr.io/longlink/dashboard:latest",
-        created_by=user.name,
+        user=user,
     )
 
     Session = await get_session()
@@ -68,13 +68,13 @@ async def test_list_apps_returns_null_role_without_app_membership(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user.id)
+    await db.orgs.create("acme", user)
     app = await db.apps.create(
         "acme",
         "dashboard",
         url="/api/apps/dashboard",
         image="ghcr.io/longlink/dashboard:latest",
-        created_by=user.name,
+        user=user,
     )
     client = clients[0]
 
@@ -107,7 +107,7 @@ async def test_list_apps_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    await db.orgs.create("acme", owner.id)
+    await db.orgs.create("acme", owner)
     await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
     client = clients[1]
 
@@ -131,7 +131,7 @@ async def test_create_app_returns_envelope(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user.id)
+    await db.orgs.create("acme", user)
     client = clients[0]
 
     # Act
@@ -160,7 +160,7 @@ async def test_delete_app_removes_dependent_env_rows(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user.id)
+    await db.orgs.create("acme", user)
     app = await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
     await db.envs.set("TOKEN", "secret", "dashboard")
     client = clients[0]

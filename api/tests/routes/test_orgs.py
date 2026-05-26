@@ -35,13 +35,13 @@ async def test_get_organization_returns_member_payload(
 
     # Arrange
     owner = users[0]
-    organization = await db.orgs.create("acme", owner.id)
+    organization = await db.orgs.create("acme", owner)
     app = await db.apps.create(
         "acme",
         "dashboard",
         url="/api/apps/dashboard",
         image="ghcr.io/longlink/dashboard:latest",
-        created_by=owner.name,
+        user=owner,
     )
 
     client = clients[0]
@@ -67,6 +67,7 @@ async def test_get_organization_returns_member_payload(
                     "name": owner.name,
                     "email": owner.email,
                     "avatar": owner.avatar,
+                    "admin": owner.admin,
                 }
             )
         ],
@@ -97,6 +98,7 @@ async def test_get_organization_returns_member_payload(
         "name": owner.name,
         "email": owner.email,
         "avatar": "",
+        "admin": owner.admin,
     }
     assert response.json()["data"]["apps"] == [
         {
@@ -121,7 +123,7 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    await db.orgs.create("acme", owner.id)
+    await db.orgs.create("acme", owner)
     client = clients[1]
 
     # Act
@@ -164,7 +166,7 @@ async def test_delete_organization_removes_its_apps(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user.id)
+    await db.orgs.create("acme", user)
     await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
     client = clients[0]
 
@@ -184,7 +186,7 @@ async def test_create_organization_returns_409_for_duplicate_name(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user.id)
+    await db.orgs.create("acme", user)
     client = clients[0]
 
     # Act

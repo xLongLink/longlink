@@ -9,11 +9,12 @@ import { Link, useLocation } from 'react-router';
 type LayoutProps = {
     tabs?: Record<string, string>;
     brandOnly?: boolean;
+    brandHref?: string;
     children: ReactNode;
 };
 
 /** Renders the shared page shell with either breadcrumbs or brand-only header chrome. */
-export default function Layout({ tabs, brandOnly = false, children }: LayoutProps) {
+export default function Layout({ tabs, brandOnly = false, brandHref = '/organizations', children }: LayoutProps) {
     const location = useLocation();
     const tabEntries = Object.entries(tabs ?? {});
     const currentPath = `${location.pathname}${location.search}`;
@@ -26,7 +27,7 @@ export default function Layout({ tabs, brandOnly = false, children }: LayoutProp
                         <div className="flex items-center justify-between gap-4 text-white/80">
                             <div className="flex items-center gap-4">
                                 {brandOnly ? (
-                                    <Link to="/organizations" aria-label="LongLink home" className="inline-flex items-center">
+                                    <Link to={brandHref} aria-label="LongLink home" className="inline-flex items-center">
                                         <Wordmark />
                                     </Link>
                                 ) : (

@@ -25,3 +25,15 @@ async def authuser(request: Request) -> db.User:
     if not user:
         raise HTTPException(401, "Not authenticated")
     return user
+
+
+async def authadmin(request: Request) -> db.User:
+    """Authenticate an admin user from session and return the User object."""
+
+    user = await authuser(request)
+
+    # Only elevated accounts can continue past this check.
+    if not user.admin:
+        raise HTTPException(403, "Admin privileges required")
+
+    return user

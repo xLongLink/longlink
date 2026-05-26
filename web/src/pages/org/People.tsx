@@ -54,7 +54,14 @@ export default function People({ people, isLoading, error }: PeopleProps) {
                                                     <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                 </Avatar>
                                                 <div className="min-w-0 space-y-0.5">
-                                                    <p className="text-sm font-medium text-foreground">{user.name}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-medium text-foreground">{user.name}</p>
+                                                        {user.admin ? (
+                                                            <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                                                Admin
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
                                                     <p className="text-xs text-muted-foreground">{user.email}</p>
                                                 </div>
                                             </div>

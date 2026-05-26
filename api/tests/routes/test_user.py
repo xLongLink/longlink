@@ -12,12 +12,41 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user.id)
+    await db.orgs.create("acme", user)
 
     client = clients[0]
 
     # Act
     response = client.get("/api/me")
+
+    # Assert
+    assert response.status_code == 200
+
+    profile = await db.users.profile(user.id)
+    assert profile is not None
+
+    expected_payload = UserProfile.model_validate(profile.model_dump()).model_dump(mode="json")
+    assert response.json() == {
+        "success": True,
+        "detail": "User profile fetched",
+        "data": expected_payload,
+    }
+
+
+async def test_get_users_alias_returns_authenticated_user_profile(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return the authenticated user's profile from the `/api/users` alias."""
+
+    # Arrange
+    user = users[0]
+    await db.orgs.create("acme", user)
+
+    client = clients[0]
+
+    # Act
+    response = client.get("/api/users")
 
     # Assert
     assert response.status_code == 200

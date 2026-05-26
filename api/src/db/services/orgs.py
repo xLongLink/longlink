@@ -21,7 +21,12 @@ class OrgsService(ServiceBase):
         """Return one org by name."""
 
         async with self.session() as session:
-            statement = select(Org).options(selectinload(Org.users)).where(Org.name == name)
+            statement = select(Org).options(
+                selectinload(Org.users),
+                selectinload(Org.created_by),
+                selectinload(Org.updated_by),
+                selectinload(Org.deleted_by),
+            ).where(Org.name == name)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -37,21 +42,15 @@ class OrgsService(ServiceBase):
             result = await session.execute(statement)
             return result.all()
 
-    async def create(self, name: str, user_id: int | None = None) -> Org:
+    async def create(self, name: str, user: User | None = None) -> Org:
         """Create an org."""
 
         async with self.session() as session:
-            # Link the creator explicitly to avoid loading the relationship collection.
-            user = None
-            if user_id is not None:
-                user = await session.get(User, user_id)
-                if user is None:
-                    raise ValueError("User not found")
-
             organization = Org(name=name)
             if user is not None:
-                organization.created_by = user.name
-                organization.updated_by = user.name
+                organization.created_by_id = user.id
+                organization.updated_by_id = user.id
+                organization.deleted_by_id = user.id
             session.add(organization)
 
             try:

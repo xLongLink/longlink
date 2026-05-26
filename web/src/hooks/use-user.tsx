@@ -121,8 +121,7 @@ export function useUser() {
         accent: user?.accent ?? DEFAULT_USER_PREFERENCES.accent,
         radius: user?.radius ?? DEFAULT_USER_PREFERENCES.radius,
         language: user?.language ?? DEFAULT_USER_PREFERENCES.language,
-        isLoading: context.isLoading,
-        isFetching: context.isFetching,
+        isLoading: context.isLoading || context.isFetching,
         error: context.error ?? null,
         signOut,
     };

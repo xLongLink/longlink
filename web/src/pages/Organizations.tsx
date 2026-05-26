@@ -11,7 +11,7 @@ export default function Organizations() {
     const { orgs, isLoading, error } = useUser();
 
     return (
-        <Layout brandOnly>
+        <Layout brandOnly brandHref="/">
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 <Hero icon={<Blocks />} className="w-full">
                     <div className="flex w-full items-center justify-between gap-4">
