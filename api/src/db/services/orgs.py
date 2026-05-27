@@ -15,7 +15,12 @@ class OrgsService(ServiceBase):
         """Return all orgs in the database."""
 
         async with self.session() as session:
-            result = await session.execute(select(Org))
+            statement = select(Org).options(
+                selectinload(Org.created_by),
+                selectinload(Org.updated_by),
+                selectinload(Org.deleted_by),
+            )
+            result = await session.execute(statement)
             return list(result.scalars().all())
 
     async def get(self, name: str) -> Org | None:

@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from src.db.models import DatabaseRegistry
+from src.models.kinds import DatabaseKind
 
 from .base import ServiceBase
 
@@ -23,6 +24,7 @@ class DatabaseRegistriesService(ServiceBase):
 
     async def create(
         self,
+        kind: DatabaseKind,
         name: str,
         host: str,
         port: int,
@@ -40,6 +42,7 @@ class DatabaseRegistriesService(ServiceBase):
             # Create a new registration or refresh the stored connection data.
             if database is None:
                 database = DatabaseRegistry(
+                    kind=kind,
                     name=name,
                     host=host,
                     port=port,
@@ -50,6 +53,7 @@ class DatabaseRegistriesService(ServiceBase):
                 )
                 session.add(database)
             else:
+                database.kind = kind
                 database.host = host
                 database.port = port
                 database.username = username

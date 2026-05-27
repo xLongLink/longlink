@@ -1,16 +1,19 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Heading } from '@/components/ui/heading';
+import { type ReactNode } from 'react';
 
 import { MarkdownDoc } from './Docs';
+import { type MarkdownDocMetadata } from '@/lib/markdown';
 
 type LegalPageProps = {
     title: string;
-    content: string;
+    content: ReactNode;
+    metadata?: MarkdownDocMetadata;
 };
 
 /** Renders the shared public legal page shell. */
-export function LegalPage({ title, content }: LegalPageProps) {
+export function LegalPage({ title, content, metadata }: LegalPageProps) {
     return (
         <div className="flex min-h-screen flex-col text-foreground">
             <div className="print:hidden">
@@ -24,7 +27,7 @@ export function LegalPage({ title, content }: LegalPageProps) {
                         <Heading level="h1" className="text-3xl text-foreground print:text-black">
                             {title}
                         </Heading>
-                        <MarkdownDoc content={content} />
+                        <MarkdownDoc content={content} metadata={metadata} />
                     </div>
                 </section>
             </main>

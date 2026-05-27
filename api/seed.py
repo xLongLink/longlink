@@ -1,7 +1,38 @@
 import asyncio
-from src.env import env
+import src.db as db
 from src.db.models import Base
+from src.env import env
+from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 from sqlalchemy.ext.asyncio import create_async_engine
+
+
+LOCAL_DATABASE = {
+    "kind": DatabaseKind.postgre,
+    "name": "local",
+    "host": "localhost",
+    "port": 15432,
+    "username": "admin",
+    "password": "admin",
+    "sslmode": None,
+    "maintenance_database": "admin",
+}
+
+LOCAL_STORAGE = {
+    "kind": StorageKind.s3,
+    "name": "local",
+    "protocol": "http",
+    "endpoint_url": "http://localhost:19000",
+    "access_key_id": "admin",
+    "secret_access_key": "admin",
+}
+
+LOCAL_COMPUTE = {
+    "kind": ComputeKind.kubernetes,
+    "name": "local",
+    "kube_config_path": "kubeconfig.yaml",
+    "ingress_host": "localhost",
+    "ingress_name": "control-ingress",
+}
 
 
 async def main() -> None:
@@ -15,6 +46,11 @@ async def main() -> None:
                 await conn.run_sync(Base.metadata.create_all)
         finally:
             await engine.dispose()
+
+    # Keep the local backend registrations available after every seed run.
+    await db.database.create(**LOCAL_DATABASE)
+    await db.storage.create(**LOCAL_STORAGE)
+    await db.compute.create(**LOCAL_COMPUTE)
 
 
 if __name__ == "__main__":

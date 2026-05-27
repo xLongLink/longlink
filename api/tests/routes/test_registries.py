@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from src.models import ComputeRegistryResponse, DatabaseRegistryResponse, StorageRegistryResponse
+from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 
 
 async def test_database_registry_endpoint_supports_create_list_and_delete(
@@ -15,6 +16,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     create_response = client.post(
         "/api/database",
         json={
+            "kind": "postgre",
             "name": "primary",
             "host": "db.longlink.internal",
             "port": 5432,
@@ -34,6 +36,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         "detail": "Database registry saved",
         "data": DatabaseRegistryResponse(
             id=1,
+            kind=DatabaseKind.postgre,
             name="primary",
             host="db.longlink.internal",
             port=5432,
@@ -49,6 +52,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         "data": [
             DatabaseRegistryResponse(
                 id=1,
+                kind=DatabaseKind.postgre,
                 name="primary",
                 host="db.longlink.internal",
                 port=5432,
@@ -73,6 +77,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     create_response = client.post(
         "/api/storage",
         json={
+            "kind": "s3",
             "name": "object-store",
             "protocol": "s3",
             "endpoint_url": "https://storage.longlink.internal",
@@ -90,6 +95,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
         "detail": "Storage registry saved",
         "data": StorageRegistryResponse(
             id=1,
+            kind=StorageKind.s3,
             name="object-store",
             protocol="s3",
             endpoint_url="https://storage.longlink.internal",
@@ -103,6 +109,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
         "data": [
             StorageRegistryResponse(
                 id=1,
+                kind=StorageKind.s3,
                 name="object-store",
                 protocol="s3",
                 endpoint_url="https://storage.longlink.internal",
@@ -125,6 +132,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     create_response = client.post(
         "/api/compute",
         json={
+            "kind": "kubernetes",
             "name": "cluster-a",
             "kube_config_path": "/etc/longlink/kubeconfig",
             "ingress_host": "apps.longlink.internal",
@@ -141,6 +149,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         "detail": "Compute registry saved",
         "data": ComputeRegistryResponse(
             id=1,
+            kind=ComputeKind.kubernetes,
             name="cluster-a",
             kube_config_path="/etc/longlink/kubeconfig",
             ingress_host="apps.longlink.internal",
@@ -154,6 +163,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         "data": [
             ComputeRegistryResponse(
                 id=1,
+                kind=ComputeKind.kubernetes,
                 name="cluster-a",
                 kube_config_path="/etc/longlink/kubeconfig",
                 ingress_host="apps.longlink.internal",

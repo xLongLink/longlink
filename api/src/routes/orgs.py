@@ -1,11 +1,38 @@
 import src.db as db
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from src.auth import authuser
+from src.auth import authadmin, authuser
 from src.models import APIResponse
-from src.models.orgs import OrgAppResponse, OrgCreate, OrgDetails
+from src.models.orgs import OrgAppResponse, OrgCreate, OrgDetails, OrgSummary
 from src.models.users import UserSummary
 
 router = APIRouter(prefix="/api/orgs")
+
+
+@router.get("")
+async def list_organizations(user: db.User = Depends(authadmin)) -> APIResponse[list[OrgSummary]]:
+    """Return all organizations for admin views."""
+
+    organizations = await db.orgs.list()
+    payload = [
+        OrgSummary.model_validate(
+            {
+                "name": organization.name,
+                "created_at": organization.created_at,
+                "updated_at": organization.updated_at,
+                "created_by": UserSummary.model_validate((organization.created_by or user).model_dump()),
+                "updated_by": UserSummary.model_validate(
+                    (organization.updated_by or organization.created_by or user).model_dump()
+                ),
+                "deleted_at": organization.deleted_at,
+                "deleted_by": UserSummary.model_validate(
+                    (organization.deleted_by or organization.updated_by or organization.created_by or user).model_dump()
+                ),
+            }
+        )
+        for organization in organizations
+    ]
+
+    return APIResponse(success=True, detail="Organizations fetched", data=payload)
 
 
 @router.get("/{name}")

@@ -41,6 +41,16 @@ export type ApiOrgApp = {
     deleted_by: ApiUserSummary;
 };
 
+export type ApiOrgSummary = {
+    name: string;
+    created_at: string;
+    updated_at: string;
+    created_by: ApiUserSummary;
+    updated_by: ApiUserSummary;
+    deleted_at: string | null;
+    deleted_by: ApiUserSummary;
+};
+
 export type ApiOrgDetails = {
     name: string;
     created_at: string;
@@ -51,6 +61,35 @@ export type ApiOrgDetails = {
     deleted_by: ApiUserSummary;
     users: ApiUserSummary[];
     apps: ApiOrgApp[];
+};
+
+export type ApiDatabaseRegistry = {
+    id: number;
+    kind: string;
+    name: string;
+    host: string;
+    port: number;
+    username: string;
+    sslmode: string | null;
+    maintenance_database: string;
+};
+
+export type ApiStorageRegistry = {
+    id: number;
+    kind: string;
+    name: string;
+    protocol: string;
+    endpoint_url: string;
+    access_key_id: string;
+};
+
+export type ApiComputeRegistry = {
+    id: number;
+    kind: string;
+    name: string;
+    kube_config_path: string;
+    ingress_host: string;
+    ingress_name: string;
 };
 
 export type ApiAppResponse = {

@@ -1,4 +1,7 @@
+from sqlalchemy import Column, Enum
 from sqlmodel import Field
+
+from src.models.kinds import DatabaseKind
 from src.db.models.__base__ import Base
 
 
@@ -8,6 +11,9 @@ class DatabaseRegistry(Base, table=True):
     __tablename__ = "database_registries"
 
     id: int = Field(default=None, primary_key=True)
+    kind: DatabaseKind = Field(
+        sa_column=Column(Enum(DatabaseKind, name="database_kind_enum", native_enum=False), nullable=False)
+    )
     name: str = Field(unique=True, max_length=128)
     host: str = Field(max_length=255)
     port: int

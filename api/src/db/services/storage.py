@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from src.db.models import StorageRegistry
+from src.models.kinds import StorageKind
 
 from .base import ServiceBase
 
@@ -23,6 +24,7 @@ class StorageRegistriesService(ServiceBase):
 
     async def create(
         self,
+        kind: StorageKind,
         name: str,
         protocol: str,
         endpoint_url: str,
@@ -38,6 +40,7 @@ class StorageRegistriesService(ServiceBase):
             # Create a new registration or refresh the stored connection data.
             if storage is None:
                 storage = StorageRegistry(
+                    kind=kind,
                     name=name,
                     protocol=protocol,
                     endpoint_url=endpoint_url,
@@ -46,6 +49,7 @@ class StorageRegistriesService(ServiceBase):
                 )
                 session.add(storage)
             else:
+                storage.kind = kind
                 storage.protocol = protocol
                 storage.endpoint_url = endpoint_url
                 storage.access_key_id = access_key_id

@@ -1,9 +1,12 @@
 from pydantic import BaseModel
 
+from src.models.kinds import StorageKind
+
 
 class StorageRegistryCreate(BaseModel):
     """Request body for creating a storage registry."""
 
+    kind: StorageKind
     name: str
     protocol: str
     endpoint_url: str
@@ -15,6 +18,7 @@ class StorageRegistryResponse(BaseModel):
     """Represent one storage registry in API responses."""
 
     id: int
+    kind: StorageKind
     name: str
     protocol: str
     endpoint_url: str

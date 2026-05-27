@@ -15,11 +15,8 @@ bun run format      # Format the code
 web/
 ├── src/
 │   ├── components/      # Shared app components
+│   │   ├── DocsSidebar.tsx
 │   │   └── ui/          # UI primitives
-│   ├── docs/            # Documentation layout and pages
-│   │   ├── api/         # Control Plane relates
-│   │   ├── sdk/         # Sdk related
-│   │   └── xml/         # XML Pages related
 │   ├── hooks/           # Shared React ooks 
 │   ├── lib/             # Shared Utilities
 │   ├── pages/           # Route-level pages

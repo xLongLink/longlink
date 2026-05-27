@@ -1,8 +1,5 @@
-import { Blocks, BookOpen, Database, FlaskConical, FileCode2, Globe, HardDrive, LayoutTemplate, Rocket, ServerCog, ShieldCheck, Waypoints } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import ReactMarkdown, { type Components } from 'react-markdown';
-import matter from 'gray-matter';
 
 import { A } from '@/components/ui/a';
 import {
@@ -13,58 +10,15 @@ import {
     Breadcrumb as UIBreadcrumb,
 } from '@/components/ui/breadcrumb';
 import { buttonVariants } from '@/components/ui/button';
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarHeader,
-    SidebarInset,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarProvider,
-    SidebarSeparator,
-    SidebarTrigger,
-} from '@/components/ui/sidebar';
-import { Wordmark } from '@/components/Wordmark';
-import { CodeBlock } from '@/components/CodeBlock';
-import { XmlWindow } from '@/components/XmlWindow';
-import { Code } from '@/components/ui/code';
-import { Heading } from '@/components/ui/heading';
-import { Li } from '@/components/ui/li';
-import { Ol } from '@/components/ui/ol';
-import { P } from '@/components/ui/p';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Ul } from '@/components/ui/ul';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { DOC_GROUPS, DocsSidebar, type DocItem } from '@/components/DocsSidebar';
+import { type MarkdownDocMetadata } from '@/lib/markdown';
 import { apiUrl } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 type DocsPageProps = {
-    content: string;
-};
-
-type MarkdownDocMetadata = {
-    lastUpdated: string;
-    editUrl: string;
-};
-
-type ParsedMarkdownDoc = {
+    content: ReactNode;
     metadata: MarkdownDocMetadata;
-    content: string;
-};
-
-type DocItem = {
-    title: string;
-    path: string;
-    id: string;
-    icon: typeof BookOpen;
-};
-
-type DocGroup = {
-    title: string;
-    items: DocItem[];
 };
 
 type PageTocItem = {
@@ -72,130 +26,8 @@ type PageTocItem = {
     label: string;
 };
 
-type MarkdownBlock =
-    | {
-          kind: 'markdown';
-          content: string;
-      }
-    | {
-          kind: 'tabs';
-          tabs: MarkdownTab[];
-      };
-
-type MarkdownTab = {
-    label: string;
-    content: string;
-};
-
-type MarkdownCodeProps = {
-    children?: ReactNode;
-    className?: string;
-    inline?: boolean;
-};
-
-const DOC_GROUPS: DocGroup[] = [
-    {
-        title: 'Overview',
-        items: [
-            {
-                title: 'Introduction',
-                path: '/docs',
-                id: 'introduction',
-                icon: BookOpen,
-            },
-        ],
-    },
-    {
-        title: 'Control Plane',
-        items: [
-            {
-                title: 'Overview',
-                path: '/docs/api',
-                id: 'control-plane-overview',
-                icon: ShieldCheck,
-            },
-            {
-                title: 'Self Hosted',
-                path: '/docs/api/self-hosted',
-                id: 'self-hosted',
-                icon: ServerCog,
-            },
-        ],
-    },
-    {
-        title: 'Applications SDK',
-        items: [
-            {
-                title: 'Overview',
-                path: '/docs/sdk',
-                id: 'sdk-overview',
-                icon: Blocks,
-            },
-            {
-                title: 'Environments',
-                path: '/docs/sdk/environments',
-                id: 'environments',
-                icon: Globe,
-            },
-            {
-                title: 'Routes',
-                path: '/docs/sdk/routes',
-                id: 'routes',
-                icon: Waypoints,
-            },
-            {
-                title: 'Storage',
-                path: '/docs/sdk/storage',
-                id: 'storage',
-                icon: HardDrive,
-            },
-            {
-                title: 'Database',
-                path: '/docs/sdk/database',
-                id: 'database',
-                icon: Database,
-            },
-            {
-                title: 'Testing',
-                path: '/docs/sdk/testing',
-                id: 'testing',
-                icon: FlaskConical,
-            },
-            {
-                title: 'Build & Publish',
-                path: '/docs/sdk/building',
-                id: 'building',
-                icon: Rocket,
-            },
-        ],
-    },
-    {
-        title: 'XML Pages',
-        items: [
-            {
-                title: 'Overview',
-                path: '/docs/xml',
-                id: 'xml-overview',
-                icon: FileCode2,
-            },
-            {
-                title: 'Layout',
-                path: '/docs/xml/layout',
-                id: 'layout',
-                icon: LayoutTemplate,
-            },
-            {
-                title: 'Components',
-                path: '/docs/xml/components',
-                id: 'components',
-                icon: Blocks,
-            },
-        ],
-    },
-];
-
 /** Renders a docs page using the shared docs shell. */
-export default function DocsPage({ content }: DocsPageProps) {
+export default function DocsPage({ content, metadata }: DocsPageProps) {
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
@@ -219,7 +51,6 @@ export default function DocsPage({ content }: DocsPageProps) {
     const pagePath = currentItem?.path ?? '/docs';
     const isRootDocsPage = pagePath === '/docs';
     const isSectionOverviewPage = !isRootDocsPage && currentItem?.id === currentGroup?.items[0]?.id;
-    const parsedDoc = parseMarkdownDoc(content);
 
     useEffect(() => {
         const contentElement = contentRef.current;
@@ -282,51 +113,11 @@ export default function DocsPage({ content }: DocsPageProps) {
             window.cancelAnimationFrame(frame);
             removeListeners();
         };
-    }, [location.pathname, parsedDoc.content]);
+    }, [location.pathname, content]);
 
     return (
         <SidebarProvider defaultOpen>
-            <Sidebar side="left" variant="sidebar" collapsible="offcanvas" className="group-data-[side=left]:border-r-0">
-                <SidebarHeader className="h-12 justify-end p-2">
-                    <Link
-                        to="/"
-                        className="flex cursor-pointer items-end justify-center gap-2 text-[1.375rem] font-semibold text-card-foreground transition-opacity hover:opacity-80"
-                    >
-                        <Wordmark className="text-base" />
-                    </Link>
-                </SidebarHeader>
-
-                <SidebarSeparator />
-
-                <SidebarContent>
-                    {DOC_GROUPS.map((group) => (
-                        <SidebarGroup key={group.title} className="px-2 py-1">
-                            <SidebarGroupLabel className="text-muted-foreground font-normal">{group.title}</SidebarGroupLabel>
-                            <SidebarGroupContent>
-                                <SidebarMenu className="space-y-1">
-                                    {group.items.map((item) => {
-                                        const isActive = currentItem?.id === item.id;
-
-                                        return (
-                                            <SidebarMenuItem key={item.id}>
-                                                <SidebarMenuButton
-                                                    render={<Link to={item.path} />}
-                                                    isActive={isActive}
-                                                    variant={isActive ? 'outline' : 'default'}
-                                                    className="text-sidebar-foreground/70 hover:bg-muted hover:text-foreground data-active:bg-muted data-active:text-foreground"
-                                                >
-                                                    <item.icon className="size-4 shrink-0 text-muted-foreground/70" aria-hidden="true" />
-                                                    {item.title}
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
-                                        );
-                                    })}
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
-                    ))}
-                </SidebarContent>
-            </Sidebar>
+            <DocsSidebar currentItemId={currentItem?.id} />
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
@@ -405,7 +196,7 @@ export default function DocsPage({ content }: DocsPageProps) {
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
                     <div ref={contentRef} className="px-4 pt-4 pb-32 lg:px-6 lg:pt-6 lg:pb-40">
                         <div className="mx-auto w-full max-w-[56rem]">
-                            <MarkdownDoc content={parsedDoc.content} metadata={parsedDoc.metadata} />
+                            <MarkdownDoc content={content} metadata={metadata} />
                         </div>
                     </div>
 
@@ -450,28 +241,15 @@ export default function DocsPage({ content }: DocsPageProps) {
 }
 
 /** Renders a markdown-backed docs article. */
-export function MarkdownDoc({ content, metadata }: { content: string; metadata?: MarkdownDocMetadata }) {
-    const parsedDoc = metadata ? { metadata, content } : parseMarkdownDoc(content);
-    const blocks = splitMarkdownBlocks(parsedDoc.content);
-
+export function MarkdownDoc({ content, metadata }: { content: ReactNode; metadata?: MarkdownDocMetadata }) {
     return (
         <article className="mx-auto w-full max-w-2xl space-y-6">
-            {blocks.map((block, index) => {
-                if (block.kind === 'tabs') {
-                    return <MarkdownTabs key={`tabs-${index}`} tabs={block.tabs} />;
-                }
-
-                return (
-                    <ReactMarkdown key={`markdown-${index}`} components={markdownComponents}>
-                        {block.content}
-                    </ReactMarkdown>
-                );
-            })}
-            {parsedDoc.metadata.lastUpdated || parsedDoc.metadata.editUrl ? (
+            {content}
+            {metadata?.lastUpdated || metadata?.editUrl ? (
                 <footer className="flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-                    {parsedDoc.metadata.lastUpdated ? <span>Last updated {parsedDoc.metadata.lastUpdated}</span> : <span />}
-                    {parsedDoc.metadata.editUrl ? (
-                        <A href={parsedDoc.metadata.editUrl} target="_blank" rel="noopener noreferrer">
+                    {metadata.lastUpdated ? <span>Last updated {metadata.lastUpdated}</span> : <span />}
+                    {metadata.editUrl ? (
+                        <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">
                             Edit this page in GitHub
                         </A>
                     ) : null}
@@ -479,224 +257,4 @@ export function MarkdownDoc({ content, metadata }: { content: string; metadata?:
             ) : null}
         </article>
     );
-}
-
-/** Parses optional YAML frontmatter from a docs markdown file. */
-function parseMarkdownDoc(content: string): ParsedMarkdownDoc {
-    const { content: body, data } = matter(content) as {
-        content: string;
-        data: { lastUpdated?: string; editUrl?: string };
-    };
-
-    return {
-        metadata: {
-            lastUpdated: data.lastUpdated ?? '',
-            editUrl: data.editUrl ?? '',
-        },
-        content: body,
-    };
-}
-
-const markdownComponents: Components = {
-    h1: ({ children }: { children?: ReactNode }) => <MarkdownHeading level="h1">{children}</MarkdownHeading>,
-    h2: ({ children }: { children?: ReactNode }) => <MarkdownHeading level="h2">{children}</MarkdownHeading>,
-    h3: ({ children }: { children?: ReactNode }) => <MarkdownHeading level="h3">{children}</MarkdownHeading>,
-    h4: ({ children }: { children?: ReactNode }) => <MarkdownHeading level="h4">{children}</MarkdownHeading>,
-    p: ({ children }: { children?: ReactNode }) => <P className="max-w-2xl text-muted-foreground">{children}</P>,
-    ul: ({ children }: { children?: ReactNode }) => <Ul className="max-w-2xl text-muted-foreground">{children}</Ul>,
-    ol: ({ children }: { children?: ReactNode }) => <Ol className="max-w-2xl text-muted-foreground">{children}</Ol>,
-    li: ({ children }: { children?: ReactNode }) => <Li>{children}</Li>,
-    a: ({ href, children }: { href?: string; children?: ReactNode }) => <MarkdownLink href={href}>{children}</MarkdownLink>,
-    code: (props: MarkdownCodeProps) => <MarkdownCode {...props} />,
-};
-
-/** Renders a tabbed docs block parsed from ::: tabs markdown. */
-function MarkdownTabs({ tabs }: { tabs: MarkdownTab[] }) {
-    const defaultValue = tabs[0]?.label ?? '';
-
-    return (
-        <Tabs defaultValue={defaultValue} className="!gap-3">
-            <TabsList variant="line">
-                {tabs.map((tab) => (
-                    <TabsTrigger key={tab.label} value={tab.label}>
-                        {tab.label}
-                    </TabsTrigger>
-                ))}
-            </TabsList>
-            {tabs.map((tab) => (
-                <TabsContent key={tab.label} value={tab.label} className="!pt-0">
-                    <ReactMarkdown components={markdownComponents}>{tab.content}</ReactMarkdown>
-                </TabsContent>
-            ))}
-        </Tabs>
-    );
-}
-
-/** Renders a markdown heading with a generated anchor id. */
-function MarkdownHeading({ children, level }: { children: ReactNode; level: 'h1' | 'h2' | 'h3' | 'h4' }) {
-    const text = extractText(children);
-    const id = slugifyText(text);
-    const anchorClassName = level === 'h1' || level === 'h2' ? '-translate-x-7' : '-translate-x-5';
-
-    return (
-        <Heading anchorClassName={anchorClassName} id={id} level={level} className="text-foreground">
-            {children}
-        </Heading>
-    );
-}
-
-/** Renders internal docs links with client-side routing. */
-function MarkdownLink({ children, href }: { children: ReactNode; href?: string }) {
-    if (!href) {
-        return <A>{children}</A>;
-    }
-
-    // Keep docs routes on the client and open external references in a new tab.
-    if (href.startsWith('/')) {
-        return (
-            <Link to={href} className="font-medium text-foreground hover:underline">
-                {children}
-            </Link>
-        );
-    }
-
-    return (
-        <A href={href} target="_blank" rel="noopener noreferrer">
-            {children}
-        </A>
-    );
-}
-
-/** Renders inline code or fenced code blocks. */
-function MarkdownCode({ children, className, inline }: MarkdownCodeProps) {
-    const code = String(children).replace(/\n$/, '');
-    const isInline = inline ?? !className?.startsWith('language-');
-
-    if (isInline) {
-        return <Code className={className}>{code}</Code>;
-    }
-
-    const language = className?.match(/language-([\w-]+)/)?.[1] ?? 'text';
-
-    // XML examples get the interactive preview window used elsewhere in the app.
-    if (language === 'xml') {
-        return <XmlWindow>{code}</XmlWindow>;
-    }
-
-    return <CodeBlock language={language}>{code}</CodeBlock>;
-}
-
-/** Splits markdown into regular blocks and tabs directives. */
-function splitMarkdownBlocks(content: string): MarkdownBlock[] {
-    const lines = content.split('\n');
-    const blocks: MarkdownBlock[] = [];
-    const markdownLines: string[] = [];
-    let tabs: MarkdownTab[] = [];
-    let tabLabel = '';
-    let tabLines: string[] = [];
-    let inTabs = false;
-
-    // Keep regular markdown together, but peel out tabs containers so they can render as interactive UI.
-    const flushMarkdown = () => {
-        const markdown = markdownLines.join('\n').trim();
-
-        if (markdown) {
-            blocks.push({ kind: 'markdown', content: markdown });
-        }
-
-        markdownLines.length = 0;
-    };
-
-    // Tabs are declared as a container with one or more `== label` sections.
-    const flushTab = () => {
-        if (!tabLabel) {
-            tabLines.length = 0;
-            return;
-        }
-
-        const content = tabLines.join('\n').trim();
-
-        tabs.push({ label: tabLabel, content });
-        tabLabel = '';
-        tabLines.length = 0;
-    };
-
-    for (const line of lines) {
-        const trimmed = line.trim();
-
-        if (!inTabs) {
-            if (trimmed === '::: tabs') {
-                flushMarkdown();
-                inTabs = true;
-                continue;
-            }
-
-            markdownLines.push(line);
-            continue;
-        }
-
-        if (trimmed === ':::') {
-            flushTab();
-
-            if (tabs.length > 0) {
-                blocks.push({ kind: 'tabs', tabs });
-            }
-
-            tabs = [];
-            inTabs = false;
-            continue;
-        }
-
-        if (trimmed.startsWith('== ')) {
-            flushTab();
-            tabLabel = trimmed.slice(3).trim();
-            continue;
-        }
-
-        if (!tabLabel && trimmed === '') {
-            continue;
-        }
-
-        tabLines.push(line);
-    }
-
-    if (inTabs) {
-        markdownLines.push('::: tabs');
-
-        if (tabs.length > 0 || tabLabel || tabLines.length > 0) {
-            if (tabLabel || tabLines.length > 0) {
-                markdownLines.push('');
-                markdownLines.push(...tabs.flatMap((tab) => ['== ' + tab.label, tab.content]));
-            }
-        }
-    }
-
-    flushMarkdown();
-
-    return blocks;
-}
-
-/** Extracts plain text from markdown heading children for slug generation. */
-function extractText(node: ReactNode): string {
-    if (typeof node === 'string' || typeof node === 'number') {
-        return String(node);
-    }
-
-    if (Array.isArray(node)) {
-        return node.map((child) => extractText(child)).join(' ');
-    }
-
-    if (node && typeof node === 'object' && 'props' in node) {
-        return extractText((node as { props?: { children?: ReactNode } }).props?.children);
-    }
-
-    return '';
-}
-
-/** Converts heading text into a URL-safe slug. */
-function slugifyText(text: string): string {
-    return text
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
 }

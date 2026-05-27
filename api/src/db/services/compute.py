@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from src.db.models import ComputeRegistry
+from src.models.kinds import ComputeKind
 
 from .base import ServiceBase
 
@@ -23,6 +24,7 @@ class ComputeRegistriesService(ServiceBase):
 
     async def create(
         self,
+        kind: ComputeKind,
         name: str,
         kube_config_path: str,
         ingress_host: str,
@@ -37,6 +39,7 @@ class ComputeRegistriesService(ServiceBase):
             # Create a new registration or refresh the stored connection data.
             if compute is None:
                 compute = ComputeRegistry(
+                    kind=kind,
                     name=name,
                     kube_config_path=kube_config_path,
                     ingress_host=ingress_host,
@@ -44,6 +47,7 @@ class ComputeRegistriesService(ServiceBase):
                 )
                 session.add(compute)
             else:
+                compute.kind = kind
                 compute.kube_config_path = kube_config_path
                 compute.ingress_host = ingress_host
                 compute.ingress_name = ingress_name

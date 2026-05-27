@@ -13,11 +13,12 @@ async def list_storage_registries(_user: db.User = Depends(authadmin)) -> APIRes
     registries = await db.storage.list()
     payload = [
         StorageRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "name": registry.name,
-                "protocol": registry.protocol,
-                "endpoint_url": registry.endpoint_url,
+                {
+                    "id": registry.id,
+                    "kind": registry.kind,
+                    "name": registry.name,
+                    "protocol": registry.protocol,
+                    "endpoint_url": registry.endpoint_url,
                 "access_key_id": registry.access_key_id,
             }
         )
@@ -41,6 +42,7 @@ async def get_storage_registry(name: str, _user: db.User = Depends(authadmin)) -
         data=StorageRegistryResponse.model_validate(
             {
                 "id": registry.id,
+                "kind": registry.kind,
                 "name": registry.name,
                 "protocol": registry.protocol,
                 "endpoint_url": registry.endpoint_url,
@@ -65,6 +67,7 @@ async def create_storage_registry(
         data=StorageRegistryResponse.model_validate(
             {
                 "id": registry.id,
+                "kind": registry.kind,
                 "name": registry.name,
                 "protocol": registry.protocol,
                 "endpoint_url": registry.endpoint_url,

@@ -9,6 +9,13 @@ from .base import ServiceBase
 
 
 class UsersService(ServiceBase):
+    async def list(self) -> list[User]:
+        """Return all users in the database."""
+
+        async with self.session() as session:
+            result = await session.execute(select(User))
+            return list(result.scalars().all())
+
     async def profile(self, user_id: int) -> UserProfile | None:
         """Return one user profile with membership roles included."""
 

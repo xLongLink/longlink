@@ -9,7 +9,7 @@ export default function Admin() {
             <Layout
                 tabs={{
                     Users: '/admin/users',
-                    Organizations: '/admin/organization',
+                    Organizations: '/admin/organizations',
                     Database: '/admin/database',
                     Storage: '/admin/storage',
                     Compute: '/admin/compute',

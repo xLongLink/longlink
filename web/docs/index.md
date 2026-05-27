@@ -1,31 +1,30 @@
 ---
-lastUpdated: 2026-05-25
+lastUpdated: 2026-05-27
 editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/index.md
 ---
 
 # LongLink
 
-LongLink is a platform for building and running applications that manage data, enforce validation rules, and
-execute structured workflows. It is designed for systems where correctness, consistency, and control over processes
-are critical.
+LongLink is a platform for building and running structured business applications.
 
-The architecture is divided into three primary areas:
+It is designed for internal tools, workflow systems, approval flows, data management interfaces, CRM-like applications, and other software where people need to work with data, follow processes, and keep operations under control.
 
-- [Control Plane](/docs/api) manages infrastructure concerns such as authentication, authorization, request routing,
-  data provisioning, and observability.
-- [Applications](/docs/sdk) are developed as full-code services using a Python SDK built on top of established
-  technologies such as FastAPI for the API layer and SQLAlchemy for data access.
-- [Pages](/docs/xml) define the user interface using XML, which is interpreted at runtime and interacts directly with
-  application APIs.
+Most business applications share the same foundation. They need users, permissions, forms, validation, routing, logs, storage, deployment, and a way for people to interact with the data. LongLink provides this common foundation once, inside a shared platform, so every application does not have to rebuild it from scratch.
+
+Applications are still built as full-code Python services. This means developers keep control over the business logic, data rules, integrations, and behavior of the application. LongLink provides the structure around the application, while the application itself stays focused on the specific problem it solves.
+
+The result is a simpler way to build operational software: less repeated infrastructure, clearer application boundaries, better visibility, and lower development and maintenance cost.
 
 ## Why
 
-Modern AI development makes generating code fast and accessible. However, without clear guardrails and a well-defined
-foundation, codebases tend to become fragmented, inconsistent, and difficult to maintain.
+Business software often becomes expensive because every application is treated as a separate system.
 
-LongLink addresses this by building on top of production-proven technologies and introducing both a control plane and
-a predefined application structure. This creates a consistent structure that applications must adhere to, giving both
-developers and AI a clear system context and well-defined boundaries.
+Each project needs its own backend structure, access control, interface, deployment setup, logging, data handling, and operational logic. Over time, this creates duplicated work, inconsistent patterns, and applications that are harder to maintain.
 
-This reduces complexity, enforces best practices by default, and results in applications that are faster to build,
-easier to maintain, and more reliable over time.
+LongLink was created to reduce that complexity.
+
+The platform handles the common layer once. Applications only need to implement what makes them specific: their business logic, validation rules, workflows, data models, and integrations. When a process changes, a regulation changes, or a business rule needs to be updated, developers can focus on the application logic instead of navigating a large amount of unrelated infrastructure code.
+
+This makes applications faster to build, easier to understand, and cheaper to maintain. It also gives teams better visibility and control, because applications run inside one coordinated platform instead of being scattered across separate custom systems.
+
+LongLink is especially useful when building with AI-assisted development. Code can be produced quickly, but it still needs a clear structure to remain reliable. LongLink gives developers and AI a defined foundation to build on, so speed does not come at the cost of consistency.

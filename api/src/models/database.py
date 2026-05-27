@@ -1,9 +1,12 @@
 from pydantic import BaseModel
 
+from src.models.kinds import DatabaseKind
+
 
 class DatabaseRegistryCreate(BaseModel):
     """Request body for creating a database registry."""
 
+    kind: DatabaseKind
     name: str
     host: str
     port: int
@@ -17,6 +20,7 @@ class DatabaseRegistryResponse(BaseModel):
     """Represent one database registry in API responses."""
 
     id: int
+    kind: DatabaseKind
     name: str
     host: str
     port: int

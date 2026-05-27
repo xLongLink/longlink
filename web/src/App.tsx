@@ -2,9 +2,9 @@ import { Auth } from '@/components/Auth';
 import { apiUrl } from '@/lib/api';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
-import impressumMarkdown from '../legal/impressum.md?raw';
-import privacyMarkdown from '../legal/privacy.md?raw';
-import termsMarkdown from '../legal/terms.md?raw';
+import impressumMarkdown, { metadata as impressumMetadata } from '../legal/impressum.md';
+import privacyMarkdown, { metadata as privacyMetadata } from '../legal/privacy.md';
+import termsMarkdown, { metadata as termsMetadata } from '../legal/terms.md';
 import { LegalPage } from './pages/LegalPage';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
@@ -23,19 +23,19 @@ import DocsPage from './pages/Docs';
 import Theme from './pages/Theme';
 import View from './pages/View';
 
-import docsApiMarkdown from '../docs/api/index.md?raw';
-import docsSelfHostedMarkdown from '../docs/api/self-hosted.md?raw';
-import docsIndexMarkdown from '../docs/index.md?raw';
-import docsSdkBuildingMarkdown from '../docs/sdk/building.md?raw';
-import docsSdkDatabaseMarkdown from '../docs/sdk/database.md?raw';
-import docsSdkEnvironmentsMarkdown from '../docs/sdk/environments.md?raw';
-import docsSdkMarkdown from '../docs/sdk/index.md?raw';
-import docsSdkRoutesMarkdown from '../docs/sdk/routes.md?raw';
-import docsSdkStorageMarkdown from '../docs/sdk/storage.md?raw';
-import docsSdkTestingMarkdown from '../docs/sdk/testing.md?raw';
-import docsXmlComponentsMarkdown from '../docs/xml/components.md?raw';
-import docsXmlLayoutMarkdown from '../docs/xml/layout.md?raw';
-import docsXmlMarkdown from '../docs/xml/index.md?raw';
+import docsApiMarkdown, { metadata as docsApiMetadata } from '../docs/api/index.md';
+import docsSelfHostedMarkdown, { metadata as docsSelfHostedMetadata } from '../docs/api/self-hosted.md';
+import docsIndexMarkdown, { metadata as docsIndexMetadata } from '../docs/index.md';
+import docsSdkBuildingMarkdown, { metadata as docsSdkBuildingMetadata } from '../docs/sdk/building.md';
+import docsSdkDatabaseMarkdown, { metadata as docsSdkDatabaseMetadata } from '../docs/sdk/database.md';
+import docsSdkEnvironmentsMarkdown, { metadata as docsSdkEnvironmentsMetadata } from '../docs/sdk/environments.md';
+import docsSdkMarkdown, { metadata as docsSdkMetadata } from '../docs/sdk/index.md';
+import docsSdkRoutesMarkdown, { metadata as docsSdkRoutesMetadata } from '../docs/sdk/routes.md';
+import docsSdkStorageMarkdown, { metadata as docsSdkStorageMetadata } from '../docs/sdk/storage.md';
+import docsSdkTestingMarkdown, { metadata as docsSdkTestingMetadata } from '../docs/sdk/testing.md';
+import docsXmlComponentsMarkdown, { metadata as docsXmlComponentsMetadata } from '../docs/xml/components.md';
+import docsXmlLayoutMarkdown, { metadata as docsXmlLayoutMetadata } from '../docs/xml/layout.md';
+import docsXmlMarkdown, { metadata as docsXmlMetadata } from '../docs/xml/index.md';
 
 /**
  * Builds the route tree for the current bundle mode.
@@ -49,25 +49,52 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        { path: 'docs', element: <DocsPage content={docsIndexMarkdown} /> },
-        { path: 'docs/api', element: <DocsPage content={docsApiMarkdown} /> },
-        { path: 'docs/api/self-hosted', element: <DocsPage content={docsSelfHostedMarkdown} /> },
-        { path: 'docs/sdk', element: <DocsPage content={docsSdkMarkdown} /> },
-        { path: 'docs/sdk/building', element: <DocsPage content={docsSdkBuildingMarkdown} /> },
-        { path: 'docs/sdk/database', element: <DocsPage content={docsSdkDatabaseMarkdown} /> },
-        { path: 'docs/sdk/environments', element: <DocsPage content={docsSdkEnvironmentsMarkdown} /> },
-        { path: 'docs/sdk/routes', element: <DocsPage content={docsSdkRoutesMarkdown} /> },
-        { path: 'docs/sdk/storage', element: <DocsPage content={docsSdkStorageMarkdown} /> },
-        { path: 'docs/sdk/testing', element: <DocsPage content={docsSdkTestingMarkdown} /> },
-        { path: 'docs/xml', element: <DocsPage content={docsXmlMarkdown} /> },
-        { path: 'docs/xml/components', element: <DocsPage content={docsXmlComponentsMarkdown} /> },
-        { path: 'docs/xml/layout', element: <DocsPage content={docsXmlLayoutMarkdown} /> },
+        { path: 'docs', element: <DocsPage content={docsIndexMarkdown} metadata={docsIndexMetadata} /> },
+        { path: 'docs/api', element: <DocsPage content={docsApiMarkdown} metadata={docsApiMetadata} /> },
+        {
+            path: 'docs/api/self-hosted',
+            element: <DocsPage content={docsSelfHostedMarkdown} metadata={docsSelfHostedMetadata} />,
+        },
+        { path: 'docs/sdk', element: <DocsPage content={docsSdkMarkdown} metadata={docsSdkMetadata} /> },
+        {
+            path: 'docs/sdk/building',
+            element: <DocsPage content={docsSdkBuildingMarkdown} metadata={docsSdkBuildingMetadata} />,
+        },
+        {
+            path: 'docs/sdk/database',
+            element: <DocsPage content={docsSdkDatabaseMarkdown} metadata={docsSdkDatabaseMetadata} />,
+        },
+        {
+            path: 'docs/sdk/environments',
+            element: <DocsPage content={docsSdkEnvironmentsMarkdown} metadata={docsSdkEnvironmentsMetadata} />,
+        },
+        { path: 'docs/sdk/routes', element: <DocsPage content={docsSdkRoutesMarkdown} metadata={docsSdkRoutesMetadata} /> },
+        {
+            path: 'docs/sdk/storage',
+            element: <DocsPage content={docsSdkStorageMarkdown} metadata={docsSdkStorageMetadata} />,
+        },
+        {
+            path: 'docs/sdk/testing',
+            element: <DocsPage content={docsSdkTestingMarkdown} metadata={docsSdkTestingMetadata} />,
+        },
+        { path: 'docs/xml', element: <DocsPage content={docsXmlMarkdown} metadata={docsXmlMetadata} /> },
+        {
+            path: 'docs/xml/components',
+            element: <DocsPage content={docsXmlComponentsMarkdown} metadata={docsXmlComponentsMetadata} />,
+        },
+        { path: 'docs/xml/layout', element: <DocsPage content={docsXmlLayoutMarkdown} metadata={docsXmlLayoutMetadata} /> },
         { path: 'playground', element: <Playground /> },
         { path: 'theme', element: <Theme /> },
         { path: 'sample', element: <Sample /> },
-        { path: 'impressum', element: <LegalPage title="Impressum" content={impressumMarkdown} /> },
-        { path: 'terms', element: <LegalPage title="Terms" content={termsMarkdown} /> },
-        { path: 'privacy', element: <LegalPage title="Privacy" content={privacyMarkdown} /> },
+        {
+            path: 'impressum',
+            element: <LegalPage title="Impressum" content={impressumMarkdown} metadata={impressumMetadata} />,
+        },
+        { path: 'terms', element: <LegalPage title="Terms" content={termsMarkdown} metadata={termsMetadata} /> },
+        {
+            path: 'privacy',
+            element: <LegalPage title="Privacy" content={privacyMarkdown} metadata={privacyMetadata} />,
+        },
         {
             path: 'organizations',
             element: (
@@ -90,7 +117,7 @@ function getRoutes() {
             children: [
                 { index: true, element: <AdminUsers /> },
                 { path: 'users', element: <AdminUsers /> },
-                { path: 'organization', element: <AdminOrganization /> },
+                { path: 'organizations', element: <AdminOrganization /> },
                 { path: 'database', element: <AdminDatabase /> },
                 { path: 'storage', element: <AdminStorage /> },
                 { path: 'compute', element: <AdminCompute /> },

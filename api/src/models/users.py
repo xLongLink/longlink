@@ -104,6 +104,12 @@ class UserSummary(BaseModel):
         return value or ""
 
 
+class UserListItem(UserSummary):
+    """Represent one user in admin list responses."""
+
+    pass
+
+
 class UserProfile(BaseModel):
     """Represent the authenticated user payload returned by the API."""
 

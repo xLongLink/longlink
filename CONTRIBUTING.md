@@ -1,5 +1,12 @@
 # Contributing to LongLink
 
+The control plane owns authentication, authorization, orchestration, storage, and application routing.
+
+The web package owns the shared frontend runtime and the XML rendering path used by both the control plane and SDK bundles.
+
+The SDK owns application-facing Python helpers, CLI commands, database helpers, and packaged XML schema assets.
+
+
 <br />
 
 ## Architecture
@@ -29,12 +36,6 @@ make web    # Run the web app proxied to the api app
 make api    # Run the control plane
 make down   # Stop services and remove the cluster
 ```
-
-The control plane owns authentication, authorization, orchestration, storage, and application routing.
-
-The web package owns the shared frontend runtime and the XML rendering path used by both the control plane and SDK bundles.
-
-The SDK owns application-facing Python helpers, CLI commands, database helpers, and packaged XML schema assets.
 
 ## Release
 

@@ -17,6 +17,18 @@ class OrgCreate(BaseModel):
         return value.strip()
 
 
+class OrgSummary(BaseModel):
+    """Represent one organization in admin list responses."""
+
+    name: str
+    created_at: datetime
+    updated_at: datetime
+    created_by: UserSummary
+    updated_by: UserSummary
+    deleted_at: datetime | None = None
+    deleted_by: UserSummary
+
+
 class OrgAppResponse(BaseModel):
     """Represent one application in an organization payload."""
 
