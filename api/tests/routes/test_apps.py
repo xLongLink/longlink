@@ -1,11 +1,10 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import insert
 
 import src.db as db
-from src.db.models.association import user_apps
-from src.db.models import User
+from src.db.models import User, UserApp
 from src.db.session import get_session
 from src.models import AppResponse, UserSummary
+from src.models.roles import Roles
 
 
 async def test_list_apps_returns_app_membership_role(
@@ -27,12 +26,12 @@ async def test_list_apps_returns_app_membership_role(
 
     Session = await get_session()
     async with Session() as session:
-        await session.execute(
-            insert(user_apps).values(
+        session.add(
+            UserApp(
                 user_id=user.id,
                 organization_name="acme",
                 app_name="dashboard",
-                role_name="write",
+                role_name=Roles.write,
             )
         )
         await session.commit()
@@ -47,7 +46,7 @@ async def test_list_apps_returns_app_membership_role(
     expected_data = AppResponse.model_validate(
         {
             **app.model_dump(),
-            "role": "write",
+            "role": Roles.write,
             "created_by": UserSummary.model_validate(user.model_dump()),
             "updated_by": UserSummary.model_validate(user.model_dump()),
             "deleted_by": UserSummary.model_validate(user.model_dump()),

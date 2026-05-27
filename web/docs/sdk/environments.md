@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-25
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/sdk/environments.md
+---
+
 # Environments
 
 The `Environments` class defines and validates environment variables for an application.

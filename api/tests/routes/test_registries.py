@@ -33,6 +33,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         "success": True,
         "detail": "Database registry saved",
         "data": DatabaseRegistryResponse(
+            id=1,
             name="primary",
             host="db.longlink.internal",
             port=5432,
@@ -47,6 +48,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         "detail": "Database registries fetched",
         "data": [
             DatabaseRegistryResponse(
+                id=1,
                 name="primary",
                 host="db.longlink.internal",
                 port=5432,
@@ -87,6 +89,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
         "success": True,
         "detail": "Storage registry saved",
         "data": StorageRegistryResponse(
+            id=1,
             name="object-store",
             protocol="s3",
             endpoint_url="https://storage.longlink.internal",
@@ -99,6 +102,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
         "detail": "Storage registries fetched",
         "data": [
             StorageRegistryResponse(
+                id=1,
                 name="object-store",
                 protocol="s3",
                 endpoint_url="https://storage.longlink.internal",
@@ -136,6 +140,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         "success": True,
         "detail": "Compute registry saved",
         "data": ComputeRegistryResponse(
+            id=1,
             name="cluster-a",
             kube_config_path="/etc/longlink/kubeconfig",
             ingress_host="apps.longlink.internal",
@@ -148,6 +153,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         "detail": "Compute registries fetched",
         "data": [
             ComputeRegistryResponse(
+                id=1,
                 name="cluster-a",
                 kube_config_path="/etc/longlink/kubeconfig",
                 ingress_host="apps.longlink.internal",

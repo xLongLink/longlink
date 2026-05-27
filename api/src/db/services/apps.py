@@ -4,7 +4,7 @@ from sqlalchemy import and_, delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.db.models import App, Env
-from src.db.models.association import user_apps
+from src.db.models.association import UserApp
 from src.db.models.users import User
 
 from .base import ServiceBase
@@ -17,18 +17,18 @@ class AppsService(ServiceBase):
         async with self.session() as session:
             # Join the membership row so the caller can render the app role in one query.
             statement = (
-                select(App, user_apps.c.role_name)
+                select(App, UserApp.role_name)
                 .options(
                     selectinload(App.created_by),
                     selectinload(App.updated_by),
                     selectinload(App.deleted_by),
                 )
                 .outerjoin(
-                    user_apps,
+                    UserApp,
                     and_(
-                        App.organization == user_apps.c.organization_name,
-                        App.name == user_apps.c.app_name,
-                        user_apps.c.user_id == user_id,
+                        App.organization == UserApp.organization_name,
+                        App.name == UserApp.app_name,
+                        UserApp.user_id == user_id,
                     ),
                 )
                 .where(App.organization == organization)

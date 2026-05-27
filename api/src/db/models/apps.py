@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship
 from src.db.models.__base__ import Base
-from src.db.models.association import user_apps
+from src.db.models.association import UserApp
 
 if TYPE_CHECKING:
     from src.db.models.users import User
@@ -28,5 +28,5 @@ class App(Base, table=True):
     deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'App.deleted_by_id'})
     users: list['User'] = Relationship(
         back_populates='apps',
-        sa_relationship_kwargs={'secondary': user_apps},
+        sa_relationship_kwargs={'secondary': UserApp.__table__},
     )

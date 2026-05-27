@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-25
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/sdk/storage.md
+---
+
 # Storage
 
 LongLink SDK exposes a native `fs` object. You can use it like a standard [fsspec](https://filesystem-spec.readthedocs.io/en/latest/)

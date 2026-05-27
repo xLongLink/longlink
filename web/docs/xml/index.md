@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-26
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/xml/index.md
+---
+
 # XML Pages
 
 LongLink XML pages define the UI for backoffice software, including CRUD screens, admin panels, dashboards, and

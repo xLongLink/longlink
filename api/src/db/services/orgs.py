@@ -1,8 +1,9 @@
-from sqlalchemy import delete, insert, select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.db.models import App, Org, User
-from src.db.models.association import user_organizations
+from src.db.models.association import UserOrganization
+from src.models.roles import Roles
 
 from .base import ServiceBase
 
@@ -35,10 +36,10 @@ class OrgsService(ServiceBase):
 
         async with self.session() as session:
             # Read the role directly from the membership table so the route stays declarative.
-            statement = select(User, user_organizations.c.role_name).join(
-                user_organizations,
-                User.id == user_organizations.c.user_id,
-            ).where(user_organizations.c.organization_name == name)
+            statement = select(User, UserOrganization.role_name).join(
+                UserOrganization,
+                User.id == UserOrganization.user_id,
+            ).where(UserOrganization.organization_name == name)
             result = await session.execute(statement)
             return result.all()
 
@@ -51,18 +52,16 @@ class OrgsService(ServiceBase):
                 organization.created_by_id = user.id
                 organization.updated_by_id = user.id
                 organization.deleted_by_id = user.id
+                session.add(
+                    UserOrganization(
+                        user_id=user.id,
+                        organization_name=organization.name,
+                        role_name=Roles.owner,
+                    )
+                )
             session.add(organization)
 
             try:
-                if user is not None:
-                    await session.flush()
-                    await session.execute(
-                        insert(user_organizations).values(
-                            user_id=user.id,
-                            organization_name=organization.name,
-                            role_name='owner',
-                        )
-                    )
                 await session.commit()
             except IntegrityError as exc:
                 await session.rollback()

@@ -9,7 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
-import { BookOpen, Building2, Cpu, Database, HardDrive, LogOut, Settings2 } from 'lucide-react';
+import { BookOpen, Building2, Cpu, Database, HardDrive, LogOut, Settings2, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 
 /** Renders a user profile dropdown with authentication actions. */
@@ -24,8 +24,6 @@ export function UserProfile() {
     const username = user.name;
     const fullName = user.email;
     const avatarUrl = user.avatar;
-    const isAdmin = user.admin;
-
     /**
      * Signs the current user out and redirects to home.
      */
@@ -52,11 +50,6 @@ export function UserProfile() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <p className="text-sm font-semibold text-foreground">{username}</p>
-                                {isAdmin ? (
-                                    <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                        Admin
-                                    </span>
-                                ) : null}
                             </div>
                             <p className="text-xs text-muted-foreground">{fullName}</p>
                         </div>
@@ -87,6 +80,18 @@ export function UserProfile() {
                     <>
                         <DropdownMenuSeparator className="my-2" />
                         <DropdownMenuGroup>
+                            <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
+                                <Link to="/admin/users" className="flex w-full items-center gap-2 text-inherit">
+                                    <Users className="h-4 w-4" />
+                                    Users
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
+                                <Link to="/admin/organization" className="flex w-full items-center gap-2 text-inherit">
+                                    <Building2 className="h-4 w-4" />
+                                    Organizations
+                                </Link>
+                            </DropdownMenuItem>
                             <DropdownMenuItem className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white">
                                 <Link to="/admin/database" className="flex w-full items-center gap-2 text-inherit">
                                     <Database className="h-4 w-4" />

@@ -1,7 +1,8 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import MarkdownDoc from '@/docs/MarkdownDoc';
 import { Heading } from '@/components/ui/heading';
+
+import { MarkdownDoc } from './Docs';
 
 type LegalPageProps = {
     title: string;

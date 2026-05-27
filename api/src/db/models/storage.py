@@ -7,7 +7,8 @@ class StorageRegistry(Base, table=True):
 
     __tablename__ = "storage_registries"
 
-    name: str = Field(primary_key=True, max_length=128)
+    id: int = Field(default=None, primary_key=True)
+    name: str = Field(unique=True, max_length=128)
     protocol: str = Field(max_length=16)
     endpoint_url: str = Field(max_length=255)
     access_key_id: str = Field(max_length=255)

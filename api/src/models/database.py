@@ -16,6 +16,7 @@ class DatabaseRegistryCreate(BaseModel):
 class DatabaseRegistryResponse(BaseModel):
     """Represent one database registry in API responses."""
 
+    id: int
     name: str
     host: str
     port: int

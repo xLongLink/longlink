@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-25
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/api/self-hosted.md
+---
+
 # Self-hosted Control Plane
 
 Use self-hosted mode when you run the LongLink control plane in your own infrastructure.

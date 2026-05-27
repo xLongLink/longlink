@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-25
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/index.md
+---
+
 # LongLink
 
 LongLink is a platform for building and running applications that manage data, enforce validation rules, and

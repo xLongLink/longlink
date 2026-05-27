@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from src.models.roles import RoleName
+from src.models.roles import Roles
 
 
 class Theme(str, Enum):
@@ -84,7 +84,7 @@ class UserOrgMembership(BaseModel):
     """Represent one organization membership in the user profile."""
 
     name: str
-    role: RoleName
+    role: Roles
 
 
 class UserSummary(BaseModel):

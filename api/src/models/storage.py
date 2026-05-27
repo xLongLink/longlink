@@ -14,6 +14,7 @@ class StorageRegistryCreate(BaseModel):
 class StorageRegistryResponse(BaseModel):
     """Represent one storage registry in API responses."""
 
+    id: int
     name: str
     protocol: str
     endpoint_url: str

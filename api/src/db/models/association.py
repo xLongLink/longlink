@@ -1,26 +1,47 @@
-from sqlalchemy import Column, Enum, ForeignKey, ForeignKeyConstraint, String, Table
+from sqlalchemy import Column, Enum, ForeignKeyConstraint
+from sqlmodel import Field, SQLModel
 
-from src.db.models.__base__ import Base
-from src.models.roles import ROLES
+from src.models.roles import Roles
 
-user_organizations = Table(
-    'user_organizations',
-    Base.metadata,
-    Column('user_id', ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
-    Column('organization_name', ForeignKey('organizations.name', ondelete='CASCADE'), primary_key=True),
-    Column('role_name', Enum(*ROLES, name='role_name_enum', native_enum=False), nullable=False),
-)
 
-user_apps = Table(
-    'user_apps',
-    Base.metadata,
-    Column('user_id', ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
-    Column('organization_name', ForeignKey('organizations.name', ondelete='CASCADE'), primary_key=True),
-    Column('app_name', String(100), primary_key=True),
-    Column('role_name', Enum(*ROLES, name='role_name_enum', native_enum=False), nullable=False),
-    ForeignKeyConstraint(
-        ['organization_name', 'app_name'],
-        ['apps.organization', 'apps.name'],
-        ondelete='CASCADE',
-    ),
-)
+class UserOrganization(SQLModel, table=True):
+    """Represent one user's membership in an organization."""
+
+    __tablename__ = "user_organizations"
+
+    user_id: int = Field(default=None, primary_key=True, foreign_key="users.id")
+    organization_name: str = Field(
+        default=None,
+        primary_key=True,
+        foreign_key="organizations.name",
+        max_length=128,
+    )
+    role_name: Roles = Field(
+        sa_column=Column(Enum(Roles, name="role_name_enum", native_enum=False), nullable=False)
+    )
+
+
+class UserApp(SQLModel, table=True):
+    """Represent one user's membership in an application."""
+
+    __tablename__ = "user_apps"
+
+    user_id: int = Field(default=None, primary_key=True, foreign_key="users.id")
+    organization_name: str = Field(
+        default=None,
+        primary_key=True,
+        foreign_key="organizations.name",
+        max_length=128,
+    )
+    app_name: str = Field(default=None, primary_key=True, max_length=100)
+    role_name: Roles = Field(
+        sa_column=Column(Enum(Roles, name="role_name_enum", native_enum=False), nullable=False)
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["organization_name", "app_name"],
+            ["apps.organization", "apps.name"],
+            ondelete="CASCADE",
+        ),
+    )

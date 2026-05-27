@@ -14,6 +14,7 @@ async def list_database_registries(_user: db.User = Depends(authadmin)) -> APIRe
     payload = [
         DatabaseRegistryResponse.model_validate(
             {
+                "id": registry.id,
                 "name": registry.name,
                 "host": registry.host,
                 "port": registry.port,
@@ -41,6 +42,7 @@ async def get_database_registry(name: str, _user: db.User = Depends(authadmin)) 
         detail="Database registry fetched",
         data=DatabaseRegistryResponse.model_validate(
             {
+                "id": registry.id,
                 "name": registry.name,
                 "host": registry.host,
                 "port": registry.port,
@@ -66,6 +68,7 @@ async def create_database_registry(
         detail="Database registry saved",
         data=DatabaseRegistryResponse.model_validate(
             {
+                "id": registry.id,
                 "name": registry.name,
                 "host": registry.host,
                 "port": registry.port,

@@ -1,10 +1,10 @@
 import pytest
-from sqlalchemy import insert, select
+from sqlalchemy import select
 
 import src.db as db
-from src.db.models.association import user_organizations
-from src.db.models import User
+from src.db.models import User, UserOrganization
 from src.db.session import get_session
+from src.models.roles import Roles
 
 
 async def test_create_persists_org_and_owner_membership(users: tuple[User, User, User]) -> None:
@@ -26,13 +26,13 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     Session = await get_session()
     async with Session() as session:
-        statement = select(user_organizations.c.role_name).where(
-            user_organizations.c.user_id == owner.id,
-            user_organizations.c.organization_name == "acme",
+        statement = select(UserOrganization.role_name).where(
+            UserOrganization.user_id == owner.id,
+            UserOrganization.organization_name == "acme",
         )
         result = await session.execute(statement)
 
-        assert result.scalar_one() == "owner"
+        assert result.scalar_one() == Roles.owner
 
 
 async def test_members_returns_users_with_roles(users: tuple[User, User, User]) -> None:
@@ -44,11 +44,11 @@ async def test_members_returns_users_with_roles(users: tuple[User, User, User]) 
 
     Session = await get_session()
     async with Session() as session:
-        await session.execute(
-            insert(user_organizations).values(
+        session.add(
+            UserOrganization(
                 user_id=member.id,
                 organization_name="acme",
-                role_name="write",
+                role_name=Roles.write,
             )
         )
         await session.commit()
@@ -58,8 +58,8 @@ async def test_members_returns_users_with_roles(users: tuple[User, User, User]) 
 
     # Assert
     assert {user.id: role for user, role in members} == {
-        owner.id: "owner",
-        member.id: "write",
+        owner.id: Roles.owner,
+        member.id: Roles.write,
     }
 
 

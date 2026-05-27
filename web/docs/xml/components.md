@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-26
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/xml/components.md
+---
+
 # Components
 
 Reusable UI components and bridge tags for XML pages.

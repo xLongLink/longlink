@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-26
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/xml/layout.md
+---
+
 # Layout
 
 XML layout components organize content into responsive sections and dialog-style surfaces.

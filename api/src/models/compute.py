@@ -13,6 +13,7 @@ class ComputeRegistryCreate(BaseModel):
 class ComputeRegistryResponse(BaseModel):
     """Represent one compute registry in API responses."""
 
+    id: int
     name: str
     kube_config_path: str
     ingress_host: str

@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-25
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/api/index.md
+---
+
 # Control Plane
 
 The Control Plane is the central system that manages and governs all applications in LongLink. It acts as the single

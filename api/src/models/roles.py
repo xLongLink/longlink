@@ -1,6 +1,11 @@
-from typing import Literal
+from enum import Enum
 
 
-ROLES = ["read", "write", "maintain", "admin", "owner"]
+class Roles(str, Enum):
+    """Supported membership roles."""
 
-RoleName = Literal["read", "write", "maintain", "admin", "owner"]
+    read = "read"
+    write = "write"
+    maintain = "maintain"
+    admin = "admin"
+    owner = "owner"

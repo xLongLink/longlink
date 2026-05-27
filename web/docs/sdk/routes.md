@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-25
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/sdk/routes.md
+---
+
 # Endpoints
 
 LongLink SDK wraps FastAPI.

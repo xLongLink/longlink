@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-26
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/sdk/testing.md
+---
+
 # Testing
 
 Applications built with the LongLink SDK can be tested using standard [pytest](https://docs.pytest.org/en/stable/)

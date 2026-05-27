@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 from src.db.models import User
 from sqlalchemy.orm import selectinload
-from src.db.models.association import user_organizations
+from src.db.models.association import UserOrganization
 from src.models import UserOrgMembership, UserProfile
 from src.models.users import Accent, Radius, Theme
 
@@ -21,9 +21,9 @@ class UsersService(ServiceBase):
             # Load organization roles from the association table so the profile stays accurate.
             org_result = await session.execute(
                 select(
-                    user_organizations.c.organization_name,
-                    user_organizations.c.role_name,
-                ).where(user_organizations.c.user_id == user.id)
+                    UserOrganization.organization_name,
+                    UserOrganization.role_name,
+                ).where(UserOrganization.user_id == user.id)
             )
 
             payload = user.model_dump()

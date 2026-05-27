@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship
 from src.models.users import Theme, Accent, Radius, Language
 from src.db.models.__base__ import Base
-from src.db.models.association import user_apps, user_organizations
+from src.db.models.association import UserApp, UserOrganization
 
 if TYPE_CHECKING:
     from src.db.models.apps import App
@@ -26,9 +26,9 @@ class User(Base, table=True):
     oidc_subject: str | None = Field(default=None, unique=True, max_length=255)
     orgs: list['Org'] = Relationship(
         back_populates='users',
-        sa_relationship_kwargs={'secondary': user_organizations},
+        sa_relationship_kwargs={'secondary': UserOrganization.__table__},
     )
     apps: list['App'] = Relationship(
         back_populates='users',
-        sa_relationship_kwargs={'secondary': user_apps},
+        sa_relationship_kwargs={'secondary': UserApp.__table__},
     )

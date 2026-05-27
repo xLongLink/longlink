@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-25
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/sdk/database.md
+---
+
 # Database
 
 LongLink SDK exposes a `db` object for database access. You use `db.Table` to define tables and `await db.get_session()`

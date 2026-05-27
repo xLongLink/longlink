@@ -14,4 +14,4 @@ from .users import (  # noqa: F401
 )
 from .orgs import OrgCreate, OrgDetails  # noqa: F401
 from .storage import StorageRegistryCreate, StorageRegistryResponse  # noqa: F401
-from .roles import ROLES, RoleName  # noqa: F401
+from .roles import Roles  # noqa: F401

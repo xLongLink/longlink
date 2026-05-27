@@ -1,3 +1,8 @@
+---
+lastUpdated: 2026-05-25
+editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/sdk/index.md
+---
+
 # Application SDK
 
 The LongLink SDK is a thin integration layer built on top of the standard Python backend ecosystem. It does not

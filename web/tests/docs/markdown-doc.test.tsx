@@ -1,4 +1,4 @@
-import MarkdownDoc from '@/docs/MarkdownDoc';
+import { MarkdownDoc } from '@/pages/Docs';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

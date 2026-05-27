@@ -2,7 +2,7 @@ from typing import Annotated
 from datetime import datetime
 
 from pydantic import BaseModel, BeforeValidator, field_validator
-from src.models.roles import RoleName
+from src.models.roles import Roles
 from src.models.users import UserSummary
 
 
@@ -30,7 +30,7 @@ class AppResponse(BaseModel):
     id: int
     name: str
     url: str
-    role: RoleName | None = None
+    role: Roles | None = None
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary

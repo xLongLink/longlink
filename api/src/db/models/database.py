@@ -7,7 +7,8 @@ class DatabaseRegistry(Base, table=True):
 
     __tablename__ = "database_registries"
 
-    name: str = Field(primary_key=True, max_length=128)
+    id: int = Field(default=None, primary_key=True)
+    name: str = Field(unique=True, max_length=128)
     host: str = Field(max_length=255)
     port: int
     username: str = Field(max_length=255)

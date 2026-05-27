@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
 from src.db.models.__base__ import Base
-from src.db.models.association import user_organizations
+from src.db.models.association import UserOrganization
 
 if TYPE_CHECKING:
     from src.db.models.users import User
@@ -21,5 +21,5 @@ class Org(Base, table=True):
     deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Org.deleted_by_id'})
     users: list['User'] = Relationship(
         back_populates='orgs',
-        sa_relationship_kwargs={'secondary': user_organizations},
+        sa_relationship_kwargs={'secondary': UserOrganization.__table__},
     )

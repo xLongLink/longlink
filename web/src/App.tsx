@@ -5,22 +5,6 @@ import { RouterProvider, createBrowserRouter } from 'react-router';
 import impressumMarkdown from '../legal/impressum.md?raw';
 import privacyMarkdown from '../legal/privacy.md?raw';
 import termsMarkdown from '../legal/terms.md?raw';
-import {
-    ControlPlanePage,
-    DocsOverviewPage,
-    SdkBuildingPage,
-    SdkDatabasePage,
-    SdkEnvironmentsPage,
-    SdkOverviewPage,
-    SdkRoutesPage,
-    SdkStoragePage,
-    SdkTestingPage,
-    SelfHostedControlPlanePage,
-    XmlComponentsPage,
-    XmlLayoutPage,
-    XmlOverviewPage,
-} from './docs';
-import DocsLayout from './docs/Layout';
 import { LegalPage } from './pages/LegalPage';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
@@ -35,8 +19,23 @@ import AdminUsers from './pages/admin/Users';
 import AdminCompute from './pages/admin/Compute';
 import AdminDatabase from './pages/admin/Database';
 import AdminStorage from './pages/admin/Storage';
+import DocsPage from './pages/Docs';
 import Theme from './pages/Theme';
 import View from './pages/View';
+
+import docsApiMarkdown from '../docs/api/index.md?raw';
+import docsSelfHostedMarkdown from '../docs/api/self-hosted.md?raw';
+import docsIndexMarkdown from '../docs/index.md?raw';
+import docsSdkBuildingMarkdown from '../docs/sdk/building.md?raw';
+import docsSdkDatabaseMarkdown from '../docs/sdk/database.md?raw';
+import docsSdkEnvironmentsMarkdown from '../docs/sdk/environments.md?raw';
+import docsSdkMarkdown from '../docs/sdk/index.md?raw';
+import docsSdkRoutesMarkdown from '../docs/sdk/routes.md?raw';
+import docsSdkStorageMarkdown from '../docs/sdk/storage.md?raw';
+import docsSdkTestingMarkdown from '../docs/sdk/testing.md?raw';
+import docsXmlComponentsMarkdown from '../docs/xml/components.md?raw';
+import docsXmlLayoutMarkdown from '../docs/xml/layout.md?raw';
+import docsXmlMarkdown from '../docs/xml/index.md?raw';
 
 /**
  * Builds the route tree for the current bundle mode.
@@ -50,25 +49,19 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        {
-            path: 'docs',
-            element: <DocsLayout />,
-            children: [
-                { index: true, element: <DocsOverviewPage /> },
-                { path: 'api', element: <ControlPlanePage /> },
-                { path: 'api/self-hosted', element: <SelfHostedControlPlanePage /> },
-                { path: 'sdk', element: <SdkOverviewPage /> },
-                { path: 'sdk/building', element: <SdkBuildingPage /> },
-                { path: 'sdk/database', element: <SdkDatabasePage /> },
-                { path: 'sdk/environments', element: <SdkEnvironmentsPage /> },
-                { path: 'sdk/routes', element: <SdkRoutesPage /> },
-                { path: 'sdk/storage', element: <SdkStoragePage /> },
-                { path: 'sdk/testing', element: <SdkTestingPage /> },
-                { path: 'xml', element: <XmlOverviewPage /> },
-                { path: 'xml/components', element: <XmlComponentsPage /> },
-                { path: 'xml/layout', element: <XmlLayoutPage /> },
-            ],
-        },
+        { path: 'docs', element: <DocsPage content={docsIndexMarkdown} /> },
+        { path: 'docs/api', element: <DocsPage content={docsApiMarkdown} /> },
+        { path: 'docs/api/self-hosted', element: <DocsPage content={docsSelfHostedMarkdown} /> },
+        { path: 'docs/sdk', element: <DocsPage content={docsSdkMarkdown} /> },
+        { path: 'docs/sdk/building', element: <DocsPage content={docsSdkBuildingMarkdown} /> },
+        { path: 'docs/sdk/database', element: <DocsPage content={docsSdkDatabaseMarkdown} /> },
+        { path: 'docs/sdk/environments', element: <DocsPage content={docsSdkEnvironmentsMarkdown} /> },
+        { path: 'docs/sdk/routes', element: <DocsPage content={docsSdkRoutesMarkdown} /> },
+        { path: 'docs/sdk/storage', element: <DocsPage content={docsSdkStorageMarkdown} /> },
+        { path: 'docs/sdk/testing', element: <DocsPage content={docsSdkTestingMarkdown} /> },
+        { path: 'docs/xml', element: <DocsPage content={docsXmlMarkdown} /> },
+        { path: 'docs/xml/components', element: <DocsPage content={docsXmlComponentsMarkdown} /> },
+        { path: 'docs/xml/layout', element: <DocsPage content={docsXmlLayoutMarkdown} /> },
         { path: 'playground', element: <Playground /> },
         { path: 'theme', element: <Theme /> },
         { path: 'sample', element: <Sample /> },
