@@ -242,12 +242,27 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
 
 /** Renders a markdown-backed docs article. */
 export function MarkdownDoc({ content, metadata }: { content: ReactNode; metadata?: MarkdownDocMetadata }) {
+    // Format frontmatter dates into the human-readable docs footer style.
+    const lastUpdated = metadata?.lastUpdated
+        ? (() => {
+              const parsedDate = new Date(metadata.lastUpdated);
+
+              return Number.isNaN(parsedDate.getTime())
+                  ? metadata.lastUpdated
+                  : new Intl.DateTimeFormat('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                    }).format(parsedDate);
+          })()
+        : '';
+
     return (
         <article className="mx-auto w-full max-w-2xl space-y-6">
             {content}
             {metadata?.lastUpdated || metadata?.editUrl ? (
                 <footer className="flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-                    {metadata.lastUpdated ? <span>Last updated {metadata.lastUpdated}</span> : <span />}
+                    {metadata.lastUpdated ? <span>Last updated: {lastUpdated}</span> : <span />}
                     {metadata.editUrl ? (
                         <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">
                             Edit this page in GitHub

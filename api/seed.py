@@ -1,8 +1,11 @@
 import asyncio
+from pathlib import Path
+
 import src.db as db
 from src.db.models import Base
 from src.env import env
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
@@ -28,7 +31,6 @@ LOCAL_STORAGE = {
 
 LOCAL_COMPUTE = {
     "kind": ComputeKind.kubernetes,
-    "name": "local",
     "kube_config_path": "kubeconfig.yaml",
     "ingress_host": "localhost",
     "ingress_name": "control-ingress",
@@ -40,6 +42,13 @@ async def main() -> None:
 
     # Local development uses SQLite, so bootstrap the schema before inserting seed rows.
     if env.DATABASE_URL.startswith('sqlite+'):
+        # Recreate the local SQLite file to avoid stale schema from older dev runs.
+        sqlite_url = make_url(env.DATABASE_URL)
+        if sqlite_url.database and sqlite_url.database != ':memory:':
+            db_path = Path(sqlite_url.database)
+            if db_path.exists():
+                db_path.unlink()
+
         engine = create_async_engine(env.DATABASE_URL)
         try:
             async with engine.begin() as conn:

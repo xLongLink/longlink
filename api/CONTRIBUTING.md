@@ -11,6 +11,44 @@ python -m isort .       # Format the code
 
 ## Architecture
 
+
+```bash
+Control Plane
+├── Infrastructure Registry
+│   ├── Compute Pools
+│   ├── Database Pools
+│   ├── Storage Pools
+│   ├── Logging Pools
+│   ├── Metrics Pools
+│   ├── Tracing Pools
+│   ├── Secret Pools
+│   ├── Network Pools
+│   └── Registry Pools
+│
+├── Organizations
+│   └── Organization
+│       ├── Org Identity
+│       ├── Org Plan / Quota
+│       ├── Org Placement
+│       ├── Org Spaces
+│       ├── Org Policies
+│       ├── Org Usage
+│       └── Applications
+│
+└── Applications
+    └── Application
+        ├── App Metadata
+        ├── App Manifest
+        ├── App Deployments
+        ├── App Allocations
+        ├── App Policies
+        ├── App Releases
+        └── App Health
+```
+
+
+## Folder Structure
+
 ```bash
 api/
 ├── src/
@@ -70,7 +108,6 @@ return APIResponse(
     data=AppResponse(name=app.name, url=app.url),
 )
 ```
-
 
 ## Testing
 

@@ -36,3 +36,11 @@ class Root(ABC):
     @abstractmethod
     def delete(self, bucket_name: str) -> None:
         """Delete one storage bucket."""
+
+    @abstractmethod
+    def usage(self) -> dict[str, int]:
+        """Return storage usage metrics."""
+
+    @abstractmethod
+    def quota(self) -> dict[str, int | None]:
+        """Return storage quota metrics."""

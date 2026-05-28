@@ -100,7 +100,7 @@ export default function ConnectStorageDialog() {
                         >
                             <div className="space-y-2">
                                 <Label htmlFor="storage-kind">Kind</Label>
-                                <Select value={kind} onValueChange={setKind}>
+                                <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
                                     <SelectTrigger id="storage-kind" className="w-full">
                                         <SelectValue placeholder="Choose a storage kind" />
                                     </SelectTrigger>

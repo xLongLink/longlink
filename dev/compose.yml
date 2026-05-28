@@ -1,7 +1,6 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: longlink-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: admin
@@ -12,7 +11,6 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: longlink-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -24,7 +22,6 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
-    container_name: longlink-keycloak
     restart: unless-stopped
     command: start-dev --http-port=8080 --import-realm
     environment:

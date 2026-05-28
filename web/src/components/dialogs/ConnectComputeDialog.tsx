@@ -13,7 +13,6 @@ export default function ConnectComputeDialog() {
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('kubernetes');
-    const [name, setName] = useState('');
     const [kubeConfigPath, setKubeConfigPath] = useState('');
     const [ingressHost, setIngressHost] = useState('');
     const [ingressName, setIngressName] = useState('');
@@ -32,7 +31,6 @@ export default function ConnectComputeDialog() {
                 credentials: 'include',
                 body: JSON.stringify({
                     kind: kind.trim(),
-                    name: name.trim(),
                     kube_config_path: kubeConfigPath.trim(),
                     ingress_host: ingressHost.trim(),
                     ingress_name: ingressName.trim(),
@@ -50,7 +48,6 @@ export default function ConnectComputeDialog() {
             await queryClient.invalidateQueries({ queryKey: ['api', computeUrl] });
             setOpen(false);
             setKind('kubernetes');
-            setName('');
             setKubeConfigPath('');
             setIngressHost('');
             setIngressName('');
@@ -97,7 +94,7 @@ export default function ConnectComputeDialog() {
                         >
                             <div className="space-y-2">
                                 <Label htmlFor="compute-kind">Kind</Label>
-                                <Select value={kind} onValueChange={setKind}>
+                                <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
                                     <SelectTrigger id="compute-kind" className="w-full">
                                         <SelectValue placeholder="Choose a compute kind" />
                                     </SelectTrigger>
@@ -105,17 +102,6 @@ export default function ConnectComputeDialog() {
                                         <SelectItem value="kubernetes">Kubernetes</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="compute-name">Name</Label>
-                                <Input
-                                    id="compute-name"
-                                    value={name}
-                                    onChange={(event) => setName(event.target.value)}
-                                    placeholder="cluster-1"
-                                    autoComplete="off"
-                                />
                             </div>
 
                             <div className="space-y-2">

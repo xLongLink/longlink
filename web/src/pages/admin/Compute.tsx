@@ -1,25 +1,70 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { type ColumnDef } from '@tanstack/react-table';
+import { Button } from '@ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Cpu } from 'lucide-react';
+import { Cpu, MoreHorizontal } from 'lucide-react';
+import { toast } from 'sonner';
 
+import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
 import { apiUrl } from '@/lib/api';
 import type { ApiComputeRegistry, ApiResponse } from '@/lib/types';
 
-import AdminPaginatedTable, { type AdminTableColumn } from './AdminPaginatedTable';
-
-const computeColumns: Array<AdminTableColumn<ApiComputeRegistry>> = [
-    { header: 'Kind', className: 'w-32', render: (compute) => compute.kind },
-    { header: 'Name', render: (compute) => compute.name },
-    { header: 'Kube config', className: 'w-64', render: (compute) => compute.kube_config_path },
-    { header: 'Ingress host', className: 'w-48', render: (compute) => compute.ingress_host },
-    { header: 'Ingress name', className: 'w-48', render: (compute) => compute.ingress_name },
+const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry>> = [
+    { accessorKey: 'kind', header: 'Kind', cell: ({ getValue }) => getValue(), meta: { className: 'w-32' } },
+    {
+        accessorKey: 'kube_config_path',
+        header: 'Kube config',
+        cell: ({ getValue }) => getValue(),
+        meta: { className: 'w-64' },
+    },
+    {
+        accessorKey: 'ingress_host',
+        header: 'Ingress host',
+        cell: ({ getValue }) => getValue(),
+        meta: { className: 'w-48' },
+    },
+    {
+        accessorKey: 'ingress_name',
+        header: 'Ingress name',
+        cell: ({ getValue }) => getValue(),
+        meta: { className: 'w-48' },
+    },
 ];
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
+    const queryClient = useQueryClient();
     const computeUrl = apiUrl('/api/compute');
+
+    const deleteCompute = useMutation({
+        mutationFn: async (registryId: string) => {
+            const response = await fetch(apiUrl(`/api/compute/${encodeURIComponent(registryId)}`), {
+                method: 'DELETE',
+                headers: { Accept: 'application/json' },
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
+
+                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
+            }
+
+            return null;
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ['api', computeUrl] });
+            toast.success('Compute deleted');
+        },
+    });
 
     const computeQuery = useQuery({
         queryKey: ['api', computeUrl],
@@ -40,26 +85,92 @@ export default function AdminCompute() {
         retry: false,
     });
 
+    const computeRows = computeQuery.data ?? [];
+    const computeColumns = [
+        ...computeColumnsBase,
+        {
+            id: 'actions',
+            header: 'Action',
+            meta: { className: 'w-24 text-right' },
+            cell: ({ row }) => {
+                const compute = row.original;
+                const computeId = String(compute.id);
+
+                return (
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        aria-label={`Open actions for compute ${compute.id}`}
+                                    />
+                                }
+                            >
+                                <MoreHorizontal className="size-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                        void navigator.clipboard.writeText(computeId);
+                                        toast.success('Compute ID copied');
+                                    }}
+                                >
+                                    Copy ID
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    variant="destructive"
+                                    onClick={async () => {
+                                        // Confirm the destructive action before deleting the compute registry.
+                                        if (!window.confirm(`Delete compute ${compute.id}?`)) {
+                                            return;
+                                        }
+
+                                        try {
+                                            await deleteCompute.mutateAsync(computeId);
+                                        } catch (mutationError) {
+                                            toast.error(
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : 'Failed to delete compute'
+                                            );
+                                        }
+                                    }}
+                                >
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+            },
+        },
+    ] satisfies Array<ColumnDef<ApiComputeRegistry>>;
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <Hero icon={<Cpu />}>
                     <div>
                         <HeroTitle>Compute</HeroTitle>
-                        <HeroDescription>Inspect runtime workloads, node capacity, and orchestration status.</HeroDescription>
+                        <HeroDescription>
+                            Inspect runtime workloads, node capacity, and orchestration status.
+                        </HeroDescription>
                     </div>
                 </Hero>
                 <ConnectComputeDialog />
             </div>
-            <AdminPaginatedTable
-                columns={computeColumns}
-                rows={computeQuery.data ?? []}
-                rowKey={(compute) => compute.name}
-                emptyMessage="No compute nodes found."
-                isLoading={computeQuery.isLoading}
-                errorMessage={computeQuery.error?.message ?? null}
-                pageSize={5}
-            />
+            {computeQuery.isLoading && computeRows.length === 0 ? (
+                <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading records...</div>
+            ) : computeQuery.error && computeRows.length === 0 ? (
+                <div className="rounded-md border p-4 text-sm text-destructive">{computeQuery.error.message}</div>
+            ) : (
+                <DataTable columns={computeColumns} data={computeRows} />
+            )}
         </div>
     );
 }

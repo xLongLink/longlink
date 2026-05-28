@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 class User(Base, table=True):
     '''Represent a user account authenticated via OIDC.'''
-
     __tablename__ = 'users'
 
     id: int | None = Field(default=None, primary_key=True)

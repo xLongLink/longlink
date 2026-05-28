@@ -120,6 +120,98 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     assert delete_response.status_code == 204
 
 
+async def test_storage_usage_endpoint_returns_summed_object_size(
+    clients: tuple[TestClient, TestClient, TestClient], monkeypatch
+) -> None:
+    """Return storage usage for the registered object store."""
+
+    # Arrange
+    client = clients[0]
+
+    class FakeStorage:
+        """Fake storage adapter for route testing."""
+
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        def usage(self) -> dict[str, int]:
+            return {"used_bytes": 512}
+
+        def quota(self) -> dict[str, int | None]:
+            return {"quota_bytes": None}
+
+    monkeypatch.setattr("src.routes.storage.StorageAdapter", FakeStorage)
+
+    client.post(
+        "/api/storage",
+        json={
+            "kind": "s3",
+            "name": "object-store",
+            "protocol": "s3",
+            "endpoint_url": "https://storage.longlink.internal",
+            "access_key_id": "access-key",
+            "secret_access_key": "secret-key",
+        },
+    )
+
+    # Act
+    response = client.get("/api/storage/object-store/usage")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "success": True,
+        "detail": "Storage usage fetched",
+        "data": {"used_bytes": 512},
+    }
+
+
+async def test_storage_quota_endpoint_returns_quota_value(
+    clients: tuple[TestClient, TestClient, TestClient], monkeypatch
+) -> None:
+    """Return storage quota for the registered object store."""
+
+    # Arrange
+    client = clients[0]
+
+    class FakeStorage:
+        """Fake storage adapter for route testing."""
+
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        def usage(self) -> dict[str, int]:
+            return {"used_bytes": 512}
+
+        def quota(self) -> dict[str, int | None]:
+            return {"quota_bytes": 1024}
+
+    monkeypatch.setattr("src.routes.storage.StorageAdapter", FakeStorage)
+
+    client.post(
+        "/api/storage",
+        json={
+            "kind": "s3",
+            "name": "object-store",
+            "protocol": "s3",
+            "endpoint_url": "https://storage.longlink.internal",
+            "access_key_id": "access-key",
+            "secret_access_key": "secret-key",
+        },
+    )
+
+    # Act
+    response = client.get("/api/storage/object-store/quota")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "success": True,
+        "detail": "Storage quota fetched",
+        "data": {"quota_bytes": 1024},
+    }
+
+
 async def test_compute_registry_endpoint_supports_create_list_and_delete(
     clients: tuple[TestClient, TestClient, TestClient],
 ) -> None:
@@ -133,14 +225,13 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         "/api/compute",
         json={
             "kind": "kubernetes",
-            "name": "cluster-a",
             "kube_config_path": "/etc/longlink/kubeconfig",
             "ingress_host": "apps.longlink.internal",
             "ingress_name": "longlink-ingress",
         },
     )
     list_response = client.get("/api/compute")
-    delete_response = client.delete("/api/compute/cluster-a")
+    delete_response = client.delete("/api/compute/1")
 
     # Assert
     assert create_response.status_code == 200
@@ -150,7 +241,6 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         "data": ComputeRegistryResponse(
             id=1,
             kind=ComputeKind.kubernetes,
-            name="cluster-a",
             kube_config_path="/etc/longlink/kubeconfig",
             ingress_host="apps.longlink.internal",
             ingress_name="longlink-ingress",
@@ -164,7 +254,6 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             ComputeRegistryResponse(
                 id=1,
                 kind=ComputeKind.kubernetes,
-                name="cluster-a",
                 kube_config_path="/etc/longlink/kubeconfig",
                 ingress_host="apps.longlink.internal",
                 ingress_name="longlink-ingress",

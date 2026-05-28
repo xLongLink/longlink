@@ -13,12 +13,11 @@ async def list_compute_registries(_user: db.User = Depends(authadmin)) -> APIRes
     registries = await db.compute.list()
     payload = [
         ComputeRegistryResponse.model_validate(
-                {
-                    "id": registry.id,
-                    "kind": registry.kind,
-                    "name": registry.name,
-                    "kube_config_path": registry.kube_config_path,
-                    "ingress_host": registry.ingress_host,
+            {
+                "id": registry.id,
+                "kind": registry.kind,
+                "kube_config_path": registry.kube_config_path,
+                "ingress_host": registry.ingress_host,
                 "ingress_name": registry.ingress_name,
             }
         )
@@ -28,13 +27,16 @@ async def list_compute_registries(_user: db.User = Depends(authadmin)) -> APIRes
     return APIResponse(success=True, detail="Compute registries fetched", data=payload)
 
 
-@router.get("/{name}")
-async def get_compute_registry(name: str, _user: db.User = Depends(authadmin)) -> APIResponse[ComputeRegistryResponse]:
+@router.get("/{registry_id}")
+async def get_compute_registry(
+    registry_id: int,
+    _user: db.User = Depends(authadmin),
+) -> APIResponse[ComputeRegistryResponse]:
     """Return one compute backend registration."""
 
-    registry = await db.compute.get(name)
+    registry = await db.compute.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Compute '{name}' not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Compute '{registry_id}' not found")
 
     return APIResponse(
         success=True,
@@ -43,7 +45,6 @@ async def get_compute_registry(name: str, _user: db.User = Depends(authadmin)) -
             {
                 "id": registry.id,
                 "kind": registry.kind,
-                "name": registry.name,
                 "kube_config_path": registry.kube_config_path,
                 "ingress_host": registry.ingress_host,
                 "ingress_name": registry.ingress_name,
@@ -57,7 +58,7 @@ async def create_compute_registry(
     payload: ComputeRegistryCreate,
     _user: db.User = Depends(authadmin),
 ) -> APIResponse[ComputeRegistryResponse]:
-    """Create or update one compute backend registration."""
+    """Create one compute backend registration."""
 
     registry = await db.compute.create(**payload.model_dump())
 
@@ -68,7 +69,6 @@ async def create_compute_registry(
             {
                 "id": registry.id,
                 "kind": registry.kind,
-                "name": registry.name,
                 "kube_config_path": registry.kube_config_path,
                 "ingress_host": registry.ingress_host,
                 "ingress_name": registry.ingress_name,
@@ -77,12 +77,12 @@ async def create_compute_registry(
     )
 
 
-@router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_compute_registry(name: str, _user: db.User = Depends(authadmin)) -> Response:
+@router.delete("/{registry_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_compute_registry(registry_id: int, _user: db.User = Depends(authadmin)) -> Response:
     """Delete one compute backend registration."""
 
-    registry = await db.compute.delete(name)
+    registry = await db.compute.delete(registry_id)
     if registry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Compute '{name}' not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Compute '{registry_id}' not found")
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

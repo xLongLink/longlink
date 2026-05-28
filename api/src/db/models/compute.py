@@ -14,7 +14,6 @@ class ComputeRegistry(Base, table=True):
     kind: ComputeKind = Field(
         sa_column=Column(Enum(ComputeKind, name="compute_kind_enum", native_enum=False), nullable=False)
     )
-    name: str = Field(unique=True, max_length=128)
     kube_config_path: str = Field(max_length=255)
     ingress_host: str = Field(max_length=255)
     ingress_name: str = Field(max_length=255)

@@ -106,7 +106,7 @@ export default function ConnectDatabaseDialog() {
                         >
                             <div className="space-y-2">
                                 <Label htmlFor="database-kind">Kind</Label>
-                                <Select value={kind} onValueChange={setKind}>
+                                <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
                                     <SelectTrigger id="database-kind" className="w-full">
                                         <SelectValue placeholder="Choose a database kind" />
                                     </SelectTrigger>

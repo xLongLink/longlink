@@ -107,7 +107,7 @@ class UserSummary(BaseModel):
 class UserListItem(UserSummary):
     """Represent one user in admin list responses."""
 
-    pass
+    oidc_subject: str | None = None
 
 
 class UserProfile(BaseModel):

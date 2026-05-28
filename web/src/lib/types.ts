@@ -1,5 +1,5 @@
-import type { Accent, Radius, Theme } from '@/lib/theme';
 import type { Role } from '@/lib/roles';
+import type { Accent, Radius, Theme } from '@/lib/theme';
 
 export type ApiResponse<T> = {
     success: boolean;
@@ -13,6 +13,7 @@ export type ApiUserSummary = {
     email: string;
     avatar: string;
     admin: boolean;
+    oidc_subject: string | null;
 };
 
 export type ApiUserOrgMembership = {
@@ -86,7 +87,6 @@ export type ApiStorageRegistry = {
 export type ApiComputeRegistry = {
     id: number;
     kind: string;
-    name: string;
     kube_config_path: string;
     ingress_host: string;
     ingress_name: string;

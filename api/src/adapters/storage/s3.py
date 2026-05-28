@@ -41,3 +41,26 @@ class Storage(Root):
     def delete(self, bucket_name: str) -> None:
         """Delete one storage bucket."""
         self._client.delete_bucket(Bucket=bucket_name)
+
+    def usage(self) -> dict[str, int]:
+        """Return the total used bytes across all buckets."""
+
+        used_bytes = 0
+        paginator = self._client.get_paginator("list_objects_v2")
+
+        # Sum the size of every object in every bucket we manage.
+        for bucket_name in self.list():
+            for page in paginator.paginate(Bucket=bucket_name):
+                for item in page.get("Contents", []):
+                    used_bytes += item.get("Size", 0)
+
+        return {"used_bytes": used_bytes}
+
+    def quota(self) -> dict[str, int | None]:
+        """Return the total quota for the storage backend.
+
+        S3-compatible APIs do not expose a quota, so it is reported as
+        ``None``.
+        """
+
+        return {"quota_bytes": None}

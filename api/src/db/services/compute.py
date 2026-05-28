@@ -15,52 +15,41 @@ class ComputeRegistriesService(ServiceBase):
             result = await session.execute(select(ComputeRegistry))
             return list(result.scalars().all())
 
-    async def get(self, name: str) -> ComputeRegistry | None:
-        """Return one compute backend by name."""
+    async def get(self, registry_id: int) -> ComputeRegistry | None:
+        """Return one compute backend by id."""
 
         async with self.session() as session:
-            result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.name == name))
+            result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == registry_id))
             return result.scalar_one_or_none()
 
     async def create(
         self,
         kind: ComputeKind,
-        name: str,
         kube_config_path: str,
         ingress_host: str,
         ingress_name: str,
     ) -> ComputeRegistry:
-        """Create or update one compute backend registration."""
+        """Create one compute backend registration."""
 
         async with self.session() as session:
-            result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.name == name))
-            compute = result.scalar_one_or_none()
-
-            # Create a new registration or refresh the stored connection data.
-            if compute is None:
-                compute = ComputeRegistry(
-                    kind=kind,
-                    name=name,
-                    kube_config_path=kube_config_path,
-                    ingress_host=ingress_host,
-                    ingress_name=ingress_name,
-                )
-                session.add(compute)
-            else:
-                compute.kind = kind
-                compute.kube_config_path = kube_config_path
-                compute.ingress_host = ingress_host
-                compute.ingress_name = ingress_name
+            # Compute registries are append-only once created.
+            compute = ComputeRegistry(
+                kind=kind,
+                kube_config_path=kube_config_path,
+                ingress_host=ingress_host,
+                ingress_name=ingress_name,
+            )
+            session.add(compute)
 
             await session.commit()
             await session.refresh(compute)
             return compute
 
-    async def delete(self, name: str) -> ComputeRegistry | None:
+    async def delete(self, registry_id: int) -> ComputeRegistry | None:
         """Delete one compute backend registration."""
 
         async with self.session() as session:
-            result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.name == name))
+            result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == registry_id))
             compute = result.scalar_one_or_none()
             # Return early when the registration does not exist.
             if compute is None:

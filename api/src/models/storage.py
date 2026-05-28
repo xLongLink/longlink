@@ -23,3 +23,15 @@ class StorageRegistryResponse(BaseModel):
     protocol: str
     endpoint_url: str
     access_key_id: str
+
+
+class StorageUsageResponse(BaseModel):
+    """Represent storage usage in API responses."""
+
+    used_bytes: int
+
+
+class StorageQuotaResponse(BaseModel):
+    """Represent storage quota in API responses."""
+
+    quota_bytes: int | None = None
