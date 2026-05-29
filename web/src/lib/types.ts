@@ -87,7 +87,7 @@ export type ApiStorageRegistry = {
 export type ApiComputeRegistry = {
     id: number;
     kind: string;
-    kube_config_path: string;
+    kubeconfig: string;
     ingress_host: string;
     ingress_name: string;
 };

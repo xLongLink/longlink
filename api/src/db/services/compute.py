@@ -25,7 +25,7 @@ class ComputeRegistriesService(ServiceBase):
     async def create(
         self,
         kind: ComputeKind,
-        kube_config_path: str,
+        kubeconfig: str,
         ingress_host: str,
         ingress_name: str,
     ) -> ComputeRegistry:
@@ -35,7 +35,7 @@ class ComputeRegistriesService(ServiceBase):
             # Compute registries are append-only once created.
             compute = ComputeRegistry(
                 kind=kind,
-                kube_config_path=kube_config_path,
+                kubeconfig=kubeconfig,
                 ingress_host=ingress_host,
                 ingress_name=ingress_name,
             )

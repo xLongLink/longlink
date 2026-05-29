@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Enum
+from sqlalchemy import Column, Enum, Text
 from sqlmodel import Field
 
 from src.models.kinds import ComputeKind
@@ -14,6 +14,6 @@ class ComputeRegistry(Base, table=True):
     kind: ComputeKind = Field(
         sa_column=Column(Enum(ComputeKind, name="compute_kind_enum", native_enum=False), nullable=False)
     )
-    kube_config_path: str = Field(max_length=255)
+    kubeconfig: str = Field(sa_column=Column(Text, nullable=False))
     ingress_host: str = Field(max_length=255)
     ingress_name: str = Field(max_length=255)

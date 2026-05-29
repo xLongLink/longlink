@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 
 import src.db as db
+from src.adapters.compute import Compute
 from src.db.models import Base
 from src.env import env
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
@@ -29,9 +30,19 @@ LOCAL_STORAGE = {
     "secret_access_key": "admin",
 }
 
+LOCAL_ORG = "test"
+
+LOCAL_APP = {
+    "name": "httpbin",
+    "url": "/api/apps/httpbin",
+    "image": "kennethreitz/httpbin",
+}
+
+LOCAL_APP_PORT = 80
+
 LOCAL_COMPUTE = {
     "kind": ComputeKind.kubernetes,
-    "kube_config_path": "kubeconfig.yaml",
+    "kubeconfig": Path(__file__).with_name("kubeconfig.yaml").read_text(encoding="utf-8"),
     "ingress_host": "localhost",
     "ingress_name": "control-ingress",
 }
@@ -60,6 +71,12 @@ async def main() -> None:
     await db.database.create(**LOCAL_DATABASE)
     await db.storage.create(**LOCAL_STORAGE)
     await db.compute.create(**LOCAL_COMPUTE)
+    await db.orgs.create(LOCAL_ORG)
+    await db.apps.create(LOCAL_ORG, **LOCAL_APP)
+
+    # Deploy the seeded app into the configured Kubernetes cluster.
+    compute = Compute(LOCAL_COMPUTE["kubeconfig"])
+    await compute.create(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
 
 
 if __name__ == "__main__":

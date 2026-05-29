@@ -12,15 +12,7 @@ async def list_compute_registries(_user: db.User = Depends(authadmin)) -> APIRes
 
     registries = await db.compute.list()
     payload = [
-        ComputeRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "kube_config_path": registry.kube_config_path,
-                "ingress_host": registry.ingress_host,
-                "ingress_name": registry.ingress_name,
-            }
-        )
+        ComputeRegistryResponse.model_validate(registry.model_dump())
         for registry in registries
     ]
 
@@ -41,15 +33,7 @@ async def get_compute_registry(
     return APIResponse(
         success=True,
         detail="Compute registry fetched",
-        data=ComputeRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "kube_config_path": registry.kube_config_path,
-                "ingress_host": registry.ingress_host,
-                "ingress_name": registry.ingress_name,
-            }
-        ),
+        data=ComputeRegistryResponse.model_validate(registry.model_dump()),
     )
 
 
@@ -65,15 +49,7 @@ async def create_compute_registry(
     return APIResponse(
         success=True,
         detail="Compute registry saved",
-        data=ComputeRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "kube_config_path": registry.kube_config_path,
-                "ingress_host": registry.ingress_host,
-                "ingress_name": registry.ingress_name,
-            }
-        ),
+        data=ComputeRegistryResponse.model_validate(registry.model_dump()),
     )
 
 

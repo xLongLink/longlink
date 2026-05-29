@@ -1,159 +1,135 @@
 from __future__ import annotations
 
-import src.db as db
-from .__root__ import Root
+from datetime import datetime, timezone
+from typing import Any
+
+import yaml
 from kubernetes import client, config
-from src.constants import TEMPLATES
-from src.utils.utils import yaml as template_yaml
-from src.utils.utils import knames
 from kubernetes.client.rest import ApiException
+
+import src.db as db
+from src.constants import TEMPLATES
+from src.utils.utils import knames
+from src.utils.utils import yaml as template_yaml
+
+from .__root__ import Root
 
 
 class Compute(Root):
-    """Manage Kubernetes namespaces and application workloads."""
+    """Manage Kubernetes namespaces and internal application workloads."""
 
-    def __init__(
-        self,
-        kube_config_path: str,
-        ingress_host: str = "localhost",
-        ingress_name: str = "control-ingress",
-    ) -> None:
+    def __init__(self, kubeconfig: str) -> None:
         """Initialize the Kubernetes compute adapter."""
-        super().__init__(
-            kube_config_path=kube_config_path,
-            ingress_host=ingress_host,
-            ingress_name=ingress_name,
-        )
+
+        super().__init__(kubeconfig=kubeconfig)
+
 
     def _api_client(self) -> client.ApiClient:
         """Return a Kubernetes API client for the configured kubeconfig."""
-        config.load_kube_config(config_file=self._kube_config_path)
+
+        config.load_kube_config_from_dict(yaml.safe_load(self._kubeconfig))
         return client.ApiClient()
 
-    def _namespace_api(self) -> client.CoreV1Api:
+
+    def _core_api(self) -> client.CoreV1Api:
         """Return a CoreV1 API client."""
+
         return client.CoreV1Api(self._api_client())
+
 
     def _apps_api(self) -> client.AppsV1Api:
         """Return an AppsV1 API client."""
+
         return client.AppsV1Api(self._api_client())
 
-    def _networking_api(self) -> client.NetworkingV1Api:
-        """Return a NetworkingV1 API client."""
-        return client.NetworkingV1Api(self._api_client())
 
     def _namespace_name(self, organization: str) -> str:
         """Normalize the organization name to a Kubernetes namespace name."""
+
         knames(organization, "Org")
         return organization
 
+
     def _application_name(self, application: str) -> str:
         """Normalize one application name for Kubernetes resources."""
+
         knames(application, "Application name")
         return application
 
-    async def _application_image(self, organization: str, application: str) -> str:
-        """Resolve the application image from the API registry."""
-        app = await db.apps.get(organization, application)
-        if app is None:
-            raise ValueError(f"App '{organization}/{application}' not found")
-
-        return app.image
 
     def _namespace_manifest(self, organization: str) -> dict:
         """Build the namespace manifest for one organization."""
+
         return {
             "apiVersion": "v1",
             "kind": "Namespace",
-            "metadata": {
-                "name": organization,
-                "labels": {"managed-by": "control-plane"},
-            },
+            "metadata": {"name": organization, "labels": {"managed-by": "control-plane"}},
         }
 
-    def _router_manifests(self, organization: str) -> list[dict]:
-        """Build the shared router manifests for one organization."""
-        manifests = template_yaml(TEMPLATES / "router.yml", namespace=organization)
+
+    def _proxy_manifests(self, organization: str) -> list[dict]:
+        """Build the shared proxy manifests for one organization namespace."""
+
+        manifests = template_yaml(TEMPLATES / "proxy.yml", namespace=organization)
         return manifests if isinstance(manifests, list) else [manifests]
 
-    def _application_manifests(self, organization: str, name: str, image: str) -> list[dict]:
+
+    def _application_manifests(self, organization: str, name: str, image: str, port: int) -> list[dict]:
         """Build the deployment and service manifests for one application."""
+
         manifests = template_yaml(
             TEMPLATES / "application.yml",
             image=image,
             name=name,
             namespace=organization,
+            port=port,
         )
         return manifests if isinstance(manifests, list) else [manifests]
 
-    def _ingress_manifest(self, organization: str, application_names: list[str]) -> dict:
-        """Build the ingress manifest for one organization."""
-        manifest = template_yaml(
-            TEMPLATES / "ingress.yml",
-            ingress_host=self.ingress_host,
-            ingress_name=self.ingress_name,
-            namespace=organization,
-        )
-        paths = [
-            {
-                "path": f"/{name}(/|$)(.*)",
-                "pathType": "ImplementationSpecific",
-                "backend": {"service": {"name": name, "port": {"number": 80}}},
-            }
-            for name in sorted(application_names)
-        ]
 
-        # The base ingress must stay valid even when the namespace has no apps yet.
-        if paths:
-            manifest["spec"]["rules"][0]["http"]["paths"] = paths
-        else:
-            manifest["spec"].pop("rules", None)
+    def _application_secret_manifest(self, organization: str, name: str, values: dict[str, str]) -> dict:
+        """Build the secret manifest for one application's configuration."""
 
-        return manifest
+        return {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {
+                "name": name,
+                "namespace": organization,
+                "labels": {"managed-by": "control-plane", "compute-role": "application", "app": name},
+            },
+            "type": "Opaque",
+            "stringData": values,
+        }
 
-    def _create_or_patch(self, api_call_create, api_call_patch, namespace: str, name: str, body: dict) -> None:
+
+    def _create_or_patch(self, create_call, patch_call, namespace: str, name: str, body: dict) -> None:
         """Create a resource when missing, otherwise patch the live object."""
+
         try:
-            api_call_patch(name, namespace, body)
+            patch_call(name, namespace, body)
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed updating {body['kind']} '{name}'") from exc
 
-            api_call_create(namespace, body)
+            create_call(namespace, body)
 
-    def _delete_if_exists(self, api_call_delete, namespace: str, name: str) -> None:
+
+    def _delete_if_exists(self, delete_call, namespace: str, name: str) -> None:
         """Delete one namespaced resource and ignore not-found errors."""
+
         try:
-            api_call_delete(name, namespace)
+            delete_call(name, namespace)
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed deleting resource '{name}'") from exc
 
 
-    async def _current_applications(self, organization: str) -> list[str]:
-        """Read the live application deployments from one namespace."""
+    def _ensure_namespace(self, organization: str) -> None:
+        """Create the namespace for one organization when it is missing."""
+
         namespace = self._namespace_name(organization)
-        apps_api = self._apps_api()
-        try:
-            deployments = apps_api.list_namespaced_deployment(namespace).items
-        except ApiException as exc:
-            raise ValueError(f"Failed listing applications in namespace '{namespace}'") from exc
-
-        applications: list[str] = []
-        for deployment in deployments:
-            labels = deployment.metadata.labels or {}
-            if labels.get("managed-by") != "control-plane":
-                continue
-            if labels.get("compute-role") != "application":
-                continue
-            applications.append(deployment.metadata.name)
-
-        return sorted(applications)
-
-    async def _ensure_namespace(self, organization: str) -> None:
-        """Create the organization namespace and base router if missing."""
-        namespace = self._namespace_name(organization)
-        core_api = self._namespace_api()
+        core_api = self._core_api()
 
         try:
             core_api.read_namespace(namespace)
@@ -163,60 +139,100 @@ class Compute(Root):
 
             core_api.create_namespace(self._namespace_manifest(namespace))
 
-        # The namespace always needs the shared router and ingress to route apps.
-        for manifest in self._router_manifests(namespace):
-            if manifest["kind"] == "Deployment":
-                self._create_or_patch(
-                    self._apps_api().create_namespaced_deployment,
-                    self._apps_api().patch_namespaced_deployment,
-                    namespace,
-                    manifest["metadata"]["name"],
-                    manifest,
-                )
-                continue
 
-            if manifest["kind"] == "Service":
-                self._create_or_patch(
-                    self._namespace_api().create_namespaced_service,
-                    self._namespace_api().patch_namespaced_service,
-                    namespace,
-                    manifest["metadata"]["name"],
-                    manifest,
-                )
+    async def _application_image(self, organization: str, application: str) -> str:
+        """Resolve the application image from the API registry."""
 
-    async def _sync_ingress(self, organization: str) -> None:
-        """Rebuild the ingress paths from the live application deployments."""
-        namespace = self._namespace_name(organization)
-        application_names = await self._current_applications(namespace)
-        manifest = self._ingress_manifest(namespace, application_names)
-        networking_api = self._networking_api()
+        app = await db.apps.get(organization, application)
+        if app is None:
+            raise ValueError(f"App '{organization}/{application}' not found")
 
-        self._create_or_patch(
-            networking_api.create_namespaced_ingress,
-            networking_api.patch_namespaced_ingress,
+        return app.image
+
+
+    async def _application_envs(self, application: str) -> dict[str, str]:
+        """Return the Secret data for one application."""
+
+        envs = await db.envs.list(application)
+        return {env.key: env.value for env in envs}
+
+
+    def _app_pods(self, namespace: str, application: str) -> list[client.V1Pod]:
+        """List pods for one application deployment."""
+
+        return self._core_api().list_namespaced_pod(
             namespace,
-            manifest["metadata"]["name"],
-            manifest,
-        )
+            label_selector=f"app={application}",
+        ).items
+
 
     async def list(self, organization: str) -> list[str]:
         """List applications deployed in one organization namespace."""
-        namespace = self._namespace_name(organization)
-        await self._ensure_namespace(namespace)
-        await self._sync_ingress(namespace)
-        return await self._current_applications(namespace)
 
-    async def create(self, organization: str, application: str) -> None:
-        """Create one application deployment in an organization namespace."""
+        namespace = self._namespace_name(organization)
+        self._ensure_namespace(namespace)
+        deployments = self._apps_api().list_namespaced_deployment(
+            namespace,
+            label_selector="managed-by=control-plane,compute-role=application",
+        ).items
+        return sorted(deployment.metadata.name for deployment in deployments)
+
+
+    async def exists(self, organization: str, application: str) -> bool:
+        """Return whether one managed application exists."""
+
         namespace = self._namespace_name(organization)
         name = self._application_name(application)
-        image = await self._application_image(namespace, name)
+        try:
+            self._apps_api().read_namespaced_deployment(name, namespace)
+            self._core_api().read_namespaced_service(name, namespace)
+            self._core_api().read_namespaced_secret(name, namespace)
+        except ApiException as exc:
+            if exc.status == 404:
+                return False
 
-        await self._ensure_namespace(namespace)
-        app_manifests = self._application_manifests(namespace, name, image)
+            raise ValueError(f"Failed checking application '{namespace}/{name}'") from exc
 
+        return True
+
+
+    async def create_namespace(self, organization: str) -> None:
+        """Create the namespace for an organization if it does not exist."""
+
+        self._ensure_namespace(organization)
+
+        # The shared proxy is part of every organization namespace.
+        await self.create_proxy(organization)
+
+
+    async def create_secret(self, organization: str, application: str, values: dict[str, str]) -> None:
+        """Create or replace the Secret for one application."""
+
+        namespace = self._namespace_name(organization)
+        name = self._application_name(application)
+
+        self._ensure_namespace(namespace)
+        core_api = self._core_api()
+        self._create_or_patch(
+            core_api.create_namespaced_secret,
+            core_api.patch_namespaced_secret,
+            namespace,
+            name,
+            self._application_secret_manifest(namespace, name, values),
+        )
+
+
+    async def create_application(self, organization: str, application: str, image: str, port: int) -> None:
+        """Create or replace one internal application Deployment and Service."""
+
+        namespace = self._namespace_name(organization)
+        name = self._application_name(application)
+
+        self._ensure_namespace(namespace)
+        app_manifests = self._application_manifests(namespace, name, image, port)
         apps_api = self._apps_api()
-        core_api = self._namespace_api()
+        core_api = self._core_api()
+
         for manifest in app_manifests:
             if manifest["kind"] == "Deployment":
                 self._create_or_patch(
@@ -237,27 +253,118 @@ class Compute(Root):
                     manifest,
                 )
 
-        await self._sync_ingress(namespace)
+
+    async def create_proxy(self, organization: str) -> None:
+        """Create or replace the shared internal proxy for an organization."""
+
+        namespace = self._namespace_name(organization)
+        self._ensure_namespace(namespace)
+
+        manifests = self._proxy_manifests(namespace)
+        apps_api = self._apps_api()
+        core_api = self._core_api()
+        for manifest in manifests:
+            if manifest["kind"] == "Deployment":
+                self._create_or_patch(
+                    apps_api.create_namespaced_deployment,
+                    apps_api.patch_namespaced_deployment,
+                    namespace,
+                    manifest["metadata"]["name"],
+                    manifest,
+                )
+                continue
+
+            if manifest["kind"] == "Service":
+                self._create_or_patch(
+                    core_api.create_namespaced_service,
+                    core_api.patch_namespaced_service,
+                    namespace,
+                    manifest["metadata"]["name"],
+                    manifest,
+                )
+
+
+    async def create(self, organization: str, application: str, image: str, port: int, values: dict[str, str]) -> None:
+        """Create or replace one complete managed application stack."""
+
+        await self.create_namespace(organization)
+        await self.create_secret(organization, application, values)
+        await self.create_application(organization, application, image, port)
+
 
     async def remove(self, organization: str, application: str) -> None:
-        """Remove one application deployment from an organization namespace."""
+        """Remove one managed application."""
+
         namespace = self._namespace_name(organization)
         name = self._application_name(application)
 
-        await self._ensure_namespace(namespace)
+        self._ensure_namespace(namespace)
         apps_api = self._apps_api()
-        core_api = self._namespace_api()
+        core_api = self._core_api()
         self._delete_if_exists(apps_api.delete_namespaced_deployment, namespace, name)
         self._delete_if_exists(core_api.delete_namespaced_service, namespace, name)
+        self._delete_if_exists(core_api.delete_namespaced_secret, namespace, name)
 
-        await self._sync_ingress(namespace)
 
     async def delete(self, organization: str) -> None:
         """Delete the organization namespace and all managed resources."""
+
         namespace = self._namespace_name(organization)
-        core_api = self._namespace_api()
         try:
-            core_api.delete_namespace(namespace)
+            self._core_api().delete_namespace(namespace)
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed deleting namespace '{namespace}'") from exc
+
+
+    async def status(self, organization: str, application: str) -> dict[str, Any]:
+        """Return runtime status for one managed application."""
+
+        namespace = self._namespace_name(organization)
+        name = self._application_name(application)
+
+        pods = self._app_pods(namespace, name)
+        pod_statuses = [
+            {
+                "name": pod.metadata.name,
+                "phase": pod.status.phase,
+                "ready": [
+                    condition.type
+                    for condition in (pod.status.conditions or [])
+                    if condition.status == "True"
+                ],
+            }
+            for pod in pods
+        ]
+
+        return {
+            "organization": namespace,
+            "application": name,
+            "exists": await self.exists(namespace, name),
+            "pods": pod_statuses,
+        }
+
+
+    async def logs(self, organization: str, application: str, lines: int = 200) -> str:
+        """Return recent logs for one managed application."""
+
+        namespace = self._namespace_name(organization)
+        name = self._application_name(application)
+        pods = self._app_pods(namespace, name)
+        if not pods:
+            raise ValueError(f"No pods found for application '{namespace}/{name}'")
+
+        # Pick the newest pod so logs stay aligned with the latest rollout.
+        pod = sorted(
+            pods,
+            key=lambda item: item.metadata.creation_timestamp or datetime.min.replace(tzinfo=timezone.utc),
+            reverse=True,
+        )[0]
+        try:
+            return self._core_api().read_namespaced_pod_log(
+                pod.metadata.name,
+                namespace,
+                tail_lines=lines,
+            )
+        except ApiException as exc:
+            raise ValueError(f"Failed reading logs for '{namespace}/{name}'") from exc

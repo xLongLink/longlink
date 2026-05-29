@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { apiUrl } from '@/lib/api';
 
 /** Renders the admin compute connect dialog. */
@@ -13,7 +14,7 @@ export default function ConnectComputeDialog() {
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('kubernetes');
-    const [kubeConfigPath, setKubeConfigPath] = useState('');
+    const [kubeconfig, setKubeconfig] = useState('');
     const [ingressHost, setIngressHost] = useState('');
     const [ingressName, setIngressName] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export default function ConnectComputeDialog() {
                 credentials: 'include',
                 body: JSON.stringify({
                     kind: kind.trim(),
-                    kube_config_path: kubeConfigPath.trim(),
+                    kubeconfig,
                     ingress_host: ingressHost.trim(),
                     ingress_name: ingressName.trim(),
                 }),
@@ -48,7 +49,7 @@ export default function ConnectComputeDialog() {
             await queryClient.invalidateQueries({ queryKey: ['api', computeUrl] });
             setOpen(false);
             setKind('kubernetes');
-            setKubeConfigPath('');
+            setKubeconfig('');
             setIngressHost('');
             setIngressName('');
         },
@@ -105,13 +106,13 @@ export default function ConnectComputeDialog() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="compute-kube-config">Kube config path</Label>
-                                <Input
-                                    id="compute-kube-config"
-                                    value={kubeConfigPath}
-                                    onChange={(event) => setKubeConfigPath(event.target.value)}
-                                    placeholder="/home/longlink/.kube/config"
-                                    autoComplete="off"
+                                <Label htmlFor="compute-kubeconfig">Kubeconfig</Label>
+                                <Textarea
+                                    id="compute-kubeconfig"
+                                    value={kubeconfig}
+                                    onChange={(event) => setKubeconfig(event.target.value)}
+                                    placeholder="Paste the kubeconfig file contents"
+                                    className="min-h-40"
                                 />
                             </div>
 

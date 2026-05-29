@@ -18,12 +18,40 @@ import { apiUrl } from '@/lib/api';
 import type { ApiComputeRegistry, ApiResponse } from '@/lib/types';
 
 const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry>> = [
-    { accessorKey: 'kind', header: 'Kind', cell: ({ getValue }) => getValue(), meta: { className: 'w-32' } },
     {
-        accessorKey: 'kube_config_path',
-        header: 'Kube config',
-        cell: ({ getValue }) => getValue(),
-        meta: { className: 'w-64' },
+        accessorKey: 'kind',
+        header: 'Kind',
+        cell: ({ row }) => {
+            const kind = row.original.kind;
+
+            return (
+                <div className="flex items-center gap-3">
+                    <img
+                        src="/images/Kubernetes.png"
+                        alt="Kubernetes"
+                        className="size-10 rounded-md border border-border bg-background object-contain p-1"
+                    />
+                    <div className="truncate font-medium text-foreground">{kind}</div>
+                </div>
+            );
+        },
+        meta: { className: 'w-40' },
+    },
+    {
+        accessorKey: 'kubeconfig',
+        header: 'Kubeconfig',
+        cell: ({ row }) => {
+            const kubeconfig = row.original.kubeconfig;
+            // Keep the table readable by showing a compact single-line preview.
+            const preview = kubeconfig.replace(/\s+/g, ' ').slice(0, 80);
+
+            return (
+                <div className="max-w-80 truncate font-mono text-xs text-muted-foreground" title={kubeconfig}>
+                    {preview}
+                </div>
+            );
+        },
+        meta: { className: 'w-80' },
     },
     {
         accessorKey: 'ingress_host',

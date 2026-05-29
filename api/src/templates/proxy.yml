@@ -1,29 +1,28 @@
-# Base router resources for compute namespace.
-# Deploys default backend returning 404 when no application matches.
-# Includes both deployment and service for the router.
+# Shared internal proxy resources for one namespace.
+# The proxy stays inside the cluster and provides a stable namespace entrypoint.
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: compute-router
+  name: compute-proxy
   namespace: $namespace
   labels:
     managed-by: control-plane
-    compute-role: base
-    app: compute-router
+    compute-role: proxy
+    app: compute-proxy
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: compute-router
+      app: compute-proxy
   template:
     metadata:
       labels:
-        app: compute-router
+        app: compute-proxy
     spec:
       containers:
-        - name: compute-router
+        - name: compute-proxy
           image: hashicorp/http-echo:1.0.0
           args:
             - -listen=:5678
@@ -35,14 +34,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: compute-router
+  name: compute-proxy
   namespace: $namespace
   labels:
     managed-by: control-plane
-    compute-role: base
+    compute-role: proxy
 spec:
+  type: ClusterIP
   selector:
-    app: compute-router
+    app: compute-proxy
   ports:
     - port: 5678
       targetPort: 5678

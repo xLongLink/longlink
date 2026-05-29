@@ -7,7 +7,7 @@ class ComputeRegistryCreate(BaseModel):
     """Request body for creating a compute registry."""
 
     kind: ComputeKind
-    kube_config_path: str
+    kubeconfig: str
     ingress_host: str
     ingress_name: str
 
@@ -17,7 +17,7 @@ class ComputeRegistryResponse(BaseModel):
 
     id: int
     kind: ComputeKind
-    kube_config_path: str
+    kubeconfig: str
     ingress_host: str
     ingress_name: str
 

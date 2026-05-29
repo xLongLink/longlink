@@ -1,6 +1,5 @@
-# Template for compute application resources.
-# Defines both deployment and service for an application.
-# Managed by control-plane for application workloads.
+# Template for application resources in one namespace.
+# Each app gets its own deployment, ClusterIP service, and secret-backed env vars.
 
 ---
 apiVersion: apps/v1
@@ -26,7 +25,10 @@ spec:
         - name: $name
           image: $image
           ports:
-            - containerPort: 80
+            - containerPort: $port
+          envFrom:
+            - secretRef:
+                name: $name
 ---
 apiVersion: v1
 kind: Service
@@ -37,8 +39,9 @@ metadata:
     managed-by: control-plane
     compute-role: application
 spec:
+  type: ClusterIP
   selector:
     app: $name
   ports:
-    - port: 80
-      targetPort: 80
+    - port: $port
+      targetPort: $port

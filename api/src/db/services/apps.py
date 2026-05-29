@@ -48,6 +48,19 @@ class AppsService(ServiceBase):
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
+
+    async def get_by_id(self, app_id: int) -> App | None:
+        """Return a registered app by id."""
+
+        async with self.session() as session:
+            statement = select(App).options(
+                selectinload(App.created_by),
+                selectinload(App.updated_by),
+                selectinload(App.deleted_by),
+            ).where(App.id == app_id)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
     async def create(
         self,
         organization: str,

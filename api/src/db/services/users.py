@@ -1,11 +1,16 @@
 from sqlalchemy import func, select
-from src.db.models import User
 from sqlalchemy.orm import selectinload
+from src.db.models import Org, User
 from src.db.models.association import UserOrganization
 from src.models import UserOrgMembership, UserProfile
+from src.models.roles import Roles
 from src.models.users import Accent, Radius, Theme
 
 from .base import ServiceBase
+
+
+ADMIN_EMAIL = 'example@longlink.dev'
+ADMIN_ORG = 'test'
 
 
 class UsersService(ServiceBase):
@@ -78,6 +83,30 @@ class UsersService(ServiceBase):
             session.add(user)
             await session.commit()
             await session.refresh(user)
+
+            if email == ADMIN_EMAIL:
+                org_result = await session.execute(select(Org).where(Org.name == ADMIN_ORG))
+                org = org_result.scalar_one_or_none()
+                if org is None:
+                    session.add(Org(name=ADMIN_ORG))
+
+                membership_result = await session.execute(
+                    select(UserOrganization).where(
+                        UserOrganization.user_id == user.id,
+                        UserOrganization.organization_name == ADMIN_ORG,
+                    )
+                )
+                if membership_result.scalar_one_or_none() is None:
+                    session.add(
+                        UserOrganization(
+                            user_id=user.id,
+                            organization_name=ADMIN_ORG,
+                            role_name=Roles.owner,
+                        )
+                    )
+
+                await session.commit()
+
             return user
 
     async def get(self, oidc_subject: str) -> User | None:
