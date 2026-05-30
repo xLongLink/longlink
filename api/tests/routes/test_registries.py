@@ -249,7 +249,6 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         "data": ComputeRegistryResponse(
             id=1,
             kind=ComputeKind.kubernetes,
-            kubeconfig="apiVersion: v1\nclusters: []\n",
             ingress_host="apps.longlink.internal",
             ingress_name="longlink-ingress",
         ).model_dump(mode="json"),
@@ -262,7 +261,6 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             ComputeRegistryResponse(
                 id=1,
                 kind=ComputeKind.kubernetes,
-                kubeconfig="apiVersion: v1\nclusters: []\n",
                 ingress_host="apps.longlink.internal",
                 ingress_name="longlink-ingress",
             ).model_dump(mode="json")

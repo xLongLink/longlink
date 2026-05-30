@@ -1,0 +1,9 @@
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm
+
+COPY sdk /workspace/sdk
+
+WORKDIR /workspace/sdk
+
+RUN uv sync
+
+CMD ["uv", "run", "longlink", "sample", "--host", "0.0.0.0", "--port", "80"]

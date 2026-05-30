@@ -38,22 +38,6 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry>> = [
         meta: { className: 'w-40' },
     },
     {
-        accessorKey: 'kubeconfig',
-        header: 'Kubeconfig',
-        cell: ({ row }) => {
-            const kubeconfig = row.original.kubeconfig;
-            // Keep the table readable by showing a compact single-line preview.
-            const preview = kubeconfig.replace(/\s+/g, ' ').slice(0, 80);
-
-            return (
-                <div className="max-w-80 truncate font-mono text-xs text-muted-foreground" title={kubeconfig}>
-                    {preview}
-                </div>
-            );
-        },
-        meta: { className: 'w-80' },
-    },
-    {
         accessorKey: 'ingress_host',
         header: 'Ingress host',
         cell: ({ getValue }) => getValue(),

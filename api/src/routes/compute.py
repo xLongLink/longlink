@@ -1,6 +1,6 @@
 import src.db as db
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from src.adapters.compute.kubernetes import Compute as KubernetesCompute
+from src.adapters.compute.k8s import Compute as KubernetesCompute
 from src.auth import authadmin
 from src.models import APIResponse, ComputeRegistryCreate, ComputeRegistryResponse
 
@@ -20,7 +20,7 @@ async def list_compute_registries(_user: db.User = Depends(authadmin)) -> APIRes
 
     registries = await db.compute.list()
     payload = [
-        ComputeRegistryResponse.model_validate(registry.model_dump())
+        ComputeRegistryResponse.model_validate(registry.model_dump(exclude={"kubeconfig"}))
         for registry in registries
     ]
 
@@ -41,7 +41,7 @@ async def get_compute_registry(
     return APIResponse(
         success=True,
         detail="Compute registry fetched",
-        data=ComputeRegistryResponse.model_validate(registry.model_dump()),
+        data=ComputeRegistryResponse.model_validate(registry.model_dump(exclude={"kubeconfig"})),
     )
 
 
@@ -66,7 +66,7 @@ async def create_compute_registry(
     return APIResponse(
         success=True,
         detail="Compute registry saved",
-        data=ComputeRegistryResponse.model_validate(registry.model_dump()),
+        data=ComputeRegistryResponse.model_validate(registry.model_dump(exclude={"kubeconfig"})),
     )
 
 

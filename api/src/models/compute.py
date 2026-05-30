@@ -17,7 +17,6 @@ class ComputeRegistryResponse(BaseModel):
 
     id: int
     kind: ComputeKind
-    kubeconfig: str
     ingress_host: str
     ingress_name: str
 

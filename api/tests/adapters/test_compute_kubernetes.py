@@ -1,6 +1,6 @@
 from kubernetes.client.rest import ApiException
 
-from src.adapters.compute.kubernetes import Compute
+from src.adapters.compute.k8s import Compute
 
 
 async def test_create_cluster_proxy_applies_all_manifests(monkeypatch) -> None:
@@ -38,12 +38,12 @@ async def test_create_cluster_proxy_applies_all_manifests(monkeypatch) -> None:
         def load_and_set(self, configuration) -> None:
             return None
 
-    monkeypatch.setattr("src.adapters.compute.kubernetes.client.Configuration", lambda: object())
-    monkeypatch.setattr("src.adapters.compute.kubernetes.config.kube_config.KubeConfigLoader", FakeLoader)
-    monkeypatch.setattr("src.adapters.compute.kubernetes.client.ApiClient", lambda configuration: object())
-    monkeypatch.setattr("src.adapters.compute.kubernetes.client.CoreV1Api", lambda api_client: object())
-    monkeypatch.setattr("src.adapters.compute.kubernetes.client.AppsV1Api", lambda api_client: object())
-    monkeypatch.setattr("src.adapters.compute.kubernetes.DynamicClient", FakeDynamicClient)
+    monkeypatch.setattr("src.adapters.compute.k8s.client.Configuration", lambda: object())
+    monkeypatch.setattr("src.adapters.compute.k8s.config.kube_config.KubeConfigLoader", FakeLoader)
+    monkeypatch.setattr("src.adapters.compute.k8s.client.ApiClient", lambda configuration: object())
+    monkeypatch.setattr("src.adapters.compute.k8s.client.CoreV1Api", lambda api_client: object())
+    monkeypatch.setattr("src.adapters.compute.k8s.client.AppsV1Api", lambda api_client: object())
+    monkeypatch.setattr("src.adapters.compute.k8s.DynamicClient", FakeDynamicClient)
 
     compute = Compute("apiVersion: v1\nclusters: []\n")
 
