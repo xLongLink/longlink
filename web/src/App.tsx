@@ -1,7 +1,9 @@
 import { Auth } from '@/components/Auth';
 import { apiUrl } from '@/lib/api';
+import { useOrg } from '@/hooks/use-org';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter } from 'react-router';
+import { useParams } from 'react-router';
 import impressumMarkdown, { metadata as impressumMetadata } from '../legal/impressum.md';
 import privacyMarkdown, { metadata as privacyMetadata } from '../legal/privacy.md';
 import termsMarkdown, { metadata as termsMetadata } from '../legal/terms.md';
@@ -182,7 +184,7 @@ function getRoutes() {
             path: ':org/:app/*',
             element: (
                 <Auth>
-                    <View metadata={apiUrl('/api/:org/:app/metadata.json')} baseurl={apiUrl('/api/apps/:app')} />
+                    <OrgAppView />
                 </Auth>
             ),
         },
@@ -195,6 +197,30 @@ function getRoutes() {
             ),
         },
     ];
+}
+
+/** Resolves an organization app name to its proxy-backed XML view. */
+function OrgAppView() {
+    const { org = '', app = '' } = useParams();
+    const { org: organization, isLoading, error } = useOrg(org);
+    const orgApp = organization?.apps.find((item) => item.name === app);
+
+    // Keep the app route loading until the org payload resolves.
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    // Hide unknown org/app combinations behind the shared 404 page.
+    if (error?.status === 404 || !organization || !orgApp) {
+        return <NotFound />;
+    }
+
+    return (
+        <View
+            metadata={apiUrl(`/api/apps/${orgApp.id}/proxy/metadata.json`)}
+            baseurl={apiUrl(`/api/apps/${orgApp.id}/proxy/`)}
+        />
+    );
 }
 
 const router = createBrowserRouter(getRoutes());
