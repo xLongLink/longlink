@@ -78,6 +78,7 @@ export default function AdminStorage() {
             return payload.data ?? [];
         },
         retry: false,
+        refetchOnMount: 'always',
     });
 
     const storageRows = storageQuery.data ?? [];

@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 import src.db as db
 from src.db.models import User
-from src.models import OrgDetails, UserSummary
+from src.models import OrgDetails, OrgSummary, UserSummary
 
 
 async def test_create_organization_returns_owner_role(
@@ -59,7 +59,7 @@ async def test_get_organization_returns_member_payload(
         created_by=UserSummary.model_validate(owner.model_dump()),
         updated_by=UserSummary.model_validate(owner.model_dump()),
         deleted_at=organization.deleted_at,
-        deleted_by=UserSummary.model_validate(owner.model_dump()),
+        deleted_by=None,
         users=[
             UserSummary.model_validate(
                 {
@@ -105,14 +105,48 @@ async def test_get_organization_returns_member_payload(
             "id": app.id,
             "name": "dashboard",
             "url": "/api/apps/dashboard",
-            "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
-            "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),
-            "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
-            "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
-            "deleted_at": None,
+                "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
+                "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),
+                "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
+                "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
+                "deleted_at": None,
             "deleted_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
         }
     ]
+
+
+async def test_list_organizations_returns_null_deleted_by_for_active_org(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return the active org audit fields without a fabricated deleted user."""
+
+    # Arrange
+    owner = users[0]
+    organization = await db.orgs.create("acme", owner)
+    client = clients[0]
+
+    # Act
+    response = client.get("/api/orgs")
+
+    # Assert
+    assert response.status_code == 200
+    expected_payload = OrgSummary.model_validate(
+        {
+            "name": organization.name,
+            "created_at": organization.created_at,
+            "updated_at": organization.updated_at,
+            "created_by": UserSummary.model_validate(owner.model_dump()),
+            "updated_by": UserSummary.model_validate(owner.model_dump()),
+            "deleted_at": None,
+            "deleted_by": None,
+        }
+    ).model_dump(mode="json")
+    assert response.json() == {
+        "success": True,
+        "detail": "Organizations fetched",
+        "data": [expected_payload],
+    }
 
 
 async def test_get_organization_returns_404_for_non_member(

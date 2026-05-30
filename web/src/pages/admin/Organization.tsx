@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,40 +12,106 @@ import {
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Building2, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
 import { apiUrl } from '@/lib/api';
 import type { ApiOrgSummary, ApiResponse } from '@/lib/types';
 
 const organizationColumnsBase: Array<ColumnDef<ApiOrgSummary>> = [
-    { accessorKey: 'name', header: 'Name', cell: ({ getValue }) => getValue() },
+    {
+        accessorKey: 'name',
+        header: 'Name',
+        cell: ({ row, getValue }) => {
+            const name = getValue<string>();
+
+            return (
+                <Link to={`/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                    {name}
+                </Link>
+            );
+        },
+    },
     {
         id: 'created_by',
         header: 'Created by',
-        cell: ({ row }) => row.original.created_by.name,
-        meta: { className: 'w-48' },
-    },
-    {
-        accessorKey: 'created_at',
-        header: 'Created',
-        cell: ({ getValue }) => new Date(getValue<string>()).toLocaleString(),
-        meta: { className: 'w-44' },
-    },
-    {
-        accessorKey: 'updated_at',
-        header: 'Updated',
-        cell: ({ getValue }) => new Date(getValue<string>()).toLocaleString(),
-        meta: { className: 'w-44' },
-    },
-    {
-        accessorKey: 'deleted_at',
-        header: 'Deleted',
-        cell: ({ getValue }) => {
-            const value = getValue<string | null>();
+        cell: ({ row }) => {
+            const createdBy = row.original.created_by;
 
-            return value ? new Date(value).toLocaleString() : '—';
+            if (!createdBy) {
+                return '—';
+            }
+
+            return (
+                <div className="flex items-center gap-3">
+                    <Avatar className="size-8">
+                        <AvatarImage src={createdBy.avatar} alt={createdBy.name} />
+                        <AvatarFallback>{createdBy.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground">{createdBy.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">
+                            {new Date(row.original.created_at).toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+            );
         },
-        meta: { className: 'w-44' },
+        meta: { className: 'w-64' },
+    },
+    {
+        id: 'updated_by',
+        header: 'Updated by',
+        cell: ({ row }) => {
+            const updatedBy = row.original.updated_by;
+
+            if (!updatedBy) {
+                return '—';
+            }
+
+            return (
+                <div className="flex items-center gap-3">
+                    <Avatar className="size-8">
+                        <AvatarImage src={updatedBy.avatar} alt={updatedBy.name} />
+                        <AvatarFallback>{updatedBy.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground">{updatedBy.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">
+                            {new Date(row.original.updated_at).toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+            );
+        },
+        meta: { className: 'w-64' },
+    },
+    {
+        id: 'deleted_by',
+        header: 'Deleted by',
+        cell: ({ row }) => {
+            const deletedBy = row.original.deleted_by;
+
+            if (!deletedBy) {
+                return '—';
+            }
+
+            return (
+                <div className="flex items-center gap-3">
+                    <Avatar className="size-8">
+                        <AvatarImage src={deletedBy.avatar} alt={deletedBy.name} />
+                        <AvatarFallback>{deletedBy.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground">{deletedBy.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">
+                            {row.original.deleted_at ? new Date(row.original.deleted_at).toLocaleString() : '—'}
+                        </div>
+                    </div>
+                </div>
+            );
+        },
+        meta: { className: 'w-64' },
     },
 ];
 
@@ -92,6 +159,7 @@ export default function AdminOrganization() {
             return payload.data ?? [];
         },
         retry: false,
+        refetchOnMount: 'always',
     });
 
     const organizationRows = organizationsQuery.data ?? [];

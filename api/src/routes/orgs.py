@@ -14,18 +14,21 @@ async def list_organizations(user: db.User = Depends(authadmin)) -> APIResponse[
 
     organizations = await db.orgs.list()
     payload = [
+        # Map optional audit relations directly so missing values stay null.
         OrgSummary.model_validate(
             {
                 "name": organization.name,
                 "created_at": organization.created_at,
                 "updated_at": organization.updated_at,
-                "created_by": UserSummary.model_validate((organization.created_by or user).model_dump()),
-                "updated_by": UserSummary.model_validate(
-                    (organization.updated_by or organization.created_by or user).model_dump()
+                "created_by": (
+                    UserSummary.model_validate(organization.created_by.model_dump()) if organization.created_by else None
+                ),
+                "updated_by": (
+                    UserSummary.model_validate(organization.updated_by.model_dump()) if organization.updated_by else None
                 ),
                 "deleted_at": organization.deleted_at,
-                "deleted_by": UserSummary.model_validate(
-                    (organization.deleted_by or organization.updated_by or organization.created_by or user).model_dump()
+                "deleted_by": (
+                    UserSummary.model_validate(organization.deleted_by.model_dump()) if organization.deleted_by else None
                 ),
             }
         )
@@ -60,9 +63,9 @@ async def get_organization(
             OrgAppResponse.model_validate(
                 {
                     **app.model_dump(),
-                    "created_by": UserSummary.model_validate((app.created_by or organization.created_by or user).model_dump()),
-                    "updated_by": UserSummary.model_validate((app.updated_by or app.created_by or organization.updated_by or user).model_dump()),
-                    "deleted_by": UserSummary.model_validate((app.deleted_by or app.updated_by or app.created_by or organization.deleted_by or user).model_dump()),
+                    "created_by": UserSummary.model_validate(app.created_by.model_dump()) if app.created_by else None,
+                    "updated_by": UserSummary.model_validate(app.updated_by.model_dump()) if app.updated_by else None,
+                    "deleted_by": UserSummary.model_validate(app.deleted_by.model_dump()) if app.deleted_by else None,
                 }
             )
         )
@@ -74,10 +77,10 @@ async def get_organization(
             name=organization.name,
             created_at=organization.created_at,
             updated_at=organization.updated_at,
-            created_by=UserSummary.model_validate((organization.created_by or user).model_dump()),
-            updated_by=UserSummary.model_validate((organization.updated_by or organization.created_by or user).model_dump()),
+            created_by=UserSummary.model_validate(organization.created_by.model_dump()) if organization.created_by else None,
+            updated_by=UserSummary.model_validate(organization.updated_by.model_dump()) if organization.updated_by else None,
             deleted_at=organization.deleted_at,
-            deleted_by=UserSummary.model_validate((organization.deleted_by or organization.updated_by or organization.created_by or user).model_dump()),
+            deleted_by=UserSummary.model_validate(organization.deleted_by.model_dump()) if organization.deleted_by else None,
             users=[UserSummary.model_validate(member.model_dump()) for member, _role_name in members],
             apps=app_payloads,
         ),

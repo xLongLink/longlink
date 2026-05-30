@@ -126,6 +126,7 @@ export default function AdminUsers() {
             return payload.data ?? [];
         },
         retry: false,
+        refetchOnMount: 'always',
     });
 
     const usersRows = usersQuery.data ?? [];

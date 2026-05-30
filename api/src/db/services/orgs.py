@@ -56,7 +56,6 @@ class OrgsService(ServiceBase):
             if user is not None:
                 organization.created_by_id = user.id
                 organization.updated_by_id = user.id
-                organization.deleted_by_id = user.id
                 session.add(
                     UserOrganization(
                         user_id=user.id,

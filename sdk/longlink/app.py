@@ -1,8 +1,11 @@
+import json
 import traceback
+from pathlib import Path
+
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, Response
 from longlink.utils import Environments
 from longlink.routes import routes
-from fastapi.responses import JSONResponse
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from fastapi.staticfiles import StaticFiles
@@ -13,8 +16,36 @@ from fastapi.middleware.cors import CORSMiddleware
 class SPAStaticFiles(StaticFiles):
     """Serve SPA assets and fall back to `index.html` for unknown routes."""
 
+    def __init__(self, *args, base_url: str = "", directory: str | Path | None = None, **kwargs):
+        """Remember the mounted directory and runtime base URL."""
+
+        super().__init__(*args, directory=directory, **kwargs)
+        self._directory = Path(directory) if directory is not None else None
+        self._base_url = base_url.rstrip("/") + "/" if base_url else "/"
+
+    def _index_response(self) -> Response:
+        """Return the rewritten SPA entrypoint for the active base URL."""
+
+        if self._directory is None:
+            raise HTTPException(status_code=404)
+
+        index_path = self._directory / "index.html"
+        content = index_path.read_text(encoding="utf-8")
+        content = content.replace('href="/favicon.ico"', f'href="{self._base_url}favicon.ico"')
+        content = content.replace('src="/assets/', f'src="{self._base_url}assets/')
+        content = content.replace('href="/assets/', f'href="{self._base_url}assets/')
+        content = content.replace(
+            "</head>",
+            f'<script>window.__LONGLINK_BASEURL__ = {json.dumps(self._base_url)};</script></head>',
+        )
+
+        return Response(content=content, media_type="text/html")
+
     async def get_response(self, path: str, scope):
         """Return static file response, falling back to SPA entrypoint on 404."""
+
+        if path in {"", "/", "index.html"}:
+            return self._index_response()
 
         not_found_exc: HTTPException | None = None
 
@@ -35,7 +66,7 @@ class SPAStaticFiles(StaticFiles):
                 raise not_found_exc
             raise HTTPException(status_code=404)
 
-        return await super().get_response("index.html", scope)
+        return self._index_response()
 
 
 
@@ -56,7 +87,7 @@ class LongLink(FastAPI):
         # Mount static files after API routes so metadata and app assets stay reachable.
         static_dir = ROOT / ".static" / "web"
         if static_dir.exists():
-            self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
+            self.mount("/", SPAStaticFiles(directory=static_dir, html=True, base_url=environments.BASEURL), name="static")
 
         # Enable CORS in development for local frontend access to API routes
         if environments.ENV == "development":

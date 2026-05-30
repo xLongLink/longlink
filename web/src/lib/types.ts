@@ -36,30 +36,30 @@ export type ApiOrgApp = {
     url: string;
     created_at: string;
     updated_at: string;
-    created_by: ApiUserSummary;
-    updated_by: ApiUserSummary;
+    created_by: ApiUserSummary | null;
+    updated_by: ApiUserSummary | null;
     deleted_at: string | null;
-    deleted_by: ApiUserSummary;
+    deleted_by: ApiUserSummary | null;
 };
 
 export type ApiOrgSummary = {
     name: string;
     created_at: string;
     updated_at: string;
-    created_by: ApiUserSummary;
-    updated_by: ApiUserSummary;
+    created_by: ApiUserSummary | null;
+    updated_by: ApiUserSummary | null;
     deleted_at: string | null;
-    deleted_by: ApiUserSummary;
+    deleted_by: ApiUserSummary | null;
 };
 
 export type ApiOrgDetails = {
     name: string;
     created_at: string;
     updated_at: string;
-    created_by: ApiUserSummary;
-    updated_by: ApiUserSummary;
+    created_by: ApiUserSummary | null;
+    updated_by: ApiUserSummary | null;
     deleted_at: string | null;
-    deleted_by: ApiUserSummary;
+    deleted_by: ApiUserSummary | null;
     users: ApiUserSummary[];
     apps: ApiOrgApp[];
 };

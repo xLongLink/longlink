@@ -7,6 +7,7 @@ import { Menu, MenuSection } from '@ui/menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 import { Boxes, Building2, Cpu, Database, HardDrive, Settings2, ShieldCheck, Plug } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 type SettingsProps = {
     org: string;
@@ -79,7 +80,11 @@ export default function Settings({ org, apps, isLoading, error }: SettingsProps)
                                 ) : apps.length ? (
                                     apps.map((app) => (
                                         <TableRow key={app.id}>
-                                            <TableCell className="font-medium text-foreground">{app.name}</TableCell>
+                                            <TableCell className="font-medium text-foreground">
+                                                <Link to={`/${org}/${app.name}`} className="hover:underline">
+                                                    {app.name}
+                                                </Link>
+                                            </TableCell>
                                             <TableCell>
                                                 <Button
                                                     type="button"

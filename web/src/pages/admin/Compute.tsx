@@ -95,6 +95,7 @@ export default function AdminCompute() {
             return payload.data ?? [];
         },
         retry: false,
+        refetchOnMount: 'always',
     });
 
     const computeRows = computeQuery.data ?? [];

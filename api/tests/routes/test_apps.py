@@ -184,7 +184,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     # Arrange
     user = users[0]
     await db.orgs.create("acme", user)
-    app = await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="kennethreitz/httpbin")
+    app = await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/xlonglink/sample:latest")
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(

@@ -37,13 +37,36 @@ import docsXmlComponentsMarkdown, { metadata as docsXmlComponentsMetadata } from
 import docsXmlLayoutMarkdown, { metadata as docsXmlLayoutMetadata } from '../docs/xml/layout.md';
 import docsXmlMarkdown, { metadata as docsXmlMetadata } from '../docs/xml/index.md';
 
+type RuntimeWindow = Window & {
+    __LONGLINK_BASEURL__?: string;
+};
+
+
+/** Returns the server-injected SDK base URL, if present. */
+function getSdkBaseUrl(): string {
+    if (typeof window === 'undefined') {
+        return '';
+    }
+
+    const baseUrl = (window as RuntimeWindow).__LONGLINK_BASEURL__ ?? '';
+
+    if (!baseUrl) {
+        return '';
+    }
+
+    return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+}
+
 /**
  * Builds the route tree for the current bundle mode.
  */
 function getRoutes() {
     // SDK bundle serves the app runtime without control-plane routes.
     if (import.meta.env.MODE === 'sdk') {
-        return [{ path: '/', element: <View metadata="/metadata.json" baseurl="" /> }];
+        const baseUrl = getSdkBaseUrl();
+        const metadataUrl = baseUrl ? `${baseUrl}metadata.json` : '/metadata.json';
+
+        return [{ path: '/', element: <View metadata={metadataUrl} baseurl={baseUrl} /> }];
     }
 
     // Default bundle serves the full app with control-plane routes.

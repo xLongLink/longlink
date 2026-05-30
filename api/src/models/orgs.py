@@ -23,10 +23,10 @@ class OrgSummary(BaseModel):
     name: str
     created_at: datetime
     updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
+    created_by: UserSummary | None = None
+    updated_by: UserSummary | None = None
     deleted_at: datetime | None = None
-    deleted_by: UserSummary
+    deleted_by: UserSummary | None = None
 
 
 class OrgAppResponse(BaseModel):
@@ -37,10 +37,10 @@ class OrgAppResponse(BaseModel):
     url: str
     created_at: datetime
     updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
+    created_by: UserSummary | None = None
+    updated_by: UserSummary | None = None
     deleted_at: datetime | None = None
-    deleted_by: UserSummary
+    deleted_by: UserSummary | None = None
 
 
 class OrgDetails(BaseModel):
@@ -49,9 +49,9 @@ class OrgDetails(BaseModel):
     name: str
     created_at: datetime
     updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
+    created_by: UserSummary | None = None
+    updated_by: UserSummary | None = None
     deleted_at: datetime | None = None
-    deleted_by: UserSummary
+    deleted_by: UserSummary | None = None
     users: list[UserSummary]
     apps: list[OrgAppResponse] = Field(default_factory=list)

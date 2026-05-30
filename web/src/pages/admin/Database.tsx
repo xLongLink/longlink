@@ -99,6 +99,7 @@ export default function AdminDatabase() {
             return payload.data ?? [];
         },
         retry: false,
+        refetchOnMount: 'always',
     });
 
     const databaseRows = databaseQuery.data ?? [];

@@ -33,9 +33,9 @@ LOCAL_STORAGE = {
 LOCAL_ORG = "test"
 
 LOCAL_APP = {
-    "name": "httpbin",
-    "url": "/api/apps/httpbin",
-    "image": "kennethreitz/httpbin",
+    "name": "sample",
+    "url": "/api/apps/sample",
+    "image": "ghcr.io/xlonglink/sample:latest",
 }
 
 LOCAL_APP_PORT = 80
