@@ -21,13 +21,23 @@ def normalize(url: str) -> str:
     if cleaned_url == "":
         raise ValueError("App URL is required")
 
-    parsed = urlparse(cleaned_url)
-    if parsed.scheme == "":
+    # Treat bare host:port values as missing a scheme before parsing.
+    if "://" not in cleaned_url:
         local_hosts = {"localhost", "127.0.0.1", "::1"}
         host = cleaned_url.split("/", 1)[0].split(":", 1)[0].strip("[]").lower()
-        default_scheme = "http" if host in local_hosts else "https"
+        port = None
+        if ":" in cleaned_url and not cleaned_url.startswith("["):
+            port = cleaned_url.rsplit(":", 1)[1].split("/", 1)[0]
+
+        default_scheme = "http"
+        if host in local_hosts:
+            default_scheme = "https" if port == "8443" else "http"
+        else:
+            default_scheme = "https"
+
         cleaned_url = f"{default_scheme}://{cleaned_url}"
-        parsed = urlparse(cleaned_url)
+
+    parsed = urlparse(cleaned_url)
 
     if parsed.netloc == "":
         raise ValueError("Invalid app URL")

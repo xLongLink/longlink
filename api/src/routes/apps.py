@@ -1,17 +1,16 @@
-import base64
-import tempfile
-from pathlib import Path
-
 import httpx
-import yaml
 import src.db as db
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from src.auth import authuser
 from src.models import APIResponse
 from src.models.apps import AppCreate, AppResponse
 from src.models.users import UserSummary
+from src.utils.utils import normalize
+from urllib.parse import urlparse
 
 router = APIRouter(prefix="/api/apps")
+
+APP_SERVICE_PORT = 80
 
 HOP_BY_HOP_HEADERS = {
     "connection",
@@ -112,16 +111,8 @@ async def delete_app(organization: str, app_id: int) -> Response:
 
 
 @router.api_route("/{app_id}/proxy", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
-@router.api_route(
-    "/{app_id}/proxy/{path:path}",
-    methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
-)
-async def proxy_app_request(
-    app_id: int,
-    request: Request,
-    path: str = "",
-    user: db.User = Depends(authuser),
-) -> Response:
+@router.api_route("/{app_id}/proxy/{path:path}", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
+async def proxy_app_request(app_id: int, request: Request, path: str = "", user: db.User = Depends(authuser)) -> Response:
     """Proxy one request into the deployed application service."""
 
     app = await db.apps.get_by_id(app_id)
@@ -136,39 +127,32 @@ async def proxy_app_request(
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 
     registry = registries[0]
-    kubeconfig = yaml.safe_load(registry.kubeconfig)
-    current_context = kubeconfig["current-context"]
-    context = next(item["context"] for item in kubeconfig["contexts"] if item["name"] == current_context)
-    cluster = next(item["cluster"] for item in kubeconfig["clusters"] if item["name"] == context["cluster"])
-    user_config = next(item["user"] for item in kubeconfig["users"] if item["name"] == context["user"])
+    ingress_url = normalize(registry.ingress_host)
+    ingress_host = urlparse(ingress_url).hostname or ""
+    verify_tls = ingress_host not in {"localhost", "127.0.0.1", "::1"}
 
-    # httpx needs cert material on disk, so stage the kubeconfig client cert temporarily.
-    with tempfile.TemporaryDirectory() as tempdir:
-        cert_path = Path(tempdir) / "client.crt"
-        key_path = Path(tempdir) / "client.key"
-        cert_path.write_bytes(base64.b64decode(user_config["client-certificate-data"]))
-        key_path.write_bytes(base64.b64decode(user_config["client-key-data"]))
+    upstream_path = f"/{path.lstrip('/')}" if path else "/"
+    upstream_url = (
+        f"/api/v1/namespaces/{app.organization}/services/{app.name}:{APP_SERVICE_PORT}/proxy/"
+        f"{upstream_path.lstrip('/')}"
+    )
+    forward_headers = {
+        key: value
+        for key, value in request.headers.items()
+        if key.lower() not in HOP_BY_HOP_HEADERS
+    }
 
-        upstream_path = f"/{path.lstrip('/')}" if path else "/"
-        upstream_url = f"/api/v1/namespaces/{app.organization}/services/{app.name}/proxy/{upstream_path.lstrip('/')}"
-        forward_headers = {
-            key: value
-            for key, value in request.headers.items()
-            if key.lower() not in HOP_BY_HOP_HEADERS
-        }
-
-        async with httpx.AsyncClient(
-            base_url=cluster["server"],
-            cert=(str(cert_path), str(key_path)),
-            verify=False,
-        ) as api_client:
-            upstream_response = await api_client.request(
-                request.method,
-                upstream_url,
-                params=list(request.query_params.multi_items()),
-                headers=forward_headers,
-                content=await request.body(),
-            )
+    async with httpx.AsyncClient(
+        base_url=ingress_url,
+        verify=verify_tls,
+    ) as api_client:
+        upstream_response = await api_client.request(
+            request.method,
+            upstream_url,
+            params=list(request.query_params.multi_items()),
+            headers=forward_headers,
+            content=await request.body(),
+        )
 
     return Response(
         content=upstream_response.content,

@@ -1,0 +1,101 @@
+# Shared cluster-wide proxy entrypoint.
+# The control plane talks to the ingress host, and the router forwards to the Kubernetes API.
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: compute-router
+  namespace: default
+  labels:
+    managed-by: control-plane
+    compute-role: base
+    app: compute-router
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compute-router
+  namespace: default
+  labels:
+    managed-by: control-plane
+    compute-role: base
+    app: compute-router
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: compute-router
+  template:
+    metadata:
+      labels:
+        app: compute-router
+    spec:
+      serviceAccountName: compute-router
+      containers:
+        - name: compute-router
+          image: registry.k8s.io/kubectl:v1.32.0
+          command:
+            - kubectl
+          args:
+            - proxy
+            - --address=0.0.0.0
+            - --port=5678
+            - --accept-hosts=^.*$
+          ports:
+            - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: compute-router
+  namespace: default
+  labels:
+    managed-by: control-plane
+    compute-role: base
+    app: compute-router
+spec:
+  selector:
+    app: compute-router
+  ports:
+    - port: 5678
+      targetPort: 5678
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: compute-router-cluster-admin
+  labels:
+    managed-by: control-plane
+    compute-role: base
+    app: compute-router
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: compute-router
+    namespace: default
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: $ingress_name
+  namespace: default
+  labels:
+    managed-by: control-plane
+    compute-role: base
+    app: compute-router
+spec:
+  ingressClassName: traefik
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: compute-router
+                port:
+                  number: 5678

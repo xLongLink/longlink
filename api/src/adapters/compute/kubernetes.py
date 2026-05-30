@@ -6,11 +6,10 @@ from typing import Any
 import yaml
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
+from kubernetes.dynamic import DynamicClient
 
-import src.db as db
 from src.constants import TEMPLATES
-from src.utils.utils import knames
-from src.utils.utils import yaml as template_yaml
+from src.utils import utils
 
 from .__root__ import Root
 
@@ -22,85 +21,13 @@ class Compute(Root):
         """Initialize the Kubernetes compute adapter."""
 
         super().__init__(kubeconfig=kubeconfig)
-
-
-    def _api_client(self) -> client.ApiClient:
-        """Return a Kubernetes API client for the configured kubeconfig."""
-
-        config.load_kube_config_from_dict(yaml.safe_load(self._kubeconfig))
-        return client.ApiClient()
-
-
-    def _core_api(self) -> client.CoreV1Api:
-        """Return a CoreV1 API client."""
-
-        return client.CoreV1Api(self._api_client())
-
-
-    def _apps_api(self) -> client.AppsV1Api:
-        """Return an AppsV1 API client."""
-
-        return client.AppsV1Api(self._api_client())
-
-
-    def _namespace_name(self, organization: str) -> str:
-        """Normalize the organization name to a Kubernetes namespace name."""
-
-        knames(organization, "Org")
-        return organization
-
-
-    def _application_name(self, application: str) -> str:
-        """Normalize one application name for Kubernetes resources."""
-
-        knames(application, "Application name")
-        return application
-
-
-    def _namespace_manifest(self, organization: str) -> dict:
-        """Build the namespace manifest for one organization."""
-
-        return {
-            "apiVersion": "v1",
-            "kind": "Namespace",
-            "metadata": {"name": organization, "labels": {"managed-by": "control-plane"}},
-        }
-
-
-    def _proxy_manifests(self, organization: str) -> list[dict]:
-        """Build the shared proxy manifests for one organization namespace."""
-
-        manifests = template_yaml(TEMPLATES / "proxy.yml", namespace=organization)
-        return manifests if isinstance(manifests, list) else [manifests]
-
-
-    def _application_manifests(self, organization: str, name: str, image: str, port: int) -> list[dict]:
-        """Build the deployment and service manifests for one application."""
-
-        manifests = template_yaml(
-            TEMPLATES / "application.yml",
-            image=image,
-            name=name,
-            namespace=organization,
-            port=port,
-        )
-        return manifests if isinstance(manifests, list) else [manifests]
-
-
-    def _application_secret_manifest(self, organization: str, name: str, values: dict[str, str]) -> dict:
-        """Build the secret manifest for one application's configuration."""
-
-        return {
-            "apiVersion": "v1",
-            "kind": "Secret",
-            "metadata": {
-                "name": name,
-                "namespace": organization,
-                "labels": {"managed-by": "control-plane", "compute-role": "application", "app": name},
-            },
-            "type": "Opaque",
-            "stringData": values,
-        }
+        configuration = client.Configuration()
+        loader = config.kube_config.KubeConfigLoader(yaml.safe_load(self.kubeconfig))
+        loader.load_and_set(configuration)
+        self._api_client = client.ApiClient(configuration)
+        self._core_api = client.CoreV1Api(self._api_client)
+        self._apps_api = client.AppsV1Api(self._api_client)
+        self._dynamic_client = DynamicClient(self._api_client)
 
 
     def _create_or_patch(self, create_call, patch_call, namespace: str, name: str, body: dict) -> None:
@@ -115,55 +42,46 @@ class Compute(Root):
             create_call(namespace, body)
 
 
-    def _delete_if_exists(self, delete_call, namespace: str, name: str) -> None:
-        """Delete one namespaced resource and ignore not-found errors."""
+    def _namespace_name(self, organization: str) -> str:
+        """Validate and return one namespace name."""
 
-        try:
-            delete_call(name, namespace)
-        except ApiException as exc:
-            if exc.status != 404:
-                raise ValueError(f"Failed deleting resource '{name}'") from exc
+        utils.knames(organization, "Org")
+        return organization
+
+
+    def _application_name(self, application: str) -> str:
+        """Validate and return one application name."""
+
+        utils.knames(application, "Application name")
+        return application
 
 
     def _ensure_namespace(self, organization: str) -> None:
         """Create the namespace for one organization when it is missing."""
 
         namespace = self._namespace_name(organization)
-        core_api = self._core_api()
 
         try:
-            core_api.read_namespace(namespace)
+            self._core_api.read_namespace(namespace)
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed reading namespace '{namespace}'") from exc
 
-            core_api.create_namespace(self._namespace_manifest(namespace))
+            self._core_api.create_namespace(
+                {
+                    "apiVersion": "v1",
+                    "kind": "Namespace",
+                    "metadata": {"name": namespace, "labels": {"managed-by": "control-plane"}},
+                }
+            )
 
 
-    async def _application_image(self, organization: str, application: str) -> str:
-        """Resolve the application image from the API registry."""
+    def _pods(self, organization: str, application: str) -> list[client.V1Pod]:
+        """Return pods for one managed application."""
 
-        app = await db.apps.get(organization, application)
-        if app is None:
-            raise ValueError(f"App '{organization}/{application}' not found")
-
-        return app.image
-
-
-    async def _application_envs(self, application: str) -> dict[str, str]:
-        """Return the Secret data for one application."""
-
-        envs = await db.envs.list(application)
-        return {env.key: env.value for env in envs}
-
-
-    def _app_pods(self, namespace: str, application: str) -> list[client.V1Pod]:
-        """List pods for one application deployment."""
-
-        return self._core_api().list_namespaced_pod(
-            namespace,
-            label_selector=f"app={application}",
-        ).items
+        namespace = self._namespace_name(organization)
+        name = self._application_name(application)
+        return self._core_api.list_namespaced_pod(namespace, label_selector=f"app={name}").items
 
 
     async def list(self, organization: str) -> list[str]:
@@ -171,7 +89,7 @@ class Compute(Root):
 
         namespace = self._namespace_name(organization)
         self._ensure_namespace(namespace)
-        deployments = self._apps_api().list_namespaced_deployment(
+        deployments = self._apps_api.list_namespaced_deployment(
             namespace,
             label_selector="managed-by=control-plane,compute-role=application",
         ).items
@@ -184,9 +102,9 @@ class Compute(Root):
         namespace = self._namespace_name(organization)
         name = self._application_name(application)
         try:
-            self._apps_api().read_namespaced_deployment(name, namespace)
-            self._core_api().read_namespaced_service(name, namespace)
-            self._core_api().read_namespaced_secret(name, namespace)
+            self._apps_api.read_namespaced_deployment(name, namespace)
+            self._core_api.read_namespaced_service(name, namespace)
+            self._core_api.read_namespaced_secret(name, namespace)
         except ApiException as exc:
             if exc.status == 404:
                 return False
@@ -212,13 +130,22 @@ class Compute(Root):
         name = self._application_name(application)
 
         self._ensure_namespace(namespace)
-        core_api = self._core_api()
         self._create_or_patch(
-            core_api.create_namespaced_secret,
-            core_api.patch_namespaced_secret,
+            self._core_api.create_namespaced_secret,
+            self._core_api.patch_namespaced_secret,
             namespace,
             name,
-            self._application_secret_manifest(namespace, name, values),
+            {
+                "apiVersion": "v1",
+                "kind": "Secret",
+                "metadata": {
+                    "name": name,
+                    "namespace": namespace,
+                    "labels": {"managed-by": "control-plane", "compute-role": "application", "app": name},
+                },
+                "type": "Opaque",
+                "stringData": values,
+            },
         )
 
 
@@ -229,15 +156,20 @@ class Compute(Root):
         name = self._application_name(application)
 
         self._ensure_namespace(namespace)
-        app_manifests = self._application_manifests(namespace, name, image, port)
-        apps_api = self._apps_api()
-        core_api = self._core_api()
+        app_manifests = utils.yaml(
+            TEMPLATES / "application.yml",
+            image=image,
+            name=name,
+            namespace=namespace,
+            port=port,
+        )
+        app_manifests = app_manifests if isinstance(app_manifests, list) else [app_manifests]
 
         for manifest in app_manifests:
             if manifest["kind"] == "Deployment":
                 self._create_or_patch(
-                    apps_api.create_namespaced_deployment,
-                    apps_api.patch_namespaced_deployment,
+                    self._apps_api.create_namespaced_deployment,
+                    self._apps_api.patch_namespaced_deployment,
                     namespace,
                     name,
                     manifest,
@@ -246,8 +178,8 @@ class Compute(Root):
 
             if manifest["kind"] == "Service":
                 self._create_or_patch(
-                    core_api.create_namespaced_service,
-                    core_api.patch_namespaced_service,
+                    self._core_api.create_namespaced_service,
+                    self._core_api.patch_namespaced_service,
                     namespace,
                     name,
                     manifest,
@@ -260,14 +192,13 @@ class Compute(Root):
         namespace = self._namespace_name(organization)
         self._ensure_namespace(namespace)
 
-        manifests = self._proxy_manifests(namespace)
-        apps_api = self._apps_api()
-        core_api = self._core_api()
+        manifests = utils.yaml(TEMPLATES / "proxy.yml", namespace=namespace)
+        manifests = manifests if isinstance(manifests, list) else [manifests]
         for manifest in manifests:
             if manifest["kind"] == "Deployment":
                 self._create_or_patch(
-                    apps_api.create_namespaced_deployment,
-                    apps_api.patch_namespaced_deployment,
+                    self._apps_api.create_namespaced_deployment,
+                    self._apps_api.patch_namespaced_deployment,
                     namespace,
                     manifest["metadata"]["name"],
                     manifest,
@@ -276,12 +207,56 @@ class Compute(Root):
 
             if manifest["kind"] == "Service":
                 self._create_or_patch(
-                    core_api.create_namespaced_service,
-                    core_api.patch_namespaced_service,
+                    self._core_api.create_namespaced_service,
+                    self._core_api.patch_namespaced_service,
                     namespace,
                     manifest["metadata"]["name"],
                     manifest,
                 )
+
+
+    async def create_cluster_proxy(self, ingress_name: str) -> None:
+        """Create or replace the shared cluster-wide proxy entrypoint."""
+
+        manifests = utils.yaml(TEMPLATES / "cluster-proxy.yml", ingress_name=ingress_name)
+        manifests = manifests if isinstance(manifests, list) else [manifests]
+
+        # Use the Kubernetes client directly so bootstrap does not depend on kubectl.
+
+        for manifest in manifests:
+            resource = self._dynamic_client.resources.get(api_version=manifest["apiVersion"], kind=manifest["kind"])
+            name = manifest["metadata"]["name"]
+            namespace = manifest["metadata"].get("namespace")
+
+            # Create new objects when missing, otherwise patch them in place.
+            try:
+                if resource.namespaced:
+                    resource.get(name=name, namespace=namespace)
+                    resource.patch(
+                        body=manifest,
+                        name=name,
+                        namespace=namespace,
+                        content_type="application/apply-patch+yaml",
+                        field_manager="longlink",
+                        force=True,
+                    )
+                else:
+                    resource.get(name=name)
+                    resource.patch(
+                        body=manifest,
+                        name=name,
+                        content_type="application/apply-patch+yaml",
+                        field_manager="longlink",
+                        force=True,
+                    )
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed applying {manifest['kind']} '{name}'") from exc
+
+                if resource.namespaced:
+                    resource.create(body=manifest, namespace=namespace)
+                else:
+                    resource.create(body=manifest)
 
 
     async def create(self, organization: str, application: str, image: str, port: int, values: dict[str, str]) -> None:
@@ -299,11 +274,16 @@ class Compute(Root):
         name = self._application_name(application)
 
         self._ensure_namespace(namespace)
-        apps_api = self._apps_api()
-        core_api = self._core_api()
-        self._delete_if_exists(apps_api.delete_namespaced_deployment, namespace, name)
-        self._delete_if_exists(core_api.delete_namespaced_service, namespace, name)
-        self._delete_if_exists(core_api.delete_namespaced_secret, namespace, name)
+        for delete_call in (
+            self._apps_api.delete_namespaced_deployment,
+            self._core_api.delete_namespaced_service,
+            self._core_api.delete_namespaced_secret,
+        ):
+            try:
+                delete_call(name, namespace)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting resource '{name}'") from exc
 
 
     async def delete(self, organization: str) -> None:
@@ -311,7 +291,7 @@ class Compute(Root):
 
         namespace = self._namespace_name(organization)
         try:
-            self._core_api().delete_namespace(namespace)
+            self._core_api.delete_namespace(namespace)
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed deleting namespace '{namespace}'") from exc
@@ -323,7 +303,7 @@ class Compute(Root):
         namespace = self._namespace_name(organization)
         name = self._application_name(application)
 
-        pods = self._app_pods(namespace, name)
+        pods = self._pods(organization, application)
         pod_statuses = [
             {
                 "name": pod.metadata.name,
@@ -340,7 +320,7 @@ class Compute(Root):
         return {
             "organization": namespace,
             "application": name,
-            "exists": await self.exists(namespace, name),
+            "exists": await self.exists(organization, application),
             "pods": pod_statuses,
         }
 
@@ -350,7 +330,7 @@ class Compute(Root):
 
         namespace = self._namespace_name(organization)
         name = self._application_name(application)
-        pods = self._app_pods(namespace, name)
+        pods = self._pods(organization, application)
         if not pods:
             raise ValueError(f"No pods found for application '{namespace}/{name}'")
 
@@ -361,7 +341,7 @@ class Compute(Root):
             reverse=True,
         )[0]
         try:
-            return self._core_api().read_namespaced_pod_log(
+            return self._core_api.read_namespaced_pod_log(
                 pod.metadata.name,
                 namespace,
                 tail_lines=lines,

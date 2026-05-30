@@ -207,16 +207,15 @@ async def test_proxy_app_forwards_request_to_internal_service(
             "    client-certificate-data: Y2VydA==\n"
             "    client-key-data: a2V5\n"
         ),
-        ingress_host="localhost",
+        ingress_host="localhost:8443",
         ingress_name="control-ingress",
     )
     client = clients[0]
     captured: dict[str, object] = {}
 
     class FakeAsyncClient:
-        def __init__(self, *, base_url, cert, verify):
+        def __init__(self, *, base_url, verify):
             captured["base_url"] = base_url
-            captured["cert"] = cert
             captured["verify"] = verify
 
         async def __aenter__(self):
@@ -242,6 +241,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert response.status_code == 200
     assert response.text == "proxied"
     assert captured["method"] == "POST"
-    assert captured["resource_path"] == "/api/v1/namespaces/acme/services/dashboard/proxy/anything"
+    assert captured["resource_path"] == "/api/v1/namespaces/acme/services/dashboard:80/proxy/anything"
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
+    assert captured["base_url"] == "https://localhost:8443"
+    assert captured["verify"] is False

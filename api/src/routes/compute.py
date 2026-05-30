@@ -1,9 +1,17 @@
 import src.db as db
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from src.adapters.compute.kubernetes import Compute as KubernetesCompute
 from src.auth import authadmin
 from src.models import APIResponse, ComputeRegistryCreate, ComputeRegistryResponse
 
 router = APIRouter(prefix="/api/compute")
+
+
+async def bootstrap_compute_cluster(kubeconfig: str, ingress_name: str) -> None:
+    """Provision the shared cluster entrypoint for one compute cluster."""
+
+    compute = KubernetesCompute(kubeconfig)
+    await compute.create_cluster_proxy(ingress_name)
 
 
 @router.get("")
@@ -45,6 +53,15 @@ async def create_compute_registry(
     """Create one compute backend registration."""
 
     registry = await db.compute.create(**payload.model_dump())
+
+    try:
+        await bootstrap_compute_cluster(registry.kubeconfig, registry.ingress_name)
+    except Exception as exc:
+        await db.compute.delete(registry.id)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Failed to bootstrap the cluster proxy",
+        ) from exc
 
     return APIResponse(
         success=True,

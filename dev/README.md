@@ -18,6 +18,8 @@ k3d cluster create compute \
   || true
 ```
 
+Use `localhost:8443` as the compute ingress host in local config.
+
 Export the kubeconfig afterward:
 
 ```bash

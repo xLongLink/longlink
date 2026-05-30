@@ -37,8 +37,8 @@ Register storage backends after startup. The API reads bucket connection details
 
 ### Compute
 
-Register compute backends after startup. The API uses the registered kubeconfig and ingress settings when provisioning
-apps.
+Register compute backends after startup. The API bootstraps a shared cluster proxy from the registered kubeconfig, then
+uses the configured ingress host for app proxying.
 
 ## Deployment Model
 

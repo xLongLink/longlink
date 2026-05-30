@@ -63,6 +63,14 @@ class Root(ABC):
         """
 
     @abstractmethod
+    async def create_cluster_proxy(self, ingress_name: str) -> None:
+        """Create or replace the shared cluster-wide proxy entrypoint.
+
+        The proxy is provisioned once for the compute cluster and used by the
+        control plane as the stable entrypoint for all proxied app requests.
+        """
+
+    @abstractmethod
     async def create(self, organization: str, application: str, image: str, port: int, values: dict[str, str]) -> None:
         """Create or replace one complete managed application stack.
 

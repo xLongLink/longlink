@@ -1,9 +1,9 @@
-import Layout from '@/Layout';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
+import XML from './XML';
 import NotFound from './NotFound';
 
 type ViewProps = {
@@ -184,10 +184,10 @@ export default function View({ metadata, baseurl }: ViewProps) {
     const ast = fromXml(pageContent);
 
     return (
-        <Layout tabs={tabs}>
+        <XML tabs={tabs}>
             <section className="space-y-6">
                 <RenderXML ast={ast} baseUrl={resolvedBaseUrl} />
             </section>
-        </Layout>
+        </XML>
     );
 }

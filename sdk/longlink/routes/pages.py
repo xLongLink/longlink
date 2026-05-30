@@ -6,9 +6,10 @@ from fastapi.responses import Response
 router = APIRouter()
 
 
+@router.get("/{page_path:path}.xml")
 @router.get("/pages/{page_path:path}.xml")
 async def get_page(page_path: str, request: Request) -> Response:
-    """Retrieve raw XML page content for a nested page path."""
+    """Retrieve raw XML page content for a page path."""
 
     normalized_path = Path(page_path.strip().lstrip("/"))
     if normalized_path.suffix != ".xml":

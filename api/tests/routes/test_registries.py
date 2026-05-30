@@ -214,11 +214,19 @@ async def test_storage_quota_endpoint_returns_quota_value(
 
 async def test_compute_registry_endpoint_supports_create_list_and_delete(
     clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
 ) -> None:
     """Create, list, and delete one compute registry."""
 
     # Arrange
     client = clients[0]
+    captured: dict[str, str] = {}
+
+    async def fake_bootstrap(kubeconfig: str, ingress_name: str) -> None:
+        captured["kubeconfig"] = kubeconfig
+        captured["ingress_name"] = ingress_name
+
+    monkeypatch.setattr("src.routes.compute.bootstrap_compute_cluster", fake_bootstrap)
 
     # Act
     create_response = client.post(
@@ -261,3 +269,4 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         ],
     }
     assert delete_response.status_code == 204
+    assert captured == {"kubeconfig": "apiVersion: v1\nclusters: []\n", "ingress_name": "longlink-ingress"}

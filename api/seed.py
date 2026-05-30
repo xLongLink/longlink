@@ -43,13 +43,15 @@ LOCAL_APP_PORT = 80
 LOCAL_COMPUTE = {
     "kind": ComputeKind.kubernetes,
     "kubeconfig": Path(__file__).with_name("kubeconfig.yaml").read_text(encoding="utf-8"),
-    "ingress_host": "localhost",
+    "ingress_host": "localhost:8443",
     "ingress_name": "control-ingress",
 }
 
 
 async def main() -> None:
     """Seed the control plane database with baseline records."""
+
+    compute = Compute(LOCAL_COMPUTE["kubeconfig"])
 
     # Local development uses SQLite, so bootstrap the schema before inserting seed rows.
     if env.DATABASE_URL.startswith('sqlite+'):
@@ -71,11 +73,11 @@ async def main() -> None:
     await db.database.create(**LOCAL_DATABASE)
     await db.storage.create(**LOCAL_STORAGE)
     await db.compute.create(**LOCAL_COMPUTE)
+    await compute.create_cluster_proxy(LOCAL_COMPUTE["ingress_name"])
     await db.orgs.create(LOCAL_ORG)
     await db.apps.create(LOCAL_ORG, **LOCAL_APP)
 
     # Deploy the seeded app into the configured Kubernetes cluster.
-    compute = Compute(LOCAL_COMPUTE["kubeconfig"])
     await compute.create(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
 
 
