@@ -4,6 +4,8 @@ COPY sdk /workspace/sdk
 
 WORKDIR /workspace/sdk
 
+ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=0.0.0
+
 RUN uv sync
 
 CMD ["uv", "run", "longlink", "sample", "--host", "0.0.0.0", "--port", "80"]
