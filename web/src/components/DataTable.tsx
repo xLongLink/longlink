@@ -1,4 +1,3 @@
-'use client';
 
 import { type ColumnDef, type RowData, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 

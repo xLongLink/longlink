@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/DataTable';
 import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
 import { useDeleteApp } from '@/hooks/use-org';
-import type { ApiOrgApp } from '@/lib/types';
+import type { ApiOrgApp, ApiOrgDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
@@ -12,13 +12,14 @@ import { Link } from 'react-router';
 
 type SettingsProps = {
     org: string;
+    orgDetails: ApiOrgDetails | undefined;
     apps: ApiOrgApp[];
     isLoading: boolean;
     error: Error | null;
 };
 
 /** Renders the organization settings page body. */
-export default function Settings({ org, apps, isLoading, error }: SettingsProps) {
+export default function Settings({ org, orgDetails, apps, isLoading, error }: SettingsProps) {
     const deleteApp = useDeleteApp(org);
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -65,12 +66,16 @@ export default function Settings({ org, apps, isLoading, error }: SettingsProps)
         <Menu defaultValue="organization" className="items-start">
             <MenuSection value="organization" label="Organization" icon={Building2}>
                 <div className="rounded-2xl border border-border bg-card/80 p-6">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Organization</h2>
-                        <p className="text-sm text-muted-foreground">
-                            Manage the workspace name, branding, and ownership.
-                        </p>
-                    </div>
+                    <dl className="space-y-3">
+                        <div>
+                            <dt className="text-sm text-muted-foreground">Name</dt>
+                            <dd className="text-lg font-medium text-foreground">{orgDetails?.name ?? org}</dd>
+                        </div>
+                        <div>
+                            <dt className="text-sm text-muted-foreground">Location</dt>
+                            <dd className="text-base text-foreground">{orgDetails?.location?.display_name ?? '—'}</dd>
+                        </div>
+                    </dl>
                 </div>
             </MenuSection>
 

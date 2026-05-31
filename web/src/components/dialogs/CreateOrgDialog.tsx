@@ -1,16 +1,30 @@
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { apiUrl, fetchApiJson } from '@/lib/api';
+import type { ApiLocation } from '@/lib/types';
 import { useCreateOrg } from '@/hooks/use-org';
-import { useState } from 'react';
 
 /** Renders the create-organization dialog. */
 export default function CreateOrgDialog() {
     const createOrg = useCreateOrg();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
+    const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
+
+    const locationsUrl = apiUrl('/api/locations');
+
+    const locationsQuery = useQuery({
+        queryKey: ['api', locationsUrl],
+        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
+        retry: false,
+    });
 
     return (
         <>
@@ -42,9 +56,10 @@ export default function CreateOrgDialog() {
 
                                 // Create the org and close the dialog on success.
                                 try {
-                                    await createOrg.mutateAsync(name.trim());
+                                    await createOrg.mutateAsync({ name: name.trim(), location_id: Number(locationId) });
                                     setOpen(false);
                                     setName('');
+                                    setLocationId('');
                                 } catch (mutationError) {
                                     setError(
                                         mutationError instanceof Error ? mutationError.message : 'Failed to create org'
@@ -63,6 +78,22 @@ export default function CreateOrgDialog() {
                                 />
                             </div>
 
+                            <div className="space-y-2">
+                                <Label htmlFor="org-location">Location</Label>
+                                <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
+                                    <SelectTrigger id="org-location" className="w-full">
+                                        <SelectValue placeholder="Choose a location" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {locationsQuery.data?.map((location) => (
+                                            <SelectItem key={location.id} value={String(location.id)}>
+                                                {location.display_name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
                             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -76,7 +107,10 @@ export default function CreateOrgDialog() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={createOrg.isPending || name.trim().length === 0}>
+                                <Button
+                                    type="submit"
+                                    disabled={createOrg.isPending || name.trim().length === 0 || !locationId}
+                                >
                                     {createOrg.isPending ? 'Creating...' : 'Create'}
                                 </Button>
                             </div>

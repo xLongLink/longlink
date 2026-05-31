@@ -8,11 +8,12 @@ if TYPE_CHECKING:
 
 
 class Org(Base, table=True):
-    '''Represent an org namespace in the control plane.'''
+    """Represent an org namespace in the control plane."""
 
     __tablename__ = 'organizations'
 
     name: str = Field(primary_key=True, max_length=128)
+    location_id: int | None = Field(default=None, foreign_key='locations.id')
     created_by_id: int | None = Field(default=None, foreign_key='users.id')
     updated_by_id: int | None = Field(default=None, foreign_key='users.id')
     deleted_by_id: int | None = Field(default=None, foreign_key='users.id')

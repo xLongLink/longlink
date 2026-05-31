@@ -73,7 +73,7 @@ async def main() -> None:
     await db.storage.create(**LOCAL_STORAGE, location_id=location.id)
     await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await compute.create_cluster_proxy(LOCAL_COMPUTE["ingress_name"])
-    await db.orgs.create(LOCAL_ORG)
+    await db.orgs.create(LOCAL_ORG, location.id)
     await db.apps.create(LOCAL_ORG, **LOCAL_APP)
 
     # Deploy the seeded app into the configured Kubernetes cluster.

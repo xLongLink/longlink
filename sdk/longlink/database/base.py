@@ -9,8 +9,8 @@ from longlink.utils.settings import Environments
 class Table(SQLModel):
     """Base SQLModel for DB tables with common timestamp fields."""
 
-    created_at: Optional[datetime] = Field(default=None, nullable=True)
-    updated_at: Optional[datetime] = Field(default=None, nullable=True)
+    created_at: datetime | None = Field(default=None, nullable=True)
+    updated_at: datetime | None = Field(default=None, nullable=True)
 
 
 _engine: AsyncEngine | None = None

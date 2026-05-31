@@ -52,7 +52,7 @@ class UsersService(ServiceBase):
         name: str,
         avatar: str | None,
     ) -> User:
-        '''Create a new OIDC user or update an existing one.'''
+        """Create a new OIDC user or update an existing one."""
 
         existing_user = await self.get(oidc_subject)
         if existing_user is not None:
@@ -108,7 +108,7 @@ class UsersService(ServiceBase):
             return user
 
     async def get(self, oidc_subject: str) -> User | None:
-        '''Retrieve a user by OIDC subject.'''
+        """Retrieve a user by OIDC subject."""
 
         async with self.session() as session:
             # Load memberships so the returned user can be used outside the session.
@@ -122,7 +122,7 @@ class UsersService(ServiceBase):
         user_id: int,
         **params: str | int | Theme | Accent | Radius | None,
     ) -> User | None:
-        '''Update a user and return the updated record.'''
+        """Update a user and return the updated record."""
 
         async with self.session() as session:
             result = await session.execute(select(User).where(User.id == user_id))

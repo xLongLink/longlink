@@ -24,7 +24,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const pathSection = pathname.split('/')[2] ?? '';
     const section =
         sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
-    const { people, apps, isLoading, error } = useOrg(org);
+    const { org: orgDetails, people, apps, isLoading, error } = useOrg(org);
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -77,7 +77,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
                     <Applications org={org} apps={apps} isLoading={isLoading} error={error} />
                 ) : null}
                 {section === 'settings' ? (
-                    <OrgSettings org={org} apps={apps} isLoading={isLoading} error={error} />
+                    <OrgSettings org={org} orgDetails={orgDetails} apps={apps} isLoading={isLoading} error={error} />
                 ) : null}
             </section>
         </Layout>

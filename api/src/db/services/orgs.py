@@ -47,11 +47,11 @@ class OrgsService(ServiceBase):
             result = await session.execute(statement)
             return result.all()
 
-    async def create(self, name: str, user: User | None = None) -> Org:
+    async def create(self, name: str, location_id: int, user: User | None = None) -> Org:
         """Create an org."""
 
         async with self.session() as session:
-            organization = Org(name=name)
+            organization = Org(name=name, location_id=location_id)
             if user is not None:
                 organization.created_by_id = user.id
                 organization.updated_by_id = user.id

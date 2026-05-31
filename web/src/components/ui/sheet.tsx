@@ -1,4 +1,3 @@
-'use client';
 
 import { Dialog as SheetPrimitive } from '@base-ui/react/dialog';
 import * as React from 'react';

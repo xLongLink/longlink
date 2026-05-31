@@ -3,7 +3,7 @@ from src.db.models.__base__ import Base
 
 
 class Location(Base, table=True):
-    '''Represent a physical or cloud location where infrastructure runs.'''
+    """Represent a physical or cloud location where infrastructure runs."""
 
     __tablename__ = 'locations'
 

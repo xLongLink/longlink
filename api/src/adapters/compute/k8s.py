@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import yaml
 from typing import Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from src.utils import utils
 from .__root__ import Root
 from kubernetes import client, config
@@ -334,7 +334,7 @@ class Compute(Root):
         # Pick the newest pod so logs stay aligned with the latest rollout.
         pod = sorted(
             pods,
-            key=lambda item: item.metadata.creation_timestamp or datetime.min.replace(tzinfo=timezone.utc),
+            key=lambda item: item.metadata.creation_timestamp or datetime.min.replace(tzinfo=UTC),
             reverse=True,
         )[0]
         try:

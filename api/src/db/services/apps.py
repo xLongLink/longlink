@@ -11,7 +11,7 @@ from src.db.models.association import UserApp
 
 class AppsService(ServiceBase):
     async def list(self, organization: str, user_id: int) -> list[tuple[App, str | None]]:
-        '''Return all registered apps for one organization with membership roles.'''
+        """Return all registered apps for one organization with membership roles."""
 
         async with self.session() as session:
             # Join the membership row so the caller can render the app role in one query.
@@ -36,7 +36,7 @@ class AppsService(ServiceBase):
             return result.all()
 
     async def get(self, organization: str, name: str) -> App | None:
-        '''Return a registered app by organization and name.'''
+        """Return a registered app by organization and name."""
 
         async with self.session() as session:
             statement = select(App).options(
@@ -68,7 +68,7 @@ class AppsService(ServiceBase):
         image: str,
         user: User | None = None,
     ) -> App:
-        '''Add a new app to the database for one organization.'''
+        """Add a new app to the database for one organization."""
 
         async with self.session() as session:
             # Check the primary-key conflict first so the API can report a clear message.
@@ -103,7 +103,7 @@ class AppsService(ServiceBase):
             return app
 
     async def delete(self, organization: str, app_id: int) -> App:
-        '''Delete an app by organization and id and return it.'''
+        """Delete an app by organization and id and return it."""
 
         async with self.session() as session:
             # Load the app first so the delete path can raise a single not-found error.

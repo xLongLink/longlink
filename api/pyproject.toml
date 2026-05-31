@@ -60,6 +60,15 @@ include = ['src*']
 longlink = { path = '../sdk', editable = true }
 
 
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["UP", "D300"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["D300"]
+
 [tool.isort]
 from_first = false
 no_sections = true

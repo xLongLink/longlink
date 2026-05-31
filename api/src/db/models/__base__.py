@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from sqlmodel import Field, SQLModel
 
-fn = lambda: datetime.now(timezone.utc)
+fn = lambda: datetime.now(UTC)
 
 
 class Base(SQLModel):

@@ -38,6 +38,7 @@ export type ApiOrgApp = {
 
 export type ApiOrgSummary = {
     name: string;
+    location_id: number | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary | null;
@@ -48,6 +49,8 @@ export type ApiOrgSummary = {
 
 export type ApiOrgDetails = {
     name: string;
+    location_id: number | null;
+    location: ApiLocation | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary | null;

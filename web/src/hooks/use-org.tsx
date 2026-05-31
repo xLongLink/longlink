@@ -40,12 +40,12 @@ export function useCreateOrg() {
     const userUrl = apiUrl('/api/me');
 
     return useMutation({
-        mutationFn: async (orgName: string) => {
+        mutationFn: async ({ name, location_id }: { name: string; location_id: number }) => {
             return fetchApiJson<ApiOrgSummary>(orgsUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ name: orgName }),
+                body: JSON.stringify({ name, location_id }),
             });
         },
         onSuccess: () => {

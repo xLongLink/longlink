@@ -1,6 +1,7 @@
 import src.db as db
 from fastapi import Depends, Response, APIRouter, HTTPException, status
 from src.auth import authuser, authadmin
+from src.models.locations import LocationResponse
 from src.models.orgs import OrgCreate, OrgDetails, OrgSummary, OrgAppResponse
 from src.models.users import UserSummary
 
@@ -17,6 +18,7 @@ async def list_organizations(_user: db.User = Depends(authadmin)) -> list[OrgSum
         OrgSummary.model_validate(
             {
                 "name": organization.name,
+                "location_id": organization.location_id,
                 "created_at": organization.created_at,
                 "updated_at": organization.updated_at,
                 "created_by": (
@@ -69,8 +71,12 @@ async def get_organization(
             )
         )
 
+    location = await db.locations.get(organization.location_id) if organization.location_id else None
+
     return OrgDetails(
         name=organization.name,
+        location_id=organization.location_id,
+        location=LocationResponse.model_validate(location.model_dump()) if location else None,
         created_at=organization.created_at,
         updated_at=organization.updated_at,
         created_by=UserSummary.model_validate(organization.created_by.model_dump()) if organization.created_by else None,
@@ -90,12 +96,13 @@ async def create_organization(
     """Create a new org."""
 
     try:
-        organization = await db.orgs.create(payload.name, user)
+        organization = await db.orgs.create(payload.name, payload.location_id, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     return OrgSummary(
         name=organization.name,
+        location_id=organization.location_id,
         created_at=organization.created_at,
         updated_at=organization.updated_at,
         created_by=UserSummary.model_validate(user.model_dump()),

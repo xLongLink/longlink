@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import Field, BaseModel, field_validator
+from src.models.locations import LocationResponse
 from src.models.users import UserSummary
 
 
@@ -7,6 +8,7 @@ class OrgCreate(BaseModel):
     """Validate org creation payloads."""
 
     name: str = Field(min_length=1, max_length=128)
+    location_id: int
 
     @field_validator("name", mode="before")
     @classmethod
@@ -19,6 +21,7 @@ class OrgSummary(BaseModel):
     """Represent one organization in admin list responses."""
 
     name: str
+    location_id: int | None = None
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None
@@ -45,6 +48,8 @@ class OrgDetails(BaseModel):
     """Represent an organization with its members."""
 
     name: str
+    location_id: int | None = None
+    location: LocationResponse | None = None
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None

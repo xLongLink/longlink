@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class App(Base, table=True):
-    '''Represent an application installed in the platform.'''
+    """Represent an application installed in the platform."""
 
     __tablename__ = 'apps'
     __table_args__ = (UniqueConstraint('organization', 'name', name='uq_apps_organization_name'),)
