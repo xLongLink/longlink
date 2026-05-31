@@ -8,7 +8,6 @@ from .storage import StorageRegistry
 from .__base__ import Base
 from .database import DatabaseRegistry
 from .location import Location
-from .registries import Registry
 from .association import UserApp, UserOrganization
 
 __all__ = [
@@ -21,7 +20,6 @@ __all__ = [
     "Env",
     "Location",
     "Org",
-    "Registry",
     "StorageRegistry",
     "User",
 ]

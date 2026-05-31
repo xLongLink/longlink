@@ -144,15 +144,3 @@ export function applyTheme(root: HTMLElement, config: ThemeConfig) {
     root.style.setProperty('--radius', RADIUS_TOKENS[config.radius]);
 }
 
-/** Resets theme-specific overrides from the document root. */
-export function resetTheme(root: HTMLElement) {
-    root.style.removeProperty('--background');
-    root.style.removeProperty('--foreground');
-    root.style.removeProperty('--muted-foreground');
-    root.style.removeProperty('--accent');
-    root.style.removeProperty('--primary');
-    root.style.removeProperty('--accent-foreground');
-    root.style.removeProperty('--primary-foreground');
-    root.style.removeProperty('--radius');
-    root.classList.remove('light', 'dark');
-}

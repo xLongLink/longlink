@@ -1,12 +1,11 @@
 from pathlib import Path
 from src.api import routers
-from longlink import LongLink, page
+from longlink import LongLink
 from src.envs import env
 
 app = LongLink(env=env)
 
 
-@page("/pages/dashboard.xml")
 def dashboard_page():
     """Return the dashboard XML page example."""
 

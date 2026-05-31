@@ -83,6 +83,11 @@ async def create_compute_registry(
             detail="Failed to bootstrap the cluster proxy",
         ) from exc
 
+    try:
+        await compute.ensure_metrics_server()
+    except Exception:
+        pass
+
     return ComputeRegistryResponse.model_validate(registry.model_dump(exclude={"kubeconfig"}))
 
 

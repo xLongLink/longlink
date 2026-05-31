@@ -256,6 +256,47 @@ class Compute(Root):
                     resource.create(body=manifest)
 
 
+    async def ensure_metrics_server(self) -> None:
+        """Install or update the Kubernetes Metrics Server in the cluster."""
+
+        manifests = utils.yaml(TEMPLATES / "metrics-server.yml")
+        manifests = manifests if isinstance(manifests, list) else [manifests]
+
+        for manifest in manifests:
+            resource = self._dynamic_client.resources.get(api_version=manifest["apiVersion"], kind=manifest["kind"])
+            name = manifest["metadata"]["name"]
+            namespace = manifest["metadata"].get("namespace")
+
+            try:
+                if resource.namespaced:
+                    resource.get(name=name, namespace=namespace)
+                    resource.patch(
+                        body=manifest,
+                        name=name,
+                        namespace=namespace,
+                        content_type="application/apply-patch+yaml",
+                        field_manager="longlink",
+                        force=True,
+                    )
+                else:
+                    resource.get(name=name)
+                    resource.patch(
+                        body=manifest,
+                        name=name,
+                        content_type="application/apply-patch+yaml",
+                        field_manager="longlink",
+                        force=True,
+                    )
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed applying {manifest['kind']} '{name}'") from exc
+
+                if resource.namespaced:
+                    resource.create(body=manifest, namespace=namespace)
+                else:
+                    resource.create(body=manifest)
+
+
     async def create(self, organization: str, application: str, image: str, port: int, values: dict[str, str]) -> None:
         """Create or replace one complete managed application stack."""
 

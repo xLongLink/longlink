@@ -29,6 +29,10 @@ spec:
           envFrom:
             - secretRef:
                 name: $name
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
 ---
 apiVersion: v1
 kind: Service

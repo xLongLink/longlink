@@ -72,12 +72,6 @@ class Longlink(Element):
         self._metadata: dict[str, Any] | None = None
 
     @property
-    def content(self) -> str:
-        """Return raw XML text for delivery to the web runtime."""
-
-        return super().content
-
-    @property
     def metadata(self) -> dict[str, Any]:
         """Return the parsed XML document as a dict for downstream processing."""
 

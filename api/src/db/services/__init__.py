@@ -6,4 +6,3 @@ from .compute import ComputeRegistriesService  # noqa: F401
 from .storage import StorageRegistriesService  # noqa: F401
 from .database import DatabaseRegistriesService  # noqa: F401
 from .locations import LocationsService  # noqa: F401
-from .registries import RegistriesService  # noqa: F401

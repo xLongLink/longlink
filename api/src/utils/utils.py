@@ -45,22 +45,6 @@ def normalize(url: str) -> str:
     return cleaned_url
 
 
-def app_path(organization: str, app_key: str, path: str = "") -> str:
-    """Return the ingress path for an organization-scoped app request."""
-    normalized_org = organization.strip("/")
-    normalized_key = app_key.strip("/")
-    normalized_path = path.strip("/")
-    if normalized_path == "":
-        return f"{normalized_org}/{normalized_key}"
-
-    return f"{normalized_org}/{normalized_key}/{normalized_path}"
-
-
-def app_url(base_url: str, organization: str, app_key: str) -> str:
-    """Return the public compute URL for an organization app."""
-    return f"{normalize(base_url).rstrip('/')}/{app_path(organization, app_key)}"
-
-
 def yaml(template_path: str | Path, **context: str) -> dict | list[dict]:
     """Render one YAML template file into a manifest dictionary or list."""
     source = Path(template_path)
