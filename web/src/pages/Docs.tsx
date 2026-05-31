@@ -13,12 +13,16 @@ import {
 import { buttonVariants } from '@/components/ui/button';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { apiUrl } from '@/lib/api';
-import { type MarkdownDocMetadata } from '@/lib/markdown';
 import { cn } from '@/lib/utils';
+
+type DocMetadata = {
+    lastUpdated: string;
+    editUrl: string;
+};
 
 type DocsPageProps = {
     content: ReactNode;
-    metadata: MarkdownDocMetadata;
+    metadata: DocMetadata;
 };
 
 type PageTocItem = {
@@ -209,7 +213,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
                     <div ref={contentRef} className="px-4 pt-4 pb-32 lg:px-6 lg:pt-6 lg:pb-40">
                         <div className="mx-auto w-full max-w-[56rem]">
-                            <MarkdownDoc content={content} metadata={metadata} />
+                            <DocArticle content={content} metadata={metadata} />
                         </div>
                     </div>
 
@@ -255,9 +259,8 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
     );
 }
 
-/** Renders a markdown-backed docs article. */
-export function MarkdownDoc({ content, metadata }: { content: ReactNode; metadata?: MarkdownDocMetadata }) {
-    // Format frontmatter dates into the human-readable docs footer style.
+/** Renders a docs article with metadata footer. */
+function DocArticle({ content, metadata }: { content: ReactNode; metadata?: DocMetadata }) {
     const lastUpdated = metadata?.lastUpdated
         ? (() => {
               const parsedDate = new Date(metadata.lastUpdated);

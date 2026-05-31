@@ -3,9 +3,9 @@ import { useOrg } from '@/hooks/use-org';
 import { apiUrl } from '@/lib/api';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
-import impressumMarkdown, { metadata as impressumMetadata } from '../legal/impressum.md';
-import privacyMarkdown, { metadata as privacyMetadata } from '../legal/privacy.md';
-import termsMarkdown, { metadata as termsMetadata } from '../legal/terms.md';
+import { content as impressumContent, metadata as impressumMetadata } from '@/legal/impressum';
+import { content as privacyContent, metadata as privacyMetadata } from '@/legal/privacy';
+import { content as termsContent, metadata as termsMetadata } from '@/legal/terms';
 import Admin from './pages/Admin';
 import AdminCompute from './pages/admin/Compute';
 import AdminDatabase from './pages/admin/Database';
@@ -25,19 +25,19 @@ import Settings from './pages/Settings';
 import Theme from './pages/Theme';
 import View from './pages/View';
 
-import docsApiMarkdown, { metadata as docsApiMetadata } from '../docs/api/index.md';
-import docsSelfHostedMarkdown, { metadata as docsSelfHostedMetadata } from '../docs/api/self-hosted.md';
-import docsIndexMarkdown, { metadata as docsIndexMetadata } from '../docs/index.md';
-import docsSdkBuildingMarkdown, { metadata as docsSdkBuildingMetadata } from '../docs/sdk/building.md';
-import docsSdkDatabaseMarkdown, { metadata as docsSdkDatabaseMetadata } from '../docs/sdk/database.md';
-import docsSdkEnvironmentsMarkdown, { metadata as docsSdkEnvironmentsMetadata } from '../docs/sdk/environments.md';
-import docsSdkMarkdown, { metadata as docsSdkMetadata } from '../docs/sdk/index.md';
-import docsSdkRoutesMarkdown, { metadata as docsSdkRoutesMetadata } from '../docs/sdk/routes.md';
-import docsSdkStorageMarkdown, { metadata as docsSdkStorageMetadata } from '../docs/sdk/storage.md';
-import docsSdkTestingMarkdown, { metadata as docsSdkTestingMetadata } from '../docs/sdk/testing.md';
-import docsXmlComponentsMarkdown, { metadata as docsXmlComponentsMetadata } from '../docs/xml/components.md';
-import docsXmlMarkdown, { metadata as docsXmlMetadata } from '../docs/xml/index.md';
-import docsXmlLayoutMarkdown, { metadata as docsXmlLayoutMetadata } from '../docs/xml/layout.md';
+import { content as docsApiContent, metadata as docsApiMetadata } from '@/docs/api/index';
+import { content as docsSelfHostedContent, metadata as docsSelfHostedMetadata } from '@/docs/api/self-hosted';
+import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/docs/index';
+import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/docs/sdk/building';
+import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/docs/sdk/database';
+import { content as docsSdkEnvironmentsContent, metadata as docsSdkEnvironmentsMetadata } from '@/docs/sdk/environments';
+import { content as docsSdkContent, metadata as docsSdkMetadata } from '@/docs/sdk/index';
+import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/docs/sdk/routes';
+import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/docs/sdk/storage';
+import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/docs/sdk/testing';
+import { content as docsXmlComponentsContent, metadata as docsXmlComponentsMetadata } from '@/docs/xml/components';
+import { content as docsXmlContent, metadata as docsXmlMetadata } from '@/docs/xml/index';
+import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/docs/xml/layout';
 
 type RuntimeWindow = Window & {
     __LONGLINK_BASEURL__?: string;
@@ -73,57 +73,57 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        { path: 'docs', element: <DocsPage content={docsIndexMarkdown} metadata={docsIndexMetadata} /> },
-        { path: 'docs/api', element: <DocsPage content={docsApiMarkdown} metadata={docsApiMetadata} /> },
+        { path: 'docs', element: <DocsPage content={docsIndexContent} metadata={docsIndexMetadata} /> },
+        { path: 'docs/api', element: <DocsPage content={docsApiContent} metadata={docsApiMetadata} /> },
         {
             path: 'docs/api/self-hosted',
-            element: <DocsPage content={docsSelfHostedMarkdown} metadata={docsSelfHostedMetadata} />,
+            element: <DocsPage content={docsSelfHostedContent} metadata={docsSelfHostedMetadata} />,
         },
-        { path: 'docs/sdk', element: <DocsPage content={docsSdkMarkdown} metadata={docsSdkMetadata} /> },
+        { path: 'docs/sdk', element: <DocsPage content={docsSdkContent} metadata={docsSdkMetadata} /> },
         {
             path: 'docs/sdk/building',
-            element: <DocsPage content={docsSdkBuildingMarkdown} metadata={docsSdkBuildingMetadata} />,
+            element: <DocsPage content={docsSdkBuildingContent} metadata={docsSdkBuildingMetadata} />,
         },
         {
             path: 'docs/sdk/database',
-            element: <DocsPage content={docsSdkDatabaseMarkdown} metadata={docsSdkDatabaseMetadata} />,
+            element: <DocsPage content={docsSdkDatabaseContent} metadata={docsSdkDatabaseMetadata} />,
         },
         {
             path: 'docs/sdk/environments',
-            element: <DocsPage content={docsSdkEnvironmentsMarkdown} metadata={docsSdkEnvironmentsMetadata} />,
+            element: <DocsPage content={docsSdkEnvironmentsContent} metadata={docsSdkEnvironmentsMetadata} />,
         },
         {
             path: 'docs/sdk/routes',
-            element: <DocsPage content={docsSdkRoutesMarkdown} metadata={docsSdkRoutesMetadata} />,
+            element: <DocsPage content={docsSdkRoutesContent} metadata={docsSdkRoutesMetadata} />,
         },
         {
             path: 'docs/sdk/storage',
-            element: <DocsPage content={docsSdkStorageMarkdown} metadata={docsSdkStorageMetadata} />,
+            element: <DocsPage content={docsSdkStorageContent} metadata={docsSdkStorageMetadata} />,
         },
         {
             path: 'docs/sdk/testing',
-            element: <DocsPage content={docsSdkTestingMarkdown} metadata={docsSdkTestingMetadata} />,
+            element: <DocsPage content={docsSdkTestingContent} metadata={docsSdkTestingMetadata} />,
         },
-        { path: 'docs/xml', element: <DocsPage content={docsXmlMarkdown} metadata={docsXmlMetadata} /> },
+        { path: 'docs/xml', element: <DocsPage content={docsXmlContent} metadata={docsXmlMetadata} /> },
         {
             path: 'docs/xml/components',
-            element: <DocsPage content={docsXmlComponentsMarkdown} metadata={docsXmlComponentsMetadata} />,
+            element: <DocsPage content={docsXmlComponentsContent} metadata={docsXmlComponentsMetadata} />,
         },
         {
             path: 'docs/xml/layout',
-            element: <DocsPage content={docsXmlLayoutMarkdown} metadata={docsXmlLayoutMetadata} />,
+            element: <DocsPage content={docsXmlLayoutContent} metadata={docsXmlLayoutMetadata} />,
         },
         { path: 'playground', element: <Playground /> },
         { path: 'theme', element: <Theme /> },
         { path: 'sample', element: <Sample /> },
         {
             path: 'impressum',
-            element: <LegalPage title="Impressum" content={impressumMarkdown} metadata={impressumMetadata} />,
+            element: <LegalPage title="Impressum" content={impressumContent} metadata={impressumMetadata} />,
         },
-        { path: 'terms', element: <LegalPage title="Terms" content={termsMarkdown} metadata={termsMetadata} /> },
+        { path: 'terms', element: <LegalPage title="Terms" content={termsContent} metadata={termsMetadata} /> },
         {
             path: 'privacy',
-            element: <LegalPage title="Privacy" content={privacyMarkdown} metadata={privacyMetadata} />,
+            element: <LegalPage title="Privacy" content={privacyContent} metadata={privacyMetadata} />,
         },
         {
             path: 'organizations',

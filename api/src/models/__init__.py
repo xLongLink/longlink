@@ -4,8 +4,7 @@ from .kinds import ComputeKind, StorageKind, DatabaseKind  # noqa: F401
 from .roles import Roles  # noqa: F401
 from .users import (Theme, Accent, Radius, Language, UserUpdate,  # noqa: F401
                     UserProfile, UserSummary, UserListItem, UserOrgMembership)
-from .compute import (DockerRegistryCreate,  # noqa: F401
-                      ComputeRegistryCreate, ComputeRegistryResponse)
+from .compute import (ComputeRegistryCreate, ComputeRegistryResponse)
 from .storage import (StorageQuotaResponse, StorageUsageResponse,  # noqa: F401
                       StorageRegistryCreate, StorageRegistryResponse)
 from .database import (DatabaseRegistryCreate,  # noqa: F401

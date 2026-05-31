@@ -1,8 +1,10 @@
 import { DataTable } from '@/components/DataTable';
 import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
 import { useDeleteApp } from '@/hooks/use-org';
-import type { ApiOrgApp, ApiOrgDetails } from '@/lib/types';
+import { apiUrl, fetchApiJson } from '@/lib/api';
+import type { ApiComputeUsage, ApiOrgApp, ApiOrgDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Menu, MenuSection } from '@ui/menu';
@@ -18,11 +20,32 @@ type SettingsProps = {
     error: Error | null;
 };
 
+function formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+}
+
+function formatMillicores(mc: number): string {
+    if (mc < 1000) return `${mc} m`;
+    return `${(mc / 1000).toFixed(2)}`;
+}
+
+
 /** Renders the organization settings page body. */
 export default function Settings({ org, orgDetails, apps, isLoading, error }: SettingsProps) {
     const deleteApp = useDeleteApp(org);
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+
+    const usageUrl = apiUrl(`/api/compute/usage/${org}`);
+    const computeUsage = useQuery({
+        queryKey: ['api', usageUrl],
+        queryFn: async () => fetchApiJson<ApiComputeUsage>(usageUrl, { credentials: 'include' }),
+        enabled: org.length > 0,
+        retry: false,
+    });
     const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
     const appColumns: Array<ColumnDef<ApiOrgApp>> = [
         {
@@ -133,9 +156,52 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
 
             <MenuSection value="compute" label="Compute" icon={Cpu}>
                 <div className="rounded-2xl border border-border bg-card/80 p-6">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Compute</h2>
-                        <p className="text-sm text-muted-foreground">Adjust runtime and execution capacity settings.</p>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">Compute</h2>
+                            <p className="text-sm text-muted-foreground">Runtime and execution capacity usage.</p>
+                        </div>
+
+                        {computeUsage.isLoading ? (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                Loading compute usage...
+                            </div>
+                        ) : computeUsage.error ? (
+                            <div className="rounded-md border p-4 text-sm text-destructive">
+                                {computeUsage.error.message ?? 'Failed to load compute usage.'}
+                            </div>
+                        ) : computeUsage.data ? (
+                            <div className="flex flex-wrap gap-4">
+                                <div className="rounded-lg border bg-background p-3 min-w-28">
+                                    <div className="text-2xl font-semibold tabular-nums">
+                                        {computeUsage.data.total_applications}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">Applications</div>
+                                </div>
+                                <div className="rounded-lg border bg-background p-3 min-w-28">
+                                    <div className="text-2xl font-semibold tabular-nums">
+                                        {computeUsage.data.total_pods}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">Pods</div>
+                                </div>
+                                <div className="rounded-lg border bg-background p-3 min-w-36">
+                                    <div className="text-2xl font-semibold tabular-nums">
+                                        {formatMillicores(computeUsage.data.total_cpu.requests_millicores)}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        CPU &middot; {formatMillicores(computeUsage.data.total_cpu.limits_millicores)} limit
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border bg-background p-3 min-w-36">
+                                    <div className="text-2xl font-semibold tabular-nums">
+                                        {formatBytes(computeUsage.data.total_memory.requests_bytes)}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        Memory &middot; {formatBytes(computeUsage.data.total_memory.limits_bytes)} limit
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
                 </div>
             </MenuSection>

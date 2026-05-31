@@ -98,6 +98,20 @@ export type ApiComputeRegistry = {
     location_id: number;
 };
 
+export type ApiComputeUsage = {
+    organization: string;
+    total_applications: number;
+    total_pods: number;
+    total_cpu: {
+        requests_millicores: number;
+        limits_millicores: number;
+    };
+    total_memory: {
+        requests_bytes: number;
+        limits_bytes: number;
+    };
+};
+
 export type ApiAppResponse = {
     id: number;
     name: string;

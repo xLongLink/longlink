@@ -345,3 +345,141 @@ class Compute(Root):
             )
         except ApiException as exc:
             raise ValueError(f"Failed reading logs for '{namespace}/{name}'") from exc
+
+
+    @staticmethod
+    def _parse_cpu(cpu_str: str) -> int:
+        """Parse Kubernetes CPU string to millicores."""
+        cpu_str = cpu_str.strip()
+        if cpu_str.endswith("m"):
+            return int(cpu_str[:-1])
+        return int(float(cpu_str) * 1000)
+
+
+    @staticmethod
+    def _parse_memory(memory_str: str) -> int:
+        """Parse Kubernetes memory string to bytes."""
+        memory_str = memory_str.strip()
+        suffixes = {
+            "Ki": 1024,
+            "Mi": 1024 ** 2,
+            "Gi": 1024 ** 3,
+            "Ti": 1024 ** 4,
+            "k": 1000,
+            "M": 1000 ** 2,
+            "G": 1000 ** 3,
+            "T": 1000 ** 4,
+        }
+        for suffix, multiplier in sorted(suffixes.items(), key=lambda x: -len(x[0])):
+            if memory_str.endswith(suffix):
+                return int(float(memory_str[: -len(suffix)]) * multiplier)
+        return int(memory_str)
+
+
+    async def usage(
+        self,
+        organization: str | None = None,
+        application: str | None = None,
+    ) -> dict[str, Any]:
+        """Return resource usage for managed compute resources."""
+
+        if organization is None:
+            namespaces = self._core_api.list_namespace(
+                label_selector="managed-by=control-plane"
+            ).items
+            orgs = [await self.usage(organization=ns.metadata.name) for ns in namespaces]
+            return {
+                "organizations": orgs,
+                "total_applications": sum(o["total_applications"] for o in orgs),
+                "total_pods": sum(o["total_pods"] for o in orgs),
+            }
+
+        namespace = self._namespace_name(organization)
+
+        try:
+            self._core_api.read_namespace(namespace)
+        except ApiException as exc:
+            if exc.status != 404:
+                raise ValueError(f"Failed reading namespace '{namespace}'") from exc
+            return {
+                "organization": namespace,
+                "applications": [],
+                "total_applications": 0,
+                "total_pods": 0,
+            }
+
+        if application is None:
+            deployments = self._apps_api.list_namespaced_deployment(
+                namespace,
+                label_selector="managed-by=control-plane,compute-role=application",
+            ).items
+            total_pods = 0
+            cpu_requests = 0
+            cpu_limits = 0
+            mem_requests = 0
+            mem_limits = 0
+            for dep in deployments:
+                app_usage = await self.usage(organization=namespace, application=dep.metadata.name)
+                total_pods += app_usage["pods"]["total"]
+                r = app_usage["resources"]
+                cpu_requests += r["cpu"]["requests_millicores"]
+                cpu_limits += r["cpu"]["limits_millicores"]
+                mem_requests += r["memory"]["requests_bytes"]
+                mem_limits += r["memory"]["limits_bytes"]
+            return {
+                "organization": namespace,
+                "total_applications": len(deployments),
+                "total_pods": total_pods,
+                "total_cpu": {
+                    "requests_millicores": cpu_requests,
+                    "limits_millicores": cpu_limits,
+                },
+                "total_memory": {
+                    "requests_bytes": mem_requests,
+                    "limits_bytes": mem_limits,
+                },
+            }
+
+        name = self._application_name(application)
+        pods = self._pods(organization, application)
+        dep = self._apps_api.read_namespaced_deployment(name, namespace)
+
+        containers = dep.spec.template.spec.containers
+        cpu_requests = 0
+        cpu_limits = 0
+        mem_requests = 0
+        mem_limits = 0
+        for container in containers:
+            resources = container.resources
+            if resources:
+                if resources.requests:
+                    cpu_requests += self._parse_cpu(resources.requests.get("cpu", "0"))
+                    mem_requests += self._parse_memory(resources.requests.get("memory", "0"))
+                if resources.limits:
+                    cpu_limits += self._parse_cpu(resources.limits.get("cpu", "0"))
+                    mem_limits += self._parse_memory(resources.limits.get("memory", "0"))
+
+        pod_phases: dict[str, int] = {}
+        for pod in pods:
+            phase = pod.status.phase or "Unknown"
+            pod_phases[phase] = pod_phases.get(phase, 0) + 1
+
+        return {
+            "organization": namespace,
+            "application": name,
+            "replicas": dep.spec.replicas,
+            "pods": {
+                "total": len(pods),
+                "phases": pod_phases,
+            },
+            "resources": {
+                "cpu": {
+                    "requests_millicores": cpu_requests,
+                    "limits_millicores": cpu_limits,
+                },
+                "memory": {
+                    "requests_bytes": mem_requests,
+                    "limits_bytes": mem_limits,
+                },
+            },
+        }

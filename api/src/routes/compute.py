@@ -1,10 +1,40 @@
+from typing import Any
+
 import src.db as db
 from fastapi import Depends, Response, APIRouter, HTTPException, status
-from src.auth import authadmin
+from src.auth import authuser, authadmin
 from src.models import ComputeRegistryCreate, ComputeRegistryResponse
 from src.adapters.compute.k8s import Compute as KubernetesCompute
 
 router = APIRouter(prefix="/api/compute")
+
+
+@router.get("/usage/{org}")
+async def get_org_compute_usage(org: str, user: db.User = Depends(authuser)) -> dict[str, Any]:
+    """Return compute resource usage for one organization."""
+
+    organization = await db.orgs.get(org)
+    if organization is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{org}' not found")
+
+    if all(org_member.name != org for org_member in user.orgs):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{org}' not found")
+
+    if organization.location_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Org '{org}' has no location assigned",
+        )
+
+    registry = await db.compute.find_by_location(organization.location_id)
+    if registry is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No compute backend found for org '{org}' location",
+        )
+
+    compute = KubernetesCompute(registry.kubeconfig)
+    return await compute.usage(organization=org)
 
 
 @router.get("", response_model=list[ComputeRegistryResponse])

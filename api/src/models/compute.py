@@ -22,4 +22,3 @@ class ComputeRegistryResponse(BaseModel):
     location_id: int
 
 
-DockerRegistryCreate = ComputeRegistryCreate

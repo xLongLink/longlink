@@ -104,3 +104,17 @@ class Root(ABC):
     @abstractmethod
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
+
+    @abstractmethod
+    async def usage(
+        self,
+        organization: str | None = None,
+        application: str | None = None,
+    ) -> dict[str, Any]:
+        """Return resource usage for managed compute resources.
+
+        When both parameters are None, returns aggregate usage across all
+        organizations. When only organization is set, returns usage for all
+        applications in that namespace. When both are set, returns usage for
+        one specific application.
+        """

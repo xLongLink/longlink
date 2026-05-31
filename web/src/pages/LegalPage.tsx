@@ -1,19 +1,36 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
+import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
 import { type ReactNode } from 'react';
 
-import { type MarkdownDocMetadata } from '@/lib/markdown';
-import { MarkdownDoc } from './Docs';
+type LegalMetadata = {
+    lastUpdated: string;
+    editUrl: string;
+};
 
 type LegalPageProps = {
     title: string;
     content: ReactNode;
-    metadata?: MarkdownDocMetadata;
+    metadata?: LegalMetadata;
 };
 
 /** Renders the shared public legal page shell. */
 export function LegalPage({ title, content, metadata }: LegalPageProps) {
+    const lastUpdated = metadata?.lastUpdated
+        ? (() => {
+              const parsedDate = new Date(metadata.lastUpdated);
+
+              return Number.isNaN(parsedDate.getTime())
+                  ? metadata.lastUpdated
+                  : new Intl.DateTimeFormat('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                    }).format(parsedDate);
+          })()
+        : '';
+
     return (
         <div className="flex min-h-screen flex-col text-foreground">
             <div className="print:hidden">
@@ -27,7 +44,17 @@ export function LegalPage({ title, content, metadata }: LegalPageProps) {
                         <Heading level="h1" className="text-3xl text-foreground print:text-black">
                             {title}
                         </Heading>
-                        <MarkdownDoc content={content} metadata={metadata} />
+                        <article className="mx-auto w-full max-w-2xl space-y-6">{content}</article>
+                        {metadata?.lastUpdated || metadata?.editUrl ? (
+                            <footer className="flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                                {metadata.lastUpdated ? <span>Last updated: {lastUpdated}</span> : <span />}
+                                {metadata.editUrl ? (
+                                    <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">
+                                        Edit this page in GitHub
+                                    </A>
+                                ) : null}
+                            </footer>
+                        ) : null}
                     </div>
                 </section>
             </main>
