@@ -81,29 +81,35 @@ Install development dependencies:
 
 ::: tabs
 == pip
+
 ```bash
 pip install .[dev]
 ```
+
 == uv
+
 ```bash
 uv sync --extra dev
 ```
-:::
 
+:::
 
 Install development dependencies:
 
 ::: tabs
 == pip
+
 ```bash
 longlink dev
 ```
+
 == uv
+
 ```bash
 uv run longlink dev
 ```
-:::
 
+:::
 
 ## Resources
 

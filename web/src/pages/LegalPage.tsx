@@ -3,8 +3,8 @@ import { Navbar } from '@/components/Navbar';
 import { Heading } from '@/components/ui/heading';
 import { type ReactNode } from 'react';
 
-import { MarkdownDoc } from './Docs';
 import { type MarkdownDocMetadata } from '@/lib/markdown';
+import { MarkdownDoc } from './Docs';
 
 type LegalPageProps = {
     title: string;

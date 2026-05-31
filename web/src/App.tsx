@@ -1,28 +1,27 @@
 import { Auth } from '@/components/Auth';
-import { apiUrl } from '@/lib/api';
 import { useOrg } from '@/hooks/use-org';
+import { apiUrl } from '@/lib/api';
 import { Toaster } from '@ui/sonner';
-import { RouterProvider, createBrowserRouter } from 'react-router';
-import { useParams } from 'react-router';
+import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import impressumMarkdown, { metadata as impressumMetadata } from '../legal/impressum.md';
 import privacyMarkdown, { metadata as privacyMetadata } from '../legal/privacy.md';
 import termsMarkdown, { metadata as termsMetadata } from '../legal/terms.md';
-import { LegalPage } from './pages/LegalPage';
+import Admin from './pages/Admin';
+import AdminCompute from './pages/admin/Compute';
+import AdminDatabase from './pages/admin/Database';
+import AdminLocation from './pages/admin/Location';
+import AdminOrganization from './pages/admin/Organization';
+import AdminStorage from './pages/admin/Storage';
+import AdminUsers from './pages/admin/Users';
+import DocsPage from './pages/Docs';
 import Home from './pages/Home';
+import { LegalPage } from './pages/LegalPage';
 import NotFound from './pages/NotFound';
 import Organization from './pages/Organization';
 import Organizations from './pages/Organizations';
 import Playground from './pages/Playground';
 import Sample from './pages/Sample';
 import Settings from './pages/Settings';
-import Admin from './pages/Admin';
-import AdminOrganization from './pages/admin/Organization';
-import AdminUsers from './pages/admin/Users';
-import AdminCompute from './pages/admin/Compute';
-import AdminDatabase from './pages/admin/Database';
-import AdminLocation from './pages/admin/Location';
-import AdminStorage from './pages/admin/Storage';
-import DocsPage from './pages/Docs';
 import Theme from './pages/Theme';
 import View from './pages/View';
 
@@ -37,13 +36,12 @@ import docsSdkRoutesMarkdown, { metadata as docsSdkRoutesMetadata } from '../doc
 import docsSdkStorageMarkdown, { metadata as docsSdkStorageMetadata } from '../docs/sdk/storage.md';
 import docsSdkTestingMarkdown, { metadata as docsSdkTestingMetadata } from '../docs/sdk/testing.md';
 import docsXmlComponentsMarkdown, { metadata as docsXmlComponentsMetadata } from '../docs/xml/components.md';
-import docsXmlLayoutMarkdown, { metadata as docsXmlLayoutMetadata } from '../docs/xml/layout.md';
 import docsXmlMarkdown, { metadata as docsXmlMetadata } from '../docs/xml/index.md';
+import docsXmlLayoutMarkdown, { metadata as docsXmlLayoutMetadata } from '../docs/xml/layout.md';
 
 type RuntimeWindow = Window & {
     __LONGLINK_BASEURL__?: string;
 };
-
 
 /** Returns the server-injected SDK base URL, if present. */
 function getSdkBaseUrl(): string {
@@ -94,7 +92,10 @@ function getRoutes() {
             path: 'docs/sdk/environments',
             element: <DocsPage content={docsSdkEnvironmentsMarkdown} metadata={docsSdkEnvironmentsMetadata} />,
         },
-        { path: 'docs/sdk/routes', element: <DocsPage content={docsSdkRoutesMarkdown} metadata={docsSdkRoutesMetadata} /> },
+        {
+            path: 'docs/sdk/routes',
+            element: <DocsPage content={docsSdkRoutesMarkdown} metadata={docsSdkRoutesMetadata} />,
+        },
         {
             path: 'docs/sdk/storage',
             element: <DocsPage content={docsSdkStorageMarkdown} metadata={docsSdkStorageMetadata} />,
@@ -108,7 +109,10 @@ function getRoutes() {
             path: 'docs/xml/components',
             element: <DocsPage content={docsXmlComponentsMarkdown} metadata={docsXmlComponentsMetadata} />,
         },
-        { path: 'docs/xml/layout', element: <DocsPage content={docsXmlLayoutMarkdown} metadata={docsXmlLayoutMetadata} /> },
+        {
+            path: 'docs/xml/layout',
+            element: <DocsPage content={docsXmlLayoutMarkdown} metadata={docsXmlLayoutMetadata} />,
+        },
         { path: 'playground', element: <Playground /> },
         { path: 'theme', element: <Theme /> },
         { path: 'sample', element: <Sample /> },

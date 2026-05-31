@@ -1,5 +1,4 @@
 from unittest.mock import Mock
-
 from src.adapters.storage.s3 import Storage
 
 

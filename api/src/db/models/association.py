@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Enum, ForeignKeyConstraint
 from sqlmodel import Field, SQLModel
-
+from sqlalchemy import Enum, Column, ForeignKeyConstraint
 from src.models.roles import Roles
 
 

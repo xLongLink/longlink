@@ -1,8 +1,7 @@
+from .base import ServiceBase
 from sqlalchemy import select
 from src.db.models import ComputeRegistry
 from src.models.kinds import ComputeKind
-
-from .base import ServiceBase
 
 
 class ComputeRegistriesService(ServiceBase):

@@ -2,15 +2,8 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tan
 import { createContext, useContext, useEffect } from 'react';
 
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { applyTheme, THEME_PRESETS, type Accent, type Radius, type Theme, type ThemeConfig } from '@/lib/theme';
 import type { ApiUserProfile } from '@/lib/types';
-import {
-    applyTheme,
-    THEME_PRESETS,
-    type Accent,
-    type ThemeConfig,
-    type Radius,
-    type Theme,
-} from '@/lib/theme';
 
 export type User = ApiUserProfile;
 
@@ -95,7 +88,8 @@ export function useUser() {
     return {
         user,
         orgs,
-        theme: user?.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : user?.theme ?? DEFAULT_USER_PREFERENCES.theme,
+        theme:
+            user?.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : (user?.theme ?? DEFAULT_USER_PREFERENCES.theme),
         accent: user?.accent ?? DEFAULT_USER_PREFERENCES.accent,
         radius: user?.radius ?? DEFAULT_USER_PREFERENCES.radius,
         language: user?.language ?? DEFAULT_USER_PREFERENCES.language,

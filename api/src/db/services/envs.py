@@ -1,7 +1,6 @@
+from .base import ServiceBase
 from sqlalchemy import select
 from src.db.models import Env
-
-from .base import ServiceBase
 
 
 class EnvsService(ServiceBase):

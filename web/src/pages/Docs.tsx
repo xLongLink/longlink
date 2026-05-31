@@ -1,6 +1,7 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 
+import { DOC_GROUPS, DocsSidebar, type DocItem } from '@/components/DocsSidebar';
 import { A } from '@/components/ui/a';
 import {
     BreadcrumbItem,
@@ -11,9 +12,8 @@ import {
 } from '@/components/ui/breadcrumb';
 import { buttonVariants } from '@/components/ui/button';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { DOC_GROUPS, DocsSidebar, type DocItem } from '@/components/DocsSidebar';
-import { type MarkdownDocMetadata } from '@/lib/markdown';
 import { apiUrl } from '@/lib/api';
+import { type MarkdownDocMetadata } from '@/lib/markdown';
 import { cn } from '@/lib/utils';
 
 type DocsPageProps = {
@@ -88,7 +88,9 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                     headings
                         .map((item) => ({
                             href: item.href,
-                            top: document.querySelector(item.href)?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY,
+                            top:
+                                document.querySelector(item.href)?.getBoundingClientRect().top ??
+                                Number.POSITIVE_INFINITY,
                         }))
                         .filter((item) => item.top <= 120)
                         .at(-1)?.href ??
@@ -132,7 +134,11 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                                             <BreadcrumbItem>
                                                 <BreadcrumbLink
                                                     render={(props) => (
-                                                        <Link {...props} to="/docs" className="transition-colors hover:text-foreground">
+                                                        <Link
+                                                            {...props}
+                                                            to="/docs"
+                                                            className="transition-colors hover:text-foreground"
+                                                        >
                                                             Documentation
                                                         </Link>
                                                     )}
@@ -160,7 +166,11 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                                                             <BreadcrumbItem>
                                                                 <BreadcrumbLink
                                                                     render={(props) => (
-                                                                        <Link {...props} to={pagePath} className="font-medium text-foreground">
+                                                                        <Link
+                                                                            {...props}
+                                                                            to={pagePath}
+                                                                            className="font-medium text-foreground"
+                                                                        >
                                                                             {pageLabel}
                                                                         </Link>
                                                                     )}
@@ -177,7 +187,10 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
 
                             <a
                                 href={apiUrl('/auth/login/oidc')}
-                                className={cn(buttonVariants({ size: 'sm' }), 'h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90')}
+                                className={cn(
+                                    buttonVariants({ size: 'sm' }),
+                                    'h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'
+                                )}
                             >
                                 Login
                             </a>
@@ -204,7 +217,9 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                         <div className="relative pl-4">
                             <div className="pointer-events-none absolute top-1 bottom-1 left-[0.55rem] w-px bg-border" />
                             <div className="flex flex-col gap-4">
-                                <div className="pl-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">On this page</div>
+                                <div className="pl-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                                    On this page
+                                </div>
                                 <nav aria-label="On this page">
                                     <div className="space-y-1.5 text-sm">
                                         {pageToc.map((item) => {

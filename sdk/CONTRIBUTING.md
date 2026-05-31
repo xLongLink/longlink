@@ -47,5 +47,5 @@ uv sync --extra dev
 
 ## XML
 
-- Is not html, but similar. 
+- Is not html, but similar.
 - Check with longlink docs <component>

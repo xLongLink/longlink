@@ -1,11 +1,10 @@
 import json
 import traceback
-from pathlib import Path
-
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, Response
+from pathlib import Path
 from longlink.utils import Environments
 from longlink.routes import routes
+from fastapi.responses import Response, JSONResponse
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from fastapi.staticfiles import StaticFiles

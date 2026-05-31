@@ -1,8 +1,7 @@
 import src.db as db
-from authlib.integrations.starlette_client import OAuth
-from fastapi import HTTPException, Request
+from fastapi import Request, HTTPException
 from src.env import env
-
+from authlib.integrations.starlette_client import OAuth
 
 oauth = OAuth()
 oauth.register(

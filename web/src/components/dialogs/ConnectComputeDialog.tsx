@@ -91,7 +91,9 @@ export default function ConnectComputeDialog() {
                                     await connectCompute.mutateAsync();
                                 } catch (mutationError) {
                                     setError(
-                                        mutationError instanceof Error ? mutationError.message : 'Failed to connect compute'
+                                        mutationError instanceof Error
+                                            ? mutationError.message
+                                            : 'Failed to connect compute'
                                     );
                                 }
                             }}

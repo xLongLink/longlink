@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-
 from src.models.kinds import ComputeKind
 
 

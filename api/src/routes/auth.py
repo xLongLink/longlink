@@ -1,13 +1,11 @@
 import httpx
-from typing import cast
-
-from authlib.integrations.starlette_client.apps import StarletteOAuth2App
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import RedirectResponse
-
 import src.db as db
-from src.auth import oauth
+from typing import cast
+from fastapi import Request, APIRouter, HTTPException
 from src.env import env
+from src.auth import oauth
+from fastapi.responses import RedirectResponse
+from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
 router = APIRouter(prefix="/auth")
 

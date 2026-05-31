@@ -1,7 +1,6 @@
+from .base import ServiceBase
 from sqlalchemy import select
 from src.db.models import Location
-
-from .base import ServiceBase
 
 
 class LocationsService(ServiceBase):

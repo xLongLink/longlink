@@ -1,8 +1,8 @@
-import { useCreateApp } from '@/hooks/use-org';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCreateApp } from '@/hooks/use-org';
 import { useState } from 'react';
 
 type CreateAppDialogProps = {
@@ -55,7 +55,9 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                                     setName('');
                                     setImage('');
                                 } catch (mutationError) {
-                                    setError(mutationError instanceof Error ? mutationError.message : 'Failed to create app');
+                                    setError(
+                                        mutationError instanceof Error ? mutationError.message : 'Failed to create app'
+                                    );
                                 }
                             }}
                         >
@@ -96,7 +98,9 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                                 </Button>
                                 <Button
                                     type="submit"
-                                    disabled={createApp.isPending || name.trim().length === 0 || image.trim().length === 0}
+                                    disabled={
+                                        createApp.isPending || name.trim().length === 0 || image.trim().length === 0
+                                    }
                                 >
                                     {createApp.isPending ? 'Creating...' : 'Create'}
                                 </Button>

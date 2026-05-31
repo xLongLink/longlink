@@ -1,11 +1,12 @@
 import httpx
 import src.db as db
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import (Depends, Request, Response, APIRouter, HTTPException,
+                     status)
 from src.auth import authuser
-from src.models.apps import AppCreate, AppResponse
-from src.models.users import UserSummary
-from src.utils.utils import normalize
 from urllib.parse import urlparse
+from src.models.apps import AppCreate, AppResponse
+from src.utils.utils import normalize
+from src.models.users import UserSummary
 
 router = APIRouter(prefix="/api/apps")
 

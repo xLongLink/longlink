@@ -18,14 +18,12 @@ export function Table({ props, nodes }: Props) {
     return <UITable>{renderNode(nodes, ctx)}</UITable>;
 }
 
-
 /** Renders the table header slot. */
 export function Thead({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UITableHeader>{renderNode(nodes, ctx)}</UITableHeader>;
 }
-
 
 /** Renders the table body slot. */
 export function Tbody({ props, nodes }: Props) {
@@ -34,14 +32,12 @@ export function Tbody({ props, nodes }: Props) {
     return <UITableBody>{renderNode(nodes, ctx)}</UITableBody>;
 }
 
-
 /** Renders the table footer slot. */
 export function Tfoot({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UITableFooter>{renderNode(nodes, ctx)}</UITableFooter>;
 }
-
 
 /** Renders a single table row. */
 export function Tr({ props, nodes }: Props) {
@@ -50,14 +46,12 @@ export function Tr({ props, nodes }: Props) {
     return <UITableRow>{renderNode(nodes, ctx)}</UITableRow>;
 }
 
-
 /** Renders a table header cell. */
 export function Th({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UITableHead>{renderNode(nodes, ctx)}</UITableHead>;
 }
-
 
 /** Renders a table body cell. */
 export function Td({ props, nodes }: Props) {

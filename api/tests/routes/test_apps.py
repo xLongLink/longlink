@@ -1,11 +1,10 @@
 import httpx
-from fastapi.testclient import TestClient
-
 import src.db as db
+from src.models import AppResponse, ComputeKind, UserSummary
 from src.db.models import User, UserApp
 from src.db.session import get_session
-from src.models import AppResponse, ComputeKind, UserSummary
 from src.models.roles import Roles
+from fastapi.testclient import TestClient
 
 
 async def test_list_apps_returns_app_membership_role(

@@ -1,7 +1,6 @@
 import pytest
 from fastapi import HTTPException
-
-from src.auth import authadmin, authuser
+from src.auth import authuser, authadmin
 from src.db.models import User
 from src.routes.auth import logout
 

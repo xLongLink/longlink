@@ -1,11 +1,11 @@
-import { type ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/DataTable';
+import type { ApiUserSummary } from '@/lib/types';
+import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Menu, MenuSection } from '@ui/menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 import { Mail, Users } from 'lucide-react';
 import { useState } from 'react';
-import type { ApiUserSummary } from '@/lib/types';
 
 type PeopleProps = {
     people: ApiUserSummary[];
@@ -89,7 +89,9 @@ export default function People({ people, isLoading, error }: PeopleProps) {
                         </TableHeader>
                         <TableBody>
                             <TableRow>
-                                <TableCell className="py-8 text-sm text-muted-foreground">No invitations yet.</TableCell>
+                                <TableCell className="py-8 text-sm text-muted-foreground">
+                                    No invitations yet.
+                                </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>

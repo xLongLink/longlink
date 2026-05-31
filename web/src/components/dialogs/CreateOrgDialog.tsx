@@ -1,8 +1,8 @@
-import { useCreateOrg } from '@/hooks/use-org';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCreateOrg } from '@/hooks/use-org';
 import { useState } from 'react';
 
 /** Renders the create-organization dialog. */
@@ -46,7 +46,9 @@ export default function CreateOrgDialog() {
                                     setOpen(false);
                                     setName('');
                                 } catch (mutationError) {
-                                    setError(mutationError instanceof Error ? mutationError.message : 'Failed to create org');
+                                    setError(
+                                        mutationError instanceof Error ? mutationError.message : 'Failed to create org'
+                                    );
                                 }
                             }}
                         >

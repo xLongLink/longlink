@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import click
 from lxml import etree
-
+from pathlib import Path
 from longlink.constants import ROOT
 
 XSD_NAMESPACE = {"xsd": "http://www.w3.org/2001/XMLSchema"}

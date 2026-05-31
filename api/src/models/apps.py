@@ -1,6 +1,5 @@
 from typing import Annotated
 from datetime import datetime
-
 from pydantic import BaseModel, BeforeValidator, field_validator
 from src.models.roles import Roles
 from src.models.users import UserSummary

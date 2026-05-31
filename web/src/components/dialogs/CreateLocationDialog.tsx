@@ -72,7 +72,9 @@ export default function CreateLocationDialog() {
                                     await createLocation.mutateAsync();
                                 } catch (mutationError) {
                                     setError(
-                                        mutationError instanceof Error ? mutationError.message : 'Failed to create location'
+                                        mutationError instanceof Error
+                                            ? mutationError.message
+                                            : 'Failed to create location'
                                     );
                                 }
                             }}

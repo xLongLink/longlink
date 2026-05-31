@@ -1,18 +1,16 @@
-from base64 import b64encode
 import json
-from collections.abc import AsyncIterator
-from pathlib import Path
-
 import pytest
 import pytest_asyncio
-from fastapi.testclient import TestClient
-from itsdangerous import TimestampSigner
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
 from main import app
+from base64 import b64encode
 from src.db import session as db_session
-from src.db.models import Base, User
+from pathlib import Path
 from src.env import env
+from itsdangerous import TimestampSigner
+from src.db.models import Base, User
+from collections.abc import AsyncIterator
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 SESSION_COOKIE = "longlink_session"
 

@@ -6,7 +6,6 @@ The web package owns the shared frontend runtime and the XML rendering path used
 
 The SDK owns application-facing Python helpers, CLI commands, database helpers, and packaged XML schema assets.
 
-
 <br />
 
 ## Architecture

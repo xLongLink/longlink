@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+from .base import ServiceBase
 from sqlalchemy import and_, delete, select
+from src.db.models import App, Env
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.db.models import App, Env
-from src.db.models.association import UserApp
 from src.db.models.users import User
-
-from .base import ServiceBase
+from src.db.models.association import UserApp
 
 
 class AppsService(ServiceBase):

@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Optional
-
-from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship
+from sqlalchemy import UniqueConstraint
 from src.db.models.__base__ import Base
 from src.db.models.association import UserApp
 

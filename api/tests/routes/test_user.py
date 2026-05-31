@@ -1,7 +1,7 @@
-from fastapi.testclient import TestClient
 import src.db as db
+from src.models import UserProfile, UserListItem
 from src.db.models import User
-from src.models import UserListItem, UserProfile
+from fastapi.testclient import TestClient
 
 
 async def test_get_me_returns_authenticated_user_profile_and_org_memberships(

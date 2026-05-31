@@ -1,7 +1,7 @@
 import src.db as db
-from fastapi import APIRouter, Depends
-from src.auth import authadmin, authuser
-from src.models import UserListItem, UserProfile, UserUpdate
+from fastapi import Depends, APIRouter
+from src.auth import authuser, authadmin
+from src.models import UserUpdate, UserProfile, UserListItem
 
 router = APIRouter(prefix="/api/me")
 users_router = APIRouter(prefix="/api/users")

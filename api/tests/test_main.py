@@ -1,7 +1,5 @@
-import importlib
-
 import main as main_module
-
+import importlib
 from src.env import env
 
 

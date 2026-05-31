@@ -40,7 +40,9 @@ export function Auth({ children, admin = false }: AuthProps) {
             <div className="flex min-h-[40vh] items-center justify-center px-6 text-center">
                 <div className="space-y-2">
                     <p className="text-sm font-medium text-foreground">Admin access required.</p>
-                    <p className="text-sm text-muted-foreground">Your account does not have permission to view this page.</p>
+                    <p className="text-sm text-muted-foreground">
+                        Your account does not have permission to view this page.
+                    </p>
                 </div>
             </div>
         );

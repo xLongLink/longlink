@@ -3,8 +3,8 @@ from longlink.cli.dev import dev_command
 from longlink.cli.docs import docs_command
 from longlink.cli.init import init_command
 from longlink.cli.build import build_command
-from longlink.cli.migrate import migrate_command
 from longlink.cli.sample import sample_command
+from longlink.cli.migrate import migrate_command
 
 
 @click.group()

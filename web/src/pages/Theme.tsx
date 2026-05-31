@@ -1,6 +1,13 @@
 import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@/components/ui/button-group';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,6 +19,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Hero, HeroAction, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { Input } from '@/components/ui/input';
 import {
     InputGroup,
@@ -20,25 +28,23 @@ import {
     InputGroupInput,
     InputGroupText,
 } from '@/components/ui/input-group';
-import { Hero, HeroAction, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverHeader, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Slider } from '@/components/ui/slider';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Toggle } from '@/components/ui/toggle';
-import { resolveTheme, THEME_OPTIONS, THEME_PRESETS, ACCENT_OPTIONS, RADIUS_OPTIONS, type Theme } from '@/lib/theme';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
+import { ACCENT_OPTIONS, RADIUS_OPTIONS, resolveTheme, THEME_OPTIONS, THEME_PRESETS, type Theme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { Paintbrush } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
@@ -52,7 +58,13 @@ type ThemeDraft = {
 /** Returns a readable text color for a hex swatch. */
 function getContrastColor(hex: string) {
     const normalized = hex.replace('#', '');
-    const expanded = normalized.length === 3 ? normalized.split('').map((part) => `${part}${part}`).join('') : normalized;
+    const expanded =
+        normalized.length === 3
+            ? normalized
+                  .split('')
+                  .map((part) => `${part}${part}`)
+                  .join('')
+            : normalized;
     const red = Number.parseInt(expanded.slice(0, 2), 16);
     const green = Number.parseInt(expanded.slice(2, 4), 16);
     const blue = Number.parseInt(expanded.slice(4, 6), 16);
@@ -85,7 +97,14 @@ export default function Theme() {
         '--primary': accentSwatch,
         '--accent-foreground': accentForeground,
         '--primary-foreground': accentForeground,
-        '--radius': draft.radius === 'none' ? '0rem' : draft.radius === 'small' ? '0.125rem' : draft.radius === 'medium' ? '0.25rem' : '0.5rem',
+        '--radius':
+            draft.radius === 'none'
+                ? '0rem'
+                : draft.radius === 'small'
+                  ? '0.125rem'
+                  : draft.radius === 'medium'
+                    ? '0.25rem'
+                    : '0.5rem',
     } as CSSProperties;
 
     return (
@@ -103,7 +122,12 @@ export default function Theme() {
 
                             <HeroAction>
                                 <Dialog open={themeDialogOpen} onOpenChange={setThemeDialogOpen}>
-                                    <DialogTrigger className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'justify-center')}>
+                                    <DialogTrigger
+                                        className={cn(
+                                            buttonVariants({ variant: 'outline', size: 'sm' }),
+                                            'justify-center'
+                                        )}
+                                    >
                                         Change theme
                                     </DialogTrigger>
                                     <DialogContent>
@@ -252,18 +276,30 @@ export default function Theme() {
 
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button size="sm">Primary</Button>
-                                <Button size="sm" variant="outline">Outline</Button>
-                                <Button size="sm" variant="ghost">Ghost</Button>
-                                <Button size="sm" variant="destructive">Danger</Button>
+                                <Button size="sm" variant="outline">
+                                    Outline
+                                </Button>
+                                <Button size="sm" variant="ghost">
+                                    Ghost
+                                </Button>
+                                <Button size="sm" variant="destructive">
+                                    Danger
+                                </Button>
                             </div>
 
                             <ButtonGroup>
                                 <ButtonGroupText>Workspace</ButtonGroupText>
-                                <Button variant="outline" size="sm">Team</Button>
+                                <Button variant="outline" size="sm">
+                                    Team
+                                </Button>
                                 <ButtonGroupSeparator />
-                                <Button variant="outline" size="sm">Billing</Button>
+                                <Button variant="outline" size="sm">
+                                    Billing
+                                </Button>
                                 <ButtonGroupSeparator />
-                                <Button variant="outline" size="sm">Security</Button>
+                                <Button variant="outline" size="sm">
+                                    Security
+                                </Button>
                             </ButtonGroup>
 
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -319,7 +355,9 @@ export default function Theme() {
                                                 </Avatar>
                                             </div>
                                             <Progress value={72}>
-                                                <span className="ml-auto text-sm text-muted-foreground tabular-nums">72%</span>
+                                                <span className="ml-auto text-sm text-muted-foreground tabular-nums">
+                                                    72%
+                                                </span>
                                             </Progress>
                                         </div>
 
@@ -410,7 +448,10 @@ export default function Theme() {
 
                             <div className="grid gap-3 sm:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Textarea defaultValue="Use the same radius and accent in large surfaces too." rows={4} />
+                                    <Textarea
+                                        defaultValue="Use the same radius and accent in large surfaces too."
+                                        rows={4}
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
@@ -422,7 +463,12 @@ export default function Theme() {
 
                             <div className="grid gap-3 sm:grid-cols-2">
                                 <Dialog>
-                                    <DialogTrigger className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'justify-center')}>
+                                    <DialogTrigger
+                                        className={cn(
+                                            buttonVariants({ variant: 'outline', size: 'sm' }),
+                                            'justify-center'
+                                        )}
+                                    >
                                         Open dialog
                                     </DialogTrigger>
                                     <DialogContent>
@@ -450,7 +496,6 @@ export default function Theme() {
                             </div>
                         </section>
                     </section>
-
                 </div>
             </main>
         </div>

@@ -1,10 +1,10 @@
+import type { Token } from 'marked';
 import { Fragment, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import type { Token } from 'marked';
 
-import { A } from '@/components/ui/a';
 import { CodeBlock } from '@/components/CodeBlock';
 import { XmlWindow } from '@/components/XmlWindow';
+import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
 import { Li } from '@/components/ui/li';
@@ -85,7 +85,13 @@ function renderToken(token: Token, index: number): ReactNode {
             const anchorClassName = token.depth <= 2 ? '-translate-x-7' : '-translate-x-5';
 
             return (
-                <Heading key={index} anchorClassName={anchorClassName} id={id} level={level} className="text-foreground">
+                <Heading
+                    key={index}
+                    anchorClassName={anchorClassName}
+                    id={id}
+                    level={level}
+                    className="text-foreground"
+                >
                     {renderInlineTokens(token.tokens ?? [])}
                 </Heading>
             );
@@ -144,7 +150,10 @@ function renderToken(token: Token, index: number): ReactNode {
                         <thead>
                             <tr>
                                 {tableToken.header.map((cell, cellIndex) => (
-                                    <th key={cellIndex} className="border-b border-border px-3 py-2 text-left font-semibold">
+                                    <th
+                                        key={cellIndex}
+                                        className="border-b border-border px-3 py-2 text-left font-semibold"
+                                    >
                                         {renderInlineTokens(cell.tokens ?? [])}
                                     </th>
                                 ))}
@@ -188,11 +197,7 @@ function renderInlineToken(token: Token, index: number): ReactNode {
         case 'del':
             return <del key={index}>{renderInlineTokens(token.tokens ?? [])}</del>;
         case 'codespan':
-            return (
-                <Code key={index}>
-                    {token.text}
-                </Code>
-            );
+            return <Code key={index}>{token.text}</Code>;
         case 'link': {
             const children = renderInlineTokens(token.tokens ?? []);
 

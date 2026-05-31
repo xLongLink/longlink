@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { FileTextIcon, Loader2 } from 'lucide-react';
 
-import type { ComponentType } from 'react';
 import { fetchApiJson } from '@/lib/api';
+import type { ComponentType } from 'react';
 
 type MetadataResponse = {
     tabs?: AppNavigationPage[];
@@ -36,7 +36,8 @@ const loadingTabs: NavigationTab[] = [
 export function useTabs(metadataPath: string | null) {
     const query = useQuery({
         queryKey: ['api', metadataPath],
-        queryFn: async () => fetchApiJson<MetadataResponse | AppNavigationPage[]>(metadataPath!, { credentials: 'include' }),
+        queryFn: async () =>
+            fetchApiJson<MetadataResponse | AppNavigationPage[]>(metadataPath!, { credentials: 'include' }),
         enabled: Boolean(metadataPath),
     });
 

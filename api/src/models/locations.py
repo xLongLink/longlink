@@ -1,6 +1,5 @@
 from datetime import datetime
-
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, BaseModel, field_validator
 
 
 class LocationCreate(BaseModel):

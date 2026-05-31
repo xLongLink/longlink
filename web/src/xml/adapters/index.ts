@@ -11,23 +11,9 @@ export { Card } from './Card';
 export { Checkbox } from './Checkbox';
 export { Code } from './Code';
 export { Column, Columns } from './Columns';
+export { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from './Dialog';
+export { Field, FieldContent, FieldDescription, FieldLabel, FieldLegend, FieldTitle } from './Field';
 export { Flex } from './Flex';
-export {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-    DialogTrigger,
-} from './Dialog';
-export { Hr } from './Hr';
-export {
-    Field,
-    FieldContent,
-    FieldDescription,
-    FieldLabel,
-    FieldLegend,
-    FieldTitle,
-} from './Field';
 export { For } from './For';
 export { Grid } from './Grid';
 export { H1 } from './H1';
@@ -35,6 +21,7 @@ export { H2 } from './H2';
 export { H3 } from './H3';
 export { H4 } from './H4';
 export { Hero, HeroAction, HeroDescription, HeroTitle } from './Hero';
+export { Hr } from './Hr';
 export { Icon } from './Icon';
 export { Input } from './Input';
 export {

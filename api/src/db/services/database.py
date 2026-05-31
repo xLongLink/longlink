@@ -1,8 +1,7 @@
+from .base import ServiceBase
 from sqlalchemy import select
 from src.db.models import DatabaseRegistry
 from src.models.kinds import DatabaseKind
-
-from .base import ServiceBase
 
 
 class DatabaseRegistriesService(ServiceBase):

@@ -1,12 +1,12 @@
-import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
 import { DataTable } from '@/components/DataTable';
+import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
 import { useDeleteApp } from '@/hooks/use-org';
 import type { ApiOrgApp } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Menu, MenuSection } from '@ui/menu';
-import { Boxes, Building2, Cpu, Database, HardDrive, Settings2, ShieldCheck, Plug } from 'lucide-react';
+import { Boxes, Building2, Cpu, Database, HardDrive, Plug, Settings2, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -167,7 +167,9 @@ export default function Settings({ org, apps, isLoading, error }: SettingsProps)
                         <div className="space-y-1">
                             <DialogTitle>Delete app</DialogTitle>
                             <DialogDescription>
-                                {deleteTarget ? `Delete ${deleteTarget} from this organization?` : 'Delete this application?'}
+                                {deleteTarget
+                                    ? `Delete ${deleteTarget} from this organization?`
+                                    : 'Delete this application?'}
                             </DialogDescription>
                         </div>
 
@@ -200,7 +202,9 @@ export default function Settings({ org, apps, isLoading, error }: SettingsProps)
                                         setDeleteError(null);
                                     } catch (mutationError) {
                                         setDeleteError(
-                                            mutationError instanceof Error ? mutationError.message : 'Failed to delete app'
+                                            mutationError instanceof Error
+                                                ? mutationError.message
+                                                : 'Failed to delete app'
                                         );
                                     }
                                 }}

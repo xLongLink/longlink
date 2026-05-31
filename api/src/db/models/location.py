@@ -1,5 +1,5 @@
-from src.db.models.__base__ import Base
 from sqlmodel import Field
+from src.db.models.__base__ import Base
 
 
 class Location(Base, table=True):

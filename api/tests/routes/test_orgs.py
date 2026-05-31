@@ -1,8 +1,7 @@
-from fastapi.testclient import TestClient
-
 import src.db as db
-from src.db.models import User
 from src.models import OrgDetails, OrgSummary, UserSummary
+from src.db.models import User
+from fastapi.testclient import TestClient
 
 
 async def test_create_organization_returns_owner_role(

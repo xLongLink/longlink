@@ -1,6 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, EmailStr, Field, field_validator
-
+from pydantic import Field, EmailStr, BaseModel, field_validator
 from src.models.roles import Roles
 
 

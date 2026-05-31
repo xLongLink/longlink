@@ -1,4 +1,17 @@
-import { Blocks, BookOpen, Database, FlaskConical, FileCode2, Globe, HardDrive, LayoutTemplate, Rocket, ServerCog, ShieldCheck, Waypoints } from 'lucide-react';
+import {
+    Blocks,
+    BookOpen,
+    Database,
+    FileCode2,
+    FlaskConical,
+    Globe,
+    HardDrive,
+    LayoutTemplate,
+    Rocket,
+    ServerCog,
+    ShieldCheck,
+    Waypoints,
+} from 'lucide-react';
 import { Link } from 'react-router';
 
 import {
@@ -150,7 +163,9 @@ export function DocsSidebar({ currentItemId }: DocsSidebarProps) {
             <SidebarContent>
                 {DOC_GROUPS.map((group) => (
                     <SidebarGroup key={group.title} className="px-2 py-1">
-                        <SidebarGroupLabel className="text-muted-foreground font-normal">{group.title}</SidebarGroupLabel>
+                        <SidebarGroupLabel className="text-muted-foreground font-normal">
+                            {group.title}
+                        </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu className="space-y-1">
                                 {group.items.map((item) => {
@@ -164,7 +179,10 @@ export function DocsSidebar({ currentItemId }: DocsSidebarProps) {
                                                 variant={isActive ? 'outline' : 'default'}
                                                 className="text-sidebar-foreground/70 hover:bg-muted hover:text-foreground data-active:bg-muted data-active:text-foreground"
                                             >
-                                                <item.icon className="size-4 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                                                <item.icon
+                                                    className="size-4 shrink-0 text-muted-foreground/70"
+                                                    aria-hidden="true"
+                                                />
                                                 {item.title}
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>

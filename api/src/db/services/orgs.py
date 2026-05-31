@@ -1,11 +1,10 @@
+from .base import ServiceBase
 from sqlalchemy import delete, select
+from src.db.models import App, Org, User
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.db.models import App, Org, User
-from src.db.models.association import UserOrganization
 from src.models.roles import Roles
-
-from .base import ServiceBase
+from src.db.models.association import UserOrganization
 
 
 class OrgsService(ServiceBase):

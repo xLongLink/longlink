@@ -47,11 +47,9 @@ bun run build:sdk   # Builds the sdk web bundle (for development)
 bun run format      # Format the code
 ```
 
-
 ## Guidelines
 
 - Use the `Toaster` for the user notifications
-
 
 ## Theme
 
@@ -71,7 +69,6 @@ Theme values are defined in `src/lib/theme.ts` and applied programmatically to t
 ```xml
 <A>, <Accordion>, <Alert>, <AlertDialog>, <AspectRatio>, <Avatar>, <B>, <Badge>, <Br>, <Breadcrumb>, <Button>, <ButtonGroup>, <Calendar>, <Card>, <Carousel>, <Chart>, <Checkbox>, <Code>, <Collapsible>, <Columns>, <Combobox>, <Command>, <ContextMenu>, <Dialog>, <Direction>, <Drawer>, <DropdownMenu>, <Empty>, <Field>, <Grid>, <Heading>, <Hero>, <HoverCard>, <Icon>, <Input>, <InputGroup>, <InputOtp>, <Item>, <Kbd>, <Label>, <Li>, <Menu>, <NavigationMenu>, <Ol>, <P>, <Pagination>, <Popover>, <Progress>, <RadioGroup>, <Resizable>, <S>, <ScrollArea>, <Select>, <Separator>, <Sheet>, <Sidebar>, <Skeleton>, <Slider>, <Sonner>, <Spinner>, <Stack>, <Sub>, <Sup>, <Switch>, <Table>, <Tabs>, <Textarea>, <Toggle>, <ToggleGroup>, <Tooltip>, <U>, <Ul>
 ```
-
 
 ## XML
 

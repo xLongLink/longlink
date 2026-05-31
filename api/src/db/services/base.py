@@ -1,9 +1,7 @@
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.db.session import get_session
+from collections.abc import AsyncIterator
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class ServiceBase:

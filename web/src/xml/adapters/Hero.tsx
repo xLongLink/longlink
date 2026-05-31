@@ -1,8 +1,4 @@
-import {
-    Hero as HeroShell,
-    HeroDescription as HeroShellDescription,
-    HeroTitle as HeroShellTitle,
-} from '@ui/hero';
+import { Hero as HeroShell, HeroDescription as HeroShellDescription, HeroTitle as HeroShellTitle } from '@ui/hero';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
@@ -44,5 +40,9 @@ export function HeroDescription({ props, nodes }: Props) {
 export function HeroAction({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
 
-    return <div data-slot="hero-action" className="flex shrink-0 items-center gap-3">{renderNode(nodes, ctx)}</div>;
+    return (
+        <div data-slot="hero-action" className="flex shrink-0 items-center gap-3">
+            {renderNode(nodes, ctx)}
+        </div>
+    );
 }

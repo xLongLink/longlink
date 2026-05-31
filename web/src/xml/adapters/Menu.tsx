@@ -3,8 +3,8 @@ import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { ASTNode, ExecutionContext, Props } from '@xml/types';
-import * as LucideIcons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 
@@ -99,7 +99,13 @@ function renderMenuNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         const IconComponent = icon.trim() ? resolveIconComponent(icon) : null;
 
         return (
-            <UIMenuSection key={index} disabled={disabled} icon={IconComponent ?? undefined} label={label} value={value}>
+            <UIMenuSection
+                key={index}
+                disabled={disabled}
+                icon={IconComponent ?? undefined}
+                label={label}
+                value={value}
+            >
                 {renderMenuSectionChildren(node.children ?? [], ctx)}
             </UIMenuSection>
         );

@@ -1,7 +1,6 @@
 import pytest
-from sqlalchemy import select
-
 import src.db as db
+from sqlalchemy import select
 from src.db.models import User, UserOrganization
 from src.db.session import get_session
 from src.models.roles import Roles

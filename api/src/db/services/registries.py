@@ -1,7 +1,6 @@
+from .base import ServiceBase
 from sqlalchemy import select
 from src.db.models import Registry
-
-from .base import ServiceBase
 
 
 class RegistriesService(ServiceBase):

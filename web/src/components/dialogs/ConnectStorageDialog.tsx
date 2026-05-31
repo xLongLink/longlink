@@ -96,7 +96,9 @@ export default function ConnectStorageDialog() {
                                     await connectStorage.mutateAsync();
                                 } catch (mutationError) {
                                     setError(
-                                        mutationError instanceof Error ? mutationError.message : 'Failed to connect storage'
+                                        mutationError instanceof Error
+                                            ? mutationError.message
+                                            : 'Failed to connect storage'
                                     );
                                 }
                             }}

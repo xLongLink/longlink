@@ -1,6 +1,6 @@
 import Layout from '@/Layout';
-import { useUser } from '@/hooks/use-user';
 import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
+import { useUser } from '@/hooks/use-user';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 import { Blocks } from 'lucide-react';
@@ -54,7 +54,9 @@ export default function Organizations() {
                                         <TableCell className="font-medium text-foreground">
                                             {organization.name}
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">{organization.role}</TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                            {organization.role}
+                                        </TableCell>
                                         <TableCell>
                                             <Link
                                                 to={`/${organization.name}`}
@@ -75,7 +77,6 @@ export default function Organizations() {
                         </TableBody>
                     </Table>
                 </div>
-
             </section>
         </Layout>
     );

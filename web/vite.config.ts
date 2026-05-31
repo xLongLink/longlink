@@ -1,8 +1,8 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import matter from 'gray-matter';
-import path from 'path';
 import { lexer, type Token } from 'marked';
+import path from 'path';
 import type { Plugin } from 'vite';
 import { defineConfig, loadEnv } from 'vite';
 

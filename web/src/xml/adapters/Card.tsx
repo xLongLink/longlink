@@ -1,7 +1,4 @@
-import {
-    Card as UICard,
-    CardContent as UICardContent,
-} from '@ui/card';
+import { Card as UICard, CardContent as UICardContent } from '@ui/card';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';

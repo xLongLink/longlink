@@ -1,7 +1,7 @@
+from src.models import (ComputeRegistryResponse, StorageRegistryResponse,
+                        DatabaseRegistryResponse)
+from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
 from fastapi.testclient import TestClient
-
-from src.models import ComputeRegistryResponse, DatabaseRegistryResponse, StorageRegistryResponse
-from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 
 
 async def test_database_registry_endpoint_supports_create_list_and_delete(

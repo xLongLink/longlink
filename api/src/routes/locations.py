@@ -1,5 +1,5 @@
 import src.db as db
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import Depends, Response, APIRouter, HTTPException, status
 from src.auth import authadmin
 from src.models.locations import LocationCreate, LocationResponse
 

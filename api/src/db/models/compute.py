@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Enum, Text
 from sqlmodel import Field
-
+from sqlalchemy import Enum, Text, Column
 from src.models.kinds import ComputeKind
 from src.db.models.__base__ import Base
 

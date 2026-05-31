@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
-import XML from './XML';
 import NotFound from './NotFound';
+import XML from './XML';
 
 type ViewProps = {
     metadata: string;

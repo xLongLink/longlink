@@ -91,7 +91,9 @@ export default function ConnectDatabaseDialog() {
                                     await connectDatabase.mutateAsync();
                                 } catch (mutationError) {
                                     setError(
-                                        mutationError instanceof Error ? mutationError.message : 'Failed to connect database'
+                                        mutationError instanceof Error
+                                            ? mutationError.message
+                                            : 'Failed to connect database'
                                     );
                                 }
                             }}

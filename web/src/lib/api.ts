@@ -22,7 +22,6 @@ async function readApiError(response: Response): Promise<string> {
     return payload?.detail ?? `API request failed (${response.status})`;
 }
 
-
 /** Sends one API request and normalizes non-OK errors. */
 async function requestApi(url: string, init?: RequestInit): Promise<Response> {
     const headers = new Headers(init?.headers);

@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 import type { ApiOrgApp } from '@/lib/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 
 type ApplicationsProps = {
     org: string;

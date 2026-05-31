@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from pathlib import Path
-from urllib.parse import urlsplit
 from src.env import env
 from src.routes import routers
+from urllib.parse import urlsplit
 from src.routes.auth import router as auth_router
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware

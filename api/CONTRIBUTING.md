@@ -11,7 +11,6 @@ python -m isort .       # Format the code
 
 ## Architecture
 
-
 ```bash
 Control Plane
 ├── Infrastructure Registry
@@ -46,7 +45,6 @@ Control Plane
         └── App Health
 ```
 
-
 ## Folder Structure
 
 ```bash
@@ -63,7 +61,7 @@ api/
 │   ├── constants.py  # Shared constants
 │   └── env.py        # Environment config
 │
-├── tests/            
+├── tests/
 │   ├── auth/         # Authentication related tests cases
 │   ├── db/           # Database related tests cases
 │   └── routes/       # Routes related tests cases
@@ -89,7 +87,6 @@ api/
 - Reuse schemas/enums across API, service, persistence layers.
 - Remove outdated paths when introducing new model.
 
-
 ## API Responses
 
 - Use FastAPI `response_model` on route decorators for successful responses.
@@ -100,6 +97,7 @@ api/
 ## Testing
 
 Structure:
+
 - Use AAA sections with comments: `# Arrange`, `# Act`, `# Assert`
 - Test names must describe expected behavior
 - One test = one behavior
@@ -107,12 +105,14 @@ Structure:
 - Prefer explicit assertions (`==`, exact payloads, exact errors)
 
 Parametrization:
+
 - Keep `@pytest.mark.parametrize` on one line
 - Use multiple decorators instead of multi-dimensional tuples
 - Extract large parameter sets into constants
 - Use `pytest.param(..., id="...")` for non-trivial cases
 
 Test Design:
+
 - Test observable behavior only
 - Do not test framework internals
 - Separate API tests from service-layer tests
@@ -122,6 +122,7 @@ Test Design:
 - Test authentication separately from authorization
 
 Fixtures & Datav
+
 - Prefer fixtures/factories/builders over inline complex setup
 - Keep fixtures small, composable, and function-scoped by default
 - Avoid shared mutable state
@@ -130,6 +131,7 @@ Fixtures & Datav
 - Prefer immutable inputs
 
 Mocking:
+
 - Mock external boundaries only (HTTP, DB, filesystem, queues, time)
 - Do not mock business logic
 - Prefer integration tests for important business flows
@@ -137,19 +139,21 @@ Mocking:
 - Freeze/mock time instead of using sleeps
 
 FastAPI / DB:
+
 - Use dependency overrides for FastAPI dependencies
 - Clear `app.dependency_overrides` after tests
 - Override auth dependencies in tests
 - Use transactional rollback fixtures for DB isolation
 
 Style:
+
 - Avoid conditionals and loops inside tests unless testing branching logic
 - Avoid randomness unless seeded
 - Avoid snapshot tests for unstable payloads
 - Use async tests only for async code
 - Keep unit tests fast
 
-```python 
+```python
 STATUSES = ["listed", "setup", "maintenance"]
 
 @pytest.mark.parametrize("status", STATUSES)
@@ -160,7 +164,7 @@ async def test_property_visibility(client, role, status):
     # Arrange
     token = create_token(role=role)
     property_id = create_property(status=status)
-    
+
     # Act
     response = await client.get(
         f"/properties/{property_id}",

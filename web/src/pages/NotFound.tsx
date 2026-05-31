@@ -1,6 +1,6 @@
 import Layout from '@/Layout';
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@ui/empty';
 import { buttonVariants } from '@ui/button';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@ui/empty';
 import { Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
@@ -20,8 +20,8 @@ export default function NotFound() {
                         </EmptyMedia>
                         <EmptyTitle>We can&apos;t find that page</EmptyTitle>
                         <EmptyDescription>
-                            The page <span className="font-medium text-foreground">{location.pathname}</span> doesn&apos;t
-                            exist or has moved.
+                            The page <span className="font-medium text-foreground">{location.pathname}</span>{' '}
+                            doesn&apos;t exist or has moved.
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent>

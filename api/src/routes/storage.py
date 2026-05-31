@@ -1,14 +1,10 @@
 import src.db as db
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from src.adapters.storage.s3 import Storage as StorageAdapter
+from fastapi import Depends, Response, APIRouter, HTTPException, status
 from src.auth import authadmin
-from src.models import (
-    StorageQuotaResponse,
-    StorageRegistryCreate,
-    StorageRegistryResponse,
-    StorageUsageResponse,
-)
+from src.models import (StorageQuotaResponse, StorageUsageResponse,
+                        StorageRegistryCreate, StorageRegistryResponse)
 from src.models.kinds import StorageKind
+from src.adapters.storage.s3 import Storage as StorageAdapter
 
 router = APIRouter(prefix="/api/storage")
 

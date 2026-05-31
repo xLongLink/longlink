@@ -30,7 +30,7 @@ export default function Playground() {
     const [examples, setExamples] = useState<ExampleMap>({} as ExampleMap);
     const [xml, setXml] = useState<string>(initialXml);
     const [selectedExample, setSelectedExample] = useState<SelectedExample>(xmlParam ? null : 'Text');
-    const activeXml = selectedExample ? examples[selectedExample] ?? xml : xml;
+    const activeXml = selectedExample ? (examples[selectedExample] ?? xml) : xml;
 
     useEffect(() => {
         if (!xmlParam) {

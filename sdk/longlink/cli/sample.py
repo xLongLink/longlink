@@ -1,11 +1,10 @@
 import click
-from fastapi import FastAPI
 import uvicorn
-
-from longlink.constants import ROOT
+from fastapi import FastAPI
 from longlink.app import SPAStaticFiles
-from longlink.routes import routes
 from longlink.utils import Longlink
+from longlink.routes import routes
+from longlink.constants import ROOT
 
 SAMPLE_ROOT = ROOT / ".static" / "new"
 

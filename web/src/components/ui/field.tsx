@@ -22,7 +22,8 @@ const fieldVariants = cva('group/field flex w-full gap-2 data-[invalid=true]:tex
     variants: {
         orientation: {
             vertical: 'flex-col *:w-full [&>.sr-only]:w-auto',
-            horizontal: 'flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
+            horizontal:
+                'flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
         },
     },
     defaultVariants: {
@@ -98,11 +99,4 @@ function FieldDescription({ className, ...props }: React.ComponentProps<'p'>) {
     );
 }
 
-export {
-    Field,
-    FieldContent,
-    FieldDescription,
-    FieldLabel,
-    FieldLegend,
-    FieldTitle,
-};
+export { Field, FieldContent, FieldDescription, FieldLabel, FieldLegend, FieldTitle };

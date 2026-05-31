@@ -1,6 +1,7 @@
 import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
-import Layout from '@/Layout';
+import { useDeleteOrg } from '@/hooks/use-org';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
+import Layout from '@/Layout';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
@@ -10,7 +11,6 @@ import { Label } from '@ui/label';
 import { Menu, MenuSection } from '@ui/menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
-import { useDeleteOrg } from '@/hooks/use-org';
 import { Bell, Building2, Code2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
@@ -255,11 +255,18 @@ export default function Settings() {
                                         {orgs.length ? (
                                             orgs.map((organization) => (
                                                 <TableRow key={organization.name}>
-                                                    <TableCell className="font-medium text-foreground">{organization.name}</TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">{organization.role}</TableCell>
+                                                    <TableCell className="font-medium text-foreground">
+                                                        {organization.name}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm text-muted-foreground">
+                                                        {organization.role}
+                                                    </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-2">
-                                                            <Link to="/organizations" className="text-sm text-accent hover:underline">
+                                                            <Link
+                                                                to="/organizations"
+                                                                className="text-sm text-accent hover:underline"
+                                                            >
                                                                 Manage
                                                             </Link>
                                                             <Button
@@ -349,7 +356,9 @@ export default function Settings() {
                                             setDeleteError(null);
                                         } catch (mutationError) {
                                             setDeleteError(
-                                                mutationError instanceof Error ? mutationError.message : 'Failed to delete org'
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : 'Failed to delete org'
                                             );
                                         }
                                     }}
