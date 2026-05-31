@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiUrl, fetchApiJson } from '@/lib/api';
+import type { ApiLocation } from '@/lib/types';
 
 /** Renders the admin storage connect dialog. */
 export default function ConnectStorageDialog() {
@@ -18,9 +19,17 @@ export default function ConnectStorageDialog() {
     const [endpointUrl, setEndpointUrl] = useState('');
     const [accessKeyId, setAccessKeyId] = useState('');
     const [secretAccessKey, setSecretAccessKey] = useState('');
+    const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
     const storageUrl = apiUrl('/api/storage');
+    const locationsUrl = apiUrl('/api/locations');
+
+    const locationsQuery = useQuery({
+        queryKey: ['api', locationsUrl],
+        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
+        retry: false,
+    });
 
     const connectStorage = useMutation({
         mutationFn: async () => {
@@ -37,6 +46,7 @@ export default function ConnectStorageDialog() {
                     endpoint_url: endpointUrl.trim(),
                     access_key_id: accessKeyId.trim(),
                     secret_access_key: secretAccessKey,
+                    location_id: Number(locationId),
                 }),
             });
         },
@@ -49,6 +59,7 @@ export default function ConnectStorageDialog() {
             setEndpointUrl('');
             setAccessKeyId('');
             setSecretAccessKey('');
+            setLocationId('');
         },
     });
 
@@ -155,6 +166,22 @@ export default function ConnectStorageDialog() {
                                     onChange={(event) => setSecretAccessKey(event.target.value)}
                                     autoComplete="off"
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="storage-location">Location</Label>
+                                <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
+                                    <SelectTrigger id="storage-location" className="w-full">
+                                        <SelectValue placeholder="Choose a location" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {locationsQuery.data?.map((location) => (
+                                            <SelectItem key={location.id} value={String(location.id)}>
+                                                {location.display_name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {error ? <p className="text-sm text-destructive">{error}</p> : null}

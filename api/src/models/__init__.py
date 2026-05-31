@@ -1,4 +1,5 @@
 from .apps import AppCreate, AppResponse  # noqa: F401
+from .locations import LocationCreate, LocationResponse  # noqa: F401
 from .compute import ComputeRegistryCreate, ComputeRegistryResponse, DockerRegistryCreate  # noqa: F401
 from .database import DatabaseRegistryCreate, DatabaseRegistryResponse  # noqa: F401
 from .kinds import ComputeKind, DatabaseKind, StorageKind  # noqa: F401

@@ -9,7 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
-import { BookOpen, Building2, Cpu, Database, HardDrive, LogOut, Settings2, Users } from 'lucide-react';
+import { BookOpen, Building2, Cpu, Database, HardDrive, LogOut, MapPin, Settings2, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 
 /** Renders a user profile dropdown with authentication actions. */
@@ -84,35 +84,63 @@ export function UserProfile() {
                         <DropdownMenuSeparator className="my-2" />
                         <DropdownMenuGroup>
                             <DropdownMenuItem
-                                render={<Link to="/admin/users" className="flex w-full items-center gap-2 text-inherit" />}
+                                render={
+                                    <Link to="/admin/users" className="flex w-full items-center gap-2 text-inherit" />
+                                }
                                 className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
                             >
                                 <Users className="h-4 w-4" />
                                 Users
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                render={<Link to="/admin/organizations" className="flex w-full items-center gap-2 text-inherit" />}
+                                render={
+                                    <Link
+                                        to="/admin/organizations"
+                                        className="flex w-full items-center gap-2 text-inherit"
+                                    />
+                                }
                                 className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
                             >
                                 <Building2 className="h-4 w-4" />
                                 Organizations
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                render={<Link to="/admin/database" className="flex w-full items-center gap-2 text-inherit" />}
+                                render={
+                                    <Link
+                                        to="/admin/locations"
+                                        className="flex w-full items-center gap-2 text-inherit"
+                                    />
+                                }
+                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                            >
+                                <MapPin className="h-4 w-4" />
+                                Locations
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                render={
+                                    <Link
+                                        to="/admin/database"
+                                        className="flex w-full items-center gap-2 text-inherit"
+                                    />
+                                }
                                 className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
                             >
                                 <Database className="h-4 w-4" />
                                 Database
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                render={<Link to="/admin/storage" className="flex w-full items-center gap-2 text-inherit" />}
+                                render={
+                                    <Link to="/admin/storage" className="flex w-full items-center gap-2 text-inherit" />
+                                }
                                 className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
                             >
                                 <HardDrive className="h-4 w-4" />
                                 Storage
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                render={<Link to="/admin/compute" className="flex w-full items-center gap-2 text-inherit" />}
+                                render={
+                                    <Link to="/admin/compute" className="flex w-full items-center gap-2 text-inherit" />
+                                }
                                 className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
                             >
                                 <Cpu className="h-4 w-4" />

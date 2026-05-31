@@ -2,7 +2,7 @@ from .models import (App, Env, Base, User, Registry,  # noqa: F401
                       Org, ComputeRegistry, StorageRegistry,
                       DatabaseRegistry)
 from .services import (AppsService, EnvsService, UsersService,
-                       RegistriesService, OrgsService,
+                       RegistriesService, OrgsService, LocationsService,
                        ComputeRegistriesService, StorageRegistriesService,
                        DatabaseRegistriesService)
 
@@ -11,6 +11,7 @@ envs = EnvsService()
 registries = RegistriesService()
 orgs = OrgsService()
 users = UsersService()
+locations = LocationsService()
 compute = ComputeRegistriesService()
 storage = StorageRegistriesService()
 database = DatabaseRegistriesService()

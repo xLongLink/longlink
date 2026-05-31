@@ -10,6 +10,7 @@ export default function Admin() {
                 tabs={{
                     Users: '/admin/users',
                     Organizations: '/admin/organizations',
+                    Locations: '/admin/locations',
                     Database: '/admin/database',
                     Storage: '/admin/storage',
                     Compute: '/admin/compute',

@@ -27,6 +27,7 @@ async def list_storage_registries(_user: db.User = Depends(authadmin)) -> list[S
                 "protocol": registry.protocol,
                 "endpoint_url": registry.endpoint_url,
                 "access_key_id": registry.access_key_id,
+                "location_id": registry.location_id,
             }
         )
         for registry in registries
@@ -93,6 +94,7 @@ async def get_storage_registry(name: str, _user: db.User = Depends(authadmin)) -
             "protocol": registry.protocol,
             "endpoint_url": registry.endpoint_url,
             "access_key_id": registry.access_key_id,
+            "location_id": registry.location_id,
         }
     )
 
@@ -114,6 +116,7 @@ async def create_storage_registry(
             "protocol": registry.protocol,
             "endpoint_url": registry.endpoint_url,
             "access_key_id": registry.access_key_id,
+            "location_id": registry.location_id,
         }
     )
 

@@ -18,3 +18,4 @@ class StorageRegistry(Base, table=True):
     endpoint_url: str = Field(max_length=255)
     access_key_id: str = Field(max_length=255)
     secret_access_key: str = Field(max_length=255)
+    location_id: int = Field(foreign_key='locations.id')

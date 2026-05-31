@@ -20,6 +20,7 @@ import AdminOrganization from './pages/admin/Organization';
 import AdminUsers from './pages/admin/Users';
 import AdminCompute from './pages/admin/Compute';
 import AdminDatabase from './pages/admin/Database';
+import AdminLocation from './pages/admin/Location';
 import AdminStorage from './pages/admin/Storage';
 import DocsPage from './pages/Docs';
 import Theme from './pages/Theme';
@@ -143,6 +144,7 @@ function getRoutes() {
                 { index: true, element: <AdminUsers /> },
                 { path: 'users', element: <AdminUsers /> },
                 { path: 'organizations', element: <AdminOrganization /> },
+                { path: 'locations', element: <AdminLocation /> },
                 { path: 'database', element: <AdminDatabase /> },
                 { path: 'storage', element: <AdminStorage /> },
                 { path: 'compute', element: <AdminCompute /> },

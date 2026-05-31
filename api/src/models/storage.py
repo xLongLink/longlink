@@ -12,6 +12,7 @@ class StorageRegistryCreate(BaseModel):
     endpoint_url: str
     access_key_id: str
     secret_access_key: str
+    location_id: int
 
 
 class StorageRegistryResponse(BaseModel):
@@ -23,6 +24,7 @@ class StorageRegistryResponse(BaseModel):
     protocol: str
     endpoint_url: str
     access_key_id: str
+    location_id: int
 
 
 class StorageUsageResponse(BaseModel):

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { apiUrl, fetchApiJson } from '@/lib/api';
-import type { ApiComputeRegistry } from '@/lib/types';
+import type { ApiComputeRegistry, ApiLocation } from '@/lib/types';
 
 /** Renders the admin compute connect dialog. */
 export default function ConnectComputeDialog() {
@@ -18,9 +18,17 @@ export default function ConnectComputeDialog() {
     const [kubeconfig, setKubeconfig] = useState('');
     const [ingressHost, setIngressHost] = useState('');
     const [ingressName, setIngressName] = useState('');
+    const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
     const computeUrl = apiUrl('/api/compute');
+    const locationsUrl = apiUrl('/api/locations');
+
+    const locationsQuery = useQuery({
+        queryKey: ['api', locationsUrl],
+        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
+        retry: false,
+    });
 
     const connectCompute = useMutation({
         mutationFn: async () => {
@@ -35,6 +43,7 @@ export default function ConnectComputeDialog() {
                     kubeconfig,
                     ingress_host: ingressHost.trim(),
                     ingress_name: ingressName.trim(),
+                    location_id: Number(locationId),
                 }),
             });
         },
@@ -45,6 +54,7 @@ export default function ConnectComputeDialog() {
             setKubeconfig('');
             setIngressHost('');
             setIngressName('');
+            setLocationId('');
         },
     });
 
@@ -129,6 +139,22 @@ export default function ConnectComputeDialog() {
                                     placeholder="longlink-ingress"
                                     autoComplete="off"
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="compute-location">Location</Label>
+                                <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
+                                    <SelectTrigger id="compute-location" className="w-full">
+                                        <SelectValue placeholder="Choose a location" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {locationsQuery.data?.map((location) => (
+                                            <SelectItem key={location.id} value={String(location.id)}>
+                                                {location.display_name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {error ? <p className="text-sm text-destructive">{error}</p> : null}

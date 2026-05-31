@@ -10,6 +10,7 @@ class ComputeRegistryCreate(BaseModel):
     kubeconfig: str
     ingress_host: str
     ingress_name: str
+    location_id: int
 
 
 class ComputeRegistryResponse(BaseModel):
@@ -19,6 +20,7 @@ class ComputeRegistryResponse(BaseModel):
     kind: ComputeKind
     ingress_host: str
     ingress_name: str
+    location_id: int
 
 
 DockerRegistryCreate = ComputeRegistryCreate

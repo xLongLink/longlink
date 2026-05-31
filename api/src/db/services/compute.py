@@ -28,6 +28,7 @@ class ComputeRegistriesService(ServiceBase):
         kubeconfig: str,
         ingress_host: str,
         ingress_name: str,
+        location_id: int,
     ) -> ComputeRegistry:
         """Create one compute backend registration."""
 
@@ -38,6 +39,7 @@ class ComputeRegistriesService(ServiceBase):
                 kubeconfig=kubeconfig,
                 ingress_host=ingress_host,
                 ingress_name=ingress_name,
+                location_id=location_id,
             )
             session.add(compute)
 

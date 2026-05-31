@@ -58,6 +58,14 @@ export type ApiOrgDetails = {
     apps: ApiOrgApp[];
 };
 
+export type ApiLocation = {
+    id: number;
+    name: string;
+    display_name: string;
+    created_at: string;
+    updated_at: string;
+};
+
 export type ApiDatabaseRegistry = {
     id: number;
     kind: string;
@@ -76,6 +84,7 @@ export type ApiStorageRegistry = {
     protocol: string;
     endpoint_url: string;
     access_key_id: string;
+    location_id: number;
 };
 
 export type ApiComputeRegistry = {
@@ -83,6 +92,7 @@ export type ApiComputeRegistry = {
     kind: string;
     ingress_host: string;
     ingress_name: string;
+    location_id: number;
 };
 
 export type ApiAppResponse = {

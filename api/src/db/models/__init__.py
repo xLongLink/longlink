@@ -9,6 +9,7 @@ from .__base__ import Base
 from .database import DatabaseRegistry
 from .registries import Registry
 from .org import Org
+from .location import Location
 
 __all__ = [
     "App",
@@ -18,6 +19,7 @@ __all__ = [
     "ComputeRegistry",
     "DatabaseRegistry",
     "Env",
+    "Location",
     "Org",
     "Registry",
     "StorageRegistry",

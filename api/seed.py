@@ -70,9 +70,10 @@ async def main() -> None:
             await engine.dispose()
 
     # Keep the local backend registrations available after every seed run.
+    location = await db.locations.create("local", "Local development")
     await db.database.create(**LOCAL_DATABASE)
-    await db.storage.create(**LOCAL_STORAGE)
-    await db.compute.create(**LOCAL_COMPUTE)
+    await db.storage.create(**LOCAL_STORAGE, location_id=location.id)
+    await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await compute.create_cluster_proxy(LOCAL_COMPUTE["ingress_name"])
     await db.orgs.create(LOCAL_ORG)
     await db.apps.create(LOCAL_ORG, **LOCAL_APP)
