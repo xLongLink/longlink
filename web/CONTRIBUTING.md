@@ -2,33 +2,49 @@
 
 The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, and control-plane rendering path.
 
+## Pages
+
+```bash
+/
+├── docs
+│   ├── api
+│   │   └── self-hosted
+│   ├── sdk
+│   │   ├── building
+│   │   ├── database
+│   │   ├── environments
+│   │   ├── routes
+│   │   ├── storage
+│   │   └── testing
+│   └── xml
+│       ├── components
+│       └── layout
+├── playground
+├── theme
+├── sample
+├── impressum
+├── terms
+├── privacy
+├── organizations
+├── settings
+├── admin
+│   ├── users
+│   ├── organizations
+│   ├── database
+│   ├── storage
+│   └── compute
+├── :org
+├── :org/applications
+├── :org/people
+├── :org/settings
+└── :org/:app/*
+```
+
 ```bash
 bun run dev         # Starts the Vite dev server for live preview.
 bun run build:api   # Builds the control-plane web bundle
 bun run build:sdk   # Builds the sdk web bundle (for development)
 bun run format      # Format the code
-```
-
-## Code structure
-
-```bash
-web/
-├── src/
-│   ├── components/      # Shared app components
-│   │   ├── DocsSidebar.tsx
-│   │   └── ui/          # UI primitives
-│   ├── hooks/           # Shared React ooks 
-│   ├── lib/             # Shared Utilities
-│   ├── pages/           # Route-level pages
-│   ├── xml/             # XML compiler, runtime, layouts, primitives, components
-│   ├── App.tsx
-│   ├── index.css        #
-│   ├── Layout.tsx
-│   └── main.tsx
-├── tests/
-├── index.html
-├── vite.config.ts
-└── package.json
 ```
 
 
@@ -53,78 +69,7 @@ Theme values are defined in `src/lib/theme.ts` and applied programmatically to t
 ## Primitives
 
 ```xml
-<A>
-<Accordion>
-<Alert>
-<AlertDialog>
-<AspectRatio>
-<Avatar>
-<B>
-<Badge>
-<Br>
-<Breadcrumb>
-<Button>
-<ButtonGroup>
-<Calendar>
-<Card>
-<Carousel>
-<Chart>
-<Checkbox>
-<Code>
-<Collapsible>
-<Columns>
-<Combobox>
-<Command>
-<ContextMenu>
-<Dialog>
-<Direction>
-<Drawer>
-<DropdownMenu>
-<Empty>
-<Field>
-<Grid>
-<Heading>
-<Hero>
-<HoverCard>
-<Icon>
-<Input>
-<InputGroup>
-<InputOtp>
-<Item>
-<Kbd>
-<Label>
-<Li>
-<Menu>
-<NavigationMenu>
-<Ol>
-<P>
-<Pagination>
-<Popover>
-<Progress>
-<RadioGroup>
-<Resizable>
-<S>
-<ScrollArea>
-<Select>
-<Separator>
-<Sheet>
-<Sidebar>
-<Skeleton>
-<Slider>
-<Sonner>
-<Spinner>
-<Stack>
-<Sub>
-<Sup>
-<Switch>
-<Table>
-<Tabs>
-<Textarea>
-<Toggle>
-<ToggleGroup>
-<Tooltip>
-<U>
-<Ul>
+<A>, <Accordion>, <Alert>, <AlertDialog>, <AspectRatio>, <Avatar>, <B>, <Badge>, <Br>, <Breadcrumb>, <Button>, <ButtonGroup>, <Calendar>, <Card>, <Carousel>, <Chart>, <Checkbox>, <Code>, <Collapsible>, <Columns>, <Combobox>, <Command>, <ContextMenu>, <Dialog>, <Direction>, <Drawer>, <DropdownMenu>, <Empty>, <Field>, <Grid>, <Heading>, <Hero>, <HoverCard>, <Icon>, <Input>, <InputGroup>, <InputOtp>, <Item>, <Kbd>, <Label>, <Li>, <Menu>, <NavigationMenu>, <Ol>, <P>, <Pagination>, <Popover>, <Progress>, <RadioGroup>, <Resizable>, <S>, <ScrollArea>, <Select>, <Separator>, <Sheet>, <Sidebar>, <Skeleton>, <Slider>, <Sonner>, <Spinner>, <Stack>, <Sub>, <Sup>, <Switch>, <Table>, <Tabs>, <Textarea>, <Toggle>, <ToggleGroup>, <Tooltip>, <U>, <Ul>
 ```
 
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { UserProfile } from '@/components/Profile';
 import { Wordmark } from '@/components/Wordmark';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router';
@@ -17,6 +18,7 @@ export default function XML({ tabs, brandOnly = false, brandHref = '/organizatio
     const location = useLocation();
     const tabEntries = Object.entries(tabs ?? {});
     const currentPath = `${location.pathname}${location.search}`;
+    const isSdkMode = import.meta.env.MODE === 'sdk';
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -33,12 +35,16 @@ export default function XML({ tabs, brandOnly = false, brandHref = '/organizatio
                                     <Breadcrumb />
                                 )}
                             </div>
-                            <Link
-                                to="/docs"
-                                className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
-                            >
-                                Docs
-                            </Link>
+                            {isSdkMode ? (
+                                <Link
+                                    to="/docs"
+                                    className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+                                >
+                                    Docs
+                                </Link>
+                            ) : (
+                                <UserProfile />
+                            )}
                         </div>
                     </div>
 

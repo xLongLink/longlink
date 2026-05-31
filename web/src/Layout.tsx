@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { Wordmark } from '@/components/Wordmark';
+import { useUser } from '@/hooks/use-user';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router';
 
@@ -18,6 +19,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
     const location = useLocation();
     const tabEntries = Object.entries(tabs ?? {});
     const currentPath = `${location.pathname}${location.search}`;
+    const { user } = useUser();
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -34,7 +36,14 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                     <Breadcrumb />
                                 )}
                             </div>
-                            <UserProfile />
+                            {/* Show Docs when the profile dropdown is not available. */}
+                            {user ? (
+                                <UserProfile />
+                            ) : (
+                                <Link to="/docs" className="text-sm font-medium text-white/70 transition-colors hover:text-white">
+                                    Docs
+                                </Link>
+                            )}
                         </div>
                     </div>
 

@@ -1,10 +1,11 @@
 import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
+import { DataTable } from '@/components/DataTable';
 import { useDeleteApp } from '@/hooks/use-org';
 import type { ApiOrgApp } from '@/lib/types';
+import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Menu, MenuSection } from '@ui/menu';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 import { Boxes, Building2, Cpu, Database, HardDrive, Settings2, ShieldCheck, Plug } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -22,6 +23,43 @@ export default function Settings({ org, apps, isLoading, error }: SettingsProps)
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
+    const appColumns: Array<ColumnDef<ApiOrgApp>> = [
+        {
+            accessorKey: 'name',
+            header: 'App',
+            cell: ({ row, getValue }) => (
+                <Link to={`/${org}/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                    {getValue<string>()}
+                </Link>
+            ),
+        },
+        {
+            accessorKey: 'url',
+            header: 'URL',
+            cell: ({ getValue }) => (
+                <span className="truncate text-sm text-muted-foreground">{getValue<string>()}</span>
+            ),
+        },
+        {
+            id: 'action',
+            header: 'Action',
+            meta: { className: 'w-32' },
+            cell: ({ row }) => (
+                <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                        // Select the app and open the delete confirmation dialog.
+                        setDeleteTargetId(row.original.id);
+                        setDeleteError(null);
+                    }}
+                >
+                    Delete
+                </Button>
+            ),
+        },
+    ];
 
     return (
         <Menu defaultValue="organization" className="items-start">
@@ -56,60 +94,15 @@ export default function Settings({ org, apps, isLoading, error }: SettingsProps)
                         <CreateAppDialog org={org} />
                     </div>
 
-                    <div className="w-full overflow-hidden rounded-2xl border border-border bg-background/60">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>App</TableHead>
-                                    <TableHead className="w-32">Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
-                                            Loading apps...
-                                        </TableCell>
-                                    </TableRow>
-                                ) : error ? (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="py-8 text-sm text-destructive">
-                                            Failed to load apps.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : apps.length ? (
-                                    apps.map((app) => (
-                                        <TableRow key={app.id}>
-                                            <TableCell className="font-medium text-foreground">
-                                                <Link to={`/${org}/${app.name}`} className="hover:underline">
-                                                    {app.name}
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    type="button"
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setDeleteTargetId(app.id);
-                                                        setDeleteError(null);
-                                                    }}
-                                                >
-                                                    Delete
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                            ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="py-8 text-sm text-muted-foreground">
-                                            No apps found.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                    {isLoading ? (
+                        <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading apps...</div>
+                    ) : error ? (
+                        <div className="rounded-md border p-4 text-sm text-destructive">Failed to load apps.</div>
+                    ) : apps.length ? (
+                        <DataTable columns={appColumns} data={apps} />
+                    ) : (
+                        <div className="rounded-md border p-4 text-sm text-muted-foreground">No apps found.</div>
+                    )}
                 </div>
             </MenuSection>
 

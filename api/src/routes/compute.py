@@ -7,13 +7,6 @@ from src.models import APIResponse, ComputeRegistryCreate, ComputeRegistryRespon
 router = APIRouter(prefix="/api/compute")
 
 
-async def bootstrap_compute_cluster(kubeconfig: str, ingress_name: str) -> None:
-    """Provision the shared cluster entrypoint for one compute cluster."""
-
-    compute = KubernetesCompute(kubeconfig)
-    await compute.create_cluster_proxy(ingress_name)
-
-
 @router.get("")
 async def list_compute_registries(_user: db.User = Depends(authadmin)) -> APIResponse[list[ComputeRegistryResponse]]:
     """Return all registered compute backends."""
@@ -55,7 +48,8 @@ async def create_compute_registry(
     registry = await db.compute.create(**payload.model_dump())
 
     try:
-        await bootstrap_compute_cluster(registry.kubeconfig, registry.ingress_name)
+        compute = KubernetesCompute(registry.kubeconfig)
+        await compute.create_cluster_proxy(registry.ingress_name)
     except Exception as exc:
         await db.compute.delete(registry.id)
         raise HTTPException(
