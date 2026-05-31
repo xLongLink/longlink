@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { apiUrl } from '@/lib/api';
+import { apiUrl, fetchApiJson } from '@/lib/api';
+import type { ApiComputeRegistry } from '@/lib/types';
 
 /** Renders the admin compute connect dialog. */
 export default function ConnectComputeDialog() {
@@ -23,10 +24,9 @@ export default function ConnectComputeDialog() {
 
     const connectCompute = useMutation({
         mutationFn: async () => {
-            const response = await fetch(computeUrl, {
+            return fetchApiJson<ApiComputeRegistry>(computeUrl, {
                 method: 'POST',
                 headers: {
-                    Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
                 credentials: 'include',
@@ -37,13 +37,6 @@ export default function ConnectComputeDialog() {
                     ingress_name: ingressName.trim(),
                 }),
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return response.json();
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['api', computeUrl] });

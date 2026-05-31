@@ -1,13 +1,13 @@
 import src.db as db
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from src.auth import authadmin
-from src.models import APIResponse, DatabaseRegistryCreate, DatabaseRegistryResponse
+from src.models import DatabaseRegistryCreate, DatabaseRegistryResponse
 
 router = APIRouter(prefix="/api/database")
 
 
-@router.get("")
-async def list_database_registries(_user: db.User = Depends(authadmin)) -> APIResponse[list[DatabaseRegistryResponse]]:
+@router.get("", response_model=list[DatabaseRegistryResponse])
+async def list_database_registries(_user: db.User = Depends(authadmin)) -> list[DatabaseRegistryResponse]:
     """Return all registered database backends."""
 
     registries = await db.database.list()
@@ -27,59 +27,51 @@ async def list_database_registries(_user: db.User = Depends(authadmin)) -> APIRe
         for registry in registries
     ]
 
-    return APIResponse(success=True, detail="Database registries fetched", data=payload)
+    return payload
 
 
-@router.get("/{name}")
-async def get_database_registry(name: str, _user: db.User = Depends(authadmin)) -> APIResponse[DatabaseRegistryResponse]:
+@router.get("/{name}", response_model=DatabaseRegistryResponse)
+async def get_database_registry(name: str, _user: db.User = Depends(authadmin)) -> DatabaseRegistryResponse:
     """Return one database backend registration."""
 
     registry = await db.database.get(name)
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Database '{name}' not found")
 
-    return APIResponse(
-        success=True,
-        detail="Database registry fetched",
-        data=DatabaseRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "name": registry.name,
-                "host": registry.host,
-                "port": registry.port,
-                "username": registry.username,
-                "sslmode": registry.sslmode,
-                "maintenance_database": registry.maintenance_database,
-            }
-        ),
+    return DatabaseRegistryResponse.model_validate(
+        {
+            "id": registry.id,
+            "kind": registry.kind,
+            "name": registry.name,
+            "host": registry.host,
+            "port": registry.port,
+            "username": registry.username,
+            "sslmode": registry.sslmode,
+            "maintenance_database": registry.maintenance_database,
+        }
     )
 
 
-@router.post("")
+@router.post("", response_model=DatabaseRegistryResponse)
 async def create_database_registry(
     payload: DatabaseRegistryCreate,
     _user: db.User = Depends(authadmin),
-) -> APIResponse[DatabaseRegistryResponse]:
+) -> DatabaseRegistryResponse:
     """Create or update one database backend registration."""
 
     registry = await db.database.create(**payload.model_dump())
 
-    return APIResponse(
-        success=True,
-        detail="Database registry saved",
-        data=DatabaseRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "name": registry.name,
-                "host": registry.host,
-                "port": registry.port,
-                "username": registry.username,
-                "sslmode": registry.sslmode,
-                "maintenance_database": registry.maintenance_database,
-            }
-        ),
+    return DatabaseRegistryResponse.model_validate(
+        {
+            "id": registry.id,
+            "kind": registry.kind,
+            "name": registry.name,
+            "host": registry.host,
+            "port": registry.port,
+            "username": registry.username,
+            "sslmode": registry.sslmode,
+            "maintenance_database": registry.maintenance_database,
+        }
     )
 
 

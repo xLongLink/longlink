@@ -14,8 +14,8 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectDatabaseDialog from '@/components/dialogs/ConnectDatabaseDialog';
-import { apiUrl } from '@/lib/api';
-import type { ApiDatabaseRegistry, ApiResponse } from '@/lib/types';
+import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type { ApiDatabaseRegistry } from '@/lib/types';
 
 const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry>> = [
     {
@@ -62,19 +62,10 @@ export default function AdminDatabase() {
 
     const deleteDatabase = useMutation({
         mutationFn: async (name: string) => {
-            const response = await fetch(apiUrl(`/api/database/${encodeURIComponent(name)}`), {
+            await fetchApiVoid(apiUrl(`/api/database/${encodeURIComponent(name)}`), {
                 method: 'DELETE',
-                headers: { Accept: 'application/json' },
                 credentials: 'include',
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return null;
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['api', databaseUrl] });
@@ -84,20 +75,7 @@ export default function AdminDatabase() {
 
     const databaseQuery = useQuery({
         queryKey: ['api', databaseUrl],
-        queryFn: async () => {
-            const response = await fetch(databaseUrl, {
-                headers: { Accept: 'application/json' },
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            const payload = (await response.json()) as ApiResponse<Array<ApiDatabaseRegistry>>;
-
-            return payload.data ?? [];
-        },
+        queryFn: async () => fetchApiJson<Array<ApiDatabaseRegistry>>(databaseUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });

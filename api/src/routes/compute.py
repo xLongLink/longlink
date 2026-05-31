@@ -2,13 +2,13 @@ import src.db as db
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from src.adapters.compute.k8s import Compute as KubernetesCompute
 from src.auth import authadmin
-from src.models import APIResponse, ComputeRegistryCreate, ComputeRegistryResponse
+from src.models import ComputeRegistryCreate, ComputeRegistryResponse
 
 router = APIRouter(prefix="/api/compute")
 
 
-@router.get("")
-async def list_compute_registries(_user: db.User = Depends(authadmin)) -> APIResponse[list[ComputeRegistryResponse]]:
+@router.get("", response_model=list[ComputeRegistryResponse])
+async def list_compute_registries(_user: db.User = Depends(authadmin)) -> list[ComputeRegistryResponse]:
     """Return all registered compute backends."""
 
     registries = await db.compute.list()
@@ -17,32 +17,28 @@ async def list_compute_registries(_user: db.User = Depends(authadmin)) -> APIRes
         for registry in registries
     ]
 
-    return APIResponse(success=True, detail="Compute registries fetched", data=payload)
+    return payload
 
 
-@router.get("/{registry_id}")
+@router.get("/{registry_id}", response_model=ComputeRegistryResponse)
 async def get_compute_registry(
     registry_id: int,
     _user: db.User = Depends(authadmin),
-) -> APIResponse[ComputeRegistryResponse]:
+) -> ComputeRegistryResponse:
     """Return one compute backend registration."""
 
     registry = await db.compute.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Compute '{registry_id}' not found")
 
-    return APIResponse(
-        success=True,
-        detail="Compute registry fetched",
-        data=ComputeRegistryResponse.model_validate(registry.model_dump(exclude={"kubeconfig"})),
-    )
+    return ComputeRegistryResponse.model_validate(registry.model_dump(exclude={"kubeconfig"}))
 
 
-@router.post("")
+@router.post("", response_model=ComputeRegistryResponse)
 async def create_compute_registry(
     payload: ComputeRegistryCreate,
     _user: db.User = Depends(authadmin),
-) -> APIResponse[ComputeRegistryResponse]:
+) -> ComputeRegistryResponse:
     """Create one compute backend registration."""
 
     registry = await db.compute.create(**payload.model_dump())
@@ -57,11 +53,7 @@ async def create_compute_registry(
             detail="Failed to bootstrap the cluster proxy",
         ) from exc
 
-    return APIResponse(
-        success=True,
-        detail="Compute registry saved",
-        data=ComputeRegistryResponse.model_validate(registry.model_dump(exclude={"kubeconfig"})),
-    )
+    return ComputeRegistryResponse.model_validate(registry.model_dump(exclude={"kubeconfig"}))
 
 
 @router.delete("/{registry_id}", status_code=status.HTTP_204_NO_CONTENT)

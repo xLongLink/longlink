@@ -14,8 +14,8 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
-import { apiUrl } from '@/lib/api';
-import type { ApiComputeRegistry, ApiResponse } from '@/lib/types';
+import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type { ApiComputeRegistry } from '@/lib/types';
 
 const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry>> = [
     {
@@ -58,19 +58,10 @@ export default function AdminCompute() {
 
     const deleteCompute = useMutation({
         mutationFn: async (registryId: string) => {
-            const response = await fetch(apiUrl(`/api/compute/${encodeURIComponent(registryId)}`), {
+            await fetchApiVoid(apiUrl(`/api/compute/${encodeURIComponent(registryId)}`), {
                 method: 'DELETE',
-                headers: { Accept: 'application/json' },
                 credentials: 'include',
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return null;
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['api', computeUrl] });
@@ -80,20 +71,7 @@ export default function AdminCompute() {
 
     const computeQuery = useQuery({
         queryKey: ['api', computeUrl],
-        queryFn: async () => {
-            const response = await fetch(computeUrl, {
-                headers: { Accept: 'application/json' },
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            const payload = (await response.json()) as ApiResponse<Array<ApiComputeRegistry>>;
-
-            return payload.data ?? [];
-        },
+        queryFn: async () => fetchApiJson<Array<ApiComputeRegistry>>(computeUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });

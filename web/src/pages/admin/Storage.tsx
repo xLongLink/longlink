@@ -14,8 +14,8 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
-import { apiUrl } from '@/lib/api';
-import type { ApiResponse, ApiStorageRegistry } from '@/lib/types';
+import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type { ApiStorageRegistry } from '@/lib/types';
 
 const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry>> = [
     { accessorKey: 'kind', header: 'Kind', cell: ({ getValue }) => getValue(), meta: { className: 'w-32' } },
@@ -41,19 +41,10 @@ export default function AdminStorage() {
 
     const deleteStorage = useMutation({
         mutationFn: async (name: string) => {
-            const response = await fetch(apiUrl(`/api/storage/${encodeURIComponent(name)}`), {
+            await fetchApiVoid(apiUrl(`/api/storage/${encodeURIComponent(name)}`), {
                 method: 'DELETE',
-                headers: { Accept: 'application/json' },
                 credentials: 'include',
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return null;
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['api', storageUrl] });
@@ -63,20 +54,7 @@ export default function AdminStorage() {
 
     const storageQuery = useQuery({
         queryKey: ['api', storageUrl],
-        queryFn: async () => {
-            const response = await fetch(storageUrl, {
-                headers: { Accept: 'application/json' },
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            const payload = (await response.json()) as ApiResponse<Array<ApiStorageRegistry>>;
-
-            return payload.data ?? [];
-        },
+        queryFn: async () => fetchApiJson<Array<ApiStorageRegistry>>(storageUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });

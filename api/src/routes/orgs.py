@@ -1,15 +1,14 @@
 import src.db as db
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from src.auth import authadmin, authuser
-from src.models import APIResponse
 from src.models.orgs import OrgAppResponse, OrgCreate, OrgDetails, OrgSummary
 from src.models.users import UserSummary
 
 router = APIRouter(prefix="/api/orgs")
 
 
-@router.get("")
-async def list_organizations(user: db.User = Depends(authadmin)) -> APIResponse[list[OrgSummary]]:
+@router.get("", response_model=list[OrgSummary])
+async def list_organizations(_user: db.User = Depends(authadmin)) -> list[OrgSummary]:
     """Return all organizations for admin views."""
 
     organizations = await db.orgs.list()
@@ -35,14 +34,14 @@ async def list_organizations(user: db.User = Depends(authadmin)) -> APIResponse[
         for organization in organizations
     ]
 
-    return APIResponse(success=True, detail="Organizations fetched", data=payload)
+    return payload
 
 
-@router.get("/{name}")
+@router.get("/{name}", response_model=OrgDetails)
 async def get_organization(
     name: str,
     user: db.User = Depends(authuser),
-) -> APIResponse[OrgDetails]:
+) -> OrgDetails:
     """Return one organization and its metadata."""
 
     organization = await db.orgs.get(name)
@@ -70,36 +69,40 @@ async def get_organization(
             )
         )
 
-    return APIResponse(
-        success=True,
-        detail="Organization fetched",
-        data=OrgDetails(
-            name=organization.name,
-            created_at=organization.created_at,
-            updated_at=organization.updated_at,
-            created_by=UserSummary.model_validate(organization.created_by.model_dump()) if organization.created_by else None,
-            updated_by=UserSummary.model_validate(organization.updated_by.model_dump()) if organization.updated_by else None,
-            deleted_at=organization.deleted_at,
-            deleted_by=UserSummary.model_validate(organization.deleted_by.model_dump()) if organization.deleted_by else None,
-            users=[UserSummary.model_validate(member.model_dump()) for member, _role_name in members],
-            apps=app_payloads,
-        ),
+    return OrgDetails(
+        name=organization.name,
+        created_at=organization.created_at,
+        updated_at=organization.updated_at,
+        created_by=UserSummary.model_validate(organization.created_by.model_dump()) if organization.created_by else None,
+        updated_by=UserSummary.model_validate(organization.updated_by.model_dump()) if organization.updated_by else None,
+        deleted_at=organization.deleted_at,
+        deleted_by=UserSummary.model_validate(organization.deleted_by.model_dump()) if organization.deleted_by else None,
+        users=[UserSummary.model_validate(member.model_dump()) for member, _role_name in members],
+        apps=app_payloads,
     )
 
 
-@router.post("")
+@router.post("", response_model=OrgSummary)
 async def create_organization(
     payload: OrgCreate,
     user: db.User = Depends(authuser),
-) -> APIResponse[None]:
+) -> OrgSummary:
     """Create a new org."""
 
     try:
-        await db.orgs.create(payload.name, user)
+        organization = await db.orgs.create(payload.name, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return APIResponse(success=True, detail="Organization created", data=None)
+    return OrgSummary(
+        name=organization.name,
+        created_at=organization.created_at,
+        updated_at=organization.updated_at,
+        created_by=UserSummary.model_validate(user.model_dump()),
+        updated_by=UserSummary.model_validate(user.model_dump()),
+        deleted_at=organization.deleted_at,
+        deleted_by=None,
+    )
 
 
 @router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)

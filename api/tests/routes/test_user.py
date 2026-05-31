@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 import src.db as db
 from src.db.models import User
-from src.models import UserProfile
+from src.models import UserListItem, UserProfile
 
 
 async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
@@ -26,18 +26,14 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
     assert profile is not None
 
     expected_payload = UserProfile.model_validate(profile.model_dump()).model_dump(mode="json")
-    assert response.json() == {
-        "success": True,
-        "detail": "User profile fetched",
-        "data": expected_payload,
-    }
+    assert response.json() == expected_payload
 
 
-async def test_get_users_alias_returns_authenticated_user_profile(
+async def test_list_users_returns_admin_user_summaries(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return the authenticated user's profile from the `/api/users` alias."""
+    """Return all user summaries from the `/api/users` admin route."""
 
     # Arrange
     user = users[0]
@@ -51,15 +47,8 @@ async def test_get_users_alias_returns_authenticated_user_profile(
     # Assert
     assert response.status_code == 200
 
-    profile = await db.users.profile(user.id)
-    assert profile is not None
-
-    expected_payload = UserProfile.model_validate(profile.model_dump()).model_dump(mode="json")
-    assert response.json() == {
-        "success": True,
-        "detail": "User profile fetched",
-        "data": expected_payload,
-    }
+    expected_payload = [UserListItem.model_validate(user.model_dump()).model_dump(mode="json") for user in users]
+    assert response.json() == expected_payload
 
 
 async def test_patch_me_updates_authenticated_user_profile(
@@ -82,8 +71,4 @@ async def test_patch_me_updates_authenticated_user_profile(
     assert updated_profile is not None
 
     expected_payload = UserProfile.model_validate(updated_profile.model_dump()).model_dump(mode="json")
-    assert response.json() == {
-        "success": True,
-        "detail": "User profile updated",
-        "data": expected_payload,
-    }
+    assert response.json() == expected_payload

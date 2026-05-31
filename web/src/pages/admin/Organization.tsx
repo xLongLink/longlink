@@ -15,8 +15,8 @@ import { toast } from 'sonner';
 import { Link } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { apiUrl } from '@/lib/api';
-import type { ApiOrgSummary, ApiResponse } from '@/lib/types';
+import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type { ApiOrgSummary } from '@/lib/types';
 
 const organizationColumnsBase: Array<ColumnDef<ApiOrgSummary>> = [
     {
@@ -122,19 +122,10 @@ export default function AdminOrganization() {
 
     const deleteOrganization = useMutation({
         mutationFn: async (name: string) => {
-            const response = await fetch(apiUrl(`/api/orgs/${encodeURIComponent(name)}`), {
+            await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(name)}`), {
                 method: 'DELETE',
-                headers: { Accept: 'application/json' },
                 credentials: 'include',
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return null;
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['api', organizationsUrl] });
@@ -144,20 +135,7 @@ export default function AdminOrganization() {
 
     const organizationsQuery = useQuery({
         queryKey: ['api', organizationsUrl],
-        queryFn: async () => {
-            const response = await fetch(organizationsUrl, {
-                headers: { Accept: 'application/json' },
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            const payload = (await response.json()) as ApiResponse<Array<ApiOrgSummary>>;
-
-            return payload.data ?? [];
-        },
+        queryFn: async () => fetchApiJson<Array<ApiOrgSummary>>(organizationsUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });

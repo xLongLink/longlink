@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
-import { apiUrl } from '@/lib/api';
-import type { ApiResponse, ApiUserProfile } from '@/lib/types';
+import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type { ApiUserProfile } from '@/lib/types';
 import {
     applyTheme,
     THEME_PRESETS,
@@ -49,24 +49,7 @@ function useUserQuery() {
 
     return useQuery<User | null, Error>({
         queryKey: ['api', userUrl],
-        queryFn: async () => {
-            const response = await fetch(userUrl, {
-                headers: { Accept: 'application/json' },
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            const responsePayload = (await response.json()) as ApiResponse<User>;
-
-            if (!responsePayload.data) {
-                throw new Error('Unexpected response format');
-            }
-
-            return responsePayload.data;
-        },
+        queryFn: async () => fetchApiJson<User>(userUrl, { credentials: 'include' }),
         // Auth state must refresh immediately after login/logout redirects.
         staleTime: 0,
         refetchOnWindowFocus: true,
@@ -104,12 +87,7 @@ export function useUser() {
 
     /** Signs the current user out and clears cached session state. */
     const signOut = async () => {
-        const response = await fetch(apiUrl('/auth/logout'), { credentials: 'include' });
-
-        if (!response.ok) {
-            throw new Error(`API request failed (${response.status})`);
-        }
-
+        await fetchApiVoid(apiUrl('/auth/logout'), { credentials: 'include' });
         queryClient.setQueryData(['api', userUrl], null);
         queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
     };
@@ -134,27 +112,12 @@ export function useUpdateUser() {
 
     return useMutation({
         mutationFn: async (payload: UserUpdate) => {
-            const response = await fetch(userUrl, {
+            return fetchApiJson<User>(userUrl, {
                 method: 'PATCH',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify(payload),
             });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            const responsePayload = (await response.json()) as ApiResponse<User>;
-
-            if (!responsePayload.data) {
-                throw new Error('Unexpected response format');
-            }
-
-            return responsePayload.data;
         },
         onSuccess: (user) => {
             queryClient.setQueryData(['api', userUrl], user);

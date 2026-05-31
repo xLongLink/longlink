@@ -92,22 +92,10 @@ api/
 
 ## API Responses
 
-- Return JSON payloads with the shared `APIResponse[T]` envelope for normal endpoints.
-- Keep the envelope shape consistent: `success`, optional `detail`, and `data`.
-- Put the actual resource payload in `data`, typed with the route-specific Pydantic model.
-- Use `data: null` when a request succeeds but has nothing to return.
-- Raise `HTTPException` for failures; the app wraps them as `{"success": false, "detail": "...", "data": null}`.
+- Use FastAPI `response_model` on route decorators for successful responses.
+- Return the plain Pydantic payload for normal endpoints.
+- Raise `HTTPException` for failures; the app handles error serialization centrally.
 - Keep error messages short, specific, and actionable.
-
-Example:
-
-```python
-return APIResponse(
-    success=True,
-    detail="App created",
-    data=AppResponse(name=app.name, url=app.url),
-)
-```
 
 ## Testing
 

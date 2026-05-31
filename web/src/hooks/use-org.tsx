@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { apiUrl } from '@/lib/api';
-import type { ApiOrgApp, ApiOrgDetails, ApiResponse, ApiUserSummary } from '@/lib/types';
+import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type { ApiAppResponse, ApiOrgApp, ApiOrgDetails, ApiOrgSummary, ApiUserSummary } from '@/lib/types';
 
 type UseOrgResult = {
     org: ApiOrgDetails | undefined;
@@ -17,26 +17,7 @@ export function useOrg(org: string): UseOrgResult {
 
     const organizationQuery = useQuery({
         queryKey: ['api', orgUrl],
-        queryFn: async () => {
-            const response = await fetch(orgUrl, {
-                headers: { Accept: 'application/json' },
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                const error = new Error(`API request failed (${response.status})`) as Error & { status: number };
-                error.status = response.status;
-                throw error;
-            }
-
-            const payload = (await response.json()) as ApiResponse<ApiOrgDetails>;
-
-            if (!payload.data) {
-                throw new Error('Unexpected response format');
-            }
-
-            return payload.data;
-        },
+        queryFn: async () => fetchApiJson<ApiOrgDetails>(orgUrl, { credentials: 'include' }),
         enabled: org.length > 0,
         retry: false,
     });
@@ -60,23 +41,12 @@ export function useCreateOrg() {
 
     return useMutation({
         mutationFn: async (orgName: string) => {
-            const response = await fetch(orgsUrl, {
+            return fetchApiJson<ApiOrgSummary>(orgsUrl, {
                 method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({ name: orgName }),
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return (await response.json()) as ApiResponse<null>;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
@@ -91,21 +61,10 @@ export function useDeleteOrg() {
 
     return useMutation({
         mutationFn: async (orgName: string) => {
-            const response = await fetch(apiUrl(`/api/orgs/${encodeURIComponent(orgName)}`), {
+            await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgName)}`), {
                 method: 'DELETE',
-                headers: {
-                    Accept: 'application/json',
-                },
                 credentials: 'include',
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return null;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
@@ -121,23 +80,12 @@ export function useCreateApp(org: string) {
 
     return useMutation({
         mutationFn: async (payload: { name: string; image: string }) => {
-            const response = await fetch(appsUrl, {
+            return fetchApiJson<ApiAppResponse>(appsUrl, {
                 method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify(payload),
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return (await response.json()) as ApiResponse<null>;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['api', orgUrl] });
@@ -152,21 +100,10 @@ export function useDeleteApp(org: string) {
 
     return useMutation({
         mutationFn: async (appId: number) => {
-            const response = await fetch(apiUrl(`/api/apps/${appId}?organization=${encodeURIComponent(org)}`), {
+            await fetchApiVoid(apiUrl(`/api/apps/${appId}?organization=${encodeURIComponent(org)}`), {
                 method: 'DELETE',
-                headers: {
-                    Accept: 'application/json',
-                },
                 credentials: 'include',
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return null;
         },
         onSuccess: (_data, appId) => {
             queryClient.setQueryData<ApiOrgDetails>(['api', orgUrl], (current) =>

@@ -31,10 +31,19 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
 
     # Assert
     assert create_response.status_code == 200
-    assert create_response.json() == {
-        "success": True,
-        "detail": "Database registry saved",
-        "data": DatabaseRegistryResponse(
+    assert create_response.json() == DatabaseRegistryResponse(
+        id=1,
+        kind=DatabaseKind.postgre,
+        name="primary",
+        host="db.longlink.internal",
+        port=5432,
+        username="longlink",
+        sslmode="require",
+        maintenance_database="postgres",
+    ).model_dump(mode="json")
+    assert list_response.status_code == 200
+    assert list_response.json() == [
+        DatabaseRegistryResponse(
             id=1,
             kind=DatabaseKind.postgre,
             name="primary",
@@ -43,25 +52,8 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             username="longlink",
             sslmode="require",
             maintenance_database="postgres",
-        ).model_dump(mode="json"),
-    }
-    assert list_response.status_code == 200
-    assert list_response.json() == {
-        "success": True,
-        "detail": "Database registries fetched",
-        "data": [
-            DatabaseRegistryResponse(
-                id=1,
-                kind=DatabaseKind.postgre,
-                name="primary",
-                host="db.longlink.internal",
-                port=5432,
-                username="longlink",
-                sslmode="require",
-                maintenance_database="postgres",
-            ).model_dump(mode="json")
-        ],
-    }
+        ).model_dump(mode="json")
+    ]
     assert delete_response.status_code == 204
 
 
@@ -90,33 +82,25 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
 
     # Assert
     assert create_response.status_code == 200
-    assert create_response.json() == {
-        "success": True,
-        "detail": "Storage registry saved",
-        "data": StorageRegistryResponse(
+    assert create_response.json() == StorageRegistryResponse(
+        id=1,
+        kind=StorageKind.s3,
+        name="object-store",
+        protocol="s3",
+        endpoint_url="https://storage.longlink.internal",
+        access_key_id="access-key",
+    ).model_dump(mode="json")
+    assert list_response.status_code == 200
+    assert list_response.json() == [
+        StorageRegistryResponse(
             id=1,
             kind=StorageKind.s3,
             name="object-store",
             protocol="s3",
             endpoint_url="https://storage.longlink.internal",
             access_key_id="access-key",
-        ).model_dump(mode="json"),
-    }
-    assert list_response.status_code == 200
-    assert list_response.json() == {
-        "success": True,
-        "detail": "Storage registries fetched",
-        "data": [
-            StorageRegistryResponse(
-                id=1,
-                kind=StorageKind.s3,
-                name="object-store",
-                protocol="s3",
-                endpoint_url="https://storage.longlink.internal",
-                access_key_id="access-key",
-            ).model_dump(mode="json")
-        ],
-    }
+        ).model_dump(mode="json")
+    ]
     assert delete_response.status_code == 204
 
 
@@ -159,11 +143,7 @@ async def test_storage_usage_endpoint_returns_summed_object_size(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {
-        "success": True,
-        "detail": "Storage usage fetched",
-        "data": {"used_bytes": 512},
-    }
+    assert response.json() == {"used_bytes": 512}
 
 
 async def test_storage_quota_endpoint_returns_quota_value(
@@ -205,11 +185,7 @@ async def test_storage_quota_endpoint_returns_quota_value(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {
-        "success": True,
-        "detail": "Storage quota fetched",
-        "data": {"quota_bytes": 1024},
-    }
+    assert response.json() == {"quota_bytes": 1024}
 
 
 async def test_compute_registry_endpoint_supports_create_list_and_delete(
@@ -246,28 +222,20 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
 
     # Assert
     assert create_response.status_code == 200
-    assert create_response.json() == {
-        "success": True,
-        "detail": "Compute registry saved",
-        "data": ComputeRegistryResponse(
+    assert create_response.json() == ComputeRegistryResponse(
+        id=1,
+        kind=ComputeKind.kubernetes,
+        ingress_host="apps.longlink.internal",
+        ingress_name="longlink-ingress",
+    ).model_dump(mode="json")
+    assert list_response.status_code == 200
+    assert list_response.json() == [
+        ComputeRegistryResponse(
             id=1,
             kind=ComputeKind.kubernetes,
             ingress_host="apps.longlink.internal",
             ingress_name="longlink-ingress",
-        ).model_dump(mode="json"),
-    }
-    assert list_response.status_code == 200
-    assert list_response.json() == {
-        "success": True,
-        "detail": "Compute registries fetched",
-        "data": [
-            ComputeRegistryResponse(
-                id=1,
-                kind=ComputeKind.kubernetes,
-                ingress_host="apps.longlink.internal",
-                ingress_name="longlink-ingress",
-            ).model_dump(mode="json")
-        ],
-    }
+        ).model_dump(mode="json")
+    ]
     assert delete_response.status_code == 204
     assert captured == {"kubeconfig": "apiVersion: v1\nclusters: []\n", "ingress_name": "longlink-ingress"}

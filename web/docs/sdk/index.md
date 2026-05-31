@@ -42,14 +42,12 @@ uv add longlink
 == pip
 
 ```bash
-pip install longlink
 longlink init
 ```
 
 == uv
 
 ```bash
-uv add longlink
 uv run longlink init
 ```
 
@@ -82,22 +80,30 @@ uv run longlink init
 Install development dependencies:
 
 ::: tabs
-
 == pip
-
 ```bash
 pip install .[dev]
+```
+== uv
+```bash
+uv sync --extra dev
+```
+:::
+
+
+Install development dependencies:
+
+::: tabs
+== pip
+```bash
 longlink dev
 ```
-
 == uv
-
 ```bash
-uv add .[dev]
 uv run longlink dev
 ```
-
 :::
+
 
 ## Resources
 

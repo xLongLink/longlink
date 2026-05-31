@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from src.adapters.storage.s3 import Storage as StorageAdapter
 from src.auth import authadmin
 from src.models import (
-    APIResponse,
     StorageQuotaResponse,
     StorageRegistryCreate,
     StorageRegistryResponse,
@@ -14,8 +13,8 @@ from src.models.kinds import StorageKind
 router = APIRouter(prefix="/api/storage")
 
 
-@router.get("")
-async def list_storage_registries(_user: db.User = Depends(authadmin)) -> APIResponse[list[StorageRegistryResponse]]:
+@router.get("", response_model=list[StorageRegistryResponse])
+async def list_storage_registries(_user: db.User = Depends(authadmin)) -> list[StorageRegistryResponse]:
     """Return all registered storage backends."""
 
     registries = await db.storage.list()
@@ -33,11 +32,11 @@ async def list_storage_registries(_user: db.User = Depends(authadmin)) -> APIRes
         for registry in registries
     ]
 
-    return APIResponse(success=True, detail="Storage registries fetched", data=payload)
+    return payload
 
 
-@router.get("/{name}/usage")
-async def get_storage_usage(name: str, _user: db.User = Depends(authadmin)) -> APIResponse[StorageUsageResponse]:
+@router.get("/{name}/usage", response_model=StorageUsageResponse)
+async def get_storage_usage(name: str, _user: db.User = Depends(authadmin)) -> StorageUsageResponse:
     """Return storage usage for one registered backend."""
 
     registry = await db.storage.get(name)
@@ -54,15 +53,11 @@ async def get_storage_usage(name: str, _user: db.User = Depends(authadmin)) -> A
         secret_access_key=registry.secret_access_key,
     )
 
-    return APIResponse(
-        success=True,
-        detail="Storage usage fetched",
-        data=StorageUsageResponse.model_validate(adapter.usage()),
-    )
+    return StorageUsageResponse.model_validate(adapter.usage())
 
 
-@router.get("/{name}/quota")
-async def get_storage_quota(name: str, _user: db.User = Depends(authadmin)) -> APIResponse[StorageQuotaResponse]:
+@router.get("/{name}/quota", response_model=StorageQuotaResponse)
+async def get_storage_quota(name: str, _user: db.User = Depends(authadmin)) -> StorageQuotaResponse:
     """Return storage quota for one registered backend."""
 
     registry = await db.storage.get(name)
@@ -79,59 +74,47 @@ async def get_storage_quota(name: str, _user: db.User = Depends(authadmin)) -> A
         secret_access_key=registry.secret_access_key,
     )
 
-    return APIResponse(
-        success=True,
-        detail="Storage quota fetched",
-        data=StorageQuotaResponse.model_validate(adapter.quota()),
-    )
+    return StorageQuotaResponse.model_validate(adapter.quota())
 
 
-@router.get("/{name}")
-async def get_storage_registry(name: str, _user: db.User = Depends(authadmin)) -> APIResponse[StorageRegistryResponse]:
+@router.get("/{name}", response_model=StorageRegistryResponse)
+async def get_storage_registry(name: str, _user: db.User = Depends(authadmin)) -> StorageRegistryResponse:
     """Return one storage backend registration."""
 
     registry = await db.storage.get(name)
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Storage '{name}' not found")
 
-    return APIResponse(
-        success=True,
-        detail="Storage registry fetched",
-        data=StorageRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "name": registry.name,
-                "protocol": registry.protocol,
-                "endpoint_url": registry.endpoint_url,
-                "access_key_id": registry.access_key_id,
-            }
-        ),
+    return StorageRegistryResponse.model_validate(
+        {
+            "id": registry.id,
+            "kind": registry.kind,
+            "name": registry.name,
+            "protocol": registry.protocol,
+            "endpoint_url": registry.endpoint_url,
+            "access_key_id": registry.access_key_id,
+        }
     )
 
 
-@router.post("")
+@router.post("", response_model=StorageRegistryResponse)
 async def create_storage_registry(
     payload: StorageRegistryCreate,
     _user: db.User = Depends(authadmin),
-) -> APIResponse[StorageRegistryResponse]:
+) -> StorageRegistryResponse:
     """Create or update one storage backend registration."""
 
     registry = await db.storage.create(**payload.model_dump())
 
-    return APIResponse(
-        success=True,
-        detail="Storage registry saved",
-        data=StorageRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "name": registry.name,
-                "protocol": registry.protocol,
-                "endpoint_url": registry.endpoint_url,
-                "access_key_id": registry.access_key_id,
-            }
-        ),
+    return StorageRegistryResponse.model_validate(
+        {
+            "id": registry.id,
+            "kind": registry.kind,
+            "name": registry.name,
+            "protocol": registry.protocol,
+            "endpoint_url": registry.endpoint_url,
+            "access_key_id": registry.access_key_id,
+        }
     )
 
 

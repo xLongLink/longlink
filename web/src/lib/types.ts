@@ -1,12 +1,6 @@
 import type { Role } from '@/lib/roles';
 import type { Accent, Radius, Theme } from '@/lib/theme';
 
-export type ApiResponse<T> = {
-    success: boolean;
-    detail: string;
-    data: T | null;
-};
-
 export type ApiUserSummary = {
     id: number;
     name: string;
@@ -101,5 +95,5 @@ export type ApiAppResponse = {
     created_by: ApiUserSummary;
     updated_by: ApiUserSummary;
     deleted_at: string | null;
-    deleted_by: ApiUserSummary;
+    deleted_by: ApiUserSummary | null;
 };

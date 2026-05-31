@@ -9,8 +9,8 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { apiUrl } from '@/lib/api';
-import type { ApiResponse, ApiUserSummary } from '@/lib/types';
+import { apiUrl, fetchApiJson } from '@/lib/api';
+import type { ApiUserSummary } from '@/lib/types';
 
 const userColumns: Array<ColumnDef<ApiUserSummary>> = [
     {
@@ -111,20 +111,7 @@ export default function AdminUsers() {
 
     const usersQuery = useQuery({
         queryKey: ['api', usersUrl],
-        queryFn: async () => {
-            const response = await fetch(usersUrl, {
-                headers: { Accept: 'application/json' },
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            const payload = (await response.json()) as ApiResponse<Array<ApiUserSummary>>;
-
-            return payload.data ?? [];
-        },
+        queryFn: async () => fetchApiJson<Array<ApiUserSummary>>(usersUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });

@@ -10,10 +10,18 @@ editUrl: https://github.com/xLongLink/longlink/edit/main/web/docs/sdk/building.m
 - Once containerized, applications can be pushed to any registry.
 - Applications can be connected to the control plane and deployed.
 
+::: tabs
+
+== pip
+
 ```bash
 longlink build
 ```
 
+== uv
+
 ```bash
 uv run longlink build
 ```
+
+:::

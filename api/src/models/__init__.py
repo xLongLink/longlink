@@ -1,4 +1,3 @@
-from .__base__ import APIResponse  # noqa: F401
 from .apps import AppCreate, AppResponse  # noqa: F401
 from .compute import ComputeRegistryCreate, ComputeRegistryResponse, DockerRegistryCreate  # noqa: F401
 from .database import DatabaseRegistryCreate, DatabaseRegistryResponse  # noqa: F401

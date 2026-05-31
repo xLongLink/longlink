@@ -50,14 +50,10 @@ async def test_list_apps_returns_app_membership_role(
             "role": Roles.write,
             "created_by": UserSummary.model_validate(user.model_dump()),
             "updated_by": UserSummary.model_validate(user.model_dump()),
-            "deleted_by": UserSummary.model_validate(user.model_dump()),
+            "deleted_by": None,
         }
     ).model_dump(mode="json")
-    assert response.json() == {
-        "success": True,
-        "detail": "Apps fetched",
-        "data": [expected_data],
-    }
+    assert response.json() == [expected_data]
 
 
 async def test_list_apps_returns_null_role_without_app_membership(
@@ -89,14 +85,10 @@ async def test_list_apps_returns_null_role_without_app_membership(
             "role": None,
             "created_by": UserSummary.model_validate(user.model_dump()),
             "updated_by": UserSummary.model_validate(user.model_dump()),
-            "deleted_by": UserSummary.model_validate(user.model_dump()),
+            "deleted_by": None,
         }
     ).model_dump(mode="json")
-    assert response.json() == {
-        "success": True,
-        "detail": "Apps fetched",
-        "data": [expected_data],
-    }
+    assert response.json() == [expected_data]
 
 
 async def test_list_apps_returns_404_for_non_member(
@@ -123,11 +115,11 @@ async def test_list_apps_returns_404_for_non_member(
     }
 
 
-async def test_create_app_returns_envelope(
+async def test_create_app_returns_app_response(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Create an app and return the shared success envelope."""
+    """Create an app and return the app response payload."""
 
     # Arrange
     user = users[0]
@@ -143,13 +135,9 @@ async def test_create_app_returns_envelope(
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    expected_data = AppResponse.model_validate(payload["data"]).model_dump(mode="json")
-    assert payload["data"]["deleted_by"] == UserSummary.model_validate(user.model_dump()).model_dump(mode="json")
-    assert payload == {
-        "success": True,
-        "detail": "App created",
-        "data": expected_data,
-    }
+    expected_data = AppResponse.model_validate(payload).model_dump(mode="json")
+    assert payload["deleted_by"] is None
+    assert payload == expected_data
 
 
 async def test_delete_app_removes_dependent_env_rows(

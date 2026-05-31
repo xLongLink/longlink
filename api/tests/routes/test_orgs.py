@@ -12,7 +12,7 @@ async def test_create_organization_returns_owner_role(
     """Create a new organization and return the owner role in the payload."""
 
     # Arrange
-    user = users[0]
+    owner = users[0]
     client = clients[0]
 
     # Act
@@ -20,11 +20,19 @@ async def test_create_organization_returns_owner_role(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {
-        "success": True,
-        "detail": "Organization created",
-        "data": None,
-    }
+    organization = await db.orgs.get("acme")
+    assert organization is not None
+    assert response.json() == OrgSummary.model_validate(
+        {
+            "name": organization.name,
+            "created_at": organization.created_at,
+            "updated_at": organization.updated_at,
+            "created_by": UserSummary.model_validate(owner.model_dump()),
+            "updated_by": UserSummary.model_validate(owner.model_dump()),
+            "deleted_at": None,
+            "deleted_by": None,
+        }
+    ).model_dump(mode="json")
 
 
 async def test_get_organization_returns_member_payload(
@@ -86,21 +94,17 @@ async def test_get_organization_returns_member_payload(
         ],
     ).model_dump(mode="json")
 
-    assert response.json() == {
-        "success": True,
-        "detail": "Organization fetched",
-        "data": expected_payload,
-    }
+    assert response.json() == expected_payload
 
-    assert response.json()["data"]["users"][0]["avatar"] == ""
-    assert response.json()["data"]["users"][0] == {
+    assert response.json()["users"][0]["avatar"] == ""
+    assert response.json()["users"][0] == {
         "id": owner.id,
         "name": owner.name,
         "email": owner.email,
         "avatar": "",
         "admin": owner.admin,
     }
-    assert response.json()["data"]["apps"] == [
+    assert response.json()["apps"] == [
         {
             "id": app.id,
             "name": "dashboard",
@@ -142,11 +146,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
             "deleted_by": None,
         }
     ).model_dump(mode="json")
-    assert response.json() == {
-        "success": True,
-        "detail": "Organizations fetched",
-        "data": [expected_payload],
-    }
+    assert response.json() == [expected_payload]
 
 
 async def test_get_organization_returns_404_for_non_member(

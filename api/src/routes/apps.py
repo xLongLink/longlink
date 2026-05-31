@@ -2,7 +2,6 @@ import httpx
 import src.db as db
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from src.auth import authuser
-from src.models import APIResponse
 from src.models.apps import AppCreate, AppResponse
 from src.models.users import UserSummary
 from src.utils.utils import normalize
@@ -25,8 +24,8 @@ HOP_BY_HOP_HEADERS = {
 }
 
 
-@router.get("")
-async def list_apps(organization: str, user: db.User = Depends(authuser)) -> APIResponse[list[AppResponse]]:
+@router.get("", response_model=list[AppResponse])
+async def list_apps(organization: str, user: db.User = Depends(authuser)) -> list[AppResponse]:
     """Return the apps registered in one organization."""
 
     if all(org.name != organization for org in user.orgs):
@@ -39,7 +38,7 @@ async def list_apps(organization: str, user: db.User = Depends(authuser)) -> API
     for app, role_name in apps:
         created_by = UserSummary.model_validate((app.created_by or user).model_dump())
         updated_by = UserSummary.model_validate((app.updated_by or app.created_by or user).model_dump())
-        deleted_by = UserSummary.model_validate((app.deleted_by or app.updated_by or app.created_by or user).model_dump())
+        deleted_by = UserSummary.model_validate(app.deleted_by.model_dump()) if app.deleted_by else None
 
         app_payloads.append(
             AppResponse.model_validate(
@@ -53,19 +52,15 @@ async def list_apps(organization: str, user: db.User = Depends(authuser)) -> API
             )
         )
 
-    return APIResponse(
-        success=True,
-        detail="Apps fetched",
-        data=app_payloads,
-    )
+    return app_payloads
 
 
-@router.post("")
+@router.post("", response_model=AppResponse)
 async def create_app(
     organization: str,
     payload: AppCreate,
     user: db.User = Depends(authuser),
-) -> APIResponse[AppResponse]:
+) -> AppResponse:
     """Register a new app in the database."""
     app_url = f"/api/apps/{payload.name}"
 
@@ -80,17 +75,13 @@ async def create_app(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return APIResponse(
-        success=True,
-        detail="App created",
-        data=AppResponse.model_validate(
-            {
-                **app.model_dump(),
-                "created_by": UserSummary.model_validate(user.model_dump()),
-                "updated_by": UserSummary.model_validate(user.model_dump()),
-                "deleted_by": UserSummary.model_validate(user.model_dump()),
-            }
-        ),
+    return AppResponse.model_validate(
+        {
+            **app.model_dump(),
+            "created_by": UserSummary.model_validate(user.model_dump()),
+            "updated_by": UserSummary.model_validate(user.model_dump()),
+            "deleted_by": None,
+        }
     )
 
 

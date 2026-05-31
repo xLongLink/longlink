@@ -1,5 +1,8 @@
 const DEFAULT_API_URL = '';
-export type { ApiResponse } from '@/lib/types';
+
+type ApiErrorPayload = {
+    detail?: string;
+} | null;
 
 /** Resolves an API path against the configured API origin. */
 export function apiUrl(path: string): string {
@@ -10,4 +13,44 @@ export function apiUrl(path: string): string {
     }
 
     return new URL(path, baseUrl).toString();
+}
+
+/** Reads the API error detail from a failed response. */
+async function readApiError(response: Response): Promise<string> {
+    const payload = (await response.json().catch(() => null)) as ApiErrorPayload;
+
+    return payload?.detail ?? `API request failed (${response.status})`;
+}
+
+
+/** Sends one API request and normalizes non-OK errors. */
+async function requestApi(url: string, init?: RequestInit): Promise<Response> {
+    const headers = new Headers(init?.headers);
+
+    if (!headers.has('Accept')) {
+        headers.set('Accept', 'application/json');
+    }
+
+    const response = await fetch(url, {
+        ...init,
+        headers,
+    });
+
+    if (!response.ok) {
+        throw new Error(await readApiError(response));
+    }
+
+    return response;
+}
+
+/** Fetches JSON and throws a normalized error for non-OK responses. */
+export async function fetchApiJson<T>(url: string, init?: RequestInit): Promise<T> {
+    const response = await requestApi(url, init);
+
+    return (await response.json()) as T;
+}
+
+/** Fetches an API endpoint and ignores the body on success. */
+export async function fetchApiVoid(url: string, init?: RequestInit): Promise<void> {
+    await requestApi(url, init);
 }

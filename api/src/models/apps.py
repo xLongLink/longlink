@@ -36,4 +36,4 @@ class AppResponse(BaseModel):
     created_by: UserSummary
     updated_by: UserSummary
     deleted_at: datetime | None = None
-    deleted_by: UserSummary
+    deleted_by: UserSummary | None = None

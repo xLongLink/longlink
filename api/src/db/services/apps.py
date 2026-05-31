@@ -98,7 +98,6 @@ class AppsService(ServiceBase):
             if user is not None:
                 app.created_by_id = user.id
                 app.updated_by_id = user.id
-                app.deleted_by_id = user.id
             session.add(app)
             await session.commit()
             await session.refresh(app)

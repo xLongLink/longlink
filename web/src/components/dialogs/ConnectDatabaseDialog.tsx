@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { apiUrl } from '@/lib/api';
+import { apiUrl, fetchApiJson } from '@/lib/api';
 
 /** Renders the admin database connect dialog. */
 export default function ConnectDatabaseDialog() {
@@ -26,10 +26,9 @@ export default function ConnectDatabaseDialog() {
 
     const connectDatabase = useMutation({
         mutationFn: async () => {
-            const response = await fetch(databaseUrl, {
+            return fetchApiJson(databaseUrl, {
                 method: 'POST',
                 headers: {
-                    Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
                 credentials: 'include',
@@ -44,13 +43,6 @@ export default function ConnectDatabaseDialog() {
                     maintenance_database: maintenanceDatabase.trim() || 'postgres',
                 }),
             });
-
-            if (!response.ok) {
-                const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-                throw new Error(payload?.detail ?? `API request failed (${response.status})`);
-            }
-
-            return response.json();
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['api', databaseUrl] });
