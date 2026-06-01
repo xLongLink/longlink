@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class Storage(ABC):
-    """Storage adapter.
+    """Storage adapter root.
 
     Storage Cluster               # Managed by the control plane
     └── Tenant                    # One per organization

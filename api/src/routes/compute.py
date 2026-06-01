@@ -2,7 +2,7 @@ import src.db as db
 from fastapi import Depends, Response, APIRouter, HTTPException, status
 from src.auth import authadmin
 from src.models import ComputeRegistryCreate, ComputeRegistryResponse
-from adapters.compute.k8s import K8s
+from src.adapters.compute.k8s import K8s
 
 router = APIRouter(prefix="/api/compute")
 

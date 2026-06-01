@@ -4,7 +4,7 @@ from src.auth import authadmin
 from src.models import (StorageQuotaResponse, StorageUsageResponse,
                         StorageRegistryCreate, StorageRegistryResponse)
 from src.models.kinds import StorageKind
-from src.adapters.storage.s3 import Storage as StorageAdapter
+from src.adapters.storage.s3 import S3 as StorageAdapter
 
 router = APIRouter(prefix="/api/storage")
 

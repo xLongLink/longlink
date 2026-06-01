@@ -1,4 +1,4 @@
 """Storage adapter exports."""
 
-from .s3 import Storage
-from .__root__ import Root
+from .__root__ import Storage
+from .s3 import S3

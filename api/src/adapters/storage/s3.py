@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import boto3
-from .__root__ import Root
+from .__root__ import Storage
 
 
-class Storage(Root):
+class S3(Storage):
     """S3-compatible storage adapter."""
 
     def __init__(

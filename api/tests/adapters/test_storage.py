@@ -1,5 +1,5 @@
 from unittest.mock import Mock
-from src.adapters.storage.s3 import Storage
+from src.adapters.storage.s3 import S3
 
 
 def test_storage_usage_sums_objects_across_buckets(monkeypatch) -> None:
@@ -16,7 +16,7 @@ def test_storage_usage_sums_objects_across_buckets(monkeypatch) -> None:
 
     monkeypatch.setattr("src.adapters.storage.s3.boto3.client", Mock(return_value=client))
 
-    storage = Storage(
+    storage = S3(
         protocol="https",
         endpoint_url="https://storage.longlink.internal",
         access_key_id="access-key",
@@ -33,7 +33,7 @@ def test_storage_quota_returns_unknown_quota(monkeypatch) -> None:
     client = Mock()
     monkeypatch.setattr("src.adapters.storage.s3.boto3.client", Mock(return_value=client))
 
-    storage = Storage(
+    storage = S3(
         protocol="https",
         endpoint_url="https://storage.longlink.internal",
         access_key_id="access-key",

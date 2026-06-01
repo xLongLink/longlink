@@ -5,7 +5,7 @@ from src.env import env
 from src.db.models import Base
 from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
 from sqlalchemy.engine import make_url
-from src.adapters.compute import Compute
+from src.adapters.compute import K8s
 from sqlalchemy.ext.asyncio import create_async_engine
 
 LOCAL_DATABASE = {
@@ -49,7 +49,7 @@ LOCAL_COMPUTE = {
 async def main() -> None:
     """Seed the control plane database with baseline records."""
 
-    compute = Compute(LOCAL_COMPUTE["kubeconfig"], LOCAL_COMPUTE["ingress_name"])
+    compute = K8s(LOCAL_COMPUTE["kubeconfig"], LOCAL_COMPUTE["ingress_name"])
 
     # Local development uses SQLite, so bootstrap the schema before inserting seed rows.
     if env.DATABASE_URL.startswith('sqlite+'):
