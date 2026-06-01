@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .base import ServiceBase
 from sqlalchemy import delete, select
 from src.db.models import App, Org, User

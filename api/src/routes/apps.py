@@ -5,8 +5,9 @@ import tempfile
 import yaml
 import src.db as db
 from fastapi import (Depends, Request, Response, APIRouter, HTTPException,
-                     status)
+                      status)
 from src.auth import authuser, authadmin
+from src.adapters.database import Postgre
 from src.models.apps import AppCreate, AppResponse
 from src.utils.utils import knames, slugify
 from src.models.users import UserSummary
@@ -69,14 +70,42 @@ async def create_app(
     """Register a new app in the database and deploy it on the compute cluster."""
     app_slug = slugify(payload.name)
 
-    # Deploy the app on the compute cluster.
+    org = await db.orgs.get(organization)
+    if org is None:
+        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+    if org.location_id is None:
+        raise HTTPException(status_code=400, detail=f"Org '{organization}' has no location configured")
+
     registries = await db.compute.list()
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
-    registry = registries[0]
+    # Create the app database schema before the workload starts.
+    database_registries = await db.database.list()
+    if not database_registries:
+        raise HTTPException(status_code=503, detail="No database configured")
+
+    registry = next((registry for registry in registries if registry.location_id == org.location_id), None)
+    if registry is None:
+        raise HTTPException(status_code=503, detail=f"No compute cluster configured for location '{org.location_id}'")
     compute = K8s(registry.kubeconfig, registry.ingress_name)
+
+    database_registry = next((registry for registry in database_registries if registry.location_id == org.location_id), None)
+    if database_registry is None:
+        raise HTTPException(status_code=503, detail=f"No database configured for location '{org.location_id}'")
+    database = Postgre(
+        database_registry.host,
+        database_registry.port,
+        database_registry.username,
+        database_registry.password,
+        database_registry.sslmode,
+        database_registry.maintenance_database,
+    )
+
     await compute.namespace(organization)
+    await database.schema(organization, app_slug)
+
+    # Deploy the app on the compute cluster.
     await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, {})
 
     try:

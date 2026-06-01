@@ -3,9 +3,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Environments(BaseSettings):
-    """SDK environment model loaded from process variables or `.env`."""
+    """SDK environment model loaded from process variables only (no `.env` file)."""
+
+    model_config = SettingsConfigDict(env_prefix="LONGLINK_")
+
     ENV: Literal["development", "testing", "production"] = "development"
-    BASEURL: str = ""
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./dev.db"
 
@@ -14,8 +16,5 @@ class Environments(BaseSettings):
     STORAGE_ACCESS_KEY_ID: str | None = None
     STORAGE_SECRET_ACCESS_KEY: str | None = None
 
-    model_config = SettingsConfigDict(
-        env_file=(".env", ".env.sample"),
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
+
+Env = Environments

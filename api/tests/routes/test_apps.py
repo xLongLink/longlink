@@ -1,6 +1,6 @@
 import httpx
 import src.db as db
-from src.models import AppResponse, ComputeKind, UserSummary
+from src.models import AppResponse, ComputeKind, DatabaseKind, UserSummary
 from src.db.models import User, UserApp
 from src.db.session import get_session
 from src.models.roles import Roles
@@ -115,12 +115,112 @@ async def test_list_apps_returns_404_for_non_member(
 async def test_create_app_returns_app_response(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
+    monkeypatch,
 ) -> None:
     """Create an app and return the app response payload."""
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user)
+    local_location = await db.locations.create("local", "Local testing")
+    remote_location = await db.locations.create("remote", "Remote testing")
+    await db.orgs.create("acme", remote_location.id, user)
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        kubeconfig="apiVersion: v1\nclusters: []\n",
+        ingress_host="apps.local.longlink.internal",
+        ingress_name="local-ingress",
+        location_id=local_location.id,
+    )
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        kubeconfig="apiVersion: v1\nclusters: []\n",
+        ingress_host="apps.remote.longlink.internal",
+        ingress_name="remote-ingress",
+        location_id=remote_location.id,
+    )
+    await db.database.create(
+        kind=DatabaseKind.postgre,
+        name="local",
+        host="db.local.longlink.internal",
+        port=5432,
+        username="longlink",
+        password="secret",
+        sslmode="require",
+        maintenance_database="postgres",
+        location_id=local_location.id,
+    )
+    await db.database.create(
+        kind=DatabaseKind.postgre,
+        name="remote",
+        host="db.remote.longlink.internal",
+        port=5432,
+        username="longlink",
+        password="secret",
+        sslmode="require",
+        maintenance_database="postgres",
+        location_id=remote_location.id,
+    )
+
+    captured: dict[str, object] = {}
+
+    class FakeCompute:
+        """Fake compute adapter for app creation tests."""
+
+        def __init__(self, kubeconfig: str, ingress_name: str) -> None:
+            captured["kubeconfig"] = kubeconfig
+            captured["ingress_name"] = ingress_name
+
+        async def namespace(self, organization: str) -> None:
+            captured["namespace"] = organization
+
+        async def application(
+            self,
+            organization: str,
+            application: str,
+            image: str,
+            port: int,
+            secrets: dict[str, str],
+        ) -> None:
+            captured["application"] = {
+                "organization": organization,
+                "application": application,
+                "image": image,
+                "port": port,
+                "secrets": secrets,
+            }
+
+    class FakeDatabase:
+        """Fake database adapter for app creation tests."""
+
+        def __init__(
+            self,
+            host: str,
+            port: int,
+            username: str,
+            password: str,
+            sslmode: str | None,
+            maintenance_database: str,
+            location_id: int,
+        ) -> None:
+            captured["database"] = {
+                "host": host,
+                "port": port,
+                "username": username,
+                "password": password,
+                "sslmode": sslmode,
+            }
+            captured["maintenance_database"] = maintenance_database
+            captured["location_id"] = location_id
+
+        async def schema(self, organization: str, application: str) -> str:
+            captured["schema"] = {
+                "organization": organization,
+                "application": application,
+            }
+            return "postgresql://fake"
+
+    monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.apps.Postgre", FakeDatabase)
     client = clients[0]
 
     # Act
@@ -135,6 +235,25 @@ async def test_create_app_returns_app_response(
     expected_data = AppResponse.model_validate(payload).model_dump(mode="json")
     assert payload["deleted_by"] is None
     assert payload == expected_data
+    assert captured["namespace"] == "acme"
+    assert captured["ingress_name"] == "remote-ingress"
+    assert captured["database"] == {
+        "host": "db.remote.longlink.internal",
+        "port": 5432,
+        "username": "longlink",
+        "password": "secret",
+        "sslmode": "require",
+    }
+    assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
+    assert captured["maintenance_database"] == "postgres"
+    assert captured["location_id"] == remote_location.id
+    assert captured["application"] == {
+        "organization": "acme",
+        "application": "dashboard",
+        "image": "ghcr.io/longlink/dashboard:latest",
+        "port": 80,
+        "secrets": {},
+    }
 
 
 async def test_delete_app_removes_dependent_env_rows(

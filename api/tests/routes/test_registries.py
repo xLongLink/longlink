@@ -24,6 +24,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             "password": "secret",
             "sslmode": "require",
             "maintenance_database": "postgres",
+            "location_id": 1,
         },
     )
     list_response = client.get("/api/database")
@@ -40,6 +41,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         username="longlink",
         sslmode="require",
         maintenance_database="postgres",
+        location_id=1,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
@@ -52,6 +54,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             username="longlink",
             sslmode="require",
             maintenance_database="postgres",
+            location_id=1,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
@@ -213,6 +216,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             "kubeconfig": "apiVersion: v1\nclusters: []\n",
             "ingress_host": "apps.longlink.internal",
             "ingress_name": "longlink-ingress",
+            "location_id": 1,
         },
     )
     list_response = client.get("/api/compute")
@@ -225,6 +229,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         kind=ComputeKind.kubernetes,
         ingress_host="apps.longlink.internal",
         ingress_name="longlink-ingress",
+        location_id=1,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
@@ -233,6 +238,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             kind=ComputeKind.kubernetes,
             ingress_host="apps.longlink.internal",
             ingress_name="longlink-ingress",
+            location_id=1,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204

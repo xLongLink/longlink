@@ -2,7 +2,7 @@ import { fromXml, RenderXML } from '@/xml';
 
 export const metadata = {
     lastUpdated: '2026-05-27',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/docs/index.md',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/docs/index.tsx',
 };
 
 const ast = fromXml(`

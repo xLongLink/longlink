@@ -70,7 +70,7 @@ async def main() -> None:
 
     # Keep the local backend registrations available after every seed run.
     location = await db.locations.create("local", "Local development")
-    await db.database.create(**LOCAL_DATABASE)
+    await db.database.create(**LOCAL_DATABASE, location_id=location.id)
     await db.storage.create(**LOCAL_STORAGE, location_id=location.id)
     await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await db.orgs.create(LOCAL_ORG, location.id)

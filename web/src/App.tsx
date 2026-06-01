@@ -39,35 +39,13 @@ import { content as docsXmlComponentsContent, metadata as docsXmlComponentsMetad
 import { content as docsXmlContent, metadata as docsXmlMetadata } from '@/docs/xml/index';
 import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/docs/xml/layout';
 
-type RuntimeWindow = Window & {
-    __LONGLINK_BASEURL__?: string;
-};
-
-/** Returns the server-injected SDK base URL, if present. */
-function getSdkBaseUrl(): string {
-    if (typeof window === 'undefined') {
-        return '';
-    }
-
-    const baseUrl = (window as RuntimeWindow).__LONGLINK_BASEURL__ ?? '';
-
-    if (!baseUrl) {
-        return '';
-    }
-
-    return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-}
-
 /**
  * Builds the route tree for the current bundle mode.
  */
 function getRoutes() {
     // SDK bundle serves the app runtime without control-plane routes.
     if (import.meta.env.MODE === 'sdk') {
-        const baseUrl = getSdkBaseUrl();
-        const metadataUrl = baseUrl ? `${baseUrl}metadata.json` : '/metadata.json';
-
-        return [{ path: '/', element: <View metadata={metadataUrl} baseurl={baseUrl} /> }];
+        return [{ path: '/', element: <View metadata="/metadata.json" /> }];
     }
 
     // Default bundle serves the full app with control-plane routes.
@@ -224,7 +202,6 @@ function OrgAppView() {
     return (
         <View
             metadata={apiUrl(`/api/apps/${orgApp.id}/proxy/metadata.json`)}
-            baseurl={apiUrl(`/api/apps/${orgApp.id}/proxy/`)}
         />
     );
 }

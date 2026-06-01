@@ -1,4 +1,3 @@
-import json
 import traceback
 from fastapi import FastAPI, Request
 from pathlib import Path
@@ -15,28 +14,20 @@ from fastapi.middleware.cors import CORSMiddleware
 class SPAStaticFiles(StaticFiles):
     """Serve SPA assets and fall back to `index.html` for unknown routes."""
 
-    def __init__(self, *args, base_url: str = "", directory: str | Path | None = None, **kwargs):
-        """Remember the mounted directory and runtime base URL."""
+    def __init__(self, *args, directory: str | Path | None = None, **kwargs):
+        """Remember the mounted directory for SPA fallback responses."""
 
         super().__init__(*args, directory=directory, **kwargs)
         self._directory = Path(directory) if directory is not None else None
-        self._base_url = base_url.rstrip("/") + "/" if base_url else "/"
 
     def _index_response(self) -> Response:
-        """Return the rewritten SPA entrypoint for the active base URL."""
+        """Return the SPA entrypoint for the mounted directory."""
 
         if self._directory is None:
             raise HTTPException(status_code=404)
 
         index_path = self._directory / "index.html"
         content = index_path.read_text(encoding="utf-8")
-        content = content.replace('href="/favicon.ico"', f'href="{self._base_url}favicon.ico"')
-        content = content.replace('src="/assets/', f'src="{self._base_url}assets/')
-        content = content.replace('href="/assets/', f'href="{self._base_url}assets/')
-        content = content.replace(
-            "</head>",
-            f'<script>window.__LONGLINK_BASEURL__ = {json.dumps(self._base_url)};</script></head>',
-        )
 
         return Response(content=content, media_type="text/html")
 
@@ -86,7 +77,7 @@ class LongLink(FastAPI):
         # Mount static files after API routes so metadata and app assets stay reachable.
         static_dir = ROOT / ".static" / "web"
         if static_dir.exists():
-            self.mount("/", SPAStaticFiles(directory=static_dir, html=True, base_url=environments.BASEURL), name="static")
+            self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
 
         # Enable CORS in development for local frontend access to API routes
         if environments.ENV == "development":

@@ -13,6 +13,7 @@ class DatabaseRegistryCreate(BaseModel):
     password: str
     sslmode: str | None = None
     maintenance_database: str = "postgres"
+    location_id: int
 
 
 class DatabaseRegistryResponse(BaseModel):
@@ -26,3 +27,4 @@ class DatabaseRegistryResponse(BaseModel):
     username: str
     sslmode: str | None = None
     maintenance_database: str = "postgres"
+    location_id: int

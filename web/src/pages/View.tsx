@@ -8,7 +8,6 @@ import XML from './XML';
 
 type ViewProps = {
     metadata: string;
-    baseurl: string;
 };
 
 type MetadataPage = {
@@ -38,7 +37,7 @@ function resolveTemplate(template: string, params: Record<string, string | undef
 /**
  * Renders metadata-backed XML pages for control-plane and app routes.
  */
-export default function View({ metadata, baseurl }: ViewProps) {
+export default function View({ metadata }: ViewProps) {
     const params = useParams();
     const [searchParams] = useSearchParams();
     const [pageContent, setPageContent] = useState<string | null>(null);
@@ -49,7 +48,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
     const routeParams = params as Record<string, string | undefined>;
     const { '*': wildcardPath } = params;
     const resolvedMetadata = resolveTemplate(metadata, routeParams);
-    const resolvedBaseUrl = resolveTemplate(baseurl, routeParams);
+    const resolvedMetadataBaseUrl = resolvedMetadata.replace(/metadata\.json(?:[?#].*)?$/i, '');
     const {
         data: metadataDocument,
         isLoading,
@@ -117,7 +116,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
         const pageUrl =
             activePage.path.startsWith('http://') || activePage.path.startsWith('https://')
                 ? activePage.path
-                : resolveUrl(resolvedBaseUrl, pagePath);
+                : resolveUrl(resolvedMetadataBaseUrl, pagePath);
 
         setPageLoading(true);
         setPageContent(null);
@@ -155,7 +154,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
             });
 
         return () => controller.abort();
-    }, [activePage?.path, resolvedBaseUrl]);
+    }, [activePage?.path, resolvedMetadataBaseUrl]);
 
     if (error) {
         return <div>{error.message}</div>;
@@ -186,7 +185,7 @@ export default function View({ metadata, baseurl }: ViewProps) {
     return (
         <XML tabs={tabs}>
             <section className="space-y-6">
-                <RenderXML ast={ast} baseUrl={resolvedBaseUrl} />
+                <RenderXML ast={ast} baseUrl={resolvedMetadataBaseUrl} />
             </section>
         </XML>
     );

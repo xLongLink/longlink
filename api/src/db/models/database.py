@@ -20,3 +20,4 @@ class DatabaseRegistry(Base, table=True):
     password: str = Field(max_length=255)
     sslmode: str | None = Field(default=None, max_length=32)
     maintenance_database: str = Field(default="postgres", max_length=255)
+    location_id: int = Field(foreign_key='locations.id')

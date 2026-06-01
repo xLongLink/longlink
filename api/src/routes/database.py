@@ -13,15 +13,16 @@ async def list_database_registries(_user: db.User = Depends(authadmin)) -> list[
     registries = await db.database.list()
     payload = [
         DatabaseRegistryResponse.model_validate(
-                {
-                    "id": registry.id,
-                    "kind": registry.kind,
-                    "name": registry.name,
-                    "host": registry.host,
-                    "port": registry.port,
+            {
+                "id": registry.id,
+                "kind": registry.kind,
+                "name": registry.name,
+                "host": registry.host,
+                "port": registry.port,
                 "username": registry.username,
                 "sslmode": registry.sslmode,
                 "maintenance_database": registry.maintenance_database,
+                "location_id": registry.location_id,
             }
         )
         for registry in registries
@@ -48,6 +49,7 @@ async def get_database_registry(name: str, _user: db.User = Depends(authadmin)) 
             "username": registry.username,
             "sslmode": registry.sslmode,
             "maintenance_database": registry.maintenance_database,
+            "location_id": registry.location_id,
         }
     )
 
@@ -71,6 +73,7 @@ async def create_database_registry(
             "username": registry.username,
             "sslmode": registry.sslmode,
             "maintenance_database": registry.maintenance_database,
+            "location_id": registry.location_id,
         }
     )
 

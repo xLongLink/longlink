@@ -29,6 +29,7 @@ class DatabaseRegistriesService(ServiceBase):
         port: int,
         username: str,
         password: str,
+        location_id: int,
         sslmode: str | None = None,
         maintenance_database: str = "postgres",
     ) -> DatabaseRegistry:
@@ -49,6 +50,7 @@ class DatabaseRegistriesService(ServiceBase):
                     password=password,
                     sslmode=sslmode,
                     maintenance_database=maintenance_database,
+                    location_id=location_id,
                 )
                 session.add(database)
             else:
@@ -59,6 +61,7 @@ class DatabaseRegistriesService(ServiceBase):
                 database.password = password
                 database.sslmode = sslmode
                 database.maintenance_database = maintenance_database
+                database.location_id = location_id
 
             await session.commit()
             await session.refresh(database)

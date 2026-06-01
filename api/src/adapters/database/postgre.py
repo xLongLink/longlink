@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 
-import psycopg
-from psycopg import conninfo
-from psycopg import sql
+from contextlib import asynccontextmanager
+
+from sqlalchemy import text
+from sqlalchemy.engine import URL
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
+from sqlalchemy.schema import CreateSchema, DropSchema
+from sqlalchemy.sql.elements import quoted_name
 
 from .__root__ import Database
 
@@ -13,112 +17,122 @@ class Postgre(Database):
 
     def __init__(
         self,
-        connection: str,
+        host: str,
+        port: int,
+        username: str,
+        password: str,
+        sslmode: str | None = None,
         maintenance_database: str = "postgres",
     ) -> None:
         """Initialize the PostgreSQL database adapter.
 
         Args:
-            connection: PostgreSQL connection string (libpq key=value format or URI).
+            host: PostgreSQL host.
+            port: PostgreSQL port.
+            username: PostgreSQL username.
+            password: PostgreSQL password.
+            sslmode: Optional libpq sslmode value.
             maintenance_database: Database to connect to for server-level operations.
         """
-        self._connection = connection
+        self._host = host
+        self._port = port
+        self._username = username
+        self._password = password
+        self._sslmode = sslmode
         self._maintenance_database = maintenance_database
-        self._maintenance_conn: psycopg.AsyncConnection | None = None
 
-        # Parse connection info for user-facing connection values.
-        info = conninfo.conninfo_to_dict(connection)
-        self._host: str = str(info.get("host") or "localhost")
-        self._port: int = int(info.get("port") or 5432)
-        self._user: str = str(info.get("user") or "")
-        self._password: str = str(info.get("password") or "")
+    def _url(self, database: str) -> URL:
+        """Build one SQLAlchemy URL for the requested database."""
+
+        # Keep the connection details inside the adapter so callers only pass registry fields.
+        url = URL.create(
+            "postgresql+psycopg",
+            username=self._username,
+            password=self._password,
+            host=self._host,
+            port=self._port,
+            database=database,
+        )
+        if self._sslmode is not None:
+            url = url.update_query_dict({"sslmode": self._sslmode})
+        return url
 
 
-    async def _ensure_maintenance_connection(self) -> psycopg.AsyncConnection:
-        """Return a cached connection to the maintenance database."""
-        if self._maintenance_conn is None or self._maintenance_conn.closed:
-            self._maintenance_conn = await psycopg.AsyncConnection.connect(
-                self._connection, dbname=self._maintenance_database
-            )
-            await self._maintenance_conn.set_autocommit(True)
-        return self._maintenance_conn
+    @asynccontextmanager
+    async def _connection(self, database: str, *, autocommit: bool = False) -> AsyncConnection:
+        """Open one managed SQLAlchemy connection for a database.
+
+        The adapter owns the engine lifecycle and disposes it after every operation.
+        """
+
+        engine_kwargs: dict[str, object] = {"pool_pre_ping": True}
+        if autocommit:
+            engine_kwargs["isolation_level"] = "AUTOCOMMIT"
+
+        engine: AsyncEngine = create_async_engine(self._url(database), **engine_kwargs)
+        try:
+            async with engine.connect() as conn:
+                yield conn
+        finally:
+            await engine.dispose()
 
 
     async def _ensure_organization_database(self, organization: str) -> None:
         """Create the organization database when it is missing."""
-        conn = await self._ensure_maintenance_connection()
-        async with conn.cursor() as cursor:
-            await cursor.execute(
-                "SELECT 1 FROM pg_database WHERE datname = %s",
-                (organization,),
-            )
-            if await cursor.fetchone() is None:
-                await cursor.execute(
-                    sql.SQL("CREATE DATABASE {}").format(sql.Identifier(organization))
-                )
+
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :organization"), {"organization": organization})
+            if result.scalar_one_or_none() is None:
+                # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
+                database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(organization)
+                await conn.exec_driver_sql(f"CREATE DATABASE {database_name}")
 
 
     async def database(self, organization: str) -> str:
         """Create the organization database if it does not exist and return a connection DSN."""
         await self._ensure_organization_database(organization)
-        return f"postgresql://{self._user}:{self._password}@{self._host}:{self._port}/{organization}"
+        return self._url(organization).render_as_string(hide_password=False)
 
 
     async def schema(self, organization: str, application: str) -> str:
         """Create or replace the schema for one application and return a connection DSN."""
         await self._ensure_organization_database(organization)
 
-        async with await psycopg.AsyncConnection.connect(
-            self._connection, dbname=organization
-        ) as conn:
-            await conn.set_autocommit(True)
-            async with conn.cursor() as cursor:
-                await cursor.execute(
-                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(
-                        sql.Identifier(application)
-                    )
+        async with self._connection(organization) as conn:
+            await conn.execute(CreateSchema(quoted_name(application, True), if_not_exists=True))
+            await conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS public.users (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR(255) NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ DEFAULT NOW()
                 )
-                await cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS public.users (
-                        id SERIAL PRIMARY KEY,
-                        email VARCHAR(255) NOT NULL,
-                        name VARCHAR(255) NOT NULL,
-                        created_at TIMESTAMPTZ DEFAULT NOW(),
-                        updated_at TIMESTAMPTZ DEFAULT NOW()
-                    )
-                """)
+            """))
 
-        return f"postgresql://{self._user}:{self._password}@{self._host}:{self._port}/{organization}"
+        return self._url(organization).render_as_string(hide_password=False)
 
 
     async def remove(self, organization: str, application: str) -> None:
         """Remove one application schema from the organization database."""
-        async with await psycopg.AsyncConnection.connect(
-            self._connection, dbname=organization
-        ) as conn:
-            await conn.set_autocommit(True)
-            async with conn.cursor() as cursor:
-                await cursor.execute(
-                    sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(
-                        sql.Identifier(application)
-                    )
-                )
+
+        async with self._connection(organization) as conn:
+            await conn.execute(DropSchema(quoted_name(application, True), cascade=True, if_exists=True))
 
 
     async def delete(self, organization: str) -> None:
         """Delete the entire database for the given organization."""
-        conn = await self._ensure_maintenance_connection()
-        async with conn.cursor() as cursor:
-            await cursor.execute(
-                """
-                SELECT pg_terminate_backend(pid)
-                FROM pg_stat_activity
-                WHERE datname = %s AND pid <> pg_backend_pid()
-                """,
-                (organization,),
+
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            await conn.execute(
+                text(
+                    """
+                    SELECT pg_terminate_backend(pid)
+                    FROM pg_stat_activity
+                    WHERE datname = :organization AND pid <> pg_backend_pid()
+                    """
+                ),
+                {"organization": organization},
             )
-            await cursor.execute(
-                sql.SQL("DROP DATABASE IF EXISTS {}").format(
-                    sql.Identifier(organization)
-                )
-            )
+            database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(organization)
+            await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")

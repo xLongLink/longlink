@@ -172,3 +172,4 @@ state.yaml
 
 # Ignore lock files for dependencies that are not meant to be committed
 sdk/longlink/.static/new/uv.lock
+sdk/argo
