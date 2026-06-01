@@ -1,6 +1,13 @@
 import type { Role } from '@/lib/roles';
 import type { Accent, Radius, Theme } from '@/lib/theme';
 
+export type ApiInvitation = {
+    id: number;
+    email: string;
+    role: string;
+    created_at: string;
+};
+
 export type ApiUserSummary = {
     id: number;
     name: string;
@@ -27,7 +34,7 @@ export type ApiUserProfile = ApiUserSummary & {
 export type ApiOrgApp = {
     id: number;
     name: string;
-    url: string;
+    icon: string | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary | null;
@@ -58,6 +65,7 @@ export type ApiOrgDetails = {
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
     users: ApiUserSummary[];
+    invitations: ApiInvitation[];
     apps: ApiOrgApp[];
 };
 
@@ -101,8 +109,8 @@ export type ApiComputeRegistry = {
 export type ApiAppResponse = {
     id: number;
     name: string;
-    url: string;
     role: Role | null;
+    icon: string | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary;

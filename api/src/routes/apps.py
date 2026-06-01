@@ -8,7 +8,7 @@ from fastapi import (Depends, Request, Response, APIRouter, HTTPException,
                      status)
 from src.auth import authuser, authadmin
 from src.models.apps import AppCreate, AppResponse
-from src.utils.utils import slugify
+from src.utils.utils import knames, slugify
 from src.models.users import UserSummary
 from src.adapters.compute.k8s import K8s
 
@@ -69,7 +69,7 @@ async def create_app(
     """Register a new app in the database and deploy it on the compute cluster."""
     app_slug = slugify(payload.name)
 
-    # Deploy the app on the compute cluster first so its URL is captured.
+    # Deploy the app on the compute cluster.
     registries = await db.compute.list()
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
@@ -77,15 +77,15 @@ async def create_app(
     registry = registries[0]
     compute = K8s(registry.kubeconfig, registry.ingress_name)
     await compute.namespace(organization)
-    app_url = await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, {})
+    await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, {})
 
     try:
         app = await db.apps.create(
             organization,
             payload.name,
             app_slug,
-            url=app_url,
             image=payload.image,
+            icon=payload.icon,
             user=user,
         )
     except ValueError as exc:
@@ -164,7 +164,10 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
             key_path = kf.name
 
         upstream_path = f"/{path.lstrip('/')}" if path else "/"
-        base = app.url.rstrip("/")
+        namespace = knames(app.organization, "Org")
+        name = knames(app.slug, "Application name")
+        api_host = kc["clusters"][0]["cluster"]["server"].rstrip("/").replace("://0.0.0.0", "://localhost")
+        base = f"{api_host}/api/v1/namespaces/{namespace}/services/{name}:{APP_SERVICE_PORT}/proxy/"
         forward_headers = {
             key: value
             for key, value in request.headers.items()

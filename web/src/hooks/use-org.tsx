@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
-import type { ApiAppResponse, ApiOrgApp, ApiOrgDetails, ApiOrgSummary, ApiUserSummary } from '@/lib/types';
+import type { ApiAppResponse, ApiInvitation, ApiOrgApp, ApiOrgDetails, ApiOrgSummary, ApiUserSummary } from '@/lib/types';
 
 type UseOrgResult = {
     org: ApiOrgDetails | undefined;
     people: ApiUserSummary[];
+    invitations: ApiInvitation[];
     apps: ApiOrgApp[];
     isLoading: boolean;
     error: (Error & { status?: number }) | null;
@@ -27,10 +28,31 @@ export function useOrg(org: string): UseOrgResult {
     return {
         org: organizationQuery.data,
         people: organizationQuery.data?.users ?? [],
+        invitations: organizationQuery.data?.invitations ?? [],
         apps: organizationQuery.data?.apps ?? [],
         isLoading: organizationQuery.isLoading,
         error,
     };
+}
+
+/** Sends an invitation for a user to join an organization. */
+export function useInviteUser(org: string) {
+    const queryClient = useQueryClient();
+    const orgUrl = apiUrl(`/api/orgs/${org}`);
+
+    return useMutation({
+        mutationFn: async ({ email, role }: { email: string; role: string }) => {
+            return fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(org)}/invitations`), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ email, role }),
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['api', orgUrl] });
+        },
+    });
 }
 
 /** Creates a new organization and refreshes the authenticated user cache. */

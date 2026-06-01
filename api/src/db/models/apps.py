@@ -14,10 +14,10 @@ class App(Base, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     organization: str = Field(max_length=100)
-    url: str = Field(unique=True, max_length=255)
     name: str = Field(unique=True, max_length=100)
     slug: str = Field(unique=True, max_length=100)
     image: str = Field(max_length=255)
+    icon: str | None = Field(default=None, max_length=50)
     created_by_id: int | None = Field(default=None, foreign_key='users.id')
     updated_by_id: int | None = Field(default=None, foreign_key='users.id')
     deleted_by_id: int | None = Field(default=None, foreign_key='users.id')

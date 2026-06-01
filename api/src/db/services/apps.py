@@ -65,8 +65,8 @@ class AppsService(ServiceBase):
         organization: str,
         name: str,
         slug: str,
-        url: str,
         image: str,
+        icon: str | None = None,
         user: User | None = None,
     ) -> App:
         """Add a new app to the database for one organization."""
@@ -90,18 +90,12 @@ class AppsService(ServiceBase):
             if slug_result.scalar_one_or_none() is not None:
                 raise ValueError('App slug already exists')
 
-            # Keep the URL uniqueness check in the service so the route stays thin.
-            url_statement = select(App).where(App.url == url)
-            url_result = await session.execute(url_statement)
-            if url_result.scalar_one_or_none() is not None:
-                raise ValueError('App URL already exists')
-
-            app_kwargs: dict[str, str] = {
+            app_kwargs: dict[str, str | None] = {
                 'organization': organization,
                 'name': name,
                 'slug': slug,
-                'url': url,
                 'image': image,
+                'icon': icon,
             }
 
             app = App(**app_kwargs)

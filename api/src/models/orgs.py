@@ -35,7 +35,7 @@ class OrgAppResponse(BaseModel):
 
     id: int
     name: str
-    url: str
+    icon: str | None = None
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None

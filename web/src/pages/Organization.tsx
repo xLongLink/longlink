@@ -24,7 +24,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const pathSection = pathname.split('/')[2] ?? '';
     const section =
         sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
-    const { org: orgDetails, people, apps, isLoading, error } = useOrg(org);
+    const { org: orgDetails, people, invitations, apps, isLoading, error } = useOrg(org);
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -72,7 +72,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 {content}
 
-                {section === 'people' ? <People people={people} isLoading={isLoading} error={error} /> : null}
+                {section === 'people' ? <People org={org} people={people} invitations={invitations} isLoading={isLoading} error={error} /> : null}
                 {section === 'applications' ? (
                     <Applications org={org} apps={apps} isLoading={isLoading} error={error} />
                 ) : null}

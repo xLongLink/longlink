@@ -1,21 +1,93 @@
-from typing import Optional
-from datetime import datetime
-from sqlmodel import Field, SQLModel
-from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
-                                    async_sessionmaker, create_async_engine)
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, DateTime
+from sqlalchemy.orm import declared_attr
+from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from longlink.utils.settings import Environments
 
 
-class Table(SQLModel):
-    """Base SQLModel for DB tables with common timestamp fields."""
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
-    created_at: datetime | None = Field(default=None, nullable=True)
-    updated_at: datetime | None = Field(default=None, nullable=True)
+
+class Base(SQLModel):
+    """Base SQLModel for DB tables."""
+    pass
+
+
+class User(Base, table=True):
+    """Shared organization user table (read-only, public schema)."""
+
+    __tablename__ = "users"
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(max_length=255)
+    email: str = Field(max_length=255)
+    avatar: str | None = Field(default=None, max_length=255)
+
+
+class Table(Base):
+    """Base SQLModel for DB tables with common timestamp and audit fields."""
+
+    created_at: datetime | None = Field(
+        default_factory=utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    updated_at: datetime | None = Field(
+        default_factory=utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    deleted_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    created_id: int | None = Field(
+        default=None,
+        foreign_key="users.id",
+        nullable=True,
+    )
+    updated_id: int | None = Field(
+        default=None,
+        foreign_key="users.id",
+        nullable=True,
+    )
+    deleted_id: int | None = Field(
+        default=None,
+        foreign_key="users.id",
+        nullable=True,
+    )
+
+    @declared_attr
+    def created_by(cls):
+        return Relationship(
+            sa_relationship_kwargs={
+                "foreign_keys": f"[{cls.__name__}.created_id]",
+                "lazy": "selectin",
+            }
+        )
+
+    @declared_attr
+    def updated_by(cls):
+        return Relationship(
+            sa_relationship_kwargs={
+                "foreign_keys": f"[{cls.__name__}.updated_id]",
+                "lazy": "selectin",
+            }
+        )
+
+    @declared_attr
+    def deleted_by(cls):
+        return Relationship(
+            sa_relationship_kwargs={
+                "foreign_keys": f"[{cls.__name__}.deleted_id]",
+                "lazy": "selectin",
+            }
+        )
 
 
 _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
-
 
 
 def create_engine(env: Environments) -> AsyncEngine:
@@ -42,7 +114,6 @@ def create_engine(env: Environments) -> AsyncEngine:
 
     _engine = create_async_engine(dburl, **engine_kwargs)
     return _engine
-
 
 
 async def get_session() -> async_sessionmaker[AsyncSession]:

@@ -4,6 +4,7 @@ import { Button } from '@ui/button';
 import { Link } from 'react-router';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
+import * as LucideIcons from 'lucide-react';
 
 import { DataTable } from '@/components/DataTable';
 import { useDeleteApp } from '@/hooks/use-org';
@@ -25,6 +26,16 @@ export default function Applications({ org, apps, isLoading, error }: Applicatio
     const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
     const appColumns: Array<ColumnDef<ApiOrgApp>> = [
         {
+            id: 'icon',
+            header: '',
+            meta: { className: 'w-10' },
+            cell: ({ row }) => {
+                const iconName = row.original.icon ?? 'Box';
+                const IconComponent = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[iconName];
+                return IconComponent ? <IconComponent className="size-5" /> : <span className="size-5" />;
+            },
+        },
+        {
             accessorKey: 'name',
             header: 'App',
             cell: ({ row, getValue }) => {
@@ -34,21 +45,6 @@ export default function Applications({ org, apps, isLoading, error }: Applicatio
                     <Link to={`/${org}/${name}`} className="font-medium text-foreground hover:underline">
                         {name}
                     </Link>
-                );
-            },
-        },
-        {
-            accessorKey: 'url',
-            header: 'URL',
-            cell: ({ getValue }) => {
-                const url = getValue<string>();
-
-                return url ? (
-                    <a href={url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:underline">
-                        {url}
-                    </a>
-                ) : (
-                    '—'
                 );
             },
         },

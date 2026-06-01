@@ -34,6 +34,7 @@ LOCAL_APP = {
     "name": "sample",
     "slug": "sample",
     "image": "ghcr.io/xlonglink/sample:latest",
+    "icon": "Rocket",
 }
 
 LOCAL_APP_PORT = 80
@@ -73,11 +74,10 @@ async def main() -> None:
     await db.storage.create(**LOCAL_STORAGE, location_id=location.id)
     await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await db.orgs.create(LOCAL_ORG, location.id)
-    # Deploy first so the URL is known at insert time.
     await compute.namespace(LOCAL_ORG)
-    app_url = await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
+    await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
 
-    await db.apps.create(LOCAL_ORG, **LOCAL_APP, url=app_url)
+    await db.apps.create(LOCAL_ORG, **LOCAL_APP)
 
 
 if __name__ == "__main__":

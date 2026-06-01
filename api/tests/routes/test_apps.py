@@ -19,7 +19,6 @@ async def test_list_apps_returns_app_membership_role(
     app = await db.apps.create(
         "acme",
         "dashboard",
-        url="/api/apps/dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
@@ -67,7 +66,6 @@ async def test_list_apps_returns_null_role_without_app_membership(
     app = await db.apps.create(
         "acme",
         "dashboard",
-        url="/api/apps/dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
@@ -99,7 +97,7 @@ async def test_list_apps_returns_404_for_non_member(
     # Arrange
     owner = users[0]
     await db.orgs.create("acme", owner)
-    await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
+    await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     client = clients[1]
 
     # Act
@@ -148,7 +146,7 @@ async def test_delete_app_removes_dependent_env_rows(
     # Arrange
     user = users[0]
     await db.orgs.create("acme", user)
-    app = await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
+    app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     await db.envs.set("TOKEN", "secret", "dashboard")
     client = clients[0]
 
@@ -171,7 +169,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     # Arrange
     user = users[0]
     await db.orgs.create("acme", user)
-    app = await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/xlonglink/sample:latest")
+    app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest")
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -201,8 +199,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
     captured: dict[str, object] = {}
 
     class FakeAsyncClient:
-        def __init__(self, *, base_url, verify):
-            captured["base_url"] = base_url
+        def __init__(self, *, cert=None, verify=True):
+            captured["cert"] = cert
             captured["verify"] = verify
 
         async def __aenter__(self):
@@ -228,8 +226,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert response.status_code == 200
     assert response.text == "proxied"
     assert captured["method"] == "POST"
-    assert captured["resource_path"] == "/api/v1/namespaces/acme/services/dashboard:80/proxy/anything"
+    assert captured["resource_path"] == "https://localhost:8001/api/v1/namespaces/acme/services/dashboard:80/proxy/anything"
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
-    assert captured["base_url"] == "https://localhost:8443"
     assert captured["verify"] is False

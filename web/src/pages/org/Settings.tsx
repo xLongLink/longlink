@@ -7,6 +7,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Menu, MenuSection } from '@ui/menu';
+import * as LucideIcons from 'lucide-react';
 import { Boxes, Building2, Database, HardDrive, Plug, Settings2, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -28,19 +29,22 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
     const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
     const appColumns: Array<ColumnDef<ApiOrgApp>> = [
         {
+            id: 'icon',
+            header: '',
+            meta: { className: 'w-10' },
+            cell: ({ row }) => {
+                const iconName = row.original.icon ?? 'Box';
+                const IconComponent = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[iconName];
+                return IconComponent ? <IconComponent className="size-5" /> : <span className="size-5" />;
+            },
+        },
+        {
             accessorKey: 'name',
             header: 'App',
             cell: ({ row, getValue }) => (
                 <Link to={`/${org}/${row.original.name}`} className="font-medium text-foreground hover:underline">
                     {getValue<string>()}
                 </Link>
-            ),
-        },
-        {
-            accessorKey: 'url',
-            header: 'URL',
-            cell: ({ getValue }) => (
-                <span className="truncate text-sm text-muted-foreground">{getValue<string>()}</span>
             ),
         },
         {

@@ -46,7 +46,7 @@ async def test_get_organization_returns_member_payload(
     app = await db.apps.create(
         "acme",
         "dashboard",
-        url="/api/apps/dashboard",
+        slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=owner,
     )
@@ -82,7 +82,7 @@ async def test_get_organization_returns_member_payload(
             {
                 "id": app.id,
                 "name": "dashboard",
-                "url": "/api/apps/dashboard",
+                "icon": None,
                 "created_at": app.created_at,
                 "updated_at": app.updated_at,
                 "created_by": UserSummary.model_validate(owner.model_dump()),
@@ -107,12 +107,12 @@ async def test_get_organization_returns_member_payload(
         {
             "id": app.id,
             "name": "dashboard",
-            "url": "/api/apps/dashboard",
-                "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
-                "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),
-                "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
-                "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
-                "deleted_at": None,
+            "icon": None,
+            "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
+            "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),
+            "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
+            "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
+            "deleted_at": None,
             "deleted_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
         }
     ]
@@ -200,7 +200,7 @@ async def test_delete_organization_removes_its_apps(
     # Arrange
     user = users[0]
     await db.orgs.create("acme", user)
-    await db.apps.create("acme", "dashboard", url="/api/apps/dashboard", image="ghcr.io/longlink/dashboard:latest")
+    await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     client = clients[0]
 
     # Act

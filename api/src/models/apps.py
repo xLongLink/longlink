@@ -17,6 +17,7 @@ AppName = Annotated[str, BeforeValidator(normalize_app_name)]
 class AppCreate(BaseModel):
     name: AppName
     image: str
+    icon: str | None = None
 
     @field_validator("image", mode="before")
     @classmethod
@@ -29,7 +30,7 @@ class AppResponse(BaseModel):
     id: int
     name: str
     slug: str
-    url: str
+    icon: str | None = None
     role: Roles | None = None
     created_at: datetime
     updated_at: datetime
