@@ -4,6 +4,7 @@ import { useDeleteApp } from '@/hooks/use-org';
 import type { ApiOrgApp, ApiOrgDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
+import { Input } from '@ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Menu, MenuSection } from '@ui/menu';
 import { Boxes, Building2, Database, HardDrive, Plug, Settings2, ShieldCheck } from 'lucide-react';
@@ -66,26 +67,32 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
     return (
         <Menu defaultValue="organization" className="items-start">
             <MenuSection value="organization" label="Organization" icon={Building2}>
-                <div className="rounded-2xl border border-border bg-card/80 p-6">
-                    <dl className="space-y-3">
-                        <div>
-                            <dt className="text-sm text-muted-foreground">Name</dt>
-                            <dd className="text-lg font-medium text-foreground">{orgDetails?.name ?? org}</dd>
+                <div className="space-y-4">
+                    <div className="space-y-1">
+                        <h2 className="text-lg font-medium text-foreground">Organization</h2>
+                        <p className="text-sm text-muted-foreground">View and manage organization details.</p>
+                    </div>
+                    <hr className="border-border" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-sm text-muted-foreground">Name</label>
+                            <Input value={orgDetails?.name ?? org} readOnly />
                         </div>
-                        <div>
-                            <dt className="text-sm text-muted-foreground">Location</dt>
-                            <dd className="text-base text-foreground">{orgDetails?.location?.display_name ?? '—'}</dd>
+                        <div className="space-y-1.5">
+                            <label className="text-sm text-muted-foreground">Location</label>
+                            <Input value={orgDetails?.location?.display_name ?? '—'} readOnly />
                         </div>
-                    </dl>
+                    </div>
                 </div>
             </MenuSection>
 
             <MenuSection value="permissions" label="Permissions" icon={ShieldCheck}>
-                <div className="rounded-2xl border border-border bg-card/80 p-6">
+                <div className="space-y-4">
                     <div className="space-y-1">
                         <h2 className="text-lg font-medium text-foreground">Permissions</h2>
                         <p className="text-sm text-muted-foreground">Control member roles and access policies.</p>
                     </div>
+                    <hr className="border-border" />
                 </div>
             </MenuSection>
 
@@ -99,7 +106,7 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
 
                         <CreateAppDialog org={org} />
                     </div>
-
+                    <hr className="border-border" />
                     {isLoading ? (
                         <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading apps...</div>
                     ) : error ? (
@@ -113,45 +120,49 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
             </MenuSection>
 
             <MenuSection value="database" label="Database" icon={Database}>
-                <div className="rounded-2xl border border-border bg-card/80 p-6">
+                <div className="space-y-4">
                     <div className="space-y-1">
                         <h2 className="text-lg font-medium text-foreground">Database</h2>
                         <p className="text-sm text-muted-foreground">
                             Configure database-backed services and connections.
                         </p>
                     </div>
+                    <hr className="border-border" />
                 </div>
             </MenuSection>
 
             <MenuSection value="storage" label="Storage" icon={HardDrive}>
-                <div className="rounded-2xl border border-border bg-card/80 p-6">
+                <div className="space-y-4">
                     <div className="space-y-1">
                         <h2 className="text-lg font-medium text-foreground">Storage</h2>
                         <p className="text-sm text-muted-foreground">Manage files, buckets, and persisted assets.</p>
                     </div>
+                    <hr className="border-border" />
                 </div>
             </MenuSection>
 
             <MenuSection value="logging" label="Logging" icon={Settings2}>
-                <div className="rounded-2xl border border-border bg-card/80 p-6">
+                <div className="space-y-4">
                     <div className="space-y-1">
                         <h2 className="text-lg font-medium text-foreground">Logging</h2>
                         <p className="text-sm text-muted-foreground">Configure event and audit logging outputs.</p>
                     </div>
+                    <hr className="border-border" />
                 </div>
             </MenuSection>
 
             <MenuSection value="integrations" label="Integrations" icon={Plug}>
-                <div className="rounded-2xl border border-border bg-card/80 p-6">
+                <div className="space-y-4">
                     <div className="space-y-1">
                         <h2 className="text-lg font-medium text-foreground">Integrations</h2>
                         <p className="text-sm text-muted-foreground">Connect external services and workflow tools.</p>
                     </div>
+                    <hr className="border-border" />
                 </div>
             </MenuSection>
 
             <Dialog
-                open={deleteTarget !== null}
+                open={deleteTargetId !== null}
                 onOpenChange={(open) => {
                     if (!open) {
                         setDeleteTargetId(null);
@@ -165,7 +176,7 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
                             <DialogTitle>Delete app</DialogTitle>
                             <DialogDescription>
                                 {deleteTarget
-                                    ? `Delete ${deleteTarget} from this organization?`
+                                    ? `Delete ${deleteTarget.name} from this organization?`
                                     : 'Delete this application?'}
                             </DialogDescription>
                         </div>
@@ -186,15 +197,16 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
                             <Button
                                 type="button"
                                 variant="destructive"
-                                disabled={deleteApp.isPending || deleteTarget === null}
+                                disabled={deleteApp.isPending || deleteTargetId === null}
                                 onClick={async () => {
-                                    if (!deleteTarget) {
+                                    if (deleteTargetId === null) {
                                         return;
                                     }
 
-                                    // Delete the selected app and close the dialog on success.
+                                    const id = deleteTargetId;
+
                                     try {
-                                        await deleteApp.mutateAsync(deleteTarget.id);
+                                        await deleteApp.mutateAsync(id);
                                         setDeleteTargetId(null);
                                         setDeleteError(null);
                                     } catch (mutationError) {

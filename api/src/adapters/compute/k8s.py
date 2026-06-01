@@ -175,7 +175,8 @@ class K8s(Compute):
                     manifest,
                 )
 
-        return f"http://{name}.{namespace}.svc.cluster.local:{port}"
+        api_host = self._api_client.configuration.host.rstrip("/").replace("://0.0.0.0", "://localhost")
+        return f"{api_host}/api/v1/namespaces/{namespace}/services/{name}:{port}/proxy/"
 
 
     async def remove(self, organization: str, application: str) -> None:

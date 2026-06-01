@@ -1,12 +1,16 @@
+import base64
 import httpx
+import os
+import tempfile
+import yaml
 import src.db as db
 from fastapi import (Depends, Request, Response, APIRouter, HTTPException,
                      status)
-from src.auth import authuser
-from urllib.parse import urlparse
+from src.auth import authuser, authadmin
 from src.models.apps import AppCreate, AppResponse
-from src.utils.utils import normalize
+from src.utils.utils import slugify
 from src.models.users import UserSummary
+from src.adapters.compute.k8s import K8s
 
 router = APIRouter(prefix="/api/apps")
 
@@ -62,13 +66,24 @@ async def create_app(
     payload: AppCreate,
     user: db.User = Depends(authuser),
 ) -> AppResponse:
-    """Register a new app in the database."""
-    app_url = f"/api/apps/{payload.name}"
+    """Register a new app in the database and deploy it on the compute cluster."""
+    app_slug = slugify(payload.name)
+
+    # Deploy the app on the compute cluster first so its URL is captured.
+    registries = await db.compute.list()
+    if not registries:
+        raise HTTPException(status_code=503, detail="No compute cluster configured")
+
+    registry = registries[0]
+    compute = K8s(registry.kubeconfig, registry.ingress_name)
+    await compute.namespace(organization)
+    app_url = await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, {})
 
     try:
         app = await db.apps.create(
             organization,
             payload.name,
+            app_slug,
             url=app_url,
             image=payload.image,
             user=user,
@@ -87,8 +102,22 @@ async def create_app(
 
 
 @router.delete("/{app_id}", status_code=204)
-async def delete_app(organization: str, app_id: int) -> Response:
-    """Delete an app registration."""
+async def delete_app(
+    organization: str,
+    app_id: int,
+    _user: db.User = Depends(authadmin),
+) -> Response:
+    """Delete an app registration and remove it from the compute cluster."""
+
+    app = await db.apps.get_by_id(app_id)
+    if app is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
+
+    registries = await db.compute.list()
+    if registries:
+        registry = registries[0]
+        compute = K8s(registry.kubeconfig, registry.ingress_name)
+        await compute.remove(organization, app.slug)
 
     try:
         await db.apps.delete(organization, app_id)
@@ -118,33 +147,45 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 
+    # Load client certificate and key from the compute registry's kubeconfig.
     registry = registries[0]
-    ingress_url = normalize(registry.ingress_host)
-    ingress_host = urlparse(ingress_url).hostname or ""
-    verify_tls = ingress_host not in {"localhost", "127.0.0.1", "::1"}
+    kc = yaml.safe_load(registry.kubeconfig)
+    user_entry = kc["users"][0]["user"]
+    cert_data = base64.b64decode(user_entry["client-certificate-data"]).decode()
+    key_data = base64.b64decode(user_entry["client-key-data"]).decode()
 
-    upstream_path = f"/{path.lstrip('/')}" if path else "/"
-    upstream_url = (
-        f"/api/v1/namespaces/{app.organization}/services/{app.name}:{APP_SERVICE_PORT}/proxy/"
-        f"{upstream_path.lstrip('/')}"
-    )
-    forward_headers = {
-        key: value
-        for key, value in request.headers.items()
-        if key.lower() not in HOP_BY_HOP_HEADERS
-    }
+    cert_path = key_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".crt", delete=False) as cf:
+            cf.write(cert_data)
+            cert_path = cf.name
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".key", delete=False) as kf:
+            kf.write(key_data)
+            key_path = kf.name
 
-    async with httpx.AsyncClient(
-        base_url=ingress_url,
-        verify=verify_tls,
-    ) as api_client:
-        upstream_response = await api_client.request(
-            request.method,
-            upstream_url,
-            params=list(request.query_params.multi_items()),
-            headers=forward_headers,
-            content=await request.body(),
-        )
+        upstream_path = f"/{path.lstrip('/')}" if path else "/"
+        base = app.url.rstrip("/")
+        forward_headers = {
+            key: value
+            for key, value in request.headers.items()
+            if key.lower() not in HOP_BY_HOP_HEADERS
+        }
+
+        async with httpx.AsyncClient(
+            cert=(cert_path, key_path),
+            verify=False,
+        ) as api_client:
+            upstream_response = await api_client.request(
+                request.method,
+                f"{base}{upstream_path}",
+                params=list(request.query_params.multi_items()),
+                headers=forward_headers,
+                content=await request.body(),
+            )
+    finally:
+        for p in (cert_path, key_path):
+            if p is not None:
+                os.unlink(p)
 
     return Response(
         content=upstream_response.content,

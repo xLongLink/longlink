@@ -1,5 +1,7 @@
 import os
 import sys
+import threading
+import webbrowser
 import click
 import uvicorn
 import importlib
@@ -47,10 +49,16 @@ def dev_command():
     sys.path.insert(0, os.getcwd())
     _set_dev_env_defaults()
 
+    port = 1707
+    threading.Timer(
+        1.0,
+        lambda: webbrowser.open(f"http://localhost:{port}"),
+    ).start()
+
     uvicorn.run(
         "longlink.cli.dev:load_app",
         host="0.0.0.0",
-        port=1707,
+        port=port,
         reload=True,
         factory=True,
     )

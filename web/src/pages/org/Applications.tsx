@@ -1,8 +1,12 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { Button } from '@ui/button';
 import { Link } from 'react-router';
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 
 import { DataTable } from '@/components/DataTable';
+import { useDeleteApp } from '@/hooks/use-org';
 import type { ApiOrgApp } from '@/lib/types';
 
 type ApplicationsProps = {
@@ -14,6 +18,11 @@ type ApplicationsProps = {
 
 /** Renders the organization applications table. */
 export default function Applications({ org, apps, isLoading, error }: ApplicationsProps) {
+    const deleteApp = useDeleteApp(org);
+    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+
+    const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
     const appColumns: Array<ColumnDef<ApiOrgApp>> = [
         {
             accessorKey: 'name',
@@ -70,6 +79,24 @@ export default function Applications({ org, apps, isLoading, error }: Applicatio
             },
             meta: { className: 'w-64' },
         },
+        {
+            id: 'action',
+            header: 'Action',
+            meta: { className: 'w-32' },
+            cell: ({ row }) => (
+                <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                        setDeleteTargetId(row.original.id);
+                        setDeleteError(null);
+                    }}
+                >
+                    Delete
+                </Button>
+            ),
+        },
     ] satisfies Array<ColumnDef<ApiOrgApp>>;
 
     return (
@@ -81,6 +108,70 @@ export default function Applications({ org, apps, isLoading, error }: Applicatio
             ) : (
                 <DataTable columns={appColumns} data={apps} />
             )}
+
+            <Dialog
+                open={deleteTargetId !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    }
+                }}
+            >
+                <DialogContent>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <DialogTitle>Delete app</DialogTitle>
+                            <DialogDescription>
+                                {deleteTarget
+                                    ? `Delete ${deleteTarget.name} from this organization?`
+                                    : 'Delete this application?'}
+                            </DialogDescription>
+                        </div>
+
+                        {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
+
+                        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    setDeleteTargetId(null);
+                                    setDeleteError(null);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                disabled={deleteApp.isPending || deleteTargetId === null}
+                                onClick={async () => {
+                                    if (deleteTargetId === null) {
+                                        return;
+                                    }
+
+                                    const id = deleteTargetId;
+
+                                    try {
+                                        await deleteApp.mutateAsync(id);
+                                        setDeleteTargetId(null);
+                                        setDeleteError(null);
+                                    } catch (mutationError) {
+                                        setDeleteError(
+                                            mutationError instanceof Error
+                                                ? mutationError.message
+                                                : 'Failed to delete app'
+                                        );
+                                    }
+                                }}
+                            >
+                                {deleteApp.isPending ? 'Deleting...' : 'Delete'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

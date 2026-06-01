@@ -49,9 +49,6 @@ pythonpath = ["."]
 [tool.uv]
 default-groups = ["dev"]
 
-[tool.uv.sources]
-longlink = { path = "../", editable = true }
-
 [tool.longlink]
 
 [tool.isort]

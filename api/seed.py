@@ -32,7 +32,7 @@ LOCAL_ORG = "test"
 
 LOCAL_APP = {
     "name": "sample",
-    "url": "/api/apps/sample",
+    "slug": "sample",
     "image": "ghcr.io/xlonglink/sample:latest",
 }
 
@@ -41,7 +41,7 @@ LOCAL_APP_PORT = 80
 LOCAL_COMPUTE = {
     "kind": ComputeKind.kubernetes,
     "kubeconfig": Path(__file__).with_name("kubeconfig.yaml").read_text(encoding="utf-8"),
-    "ingress_host": "localhost:8443",
+    "ingress_host": "https://localhost:8001",
     "ingress_name": "control-ingress",
 }
 
@@ -73,11 +73,11 @@ async def main() -> None:
     await db.storage.create(**LOCAL_STORAGE, location_id=location.id)
     await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await db.orgs.create(LOCAL_ORG, location.id)
-    await db.apps.create(LOCAL_ORG, **LOCAL_APP)
-
-    # Deploy the seeded app into the configured Kubernetes cluster.
+    # Deploy first so the URL is known at insert time.
     await compute.namespace(LOCAL_ORG)
-    await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
+    app_url = await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
+
+    await db.apps.create(LOCAL_ORG, **LOCAL_APP, url=app_url)
 
 
 if __name__ == "__main__":

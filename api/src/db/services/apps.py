@@ -64,6 +64,7 @@ class AppsService(ServiceBase):
         self,
         organization: str,
         name: str,
+        slug: str,
         url: str,
         image: str,
         user: User | None = None,
@@ -80,6 +81,15 @@ class AppsService(ServiceBase):
             if name_result.scalar_one_or_none() is not None:
                 raise ValueError('App name already exists')
 
+            # Check slug uniqueness so K8s resource names stay collision-free.
+            slug_statement = select(App).where(
+                App.organization == organization,
+                App.slug == slug,
+            )
+            slug_result = await session.execute(slug_statement)
+            if slug_result.scalar_one_or_none() is not None:
+                raise ValueError('App slug already exists')
+
             # Keep the URL uniqueness check in the service so the route stays thin.
             url_statement = select(App).where(App.url == url)
             url_result = await session.execute(url_statement)
@@ -89,6 +99,7 @@ class AppsService(ServiceBase):
             app_kwargs: dict[str, str] = {
                 'organization': organization,
                 'name': name,
+                'slug': slug,
                 'url': url,
                 'image': image,
             }

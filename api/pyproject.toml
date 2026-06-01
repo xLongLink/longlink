@@ -24,7 +24,6 @@ dependencies = [
     'sqlalchemy',
     'sqlmodel',
     'starlette',
-    'uvicorn',
     'kr8s',
     'boto3',
     'xmltodict',
@@ -33,6 +32,7 @@ dependencies = [
     'jinja2',
     'lxml',
     'longlink',
+    "uvicorn<0.48.0",
 ]
 
 [project.optional-dependencies]

@@ -28,6 +28,7 @@ class AppCreate(BaseModel):
 class AppResponse(BaseModel):
     id: int
     name: str
+    slug: str
     url: str
     role: Roles | None = None
     created_at: datetime
