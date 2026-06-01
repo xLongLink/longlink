@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 
 class Router(APIRouter):
-    """FastAPI router wrapper for future extensibility."""
+    """Placeholder — reserved for future custom middleware or routing behavior."""
 
     def add_api_route(self, path: str, endpoint, **kwargs):
         """Register a route."""

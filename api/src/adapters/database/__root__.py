@@ -1,51 +1,55 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
+from datetime import datetime
+
+from sqlalchemy import String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.sql import func
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class User(Base):
+    """Shared organization user stored in the public schema."""
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 
 
 class Database(ABC):
-    """Database adapter root interface, extended by specific database implementations.
+    """Database adapter.
 
-    Server              # Connected to the database server (e.g. PostgreSQL, MySQL, etc.)
+    Server              # Connected to the database server, e.g. PostgreSQL, MySQL
     └── Database        # One for each organization
         └── Schema      # One for each application
-            └── Tables  # Managed by the applications, using an ORM (e.g. Prisma, SQLAlchemy, etc.)
+            └── Tables  # Managed by the application ORM, e.g. Prisma, SQLAlchemy
+
+    Database structure for one organization:
+    ├── (org) Users + other shared tables
+    ├── (app a) Schema
+    └── (app ...) Schema
+
+    Each application has read/write access to it's own schema, and read-only access to shared tables.
     """
 
-    def __init__(
-        self,
-        host: str,
-        port: int,
-        user: str,
-        password: str,
-        sslmode: str | None = None,
-        maintenance_database: str = "postgres",
-    ) -> None:
-        """Store the shared database connection settings."""
-        self._kwargs: dict[str, str | int] = {
-            "host": host,
-            "port": port,
-            "user": user,
-            "password": password,
-            "dbname": maintenance_database,
-        }
-        self._maintenance_database = maintenance_database
-
-        if sslmode:
-            self._kwargs["sslmode"] = sslmode
+    @abstractmethod
+    async def database(self, organization: str) -> str:
+        """Create the database for an organization if it does not exist and return a connection DSN."""
 
     @abstractmethod
-    async def list(self, organization: str) -> list[str]:
-        """List created schemas for an organization."""
-
-    @abstractmethod
-    async def create(self, organization: str, application: str) -> None:
-        """Create one schema in the given organization for the given application."""
+    async def schema(self, organization: str, application: str) -> str:
+        """Create or replace the schema for one application and return a connection DSN."""
 
     @abstractmethod
     async def remove(self, organization: str, application: str) -> None:
-        """Delete one schema in the given organization for the given application."""
+        """Remove one application schema from the organization database."""
 
     @abstractmethod
     async def delete(self, organization: str) -> None:
-        """Delete the entire database for the given organization."""
+        """Delete the organization database and all managed application schemas."""
+

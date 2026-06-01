@@ -1,4 +1,2 @@
-"""Compute adapter exports."""
-
-from .k8s import Compute
-from .__root__ import Root
+from .k8s import K8s
+from .__root__ import Compute

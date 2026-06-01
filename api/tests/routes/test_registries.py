@@ -199,10 +199,8 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     captured: dict[str, str] = {}
 
     class FakeCompute:
-        def __init__(self, kubeconfig: str) -> None:
+        def __init__(self, kubeconfig: str, ingress_name: str) -> None:
             captured["kubeconfig"] = kubeconfig
-
-        async def create_cluster_proxy(self, ingress_name: str) -> None:
             captured["ingress_name"] = ingress_name
 
     monkeypatch.setattr("src.routes.compute.KubernetesCompute", FakeCompute)

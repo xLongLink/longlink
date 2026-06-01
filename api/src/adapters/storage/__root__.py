@@ -1,46 +1,30 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 
 
-class Root(ABC):
-    """Storage adapter root interface.
+class Storage(ABC):
+    """Storage adapter.
 
-    Storage Cluster       # Managed by the control plane
-    └── Tenant            # One per organization
-        └── Bucket        # Each app gets isolated storage
-        └── Objects   # Managed by each app (ffspec)
+    Storage Cluster               # Managed by the control plane
+    └── Tenant                    # One per organization
+        ├── Shared Bucket         # Optional organization-level shared objects
+        ├── App A Bucket          # Isolated storage for App A
+        └── App B Bucket          # Isolated storage for App B
+
+    Each application has read/write access to its own bucket, and read-only access to shared bucket.
     """
 
-    def __init__(
-        self,
-        protocol: str,
-        endpoint_url: str,
-        access_key_id: str,
-        secret_access_key: str,
-    ) -> None:
-        """Store the shared storage connection settings."""
-        self._protocol = protocol
-        self._endpoint_url = endpoint_url
-        self._access_key_id = access_key_id
-        self._secret_access_key = secret_access_key
+    @abstractmethod
+    async def tenant(self, organization: str) -> str:
+        """Create the storage tenant for an organization if it does not exist and return a tenant identifier."""
 
     @abstractmethod
-    def list(self) -> list[str]:
-        """List storage buckets."""
+    async def bucket(self, organization: str, application: str) -> str:
+        """Create or replace the isolated storage bucket for one application and return a storage URI."""
 
     @abstractmethod
-    def create(self, bucket_name: str) -> None:
-        """Create one storage bucket."""
+    async def remove(self, organization: str, application: str) -> None:
+        """Remove one managed application bucket and all contained objects."""
 
     @abstractmethod
-    def delete(self, bucket_name: str) -> None:
-        """Delete one storage bucket."""
-
-    @abstractmethod
-    def usage(self) -> dict[str, int]:
-        """Return storage usage metrics."""
-
-    @abstractmethod
-    def quota(self) -> dict[str, int | None]:
-        """Return storage quota metrics."""
+    async def delete(self, organization: str) -> None:
+        """Delete the organization tenant and all managed application buckets."""

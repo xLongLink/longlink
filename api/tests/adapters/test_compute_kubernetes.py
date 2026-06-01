@@ -2,8 +2,8 @@ from kubernetes.client.rest import ApiException
 from src.adapters.compute.k8s import Compute
 
 
-async def test_create_cluster_proxy_applies_all_manifests(monkeypatch) -> None:
-    """Apply the cluster proxy manifests with the Kubernetes client."""
+async def test_init_bootstraps_cluster_proxy(monkeypatch) -> None:
+    """Apply the cluster proxy manifests during Compute initialization."""
 
     # Arrange
     captured: list[tuple[str, str, str | None]] = []
@@ -44,10 +44,7 @@ async def test_create_cluster_proxy_applies_all_manifests(monkeypatch) -> None:
     monkeypatch.setattr("src.adapters.compute.k8s.client.AppsV1Api", lambda api_client: object())
     monkeypatch.setattr("src.adapters.compute.k8s.DynamicClient", FakeDynamicClient)
 
-    compute = Compute("apiVersion: v1\nclusters: []\n")
-
-    # Act
-    await compute.create_cluster_proxy("control-ingress")
+    Compute("apiVersion: v1\nclusters: []\n", "control-ingress")
 
     # Assert
     assert captured == [

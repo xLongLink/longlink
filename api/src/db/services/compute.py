@@ -46,16 +46,6 @@ class ComputeRegistriesService(ServiceBase):
             await session.refresh(compute)
             return compute
 
-    async def find_by_location(self, location_id: int) -> ComputeRegistry | None:
-        """Return the compute backend registered for a location, if any."""
-
-        async with self.session() as session:
-            result = await session.execute(
-                select(ComputeRegistry).where(ComputeRegistry.location_id == location_id)
-            )
-            return result.scalar_one_or_none()
-
-
     async def delete(self, registry_id: int) -> ComputeRegistry | None:
         """Delete one compute backend registration."""
 
