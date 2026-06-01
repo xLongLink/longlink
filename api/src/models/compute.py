@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from src.models.kinds import ComputeKind
 
 
@@ -15,10 +15,11 @@ class ComputeRegistryCreate(BaseModel):
 class ComputeRegistryResponse(BaseModel):
     """Represent one compute registry in API responses."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     kind: ComputeKind
     ingress_host: str
     ingress_name: str
     location_id: int
-
 

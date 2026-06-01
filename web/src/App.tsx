@@ -1,11 +1,11 @@
 import { Auth } from '@/components/Auth';
 import { useOrg } from '@/hooks/use-org';
-import { apiUrl } from '@/lib/api';
-import { Toaster } from '@ui/sonner';
-import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import { content as impressumContent, metadata as impressumMetadata } from '@/legal/impressum';
 import { content as privacyContent, metadata as privacyMetadata } from '@/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/legal/terms';
+import { apiUrl } from '@/lib/api';
+import { Toaster } from '@ui/sonner';
+import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import Admin from './pages/Admin';
 import AdminCompute from './pages/admin/Compute';
 import AdminDatabase from './pages/admin/Database';
@@ -30,7 +30,10 @@ import { content as docsSelfHostedContent, metadata as docsSelfHostedMetadata } 
 import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/docs/index';
 import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/docs/sdk/building';
 import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/docs/sdk/database';
-import { content as docsSdkEnvironmentsContent, metadata as docsSdkEnvironmentsMetadata } from '@/docs/sdk/environments';
+import {
+    content as docsSdkEnvironmentsContent,
+    metadata as docsSdkEnvironmentsMetadata,
+} from '@/docs/sdk/environments';
 import { content as docsSdkContent, metadata as docsSdkMetadata } from '@/docs/sdk/index';
 import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/docs/sdk/routes';
 import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/docs/sdk/storage';
@@ -199,11 +202,7 @@ function OrgAppView() {
         return <NotFound />;
     }
 
-    return (
-        <View
-            metadata={apiUrl(`/api/apps/${orgApp.id}/proxy/metadata.json`)}
-        />
-    );
+    return <View metadata={apiUrl(`/api/apps/${orgApp.id}/proxy/metadata.json`)} />;
 }
 
 const router = createBrowserRouter(getRoutes());

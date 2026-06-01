@@ -12,7 +12,7 @@ class StorageRegistriesService(ServiceBase):
 
         async with self.session() as session:
             result = await session.execute(select(StorageRegistry))
-            return list(result.scalars().all())
+            return result.scalars().all()
 
     async def get(self, name: str) -> StorageRegistry | None:
         """Return one storage backend by name."""
@@ -55,6 +55,7 @@ class StorageRegistriesService(ServiceBase):
                 storage.endpoint_url = endpoint_url
                 storage.access_key_id = access_key_id
                 storage.secret_access_key = secret_access_key
+                storage.location_id = location_id
 
             await session.commit()
             await session.refresh(storage)

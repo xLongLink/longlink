@@ -5,13 +5,9 @@ from src.envs import env
 
 app = LongLink(env=env)
 
+# Point the app at the scaffolded XML pages so `longlink dev` serves them.
+app.state.page_roots = [Path(__file__).resolve().parent / "src" / "pages"]
 
-def dashboard_page():
-    """Return the dashboard XML page example."""
-
-    # Load the scaffolded dashboard page directly from disk.
-    return (Path(__file__).resolve().parent / "src" / "pages" / "dashboard.xml").read_text(encoding="utf-8")
-
-# Register routers
+# Register routers.
 for router in routers:
     app.include_router(router)

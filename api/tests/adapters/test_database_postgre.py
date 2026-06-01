@@ -96,7 +96,7 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
     assert log[0][0] == "engine"
     assert log[0][1][0] == "postgresql+psycopg://longlink:***@db.longlink.internal:5432/postgres?sslmode=require"
     assert log[0][1][1] == {"pool_pre_ping": True, "isolation_level": "AUTOCOMMIT"}
-    assert log[1] == ("execute", "SELECT 1 FROM pg_database WHERE datname = :organization")
+    assert str(log[1][1]) == "SELECT 1 FROM pg_database WHERE datname = :organization"
     assert log[2] == ("driver_sql", 'CREATE DATABASE "acme"')
     assert log[3][0] == "dispose"
     assert log[4][0] == "engine"

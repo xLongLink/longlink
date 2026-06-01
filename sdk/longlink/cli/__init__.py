@@ -13,8 +13,6 @@ __all__ = [
     "main",
     "build_app",
     "build_command",
-    "sample_command",
-    "load_sample_app",
 ]
 
 
@@ -41,10 +39,6 @@ def __getattr__(name: str) -> Any:
         from .build import build_app, build_command
 
         exports = {"build_app": build_app, "build_command": build_command}
-    elif name in {"sample_command", "load_sample_app"}:
-        from .sample import sample_command, load_sample_app
-
-        exports = {"sample_command": sample_command, "load_sample_app": load_sample_app}
     else:
         raise AttributeError(f"module 'longlink.cli' has no attribute {name!r}")
 

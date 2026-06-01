@@ -1,10 +1,36 @@
 import Layout from '@/Layout';
+import { DataTable } from '@/components/DataTable';
 import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
 import { useUser } from '@/hooks/use-user';
+import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 import { Blocks } from 'lucide-react';
 import { Link } from 'react-router';
+
+import type { ApiUserOrgMembership } from '@/lib/types';
+
+const organizationColumns: Array<ColumnDef<ApiUserOrgMembership>> = [
+    {
+        accessorKey: 'name',
+        header: 'Name',
+        cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
+    },
+    {
+        accessorKey: 'role',
+        header: 'Role',
+        meta: { className: 'w-32' },
+    },
+    {
+        id: 'open',
+        header: 'Open',
+        meta: { className: 'w-32' },
+        cell: ({ row }) => (
+            <Link to={`/${row.original.name}`} className="text-sm text-accent hover:underline">
+                Open
+            </Link>
+        ),
+    },
+];
 
 /** Renders the authenticated organizations landing page. */
 export default function Organizations() {
@@ -26,57 +52,13 @@ export default function Organizations() {
                     </div>
                 </Hero>
 
-                <div className="w-full overflow-hidden rounded-2xl border border-border bg-card/80">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead className="w-32">Role</TableHead>
-                                <TableHead className="w-32">Open</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="py-8 text-sm text-muted-foreground">
-                                        Loading orgs...
-                                    </TableCell>
-                                </TableRow>
-                            ) : error ? (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="py-8 text-sm text-destructive">
-                                        Failed to load orgs.
-                                    </TableCell>
-                                </TableRow>
-                            ) : orgs.length ? (
-                                orgs.map((organization) => (
-                                    <TableRow key={organization.name}>
-                                        <TableCell className="font-medium text-foreground">
-                                            {organization.name}
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
-                                            {organization.role}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Link
-                                                to={`/${organization.name}`}
-                                                className="text-sm text-accent hover:underline"
-                                            >
-                                                Open
-                                            </Link>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="py-8 text-sm text-muted-foreground">
-                                        No orgs found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                {isLoading && orgs.length === 0 ? (
+                    <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading orgs...</div>
+                ) : error && orgs.length === 0 ? (
+                    <div className="rounded-md border p-4 text-sm text-destructive">Failed to load orgs.</div>
+                ) : (
+                    <DataTable columns={organizationColumns} data={orgs} />
+                )}
             </section>
         </Layout>
     );

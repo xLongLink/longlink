@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from src.models.kinds import StorageKind
 
 
@@ -16,6 +16,8 @@ class StorageRegistryCreate(BaseModel):
 
 class StorageRegistryResponse(BaseModel):
     """Represent one storage registry in API responses."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     kind: StorageKind

@@ -51,6 +51,10 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert '"tests"' in pyproject
     assert (target / 'README.md').read_text().startswith('# Minimal LongLink showcase app')
 
+    main_py = (target / 'main.py').read_text()
+    assert 'app.state.page_roots = [Path(__file__).resolve().parent / "src" / "pages"]' in main_py
+    assert 'for router in routers:' in main_py
+
 
 def test_init_command_calls_setup(monkeypatch):
     """Ensure init CLI command delegates project creation to setup."""

@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any, ClassVar
 
 from sqlalchemy import Column, DateTime
 from sqlalchemy.orm import declared_attr
@@ -58,32 +59,32 @@ class Table(Base):
         nullable=True,
     )
 
-    @declared_attr
-    def created_by(cls):
-        return Relationship(
+    created_by: ClassVar[Any] = declared_attr(
+        lambda cls: Relationship(
             sa_relationship_kwargs={
                 "foreign_keys": f"[{cls.__name__}.created_id]",
                 "lazy": "selectin",
             }
         )
+    )
 
-    @declared_attr
-    def updated_by(cls):
-        return Relationship(
+    updated_by: ClassVar[Any] = declared_attr(
+        lambda cls: Relationship(
             sa_relationship_kwargs={
                 "foreign_keys": f"[{cls.__name__}.updated_id]",
                 "lazy": "selectin",
             }
         )
+    )
 
-    @declared_attr
-    def deleted_by(cls):
-        return Relationship(
+    deleted_by: ClassVar[Any] = declared_attr(
+        lambda cls: Relationship(
             sa_relationship_kwargs={
                 "foreign_keys": f"[{cls.__name__}.deleted_id]",
                 "lazy": "selectin",
             }
         )
+    )
 
 
 _engine: AsyncEngine | None = None

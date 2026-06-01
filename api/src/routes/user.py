@@ -12,7 +12,7 @@ async def serialize_user(user: db.User) -> UserProfile:
 
     profile = await db.users.profile(user.id)
     if profile is None:
-        profile = UserProfile.model_validate({**user.model_dump(), "orgs": []})
+        profile = UserProfile(**{**user.model_dump(), "orgs": []})
 
     return profile
 
@@ -28,10 +28,7 @@ async def get_me(user: db.User = Depends(authuser)) -> UserProfile:
 async def list_users(_user: db.User = Depends(authadmin)) -> list[UserListItem]:
     """Return all user summaries for admin views."""
 
-    users = await db.users.list()
-    payload = [UserListItem.model_validate(user.model_dump()) for user in users]
-
-    return payload
+    return await db.users.list()
 
 
 @router.patch("", response_model=UserProfile)
@@ -40,8 +37,4 @@ async def patch_me(payload: UserUpdate, user: db.User = Depends(authuser)) -> Us
 
     params = payload.model_dump(exclude_unset=True)
     updated_user = user if not params else await db.users.update(user.id, **params)
-    profile = await db.users.profile(updated_user.id if updated_user is not None else user.id)
-    if profile is None:
-        profile = UserProfile.model_validate({**(updated_user or user).model_dump(), "orgs": []})
-
-    return profile
+    return await serialize_user(updated_user or user)

@@ -4,8 +4,8 @@ import { useDeleteApp } from '@/hooks/use-org';
 import type { ApiOrgApp, ApiOrgDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
-import { Input } from '@ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
+import { Input } from '@ui/input';
 import { Menu, MenuSection } from '@ui/menu';
 import * as LucideIcons from 'lucide-react';
 import { Boxes, Building2, Database, HardDrive, Plug, Settings2, ShieldCheck } from 'lucide-react';
@@ -34,7 +34,10 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
             meta: { className: 'w-10' },
             cell: ({ row }) => {
                 const iconName = row.original.icon ?? 'Box';
-                const IconComponent = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[iconName];
+                const IconComponent = (LucideIcons as unknown as Record<
+                    string,
+                    React.ComponentType<{ className?: string }>
+                >)[iconName];
                 return IconComponent ? <IconComponent className="size-5" /> : <span className="size-5" />;
             },
         },

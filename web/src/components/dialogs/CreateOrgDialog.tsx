@@ -6,9 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCreateOrg } from '@/hooks/use-org';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
-import { useCreateOrg } from '@/hooks/use-org';
 
 /** Renders the create-organization dialog. */
 export default function CreateOrgDialog() {

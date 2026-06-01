@@ -26,6 +26,7 @@ dependencies = [
     'starlette',
     'kr8s',
     'boto3',
+    'docker',
     'xmltodict',
     'sniffio',
     'kubernetes',
@@ -39,7 +40,7 @@ dependencies = [
 dev = [
     'mypy==1.18.2',
     'ruff==0.14.0',
-    'pytest==8.4.2',
+    'pytest==8.2.2',
     'pytest-asyncio==1.2.0',
     'isort==8.0.1',
     'testcontainers==4.13.2',

@@ -1,10 +1,10 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
-import { Link } from 'react-router';
-import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import * as LucideIcons from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
 import { useDeleteApp } from '@/hooks/use-org';
@@ -31,7 +31,10 @@ export default function Applications({ org, apps, isLoading, error }: Applicatio
             meta: { className: 'w-10' },
             cell: ({ row }) => {
                 const iconName = row.original.icon ?? 'Box';
-                const IconComponent = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[iconName];
+                const IconComponent = (LucideIcons as unknown as Record<
+                    string,
+                    React.ComponentType<{ className?: string }>
+                >)[iconName];
                 return IconComponent ? <IconComponent className="size-5" /> : <span className="size-5" />;
             },
         },

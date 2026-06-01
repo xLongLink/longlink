@@ -102,14 +102,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
 
-      - name: Install web dependencies
-        run: bun install --cwd web --frozen-lockfile
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-      - name: Build web assets for SDK
-        run: bun run --cwd web build:sdk --logLevel warn
+      - name: Install SDK dependencies
+        working-directory: sdk
+        run: uv sync
+
+      - name: Generate sample app scaffold
+        working-directory: sdk
+        run: .venv/bin/longlink init --folder sample-app
+
+      - name: Build sample app Dockerfile
+        working-directory: sdk/sample-app
+        run: ../.venv/bin/longlink build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -133,8 +144,8 @@ jobs:
       - name: Build and push sample image
         uses: docker/build-push-action@v7
         with:
-          context: .
-          file: sdk/Dockerfile.sample
+          context: sdk/sample-app
+          file: sdk/sample-app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

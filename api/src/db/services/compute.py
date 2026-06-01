@@ -12,7 +12,7 @@ class ComputeRegistriesService(ServiceBase):
 
         async with self.session() as session:
             result = await session.execute(select(ComputeRegistry))
-            return list(result.scalars().all())
+            return result.scalars().all()
 
     async def get(self, registry_id: int) -> ComputeRegistry | None:
         """Return one compute backend by id."""

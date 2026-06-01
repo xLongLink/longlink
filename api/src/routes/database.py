@@ -1,5 +1,5 @@
 import src.db as db
-from fastapi import Depends, Response, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, HTTPException, status
 from src.auth import authadmin
 from src.models import DatabaseRegistryCreate, DatabaseRegistryResponse
 
@@ -10,25 +10,7 @@ router = APIRouter(prefix="/api/database")
 async def list_database_registries(_user: db.User = Depends(authadmin)) -> list[DatabaseRegistryResponse]:
     """Return all registered database backends."""
 
-    registries = await db.database.list()
-    payload = [
-        DatabaseRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "name": registry.name,
-                "host": registry.host,
-                "port": registry.port,
-                "username": registry.username,
-                "sslmode": registry.sslmode,
-                "maintenance_database": registry.maintenance_database,
-                "location_id": registry.location_id,
-            }
-        )
-        for registry in registries
-    ]
-
-    return payload
+    return await db.database.list()
 
 
 @router.get("/{name}", response_model=DatabaseRegistryResponse)
@@ -39,19 +21,7 @@ async def get_database_registry(name: str, _user: db.User = Depends(authadmin)) 
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Database '{name}' not found")
 
-    return DatabaseRegistryResponse.model_validate(
-        {
-            "id": registry.id,
-            "kind": registry.kind,
-            "name": registry.name,
-            "host": registry.host,
-            "port": registry.port,
-            "username": registry.username,
-            "sslmode": registry.sslmode,
-            "maintenance_database": registry.maintenance_database,
-            "location_id": registry.location_id,
-        }
-    )
+    return registry
 
 
 @router.post("", response_model=DatabaseRegistryResponse)
@@ -63,27 +33,15 @@ async def create_database_registry(
 
     registry = await db.database.create(**payload.model_dump())
 
-    return DatabaseRegistryResponse.model_validate(
-        {
-            "id": registry.id,
-            "kind": registry.kind,
-            "name": registry.name,
-            "host": registry.host,
-            "port": registry.port,
-            "username": registry.username,
-            "sslmode": registry.sslmode,
-            "maintenance_database": registry.maintenance_database,
-            "location_id": registry.location_id,
-        }
-    )
+    return registry
 
 
 @router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_database_registry(name: str, _user: db.User = Depends(authadmin)) -> Response:
+async def delete_database_registry(name: str, _user: db.User = Depends(authadmin)) -> None:
     """Delete one database backend registration."""
 
     registry = await db.database.delete(name)
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Database '{name}' not found")
 
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return

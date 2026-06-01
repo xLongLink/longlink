@@ -78,6 +78,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
+            "location_id": 1,
         },
     )
     list_response = client.get("/api/storage")
@@ -92,6 +93,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
         protocol="s3",
         endpoint_url="https://storage.longlink.internal",
         access_key_id="access-key",
+        location_id=1,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
@@ -102,6 +104,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
             protocol="s3",
             endpoint_url="https://storage.longlink.internal",
             access_key_id="access-key",
+            location_id=1,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
@@ -138,6 +141,7 @@ async def test_storage_usage_endpoint_returns_summed_object_size(
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
+            "location_id": 1,
         },
     )
 
@@ -180,6 +184,7 @@ async def test_storage_quota_endpoint_returns_quota_value(
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
+            "location_id": 1,
         },
     )
 
@@ -206,7 +211,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             captured["kubeconfig"] = kubeconfig
             captured["ingress_name"] = ingress_name
 
-    monkeypatch.setattr("src.routes.compute.KubernetesCompute", FakeCompute)
+    monkeypatch.setattr("src.routes.compute.K8s", FakeCompute)
 
     # Act
     create_response = client.post(

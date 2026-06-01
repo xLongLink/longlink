@@ -132,7 +132,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                             <SidebarTrigger className="shrink-0 cursor-pointer" />
 
                             <div className="min-w-0 justify-self-center">
-                                <div className="mx-auto w-full max-w-2xl">
+                                <div className="w-full max-w-[56rem]">
                                     <UIBreadcrumb>
                                         <BreadcrumbList>
                                             <BreadcrumbItem>

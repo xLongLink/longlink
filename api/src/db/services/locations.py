@@ -11,7 +11,7 @@ class LocationsService(ServiceBase):
 
         async with self.session() as session:
             result = await session.execute(select(Location))
-            return list(result.scalars().all())
+            return result.scalars().all()
 
     async def get(self, location_id: int) -> Location | None:
         """Return one location by id."""

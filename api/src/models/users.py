@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import Field, EmailStr, BaseModel, field_validator
+from pydantic import Field, EmailStr, BaseModel, ConfigDict, field_validator
 from src.models.roles import Roles
 
 
@@ -89,6 +89,8 @@ class UserOrgMembership(BaseModel):
 class UserSummary(BaseModel):
     """Represent a compact user object in nested responses."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     email: EmailStr
@@ -105,6 +107,8 @@ class UserSummary(BaseModel):
 
 class UserListItem(UserSummary):
     """Represent one user in admin list responses."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     oidc_subject: str | None = None
 

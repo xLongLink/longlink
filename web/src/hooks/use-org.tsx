@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
-import type { ApiAppResponse, ApiInvitation, ApiOrgApp, ApiOrgDetails, ApiOrgSummary, ApiUserSummary } from '@/lib/types';
+import type {
+    ApiAppResponse,
+    ApiInvitation,
+    ApiOrgApp,
+    ApiOrgDetails,
+    ApiOrgSummary,
+    ApiUserSummary,
+} from '@/lib/types';
 
 type UseOrgResult = {
     org: ApiOrgDetails | undefined;

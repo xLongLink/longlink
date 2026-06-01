@@ -1,16 +1,17 @@
 import base64
+import json
 import httpx
 import os
 import tempfile
 import yaml
 import src.db as db
+import docker
 from fastapi import (Depends, Request, Response, APIRouter, HTTPException,
                       status)
 from src.auth import authuser, authadmin
 from src.adapters.database import Postgre
 from src.models.apps import AppCreate, AppResponse
 from src.utils.utils import knames, slugify
-from src.models.users import UserSummary
 from src.adapters.compute.k8s import K8s
 
 router = APIRouter(prefix="/api/apps")
@@ -30,33 +31,55 @@ HOP_BY_HOP_HEADERS = {
 }
 
 
+def inspect_image_specs(image: str) -> dict[str, object] | None:
+    """Inspect a built image and return LongLink labels if available."""
+
+    try:
+        client = docker.from_env()
+        inspect_data = client.images.get(image).attrs
+    except docker.errors.DockerException:
+        return None
+
+    labels = inspect_data.get("Config", {}).get("Labels") or {}
+    if not isinstance(labels, dict):
+        return None
+
+    env_spec = labels.get("longlink.env.spec")
+    inspected: dict[str, object] = {
+        "name": labels.get("longlink.name"),
+        "version": labels.get("longlink.version"),
+        "description": labels.get("longlink.description"),
+    }
+
+    if env_spec is not None:
+        try:
+            inspected["env_spec"] = json.loads(env_spec)
+        except json.JSONDecodeError:
+            return None
+
+    return {key: value for key, value in inspected.items() if value is not None}
+
+
 @router.get("", response_model=list[AppResponse])
 async def list_apps(organization: str, user: db.User = Depends(authuser)) -> list[AppResponse]:
     """Return the apps registered in one organization."""
 
-    if all(org.name != organization for org in user.orgs):
+    org_names = {org.name for org in user.orgs}
+    if organization not in org_names:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
     apps = await db.apps.list(organization, user.id)
-    app_payloads: list[AppResponse] = []
+    app_payloads: list[dict[str, object]] = []
 
-    # Build the response from the loaded audit relations instead of a name lookup.
     for app, role_name in apps:
-        created_by = UserSummary.model_validate((app.created_by or user).model_dump())
-        updated_by = UserSummary.model_validate((app.updated_by or app.created_by or user).model_dump())
-        deleted_by = UserSummary.model_validate(app.deleted_by.model_dump()) if app.deleted_by else None
-
-        app_payloads.append(
-            AppResponse.model_validate(
-                {
-                    **app.model_dump(),
-                    "created_by": created_by,
-                    "updated_by": updated_by,
-                    "deleted_by": deleted_by,
-                    "role": role_name,
-                }
-            )
-        )
+        app_payload = {
+            **app.model_dump(),
+            "created_by": app.created_by or user,
+            "updated_by": app.updated_by or app.created_by or user,
+            "deleted_by": app.deleted_by,
+            "role": role_name,
+        }
+        app_payloads.append(app_payload)
 
     return app_payloads
 
@@ -108,6 +131,11 @@ async def create_app(
     # Deploy the app on the compute cluster.
     await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, {})
 
+    # Print the built image labels so operators can verify the app contract.
+    image_specs = inspect_image_specs(payload.image)
+    if image_specs is not None:
+        print(json.dumps(image_specs, indent=2))
+
     try:
         app = await db.apps.create(
             organization,
@@ -120,14 +148,12 @@ async def create_app(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return AppResponse.model_validate(
-        {
-            **app.model_dump(),
-            "created_by": UserSummary.model_validate(user.model_dump()),
-            "updated_by": UserSummary.model_validate(user.model_dump()),
-            "deleted_by": None,
-        }
-    )
+    return {
+        **app.model_dump(),
+        "created_by": user,
+        "updated_by": user,
+        "deleted_by": None,
+    }
 
 
 @router.delete("/{app_id}", status_code=204)
@@ -135,16 +161,22 @@ async def delete_app(
     organization: str,
     app_id: int,
     _user: db.User = Depends(authadmin),
-) -> Response:
+) -> None:
     """Delete an app registration and remove it from the compute cluster."""
 
     app = await db.apps.get_by_id(app_id)
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
 
+    org = await db.orgs.get(organization)
+    if org is None:
+        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+    if org.location_id is None:
+        raise HTTPException(status_code=400, detail=f"Org '{organization}' has no location configured")
+
     registries = await db.compute.list()
-    if registries:
-        registry = registries[0]
+    registry = next((registry for registry in registries if registry.location_id == org.location_id), None)
+    if registry is not None:
         compute = K8s(registry.kubeconfig, registry.ingress_name)
         await compute.remove(organization, app.slug)
 
@@ -157,7 +189,7 @@ async def delete_app(
 
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail) from exc
 
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return
 
 
 @router.api_route("/{app_id}/proxy", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
@@ -169,15 +201,28 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
 
-    if all(org.name != app.organization for org in user.orgs):
+    org_names = {org.name for org in user.orgs}
+    if app.organization not in org_names:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{app.organization}' not found")
+
+    org = await db.orgs.get(app.organization)
+    if org is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{app.organization}' not found")
+    if org.location_id is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Org '{app.organization}' has no location configured")
 
     registries = await db.compute.list()
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 
+    registry = next((registry for registry in registries if registry.location_id == org.location_id), None)
+    if registry is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"No compute cluster configured for location '{org.location_id}'",
+        )
+
     # Load client certificate and key from the compute registry's kubeconfig.
-    registry = registries[0]
     kc = yaml.safe_load(registry.kubeconfig)
     user_entry = kc["users"][0]["user"]
     cert_data = base64.b64decode(user_entry["client-certificate-data"]).decode()
@@ -192,7 +237,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
             kf.write(key_data)
             key_path = kf.name
 
-        upstream_path = f"/{path.lstrip('/')}" if path else "/"
+        upstream_path = path.lstrip("/")
         namespace = knames(app.organization, "Org")
         name = knames(app.slug, "Application name")
         api_host = kc["clusters"][0]["cluster"]["server"].rstrip("/").replace("://0.0.0.0", "://localhost")

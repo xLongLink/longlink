@@ -12,7 +12,7 @@ class DatabaseRegistriesService(ServiceBase):
 
         async with self.session() as session:
             result = await session.execute(select(DatabaseRegistry))
-            return list(result.scalars().all())
+            return result.scalars().all()
 
     async def get(self, name: str) -> DatabaseRegistry | None:
         """Return one database backend by name."""

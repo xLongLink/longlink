@@ -143,4 +143,3 @@ export function applyTheme(root: HTMLElement, config: ThemeConfig) {
     root.style.setProperty('--primary-foreground', accent.accentForeground);
     root.style.setProperty('--radius', RADIUS_TOKENS[config.radius]);
 }
-

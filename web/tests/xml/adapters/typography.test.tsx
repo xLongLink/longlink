@@ -27,7 +27,7 @@ describe('Typography', () => {
         expect(output).toContain('href="#detail"');
         expect(output).toContain('aria-label="Link to this heading"');
         expect(output).toContain('class="leading-7"');
-        expect(output).toContain('class="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground"');
+        expect(output).toContain('class="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground"');
         expect(output).toContain('class="ml-6 list-disc space-y-2"');
         expect(output).toContain('class="ml-6 list-decimal space-y-2"');
         expect(output).toContain('Page title');

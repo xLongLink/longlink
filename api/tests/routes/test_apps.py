@@ -15,10 +15,12 @@ async def test_list_apps_returns_app_membership_role(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user)
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, user)
     app = await db.apps.create(
         "acme",
         "dashboard",
+        slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
@@ -62,10 +64,12 @@ async def test_list_apps_returns_null_role_without_app_membership(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user)
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, user)
     app = await db.apps.create(
         "acme",
         "dashboard",
+        slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
@@ -96,7 +100,8 @@ async def test_list_apps_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    await db.orgs.create("acme", owner)
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, owner)
     await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     client = clients[1]
 
@@ -116,6 +121,7 @@ async def test_create_app_returns_app_response(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
     monkeypatch,
+    capsys,
 ) -> None:
     """Create an app and return the app response payload."""
 
@@ -200,7 +206,6 @@ async def test_create_app_returns_app_response(
             password: str,
             sslmode: str | None,
             maintenance_database: str,
-            location_id: int,
         ) -> None:
             captured["database"] = {
                 "host": host,
@@ -210,7 +215,6 @@ async def test_create_app_returns_app_response(
                 "sslmode": sslmode,
             }
             captured["maintenance_database"] = maintenance_database
-            captured["location_id"] = location_id
 
         async def schema(self, organization: str, application: str) -> str:
             captured["schema"] = {
@@ -221,6 +225,15 @@ async def test_create_app_returns_app_response(
 
     monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
     monkeypatch.setattr("src.routes.apps.Postgre", FakeDatabase)
+    monkeypatch.setattr(
+        "src.routes.apps.inspect_image_specs",
+        lambda image: {
+            "name": "dashboard",
+            "version": "0.1.0",
+            "description": "Demo app",
+            "env_spec": {"version": 1, "required": {}, "optional": {}},
+        },
+    )
     client = clients[0]
 
     # Act
@@ -246,7 +259,6 @@ async def test_create_app_returns_app_response(
     }
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
     assert captured["maintenance_database"] == "postgres"
-    assert captured["location_id"] == remote_location.id
     assert captured["application"] == {
         "organization": "acme",
         "application": "dashboard",
@@ -254,19 +266,87 @@ async def test_create_app_returns_app_response(
         "port": 80,
         "secrets": {},
     }
+    assert '"env_spec"' in capsys.readouterr().out
 
 
 async def test_delete_app_removes_dependent_env_rows(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
+    monkeypatch,
 ) -> None:
     """Delete an app even when it still has env secrets."""
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user)
+    local_location = await db.locations.create("local", "Local testing")
+    remote_location = await db.locations.create("remote", "Remote testing")
+    await db.orgs.create("acme", local_location.id, user)
     app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     await db.envs.set("TOKEN", "secret", "dashboard")
+    captured: dict[str, object] = {}
+
+    class FakeCompute:
+        """Fake compute adapter for app deletion tests."""
+
+        def __init__(self, kubeconfig: str, ingress_name: str) -> None:
+            captured["ingress_name"] = ingress_name
+
+        async def remove(self, organization: str, application: str) -> None:
+            captured["remove"] = {"organization": organization, "application": application}
+
+    monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        kubeconfig=(
+            "apiVersion: v1\n"
+            "clusters:\n"
+            "- name: k3d-compute\n"
+            "  cluster:\n"
+            "    server: https://0.0.0.0:8001\n"
+            "contexts:\n"
+            "- name: k3d-compute\n"
+            "  context:\n"
+            "    cluster: k3d-compute\n"
+            "    user: admin@k3d-compute\n"
+            "current-context: k3d-compute\n"
+            "kind: Config\n"
+            "preferences: {}\n"
+            "users:\n"
+            "- name: admin@k3d-compute\n"
+            "  user:\n"
+            "    client-certificate-data: Y2VydA==\n"
+            "    client-key-data: a2V5\n"
+        ),
+        ingress_host="localhost:8443",
+        ingress_name="remote-ingress",
+        location_id=remote_location.id,
+    )
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        kubeconfig=(
+            "apiVersion: v1\n"
+            "clusters:\n"
+            "- name: k3d-compute\n"
+            "  cluster:\n"
+            "    server: https://0.0.0.0:8001\n"
+            "contexts:\n"
+            "- name: k3d-compute\n"
+            "  context:\n"
+            "    cluster: k3d-compute\n"
+            "    user: admin@k3d-compute\n"
+            "current-context: k3d-compute\n"
+            "kind: Config\n"
+            "preferences: {}\n"
+            "users:\n"
+            "- name: admin@k3d-compute\n"
+            "  user:\n"
+            "    client-certificate-data: Y2VydA==\n"
+            "    client-key-data: a2V5\n"
+        ),
+        ingress_host="localhost:8443",
+        ingress_name="local-ingress",
+        location_id=local_location.id,
+    )
     client = clients[0]
 
     # Act
@@ -276,6 +356,10 @@ async def test_delete_app_removes_dependent_env_rows(
     assert response.status_code == 204
     assert await db.apps.get("acme", "dashboard") is None
     assert await db.envs.get("TOKEN", "dashboard") is None
+    assert captured == {
+        "ingress_name": "local-ingress",
+        "remove": {"organization": "acme", "application": "dashboard"},
+    }
 
 
 async def test_proxy_app_forwards_request_to_internal_service(
@@ -287,7 +371,9 @@ async def test_proxy_app_forwards_request_to_internal_service(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user)
+    local_location = await db.locations.create("local", "Local testing")
+    remote_location = await db.locations.create("remote", "Remote testing")
+    await db.orgs.create("acme", remote_location.id, user)
     app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest")
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -313,6 +399,33 @@ async def test_proxy_app_forwards_request_to_internal_service(
         ),
         ingress_host="localhost:8443",
         ingress_name="control-ingress",
+        location_id=local_location.id,
+    )
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        kubeconfig=(
+            "apiVersion: v1\n"
+            "clusters:\n"
+            "- name: k3d-compute\n"
+            "  cluster:\n"
+            "    server: https://0.0.0.0:8001\n"
+            "contexts:\n"
+            "- name: k3d-compute\n"
+            "  context:\n"
+            "    cluster: k3d-compute\n"
+            "    user: admin@k3d-compute\n"
+            "current-context: k3d-compute\n"
+            "kind: Config\n"
+            "preferences: {}\n"
+            "users:\n"
+            "- name: admin@k3d-compute\n"
+            "  user:\n"
+            "    client-certificate-data: Y2VydA==\n"
+            "    client-key-data: a2V5\n"
+        ),
+        ingress_host="localhost:8443",
+        ingress_name="remote-ingress",
+        location_id=remote_location.id,
     )
     client = clients[0]
     captured: dict[str, object] = {}

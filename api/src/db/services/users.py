@@ -17,7 +17,7 @@ class UsersService(ServiceBase):
 
         async with self.session() as session:
             result = await session.execute(select(User))
-            return list(result.scalars().all())
+            return result.scalars().all()
 
     async def profile(self, user_id: int) -> UserProfile | None:
         """Return one user profile with membership roles included."""

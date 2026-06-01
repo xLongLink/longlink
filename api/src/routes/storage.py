@@ -1,5 +1,5 @@
 import src.db as db
-from fastapi import Depends, Response, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, HTTPException, status
 from src.auth import authadmin
 from src.models import (StorageQuotaResponse, StorageUsageResponse,
                         StorageRegistryCreate, StorageRegistryResponse)
@@ -13,23 +13,7 @@ router = APIRouter(prefix="/api/storage")
 async def list_storage_registries(_user: db.User = Depends(authadmin)) -> list[StorageRegistryResponse]:
     """Return all registered storage backends."""
 
-    registries = await db.storage.list()
-    payload = [
-        StorageRegistryResponse.model_validate(
-            {
-                "id": registry.id,
-                "kind": registry.kind,
-                "name": registry.name,
-                "protocol": registry.protocol,
-                "endpoint_url": registry.endpoint_url,
-                "access_key_id": registry.access_key_id,
-                "location_id": registry.location_id,
-            }
-        )
-        for registry in registries
-    ]
-
-    return payload
+    return await db.storage.list()
 
 
 @router.get("/{name}/usage", response_model=StorageUsageResponse)
@@ -50,7 +34,7 @@ async def get_storage_usage(name: str, _user: db.User = Depends(authadmin)) -> S
         secret_access_key=registry.secret_access_key,
     )
 
-    return StorageUsageResponse.model_validate(adapter.usage())
+    return adapter.usage()
 
 
 @router.get("/{name}/quota", response_model=StorageQuotaResponse)
@@ -71,7 +55,7 @@ async def get_storage_quota(name: str, _user: db.User = Depends(authadmin)) -> S
         secret_access_key=registry.secret_access_key,
     )
 
-    return StorageQuotaResponse.model_validate(adapter.quota())
+    return adapter.quota()
 
 
 @router.get("/{name}", response_model=StorageRegistryResponse)
@@ -82,17 +66,7 @@ async def get_storage_registry(name: str, _user: db.User = Depends(authadmin)) -
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Storage '{name}' not found")
 
-    return StorageRegistryResponse.model_validate(
-        {
-            "id": registry.id,
-            "kind": registry.kind,
-            "name": registry.name,
-            "protocol": registry.protocol,
-            "endpoint_url": registry.endpoint_url,
-            "access_key_id": registry.access_key_id,
-            "location_id": registry.location_id,
-        }
-    )
+    return registry
 
 
 @router.post("", response_model=StorageRegistryResponse)
@@ -104,25 +78,15 @@ async def create_storage_registry(
 
     registry = await db.storage.create(**payload.model_dump())
 
-    return StorageRegistryResponse.model_validate(
-        {
-            "id": registry.id,
-            "kind": registry.kind,
-            "name": registry.name,
-            "protocol": registry.protocol,
-            "endpoint_url": registry.endpoint_url,
-            "access_key_id": registry.access_key_id,
-            "location_id": registry.location_id,
-        }
-    )
+    return registry
 
 
 @router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_storage_registry(name: str, _user: db.User = Depends(authadmin)) -> Response:
+async def delete_storage_registry(name: str, _user: db.User = Depends(authadmin)) -> None:
     """Delete one storage backend registration."""
 
     registry = await db.storage.delete(name)
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Storage '{name}' not found")
 
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return

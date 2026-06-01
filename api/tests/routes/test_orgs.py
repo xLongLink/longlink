@@ -13,9 +13,10 @@ async def test_create_organization_returns_owner_role(
     # Arrange
     owner = users[0]
     client = clients[0]
+    location = await db.locations.create("local", "Local testing")
 
     # Act
-    response = client.post("/api/orgs", json={"name": "  acme  "})
+    response = client.post("/api/orgs", json={"name": "  acme  ", "location_id": location.id})
 
     # Assert
     assert response.status_code == 200
@@ -24,6 +25,7 @@ async def test_create_organization_returns_owner_role(
     assert response.json() == OrgSummary.model_validate(
         {
             "name": organization.name,
+            "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
             "created_by": UserSummary.model_validate(owner.model_dump()),
@@ -42,7 +44,8 @@ async def test_get_organization_returns_member_payload(
 
     # Arrange
     owner = users[0]
-    organization = await db.orgs.create("acme", owner)
+    location = await db.locations.create("local", "Local testing")
+    organization = await db.orgs.create("acme", location.id, owner)
     app = await db.apps.create(
         "acme",
         "dashboard",
@@ -61,6 +64,14 @@ async def test_get_organization_returns_member_payload(
 
     expected_payload = OrgDetails(
         name="acme",
+        location_id=organization.location_id,
+        location={
+            "id": location.id,
+            "name": location.name,
+            "display_name": location.display_name,
+            "created_at": location.created_at,
+            "updated_at": location.updated_at,
+        },
         created_at=organization.created_at,
         updated_at=organization.updated_at,
         created_by=UserSummary.model_validate(owner.model_dump()),
@@ -88,7 +99,7 @@ async def test_get_organization_returns_member_payload(
                 "created_by": UserSummary.model_validate(owner.model_dump()),
                 "updated_by": UserSummary.model_validate(owner.model_dump()),
                 "deleted_at": None,
-                "deleted_by": UserSummary.model_validate(owner.model_dump()),
+                "deleted_by": None,
             }
         ],
     ).model_dump(mode="json")
@@ -113,7 +124,7 @@ async def test_get_organization_returns_member_payload(
             "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
             "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
             "deleted_at": None,
-            "deleted_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
+            "deleted_by": None,
         }
     ]
 
@@ -126,7 +137,8 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
 
     # Arrange
     owner = users[0]
-    organization = await db.orgs.create("acme", owner)
+    location = await db.locations.create("local", "Local testing")
+    organization = await db.orgs.create("acme", location.id, owner)
     client = clients[0]
 
     # Act
@@ -137,6 +149,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     expected_payload = OrgSummary.model_validate(
         {
             "name": organization.name,
+            "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
             "created_by": UserSummary.model_validate(owner.model_dump()),
@@ -156,7 +169,8 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    await db.orgs.create("acme", owner)
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, owner)
     client = clients[1]
 
     # Act
@@ -199,7 +213,8 @@ async def test_delete_organization_removes_its_apps(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user)
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, user)
     await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     client = clients[0]
 
@@ -219,11 +234,12 @@ async def test_create_organization_returns_409_for_duplicate_name(
 
     # Arrange
     user = users[0]
-    await db.orgs.create("acme", user)
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, user)
     client = clients[0]
 
     # Act
-    response = client.post("/api/orgs", json={"name": "acme"})
+    response = client.post("/api/orgs", json={"name": "acme", "location_id": location.id})
 
     # Assert
     assert response.status_code == 409

@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import Field, BaseModel, field_validator
+from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.locations import LocationResponse
 from src.models.users import UserSummary
 
@@ -20,6 +20,8 @@ class OrgCreate(BaseModel):
 class OrgSummary(BaseModel):
     """Represent one organization in admin list responses."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     name: str
     location_id: int | None = None
     created_at: datetime
@@ -32,6 +34,8 @@ class OrgSummary(BaseModel):
 
 class OrgAppResponse(BaseModel):
     """Represent one application in an organization payload."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str

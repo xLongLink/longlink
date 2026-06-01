@@ -35,7 +35,7 @@ const ast = fromXml(`
       </Tab>
     </Tabs>
     <H2>Applications</H2>
-    <P><Code>longlink init</Code> creates a minimal application scaffold:</P>
+    <P><Code>longlink init</Code> creates a minimal application scaffold that <Code>longlink dev</Code> can run immediately:</P>
     <Pre lang="text">├── src/
 │   ├── api/          # Route registration
 │   ├── models/       # Database models
@@ -61,7 +61,7 @@ const ast = fromXml(`
         <Pre lang="bash">uv sync --extra dev</Pre>
       </Tab>
     </Tabs>
-    <P>Run the development server:</P>
+    <P>Run the development server against the scaffolded app:</P>
     <Tabs defaultValue="pip">
       <Tab value="pip" label="pip">
         <Pre lang="bash">longlink dev</Pre>

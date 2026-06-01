@@ -11,9 +11,10 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Arrange
     owner = users[0]
+    location = await db.locations.create("local", "Local testing")
 
     # Act
-    organization = await db.orgs.create("acme", owner)
+    organization = await db.orgs.create("acme", location.id, owner)
 
     # Assert
     assert organization.name == "acme"
@@ -39,7 +40,8 @@ async def test_members_returns_users_with_roles(users: tuple[User, User, User]) 
 
     # Arrange
     owner, member = users[0], users[1]
-    await db.orgs.create("acme", owner)
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -67,11 +69,12 @@ async def test_create_raises_value_error_when_org_already_exists(users: tuple[Us
 
     # Arrange
     owner = users[0]
-    await db.orgs.create("acme", owner)
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, owner)
 
     # Act
     with pytest.raises(ValueError) as exc:
-        await db.orgs.create("acme", owner)
+        await db.orgs.create("acme", location.id, owner)
 
     # Assert
     assert str(exc.value) == "Org already exists"

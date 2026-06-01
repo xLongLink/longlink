@@ -9,7 +9,7 @@ class EnvsService(ServiceBase):
         async with self.session() as session:
             statement = select(Env).where(Env.appname == app_name)
             result = await session.execute(statement)
-            return list(result.scalars().all())
+            return result.scalars().all()
 
     async def get(self, key: str, app_name: str) -> Env | None:
         """Return an env secret by key and app scope."""

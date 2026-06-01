@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInviteUser } from '@/hooks/use-org';
-import type { ApiInvitation, ApiUserSummary } from '@/lib/types';
 import { ROLE_NAMES } from '@/lib/roles';
+import type { ApiInvitation, ApiUserSummary } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Menu, MenuSection } from '@ui/menu';
@@ -102,9 +102,7 @@ export default function People({ org, people, invitations, isLoading, error }: P
                 <div className="space-y-4">
                     <div className="space-y-1">
                         <h2 className="text-lg font-medium text-foreground">Members</h2>
-                        <p className="text-sm text-muted-foreground">
-                            Users who have access to this organization.
-                        </p>
+                        <p className="text-sm text-muted-foreground">Users who have access to this organization.</p>
                     </div>
                     <hr className="border-border" />
                     {isLoading ? (
@@ -134,9 +132,13 @@ export default function People({ org, people, invitations, isLoading, error }: P
                     </div>
                     <hr className="border-border" />
                     {isLoading ? (
-                        <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading invitations...</div>
+                        <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                            Loading invitations...
+                        </div>
                     ) : error ? (
-                        <div className="rounded-md border p-4 text-sm text-destructive">Failed to load invitations.</div>
+                        <div className="rounded-md border p-4 text-sm text-destructive">
+                            Failed to load invitations.
+                        </div>
                     ) : invitations.length ? (
                         <DataTable columns={invitationColumns} data={invitations} />
                     ) : (

@@ -72,7 +72,9 @@ export default function Organization({ sectionName }: OrganizationProps) {
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 {content}
 
-                {section === 'people' ? <People org={org} people={people} invitations={invitations} isLoading={isLoading} error={error} /> : null}
+                {section === 'people' ? (
+                    <People org={org} people={people} invitations={invitations} isLoading={isLoading} error={error} />
+                ) : null}
                 {section === 'applications' ? (
                     <Applications org={org} apps={apps} isLoading={isLoading} error={error} />
                 ) : null}

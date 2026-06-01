@@ -1,5 +1,5 @@
 from kubernetes.client.rest import ApiException
-from src.adapters.compute.k8s import Compute
+from src.adapters.compute.k8s import K8s
 
 
 async def test_init_bootstraps_cluster_proxy(monkeypatch) -> None:
@@ -44,7 +44,7 @@ async def test_init_bootstraps_cluster_proxy(monkeypatch) -> None:
     monkeypatch.setattr("src.adapters.compute.k8s.client.AppsV1Api", lambda api_client: object())
     monkeypatch.setattr("src.adapters.compute.k8s.DynamicClient", FakeDynamicClient)
 
-    Compute("apiVersion: v1\nclusters: []\n", "control-ingress")
+    K8s("apiVersion: v1\nclusters: []\n", "control-ingress")
 
     # Assert
     assert captured == [
