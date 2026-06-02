@@ -1,7 +1,12 @@
-from sqlmodel import Field
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Column
 from src.models.kinds import DatabaseKind
 from src.db.models.__base__ import Base
+
+if TYPE_CHECKING:
+    from src.db.models.location import Location
 
 
 class DatabaseRegistry(Base, table=True):
@@ -21,3 +26,4 @@ class DatabaseRegistry(Base, table=True):
     sslmode: str | None = Field(default=None, max_length=32)
     maintenance_database: str = Field(default="postgres", max_length=255)
     location_id: int = Field(foreign_key='locations.id')
+    location: 'Location' = Relationship(back_populates='database_registries')

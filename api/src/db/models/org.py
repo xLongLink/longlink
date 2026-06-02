@@ -4,6 +4,8 @@ from src.db.models.__base__ import Base
 from src.db.models.association import UserOrganization
 
 if TYPE_CHECKING:
+    from src.db.models.apps import App
+    from src.db.models.location import Location
     from src.db.models.users import User
 
 
@@ -17,6 +19,8 @@ class Org(Base, table=True):
     created_by_id: int | None = Field(default=None, foreign_key='users.id')
     updated_by_id: int | None = Field(default=None, foreign_key='users.id')
     deleted_by_id: int | None = Field(default=None, foreign_key='users.id')
+    location: Optional['Location'] = Relationship(back_populates='orgs')
+    apps: list['App'] = Relationship(back_populates='organization_rel')
     created_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Org.created_by_id'})
     updated_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Org.updated_by_id'})
     deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Org.deleted_by_id'})

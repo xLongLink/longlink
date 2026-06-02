@@ -46,8 +46,8 @@ def inspect_image_specs(image: str) -> dict[str, object] | None:
 async def list_apps(organization: str, user: db.User = Depends(authuser)) -> list[AppResponse]:
     """Return the apps registered in one organization."""
 
-    org_names = {org.name for org in user.orgs}
-    if organization not in org_names:
+    org = next((org for org in user.orgs if org.name == organization), None)
+    if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
     apps = await db.apps.list(organization, user.id)
@@ -75,7 +75,7 @@ async def create_app(
     """Register a new app in the database and deploy it on the compute cluster."""
     app_slug = slugify(payload.name)
 
-    org = await db.orgs.get(organization)
+    org = next((org for org in user.orgs if org.name == organization), None)
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
     if org.location_id is None:
@@ -151,7 +151,7 @@ async def delete_app(
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
 
-    org = await db.orgs.get(organization)
+    org = next((org for org in _user.orgs if org.name == organization), None)
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
     if org.location_id is None:

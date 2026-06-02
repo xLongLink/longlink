@@ -24,38 +24,10 @@ async def get_organization(
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
-    org_names = {org.name for org in user.orgs}
-    if name not in org_names:
+    if next((org for org in user.orgs if org.name == name), None) is None:
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
-    # Load the org apps separately so the detail payload includes the organization inventory.
-    apps = await db.apps.list(name, user.id)
-    members = await db.orgs.members(name)
-    app_payloads = [
-        {
-            **app.model_dump(),
-            "created_by": app.created_by,
-            "updated_by": app.updated_by,
-            "deleted_by": app.deleted_by,
-        }
-        for app, _role_name in apps
-    ]
-
-    location = await db.locations.get(organization.location_id) if organization.location_id else None
-
-    return {
-        "name": organization.name,
-        "location_id": organization.location_id,
-        "location": location,
-        "created_at": organization.created_at,
-        "updated_at": organization.updated_at,
-        "created_by": organization.created_by,
-        "updated_by": organization.updated_by,
-        "deleted_at": organization.deleted_at,
-        "deleted_by": organization.deleted_by,
-        "users": [member for member, _role_name in members],
-        "apps": app_payloads,
-    }
+    return organization
 
 
 @router.post("", response_model=OrgSummary)
@@ -86,9 +58,7 @@ async def create_organization(
 async def delete_organization(name: str, user: db.User = Depends(authuser)) -> None:
     """Delete one org by name."""
 
-    organization = await db.orgs.get(name)
-    org_names = {org.name for org in user.orgs}
-    if organization is None or name not in org_names:
+    if next((org for org in user.orgs if org.name == name), None) is None:
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
     await db.orgs.delete(name)

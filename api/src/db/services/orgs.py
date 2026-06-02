@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from .base import ServiceBase
 from sqlalchemy import delete, select
-from src.db.models import App, Org, User
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from src.db.models import App, Location, Org, User
+from sqlalchemy.exc import IntegrityError
 from src.models.roles import Roles
 from src.db.models.association import UserOrganization
 
@@ -30,24 +30,21 @@ class OrgsService(ServiceBase):
         async with self.session() as session:
             statement = select(Org).options(
                 selectinload(Org.users),
+                selectinload(Org.apps).selectinload(App.created_by),
+                selectinload(Org.apps).selectinload(App.updated_by),
+                selectinload(Org.apps).selectinload(App.deleted_by),
                 selectinload(Org.created_by),
                 selectinload(Org.updated_by),
                 selectinload(Org.deleted_by),
+                selectinload(Org.location).selectinload(Location.orgs).selectinload(Org.created_by),
+                selectinload(Org.location).selectinload(Location.orgs).selectinload(Org.updated_by),
+                selectinload(Org.location).selectinload(Location.orgs).selectinload(Org.deleted_by),
+                selectinload(Org.location).selectinload(Location.compute_registries),
+                selectinload(Org.location).selectinload(Location.database_registries),
+                selectinload(Org.location).selectinload(Location.storage_registries),
             ).where(Org.name == name)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
-
-    async def members(self, name: str) -> list[tuple[User, str | None]]:
-        """Return the members and roles for one org."""
-
-        async with self.session() as session:
-            # Read the role directly from the membership table so the route stays declarative.
-            statement = select(User, UserOrganization.role_name).join(
-                UserOrganization,
-                User.id == UserOrganization.user_id,
-            ).where(UserOrganization.organization_name == name)
-            result = await session.execute(statement)
-            return result.all()
 
     async def create(self, name: str, location_id: int, user: User | None = None) -> Org:
         """Create an org."""

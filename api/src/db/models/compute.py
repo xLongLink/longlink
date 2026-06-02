@@ -1,7 +1,12 @@
-from sqlmodel import Field
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Text, Column
 from src.models.kinds import ComputeKind
 from src.db.models.__base__ import Base
+
+if TYPE_CHECKING:
+    from src.db.models.location import Location
 
 
 class ComputeRegistry(Base, table=True):
@@ -18,3 +23,4 @@ class ComputeRegistry(Base, table=True):
     ingress_name: str = Field(max_length=255)
     proxy_secret: str = Field(max_length=255)
     location_id: int = Field(foreign_key='locations.id')
+    location: 'Location' = Relationship(back_populates='compute_registries')

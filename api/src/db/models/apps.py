@@ -4,6 +4,7 @@ from src.db.models.__base__ import Base
 from src.db.models.association import UserApp
 
 if TYPE_CHECKING:
+    from src.db.models.org import Org
     from src.db.models.users import User
 
 
@@ -13,7 +14,7 @@ class App(Base, table=True):
     __tablename__ = 'apps'
 
     id: int | None = Field(default=None, primary_key=True)
-    organization: str = Field(max_length=100)
+    organization: str = Field(foreign_key='organizations.name', max_length=100)
     name: str = Field(unique=True, max_length=100)
     slug: str = Field(unique=True, max_length=100)
     image: str = Field(max_length=255)
@@ -24,6 +25,7 @@ class App(Base, table=True):
     created_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'App.created_by_id'})
     updated_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'App.updated_by_id'})
     deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'App.deleted_by_id'})
+    organization_rel: 'Org' = Relationship(back_populates='apps')
     users: list['User'] = Relationship(
         back_populates='apps',
         sa_relationship_kwargs={'secondary': UserApp.__table__},

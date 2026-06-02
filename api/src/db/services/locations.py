@@ -1,6 +1,7 @@
 from .base import ServiceBase
 from sqlalchemy import select
-from src.db.models import Location
+from sqlalchemy.orm import selectinload
+from src.db.models import Location, Org
 
 
 class LocationsService(ServiceBase):
@@ -10,14 +11,30 @@ class LocationsService(ServiceBase):
         """Return all registered locations."""
 
         async with self.session() as session:
-            result = await session.execute(select(Location))
+            statement = select(Location).options(
+                selectinload(Location.orgs).selectinload(Org.created_by),
+                selectinload(Location.orgs).selectinload(Org.updated_by),
+                selectinload(Location.orgs).selectinload(Org.deleted_by),
+                selectinload(Location.compute_registries),
+                selectinload(Location.database_registries),
+                selectinload(Location.storage_registries),
+            )
+            result = await session.execute(statement)
             return result.scalars().all()
 
     async def get(self, location_id: int) -> Location | None:
         """Return one location by id."""
 
         async with self.session() as session:
-            result = await session.execute(select(Location).where(Location.id == location_id))
+            statement = select(Location).options(
+                selectinload(Location.orgs).selectinload(Org.created_by),
+                selectinload(Location.orgs).selectinload(Org.updated_by),
+                selectinload(Location.orgs).selectinload(Org.deleted_by),
+                selectinload(Location.compute_registries),
+                selectinload(Location.database_registries),
+                selectinload(Location.storage_registries),
+            ).where(Location.id == location_id)
+            result = await session.execute(statement)
             return result.scalar_one_or_none()
 
     async def create(self, name: str, display_name: str) -> Location:
@@ -28,7 +45,18 @@ class LocationsService(ServiceBase):
             session.add(location)
             await session.commit()
             await session.refresh(location)
-            return location
+
+            result = await session.execute(
+                select(Location).options(
+                    selectinload(Location.orgs).selectinload(Org.created_by),
+                    selectinload(Location.orgs).selectinload(Org.updated_by),
+                    selectinload(Location.orgs).selectinload(Org.deleted_by),
+                    selectinload(Location.compute_registries),
+                    selectinload(Location.database_registries),
+                    selectinload(Location.storage_registries),
+                ).where(Location.id == location.id)
+            )
+            return result.scalar_one()
 
     async def delete(self, location_id: int) -> Location | None:
         """Delete one location."""

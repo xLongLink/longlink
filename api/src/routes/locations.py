@@ -13,6 +13,17 @@ async def list_locations(_user: db.User = Depends(authadmin)) -> list[LocationRe
     return await db.locations.list()
 
 
+@router.get("/{location_id}", response_model=LocationResponse)
+async def get_location(location_id: int, _user: db.User = Depends(authadmin)) -> LocationResponse:
+    """Return one location and its attached infrastructure."""
+
+    location = await db.locations.get(location_id)
+    if location is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Location '{location_id}' not found")
+
+    return location
+
+
 @router.post("", response_model=LocationResponse)
 async def create_location(
     payload: LocationCreate,

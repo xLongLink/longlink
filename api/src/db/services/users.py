@@ -112,7 +112,9 @@ class UsersService(ServiceBase):
 
         async with self.session() as session:
             # Load memberships so the returned user can be used outside the session.
-            statement = select(User).options(selectinload(User.orgs)).where(User.oidc_subject == oidc_subject)
+            statement = select(User).options(
+                selectinload(User.orgs).selectinload(Org.location),
+            ).where(User.oidc_subject == oidc_subject)
             result = await session.execute(statement)
             return result.scalars().first()
 

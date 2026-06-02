@@ -127,65 +127,67 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
-                    <div className="pointer-events-auto shrink-0 border-b border-border bg-card">
-                        <div className="grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 lg:px-6">
-                            <SidebarTrigger className="shrink-0 cursor-pointer" />
+                    <div className="pointer-events-auto relative shrink-0 border-b border-border bg-card">
+                        <SidebarTrigger className="absolute top-1/2 left-4 z-10 shrink-0 -translate-y-1/2 cursor-pointer lg:left-6" />
 
-                            <div className="min-w-0 justify-self-center">
-                                <div className="w-full max-w-[56rem]">
-                                    <UIBreadcrumb>
-                                        <BreadcrumbList>
-                                            <BreadcrumbItem>
-                                                <BreadcrumbLink
-                                                    render={(props) => (
-                                                        <Link
-                                                            {...props}
-                                                            to="/docs"
-                                                            className="transition-colors hover:text-foreground"
-                                                        >
-                                                            Documentation
-                                                        </Link>
-                                                    )}
-                                                />
-                                            </BreadcrumbItem>
-                                            {!isRootDocsPage ? (
-                                                <>
-                                                    <BreadcrumbSeparator />
-                                                    <BreadcrumbItem>
-                                                        <BreadcrumbLink
-                                                            render={(props) => (
-                                                                <Link
-                                                                    {...props}
-                                                                    to={currentGroup?.items[0]?.path ?? '/docs'}
-                                                                    className="transition-colors hover:text-foreground"
-                                                                >
-                                                                    {currentGroup?.title ?? 'Overview'}
-                                                                </Link>
-                                                            )}
-                                                        />
-                                                    </BreadcrumbItem>
-                                                    {!isSectionOverviewPage ? (
-                                                        <>
-                                                            <BreadcrumbSeparator />
-                                                            <BreadcrumbItem>
-                                                                <BreadcrumbLink
-                                                                    render={(props) => (
-                                                                        <Link
-                                                                            {...props}
-                                                                            to={pagePath}
-                                                                            className="font-medium text-foreground"
-                                                                        >
-                                                                            {pageLabel}
-                                                                        </Link>
-                                                                    )}
-                                                                />
-                                                            </BreadcrumbItem>
-                                                        </>
-                                                    ) : null}
-                                                </>
-                                            ) : null}
-                                        </BreadcrumbList>
-                                    </UIBreadcrumb>
+                        <div className="grid h-14 lg:grid-cols-[minmax(0,1fr)_14rem]">
+                            <div className="min-w-0 px-4 lg:px-6">
+                                <div className="mx-auto flex h-full w-full max-w-[56rem] items-center">
+                                    <div className="mx-auto w-full max-w-2xl">
+                                        <UIBreadcrumb>
+                                            <BreadcrumbList>
+                                                <BreadcrumbItem>
+                                                    <BreadcrumbLink
+                                                        render={(props) => (
+                                                            <Link
+                                                                {...props}
+                                                                to="/docs"
+                                                                className="transition-colors hover:text-foreground"
+                                                            >
+                                                                Documentation
+                                                            </Link>
+                                                        )}
+                                                    />
+                                                </BreadcrumbItem>
+                                                {!isRootDocsPage ? (
+                                                    <>
+                                                        <BreadcrumbSeparator />
+                                                        <BreadcrumbItem>
+                                                            <BreadcrumbLink
+                                                                render={(props) => (
+                                                                    <Link
+                                                                        {...props}
+                                                                        to={currentGroup?.items[0]?.path ?? '/docs'}
+                                                                        className="transition-colors hover:text-foreground"
+                                                                    >
+                                                                        {currentGroup?.title ?? 'Overview'}
+                                                                    </Link>
+                                                                )}
+                                                            />
+                                                        </BreadcrumbItem>
+                                                        {!isSectionOverviewPage ? (
+                                                            <>
+                                                                <BreadcrumbSeparator />
+                                                                <BreadcrumbItem>
+                                                                    <BreadcrumbLink
+                                                                        render={(props) => (
+                                                                            <Link
+                                                                                {...props}
+                                                                                to={pagePath}
+                                                                                className="font-medium text-foreground"
+                                                                            >
+                                                                                {pageLabel}
+                                                                            </Link>
+                                                                        )}
+                                                                    />
+                                                                </BreadcrumbItem>
+                                                            </>
+                                                        ) : null}
+                                                    </>
+                                                ) : null}
+                                            </BreadcrumbList>
+                                        </UIBreadcrumb>
+                                    </div>
                                 </div>
                             </div>
 
@@ -193,7 +195,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                                 href={apiUrl('/auth/login/oidc')}
                                 className={cn(
                                     buttonVariants({ size: 'sm' }),
-                                    'h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'
+                                    'absolute top-1/2 right-4 z-10 h-7 -translate-y-1/2 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
                                 )}
                             >
                                 Login
@@ -219,7 +221,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
 
                     <aside className="hidden px-5 pt-4 pb-8 lg:fixed lg:top-[4.5rem] lg:right-2 lg:block lg:h-[calc(100vh-5rem)] lg:w-56 lg:overflow-y-auto lg:pt-6">
                         <div className="relative pl-4">
-                            <div className="pointer-events-none absolute top-1 bottom-1 left-[0.55rem] w-px bg-border" />
+                            <div className="pointer-events-none absolute top-0 bottom-0 left-[0.55rem] w-px bg-border" />
                             <div className="flex flex-col gap-4">
                                 <div className="pl-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">
                                     On this page
@@ -233,7 +235,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                                                 <div key={item.href} className="relative">
                                                     <span
                                                         aria-hidden="true"
-                                                        className={`absolute left-[-0.55rem] top-1.5 h-5 w-px rounded-full transition-colors ${
+                                                        className={`absolute left-[-0.5rem] top-1.5 h-5 w-0.5 rounded-full transition-colors ${
                                                             isActive ? 'bg-primary' : 'bg-transparent'
                                                         }`}
                                                     />
