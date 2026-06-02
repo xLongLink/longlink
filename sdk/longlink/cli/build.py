@@ -16,7 +16,7 @@ WORKDIR {workdir}
 
 {labels}
 
-RUN uv sync --frozen
+RUN uv sync
 
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--log-level", "debug"]
 """
