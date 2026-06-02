@@ -59,8 +59,8 @@ async def test_init_bootstraps_cluster_proxy(monkeypatch) -> None:
     monkeypatch.setattr("src.adapters.compute.k8s.DynamicClient", FakeDynamicClient)
     K8s._instances.clear()
 
-    adapter = K8s("apiVersion: v1\nclusters: []\n", "control-ingress", "shared-secret")
-    K8s("apiVersion: v1\nclusters: []\n", "control-ingress", "shared-secret")
+    adapter = K8s("apiVersion: v1\nclusters: []\n", "shared-secret")
+    K8s("apiVersion: v1\nclusters: []\n", "shared-secret")
 
     # Assert
     assert captured == [

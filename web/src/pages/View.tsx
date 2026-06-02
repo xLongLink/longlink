@@ -4,7 +4,7 @@ import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import NotFound from './NotFound';
-import XML from './XML';
+import XML from '@/layout/XmlLayout';
 
 type ViewProps = {
     metadata: string;

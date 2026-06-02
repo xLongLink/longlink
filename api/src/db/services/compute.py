@@ -2,6 +2,7 @@ from .base import ServiceBase
 import secrets
 from sqlalchemy import select
 from src.db.models import ComputeRegistry
+from src.constants import INGRESS_NAME
 from src.models.kinds import ComputeKind
 
 
@@ -27,7 +28,6 @@ class ComputeRegistriesService(ServiceBase):
         kind: ComputeKind,
         kubeconfig: str,
         ingress_host: str,
-        ingress_name: str,
         location_id: int,
         proxy_secret: str | None = None,
     ) -> ComputeRegistry:
@@ -40,7 +40,7 @@ class ComputeRegistriesService(ServiceBase):
                 kind=kind,
                 kubeconfig=kubeconfig,
                 ingress_host=ingress_host,
-                ingress_name=ingress_name,
+                ingress_name=INGRESS_NAME,
                 proxy_secret=proxy_secret_value,
                 location_id=location_id,
             )

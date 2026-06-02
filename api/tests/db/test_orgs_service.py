@@ -35,8 +35,8 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
         assert result.scalar_one() == Roles.owner
 
 
-async def test_members_returns_users_with_roles(users: tuple[User, User, User]) -> None:
-    """Return org members with their association roles."""
+async def test_get_returns_users_from_membership_table(users: tuple[User, User, User]) -> None:
+    """Return org members loaded through the organization relationship."""
 
     # Arrange
     owner, member = users[0], users[1]
@@ -55,13 +55,11 @@ async def test_members_returns_users_with_roles(users: tuple[User, User, User]) 
         await session.commit()
 
     # Act
-    members = await db.orgs.members("acme")
+    reloaded = await db.orgs.get("acme")
 
     # Assert
-    assert {user.id: role for user, role in members} == {
-        owner.id: Roles.owner,
-        member.id: Roles.write,
-    }
+    assert reloaded is not None
+    assert {user.id for user in reloaded.users} == {owner.id, member.id}
 
 
 async def test_create_raises_value_error_when_org_already_exists(users: tuple[User, User, User]) -> None:

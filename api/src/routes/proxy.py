@@ -49,7 +49,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
             detail=f"No compute cluster configured for location '{org.location_id}'",
         )
 
-    compute = K8s(registry.kubeconfig, registry.ingress_name, registry.proxy_secret)
+    compute = K8s(registry.kubeconfig, registry.proxy_secret)
 
     upstream_path = path.lstrip("/")
     namespace = knames(app.organization, "Org")

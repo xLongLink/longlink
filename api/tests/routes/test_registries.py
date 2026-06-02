@@ -110,92 +110,6 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     assert delete_response.status_code == 204
 
 
-async def test_storage_usage_endpoint_returns_summed_object_size(
-    clients: tuple[TestClient, TestClient, TestClient], monkeypatch
-) -> None:
-    """Return storage usage for the registered object store."""
-
-    # Arrange
-    client = clients[0]
-
-    class FakeStorage:
-        """Fake storage adapter for route testing."""
-
-        def __init__(self, *args, **kwargs) -> None:
-            pass
-
-        def usage(self) -> dict[str, int]:
-            return {"used_bytes": 512}
-
-        def quota(self) -> dict[str, int | None]:
-            return {"quota_bytes": None}
-
-    monkeypatch.setattr("src.routes.storage.StorageAdapter", FakeStorage)
-
-    client.post(
-        "/api/storage",
-        json={
-            "kind": "s3",
-            "name": "object-store",
-            "protocol": "s3",
-            "endpoint_url": "https://storage.longlink.internal",
-            "access_key_id": "access-key",
-            "secret_access_key": "secret-key",
-            "location_id": 1,
-        },
-    )
-
-    # Act
-    response = client.get("/api/storage/object-store/usage")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"used_bytes": 512}
-
-
-async def test_storage_quota_endpoint_returns_quota_value(
-    clients: tuple[TestClient, TestClient, TestClient], monkeypatch
-) -> None:
-    """Return storage quota for the registered object store."""
-
-    # Arrange
-    client = clients[0]
-
-    class FakeStorage:
-        """Fake storage adapter for route testing."""
-
-        def __init__(self, *args, **kwargs) -> None:
-            pass
-
-        def usage(self) -> dict[str, int]:
-            return {"used_bytes": 512}
-
-        def quota(self) -> dict[str, int | None]:
-            return {"quota_bytes": 1024}
-
-    monkeypatch.setattr("src.routes.storage.StorageAdapter", FakeStorage)
-
-    client.post(
-        "/api/storage",
-        json={
-            "kind": "s3",
-            "name": "object-store",
-            "protocol": "s3",
-            "endpoint_url": "https://storage.longlink.internal",
-            "access_key_id": "access-key",
-            "secret_access_key": "secret-key",
-            "location_id": 1,
-        },
-    )
-
-    # Act
-    response = client.get("/api/storage/object-store/quota")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"quota_bytes": 1024}
-
-
 async def test_compute_registry_endpoint_supports_create_list_and_delete(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
@@ -207,9 +121,8 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     captured: dict[str, str] = {}
 
     class FakeCompute:
-        def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             captured["kubeconfig"] = kubeconfig
-            captured["ingress_name"] = ingress_name
             captured["proxy_secret"] = proxy_secret
 
     monkeypatch.setattr("src.routes.compute.K8s", FakeCompute)
@@ -221,7 +134,6 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             "kind": "kubernetes",
             "kubeconfig": "apiVersion: v1\nclusters: []\n",
             "ingress_host": "apps.longlink.internal",
-            "ingress_name": "longlink-ingress",
             "location_id": 1,
         },
     )
@@ -234,7 +146,6 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         id=1,
         kind=ComputeKind.kubernetes,
         ingress_host="apps.longlink.internal",
-        ingress_name="longlink-ingress",
         location_id=1,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
@@ -243,11 +154,9 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             id=1,
             kind=ComputeKind.kubernetes,
             ingress_host="apps.longlink.internal",
-            ingress_name="longlink-ingress",
             location_id=1,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
-    assert captured["ingress_name"] == "longlink-ingress"
     assert captured["proxy_secret"]

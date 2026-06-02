@@ -134,14 +134,12 @@ async def test_create_app_returns_app_response(
         kind=ComputeKind.kubernetes,
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.local.longlink.internal",
-        ingress_name="local-ingress",
         location_id=local_location.id,
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.remote.longlink.internal",
-        ingress_name="remote-ingress",
         location_id=remote_location.id,
     )
     await db.database.create(
@@ -172,9 +170,8 @@ async def test_create_app_returns_app_response(
     class FakeCompute:
         """Fake compute adapter for app creation tests."""
 
-        def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             captured["kubeconfig"] = kubeconfig
-            captured["ingress_name"] = ingress_name
             captured["proxy_secret"] = proxy_secret
 
         async def namespace(self, organization: str) -> None:
@@ -250,7 +247,6 @@ async def test_create_app_returns_app_response(
     assert payload["deleted_by"] is None
     assert payload == expected_data
     assert captured["namespace"] == "acme"
-    assert captured["ingress_name"] == "remote-ingress"
     assert captured["proxy_secret"]
     assert captured["database"] == {
         "host": "db.remote.longlink.internal",
@@ -290,8 +286,7 @@ async def test_delete_app_removes_dependent_env_rows(
     class FakeCompute:
         """Fake compute adapter for app deletion tests."""
 
-        def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
-            captured["ingress_name"] = ingress_name
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             captured["proxy_secret"] = proxy_secret
 
         async def remove(self, organization: str, application: str) -> None:
@@ -321,7 +316,6 @@ async def test_delete_app_removes_dependent_env_rows(
             "    client-key-data: a2V5\n"
         ),
         ingress_host="localhost:8443",
-        ingress_name="remote-ingress",
         location_id=remote_location.id,
     )
     await db.compute.create(
@@ -347,7 +341,6 @@ async def test_delete_app_removes_dependent_env_rows(
             "    client-key-data: a2V5\n"
         ),
         ingress_host="localhost:8443",
-        ingress_name="local-ingress",
         location_id=local_location.id,
     )
     client = clients[0]
@@ -360,7 +353,6 @@ async def test_delete_app_removes_dependent_env_rows(
     assert await db.apps.get("acme", "dashboard") is None
     assert await db.envs.get("TOKEN", "dashboard") is None
     assert captured == {
-        "ingress_name": "local-ingress",
         "proxy_secret": captured["proxy_secret"],
         "remove": {"organization": "acme", "application": "dashboard"},
     }
@@ -402,7 +394,6 @@ async def test_proxy_app_forwards_request_to_internal_service(
             "    client-key-data: a2V5\n"
         ),
         ingress_host="localhost:8443",
-        ingress_name="control-ingress",
         location_id=local_location.id,
     )
     await db.compute.create(
@@ -428,7 +419,6 @@ async def test_proxy_app_forwards_request_to_internal_service(
             "    client-key-data: a2V5\n"
         ),
         ingress_host="localhost:8443",
-        ingress_name="remote-ingress",
         location_id=remote_location.id,
     )
     await db.compute.create(
@@ -454,7 +444,6 @@ async def test_proxy_app_forwards_request_to_internal_service(
             "    client-key-data: a2V5\n"
         ),
         ingress_host="localhost:9443",
-        ingress_name="remote-ingress-v2",
         location_id=remote_location.id,
         proxy_secret="latest-secret",
     )
@@ -464,9 +453,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
     class FakeCompute:
         """Fake compute adapter for app proxy tests."""
 
-        def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             captured["kubeconfig"] = kubeconfig
-            captured["ingress_name"] = ingress_name
             captured["proxy_secret"] = proxy_secret
 
         def authorization_header(self) -> str:

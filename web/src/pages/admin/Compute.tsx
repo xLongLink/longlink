@@ -38,12 +38,6 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry>> = [
         cell: ({ getValue }) => getValue(),
         meta: { className: 'w-48' },
     },
-    {
-        accessorKey: 'ingress_name',
-        header: 'Ingress name',
-        cell: ({ getValue }) => getValue(),
-        meta: { className: 'w-48' },
-    },
 ];
 
 /** Renders the admin compute page. */

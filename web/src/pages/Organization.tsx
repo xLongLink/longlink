@@ -1,4 +1,4 @@
-import Layout from '@/Layout';
+import Layout from '@/layout/Layout';
 import { useOrg } from '@/hooks/use-org';
 import { useUser } from '@/hooks/use-user';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';

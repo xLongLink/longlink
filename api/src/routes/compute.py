@@ -38,7 +38,7 @@ async def create_compute_registry(
     registry = await db.compute.create(**payload.model_dump())
 
     try:
-        K8s(registry.kubeconfig, registry.ingress_name, registry.proxy_secret)
+        K8s(registry.kubeconfig, registry.proxy_secret)
     except Exception as exc:
         await db.compute.delete(registry.id)
         raise HTTPException(

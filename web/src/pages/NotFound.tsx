@@ -1,4 +1,4 @@
-import Layout from '@/Layout';
+import Layout from '@/layout/Layout';
 import { buttonVariants } from '@ui/button';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@ui/empty';
 import { Compass } from 'lucide-react';

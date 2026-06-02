@@ -1,4 +1,4 @@
-import Layout from '@/Layout';
+import Layout from '@/layout/Layout';
 import { Auth } from '@/components/Auth';
 import { Outlet } from 'react-router';
 

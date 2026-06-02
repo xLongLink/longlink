@@ -1,4 +1,4 @@
-import Layout from '@/Layout';
+import Layout from '@/layout/Layout';
 import { DataTable } from '@/components/DataTable';
 import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
 import { useUser } from '@/hooks/use-user';

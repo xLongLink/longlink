@@ -17,7 +17,7 @@ format:
 
 tests:
 	cd api && uv sync --extra dev
-	cd api && sh -c 'if [ -n "$$(find tests -type f \( -name "test*.py" -o -name "test_*.py" \) -print -quit)" ]; then uv run pytest; fi'
+	cd api && uv run pytest'
 	cd sdk && uv sync --extra dev
 	cd sdk && uv run pytest
 	bun test --cwd web

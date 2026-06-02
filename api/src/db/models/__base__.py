@@ -1,12 +1,16 @@
-from datetime import datetime, timezone, UTC
+from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
 
-fn = lambda: datetime.now(UTC)
+
+def utcnow() -> datetime:
+    """Return the current UTC timestamp."""
+
+    return datetime.now(UTC)
 
 
 class Base(SQLModel):
     """Shared model base with audit fields."""
 
-    created_at: datetime = Field(default_factory=fn)
-    updated_at: datetime = Field(default_factory=fn, sa_column_kwargs={'onupdate': fn})
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
     deleted_at: datetime | None = None

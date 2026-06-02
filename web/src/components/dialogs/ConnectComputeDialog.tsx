@@ -17,7 +17,6 @@ export default function ConnectComputeDialog() {
     const [kind, setKind] = useState('kubernetes');
     const [kubeconfig, setKubeconfig] = useState('');
     const [ingressHost, setIngressHost] = useState('');
-    const [ingressName, setIngressName] = useState('');
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +41,6 @@ export default function ConnectComputeDialog() {
                     kind: kind.trim(),
                     kubeconfig,
                     ingress_host: ingressHost.trim(),
-                    ingress_name: ingressName.trim(),
                     location_id: Number(locationId),
                 }),
             });
@@ -53,7 +51,6 @@ export default function ConnectComputeDialog() {
             setKind('kubernetes');
             setKubeconfig('');
             setIngressHost('');
-            setIngressName('');
             setLocationId('');
         },
     });
@@ -128,17 +125,6 @@ export default function ConnectComputeDialog() {
                                     value={ingressHost}
                                     onChange={(event) => setIngressHost(event.target.value)}
                                     placeholder="apps.example.com"
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="compute-ingress-name">Ingress name</Label>
-                                <Input
-                                    id="compute-ingress-name"
-                                    value={ingressName}
-                                    onChange={(event) => setIngressName(event.target.value)}
-                                    placeholder="longlink-ingress"
                                     autoComplete="off"
                                 />
                             </div>

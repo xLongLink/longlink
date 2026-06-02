@@ -8,7 +8,6 @@ class ComputeRegistryCreate(BaseModel):
     kind: ComputeKind
     kubeconfig: str
     ingress_host: str
-    ingress_name: str
     location_id: int
 
 
@@ -20,5 +19,4 @@ class ComputeRegistryResponse(BaseModel):
     id: int
     kind: ComputeKind
     ingress_host: str
-    ingress_name: str
     location_id: int

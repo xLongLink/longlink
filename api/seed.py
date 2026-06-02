@@ -43,7 +43,6 @@ LOCAL_COMPUTE = {
     "kind": ComputeKind.kubernetes,
     "kubeconfig": Path(__file__).with_name("kubeconfig.yaml").read_text(encoding="utf-8"),
     "ingress_host": "localhost:8443",
-    "ingress_name": "control-ingress",
 }
 
 
@@ -72,7 +71,7 @@ async def main() -> None:
     await db.storage.create(**LOCAL_STORAGE, location_id=location.id)
     compute_registry = await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await db.orgs.create(LOCAL_ORG, location.id)
-    compute = K8s(LOCAL_COMPUTE["kubeconfig"], LOCAL_COMPUTE["ingress_name"], compute_registry.proxy_secret)
+    compute = K8s(LOCAL_COMPUTE["kubeconfig"], compute_registry.proxy_secret)
     await compute.namespace(LOCAL_ORG)
     await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
 

@@ -94,7 +94,7 @@ async def create_app(
     registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
     if registry is None:
         raise HTTPException(status_code=503, detail=f"No compute cluster configured for location '{org.location_id}'")
-    compute = K8s(registry.kubeconfig, registry.ingress_name, registry.proxy_secret)
+    compute = K8s(registry.kubeconfig, registry.proxy_secret)
 
     database_registry = next((registry for registry in database_registries if registry.location_id == org.location_id), None)
     if database_registry is None:
@@ -161,7 +161,7 @@ async def delete_app(
     # Prefer the newest registry for the location so teardown targets the active gateway.
     registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
     if registry is not None:
-        compute = K8s(registry.kubeconfig, registry.ingress_name, registry.proxy_secret)
+        compute = K8s(registry.kubeconfig, registry.proxy_secret)
         await compute.remove(organization, app.slug)
 
     try:

@@ -1,7 +1,7 @@
 import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
 import { useDeleteOrg } from '@/hooks/use-org';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
-import Layout from '@/Layout';
+import Layout from '@/layout/Layout';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';

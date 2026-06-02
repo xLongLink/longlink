@@ -71,6 +71,21 @@ async def test_get_organization_returns_member_payload(
             "display_name": location.display_name,
             "created_at": location.created_at,
             "updated_at": location.updated_at,
+            "orgs": [
+                {
+                    "name": organization.name,
+                    "location_id": location.id,
+                    "created_at": organization.created_at,
+                    "updated_at": organization.updated_at,
+                    "created_by": UserSummary.model_validate(owner.model_dump()),
+                    "updated_by": UserSummary.model_validate(owner.model_dump()),
+                    "deleted_at": None,
+                    "deleted_by": None,
+                }
+            ],
+            "compute_registries": [],
+            "database_registries": [],
+            "storage_registries": [],
         },
         created_at=organization.created_at,
         updated_at=organization.updated_at,

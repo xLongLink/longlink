@@ -21,12 +21,12 @@ from .__root__ import Compute
 class K8s(Compute):
     """Manage Kubernetes namespaces and internal application workloads."""
 
-    _instances: dict[tuple[str, str, str], K8s] = {}
+    _instances: dict[tuple[str, str], K8s] = {}
 
-    def __new__(cls, kubeconfig: str, ingress_name: str, proxy_secret: str) -> K8s:
+    def __new__(cls, kubeconfig: str, proxy_secret: str) -> K8s:
         """Reuse one adapter per cluster configuration."""
 
-        key = (kubeconfig, ingress_name, proxy_secret)
+        key = (kubeconfig, proxy_secret)
         instance = cls._instances.get(key)
         if instance is not None:
             return instance
@@ -35,7 +35,7 @@ class K8s(Compute):
         cls._instances[key] = instance
         return instance
 
-    def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
+    def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
         """Initialize the Kubernetes compute adapter and bootstrap the cluster proxy."""
 
         if getattr(self, "_initialized", False):
@@ -57,7 +57,6 @@ class K8s(Compute):
         proxy_script = (TEMPLATES / "cluster-proxy.py").read_text(encoding="utf-8")
         manifests = utils.yaml(
             TEMPLATES / "cluster-proxy.yml",
-            ingress_name=ingress_name,
             proxy_script="\n".join(f"    {line}" for line in proxy_script.splitlines()),
             proxy_secret=self._proxy_secret,
         )
