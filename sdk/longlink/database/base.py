@@ -87,6 +87,8 @@ class Table(Base):
     )
 
 
+
+
 _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
 

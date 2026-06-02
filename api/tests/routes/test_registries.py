@@ -207,9 +207,10 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     captured: dict[str, str] = {}
 
     class FakeCompute:
-        def __init__(self, kubeconfig: str, ingress_name: str) -> None:
+        def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
             captured["kubeconfig"] = kubeconfig
             captured["ingress_name"] = ingress_name
+            captured["proxy_secret"] = proxy_secret
 
     monkeypatch.setattr("src.routes.compute.K8s", FakeCompute)
 
@@ -247,4 +248,6 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
-    assert captured == {"kubeconfig": "apiVersion: v1\nclusters: []\n", "ingress_name": "longlink-ingress"}
+    assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
+    assert captured["ingress_name"] == "longlink-ingress"
+    assert captured["proxy_secret"]

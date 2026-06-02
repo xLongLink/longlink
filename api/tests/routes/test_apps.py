@@ -172,9 +172,10 @@ async def test_create_app_returns_app_response(
     class FakeCompute:
         """Fake compute adapter for app creation tests."""
 
-        def __init__(self, kubeconfig: str, ingress_name: str) -> None:
+        def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
             captured["kubeconfig"] = kubeconfig
             captured["ingress_name"] = ingress_name
+            captured["proxy_secret"] = proxy_secret
 
         async def namespace(self, organization: str) -> None:
             captured["namespace"] = organization
@@ -250,6 +251,7 @@ async def test_create_app_returns_app_response(
     assert payload == expected_data
     assert captured["namespace"] == "acme"
     assert captured["ingress_name"] == "remote-ingress"
+    assert captured["proxy_secret"]
     assert captured["database"] == {
         "host": "db.remote.longlink.internal",
         "port": 5432,
@@ -288,8 +290,9 @@ async def test_delete_app_removes_dependent_env_rows(
     class FakeCompute:
         """Fake compute adapter for app deletion tests."""
 
-        def __init__(self, kubeconfig: str, ingress_name: str) -> None:
+        def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
             captured["ingress_name"] = ingress_name
+            captured["proxy_secret"] = proxy_secret
 
         async def remove(self, organization: str, application: str) -> None:
             captured["remove"] = {"organization": organization, "application": application}
@@ -358,6 +361,7 @@ async def test_delete_app_removes_dependent_env_rows(
     assert await db.envs.get("TOKEN", "dashboard") is None
     assert captured == {
         "ingress_name": "local-ingress",
+        "proxy_secret": captured["proxy_secret"],
         "remove": {"organization": "acme", "application": "dashboard"},
     }
 
@@ -427,12 +431,49 @@ async def test_proxy_app_forwards_request_to_internal_service(
         ingress_name="remote-ingress",
         location_id=remote_location.id,
     )
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        kubeconfig=(
+            "apiVersion: v1\n"
+            "clusters:\n"
+            "- name: k3d-compute\n"
+            "  cluster:\n"
+            "    server: https://0.0.0.0:8001\n"
+            "contexts:\n"
+            "- name: k3d-compute\n"
+            "  context:\n"
+            "    cluster: k3d-compute\n"
+            "    user: admin@k3d-compute\n"
+            "current-context: k3d-compute\n"
+            "kind: Config\n"
+            "preferences: {}\n"
+            "users:\n"
+            "- name: admin@k3d-compute\n"
+            "  user:\n"
+            "    client-certificate-data: Y2VydA==\n"
+            "    client-key-data: a2V5\n"
+        ),
+        ingress_host="localhost:9443",
+        ingress_name="remote-ingress-v2",
+        location_id=remote_location.id,
+        proxy_secret="latest-secret",
+    )
     client = clients[0]
     captured: dict[str, object] = {}
 
+    class FakeCompute:
+        """Fake compute adapter for app proxy tests."""
+
+        def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
+            captured["kubeconfig"] = kubeconfig
+            captured["ingress_name"] = ingress_name
+            captured["proxy_secret"] = proxy_secret
+
+        def authorization_header(self) -> str:
+            return "Bearer test-token"
+
     class FakeAsyncClient:
-        def __init__(self, *, cert=None, verify=True):
-            captured["cert"] = cert
+        def __init__(self, *, verify=True):
             captured["verify"] = verify
 
         async def __aenter__(self):
@@ -449,6 +490,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
             captured["body"] = kwargs.get("content")
             return httpx.Response(200, content=b"proxied", headers={"content-type": "text/plain"})
 
+    monkeypatch.setattr("src.routes.proxy.K8s", FakeCompute)
     monkeypatch.setattr(httpx, "AsyncClient", FakeAsyncClient)
 
     # Act
@@ -458,7 +500,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert response.status_code == 200
     assert response.text == "proxied"
     assert captured["method"] == "POST"
-    assert captured["resource_path"] == "https://localhost:8001/api/v1/namespaces/acme/services/dashboard:80/proxy/anything"
+    assert captured["resource_path"] == "http://localhost:9443/api/v1/namespaces/acme/services/dashboard:80/proxy/anything"
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
+    assert captured["headers"]["authorization"] == "Bearer test-token"
     assert captured["verify"] is False

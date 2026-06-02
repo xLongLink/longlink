@@ -1,21 +1,50 @@
 from __future__ import annotations
+
+import base64
+import hashlib
+import hmac
+import json
+import time
+from datetime import UTC, datetime
+
 import yaml
-from datetime import datetime, UTC
-from src.utils import utils
-from .__root__ import Compute
 from kubernetes import client, config
-from src.constants import TEMPLATES
-from kubernetes.dynamic import DynamicClient
 from kubernetes.client.rest import ApiException
+from kubernetes.dynamic import DynamicClient
+
+from src.constants import TEMPLATES
+from src.utils import utils
+
+from .__root__ import Compute
 
 
 class K8s(Compute):
     """Manage Kubernetes namespaces and internal application workloads."""
 
-    def __init__(self, kubeconfig: str, ingress_name: str) -> None:
+    _instances: dict[tuple[str, str, str], K8s] = {}
+
+    def __new__(cls, kubeconfig: str, ingress_name: str, proxy_secret: str) -> K8s:
+        """Reuse one adapter per cluster configuration."""
+
+        key = (kubeconfig, ingress_name, proxy_secret)
+        instance = cls._instances.get(key)
+        if instance is not None:
+            return instance
+
+        instance = super().__new__(cls)
+        cls._instances[key] = instance
+        return instance
+
+    def __init__(self, kubeconfig: str, ingress_name: str, proxy_secret: str) -> None:
         """Initialize the Kubernetes compute adapter and bootstrap the cluster proxy."""
 
+        if getattr(self, "_initialized", False):
+            return
+
+        self._initialized = True
+
         self._kubeconfig = kubeconfig
+        self._proxy_secret = proxy_secret
         configuration = client.Configuration()
         loader = config.kube_config.KubeConfigLoader(yaml.safe_load(self._kubeconfig))
         loader.load_and_set(configuration)
@@ -25,7 +54,13 @@ class K8s(Compute):
         self._dynamic_client = DynamicClient(self._api_client)
 
         # Bootstrap the shared cluster-wide proxy entrypoint.
-        manifests = utils.yaml(TEMPLATES / "cluster-proxy.yml", ingress_name=ingress_name)
+        proxy_script = (TEMPLATES / "cluster-proxy.py").read_text(encoding="utf-8")
+        manifests = utils.yaml(
+            TEMPLATES / "cluster-proxy.yml",
+            ingress_name=ingress_name,
+            proxy_script="\n".join(f"    {line}" for line in proxy_script.splitlines()),
+            proxy_secret=self._proxy_secret,
+        )
         manifests = manifests if isinstance(manifests, list) else [manifests]
         for manifest in manifests:
             resource = self._dynamic_client.resources.get(api_version=manifest["apiVersion"], kind=manifest["kind"])
@@ -52,12 +87,53 @@ class K8s(Compute):
                         force=True,
                     )
             except ApiException as exc:
-                if exc.status != 404:
+                if exc.status not in (404, 409):
                     raise ValueError(f"Failed applying {manifest['kind']} '{name}'") from exc
+                # Replace conflicting resources so a changed gateway secret can roll out cleanly.
+                if exc.status == 409:
+                    try:
+                        if resource.namespaced:
+                            resource.delete(name=name, namespace=namespace)
+                        else:
+                            resource.delete(name=name)
+                    except ApiException:
+                        pass
                 if resource.namespaced:
                     resource.create(body=manifest, namespace=namespace)
                 else:
                     resource.create(body=manifest)
+
+
+    def _issue_token(self) -> str:
+        """Return a short-lived bearer token for the cluster proxy."""
+
+        header = {"alg": "HS256", "typ": "JWT"}
+        payload = {
+            "iss": "longlink-control-plane",
+            "aud": "longlink-proxy",
+            "sub": "compute-router",
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 60,
+        }
+        header_b64 = base64.urlsafe_b64encode(json.dumps(header, separators=(",", ":")).encode("utf-8")).rstrip(b"=")
+        payload_b64 = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode("utf-8")).rstrip(b"=")
+        signing_input = b".".join((header_b64, payload_b64))
+        signature = hmac.new(self._proxy_secret.encode("utf-8"), signing_input, hashlib.sha256).digest()
+        signature_b64 = base64.urlsafe_b64encode(signature).rstrip(b"=")
+
+        return b".".join((header_b64, payload_b64, signature_b64)).decode("ascii")
+
+    @property
+    def token(self) -> str:
+        """Return the current short-lived bearer token."""
+
+        return self._issue_token()
+
+
+    def authorization_header(self) -> str:
+        """Return the bearer authorization header value for API requests."""
+
+        return f"Bearer {self._issue_token()}"
 
 
     def _upsert(self, create_call, patch_call, namespace: str, name: str, body: dict) -> None:

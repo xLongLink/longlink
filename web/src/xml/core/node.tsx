@@ -40,12 +40,6 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         if (node.name === 'Text') {
-            if (!node.params?.value) return <Fragment key={index} />;
-
-            const value = evaluate(node.params.value, ctx);
-            if (typeof value !== 'string')
-                throw new Error(`Text.value must evaluate to a string, but got ${typeof value}`);
-
             return <Text key={index} props={node.params} nodes={node.children ?? []} />;
         }
 

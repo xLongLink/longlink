@@ -1,4 +1,5 @@
 from .base import ServiceBase
+import secrets
 from sqlalchemy import select
 from src.db.models import ComputeRegistry
 from src.models.kinds import ComputeKind
@@ -28,16 +29,19 @@ class ComputeRegistriesService(ServiceBase):
         ingress_host: str,
         ingress_name: str,
         location_id: int,
+        proxy_secret: str | None = None,
     ) -> ComputeRegistry:
         """Create one compute backend registration."""
 
         async with self.session() as session:
             # Compute registries are append-only once created.
+            proxy_secret_value = proxy_secret or secrets.token_urlsafe(32)
             compute = ComputeRegistry(
                 kind=kind,
                 kubeconfig=kubeconfig,
                 ingress_host=ingress_host,
                 ingress_name=ingress_name,
+                proxy_secret=proxy_secret_value,
                 location_id=location_id,
             )
             session.add(compute)

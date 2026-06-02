@@ -1,0 +1,116 @@
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Any, Iterator
+
+from fastapi import FastAPI, Request
+from sqlalchemy import event
+from sqlalchemy.orm import Session as SyncSession
+
+from .base import Table, utcnow
+
+
+_current_user_id: ContextVar[int | None] = ContextVar("current_user_id", default=None)
+
+
+@contextmanager
+def audit_user_scope(user_id: int | None) -> Iterator[None]:
+    """Bind an audit user ID for the current execution scope."""
+
+    token = _current_user_id.set(user_id)
+    try:
+        yield
+    finally:
+        _current_user_id.reset(token)
+
+
+# ---------------------------------------------------------------------
+# SQLAlchemy audit hook
+# ---------------------------------------------------------------------
+
+
+@event.listens_for(SyncSession, "before_flush")
+def apply_audit_fields(
+    session: SyncSession,
+    flush_context: Any,
+    instances: Any,
+) -> None:
+    """
+    Automatically apply audit fields before SQLAlchemy flushes changes.
+
+    Works for AsyncSession because AsyncSession uses an internal sync Session.
+    """
+
+    now = utcnow()
+    user_id = _current_user_id.get()
+
+    # Apply audit fields to newly tracked rows.
+    for obj in session.new:
+        if not isinstance(obj, Table):
+            continue
+
+        if obj.created_at is None:
+            obj.created_at = now
+
+        if obj.updated_at is None:
+            obj.updated_at = now
+
+        if obj.created_id is None:
+            obj.created_id = user_id
+
+        if obj.updated_id is None:
+            obj.updated_id = user_id
+
+    # Refresh audit timestamps for modified tracked rows.
+    for obj in session.dirty:
+        if not isinstance(obj, Table):
+            continue
+
+        if not session.is_modified(obj, include_collections=False):
+            continue
+
+        obj.updated_at = now
+        obj.updated_id = user_id
+
+        if obj.deleted_at is not None and obj.deleted_id is None:
+            obj.deleted_id = user_id
+
+    # Convert hard deletes into soft deletes.
+    for obj in list(session.deleted):
+        if not isinstance(obj, Table):
+            continue
+
+        session.add(obj)
+
+        obj.deleted_at = now
+        obj.deleted_id = user_id
+        obj.updated_at = now
+        obj.updated_id = user_id
+
+
+# ---------------------------------------------------------------------
+# Recommended FastAPI middleware version
+# ---------------------------------------------------------------------
+
+
+def install_audit_middleware(app: FastAPI) -> None:
+    """
+    Middleware keeps the user context active for the whole request lifecycle.
+    """
+
+    @app.middleware("http")
+    async def audit_context_middleware(request: Request, call_next):
+        """Bind the request user ID for the duration of the request."""
+
+        user_id: int | None = None
+
+        raw_user_id = request.headers.get("x-user-id")
+
+        if raw_user_id is not None:
+            try:
+                user_id = int(raw_user_id)
+            except ValueError:
+                user_id = None
+
+        with audit_user_scope(user_id):
+            response = await call_next(request)
+            return response

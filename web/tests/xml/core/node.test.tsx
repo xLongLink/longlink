@@ -25,6 +25,41 @@ describe('renderNode', () => {
         ).toBe('<div>Hello</div>');
     });
 
+    it('renders literal text values without evaluating them', () => {
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const node: ASTNode = { name: 'Text', params: { value: 'db' } };
+
+        expect(
+            renderToStaticMarkup(
+                createElement(
+                    'div',
+                    null,
+                    createElement(ContextProvider, { value: ctx, children: renderNode([node], ctx) })
+                )
+            )
+        ).toBe('<div>db</div>');
+    });
+
+    it('renders interpolated text values through the expression engine', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+            user: { name: 'Ada' },
+        };
+        const node: ASTNode = { name: 'Text', params: { value: '${user.name}' } };
+
+        expect(
+            renderToStaticMarkup(
+                createElement(
+                    'div',
+                    null,
+                    createElement(ContextProvider, { value: ctx, children: renderNode([node], ctx) })
+                )
+            )
+        ).toBe('<div>Ada</div>');
+    });
+
     it('rejects className on xml nodes', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
 

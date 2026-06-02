@@ -1,4 +1,4 @@
-import httpx
+import httpx2
 import src.db as db
 from typing import cast
 from fastapi import Request, APIRouter, HTTPException
@@ -17,7 +17,7 @@ async def login_oidc(request: Request):
 
     try:
         return await oidc.authorize_redirect(request, redirect_uri=env.OIDC_REDIRECT_URI)
-    except httpx.HTTPStatusError as exc:
+    except httpx2.HTTPStatusError as exc:
         raise HTTPException(
             status_code=502,
             detail=(
@@ -35,7 +35,7 @@ async def auth_oidc(request: Request):
 
     try:
         token = await oidc.authorize_access_token(request)
-    except httpx.HTTPStatusError as exc:
+    except httpx2.HTTPStatusError as exc:
         raise HTTPException(
             status_code=502,
             detail="OIDC token exchange failed. Verify provider URL and client credentials.",

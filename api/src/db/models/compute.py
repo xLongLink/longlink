@@ -16,4 +16,5 @@ class ComputeRegistry(Base, table=True):
     kubeconfig: str = Field(sa_column=Column(Text, nullable=False))
     ingress_host: str = Field(max_length=255)
     ingress_name: str = Field(max_length=255)
+    proxy_secret: str = Field(max_length=255)
     location_id: int = Field(foreign_key='locations.id')

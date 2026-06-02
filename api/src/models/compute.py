@@ -22,4 +22,3 @@ class ComputeRegistryResponse(BaseModel):
     ingress_host: str
     ingress_name: str
     location_id: int
-

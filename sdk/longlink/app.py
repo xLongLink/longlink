@@ -1,6 +1,7 @@
 import traceback
 from fastapi import FastAPI, Request
 from pathlib import Path
+from longlink.database.audit import install_audit_middleware
 from longlink.utils import Environments
 from longlink.routes import routes
 from fastapi.responses import Response, JSONResponse
@@ -78,6 +79,8 @@ class LongLink(FastAPI):
         static_dir = ROOT / ".static" / "web"
         if static_dir.exists():
             self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
+
+        install_audit_middleware(self)
 
         # Enable CORS in development for local frontend access to API routes
         if environments.ENV == "development":
