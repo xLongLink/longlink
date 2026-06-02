@@ -626,7 +626,6 @@ dependencies = [
     { name = "click" },
     { name = "fastapi" },
     { name = "fsspec" },
-    { name = "httpx" },
     { name = "lxml" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -643,7 +642,7 @@ requires-dist = [
     { name = "click", marker = "extra == 'cli'" },
     { name = "fastapi" },
     { name = "fsspec" },
-    { name = "httpx" },
+    { name = "httpx2", marker = "extra == 'dev'" },
     { name = "isort", marker = "extra == 'dev'" },
     { name = "lxml" },
     { name = "pydantic" },
@@ -660,6 +659,7 @@ provides-extras = ["cli", "dev"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "httpx2" },
     { name = "isort" },
     { name = "pytest" },
     { name = "pytest-asyncio" },

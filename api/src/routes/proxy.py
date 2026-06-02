@@ -1,4 +1,4 @@
-import httpx
+import httpx2 as httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 import src.db as db

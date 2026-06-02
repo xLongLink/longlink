@@ -40,7 +40,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         if (node.name === 'Text') {
-            return <Text key={index} props={node.params} nodes={node.children ?? []} />;
+            return <Text key={index} props={node.params ?? {}} nodes={node.children ?? []} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

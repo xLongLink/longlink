@@ -1,4 +1,4 @@
-import httpx
+import httpx2 as httpx
 import src.db as db
 from src.models import AppResponse, ComputeKind, DatabaseKind, UserSummary
 from src.db.models import User, UserApp

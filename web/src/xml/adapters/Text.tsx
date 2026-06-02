@@ -13,6 +13,13 @@ export function Text({ props, nodes }: Props) {
 
     if (rawValue == null) return '';
 
+    // Mixed text needs interpolation before we fall back to literal rendering.
+    if (rawValue.includes('${')) {
+        const value = evaluate(rawValue, ctx);
+
+        return value == null ? '' : String(value);
+    }
+
     // Plain text should render literally; only expression-shaped text is evaluated.
     if (isText(rawValue)) return rawValue;
 

@@ -12,7 +12,6 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "pydantic-settings",
-    "httpx",
     "fsspec",
     "fastapi",
     "aiosqlite",
@@ -40,18 +39,20 @@ cli = [
   "click",
 ]
 dev = [
-  "pytest",
-  "pytest-asyncio",
-  "pytest-mock",
-  "isort"
+    "pytest",
+    "pytest-asyncio",
+    "pytest-mock",
+    "isort",
+    "httpx2",
 ]
 
 [dependency-groups]
 dev = [
-  "pytest",
-  "pytest-asyncio",
-  "pytest-mock",
-  "isort"
+    "pytest",
+    "pytest-asyncio",
+    "pytest-mock",
+    "isort",
+    "httpx2",
 ]
 
 [project.urls]

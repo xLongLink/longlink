@@ -82,6 +82,5 @@ markers = [
     "unit: marks unit tests",
 ]
 asyncio_mode = "auto"
-env = [
-    "ENV=testing",
-]
+asyncio_default_fixture_loop_scope = "function"
+
