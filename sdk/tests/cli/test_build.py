@@ -37,9 +37,8 @@ def test_build_app_creates_dockerfile_with_labels(tmp_path, monkeypatch):
         key, raw_value = line[len('LABEL '):].split('=', 1)
         labels[key] = ast.literal_eval(raw_value)
 
-    env_spec_match = re.search(r"^LABEL longlink\.env\.spec='(?P<body>.+?)'$", dockerfile, re.S | re.M)
-    env_spec_body = env_spec_match.group('body')
-    env_spec = json.loads(env_spec_body)
+    env_spec_line = next(line for line in dockerfile.splitlines() if line.startswith('LABEL longlink.env.spec='))
+    env_spec = json.loads(ast.literal_eval(env_spec_line[len('LABEL '):].split('=', 1)[1]))
     assert env_spec['version'] == 1
     assert env_spec['required']['LONGLINK_API_KEY']['secret'] is True
     assert env_spec['required']['LONGLINK_API_KEY']['description'] == 'API key used by Longlink'

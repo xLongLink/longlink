@@ -202,10 +202,9 @@ def encode_label_value(value: object) -> str:
 
 
 def render_env_spec_label(env_spec: dict[str, object]) -> str:
-    """Render the env spec label as a multi-line Dockerfile string."""
+    """Render the env spec label as a single-line Dockerfile string."""
 
-    json_text = json.dumps(env_spec, indent=2)
-    return f"LABEL longlink.env.spec='{json_text}'"
+    return f"LABEL longlink.env.spec={encode_label_value(env_spec)}"
 
 
 def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, object]) -> str:
