@@ -1,6 +1,6 @@
 import httpx2 as httpx
 import src.db as db
-from src.models import AppResponse, ComputeKind, DatabaseKind, UserSummary
+from src.models import AppResponse, ComputeKind, DatabaseKind, LongLinkMetadata, UserSummary
 from src.db.models import User, UserApp
 from src.db.session import get_session
 from src.models.roles import Roles
@@ -121,7 +121,6 @@ async def test_create_app_returns_app_response(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
     monkeypatch,
-    capsys,
 ) -> None:
     """Create an app and return the app response payload."""
 
@@ -224,13 +223,13 @@ async def test_create_app_returns_app_response(
     monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
     monkeypatch.setattr("src.routes.apps.Postgre", FakeDatabase)
     monkeypatch.setattr(
-        "src.routes.apps.inspect_image_specs",
-        lambda image: {
-            "name": "dashboard",
-            "version": "0.1.0",
-            "description": "Demo app",
-            "env_spec": {"version": 1, "required": {}, "optional": {}},
-        },
+        "src.utils.utils.metadata",
+        lambda image: LongLinkMetadata(
+            name="dashboard",
+            version="0.1.0",
+            description="Demo app",
+            env_spec={"version": 1, "required": {}, "optional": {}},
+        ),
     )
     client = clients[0]
 
@@ -264,7 +263,6 @@ async def test_create_app_returns_app_response(
         "port": 80,
         "secrets": {},
     }
-    assert '"env_spec"' in capsys.readouterr().out
 
 
 async def test_delete_app_removes_dependent_env_rows(

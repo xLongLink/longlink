@@ -4,7 +4,7 @@ from src.db.models import StorageRegistry
 from src.models.kinds import StorageKind
 
 
-class StorageRegistriesService(ServiceBase):
+class StorageService(ServiceBase):
     """Manage storage backend registrations."""
 
     async def list(self) -> list[StorageRegistry]:

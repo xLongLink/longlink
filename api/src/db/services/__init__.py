@@ -1,19 +1,20 @@
 from .apps import AppsService
-from .compute import ComputeRegistriesService
-from .database import DatabaseRegistriesService
+from .apps import AppsService
+from .compute import ComputeService
+from .database import DatabaseService
 from .envs import EnvsService
 from .locations import LocationsService
 from .orgs import OrgsService
-from .storage import StorageRegistriesService
+from .storage import StorageService
 from .users import UsersService
 
 __all__ = [
     "AppsService",
-    "ComputeRegistriesService",
-    "DatabaseRegistriesService",
+    "ComputeService",
+    "DatabaseService",
     "EnvsService",
     "LocationsService",
     "OrgsService",
-    "StorageRegistriesService",
+    "StorageService",
     "UsersService",
 ]

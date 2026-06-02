@@ -21,27 +21,8 @@ from .__root__ import Compute
 class K8s(Compute):
     """Manage Kubernetes namespaces and internal application workloads."""
 
-    _instances: dict[tuple[str, str], K8s] = {}
-
-    def __new__(cls, kubeconfig: str, proxy_secret: str) -> K8s:
-        """Reuse one adapter per cluster configuration."""
-
-        key = (kubeconfig, proxy_secret)
-        instance = cls._instances.get(key)
-        if instance is not None:
-            return instance
-
-        instance = super().__new__(cls)
-        cls._instances[key] = instance
-        return instance
-
     def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
         """Initialize the Kubernetes compute adapter and bootstrap the cluster proxy."""
-
-        if getattr(self, "_initialized", False):
-            return
-
-        self._initialized = True
 
         self._kubeconfig = kubeconfig
         self._proxy_secret = proxy_secret

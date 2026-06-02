@@ -1,8 +1,166 @@
+import json
 import re
+
+import httpx2 as httpx
 import yaml as pyyaml
+from src.models.metadata import LongLinkMetadata
 from string import Template
 from pathlib import Path
 from urllib.parse import urlparse
+
+
+def metadata(image: str) -> LongLinkMetadata | None:
+    """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
+
+    registry, repository, tag = _parse_image_ref(image)
+
+    try:
+        with httpx.Client(verify=False, follow_redirects=True) as client:
+            manifest = _fetch_manifest(client, registry, repository, tag)
+            if manifest is None:
+                return None
+
+            config_digest = manifest.get("config", {}).get("digest")
+            if config_digest is None:
+                return None
+
+            config = _fetch_blob(client, registry, repository, config_digest)
+            if config is None:
+                return None
+
+            labels = config.get("config", {}).get("Labels") or {}
+            if not isinstance(labels, dict):
+                return None
+
+            result = LongLinkMetadata(
+                name=labels.get("longlink.name"),
+                version=labels.get("longlink.version"),
+                description=labels.get("longlink.description"),
+            )
+
+            env_spec = labels.get("longlink.env.spec")
+            if env_spec is not None:
+                try:
+                    result.env_spec = json.loads(env_spec)
+                except (json.JSONDecodeError, TypeError):
+                    return None
+
+            if result.name is None and result.version is None and result.description is None and result.env_spec is None:
+                return None
+
+            return result
+    except Exception:
+        return None
+
+
+def _parse_image_ref(image: str) -> tuple[str, str, str]:
+    """Parse an image reference into (registry, repository, tag)."""
+
+    tag = "latest"
+
+    if ":" in image:
+        parts = image.rsplit(":", 1)
+        if not parts[1].isdigit():
+            tag = parts[1]
+            image = parts[0]
+
+    if "/" in image:
+        parts = image.split("/", 1)
+        if "." in parts[0] or ":" in parts[0] or parts[0] == "localhost":
+            registry = parts[0]
+            repository = parts[1]
+        else:
+            registry = "registry-1.docker.io"
+            repository = image
+    else:
+        registry = "registry-1.docker.io"
+        repository = f"library/{image}"
+
+    return registry, repository, tag
+
+
+def _fetch_manifest(client: httpx.Client, registry: str, repository: str, tag: str) -> dict | None:
+    """Fetch the image manifest from the OCI Distribution API, resolving manifest lists to a single platform manifest."""
+
+    url = f"https://{registry}/v2/{repository}/manifests/{tag}"
+    accept = "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json"
+
+    resp = client.get(url, headers={"Accept": accept})
+    if not resp.is_success:
+        token = _resolve_bearer_token(client, registry, repository, resp)
+        if token is None:
+            return None
+        resp = client.get(url, headers={"Accept": accept, "Authorization": f"Bearer {token}"})
+        if not resp.is_success:
+            return None
+
+    data = resp.json()
+
+    # Resolve multi-arch manifest list to a single platform manifest (prefer linux/amd64).
+    if "manifests" in data:
+        entry = next(
+            (m for m in data["manifests"] if m.get("platform", {}).get("architecture") == "amd64"),
+            data["manifests"][0],
+        )
+        manifest_digest = entry["digest"]
+        resp = client.get(
+            f"https://{registry}/v2/{repository}/manifests/{manifest_digest}",
+            headers={"Accept": entry["mediaType"], **({"Authorization": f"Bearer {token}"} if token else {})},
+        )
+        if not resp.is_success:
+            return None
+        data = resp.json()
+
+    return data
+
+
+def _fetch_blob(client: httpx.Client, registry: str, repository: str, digest: str) -> dict | None:
+    """Fetch an image config blob from the OCI Distribution API."""
+
+    url = f"https://{registry}/v2/{repository}/blobs/{digest}"
+
+    resp = client.get(url)
+    if resp.is_success:
+        return resp.json()
+
+    token = _resolve_bearer_token(client, registry, repository, resp)
+    if token is not None:
+        resp = client.get(url, headers={"Authorization": f"Bearer {token}"})
+        if resp.is_success:
+            return resp.json()
+
+    return None
+
+
+def _resolve_bearer_token(client: httpx.Client, registry: str, repository: str, resp: httpx.Response) -> str | None:
+    """Resolve a bearer token from a 401 Www-Authenticate response."""
+
+    auth_header = resp.headers.get("www-authenticate", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+
+    params: dict[str, str] = {}
+    for part in auth_header[7:].split(","):
+        key, _, value = part.strip().partition("=")
+        params[key] = value.strip('"')
+
+    realm = params.get("realm")
+    if realm is None:
+        return None
+
+    token_params: dict[str, str] = {}
+    for key in ("service", "scope"):
+        if key in params:
+            token_params[key] = params[key]
+
+    try:
+        token_resp = client.get(realm, params=token_params)
+        if token_resp.is_success:
+            return token_resp.json().get("token")
+    except Exception:
+        pass
+
+    return None
 
 
 def slugify(value: str) -> str:

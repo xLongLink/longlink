@@ -25,22 +25,22 @@ import Settings from './pages/Settings';
 import Theme from './pages/Theme';
 import View from './pages/View';
 
-import { content as docsApiContent, metadata as docsApiMetadata } from '@/docs/api/index';
-import { content as docsSelfHostedContent, metadata as docsSelfHostedMetadata } from '@/docs/api/self-hosted';
-import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/docs/index';
-import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/docs/sdk/building';
-import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/docs/sdk/database';
+import { content as docsApiContent, metadata as docsApiMetadata } from '@/pages/docs/api/index';
+import { content as docsSelfHostedContent, metadata as docsSelfHostedMetadata } from '@/pages/docs/api/self-hosted';
+import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
+import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
+import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
 import {
     content as docsSdkEnvironmentsContent,
     metadata as docsSdkEnvironmentsMetadata,
-} from '@/docs/sdk/environments';
-import { content as docsSdkContent, metadata as docsSdkMetadata } from '@/docs/sdk/index';
-import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/docs/sdk/routes';
-import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/docs/sdk/storage';
-import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/docs/sdk/testing';
-import { content as docsXmlComponentsContent, metadata as docsXmlComponentsMetadata } from '@/docs/xml/components';
-import { content as docsXmlContent, metadata as docsXmlMetadata } from '@/docs/xml/index';
-import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/docs/xml/layout';
+} from '@/pages/docs/sdk/environments';
+import { content as docsSdkContent, metadata as docsSdkMetadata } from '@/pages/docs/sdk/index';
+import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
+import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
+import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
+import { content as docsXmlComponentsContent, metadata as docsXmlComponentsMetadata } from '@/pages/docs/xml/components';
+import { content as docsXmlContent, metadata as docsXmlMetadata } from '@/pages/docs/xml/index';
+import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/pages/docs/xml/layout';
 
 /**
  * Builds the route tree for the current bundle mode.

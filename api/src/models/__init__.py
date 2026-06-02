@@ -3,6 +3,7 @@ from .compute import ComputeRegistryCreate, ComputeRegistryResponse
 from .database import DatabaseRegistryCreate, DatabaseRegistryResponse
 from .kinds import ComputeKind, DatabaseKind, StorageKind
 from .locations import LocationCreate, LocationResponse
+from .metadata import LongLinkMetadata
 from .orgs import OrgCreate, OrgDetails, OrgSummary
 from .roles import Roles
 from .storage import StorageRegistryCreate, StorageRegistryResponse
@@ -31,6 +32,7 @@ __all__ = [
     "Language",
     "LocationCreate",
     "LocationResponse",
+    "LongLinkMetadata",
     "OrgCreate",
     "OrgDetails",
     "OrgSummary",

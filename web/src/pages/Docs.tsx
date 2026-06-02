@@ -125,7 +125,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
         <SidebarProvider defaultOpen>
             <DocsSidebar currentItemId={currentItem?.id} />
 
-            <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
+            <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
                     <div className="pointer-events-auto relative shrink-0 border-b border-border bg-card">
                         <SidebarTrigger className="absolute top-1/2 left-4 z-10 shrink-0 -translate-y-1/2 cursor-pointer lg:left-6" />
@@ -195,7 +195,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                                 href={apiUrl('/auth/login/oidc')}
                                 className={cn(
                                     buttonVariants({ size: 'sm' }),
-                                    'absolute top-1/2 right-4 z-10 h-7 -translate-y-1/2 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
+                                    'absolute top-1/2 right-4 z-10 h-7 -translate-y-1/2 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 !transition-none active:!translate-y-1/2 lg:right-6'
                                 )}
                             >
                                 Login
@@ -205,9 +205,9 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                 </div>
             </SidebarInset>
 
-            <div className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-0 rounded-lg bg-card transition-[left] lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2" />
-            <div className="pointer-events-none fixed top-0 right-1 left-1 z-[15] h-[5px] bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-[9px] lg:peer-data-[state=collapsed]:left-2" />
-            <div className="pointer-events-none fixed right-1 bottom-0 left-1 z-[15] h-1 bg-background transition-[left] lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-2 lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-0 rounded-lg bg-card lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed top-0 right-1 left-1 z-[15] h-[5px] bg-background lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-[9px] lg:peer-data-[state=collapsed]:left-2" />
+            <div className="pointer-events-none fixed right-1 bottom-0 left-1 z-[15] h-1 bg-background lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-2 lg:peer-data-[state=collapsed]:left-2" />
             <div className="pointer-events-none fixed top-0 bottom-0 left-0 z-[15] w-[5px] bg-background lg:left-[calc(var(--sidebar-width)-1px)] lg:w-[9px] lg:peer-data-[state=collapsed]:left-0" />
             <div className="pointer-events-none fixed top-0 right-0 bottom-0 z-[15] w-[5px] bg-background lg:w-[9px]" />
 

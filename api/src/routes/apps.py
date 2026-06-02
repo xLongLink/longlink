@@ -1,45 +1,14 @@
-import json
 import src.db as db
-import docker
 from fastapi import Depends, APIRouter, HTTPException, status
 from src.auth import authuser, authadmin
 from src.adapters.database import Postgre
 from src.models.apps import AppCreate, AppResponse
-from src.utils.utils import knames, slugify
+from src.utils.utils import knames, slugify, metadata
 from src.adapters.compute.k8s import K8s
 
 router = APIRouter(prefix="/api/apps")
 
 APP_SERVICE_PORT = 80
-
-
-def inspect_image_specs(image: str) -> dict[str, object] | None:
-    """Inspect a built image and return LongLink labels if available."""
-
-    try:
-        client = docker.from_env()
-        inspect_data = client.images.get(image).attrs
-    except docker.errors.DockerException:
-        return None
-
-    labels = inspect_data.get("Config", {}).get("Labels") or {}
-    if not isinstance(labels, dict):
-        return None
-
-    env_spec = labels.get("longlink.env.spec")
-    inspected: dict[str, object] = {
-        "name": labels.get("longlink.name"),
-        "version": labels.get("longlink.version"),
-        "description": labels.get("longlink.description"),
-    }
-
-    if env_spec is not None:
-        try:
-            inspected["env_spec"] = json.loads(env_spec)
-        except json.JSONDecodeError:
-            return None
-
-    return {key: value for key, value in inspected.items() if value is not None}
 
 
 @router.get("", response_model=list[AppResponse])
@@ -114,10 +83,8 @@ async def create_app(
     # Deploy the app on the compute cluster.
     await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, {})
 
-    # Print the built image labels so operators can verify the app contract.
-    image_specs = inspect_image_specs(payload.image)
-    if image_specs is not None:
-        print(json.dumps(image_specs, indent=2))
+    # Validate the image metadata after a successful deployment.
+    metadata(payload.image)
 
     try:
         app = await db.apps.create(

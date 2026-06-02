@@ -6,7 +6,7 @@ from src.constants import INGRESS_NAME
 from src.models.kinds import ComputeKind
 
 
-class ComputeRegistriesService(ServiceBase):
+class ComputeService(ServiceBase):
     """Manage compute backend registrations."""
 
     async def list(self) -> list[ComputeRegistry]:

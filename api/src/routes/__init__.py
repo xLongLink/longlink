@@ -2,7 +2,7 @@ from src.routes.apps import router as apps_router
 from src.routes.auth import router as auth_router
 from src.routes.orgs import router as orgs_router
 from src.routes.user import router as me_router
-from src.routes.user import users_router as api_users_router
+from src.routes.user import users_router
 from src.routes.compute import router as compute_router
 from src.routes.storage import router as storage_router
 from src.routes.database import router as database_router
@@ -18,6 +18,6 @@ routers = [
     me_router,
     orgs_router,
     proxy_router,
-    api_users_router,
+    users_router,
     storage_router,
 ]

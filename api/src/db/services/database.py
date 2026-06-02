@@ -4,7 +4,7 @@ from src.db.models import DatabaseRegistry
 from src.models.kinds import DatabaseKind
 
 
-class DatabaseRegistriesService(ServiceBase):
+class DatabaseService(ServiceBase):
     """Manage database backend registrations."""
 
     async def list(self) -> list[DatabaseRegistry]:

@@ -57,10 +57,7 @@ async def test_init_bootstraps_cluster_proxy(monkeypatch) -> None:
     monkeypatch.setattr("src.adapters.compute.k8s.client.CoreV1Api", lambda api_client: FakeCoreApi())
     monkeypatch.setattr("src.adapters.compute.k8s.client.AppsV1Api", lambda api_client: FakeAppsApi())
     monkeypatch.setattr("src.adapters.compute.k8s.DynamicClient", FakeDynamicClient)
-    K8s._instances.clear()
-
     adapter = K8s("apiVersion: v1\nclusters: []\n", "shared-secret")
-    K8s("apiVersion: v1\nclusters: []\n", "shared-secret")
 
     # Assert
     assert captured == [

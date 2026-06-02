@@ -3,7 +3,6 @@ from pathlib import Path
 from src.env import env
 from src.routes import routers
 from urllib.parse import urlsplit
-from src.routes.auth import router as auth_router
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
@@ -82,12 +81,7 @@ app.add_middleware(
 )
 
 
-# Register routers
-app.include_router(auth_router)
-
 for router in routers:
-    if router is auth_router:
-        continue
     app.include_router(router)
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"

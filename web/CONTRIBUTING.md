@@ -6,19 +6,20 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 
 ```bash
 /
-├── docs
-│   ├── api
-│   │   └── self-hosted
-│   ├── sdk
-│   │   ├── building
-│   │   ├── database
-│   │   ├── environments
-│   │   ├── routes
-│   │   ├── storage
-│   │   └── testing
-│   └── xml
-│       ├── components
-│       └── layout
+├── pages
+│   └── docs
+│       ├── api
+│       │   └── self-hosted
+│       ├── sdk
+│       │   ├── building
+│       │   ├── database
+│       │   ├── environments
+│       │   ├── routes
+│       │   ├── storage
+│       │   └── testing
+│       └── xml
+│           ├── components
+│           └── layout
 ├── playground
 ├── theme
 ├── sample

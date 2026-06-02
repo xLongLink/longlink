@@ -1,24 +1,10 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
 
-from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.sql import func
+from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
     pass
-
-
-class User(Base):
-    """Shared organization user stored in the public schema."""
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(255))
-    email: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 
 
 class Database(ABC):
