@@ -1,4 +1,4 @@
-import httpx2 as httpx
+import httpx2
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 import src.db as db
@@ -62,7 +62,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     }
     forward_headers["authorization"] = compute.authorization_header()
 
-    async with httpx.AsyncClient(verify=False) as api_client:
+    async with httpx2.AsyncClient(verify=False) as api_client:
         upstream_response = await api_client.request(
             request.method,
             f"{base}{upstream_path}",

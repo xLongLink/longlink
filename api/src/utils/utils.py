@@ -1,7 +1,7 @@
 import json
 import re
 
-import httpx2 as httpx
+import httpx2
 import yaml as pyyaml
 from src.models.metadata import LongLinkMetadata
 from string import Template
@@ -15,7 +15,7 @@ def metadata(image: str) -> LongLinkMetadata | None:
     registry, repository, tag = _parse_image_ref(image)
 
     try:
-        with httpx.Client(verify=False, follow_redirects=True) as client:
+        with httpx2.Client(verify=False, follow_redirects=True) as client:
             manifest = _fetch_manifest(client, registry, repository, tag)
             if manifest is None:
                 return None
@@ -79,7 +79,7 @@ def _parse_image_ref(image: str) -> tuple[str, str, str]:
     return registry, repository, tag
 
 
-def _fetch_manifest(client: httpx.Client, registry: str, repository: str, tag: str) -> dict | None:
+def _fetch_manifest(client: httpx2.Client, registry: str, repository: str, tag: str) -> dict | None:
     """Fetch the image manifest from the OCI Distribution API, resolving manifest lists to a single platform manifest."""
 
     url = f"https://{registry}/v2/{repository}/manifests/{tag}"
@@ -114,7 +114,7 @@ def _fetch_manifest(client: httpx.Client, registry: str, repository: str, tag: s
     return data
 
 
-def _fetch_blob(client: httpx.Client, registry: str, repository: str, digest: str) -> dict | None:
+def _fetch_blob(client: httpx2.Client, registry: str, repository: str, digest: str) -> dict | None:
     """Fetch an image config blob from the OCI Distribution API."""
 
     url = f"https://{registry}/v2/{repository}/blobs/{digest}"
@@ -132,7 +132,7 @@ def _fetch_blob(client: httpx.Client, registry: str, repository: str, digest: st
     return None
 
 
-def _resolve_bearer_token(client: httpx.Client, registry: str, repository: str, resp: httpx.Response) -> str | None:
+def _resolve_bearer_token(client: httpx2.Client, registry: str, repository: str, resp: httpx2.Response) -> str | None:
     """Resolve a bearer token from a 401 Www-Authenticate response."""
 
     auth_header = resp.headers.get("www-authenticate", "")

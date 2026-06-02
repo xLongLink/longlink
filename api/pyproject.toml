@@ -14,6 +14,7 @@ dependencies = [
     'authlib',
     'email-validator',
     'fastapi',
+    'httpx',
     'httpx2',
     'itsdangerous',
     'pydantic',
@@ -75,4 +76,3 @@ markers = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-

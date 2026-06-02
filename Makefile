@@ -17,7 +17,7 @@ format:
 
 tests:
 	cd api && uv sync --extra dev
-	cd api && uv run pytest'
+	cd api && uv run pytest
 	cd sdk && uv sync --extra dev
 	cd sdk && uv run pytest
 	bun test --cwd web

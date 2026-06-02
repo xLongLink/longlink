@@ -1,4 +1,4 @@
-import httpx2 as httpx
+import httpx2
 import src.db as db
 from src.models import AppResponse, ComputeKind, DatabaseKind, LongLinkMetadata, UserSummary
 from src.db.models import User, UserApp
@@ -474,10 +474,10 @@ async def test_proxy_app_forwards_request_to_internal_service(
             captured["query_params"] = kwargs.get("params")
             captured["headers"] = kwargs.get("headers")
             captured["body"] = kwargs.get("content")
-            return httpx.Response(200, content=b"proxied", headers={"content-type": "text/plain"})
+            return httpx2.Response(200, content=b"proxied", headers={"content-type": "text/plain"})
 
     monkeypatch.setattr("src.routes.proxy.K8s", FakeCompute)
-    monkeypatch.setattr(httpx, "AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr(httpx2, "AsyncClient", FakeAsyncClient)
 
     # Act
     response = client.post(f"/api/apps/{app.id}/proxy/anything?answer=42", content=b"hello")
