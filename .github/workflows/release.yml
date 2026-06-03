@@ -171,3 +171,21 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
+
+      - name: Trigger apply workflow_dispatch in target repository
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: apply.yml
+          repo: xLongLink/linklong
+          ref: main
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+
+      - name: Trigger update workflow_dispatch in target repository
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: update.yml
+          repo: xLongLink/linklong
+          inputs: >-
+            { "version": "${{ github.ref_name }}" }
+          ref: main
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
