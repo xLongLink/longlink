@@ -5,6 +5,6 @@ class LongLinkMetadata(BaseModel):
     """Structured metadata extracted from a built image's LongLink labels."""
 
     name: str | None = None
-    version: str | None = None
     description: str | None = None
-    env_spec: dict[str, object] | None = None
+    required: list[str] | None = None
+    optional: list[str] | None = None

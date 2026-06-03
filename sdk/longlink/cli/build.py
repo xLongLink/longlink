@@ -1,7 +1,6 @@
 import ast
 import json
 import os
-import re
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,8 +19,6 @@ RUN uv sync
 
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--log-level", "debug"]
 """
-
-SECRET_NAME_PATTERN = re.compile(r"(?:SECRET|TOKEN|PASSWORD|PASS|KEY|CREDENTIAL)", re.IGNORECASE)
 
 
 def create_version() -> str:
@@ -65,11 +62,11 @@ def resolve_env_prefix(class_node: ast.ClassDef) -> str:
     return "LONGLINK_"
 
 
-def read_env_spec(root: Path) -> dict[str, object]:
-    """Parse `src/envs.py` and build the Docker env spec payload."""
+def read_env_spec(root: Path) -> dict[str, list[str]]:
+    """Parse `src/envs.py` and return required and optional env var names."""
 
     envs_path = root / "src" / "envs.py"
-    empty_spec: dict[str, object] = {"version": 1, "required": {}, "optional": {}}
+    empty_spec: dict[str, list[str]] = {"required": [], "optional": []}
 
     if not envs_path.exists():
         return empty_spec
@@ -80,10 +77,9 @@ def read_env_spec(root: Path) -> dict[str, object]:
         return empty_spec
 
     prefix = resolve_env_prefix(class_node)
-    required: dict[str, dict[str, object]] = {}
-    optional: dict[str, dict[str, object]] = {}
+    required: list[str] = []
+    optional: list[str] = []
 
-    # Walk the class body and convert each annotated settings field into a label entry.
     for statement in class_node.body:
         if not isinstance(statement, ast.AnnAssign):
             continue
@@ -92,50 +88,15 @@ def read_env_spec(root: Path) -> dict[str, object]:
             continue
 
         field_name = statement.target.id
-        field_type = resolve_field_type(statement.annotation)
         field_info = resolve_field_info(statement.value)
         env_name = field_info.pop("env_name") or f"{prefix}{field_name}"
-        field_spec: dict[str, object] = {"type": field_type}
 
-        if field_info.get("secret") is True or SECRET_NAME_PATTERN.search(env_name) or SECRET_NAME_PATTERN.search(field_name):
-            field_spec["secret"] = True
-
-        description = field_info.get("description")
-        if description:
-            field_spec["description"] = description
-
-        default_value = field_info.get("default")
         if field_info.get("required"):
-            required[env_name] = field_spec
+            required.append(env_name)
         else:
-            if default_value is not None:
-                field_spec["default"] = default_value
-            optional[env_name] = field_spec
+            optional.append(env_name)
 
-    return {"version": 1, "required": required, "optional": optional}
-
-
-def resolve_field_type(annotation: ast.AST) -> str:
-    """Normalize an annotation into a compact JSON schema type string."""
-
-    if isinstance(annotation, ast.Name):
-        return annotation.id.lower()
-
-    if isinstance(annotation, ast.Constant):
-        return str(annotation.value).lower()
-
-    if isinstance(annotation, ast.BinOp) and isinstance(annotation.op, ast.BitOr):
-        left_type = resolve_field_type(annotation.left)
-        if left_type not in {"none", "nonetype"}:
-            return left_type
-        return resolve_field_type(annotation.right)
-
-    if isinstance(annotation, ast.Subscript):
-        base = resolve_field_type(annotation.value)
-        if base in {"list", "set", "tuple", "dict"}:
-            return base
-
-    return "str"
+    return {"required": required, "optional": optional}
 
 
 def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
@@ -201,23 +162,20 @@ def encode_label_value(value: object) -> str:
     return json.dumps(value)
 
 
-def render_env_spec_label(env_spec: dict[str, object]) -> str:
-    """Render the env spec label as a single-line Dockerfile string."""
-
-    return f"LABEL longlink.env.spec={encode_label_value(env_spec)}"
-
-
-def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, object]) -> str:
+def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, list[str]]) -> str:
     """Render the LongLink metadata labels for a Dockerfile."""
 
     label_items = [
         ("longlink.name", metadata.get("name")),
-        ("longlink.version", metadata.get("version")),
         ("longlink.description", metadata.get("description")),
     ]
 
     rendered_labels = [f"LABEL {key}={encode_label_value(value)}" for key, value in label_items if value is not None]
-    rendered_labels.append(render_env_spec_label(env_spec))
+
+    env_items = [("longlink.required", env_spec.get("required")), ("longlink.optional", env_spec.get("optional"))]
+    rendered_labels.extend(
+        f"LABEL {key}={encode_label_value(value)}" for key, value in env_items if value
+    )
 
     rendered_labels.extend(
         [

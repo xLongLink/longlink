@@ -1,23 +1,23 @@
 import main as main_module
-import importlib
-from src.env import env
+from fastapi.testclient import TestClient
 
 
-def test_headless_defaults_to_enabled() -> None:
-    """Keep static frontend serving disabled unless explicitly turned off."""
+def test_static_frontend_serving_is_enabled_by_default() -> None:
+    """Serve the built web bundle at the API root."""
 
-    assert env.HEADLESS is True
-    assert not any(route.name == "static" for route in main_module.app.router.routes)
+    assert any(route.name == "static" for route in main_module.app.router.routes)
 
 
-def test_static_mount_is_registered_when_headless_is_disabled(monkeypatch) -> None:
-    """Mount the SPA assets only when headless mode is disabled."""
+def test_root_serves_the_static_web_bundle() -> None:
+    """Return the bundled web app at the root path."""
 
     # Arrange
-    monkeypatch.setattr(env, "HEADLESS", False)
+    client = TestClient(main_module.app)
 
     # Act
-    reloaded_module = importlib.reload(main_module)
+    response = client.get("/")
 
     # Assert
-    assert any(route.name == "static" for route in reloaded_module.app.router.routes)
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+

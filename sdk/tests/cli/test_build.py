@@ -30,22 +30,17 @@ def test_build_app_creates_dockerfile_with_labels(tmp_path, monkeypatch):
     assert re.match(r'^\d{8}_\d{6}$', version)
 
     dockerfile = dockerfile_path.read_text()
-    label_lines = [line for line in dockerfile.splitlines() if line.startswith('LABEL ') and 'longlink.env.spec' not in line]
     labels = {}
 
-    for line in label_lines:
+    for line in dockerfile.splitlines():
+        if not line.startswith('LABEL '):
+            continue
         key, raw_value = line[len('LABEL '):].split('=', 1)
         labels[key] = ast.literal_eval(raw_value)
 
-    env_spec_line = next(line for line in dockerfile.splitlines() if line.startswith('LABEL longlink.env.spec='))
-    env_spec = json.loads(ast.literal_eval(env_spec_line[len('LABEL '):].split('=', 1)[1]))
-    assert env_spec['version'] == 1
-    assert env_spec['required']['LONGLINK_API_KEY']['secret'] is True
-    assert env_spec['required']['LONGLINK_API_KEY']['description'] == 'API key used by Longlink'
-    assert env_spec['optional']['LONGLINK_PORT']['default'] == 8080
-    assert env_spec['optional']['LONGLINK_PORT']['description'] == 'HTTP listen port'
     assert labels['longlink.name'] == 'demo-app'
-    assert labels['longlink.version'] == '0.1.0'
+    assert json.loads(labels['longlink.required']) == ['LONGLINK_API_KEY']
+    assert json.loads(labels['longlink.optional']) == ['LONGLINK_PORT']
 
 
 def test_build_command_prints_created_artifacts():

@@ -226,9 +226,9 @@ async def test_create_app_returns_app_response(
         "src.utils.utils.metadata",
         lambda image: LongLinkMetadata(
             name="dashboard",
-            version="0.1.0",
             description="Demo app",
-            env_spec={"version": 1, "required": {}, "optional": {}},
+            required=["API_KEY"],
+            optional=["PORT"],
         ),
     )
     client = clients[0]

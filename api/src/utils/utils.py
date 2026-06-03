@@ -34,18 +34,24 @@ def metadata(image: str) -> LongLinkMetadata | None:
 
             result = LongLinkMetadata(
                 name=labels.get("longlink.name"),
-                version=labels.get("longlink.version"),
                 description=labels.get("longlink.description"),
             )
 
-            env_spec = labels.get("longlink.env.spec")
-            if env_spec is not None:
+            required = labels.get("longlink.required")
+            if required is not None:
                 try:
-                    result.env_spec = json.loads(env_spec)
+                    result.required = json.loads(required)
                 except (json.JSONDecodeError, TypeError):
                     return None
 
-            if result.name is None and result.version is None and result.description is None and result.env_spec is None:
+            optional = labels.get("longlink.optional")
+            if optional is not None:
+                try:
+                    result.optional = json.loads(optional)
+                except (json.JSONDecodeError, TypeError):
+                    return None
+
+            if all(v is None for v in [result.name, result.description, result.required, result.optional]):
                 return None
 
             return result

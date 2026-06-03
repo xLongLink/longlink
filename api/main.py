@@ -85,7 +85,7 @@ for router in routers:
     app.include_router(router)
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
-if not env.HEADLESS and static_dir.exists():
+if static_dir.exists():
     app.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
 
 
