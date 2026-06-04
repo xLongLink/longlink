@@ -21,3 +21,16 @@ def test_root_serves_the_static_web_bundle() -> None:
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
 
+
+def test_healthz_returns_ok() -> None:
+    """Expose a liveness endpoint for the API."""
+
+    # Arrange
+    client = TestClient(main_module.app)
+
+    # Act
+    response = client.get("/healthz")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}

@@ -1,5 +1,6 @@
 from src.routes.apps import router as apps_router
 from src.routes.auth import router as auth_router
+from src.routes.health import router as health_router
 from src.routes.orgs import router as orgs_router
 from src.routes.user import router as me_router
 from src.routes.user import users_router
@@ -12,6 +13,7 @@ from src.routes.proxy import router as proxy_router
 routers = [
     apps_router,
     auth_router,
+    health_router,
     compute_router,
     database_router,
     locations_router,

@@ -1,16 +1,28 @@
+import os
 import json
 import pytest
 import pytest_asyncio
-from main import app
 from base64 import b64encode
-from src.db import session as db_session
-from pathlib import Path
-from src.env import env
 from itsdangerous import TimestampSigner
-from src.db.models import Base, User
+from pathlib import Path
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+
+# Seed the required settings before importing the FastAPI app.
+os.environ.setdefault("SESSION_KEY", "1234")
+os.environ.setdefault("URL", "http://localhost:5173")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
+os.environ.setdefault("OIDC_CLIENT_ID", "longlink-api")
+os.environ.setdefault("OIDC_CLIENT_SECRET", "longlink-secret")
+os.environ.setdefault("OIDC_ISSUER", "http://localhost:18080/realms/dev")
+os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:8000/auth/oidc")
+
+from main import app
+from src.db import session as db_session
+from src.db.models import Base, User
+from src.env import env
 
 SESSION_COOKIE = "longlink_session"
 

@@ -10,16 +10,16 @@ class Env(BaseSettings):
     DATABASE_URL: str
 
     # OIDC bridge credentials
-    OIDC_CLIENT_ID: str | None = None
-    OIDC_CLIENT_SECRET: str | None = None
-    OIDC_ISSUER: str | None = None
+    OIDC_CLIENT_ID: str
+    OIDC_CLIENT_SECRET: str
+    OIDC_ISSUER: str
     OIDC_REDIRECT_URI: str
 
     # Web URL used for auth redirects
     URL: str
 
     model_config = SettingsConfigDict(
-        env_file=(".env", ".env.sample"),
+        env_file=(".env",),
         env_file_encoding="utf-8",
     )
 
