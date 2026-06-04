@@ -16,6 +16,8 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [react(), tailwindcss()],
 
+        envPrefix: ['VITE_', 'VERSION'],
+
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, './src'),

@@ -4,6 +4,8 @@ WORKDIR /repo
 COPY web/package.json web/bun.lock web/ ./web/
 COPY api/ ./api/
 WORKDIR /repo/web
+ARG VERSION=v0.0.0
+ENV VERSION=${VERSION}
 RUN bun install --frozen-lockfile
 RUN bun run build:api
 

@@ -46,6 +46,8 @@ jobs:
 
       - name: Build web assets for SDK
         run: bun run --cwd web build:sdk --logLevel warn
+        env:
+          VERSION: ${{ github.ref_name }}
 
       - name: Build the distribution
         working-directory: sdk
@@ -89,6 +91,8 @@ jobs:
           context: .
           file: api/Dockerfile
           push: true
+          build-args: |
+            VERSION=${{ github.ref_name }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 

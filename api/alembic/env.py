@@ -1,11 +1,16 @@
+import asyncio
 from alembic import context
 from sqlalchemy import pool, engine_from_config
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import create_async_engine
 from src.db.models import Base
+from src.env import env
 from logging.config import fileConfig
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+config.set_main_option('sqlalchemy.url', env.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -55,6 +60,33 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    url = make_url(config.get_main_option('sqlalchemy.url'))
+
+    # Async drivers need Alembic's async engine path, while sync drivers can use the classic runner.
+    if url.drivername.endswith(('aiosqlite', 'asyncmy', 'aiomysql', 'asyncpg')):
+
+        async def run_async_migrations() -> None:
+            """Run Alembic migrations through an async SQLAlchemy engine."""
+
+            connectable = create_async_engine(url, poolclass=pool.NullPool)
+
+            def do_run_migrations(sync_connection) -> None:
+                """Configure Alembic against the synchronous bridge connection."""
+
+                context.configure(connection=sync_connection, target_metadata=target_metadata)
+
+                with context.begin_transaction():
+                    context.run_migrations()
+
+            try:
+                async with connectable.connect() as connection:
+                    await connection.run_sync(do_run_migrations)
+            finally:
+                await connectable.dispose()
+
+        asyncio.run(run_async_migrations())
+        return
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix='sqlalchemy.',

@@ -73,10 +73,7 @@ class AppsService(ServiceBase):
 
         async with self.session() as session:
             # Check the primary-key conflict first so the API can report a clear message.
-            name_statement = select(App).where(
-                App.organization == organization,
-                App.name == name,
-            )
+            name_statement = select(App).where(App.name == name)
             name_result = await session.execute(name_statement)
             if name_result.scalar_one_or_none() is not None:
                 raise ValueError('App name already exists')

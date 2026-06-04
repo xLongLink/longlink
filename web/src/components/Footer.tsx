@@ -75,7 +75,7 @@ export function Footer() {
                 </div>
 
                 <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t border-black/10 pt-3 text-center text-[11px] font-medium text-muted-foreground dark:border-white/10 sm:flex-row sm:text-left">
-                    <p> LongLink LLC - 2026</p>
+                    <p>LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}</p>
                     <ul className="flex items-center gap-4">
                         <li className="transition-colors hover:text-accent">
                             <Link to="/impressum">Impressum</Link>
