@@ -1,11 +1,11 @@
 import asyncio
 from alembic import context
-from sqlalchemy import pool, engine_from_config
+from logging.config import fileConfig
+from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 from src.db.models import Base
 from src.env import env
-from logging.config import fileConfig
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -61,6 +61,14 @@ def run_migrations_online() -> None:
 
     """
     url = make_url(config.get_main_option('sqlalchemy.url'))
+
+    # MySQL needs an async DBAPI for Alembic's async engine path.
+    if (
+        url.drivername == 'mysql'
+        or url.drivername.startswith('mysql+')
+        and not url.drivername.endswith(('asyncmy', 'aiomysql'))
+    ):
+        url = url.set(drivername='mysql+asyncmy')
 
     # Async drivers need Alembic's async engine path, while sync drivers can use the classic runner.
     if url.drivername.endswith(('aiosqlite', 'asyncmy', 'aiomysql', 'asyncpg')):
