@@ -17,7 +17,7 @@ export const content = (
         <p className="leading-7">Provide these systems before you deploy LongLink:</p>
         <ul className="ml-6 list-disc space-y-2">
             <li>A Kubernetes cluster for the control plane and application workloads</li>
-            <li>A PostgreSQL server for database provisioning</li>
+            <li>A PostgreSQL or MySQL server for database provisioning</li>
             <li>S3-compatible object storage for files and artifacts</li>
         </ul>
         <Heading id="required-environment-variables" level="h2">

@@ -17,6 +17,7 @@ dependencies = [
     'httpx',
     'httpx2',
     'itsdangerous',
+    'asyncmy',
     'pydantic',
     'pydantic-settings',
     'psycopg[binary,pool]',
