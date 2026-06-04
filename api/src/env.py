@@ -15,11 +15,8 @@ class Env(BaseSettings):
     OIDC_ISSUER: str
     OIDC_REDIRECT_URI: str
 
-    # Web URL used for auth redirects
-    URL: str
-
     model_config = SettingsConfigDict(
-        env_file=(".env",),
+        env_file=(".env", ".env.sample"),
         env_file_encoding="utf-8",
     )
 

@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request
 from pathlib import Path
 from src.env import env
 from src.routes import routers
-from urllib.parse import urlsplit
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
@@ -65,7 +64,6 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8000",
-        f"{urlsplit(env.URL).scheme}://{urlsplit(env.URL).netloc}",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -75,9 +73,8 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=env.SESSION_KEY,
     session_cookie="longlink_session",
-    # Allow the web app to call the API after a cross-origin OIDC round-trip.
-    same_site="none" if env.URL.startswith("https://") else "lax",
-    https_only=env.URL.startswith("https://"),
+    same_site="lax",
+    https_only=False,
 )
 
 

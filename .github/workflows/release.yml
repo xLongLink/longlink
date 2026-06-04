@@ -51,10 +51,9 @@ jobs:
         working-directory: sdk
         run: uvx --from build pyproject-build
 
-      - name: Publish to PyPI (OIDC)
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: sdk/dist
+      - name: Publish to PyPI
+        working-directory: sdk
+        run: uv publish --trusted-publishing automatic
 
   # The API is packaged into a container, so we will publish the image to GHCR on each release.
   publish-api-image:
