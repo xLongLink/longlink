@@ -29,7 +29,7 @@ def test_healthz_returns_ok() -> None:
     client = TestClient(main_module.app)
 
     # Act
-    response = client.get("/healthz")
+    response = client.get("/api/healthz")
 
     # Assert
     assert response.status_code == 200
