@@ -85,8 +85,8 @@ jobs:
           build-args: |
             VERSION=${{ github.ref_name }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/longlink:latest
-            ghcr.io/${{ github.repository_owner }}/longlink:${{ github.ref_name }}
+            ghcr.io/xlonglink/longlink:latest
+            ghcr.io/xlonglink/longlink:${{ github.ref_name }}
 
   # The SDK sample is also published as a container image for one-command demos.
   publish-sdk-sample-image:
@@ -134,8 +134,8 @@ jobs:
           file: sdk/sample-app/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/sample:latest
-            ghcr.io/${{ github.repository_owner }}/sample:${{ github.ref_name }}
+            ghcr.io/xlonglink/sample:latest
+            ghcr.io/xlonglink/sample:${{ github.ref_name }}
 
   publish-github-release:
     if: startsWith(github.ref, 'refs/tags/v')
