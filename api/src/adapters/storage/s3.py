@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import boto3
+from src.utils.namespace import s3name
+
 from .__root__ import Storage
 
 
@@ -42,7 +44,7 @@ class S3(Storage):
     async def bucket(self, organization: str, application: str) -> str:
         """Create the application bucket and return its name."""
 
-        bucket_name = f"{organization}-{application}"
+        bucket_name = s3name(f"{organization}-{application}")
         self._client.create_bucket(Bucket=bucket_name)
         return bucket_name
 
@@ -50,12 +52,45 @@ class S3(Storage):
     async def remove(self, organization: str, application: str) -> None:
         """Delete the application bucket for one organization."""
 
-        self._client.delete_bucket(Bucket=f"{organization}-{application}")
+        self._client.delete_bucket(Bucket=s3name(f"{organization}-{application}"))
 
 
     async def delete(self, organization: str) -> None:
         """Delete every managed bucket for one organization."""
 
+        bucket_prefix = s3name(organization)
         for bucket_name in self.list():
-            if bucket_name == organization or bucket_name.startswith(f"{organization}-"):
+            if bucket_name == bucket_prefix or bucket_name.startswith(f"{bucket_prefix}-"):
                 self._client.delete_bucket(Bucket=bucket_name)
+
+
+    async def setup(self) -> None:
+        """Initialize the S3 backend used by the control plane."""
+
+        # The storage backend is provisioned externally; no bootstrap is required.
+        return None
+
+
+    async def cleanup(self) -> None:
+        """Delete all managed buckets from the storage backend."""
+
+        # Empty each bucket before deleting it so versioned and non-versioned buckets can be removed.
+        for bucket_name in self.list():
+            version_paginator = self._client.get_paginator("list_object_versions")
+            for page in version_paginator.paginate(Bucket=bucket_name):
+                objects = []
+                for item in page.get("Versions", []):
+                    objects.append({"Key": item["Key"], "VersionId": item["VersionId"]})
+                for item in page.get("DeleteMarkers", []):
+                    objects.append({"Key": item["Key"], "VersionId": item["VersionId"]})
+
+                if objects:
+                    self._client.delete_objects(Bucket=bucket_name, Delete={"Objects": objects, "Quiet": True})
+
+            object_paginator = self._client.get_paginator("list_objects_v2")
+            for page in object_paginator.paginate(Bucket=bucket_name):
+                objects = [{"Key": item["Key"]} for item in page.get("Contents", [])]
+                if objects:
+                    self._client.delete_objects(Bucket=bucket_name, Delete={"Objects": objects, "Quiet": True})
+
+            self._client.delete_bucket(Bucket=bucket_name)

@@ -11,8 +11,8 @@ __all__ = [
     "create_db",
     "Element",
     "Longlink",
+    "Envs",
     "Environments",
-    "UserEnvironments",
     "fs",
     "db",
 ]
@@ -29,22 +29,22 @@ def __getattr__(name: str) -> Any:
         from longlink.storage import create_fs as exported
     elif name == "create_db":
         from longlink.database import create_db as exported
-    elif name in {"Element", "Longlink", "Environments", "UserEnvironments"}:
-        from longlink.utils import Element, Longlink, Environments, UserEnvironments
+    elif name in {"Element", "Longlink", "Envs", "Environments"}:
+        from longlink.utils import Element, Longlink, Envs, Environments
 
         exports = {
             "Element": Element,
             "Longlink": Longlink,
+            "Envs": Envs,
             "Environments": Environments,
-            "UserEnvironments": UserEnvironments,
         }
         exported = exports[name]
     elif name in {"fs", "db"}:
         from longlink.storage import create_fs
         from longlink.database import create_db
-        from longlink.utils import Environments
+        from longlink.utils import Envs
 
-        env = Environments()
+        env = Envs()
         globals()["fs"] = create_fs(env)
         globals()["db"] = create_db(env)
         return globals()[name]

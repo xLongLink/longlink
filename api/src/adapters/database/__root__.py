@@ -36,6 +36,13 @@ class Database(ABC):
         """Remove one application schema from the organization database."""
 
     @abstractmethod
+    async def setup(self) -> None:
+        """Initialize the database backend used by the control plane."""
+
+    @abstractmethod
+    async def cleanup(self) -> None:
+        """Delete all databases managed by the control plane."""
+
+    @abstractmethod
     async def delete(self, organization: str) -> None:
         """Delete the organization database and all managed application schemas."""
-

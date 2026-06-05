@@ -13,6 +13,7 @@ from kubernetes.client.rest import ApiException
 from kubernetes.dynamic import DynamicClient
 
 from src.constants import TEMPLATES
+from src.utils.namespace import k8name
 from src.utils import utils
 
 from .__root__ import Compute
@@ -22,7 +23,7 @@ class K8s(Compute):
     """Manage Kubernetes namespaces and internal application workloads."""
 
     def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-        """Initialize the Kubernetes compute adapter and bootstrap the cluster proxy."""
+        """Initialize the Kubernetes compute adapter."""
 
         self._kubeconfig = kubeconfig
         self._proxy_secret = proxy_secret
@@ -34,7 +35,9 @@ class K8s(Compute):
         self._apps_api = client.AppsV1Api(self._api_client)
         self._dynamic_client = DynamicClient(self._api_client)
 
-        # Bootstrap the shared cluster-wide proxy entrypoint.
+    async def setup(self) -> None:
+        """Bootstrap the shared cluster-wide proxy entrypoint."""
+
         proxy_script = (TEMPLATES / "cluster-proxy.py").read_text(encoding="utf-8")
         manifests = utils.yaml(
             TEMPLATES / "cluster-proxy.yml",
@@ -84,6 +87,73 @@ class K8s(Compute):
                     resource.create(body=manifest)
 
 
+    async def cleanup(self) -> None:
+        """Delete all Kubernetes resources managed by the control plane."""
+
+        # Remove namespaced resources before namespaces so namespace deletion is not blocked.
+        for item in self._core_api.list_config_map_for_all_namespaces(label_selector="managed-by=longlink").items:
+            try:
+                self._core_api.delete_namespaced_config_map(item.metadata.name, item.metadata.namespace)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting ConfigMap '{item.metadata.namespace}/{item.metadata.name}'") from exc
+
+        for item in self._core_api.list_secret_for_all_namespaces(label_selector="managed-by=longlink").items:
+            try:
+                self._core_api.delete_namespaced_secret(item.metadata.name, item.metadata.namespace)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting Secret '{item.metadata.namespace}/{item.metadata.name}'") from exc
+
+        for item in self._core_api.list_service_account_for_all_namespaces(label_selector="managed-by=longlink").items:
+            try:
+                self._core_api.delete_namespaced_service_account(item.metadata.name, item.metadata.namespace)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(
+                        f"Failed deleting ServiceAccount '{item.metadata.namespace}/{item.metadata.name}'"
+                    ) from exc
+
+        for item in self._core_api.list_service_for_all_namespaces(label_selector="managed-by=longlink").items:
+            try:
+                self._core_api.delete_namespaced_service(item.metadata.name, item.metadata.namespace)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting Service '{item.metadata.namespace}/{item.metadata.name}'") from exc
+
+        for item in self._apps_api.list_deployment_for_all_namespaces(label_selector="managed-by=longlink").items:
+            try:
+                self._apps_api.delete_namespaced_deployment(item.metadata.name, item.metadata.namespace)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting Deployment '{item.metadata.namespace}/{item.metadata.name}'") from exc
+
+        networking_api = client.NetworkingV1Api(self._api_client)
+        for item in networking_api.list_ingress_for_all_namespaces(label_selector="managed-by=longlink").items:
+            try:
+                networking_api.delete_namespaced_ingress(item.metadata.name, item.metadata.namespace)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting Ingress '{item.metadata.namespace}/{item.metadata.name}'") from exc
+
+        # Delete managed namespaces after their contents are gone.
+        for item in self._core_api.list_namespace(label_selector="managed-by=longlink").items:
+            try:
+                self._core_api.delete_namespace(item.metadata.name)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting namespace '{item.metadata.name}'") from exc
+
+        # Cluster-scoped bindings must be removed explicitly.
+        rbac_api = client.RbacAuthorizationV1Api(self._api_client)
+        for item in rbac_api.list_cluster_role_binding(label_selector="managed-by=longlink").items:
+            try:
+                rbac_api.delete_cluster_role_binding(item.metadata.name)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting ClusterRoleBinding '{item.metadata.name}'") from exc
+
+
     def _issue_token(self) -> str:
         """Return a short-lived bearer token for the cluster proxy."""
 
@@ -131,7 +201,7 @@ class K8s(Compute):
     def _pods(self, organization: str, application: str) -> list[client.V1Pod]:
         """Return pods for one managed application."""
 
-        namespace = utils.knames(organization, "Org")
+        namespace = k8name(utils.knames(organization, "Org"))
         name = utils.knames(application, "Application name")
         return self._core_api.list_namespaced_pod(namespace, label_selector=f"app={name}").items
 
@@ -139,7 +209,7 @@ class K8s(Compute):
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
 
-        namespace = utils.knames(organization, "Org")
+        namespace = k8name(utils.knames(organization, "Org"))
         try:
             self._core_api.read_namespace(namespace)
         except ApiException as exc:
@@ -150,14 +220,14 @@ class K8s(Compute):
                 {
                     "apiVersion": "v1",
                     "kind": "Namespace",
-                    "metadata": {"name": namespace, "labels": {"managed-by": "control-plane"}},
+                    "metadata": {"name": namespace, "labels": {"managed-by": "longlink"}},
                 }
             )
 
     async def application(self, organization: str, application: str, image: str, port: int, secrets: dict[str, str]) -> str:
         """Create or replace one internal application Deployment and Service."""
 
-        namespace = utils.knames(organization, "Org")
+        namespace = k8name(utils.knames(organization, "Org"))
         name = utils.knames(application, "Application name")
 
         # Create or replace the application Secret.
@@ -172,7 +242,7 @@ class K8s(Compute):
                 "metadata": {
                     "name": name,
                     "namespace": namespace,
-                    "labels": {"managed-by": "control-plane", "compute-role": "application", "app": name},
+                    "labels": {"managed-by": "longlink", "compute-role": "application", "app": name},
                 },
                 "type": "Opaque",
                 "stringData": secrets,
@@ -238,7 +308,7 @@ class K8s(Compute):
     async def remove(self, organization: str, application: str) -> None:
         """Remove one managed application."""
 
-        namespace = utils.knames(organization, "Org")
+        namespace = k8name(utils.knames(organization, "Org"))
         name = utils.knames(application, "Application name")
 
         for delete_call in (
@@ -256,7 +326,7 @@ class K8s(Compute):
     async def delete(self, organization: str) -> None:
         """Delete the organization namespace and all managed resources."""
 
-        namespace = utils.knames(organization, "Org")
+        namespace = k8name(utils.knames(organization, "Org"))
         try:
             self._core_api.delete_namespace(namespace)
         except ApiException as exc:
@@ -267,7 +337,7 @@ class K8s(Compute):
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
 
-        namespace = utils.knames(organization, "Org")
+        namespace = k8name(utils.knames(organization, "Org"))
         name = utils.knames(application, "Application name")
         pods = self._pods(organization, application)
         if not pods:

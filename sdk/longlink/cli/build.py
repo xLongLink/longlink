@@ -62,11 +62,11 @@ def resolve_env_prefix(class_node: ast.ClassDef) -> str:
     return "LONGLINK_"
 
 
-def read_env_spec(root: Path) -> dict[str, list[str]]:
-    """Parse `src/envs.py` and return required and optional env var names."""
+def read_env_spec(root: Path) -> dict[str, dict[str, object] | None]:
+    """Parse `src/envs.py` and return one required and one optional env spec."""
 
     envs_path = root / "src" / "envs.py"
-    empty_spec: dict[str, list[str]] = {"required": [], "optional": []}
+    empty_spec: dict[str, dict[str, object] | None] = {"required": None, "optional": None}
 
     if not envs_path.exists():
         return empty_spec
@@ -77,8 +77,8 @@ def read_env_spec(root: Path) -> dict[str, list[str]]:
         return empty_spec
 
     prefix = resolve_env_prefix(class_node)
-    required: list[str] = []
-    optional: list[str] = []
+    required: dict[str, object] | None = None
+    optional: dict[str, object] | None = None
 
     for statement in class_node.body:
         if not isinstance(statement, ast.AnnAssign):
@@ -90,11 +90,13 @@ def read_env_spec(root: Path) -> dict[str, list[str]]:
         field_name = statement.target.id
         field_info = resolve_field_info(statement.value)
         env_name = field_info.pop("env_name") or f"{prefix}{field_name}"
+        type_name = ast.unparse(statement.annotation)
 
         if field_info.get("required"):
-            required.append(env_name)
-        else:
-            optional.append(env_name)
+            if required is None:
+                required = {"name": env_name, "type": type_name}
+        elif optional is None:
+            optional = {"name": env_name, "type": type_name}
 
     return {"required": required, "optional": optional}
 
@@ -162,7 +164,7 @@ def encode_label_value(value: object) -> str:
     return json.dumps(value)
 
 
-def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, list[str]]) -> str:
+def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, dict[str, object] | None]) -> str:
     """Render the LongLink metadata labels for a Dockerfile."""
 
     label_items = [
@@ -173,9 +175,7 @@ def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, list
     rendered_labels = [f"LABEL {key}={encode_label_value(value)}" for key, value in label_items if value is not None]
 
     env_items = [("longlink.required", env_spec.get("required")), ("longlink.optional", env_spec.get("optional"))]
-    rendered_labels.extend(
-        f"LABEL {key}={encode_label_value(value)}" for key, value in env_items if value
-    )
+    rendered_labels.extend(f"LABEL {key}={encode_label_value(value)}" for key, value in env_items if value is not None)
 
     rendered_labels.extend(
         [

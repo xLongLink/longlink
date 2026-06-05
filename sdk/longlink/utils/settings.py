@@ -2,7 +2,7 @@ from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Environments(BaseSettings):
+class Envs(BaseSettings):
     """SDK environment model loaded from process variables only (no `.env` file)."""
 
     model_config = SettingsConfigDict(env_prefix="LONGLINK_")
@@ -17,4 +17,4 @@ class Environments(BaseSettings):
     STORAGE_SECRET_ACCESS_KEY: str | None = None
 
 
-Env = Environments
+Env = Envs

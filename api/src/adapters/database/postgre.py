@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_en
 from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy.sql.elements import quoted_name
 
+from src.utils.namespace import dbname
+
 from .__root__ import Database
 
 
@@ -80,25 +82,27 @@ class Postgre(Database):
     async def _ensure_organization_database(self, organization: str) -> None:
         """Create the organization database when it is missing."""
 
+        database_name_value = dbname(organization)
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :organization"), {"organization": organization})
+            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :organization"), {"organization": database_name_value})
             if result.scalar_one_or_none() is None:
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
-                database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(organization)
+                database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database_name_value)
                 await conn.exec_driver_sql(f"CREATE DATABASE {database_name}")
 
 
     async def database(self, organization: str) -> str:
         """Create the organization database if it does not exist and return a connection DSN."""
         await self._ensure_organization_database(organization)
-        return self._url(organization).render_as_string(hide_password=False)
+        return self._url(dbname(organization)).render_as_string(hide_password=False)
 
 
     async def schema(self, organization: str, application: str) -> str:
         """Create or replace the schema for one application and return a connection DSN."""
         await self._ensure_organization_database(organization)
+        database_name = dbname(organization)
 
-        async with self._connection(organization) as conn:
+        async with self._connection(database_name) as conn:
             await conn.execute(CreateSchema(quoted_name(application, True), if_not_exists=True))
             await conn.execute(text("""
                 CREATE TABLE IF NOT EXISTS public.users (
@@ -110,19 +114,20 @@ class Postgre(Database):
                 )
             """))
 
-        return self._url(organization).render_as_string(hide_password=False)
+        return self._url(database_name).render_as_string(hide_password=False)
 
 
     async def remove(self, organization: str, application: str) -> None:
         """Remove one application schema from the organization database."""
 
-        async with self._connection(organization) as conn:
+        async with self._connection(dbname(organization)) as conn:
             await conn.execute(DropSchema(quoted_name(application, True), cascade=True, if_exists=True))
 
 
     async def delete(self, organization: str) -> None:
         """Delete the entire database for the given organization."""
 
+        database_name_value = dbname(organization)
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
             await conn.execute(
                 text(
@@ -132,7 +137,39 @@ class Postgre(Database):
                     WHERE datname = :organization AND pid <> pg_backend_pid()
                     """
                 ),
-                {"organization": organization},
+                {"organization": database_name_value},
             )
-            database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(organization)
+            database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database_name_value)
             await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
+
+
+    async def setup(self) -> None:
+        """Initialize the PostgreSQL backend used by the control plane."""
+
+        # The backend is provisioned externally; instantiating the adapter is enough here.
+        return None
+
+
+    async def cleanup(self) -> None:
+        """Delete all managed PostgreSQL databases."""
+
+        # Drop every non-system database except the maintenance database used for admin operations.
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            result = await conn.execute(text("SELECT datname FROM pg_database WHERE datname LIKE 'longlink\\_%' ESCAPE '\\'"))
+            for row in result.fetchall():
+                database = row[0]
+                if database in {self._maintenance_database, "postgres"}:
+                    continue
+
+                await conn.execute(
+                    text(
+                        """
+                        SELECT pg_terminate_backend(pid)
+                        FROM pg_stat_activity
+                        WHERE datname = :database AND pid <> pg_backend_pid()
+                        """
+                    ),
+                    {"database": database},
+                )
+                database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database)
+                await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")

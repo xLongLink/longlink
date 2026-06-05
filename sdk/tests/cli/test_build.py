@@ -39,8 +39,8 @@ def test_build_app_creates_dockerfile_with_labels(tmp_path, monkeypatch):
         labels[key] = ast.literal_eval(raw_value)
 
     assert labels['longlink.name'] == 'demo-app'
-    assert json.loads(labels['longlink.required']) == ['LONGLINK_API_KEY']
-    assert json.loads(labels['longlink.optional']) == ['LONGLINK_PORT']
+    assert json.loads(labels['longlink.required']) == {'name': 'LONGLINK_API_KEY', 'type': 'str'}
+    assert json.loads(labels['longlink.optional']) == {'name': 'LONGLINK_PORT', 'type': 'int'}
 
 
 def test_build_command_prints_created_artifacts():

@@ -125,6 +125,12 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
+        async def cleanup(self) -> None:
+            captured["cleanup"] = "called"
+
+        async def setup(self) -> None:
+            captured["setup"] = "called"
+
     monkeypatch.setattr("src.routes.compute.K8s", FakeCompute)
 
     # Act
@@ -160,3 +166,5 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     assert delete_response.status_code == 204
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
+    assert captured["cleanup"] == "called"
+    assert captured["setup"] == "called"

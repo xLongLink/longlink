@@ -2,7 +2,7 @@ import traceback
 from fastapi import FastAPI, Request
 from pathlib import Path
 from longlink.database.audit import install_audit_middleware
-from longlink.utils import Environments
+from longlink.utils import Envs
 from longlink.routes import routes
 from fastapi.responses import Response, JSONResponse
 from pydantic_settings import BaseSettings
@@ -68,7 +68,7 @@ class LongLink(FastAPI):
         """Build app, initialize managed services, mount routes, and attach static files."""
         super().__init__(**kwargs)
 
-        environments = env if isinstance(env, Environments) else Environments()
+        environments = env if isinstance(env, Envs) else Envs()
         self.state.page_roots = []
 
         # Register API routes from the router module

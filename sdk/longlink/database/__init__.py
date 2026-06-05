@@ -1,5 +1,5 @@
 from .base import Table, User, get_session, create_engine
-from longlink.utils.settings import Environments
+from longlink.utils.settings import Envs
 
 
 class Database:
@@ -14,7 +14,7 @@ class Database:
         return await get_session()
 
 
-def create_db(env: Environments):
+def create_db(env: Envs):
     """Create the database facade for the current environment."""
 
     create_engine(env)

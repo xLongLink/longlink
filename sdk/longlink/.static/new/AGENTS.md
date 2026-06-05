@@ -13,7 +13,6 @@ You are working on a LongLink application.
 │   ├── api/          # API route tests
 │   └── conftest.py   # Test fixtures
 ├── main.py           # Application entry
-├── Dockerfile        # Container build definition
 ├── pyproject.toml    # Project configuration
 └── .env.sample       # Environment template
 ```

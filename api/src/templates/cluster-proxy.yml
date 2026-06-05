@@ -8,7 +8,7 @@ metadata:
   name: compute-router-script
   namespace: default
   labels:
-    managed-by: control-plane
+    managed-by: longlink
     compute-role: base
     app: compute-router
 data:
@@ -21,7 +21,7 @@ metadata:
   name: compute-router
   namespace: default
   labels:
-    managed-by: control-plane
+    managed-by: longlink
     compute-role: base
     app: compute-router
 ---
@@ -31,7 +31,7 @@ metadata:
   name: compute-router
   namespace: default
   labels:
-    managed-by: control-plane
+    managed-by: longlink
     compute-role: base
     app: compute-router
 spec:
@@ -75,7 +75,7 @@ metadata:
   name: compute-router
   namespace: default
   labels:
-    managed-by: control-plane
+    managed-by: longlink
     compute-role: base
     app: compute-router
 spec:
@@ -90,7 +90,7 @@ kind: ClusterRoleBinding
 metadata:
   name: compute-router-cluster-admin
   labels:
-    managed-by: control-plane
+    managed-by: longlink
     compute-role: base
     app: compute-router
 roleRef:
@@ -108,7 +108,7 @@ metadata:
   name: control-ingress
   namespace: default
   labels:
-    managed-by: control-plane
+    managed-by: longlink
     compute-role: base
     app: compute-router
 spec:

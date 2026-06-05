@@ -59,6 +59,9 @@ async def test_init_bootstraps_cluster_proxy(monkeypatch) -> None:
     monkeypatch.setattr("src.adapters.compute.k8s.DynamicClient", FakeDynamicClient)
     adapter = K8s("apiVersion: v1\nclusters: []\n", "shared-secret")
 
+    # Act
+    await adapter.setup()
+
     # Assert
     assert captured == [
         ("ConfigMap", "compute-router-script", "default"),

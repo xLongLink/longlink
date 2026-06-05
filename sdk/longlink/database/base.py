@@ -5,7 +5,7 @@ from sqlalchemy import Column, DateTime
 from sqlalchemy.orm import declared_attr
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from longlink.utils.settings import Environments
+from longlink.utils.settings import Envs
 
 
 def utcnow() -> datetime:
@@ -93,7 +93,7 @@ _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
 
 
-def create_engine(env: Environments) -> AsyncEngine:
+def create_engine(env: Envs) -> AsyncEngine:
     """Create and cache the async SQLAlchemy engine for the current environment."""
     global _engine
 
@@ -127,7 +127,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
         return Session
 
     if _engine is None:
-        _engine = create_engine(Environments())
+        _engine = create_engine(Envs())
 
     # Verify connection once before exposing the session factory.
     async with _engine.connect():

@@ -8,7 +8,7 @@ metadata:
   name: compute-proxy
   namespace: $namespace
   labels:
-    managed-by: control-plane
+    managed-by: longlink
     compute-role: proxy
     app: compute-proxy
 spec:
@@ -37,7 +37,7 @@ metadata:
   name: compute-proxy
   namespace: $namespace
   labels:
-    managed-by: control-plane
+    managed-by: longlink
     compute-role: proxy
 spec:
   type: ClusterIP

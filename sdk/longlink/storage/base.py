@@ -1,5 +1,5 @@
 from fsspec.spec import AbstractFileSystem
-from longlink.utils.settings import Environments
+from longlink.utils.settings import Envs
 
 
 class Storage(AbstractFileSystem):
@@ -10,7 +10,7 @@ class Storage(AbstractFileSystem):
 
 
 
-def create_fs(env: Environments):
+def create_fs(env: Envs):
     """Create a filesystem for the active environment."""
 
     if env.ENV == "testing":

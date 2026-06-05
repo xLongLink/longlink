@@ -92,15 +92,15 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
     connection = await adapter.schema("acme", "dashboard")
 
     # Assert
-    assert connection == "postgresql+psycopg://longlink:secret@db.longlink.internal:5432/acme?sslmode=require"
+    assert connection == "postgresql+psycopg://longlink:secret@db.longlink.internal:5432/longlink_acme?sslmode=require"
     assert log[0][0] == "engine"
     assert log[0][1][0] == "postgresql+psycopg://longlink:***@db.longlink.internal:5432/postgres?sslmode=require"
     assert log[0][1][1] == {"pool_pre_ping": True, "isolation_level": "AUTOCOMMIT"}
     assert str(log[1][1]) == "SELECT 1 FROM pg_database WHERE datname = :organization"
-    assert log[2] == ("driver_sql", 'CREATE DATABASE "acme"')
+    assert log[2] == ("driver_sql", 'CREATE DATABASE "longlink_acme"')
     assert log[3][0] == "dispose"
     assert log[4][0] == "engine"
-    assert log[4][1][0] == "postgresql+psycopg://longlink:***@db.longlink.internal:5432/acme?sslmode=require"
+    assert log[4][1][0] == "postgresql+psycopg://longlink:***@db.longlink.internal:5432/longlink_acme?sslmode=require"
     assert log[4][1][1] == {"pool_pre_ping": True}
     assert any(isinstance(entry[1], CreateSchema) for entry in log if entry[0] == "execute")
     assert any("CREATE TABLE IF NOT EXISTS public.users" in str(entry[1]) for entry in log if entry[0] == "execute")
@@ -133,4 +133,4 @@ async def test_remove_and_delete_use_managed_sqlalchemy_connections(monkeypatch)
 
     # Assert
     assert any(isinstance(entry[1], DropSchema) for entry in log if entry[0] == "execute")
-    assert any(entry == ("driver_sql", 'DROP DATABASE IF EXISTS "acme"') for entry in log)
+    assert any(entry == ("driver_sql", 'DROP DATABASE IF EXISTS "longlink_acme"') for entry in log)

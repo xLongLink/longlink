@@ -2,7 +2,7 @@ import src.db as db
 from fastapi import Depends, APIRouter, HTTPException, status
 from src.auth import authadmin
 from src.models import ComputeRegistryCreate, ComputeRegistryResponse
-from src.adapters.compute.k8s import K8s
+from src.adapters.compute import K8s
 
 router = APIRouter(prefix="/api/compute")
 
@@ -36,9 +36,11 @@ async def create_compute_registry(
     """Create one compute backend registration."""
 
     registry = await db.compute.create(**payload.model_dump())
+    compute = K8s(registry.kubeconfig, registry.proxy_secret)
 
     try:
-        K8s(registry.kubeconfig, registry.proxy_secret)
+        await compute.cleanup()
+        await compute.setup()
     except Exception as exc:
         await db.compute.delete(registry.id)
         raise HTTPException(

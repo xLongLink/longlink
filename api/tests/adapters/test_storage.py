@@ -25,7 +25,7 @@ async def test_storage_delete_removes_matching_buckets(monkeypatch) -> None:
     """Delete buckets that belong to one organization."""
 
     client = Mock()
-    client.list_buckets.return_value = {"Buckets": [{"Name": "acme"}, {"Name": "acme-dashboard"}, {"Name": "other"}]}
+    client.list_buckets.return_value = {"Buckets": [{"Name": "longlink-acme"}, {"Name": "longlink-acme-dashboard"}, {"Name": "other"}]}
     monkeypatch.setattr("src.adapters.storage.s3.boto3.client", Mock(return_value=client))
 
     storage = S3(
@@ -37,6 +37,6 @@ async def test_storage_delete_removes_matching_buckets(monkeypatch) -> None:
 
     await storage.delete("acme")
 
-    client.delete_bucket.assert_any_call(Bucket="acme")
-    client.delete_bucket.assert_any_call(Bucket="acme-dashboard")
+    client.delete_bucket.assert_any_call(Bucket="longlink-acme")
+    client.delete_bucket.assert_any_call(Bucket="longlink-acme-dashboard")
     assert client.delete_bucket.call_count == 2

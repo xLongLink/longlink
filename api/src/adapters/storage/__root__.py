@@ -26,5 +26,13 @@ class Storage(ABC):
         """Remove one managed application bucket and all contained objects."""
 
     @abstractmethod
+    async def setup(self) -> None:
+        """Initialize the storage backend used by the control plane."""
+
+    @abstractmethod
+    async def cleanup(self) -> None:
+        """Delete all buckets managed by the control plane."""
+
+    @abstractmethod
     async def delete(self, organization: str) -> None:
         """Delete the organization tenant and all managed application buckets."""

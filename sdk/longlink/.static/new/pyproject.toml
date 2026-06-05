@@ -37,7 +37,6 @@ include = [
   "main.py",
   "README.md",
   "AGENTS.md",
-  "Dockerfile",
   ".env.sample",
   "tests",
 ]

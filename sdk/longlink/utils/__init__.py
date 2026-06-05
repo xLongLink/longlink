@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["Element", "Longlink", "Environments", "UserEnvironments"]
+__all__ = ["Element", "Longlink", "Envs", "Environments"]
 
 
 def __getattr__(name: str) -> Any:
@@ -14,14 +14,14 @@ def __getattr__(name: str) -> Any:
         from .xml import Element, Longlink
 
         exports = {"Element": Element, "Longlink": Longlink}
+    elif name == "Envs":
+        from .settings import Envs
+
+        exports = {"Envs": Envs}
     elif name == "Environments":
-        from .settings import Environments
+        from .environments import Environments
 
         exports = {"Environments": Environments}
-    elif name == "UserEnvironments":
-        from .environments import UserEnvironments
-
-        exports = {"UserEnvironments": UserEnvironments}
     else:
         raise AttributeError(f"module 'longlink.utils' has no attribute {name!r}")
 

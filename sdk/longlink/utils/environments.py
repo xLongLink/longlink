@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class UserEnvironments(BaseSettings):
+class Environments(BaseSettings):
     """User-defined environment model loaded from `.env` files or process variables.
 
     Extend this class to declare custom fields (use ``Field(validation_alias=...)`` to

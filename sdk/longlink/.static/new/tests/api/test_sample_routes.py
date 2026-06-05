@@ -82,7 +82,7 @@ def test_sample_get_endpoint_returns_expected_message() -> None:
 
     assert response.status_code == 200
     assert response.json()["message"] == "Sample GET endpoint received data"
-    assert response.json()["app_key"] == "longlink"
+    assert response.json()["sample"] == "sample"
     assert response.json()["filesystem_protocol"] == "abstract"
     assert response.json()["filesystem_type"] == "Storage"
 

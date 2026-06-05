@@ -3,7 +3,7 @@ import re
 
 import httpx2
 import yaml as pyyaml
-from src.models.metadata import LongLinkMetadata
+from src.models.metadata import EnvironmentMetadata, LongLinkMetadata
 from string import Template
 from pathlib import Path
 from urllib.parse import urlparse
@@ -40,15 +40,15 @@ def metadata(image: str) -> LongLinkMetadata | None:
             required = labels.get("longlink.required")
             if required is not None:
                 try:
-                    result.required = json.loads(required)
-                except (json.JSONDecodeError, TypeError):
+                    result.required = EnvironmentMetadata.model_validate(json.loads(required))
+                except (json.JSONDecodeError, TypeError, ValueError):
                     return None
 
             optional = labels.get("longlink.optional")
             if optional is not None:
                 try:
-                    result.optional = json.loads(optional)
-                except (json.JSONDecodeError, TypeError):
+                    result.optional = EnvironmentMetadata.model_validate(json.loads(optional))
+                except (json.JSONDecodeError, TypeError, ValueError):
                     return None
 
             if all(v is None for v in [result.name, result.description, result.required, result.optional]):
