@@ -1,64 +1,11 @@
-import traceback
-from fastapi import FastAPI, Request
-from pathlib import Path
+from fastapi import FastAPI
 from longlink.database.audit import install_audit_middleware
 from longlink.utils import Envs
 from longlink.routes import routes
-from fastapi.responses import Response, JSONResponse
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
-
-class SPAStaticFiles(StaticFiles):
-    """Serve SPA assets and fall back to `index.html` for unknown routes."""
-
-    def __init__(self, *args, directory: str | Path | None = None, **kwargs):
-        """Remember the mounted directory for SPA fallback responses."""
-
-        super().__init__(*args, directory=directory, **kwargs)
-        self._directory = Path(directory) if directory is not None else None
-
-    def _index_response(self) -> Response:
-        """Return the SPA entrypoint for the mounted directory."""
-
-        if self._directory is None:
-            raise HTTPException(status_code=404)
-
-        index_path = self._directory / "index.html"
-        content = index_path.read_text(encoding="utf-8")
-
-        return Response(content=content, media_type="text/html")
-
-    async def get_response(self, path: str, scope):
-        """Return static file response, falling back to SPA entrypoint on 404."""
-
-        if path in {"", "/", "index.html"}:
-            return self._index_response()
-
-        not_found_exc: HTTPException | None = None
-
-        try:
-            return await super().get_response(path, scope)
-        except HTTPException as exc:
-            if exc.status_code != 404:
-                raise
-            not_found_exc = exc
-
-        method = scope.get("method", "").upper()
-        headers = dict(scope.get("headers", []))
-        accept_header = headers.get(b"accept", b"").decode("latin-1").lower()
-
-        # Only serve SPA fallback for browser navigations that explicitly accept HTML.
-        if method != "GET" or "text/html" not in accept_header:
-            if not_found_exc is not None:
-                raise not_found_exc
-            raise HTTPException(status_code=404)
-
-        return self._index_response()
-
 
 
 class LongLink(FastAPI):
@@ -78,7 +25,7 @@ class LongLink(FastAPI):
         # Mount static files after API routes so metadata and app assets stay reachable.
         static_dir = ROOT / ".static" / "web"
         if static_dir.exists():
-            self.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
+            self.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
         install_audit_middleware(self)
 
@@ -95,32 +42,3 @@ class LongLink(FastAPI):
                 allow_methods=["*"],
                 allow_headers=["*"],
             )
-
-        self.add_exception_handler(HTTPException, self._handle_http_exception)
-        self.add_exception_handler(Exception, self._handle_unexpected_exception)
-
-    async def _handle_http_exception(self, request: Request, exc: HTTPException) -> JSONResponse:
-        """Return structured error response for HTTP exceptions."""
-
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={
-                "error": exc.detail,
-                "status_code": exc.status_code,
-            },
-        )
-
-    async def _handle_unexpected_exception(self, request: Request, exc: Exception) -> JSONResponse:
-        """Return detailed error response for unhandled exceptions, including traceback."""
-
-        tb_lines = traceback.format_exception(type(exc), exc, exc.__traceback__)
-        error_detail = "".join(tb_lines)
-
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": str(exc),
-                "error_type": type(exc).__name__,
-                "traceback": error_detail,
-            },
-        )

@@ -6,6 +6,7 @@ from .locations import LocationCreate, LocationResponse
 from .metadata import LongLinkMetadata
 from .orgs import OrgCreate, OrgDetails, OrgSummary
 from .roles import Roles
+from .operations import OperationResponse
 from .storage import StorageRegistryCreate, StorageRegistryResponse
 from .users import (
     Accent,
@@ -33,6 +34,7 @@ __all__ = [
     "LocationCreate",
     "LocationResponse",
     "LongLinkMetadata",
+    "OperationResponse",
     "OrgCreate",
     "OrgDetails",
     "OrgSummary",

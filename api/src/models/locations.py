@@ -26,6 +26,7 @@ class LocationCreate(BaseModel):
 
     name: str = Field(min_length=1, max_length=128)
     display_name: str = Field(min_length=1, max_length=255)
+    country: str = Field(default="", max_length=128)
 
     @field_validator("name", mode="before")
     @classmethod
@@ -39,6 +40,13 @@ class LocationCreate(BaseModel):
         """Trim whitespace from display names."""
         return value.strip()
 
+    @field_validator("country", mode="before")
+    @classmethod
+    def normalize_country(cls, value: str) -> str:
+        """Trim whitespace from country names."""
+
+        return value.strip()
+
 
 class LocationResponse(BaseModel):
     """Represent one location in API responses."""
@@ -48,6 +56,7 @@ class LocationResponse(BaseModel):
     id: int
     name: str
     display_name: str
+    country: str = ""
     created_at: datetime
     updated_at: datetime
     orgs: list[LocationOrgSummary] = Field(default_factory=list)

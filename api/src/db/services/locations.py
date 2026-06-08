@@ -1,7 +1,7 @@
 from .base import ServiceBase
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from src.db.models import Location, Org
+from src.db.models import ComputeRegistry, DatabaseRegistry, Location, Org
 
 
 class LocationsService(ServiceBase):
@@ -15,8 +15,8 @@ class LocationsService(ServiceBase):
                 selectinload(Location.orgs).selectinload(Org.created_by),
                 selectinload(Location.orgs).selectinload(Org.updated_by),
                 selectinload(Location.orgs).selectinload(Org.deleted_by),
-                selectinload(Location.compute_registries),
-                selectinload(Location.database_registries),
+                selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
+                selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
                 selectinload(Location.storage_registries),
             )
             result = await session.execute(statement)
@@ -30,18 +30,18 @@ class LocationsService(ServiceBase):
                 selectinload(Location.orgs).selectinload(Org.created_by),
                 selectinload(Location.orgs).selectinload(Org.updated_by),
                 selectinload(Location.orgs).selectinload(Org.deleted_by),
-                selectinload(Location.compute_registries),
-                selectinload(Location.database_registries),
+                selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
+                selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
                 selectinload(Location.storage_registries),
             ).where(Location.id == location_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def create(self, name: str, display_name: str) -> Location:
+    async def create(self, name: str, display_name: str, country: str = "") -> Location:
         """Create one location."""
 
         async with self.session() as session:
-            location = Location(name=name, display_name=display_name)
+            location = Location(name=name, display_name=display_name, country=country)
             session.add(location)
             await session.commit()
             await session.refresh(location)
@@ -51,8 +51,8 @@ class LocationsService(ServiceBase):
                     selectinload(Location.orgs).selectinload(Org.created_by),
                     selectinload(Location.orgs).selectinload(Org.updated_by),
                     selectinload(Location.orgs).selectinload(Org.deleted_by),
-                    selectinload(Location.compute_registries),
-                    selectinload(Location.database_registries),
+                    selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
+                    selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
                     selectinload(Location.storage_registries),
                 ).where(Location.id == location.id)
             )

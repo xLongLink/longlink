@@ -28,6 +28,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("display_name", sa.String(length=255), nullable=False),
+        sa.Column("country", sa.String(length=128), nullable=False, server_default=""),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )

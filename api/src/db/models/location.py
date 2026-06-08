@@ -18,6 +18,7 @@ class Location(Base, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(unique=True, max_length=128)
     display_name: str = Field(max_length=255)
+    country: str = Field(default="", max_length=128)
     orgs: list['Org'] = Relationship(back_populates='location')
     compute_registries: list['ComputeRegistry'] = Relationship(back_populates='location')
     database_registries: list['DatabaseRegistry'] = Relationship(back_populates='location')

@@ -3,7 +3,7 @@ from __future__ import annotations
 from .base import ServiceBase
 from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
-from src.db.models import App, Location, Org, User
+from src.db.models import App, ComputeRegistry, DatabaseRegistry, Location, Org, User
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import Roles
 from src.db.models.association import UserOrganization
@@ -39,8 +39,8 @@ class OrgsService(ServiceBase):
                 selectinload(Org.location).selectinload(Location.orgs).selectinload(Org.created_by),
                 selectinload(Org.location).selectinload(Location.orgs).selectinload(Org.updated_by),
                 selectinload(Org.location).selectinload(Location.orgs).selectinload(Org.deleted_by),
-                selectinload(Org.location).selectinload(Location.compute_registries),
-                selectinload(Org.location).selectinload(Location.database_registries),
+                selectinload(Org.location).selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
+                selectinload(Org.location).selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
                 selectinload(Org.location).selectinload(Location.storage_registries),
             ).where(Org.name == name)
             result = await session.execute(statement)

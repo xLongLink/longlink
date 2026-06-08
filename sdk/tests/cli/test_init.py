@@ -46,8 +46,9 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
 
     pyproject = (target / 'pyproject.toml').read_text()
     assert 'name = "longlink-app"' in pyproject
-    assert 'packages = ["src"]' in pyproject
-    assert '"tests"' in pyproject
+    assert 'dependencies = [\n  "longlink",\n]' in pyproject
+    assert '[dependency-groups]' in pyproject
+    assert 'dev = [' in pyproject
     assert (target / 'README.md').read_text().startswith('# Minimal LongLink showcase app')
 
     main_py = (target / 'main.py').read_text()

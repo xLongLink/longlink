@@ -14,6 +14,7 @@ export default function CreateLocationDialog() {
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [displayName, setDisplayName] = useState('');
+    const [country, setCountry] = useState('');
     const [error, setError] = useState<string | null>(null);
 
     const locationUrl = apiUrl('/api/locations');
@@ -29,6 +30,7 @@ export default function CreateLocationDialog() {
                 body: JSON.stringify({
                     name: name.trim(),
                     display_name: displayName.trim(),
+                    country: country.trim(),
                 }),
             });
         },
@@ -37,6 +39,7 @@ export default function CreateLocationDialog() {
             setOpen(false);
             setName('');
             setDisplayName('');
+            setCountry('');
         },
     });
 
@@ -97,6 +100,17 @@ export default function CreateLocationDialog() {
                                     value={displayName}
                                     onChange={(event) => setDisplayName(event.target.value)}
                                     placeholder="US East (N. Virginia)"
+                                    autoComplete="off"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="location-country">Country</Label>
+                                <Input
+                                    id="location-country"
+                                    value={country}
+                                    onChange={(event) => setCountry(event.target.value)}
+                                    placeholder="United States"
                                     autoComplete="off"
                                 />
                             </div>

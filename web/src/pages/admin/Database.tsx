@@ -48,6 +48,12 @@ const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry>> = [
         cell: ({ row }) => row.original.maintenance_database,
         meta: { className: 'w-44' },
     },
+    {
+        accessorKey: 'location_id',
+        header: 'Location',
+        cell: ({ getValue }) => `#${getValue<number>()}`,
+        meta: { className: 'w-28' },
+    },
 ];
 
 /** Renders the admin database page. */

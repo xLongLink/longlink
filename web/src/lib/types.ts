@@ -73,8 +73,12 @@ export type ApiLocation = {
     id: number;
     name: string;
     display_name: string;
+    country: string;
     created_at: string;
     updated_at: string;
+    compute_registries: Array<ApiComputeRegistry>;
+    database_registries: Array<ApiDatabaseRegistry>;
+    storage_registries: Array<ApiStorageRegistry>;
 };
 
 export type ApiDatabaseRegistry = {
@@ -86,6 +90,8 @@ export type ApiDatabaseRegistry = {
     username: string;
     sslmode: string | null;
     maintenance_database: string;
+    deleted_at: string | null;
+    deleted_by: ApiUserSummary | null;
 };
 
 export type ApiStorageRegistry = {
@@ -103,6 +109,8 @@ export type ApiComputeRegistry = {
     kind: string;
     ingress_host: string;
     location_id: number;
+    deleted_at: string | null;
+    deleted_by: ApiUserSummary | null;
 };
 
 export type ApiAppResponse = {
@@ -116,4 +124,13 @@ export type ApiAppResponse = {
     updated_by: ApiUserSummary;
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
+};
+
+export type ApiOperation = {
+    id: number;
+    kind: string;
+    payload: Record<string, unknown>;
+    created_at: string;
+    started_at: string | null;
+    stopped_at: string | null;
 };

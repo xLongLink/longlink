@@ -27,6 +27,12 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry>> = [
         cell: ({ getValue }) => getValue(),
         meta: { className: 'w-64' },
     },
+    {
+        accessorKey: 'location_id',
+        header: 'Location',
+        cell: ({ getValue }) => `#${getValue<number>()}`,
+        meta: { className: 'w-28' },
+    },
 ];
 
 /** Renders the admin storage page. */

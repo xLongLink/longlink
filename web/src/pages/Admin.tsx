@@ -14,6 +14,7 @@ export default function Admin() {
                     Database: '/admin/database',
                     Storage: '/admin/storage',
                     Compute: '/admin/compute',
+                    Operations: '/admin/operations',
                 }}
             >
                 <section className="mx-auto w-full max-w-[1000px] space-y-8">

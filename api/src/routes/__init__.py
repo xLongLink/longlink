@@ -5,6 +5,7 @@ from src.routes.orgs import router as orgs_router
 from src.routes.user import router as me_router
 from src.routes.user import users_router
 from src.routes.compute import router as compute_router
+from src.routes.operations import router as operations_router
 from src.routes.storage import router as storage_router
 from src.routes.database import router as database_router
 from src.routes.locations import router as locations_router
@@ -17,6 +18,7 @@ routers = [
     compute_router,
     database_router,
     locations_router,
+    operations_router,
     me_router,
     orgs_router,
     proxy_router,

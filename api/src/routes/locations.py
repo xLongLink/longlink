@@ -32,7 +32,7 @@ async def create_location(
     """Create one location."""
 
     try:
-        location = await db.locations.create(payload.name, payload.display_name)
+        location = await db.locations.create(payload.name, payload.display_name, payload.country)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 

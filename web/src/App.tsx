@@ -11,6 +11,7 @@ import AdminCompute from './pages/admin/Compute';
 import AdminDatabase from './pages/admin/Database';
 import AdminLocation from './pages/admin/Location';
 import AdminOrganization from './pages/admin/Organization';
+import AdminOperations from './pages/admin/Operations';
 import AdminStorage from './pages/admin/Storage';
 import AdminUsers from './pages/admin/Users';
 import DocsPage from './pages/Docs';
@@ -133,6 +134,7 @@ function getRoutes() {
                 { path: 'database', element: <AdminDatabase /> },
                 { path: 'storage', element: <AdminStorage /> },
                 { path: 'compute', element: <AdminCompute /> },
+                { path: 'operations', element: <AdminOperations /> },
             ],
         },
         {

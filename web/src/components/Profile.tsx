@@ -139,6 +139,18 @@ export function UserProfile() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
+                                    <Link
+                                        to="/admin/operations"
+                                        className="flex w-full items-center gap-2 text-inherit"
+                                    />
+                                }
+                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                            >
+                                <Settings2 className="h-4 w-4" />
+                                Operations
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                render={
                                     <Link to="/admin/compute" className="flex w-full items-center gap-2 text-inherit" />
                                 }
                                 className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"

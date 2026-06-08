@@ -2,7 +2,7 @@ import { fromXml, RenderXML, resolveUrl } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import NotFound from './NotFound';
 import XML from '@/layout/XmlLayout';
 
@@ -39,6 +39,7 @@ function resolveTemplate(template: string, params: Record<string, string | undef
  */
 export default function View({ metadata }: ViewProps) {
     const params = useParams();
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [pageContent, setPageContent] = useState<string | null>(null);
     const [pageContentPath, setPageContentPath] = useState<string | null>(null);
@@ -82,6 +83,19 @@ export default function View({ metadata }: ViewProps) {
         ) ??
         metadataDocument?.pages?.[0];
     const isNotFound = metadataDocument === null;
+
+    // Make the first tab explicit in the URL when the page loads without a tab selection.
+    useEffect(() => {
+        if (!metadataDocument?.pages?.length || selectedTab || normalizedRoutePath) {
+            return;
+        }
+
+        const firstTab = normalizePath(metadataDocument.pages[0].path.replace(/\.xml$/i, ''));
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.set('tab', firstTab);
+
+        navigate(`?${nextSearchParams.toString()}`, { replace: true });
+    }, [metadataDocument?.pages, navigate, normalizedRoutePath, searchParams, selectedTab]);
 
     /* Build tab links from metadata page names. */
     const tabs = Object.fromEntries(

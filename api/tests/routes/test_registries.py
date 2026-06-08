@@ -1,7 +1,41 @@
+import src.db as db
+from fastapi.testclient import TestClient
 from src.models import (ComputeRegistryResponse, StorageRegistryResponse,
                         DatabaseRegistryResponse)
 from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
-from fastapi.testclient import TestClient
+
+
+async def test_operations_endpoint_returns_recorded_operations(
+    clients: tuple[TestClient, TestClient, TestClient],
+) -> None:
+    """Return recorded long-running operations for admin views."""
+
+    # Arrange
+    client = clients[0]
+    payload = {
+        "organization": "acme",
+        "app": "dashboard",
+    }
+    await db.operations.create(
+        "app.create",
+        payload,
+    )
+
+    # Act
+    response = client.get("/api/operations")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": 1,
+            "kind": "app.create",
+            "payload": payload,
+            "created_at": response.json()[0]["created_at"],
+            "started_at": None,
+            "stopped_at": None,
+        }
+    ]
 
 
 async def test_database_registry_endpoint_supports_create_list_and_delete(
