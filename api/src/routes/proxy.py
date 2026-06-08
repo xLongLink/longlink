@@ -37,7 +37,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if org.location_id is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Org '{app.organization}' has no location configured")
 
-    registries = await db.compute.list()
+    registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 

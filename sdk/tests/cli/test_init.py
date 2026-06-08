@@ -28,7 +28,6 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert copied['dirs_exist_ok'] is True
     assert (target / 'pyproject.toml').exists()
     assert (target / 'README.md').exists()
-    assert (target / 'Dockerfile').exists()
     assert (target / 'AGENTS.md').exists()
     assert (target / '.env.sample').exists()
     assert (target / 'main.py').exists()

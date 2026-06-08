@@ -27,41 +27,6 @@ def create_version() -> str:
     return datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
 
-def resolve_env_prefix(class_node: ast.ClassDef) -> str:
-    """Resolve the environment prefix declared on a settings class."""
-
-    for statement in class_node.body:
-        if not isinstance(statement, ast.Assign):
-            continue
-
-        if len(statement.targets) != 1:
-            continue
-
-        target = statement.targets[0]
-        if not isinstance(target, ast.Name) or target.id != "model_config":
-            continue
-
-        if not isinstance(statement.value, ast.Call):
-            continue
-
-        if not isinstance(statement.value.func, ast.Name) or statement.value.func.id != "SettingsConfigDict":
-            continue
-
-        for keyword in statement.value.keywords:
-            if keyword.arg != "env_prefix":
-                continue
-
-            try:
-                prefix = ast.literal_eval(keyword.value)
-            except (ValueError, SyntaxError):
-                continue
-
-            if isinstance(prefix, str):
-                return prefix
-
-    return "LONGLINK_"
-
-
 def read_env_spec(root: Path) -> dict[str, dict[str, object] | None]:
     """Parse `src/envs.py` and return one required and one optional env spec."""
 
@@ -76,7 +41,6 @@ def read_env_spec(root: Path) -> dict[str, dict[str, object] | None]:
     if class_node is None:
         return empty_spec
 
-    prefix = resolve_env_prefix(class_node)
     required: dict[str, object] | None = None
     optional: dict[str, object] | None = None
 
@@ -89,14 +53,18 @@ def read_env_spec(root: Path) -> dict[str, dict[str, object] | None]:
 
         field_name = statement.target.id
         field_info = resolve_field_info(statement.value)
-        env_name = field_info.pop("env_name") or f"{prefix}{field_name}"
+        env_name = field_info.pop("env_name") or field_name
         type_name = ast.unparse(statement.annotation)
+        env_entry: dict[str, object] = {"name": env_name, "type": type_name}
+
+        if isinstance(field_info.get("description"), str):
+            env_entry["description"] = field_info["description"]
 
         if field_info.get("required"):
             if required is None:
-                required = {"name": env_name, "type": type_name}
+                required = env_entry
         elif optional is None:
-            optional = {"name": env_name, "type": type_name}
+            optional = env_entry
 
     return {"required": required, "optional": optional}
 

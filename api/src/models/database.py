@@ -1,5 +1,7 @@
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from src.models.kinds import DatabaseKind
+from src.models.users import UserSummary
 
 
 class DatabaseRegistryCreate(BaseModel):
@@ -30,3 +32,5 @@ class DatabaseRegistryResponse(BaseModel):
     sslmode: str | None = None
     maintenance_database: str = "postgres"
     location_id: int
+    deleted_at: datetime | None = None
+    deleted_by: UserSummary | None = None

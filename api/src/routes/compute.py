@@ -42,20 +42,24 @@ async def create_compute_registry(
         await compute.cleanup()
         await compute.setup()
     except Exception as exc:
-        await db.compute.delete(registry.id)
+        await db.compute.purge(registry.id)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Failed to bootstrap the cluster proxy",
         ) from exc
 
-    return registry
+    return {
+        **registry.model_dump(),
+        "deleted_at": registry.deleted_at,
+        "deleted_by": None,
+    }
 
 
 @router.delete("/{registry_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_compute_registry(registry_id: int, _user: db.User = Depends(authadmin)) -> None:
-    """Delete one compute backend registration."""
+async def delete_compute_registry(registry_id: int, user: db.User = Depends(authadmin)) -> None:
+    """Mark one compute backend registration as deleted."""
 
-    registry = await db.compute.delete(registry_id)
+    registry = await db.compute.delete(registry_id, user.id)
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Compute '{registry_id}' not found")
 

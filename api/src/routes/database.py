@@ -33,14 +33,18 @@ async def create_database_registry(
 
     registry = await db.database.create(**payload.model_dump())
 
-    return registry
+    return {
+        **registry.model_dump(),
+        "deleted_at": registry.deleted_at,
+        "deleted_by": None,
+    }
 
 
 @router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_database_registry(name: str, _user: db.User = Depends(authadmin)) -> None:
-    """Delete one database backend registration."""
+async def delete_database_registry(name: str, user: db.User = Depends(authadmin)) -> None:
+    """Mark one database backend registration as deleted."""
 
-    registry = await db.database.delete(name)
+    registry = await db.database.delete(name, user.id)
     if registry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Database '{name}' not found")
 

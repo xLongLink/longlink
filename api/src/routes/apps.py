@@ -50,12 +50,12 @@ async def create_app(
     if org.location_id is None:
         raise HTTPException(status_code=400, detail=f"Org '{organization}' has no location configured")
 
-    registries = await db.compute.list()
+    registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     # Create the app database schema before the workload starts.
-    database_registries = await db.database.list()
+    database_registries = [registry for registry in await db.database.list() if registry.deleted_at is None]
     if not database_registries:
         raise HTTPException(status_code=503, detail="No database configured")
 
@@ -83,8 +83,18 @@ async def create_app(
     # Deploy the app on the compute cluster.
     await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, {})
 
-    # Validate the image metadata after a successful deployment.
-    metadata(payload.image)
+    # Validate the image metadata after a successful deployment and print env specs.
+    app_metadata = metadata(payload.image)
+    if app_metadata is not None:
+        for label, env in (("required", app_metadata.required), ("optional", app_metadata.optional)):
+            if env is None:
+                continue
+
+            env_payload = {"name": env.name, "type": env.type}
+            if env.description is not None:
+                env_payload["description"] = env.description
+
+            print(label, env_payload)
 
     try:
         app = await db.apps.create(
@@ -124,7 +134,7 @@ async def delete_app(
     if org.location_id is None:
         raise HTTPException(status_code=400, detail=f"Org '{organization}' has no location configured")
 
-    registries = await db.compute.list()
+    registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
     # Prefer the newest registry for the location so teardown targets the active gateway.
     registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
     if registry is not None:

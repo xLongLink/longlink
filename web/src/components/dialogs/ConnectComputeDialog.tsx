@@ -114,7 +114,7 @@ export default function ConnectComputeDialog() {
                                     value={kubeconfig}
                                     onChange={(event) => setKubeconfig(event.target.value)}
                                     placeholder="Paste the kubeconfig file contents"
-                                    className="min-h-40"
+                                    className="min-h-40 max-w-full overflow-auto resize-y [field-sizing:fixed]"
                                 />
                             </div>
 

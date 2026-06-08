@@ -59,6 +59,11 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     ]
     assert delete_response.status_code == 204
 
+    deleted_response = client.get("/api/database/primary")
+    assert deleted_response.status_code == 200
+    assert deleted_response.json()["deleted_at"] is not None
+    assert deleted_response.json()["deleted_by"] is not None
+
 
 async def test_storage_registry_endpoint_supports_create_list_and_delete(
     clients: tuple[TestClient, TestClient, TestClient],
@@ -118,7 +123,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
 
     # Arrange
     client = clients[0]
-    captured: dict[str, str] = {}
+    captured: dict[str, object] = {}
 
     class FakeCompute:
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
@@ -126,10 +131,10 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             captured["proxy_secret"] = proxy_secret
 
         async def cleanup(self) -> None:
-            captured["cleanup"] = "called"
+            captured["cleanup_calls"] = int(captured.get("cleanup_calls", 0)) + 1
 
         async def setup(self) -> None:
-            captured["setup"] = "called"
+            captured["setup_calls"] = int(captured.get("setup_calls", 0)) + 1
 
     monkeypatch.setattr("src.routes.compute.K8s", FakeCompute)
 
@@ -164,7 +169,11 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
+    deleted_response = client.get("/api/compute/1")
+    assert deleted_response.status_code == 200
+    assert deleted_response.json()["deleted_at"] is not None
+    assert deleted_response.json()["deleted_by"] is not None
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
-    assert captured["cleanup"] == "called"
-    assert captured["setup"] == "called"
+    assert captured["cleanup_calls"] == 1
+    assert captured["setup_calls"] == 1

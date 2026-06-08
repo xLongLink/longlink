@@ -1,5 +1,7 @@
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from src.models.kinds import ComputeKind
+from src.models.users import UserSummary
 
 
 class ComputeRegistryCreate(BaseModel):
@@ -20,3 +22,5 @@ class ComputeRegistryResponse(BaseModel):
     kind: ComputeKind
     ingress_host: str
     location_id: int
+    deleted_at: datetime | None = None
+    deleted_by: UserSummary | None = None

@@ -223,14 +223,16 @@ async def test_create_app_returns_app_response(
     monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
     monkeypatch.setattr("src.routes.apps.Postgre", FakeDatabase)
     monkeypatch.setattr(
-        "src.utils.utils.metadata",
+        "src.routes.apps.metadata",
         lambda image: LongLinkMetadata(
             name="dashboard",
             description="Demo app",
-            required={"name": "API_KEY", "type": "str"},
-            optional={"name": "PORT", "type": "int"},
+            required={"name": "API_KEY", "type": "str", "description": "API key used by Longlink"},
+            optional={"name": "PORT", "type": "int", "description": "HTTP listen port"},
         ),
     )
+    printed: list[tuple[object, ...]] = []
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: printed.append(args))
     client = clients[0]
 
     # Act
@@ -263,6 +265,16 @@ async def test_create_app_returns_app_response(
         "port": 80,
         "secrets": {},
     }
+    assert printed == [
+        (
+            "required",
+            {"name": "API_KEY", "type": "str", "description": "API key used by Longlink"},
+        ),
+        (
+            "optional",
+            {"name": "PORT", "type": "int", "description": "HTTP listen port"},
+        ),
+    ]
 
 
 async def test_delete_app_removes_dependent_env_rows(

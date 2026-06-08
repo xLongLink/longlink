@@ -5,6 +5,7 @@ from .envs import Env
 from .users import User
 from .compute import ComputeRegistry
 from .storage import StorageRegistry
+from .operation import Operation
 from .__base__ import Base
 from .database import DatabaseRegistry
 from .location import Location
@@ -18,6 +19,7 @@ __all__ = [
     "ComputeRegistry",
     "DatabaseRegistry",
     "Env",
+    "Operation",
     "Location",
     "Org",
     "StorageRegistry",

@@ -72,6 +72,8 @@ async def main() -> None:
     compute_registry = await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await db.orgs.create(LOCAL_ORG, location.id)
     compute = K8s(LOCAL_COMPUTE["kubeconfig"], compute_registry.proxy_secret)
+    # Create the organization namespace before deploying any workloads into it.
+    await compute.namespace(LOCAL_ORG)
     await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
 
     await db.apps.create(LOCAL_ORG, **LOCAL_APP)

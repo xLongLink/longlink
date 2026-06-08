@@ -6,6 +6,7 @@ class EnvironmentMetadata(BaseModel):
 
     name: str
     type: str
+    description: str | None = None
 
 
 class LongLinkMetadata(BaseModel):

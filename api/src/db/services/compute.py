@@ -1,6 +1,10 @@
-from .base import ServiceBase
 import secrets
+from datetime import UTC, datetime
+
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
+from .base import ServiceBase
 from src.db.models import ComputeRegistry
 from src.constants import INGRESS_NAME
 from src.models.kinds import ComputeKind
@@ -13,14 +17,16 @@ class ComputeService(ServiceBase):
         """Return all registered compute backends."""
 
         async with self.session() as session:
-            result = await session.execute(select(ComputeRegistry))
+            statement = select(ComputeRegistry).options(selectinload(ComputeRegistry.deleted_by))
+            result = await session.execute(statement)
             return result.scalars().all()
 
     async def get(self, registry_id: int) -> ComputeRegistry | None:
         """Return one compute backend by id."""
 
         async with self.session() as session:
-            result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == registry_id))
+            statement = select(ComputeRegistry).options(selectinload(ComputeRegistry.deleted_by)).where(ComputeRegistry.id == registry_id)
+            result = await session.execute(statement)
             return result.scalar_one_or_none()
 
     async def create(
@@ -50,13 +56,30 @@ class ComputeService(ServiceBase):
             await session.refresh(compute)
             return compute
 
-    async def delete(self, registry_id: int) -> ComputeRegistry | None:
-        """Delete one compute backend registration."""
+    async def delete(self, registry_id: int, deleted_by_id: int | None = None) -> ComputeRegistry | None:
+        """Mark one compute backend registration as deleted."""
+
+        async with self.session() as session:
+            statement = select(ComputeRegistry).options(selectinload(ComputeRegistry.deleted_by)).where(ComputeRegistry.id == registry_id)
+            result = await session.execute(statement)
+            compute = result.scalar_one_or_none()
+            if compute is None:
+                return None
+
+            # Keep the row until the background cleanup removes the resources.
+            compute.deleted_at = datetime.now(UTC)
+            compute.deleted_by_id = deleted_by_id
+            await session.commit()
+            await session.refresh(compute)
+            return compute
+
+
+    async def purge(self, registry_id: int) -> ComputeRegistry | None:
+        """Hard delete one compute backend registration."""
 
         async with self.session() as session:
             result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == registry_id))
             compute = result.scalar_one_or_none()
-            # Return early when the registration does not exist.
             if compute is None:
                 return None
 

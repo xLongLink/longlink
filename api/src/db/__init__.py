@@ -1,4 +1,4 @@
-from .models import App, Base, ComputeRegistry, DatabaseRegistry, Env, Location, Org, StorageRegistry, User
+from .models import App, Base, ComputeRegistry, DatabaseRegistry, Env, Location, Operation, Org, StorageRegistry, User
 from .services import (
     AppsService,
     ComputeService,
@@ -6,6 +6,7 @@ from .services import (
     EnvsService,
     LocationsService,
     OrgsService,
+    OperationsService,
     StorageService,
     UsersService,
 )
@@ -22,8 +23,10 @@ __all__ = [
     "EnvsService",
     "Location",
     "LocationsService",
+    "Operation",
     "Org",
     "OrgsService",
+    "OperationsService",
     "StorageRegistry",
     "StorageService",
     "User",
@@ -38,3 +41,4 @@ locations = LocationsService()
 compute = ComputeService()
 storage = StorageService()
 database = DatabaseService()
+operations = OperationsService()
