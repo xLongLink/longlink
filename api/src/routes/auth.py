@@ -1,13 +1,30 @@
+from typing import cast
+
 import httpx2
 import src.db as db
-from typing import cast
-from fastapi import Request, APIRouter, HTTPException
-from src.env import env
-from src.auth import oauth
-from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
+from fastapi import APIRouter, HTTPException, Request, status
+from fastapi.responses import Response, RedirectResponse
+from pydantic import BaseModel, Field
+
+from src.auth import oauth
+from src.env import env
 
 router = APIRouter(prefix="/auth")
+
+
+class PasswordLoginRequest(BaseModel):
+    """Payload for the password-based login flow."""
+
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+
+
+class PasswordLoginResponse(BaseModel):
+    """Response returned after a successful password login."""
+
+    ok: bool = True
+
 
 @router.get("/login/oidc")
 async def login_oidc(request: Request):
@@ -25,6 +42,81 @@ async def login_oidc(request: Request):
                 "Check OIDC_ISSUER and provider realm configuration."
             ),
         ) from exc
+
+
+@router.post("/login/password", response_model=PasswordLoginResponse)
+async def login_password(request: Request, payload: PasswordLoginRequest) -> PasswordLoginResponse:
+    """Exchange username/password credentials for a session through Keycloak."""
+
+    metadata_url = f"{env.OIDC_ISSUER.rstrip('/')}/.well-known/openid-configuration"
+
+    async with httpx2.AsyncClient() as client:
+        try:
+            metadata_response = await client.get(metadata_url)
+            metadata_response.raise_for_status()
+        except httpx2.HTTPStatusError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider unavailable") from exc
+
+        metadata = metadata_response.json()
+
+        token_response = await client.post(
+            metadata["token_endpoint"],
+            data={
+                "grant_type": "password",
+                "client_id": env.OIDC_CLIENT_ID,
+                "client_secret": env.OIDC_CLIENT_SECRET,
+                "username": payload.username,
+                "password": payload.password,
+                "scope": "openid profile email",
+            },
+        )
+
+    try:
+        token_response.raise_for_status()
+    except httpx2.HTTPStatusError as exc:
+        if exc.response.status_code in {status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED}:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password") from exc
+
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider unavailable") from exc
+
+    token = token_response.json()
+    access_token = token.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider returned no access token")
+
+    async with httpx2.AsyncClient() as client:
+        try:
+            userinfo_response = await client.get(
+                metadata["userinfo_endpoint"],
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            userinfo_response.raise_for_status()
+        except httpx2.HTTPStatusError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to read authenticated user profile") from exc
+
+    userinfo = userinfo_response.json()
+    subject = str(userinfo.get("sub") or "")
+    if not subject:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider returned no subject")
+
+    given_name = userinfo.get("given_name") or "Example"
+    family_name = userinfo.get("family_name") or "LongLink"
+    email = userinfo.get("email") or "example@longlink.dev"
+    name = (
+        userinfo.get("name")
+        or userinfo.get("preferred_username")
+        or f"{given_name} {family_name}"
+    )
+
+    await db.users.upsert(
+        oidc_subject=subject,
+        email=email,
+        name=name,
+        avatar=userinfo.get("picture"),
+    )
+
+    request.session["oidc_subject"] = subject
+    return PasswordLoginResponse()
 
 
 @router.get("/oidc")
@@ -69,5 +161,6 @@ async def auth_oidc(request: Request):
 @router.get("/logout")
 async def logout(request: Request):
     """Clear the user session and log out."""
+
     request.session.clear()
-    return RedirectResponse("/")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

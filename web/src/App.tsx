@@ -16,6 +16,7 @@ import AdminStorage from './pages/admin/Storage';
 import AdminUsers from './pages/admin/Users';
 import DocsPage from './pages/Docs';
 import Home from './pages/Home';
+import Login from './pages/Login';
 import { LegalPage } from './pages/LegalPage';
 import NotFound from './pages/NotFound';
 import Organization from './pages/Organization';
@@ -55,6 +56,7 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
+        { path: 'login', element: <Login /> },
         { path: 'docs', element: <DocsPage content={docsIndexContent} metadata={docsIndexMetadata} /> },
         { path: 'docs/api', element: <DocsPage content={docsApiContent} metadata={docsApiMetadata} /> },
         {

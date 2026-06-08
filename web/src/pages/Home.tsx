@@ -1,6 +1,5 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { apiUrl } from '@/lib/api';
 import { buttonVariants } from '@ui/button';
 import { Blocks, Code2, Rocket, ShieldCheck } from 'lucide-react';
 import type { CSSProperties } from 'react';
@@ -103,14 +102,14 @@ export default function Home() {
                     </div>
 
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                        <a
-                            href={apiUrl('/auth/login/oidc')}
+                        <Link
+                            to="/login"
                             className={buttonVariants({
                                 size: 'lg',
                             })}
                         >
                             Get Started
-                        </a>
+                        </Link>
                         <Link
                             to="/docs"
                             className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiUrl, fetchApiText } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
@@ -89,9 +90,11 @@ export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
                                 {logsError}
                             </div>
                         ) : (
-                            <pre className="max-h-[60vh] overflow-auto rounded-md border bg-muted/30 p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
-                                {logsContent || 'No logs available.'}
-                            </pre>
+                            <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
+                                <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
+                                    {logsContent || 'No logs available.'}
+                                </pre>
+                            </ScrollArea>
                         )}
                     </div>
                 </DialogContent>

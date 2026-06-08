@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/breadcrumb';
 import { buttonVariants } from '@/components/ui/button';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { apiUrl } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 type DocMetadata = {
@@ -191,15 +190,15 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                                 </div>
                             </div>
 
-                            <a
-                                href={apiUrl('/auth/login/oidc')}
+                            <Link
+                                to="/login"
                                 className={cn(
                                     buttonVariants({ size: 'sm' }),
                                     'absolute top-1/2 right-4 z-10 h-7 -translate-y-1/2 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 !transition-none active:!translate-y-1/2 lg:right-6'
                                 )}
                             >
                                 Login
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>
