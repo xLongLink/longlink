@@ -368,6 +368,73 @@ async def test_delete_app_removes_dependent_env_rows(
     }
 
 
+async def test_get_app_logs_returns_pod_logs(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Return the recent pod logs for one app."""
+
+    # Arrange
+    user = users[0]
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, user)
+    app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        kubeconfig=(
+            "apiVersion: v1\n"
+            "clusters:\n"
+            "- name: k3d-compute\n"
+            "  cluster:\n"
+            "    server: https://0.0.0.0:8001\n"
+            "contexts:\n"
+            "- name: k3d-compute\n"
+            "  context:\n"
+            "    cluster: k3d-compute\n"
+            "    user: admin@k3d-compute\n"
+            "current-context: k3d-compute\n"
+            "kind: Config\n"
+            "preferences: {}\n"
+            "users:\n"
+            "- name: admin@k3d-compute\n"
+            "  user:\n"
+            "    client-certificate-data: Y2VydA==\n"
+            "    client-key-data: a2V5\n"
+        ),
+        ingress_host="localhost:8443",
+        location_id=location.id,
+    )
+    captured: dict[str, object] = {}
+
+    class FakeCompute:
+        """Fake compute adapter for app log tests."""
+
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            captured["kubeconfig"] = kubeconfig
+            captured["proxy_secret"] = proxy_secret
+
+        async def logs(self, organization: str, application: str, lines: int = 200) -> str:
+            captured["logs"] = {
+                "organization": organization,
+                "application": application,
+                "lines": lines,
+            }
+            return "line 1\nline 2"
+
+    monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
+    client = clients[0]
+
+    # Act
+    response = client.get(f"/api/apps/{app.id}/logs?organization=acme")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.text == "line 1\nline 2"
+    assert response.headers["content-type"].startswith("text/plain")
+    assert captured["logs"] == {"organization": "acme", "application": "dashboard", "lines": 200}
+
+
 async def test_proxy_app_forwards_request_to_internal_service(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],

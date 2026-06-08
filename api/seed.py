@@ -1,11 +1,15 @@
 import src.db as db
 import asyncio
 from pathlib import Path
+from sqlalchemy import select
 from src.env import env
 from src.db.models import Base
+from src.db.models.association import UserOrganization
 from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
+from src.models.roles import Roles
 from sqlalchemy.engine import make_url
 from src.adapters.compute import K8s
+from src.db.session import get_session
 from sqlalchemy.ext.asyncio import create_async_engine
 
 LOCAL_DATABASE = {
@@ -71,7 +75,31 @@ async def main() -> None:
     await db.storage.create(**LOCAL_STORAGE, location_id=location.id)
     compute_registry = await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await db.orgs.create(LOCAL_ORG, location.id)
+
+    # Backfill the seeded demo membership if the admin user already exists locally.
+    Session = await get_session()
+    async with Session() as session:
+        user_result = await session.execute(select(db.User).where(db.User.email == "example@longlink.dev"))
+        seed_user = user_result.scalar_one_or_none()
+        if seed_user is not None:
+            membership_result = await session.execute(
+                select(UserOrganization).where(
+                    UserOrganization.user_id == seed_user.id,
+                    UserOrganization.organization_name == LOCAL_ORG,
+                )
+            )
+            if membership_result.scalar_one_or_none() is None:
+                session.add(
+                    UserOrganization(
+                        user_id=seed_user.id,
+                        organization_name=LOCAL_ORG,
+                        role_name=Roles.owner,
+                    )
+                )
+                await session.commit()
+
     compute = K8s(LOCAL_COMPUTE["kubeconfig"], compute_registry.proxy_secret)
+    await compute.setup()
     # Create the organization namespace before deploying any workloads into it.
     await compute.namespace(LOCAL_ORG)
     await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})

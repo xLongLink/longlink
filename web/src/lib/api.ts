@@ -49,6 +49,13 @@ export async function fetchApiJson<T>(url: string, init?: RequestInit): Promise<
     return (await response.json()) as T;
 }
 
+/** Fetches text and throws a normalized error for non-OK responses. */
+export async function fetchApiText(url: string, init?: RequestInit): Promise<string> {
+    const response = await requestApi(url, init);
+
+    return response.text();
+}
+
 /** Fetches an API endpoint and ignores the body on success. */
 export async function fetchApiVoid(url: string, init?: RequestInit): Promise<void> {
     await requestApi(url, init);

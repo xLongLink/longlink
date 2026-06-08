@@ -139,4 +139,29 @@ class UsersService(ServiceBase):
 
             await session.commit()
             await session.refresh(user)
+
+            # Keep the seeded admin account attached to the demo org even if the org appears later.
+            if user.email == ADMIN_EMAIL:
+                org_result = await session.execute(select(Org).where(Org.name == ADMIN_ORG))
+                org = org_result.scalar_one_or_none()
+                if org is None:
+                    session.add(Org(name=ADMIN_ORG))
+
+                membership_result = await session.execute(
+                    select(UserOrganization).where(
+                        UserOrganization.user_id == user.id,
+                        UserOrganization.organization_name == ADMIN_ORG,
+                    )
+                )
+                if membership_result.scalar_one_or_none() is None:
+                    session.add(
+                        UserOrganization(
+                            user_id=user.id,
+                            organization_name=ADMIN_ORG,
+                            role_name=Roles.owner,
+                        )
+                    )
+
+                await session.commit()
+
             return user

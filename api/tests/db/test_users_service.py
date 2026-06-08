@@ -1,4 +1,5 @@
 import src.db as db
+from src.models import Roles, UserOrgMembership
 
 
 async def test_upsert_creates_user_when_no_existing_match() -> None:
@@ -40,6 +41,33 @@ async def test_upsert_marks_first_created_user_as_admin() -> None:
     assert user.id is not None
     assert user.name == "First User"
     assert user.admin is True
+
+
+async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None:
+    """Grant the admin org membership after the org is seeded later."""
+
+    # Arrange
+    user = await db.users.upsert(
+        oidc_subject="oidc-subject-admin",
+        email="example@longlink.dev",
+        name="First User",
+        avatar=None,
+    )
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("test", location.id)
+
+    # Act
+    await db.users.upsert(
+        oidc_subject="oidc-subject-admin",
+        email="example@longlink.dev",
+        name="First User",
+        avatar=None,
+    )
+    profile = await db.users.profile(user.id)
+
+    # Assert
+    assert profile is not None
+    assert profile.orgs == [UserOrgMembership(name="test", role=Roles.owner)]
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:

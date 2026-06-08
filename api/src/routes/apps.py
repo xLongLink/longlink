@@ -1,5 +1,5 @@
 import src.db as db
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from src.auth import authuser, authadmin
 from src.adapters.database import Postgre
 from src.models.apps import AppCreate, AppResponse
@@ -151,3 +151,41 @@ async def delete_app(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail) from exc
 
     return
+
+
+@router.get("/{app_id}/logs")
+async def get_app_logs(organization: str, app_id: int, user: db.User = Depends(authuser)) -> Response:
+    """Return recent pod logs for one managed app."""
+
+    app = await db.apps.get_by_id(app_id)
+    if app is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
+    if app.organization != organization:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
+
+    org = next((org for org in user.orgs if org.name == organization), None)
+    if org is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
+    if org.location_id is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Org '{organization}' has no location configured")
+
+    registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
+    if not registries:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
+
+    # Prefer the newest registry for the location so logs come from the active cluster.
+    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
+    if registry is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"No compute cluster configured for location '{org.location_id}'",
+        )
+
+    compute = K8s(registry.kubeconfig, registry.proxy_secret)
+
+    try:
+        logs = await compute.logs(organization, app.slug)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+
+    return Response(content=logs, media_type="text/plain")

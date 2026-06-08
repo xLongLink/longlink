@@ -1,5 +1,6 @@
 import { DataTable } from '@/components/DataTable';
 import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
+import LogsDialog from '@/components/dialogs/LogsDialog';
 import { useDeleteApp } from '@/hooks/use-org';
 import type { ApiOrgApp, ApiOrgDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -27,6 +28,7 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
+
     const appColumns: Array<ColumnDef<ApiOrgApp>> = [
         {
             id: 'icon',
@@ -34,10 +36,9 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
             meta: { className: 'w-10' },
             cell: ({ row }) => {
                 const iconName = row.original.icon ?? 'Box';
-                const IconComponent = (LucideIcons as unknown as Record<
-                    string,
-                    React.ComponentType<{ className?: string }>
-                >)[iconName];
+                const IconComponent = (
+                    LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
+                )[iconName];
                 return IconComponent ? <IconComponent className="size-5" /> : <span className="size-5" />;
             },
         },
@@ -53,120 +54,131 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
         {
             id: 'action',
             header: 'Action',
-            meta: { className: 'w-32' },
+            meta: { className: 'w-44' },
             cell: ({ row }) => (
-                <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                        // Select the app and open the delete confirmation dialog.
-                        setDeleteTargetId(row.original.id);
-                        setDeleteError(null);
-                    }}
-                >
-                    Delete
-                </Button>
+                <div className="flex items-center gap-2">
+                    <LogsDialog org={org} appId={row.original.id} appName={row.original.name} />
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                            // Select the app and open the delete confirmation dialog.
+                            setDeleteTargetId(row.original.id);
+                            setDeleteError(null);
+                        }}
+                    >
+                        Delete
+                    </Button>
+                </div>
             ),
         },
     ];
 
     return (
-        <Menu defaultValue="organization" className="items-start">
-            <MenuSection value="organization" label="Organization" icon={Building2}>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Organization</h2>
-                        <p className="text-sm text-muted-foreground">View and manage organization details.</p>
-                    </div>
-                    <hr className="border-border" />
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-sm text-muted-foreground">Name</label>
-                            <Input value={orgDetails?.name ?? org} readOnly />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm text-muted-foreground">Location</label>
-                            <Input value={orgDetails?.location?.display_name ?? '—'} readOnly />
-                        </div>
-                    </div>
-                </div>
-            </MenuSection>
-
-            <MenuSection value="permissions" label="Permissions" icon={ShieldCheck}>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Permissions</h2>
-                        <p className="text-sm text-muted-foreground">Control member roles and access policies.</p>
-                    </div>
-                    <hr className="border-border" />
-                </div>
-            </MenuSection>
-
-            <MenuSection value="applications" label="Applications" icon={Boxes}>
-                <div className="space-y-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <>
+            <Menu defaultValue="organization" className="items-start">
+                <MenuSection value="organization" label="Organization" icon={Building2}>
+                    <div className="space-y-4">
                         <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Applications</h2>
-                            <p className="text-sm text-muted-foreground">Review apps connected to this organization.</p>
+                            <h2 className="text-lg font-medium text-foreground">Organization</h2>
+                            <p className="text-sm text-muted-foreground">View and manage organization details.</p>
                         </div>
-
-                        <CreateAppDialog org={org} />
+                        <hr className="border-border" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-sm text-muted-foreground">Name</label>
+                                <Input value={orgDetails?.name ?? org} readOnly />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm text-muted-foreground">Location</label>
+                                <Input value={orgDetails?.location?.display_name ?? '—'} readOnly />
+                            </div>
+                        </div>
                     </div>
-                    <hr className="border-border" />
-                    {isLoading ? (
-                        <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading apps...</div>
-                    ) : error ? (
-                        <div className="rounded-md border p-4 text-sm text-destructive">Failed to load apps.</div>
-                    ) : apps.length ? (
-                        <DataTable columns={appColumns} data={apps} />
-                    ) : (
-                        <div className="rounded-md border p-4 text-sm text-muted-foreground">No apps found.</div>
-                    )}
-                </div>
-            </MenuSection>
+                </MenuSection>
 
-            <MenuSection value="database" label="Database" icon={Database}>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Database</h2>
-                        <p className="text-sm text-muted-foreground">
-                            Configure database-backed services and connections.
-                        </p>
+                <MenuSection value="permissions" label="Permissions" icon={ShieldCheck}>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">Permissions</h2>
+                            <p className="text-sm text-muted-foreground">Control member roles and access policies.</p>
+                        </div>
+                        <hr className="border-border" />
                     </div>
-                    <hr className="border-border" />
-                </div>
-            </MenuSection>
+                </MenuSection>
 
-            <MenuSection value="storage" label="Storage" icon={HardDrive}>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Storage</h2>
-                        <p className="text-sm text-muted-foreground">Manage files, buckets, and persisted assets.</p>
-                    </div>
-                    <hr className="border-border" />
-                </div>
-            </MenuSection>
+                <MenuSection value="applications" label="Applications" icon={Boxes}>
+                    <div className="space-y-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="space-y-1">
+                                <h2 className="text-lg font-medium text-foreground">Applications</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Review apps connected to this organization.
+                                </p>
+                            </div>
 
-            <MenuSection value="logging" label="Logging" icon={Settings2}>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Logging</h2>
-                        <p className="text-sm text-muted-foreground">Configure event and audit logging outputs.</p>
+                            <CreateAppDialog org={org} />
+                        </div>
+                        <hr className="border-border" />
+                        {isLoading ? (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading apps...</div>
+                        ) : error ? (
+                            <div className="rounded-md border p-4 text-sm text-destructive">Failed to load apps.</div>
+                        ) : apps.length ? (
+                            <DataTable columns={appColumns} data={apps} />
+                        ) : (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">No apps found.</div>
+                        )}
                     </div>
-                    <hr className="border-border" />
-                </div>
-            </MenuSection>
+                </MenuSection>
 
-            <MenuSection value="integrations" label="Integrations" icon={Plug}>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Integrations</h2>
-                        <p className="text-sm text-muted-foreground">Connect external services and workflow tools.</p>
+                <MenuSection value="database" label="Database" icon={Database}>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">Database</h2>
+                            <p className="text-sm text-muted-foreground">
+                                Configure database-backed services and connections.
+                            </p>
+                        </div>
+                        <hr className="border-border" />
                     </div>
-                    <hr className="border-border" />
-                </div>
-            </MenuSection>
+                </MenuSection>
+
+                <MenuSection value="storage" label="Storage" icon={HardDrive}>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">Storage</h2>
+                            <p className="text-sm text-muted-foreground">
+                                Manage files, buckets, and persisted assets.
+                            </p>
+                        </div>
+                        <hr className="border-border" />
+                    </div>
+                </MenuSection>
+
+                <MenuSection value="logging" label="Logging" icon={Settings2}>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">Logging</h2>
+                            <p className="text-sm text-muted-foreground">Configure event and audit logging outputs.</p>
+                        </div>
+                        <hr className="border-border" />
+                    </div>
+                </MenuSection>
+
+                <MenuSection value="integrations" label="Integrations" icon={Plug}>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">Integrations</h2>
+                            <p className="text-sm text-muted-foreground">
+                                Connect external services and workflow tools.
+                            </p>
+                        </div>
+                        <hr className="border-border" />
+                    </div>
+                </MenuSection>
+            </Menu>
 
             <Dialog
                 open={deleteTargetId !== null}
@@ -231,6 +243,6 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
                     </div>
                 </DialogContent>
             </Dialog>
-        </Menu>
+        </>
     );
 }
