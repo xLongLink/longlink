@@ -565,7 +565,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert response.status_code == 200
     assert response.text == "proxied"
     assert captured["method"] == "POST"
-    assert captured["resource_path"] == "http://localhost:9443/api/v1/namespaces/acme/services/dashboard:80/proxy/anything"
+    assert captured["resource_path"] == "http://localhost:9443/api/v1/namespaces/longlink-acme/services/dashboard:80/proxy/anything"
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
     assert captured["headers"]["authorization"] == "Bearer test-token"

@@ -5,6 +5,7 @@ import src.db as db
 from src.adapters.compute.k8s import K8s
 from src.auth import authuser
 from src.routes.apps import APP_SERVICE_PORT
+from src.utils.namespace import k8name
 from src.utils.utils import knames, normalize
 
 router = APIRouter(prefix="/api/apps")
@@ -52,7 +53,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     compute = K8s(registry.kubeconfig, registry.proxy_secret)
 
     upstream_path = path.lstrip("/")
-    namespace = knames(app.organization, "Org")
+    namespace = k8name(knames(app.organization, "Org"))
     name = knames(app.slug, "Application name")
     base = f"{normalize(registry.ingress_host)}/api/v1/namespaces/{namespace}/services/{name}:{APP_SERVICE_PORT}/proxy/"
     forward_headers = {
