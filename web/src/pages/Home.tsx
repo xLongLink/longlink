@@ -103,7 +103,7 @@ export default function Home() {
 
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <Link
-                            to="/login"
+                            to="/organizations"
                             className={buttonVariants({
                                 size: 'lg',
                             })}

@@ -54,7 +54,7 @@ export function Navbar() {
                     </ul>
 
                     <Link
-                        to="/login"
+                        to="/organizations"
                         className={cn(
                             buttonVariants({ size: 'sm' }),
                             'ml-auto h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'

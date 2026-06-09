@@ -191,7 +191,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                             </div>
 
                             <Link
-                                to="/login"
+                                to="/organizations"
                                 className={cn(
                                     buttonVariants({ size: 'sm' }),
                                     'absolute top-1/2 right-4 z-10 h-7 -translate-y-1/2 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 !transition-none active:!translate-y-1/2 lg:right-6'

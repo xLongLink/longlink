@@ -10,13 +10,12 @@ import Admin from './pages/Admin';
 import AdminCompute from './pages/admin/Compute';
 import AdminDatabase from './pages/admin/Database';
 import AdminLocation from './pages/admin/Location';
-import AdminOrganization from './pages/admin/Organization';
 import AdminOperations from './pages/admin/Operations';
+import AdminOrganization from './pages/admin/Organization';
 import AdminStorage from './pages/admin/Storage';
 import AdminUsers from './pages/admin/Users';
 import DocsPage from './pages/Docs';
 import Home from './pages/Home';
-import Login from './pages/Login';
 import { LegalPage } from './pages/LegalPage';
 import NotFound from './pages/NotFound';
 import Organization from './pages/Organization';
@@ -40,7 +39,10 @@ import { content as docsSdkContent, metadata as docsSdkMetadata } from '@/pages/
 import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
 import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
 import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
-import { content as docsXmlComponentsContent, metadata as docsXmlComponentsMetadata } from '@/pages/docs/xml/components';
+import {
+    content as docsXmlComponentsContent,
+    metadata as docsXmlComponentsMetadata,
+} from '@/pages/docs/xml/components';
 import { content as docsXmlContent, metadata as docsXmlMetadata } from '@/pages/docs/xml/index';
 import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/pages/docs/xml/layout';
 
@@ -56,7 +58,6 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        { path: 'login', element: <Login /> },
         { path: 'docs', element: <DocsPage content={docsIndexContent} metadata={docsIndexMetadata} /> },
         { path: 'docs/api', element: <DocsPage content={docsApiContent} metadata={docsApiMetadata} /> },
         {
@@ -111,11 +112,7 @@ function getRoutes() {
         },
         {
             path: 'organizations',
-            element: (
-                <Auth>
-                    <Organizations />
-                </Auth>
-            ),
+            element: <Organizations />,
         },
         {
             path: 'settings',
