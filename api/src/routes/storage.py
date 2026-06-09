@@ -1,19 +1,18 @@
 import src.db as db
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from src.auth import authadmin
 from src.models import StorageRegistryCreate, StorageRegistryResponse
+from src.router import router
 
-router = APIRouter(prefix="/api/storage")
 
-
-@router.get("", response_model=list[StorageRegistryResponse])
+@router.get("/api/storage", response_model=list[StorageRegistryResponse])
 async def list_storage_registries(_user: db.User = Depends(authadmin)) -> list[StorageRegistryResponse]:
     """Return all registered storage backends."""
 
     return await db.storage.list()
 
 
-@router.get("/{name}", response_model=StorageRegistryResponse)
+@router.get("/api/storage/{name}", response_model=StorageRegistryResponse)
 async def get_storage_registry(name: str, _user: db.User = Depends(authadmin)) -> StorageRegistryResponse:
     """Return one storage backend registration."""
 
@@ -24,7 +23,7 @@ async def get_storage_registry(name: str, _user: db.User = Depends(authadmin)) -
     return registry
 
 
-@router.post("", response_model=StorageRegistryResponse)
+@router.post("/api/storage", response_model=StorageRegistryResponse)
 async def create_storage_registry(
     payload: StorageRegistryCreate,
     _user: db.User = Depends(authadmin),
@@ -36,7 +35,7 @@ async def create_storage_registry(
     return registry
 
 
-@router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/api/storage/{name}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_storage_registry(name: str, _user: db.User = Depends(authadmin)) -> None:
     """Delete one storage backend registration."""
 

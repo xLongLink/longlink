@@ -1,19 +1,18 @@
 import src.db as db
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from src.auth import authuser, authadmin
 from src.models.orgs import OrgCreate, OrgDetails, OrgSummary
+from src.router import router
 
-router = APIRouter(prefix="/api/orgs")
 
-
-@router.get("", response_model=list[OrgSummary])
+@router.get("/api/orgs", response_model=list[OrgSummary])
 async def list_organizations(_user: db.User = Depends(authadmin)) -> list[OrgSummary]:
     """Return all organizations for admin views."""
 
     return await db.orgs.list()
 
 
-@router.get("/{name}", response_model=OrgDetails)
+@router.get("/api/orgs/{name}", response_model=OrgDetails)
 async def get_organization(
     name: str,
     user: db.User = Depends(authuser),
@@ -30,7 +29,7 @@ async def get_organization(
     return organization
 
 
-@router.post("", response_model=OrgSummary)
+@router.post("/api/orgs", response_model=OrgSummary)
 async def create_organization(
     payload: OrgCreate,
     user: db.User = Depends(authuser),
@@ -54,7 +53,7 @@ async def create_organization(
     }
 
 
-@router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/api/orgs/{name}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_organization(name: str, user: db.User = Depends(authuser)) -> None:
     """Delete one org by name."""
 

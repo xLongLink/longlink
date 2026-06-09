@@ -1,14 +1,13 @@
 import src.db as db
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Depends, HTTPException
 
 from src.auth import authuser
 from src.models import ImageMetadataResponse
 from src.utils.utils import metadata
+from src.router import router
 
-router = APIRouter(prefix="/api")
 
-
-@router.get("/image", response_model=ImageMetadataResponse)
+@router.get("/api/image", response_model=ImageMetadataResponse)
 async def inspect_image(image: str, _user: db.User = Depends(authuser)) -> ImageMetadataResponse:
     """Inspect a container image and return its LongLink metadata."""
 

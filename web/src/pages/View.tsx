@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { Skeleton } from '@ui/skeleton';
 import NotFound from './NotFound';
 import XML from '@/layout/XmlLayout';
 
@@ -182,12 +183,24 @@ export default function View({ metadata }: ViewProps) {
         return <div>{pageError}</div>;
     }
 
-    if (!activePage) {
-        return <div>Unexpected response format</div>;
+    if (isLoading || pageLoading || (activePage && pageContentPath !== activePage.path)) {
+        // Keep the XML shell mounted while metadata or page content is still loading.
+        return (
+            <XML tabs={tabs}>
+                <section className="space-y-6">
+                    <Skeleton className="h-10 w-64" />
+                    <Skeleton className="h-5 w-[28rem] max-w-full" />
+                    <div className="grid gap-4 lg:grid-cols-2">
+                        <Skeleton className="h-48 w-full" />
+                        <Skeleton className="h-48 w-full" />
+                    </div>
+                </section>
+            </XML>
+        );
     }
 
-    if (isLoading || pageLoading || pageContentPath !== activePage?.path) {
-        return <div>Loading...</div>;
+    if (!activePage) {
+        return <div>Unexpected response format</div>;
     }
 
     if (!pageContent) {

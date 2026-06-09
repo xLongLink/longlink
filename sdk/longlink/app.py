@@ -16,7 +16,6 @@ class LongLink(FastAPI):
         super().__init__(**kwargs)
 
         environments = env if isinstance(env, Envs) else Envs()
-        self.state.page_roots = []
 
         # Register API routes from the router module
         for router in routes:

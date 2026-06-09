@@ -1,1 +1,1 @@
-from .user import UserModel
+from src.types.user import UserModel

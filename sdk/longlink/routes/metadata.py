@@ -1,29 +1,34 @@
-from fastapi import Request, APIRouter
-from pathlib import Path
-from longlink.utils import Longlink
+from inspect import isawaitable
+
+from fastapi import APIRouter
+from fastapi.responses import Response
+
+from longlink.pages import page_registry
 from longlink.utils.metadata import load_metadata
 
 router = APIRouter()
 
 
 @router.get("/metadata.json")
-async def get_metadata(request: Request) -> dict[str, object]:
+async def get_metadata() -> dict[str, object]:
     """Return basic application metadata for the current SDK project."""
 
     metadata = load_metadata()
     pages: list[dict[str, object]] = []
 
-    for page_root in request.app.state.page_roots:
-        root_path = Path(page_root)
-        for page_file in sorted(root_path.rglob("*.xml")):
-            document = Longlink(page_file)
-            document.validate()
-            pages.append(
-                {
-                    "path": page_file.relative_to(root_path).as_posix(),
-                    "content": document.content,
-                }
-            )
+    # Page handlers are registered through the router.page decorator.
+    for page in page_registry:
+        content = page.handler()
+        if isawaitable(content):
+            content = await content
+
+        if isinstance(content, Response):
+            body = content.body
+            content = body.decode(content.charset or "utf-8") if isinstance(body, bytes) else str(body)
+        else:
+            content = str(content)
+
+        pages.append({"path": page.path.lstrip("/"), "content": content})
 
     return {
         "name": metadata.name,

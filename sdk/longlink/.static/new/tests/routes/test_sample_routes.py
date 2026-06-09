@@ -1,6 +1,6 @@
 from io import BytesIO
 from fastapi import FastAPI
-from src.api import sample as sample_api
+from src.routes import sample as sample_api
 from contextlib import contextmanager
 from fastapi.testclient import TestClient
 

@@ -1,17 +1,16 @@
 import src.db as db
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import Depends, HTTPException, Response, status
 from src.auth import authuser, authadmin
 from src.adapters.database import Postgre
 from src.models.apps import AppCreate, AppResponse
 from src.utils.utils import knames, slugify, metadata
 from src.adapters.compute.k8s import K8s
-
-router = APIRouter(prefix="/api/apps")
+from src.router import router
 
 APP_SERVICE_PORT = 80
 
 
-@router.get("", response_model=list[AppResponse])
+@router.get("/api/apps", response_model=list[AppResponse])
 async def list_apps(organization: str, user: db.User = Depends(authuser)) -> list[AppResponse]:
     """Return the apps registered in one organization."""
 
@@ -35,7 +34,7 @@ async def list_apps(organization: str, user: db.User = Depends(authuser)) -> lis
     return app_payloads
 
 
-@router.post("", response_model=AppResponse)
+@router.post("/api/apps", response_model=AppResponse)
 async def create_app(
     organization: str,
     payload: AppCreate,
@@ -117,7 +116,7 @@ async def create_app(
     }
 
 
-@router.delete("/{app_id}", status_code=204)
+@router.delete("/api/apps/{app_id}", status_code=204)
 async def delete_app(
     organization: str,
     app_id: int,
@@ -154,7 +153,7 @@ async def delete_app(
     return
 
 
-@router.get("/{app_id}/logs")
+@router.get("/api/apps/{app_id}/logs")
 async def get_app_logs(organization: str, app_id: int, user: db.User = Depends(authuser)) -> Response:
     """Return recent pod logs for one managed app."""
 

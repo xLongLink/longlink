@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from pathlib import Path
 from src.env import env
-from src.routes import routers
+from src.router import router
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
@@ -77,9 +77,21 @@ app.add_middleware(
     https_only=False,
 )
 
+# Register API routes
+app.include_router(router)
+import src.routes.apps 
+import src.routes.auth
+import src.routes.compute
+import src.routes.database
+import src.routes.health
+import src.routes.image
+import src.routes.locations
+import src.routes.operations
+import src.routes.orgs
+import src.routes.proxy 
+import src.routes.storage 
+import src.routes.user
 
-for router in routers:
-    app.include_router(router)
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():

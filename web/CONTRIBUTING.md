@@ -21,8 +21,6 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 │           ├── components
 │           └── layout
 ├── playground
-├── theme
-├── sample
 ├── impressum
 ├── terms
 ├── privacy

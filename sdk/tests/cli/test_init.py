@@ -31,8 +31,12 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert (target / 'AGENTS.md').exists()
     assert (target / '.env.sample').exists()
     assert (target / 'main.py').exists()
-    assert (target / 'src/api/__init__.py').exists()
-    assert (target / 'src/api/sample.py').exists()
+    assert (target / 'src/routes/__init__.py').exists()
+    assert (target / 'src/routes/sample.py').exists()
+    assert (target / 'src/routes/pages.py').exists()
+    assert (target / 'src/services').exists()
+    assert (target / 'src/services/__init__.py').exists()
+    assert (target / 'src/services/sample.py').exists()
     assert (target / 'src/models/__init__.py').exists()
     assert (target / 'src/models/project.py').exists()
     assert (target / 'src/types/__init__.py').exists()
@@ -41,8 +45,8 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert (target / 'src/pages').exists()
     assert (target / 'src/pages/dashboard.xml').exists()
     assert (target / 'tests/conftest.py').exists()
-    assert (target / 'tests/api').exists()
-    assert (target / 'tests/api/test_sample_routes.py').exists()
+    assert (target / 'tests/routes').exists()
+    assert (target / 'tests/routes/test_sample_routes.py').exists()
     assert not (target / 'uv.lock').exists()
 
     pyproject = (target / 'pyproject.toml').read_text()
@@ -53,8 +57,21 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert (target / 'README.md').read_text().startswith('# Minimal LongLink showcase app')
 
     main_py = (target / 'main.py').read_text()
-    assert 'app.state.page_roots = [Path(__file__).resolve().parent / "src" / "pages"]' in main_py
     assert 'for router in routers:' in main_py
+
+    pages_py = (target / 'src/routes/pages.py').read_text()
+    assert '@router.page("/dashboard.xml")' in pages_py
+    assert 'read_text(encoding="utf-8")' in pages_py
+
+    service_py = (target / 'src/services/sample.py').read_text()
+    assert 'class SampleService:' in service_py
+    assert 'async def create_project(self, session_maker) -> UserModel:' in service_py
+
+    models_init = (target / 'src/models/__init__.py').read_text()
+    assert 'from src.models.project import Project' in models_init
+
+    types_init = (target / 'src/types/__init__.py').read_text()
+    assert 'from src.types.user import UserModel' in types_init
 
 
 def test_init_command_calls_setup(monkeypatch):

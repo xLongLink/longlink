@@ -46,7 +46,13 @@ export default function Settings() {
         accountEmail.length > 0;
 
     return (
-        <Layout brandOnly>
+        <Layout
+            brandOnly
+            tabs={{
+                Organizations: { href: '/organizations', icon: Building2 },
+                Settings: { href: '/settings', icon: Settings2 },
+            }}
+        >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 <Hero icon={<Settings2 />}>
                     <div>

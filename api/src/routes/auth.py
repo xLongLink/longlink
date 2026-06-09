@@ -3,14 +3,13 @@ from typing import cast
 import httpx2
 import src.db as db
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import HTTPException, Request, status
 from fastapi.responses import Response, RedirectResponse
 from pydantic import BaseModel, Field
 
 from src.auth import oauth
 from src.env import env
-
-router = APIRouter(prefix="/auth")
+from src.router import router
 
 
 class PasswordLoginRequest(BaseModel):
@@ -26,7 +25,7 @@ class PasswordLoginResponse(BaseModel):
     ok: bool = True
 
 
-@router.get("/login/oidc")
+@router.get("/auth/login/oidc")
 async def login_oidc(request: Request):
     """Initiate OIDC login flow by redirecting to the identity provider."""
 
@@ -44,7 +43,7 @@ async def login_oidc(request: Request):
         ) from exc
 
 
-@router.post("/login/password", response_model=PasswordLoginResponse)
+@router.post("/auth/login/password", response_model=PasswordLoginResponse)
 async def login_password(request: Request, payload: PasswordLoginRequest) -> PasswordLoginResponse:
     """Exchange username/password credentials for a session through Keycloak."""
 
@@ -119,7 +118,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
     return PasswordLoginResponse()
 
 
-@router.get("/oidc")
+@router.get("/auth/oidc")
 async def auth_oidc(request: Request):
     """Handle OIDC callback, exchange code for token, and create/update user."""
 
@@ -158,7 +157,7 @@ async def auth_oidc(request: Request):
     return RedirectResponse("/organizations")
 
 
-@router.get("/logout")
+@router.get("/auth/logout")
 async def logout(request: Request):
     """Clear the user session and log out."""
 

@@ -6,7 +6,7 @@ import Layout from '@/layout/Layout';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
 import { Skeleton } from '@ui/skeleton';
-import { Blocks } from 'lucide-react';
+import { Building2, Settings2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
 import type { ApiUserOrgMembership } from '@/lib/types';
@@ -54,9 +54,16 @@ export default function Organizations() {
     }
 
     return (
-        <Layout brandOnly brandHref="/">
+        <Layout
+            brandOnly
+            brandHref="/"
+            tabs={{
+                Organizations: { href: '/organizations', icon: Building2 },
+                Settings: { href: '/settings', icon: Settings2 },
+            }}
+        >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
-                <Hero icon={<Blocks />} className="w-full">
+                <Hero icon={<Building2 />} className="w-full">
                     <div className="flex w-full items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                             <HeroTitle>Organizations</HeroTitle>

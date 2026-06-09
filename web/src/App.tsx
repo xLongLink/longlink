@@ -1,7 +1,9 @@
 import { Auth } from '@/components/Auth';
 import { useOrg } from '@/hooks/use-org';
 import { apiUrl } from '@/lib/api';
+import Layout from '@/layout/Layout';
 import { Toaster } from '@ui/sonner';
+import { Skeleton } from '@ui/skeleton';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import Admin from './pages/Admin';
 import AdminCompute from './pages/admin/Compute';
@@ -17,9 +19,7 @@ import NotFound from './pages/NotFound';
 import Organization from './pages/Organization';
 import Organizations from './pages/Organizations';
 import Playground from './pages/Playground';
-import Sample from './pages/Sample';
 import Settings from './pages/Settings';
-import Theme from './pages/Theme';
 import View from './pages/View';
 
 import { content as docsApiContent, metadata as docsApiMetadata } from '@/pages/docs/api/index';
@@ -99,8 +99,6 @@ function getRoutes() {
             element: <DocsLayout content={docsXmlLayoutContent} metadata={docsXmlLayoutMetadata} />,
         },
         { path: 'playground', element: <Playground /> },
-        { path: 'theme', element: <Theme /> },
-        { path: 'sample', element: <Sample /> },
         {
             path: 'impressum',
             element: <LegalLayout title="Impressum" content={impressumContent} metadata={impressumMetadata} />,
@@ -193,9 +191,20 @@ function OrgAppView() {
     const { org: organization, isLoading, error } = useOrg(org);
     const orgApp = organization?.apps.find((item) => item.name === app);
 
-    // Keep the app route loading until the org payload resolves.
     if (isLoading) {
-        return <div>Loading...</div>;
+        // Keep the app chrome visible while the org payload resolves.
+        return (
+            <Layout brandOnly>
+                <section className="mx-auto w-full max-w-[1000px] space-y-6 px-6 py-10">
+                    <Skeleton className="h-10 w-64" />
+                    <Skeleton className="h-5 w-[28rem] max-w-full" />
+                    <div className="grid gap-4 lg:grid-cols-2">
+                        <Skeleton className="h-48 w-full" />
+                        <Skeleton className="h-48 w-full" />
+                    </div>
+                </section>
+            </Layout>
+        );
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.

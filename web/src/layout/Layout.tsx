@@ -53,7 +53,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                 </div>
             </div>
 
-            {brandOnly || !tabEntries.length ? null : (
+            {!tabEntries.length ? null : (
                 <div className="mx-auto w-full px-6 pb-0 pt-0">
                     <div className="flex w-full items-center gap-2 border-b border-white/10">
                         {tabEntries.map(([label, tab]) => {

@@ -1,1 +1,1 @@
-from .project import Project
+from src.models.project import Project

@@ -1,14 +1,13 @@
 import httpx2
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import Depends, HTTPException, Request, Response, status
 
 import src.db as db
 from src.adapters.compute.k8s import K8s
 from src.auth import authuser
+from src.router import router
 from src.routes.apps import APP_SERVICE_PORT
 from src.utils.namespace import k8name
 from src.utils.utils import knames, normalize
-
-router = APIRouter(prefix="/api/apps")
 
 HOP_BY_HOP_HEADERS = {
     "connection",
@@ -23,8 +22,8 @@ HOP_BY_HOP_HEADERS = {
 }
 
 
-@router.api_route("/{app_id}/proxy", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
-@router.api_route("/{app_id}/proxy/{path:path}", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
+@router.api_route("/api/apps/{app_id}/proxy", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
+@router.api_route("/api/apps/{app_id}/proxy/{path:path}", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
 async def proxy_app_request(app_id: int, request: Request, path: str = "", user: db.User = Depends(authuser)) -> Response:
     """Proxy one request into the deployed application service."""
 

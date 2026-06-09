@@ -1,20 +1,19 @@
 import src.db as db
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from src.auth import authadmin
 from src.models import ComputeRegistryCreate, ComputeRegistryResponse
 from src.adapters.compute import K8s
+from src.router import router
 
-router = APIRouter(prefix="/api/compute")
 
-
-@router.get("", response_model=list[ComputeRegistryResponse])
+@router.get("/api/compute", response_model=list[ComputeRegistryResponse])
 async def list_compute_registries(_user: db.User = Depends(authadmin)) -> list[ComputeRegistryResponse]:
     """Return all registered compute backends."""
 
     return await db.compute.list()
 
 
-@router.get("/{registry_id}", response_model=ComputeRegistryResponse)
+@router.get("/api/compute/{registry_id}", response_model=ComputeRegistryResponse)
 async def get_compute_registry(
     registry_id: int,
     _user: db.User = Depends(authadmin),
@@ -28,7 +27,7 @@ async def get_compute_registry(
     return registry
 
 
-@router.post("", response_model=ComputeRegistryResponse)
+@router.post("/api/compute", response_model=ComputeRegistryResponse)
 async def create_compute_registry(
     payload: ComputeRegistryCreate,
     _user: db.User = Depends(authadmin),
@@ -55,7 +54,7 @@ async def create_compute_registry(
     }
 
 
-@router.delete("/{registry_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/api/compute/{registry_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_compute_registry(registry_id: int, user: db.User = Depends(authadmin)) -> None:
     """Mark one compute backend registration as deleted."""
 
