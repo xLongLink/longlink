@@ -77,8 +77,6 @@ app.add_middleware(
     https_only=False,
 )
 
-# Register API routes
-app.include_router(router)
 import src.routes.apps 
 import src.routes.auth
 import src.routes.compute
@@ -91,6 +89,9 @@ import src.routes.orgs
 import src.routes.proxy 
 import src.routes.storage 
 import src.routes.user
+
+# Register API routes after importing the endpoint modules so their decorators run.
+app.include_router(router)
 
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"

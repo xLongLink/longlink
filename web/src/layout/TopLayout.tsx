@@ -1,4 +1,4 @@
-import { useEffect, type HTMLAttributes, ReactNode } from 'react';
+import { useEffect, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
