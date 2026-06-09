@@ -34,6 +34,13 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
                 "description": "API key used by Longlink",
             }
         ],
+        "optional_envs": [
+            {
+                "name": "PORT",
+                "type": "int",
+                "description": "HTTP listen port",
+            }
+        ],
     }
 
 
@@ -53,6 +60,7 @@ def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monke
         "title": None,
         "description": None,
         "required_envs": [],
+        "optional_envs": [],
     }
 
 

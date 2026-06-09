@@ -36,12 +36,6 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
     const [isInspecting, setIsInspecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const steps = [
-        { key: 'image', label: 'Image' },
-        { key: 'metadata', label: 'Metadata' },
-        { key: 'envs', label: 'Envs' },
-    ] as const;
-
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
         setStep('image');
@@ -118,29 +112,12 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                                 {step === 'image' ? 'Inspect image' : step === 'metadata' ? 'Review metadata' : 'Review envs'}
                             </DialogTitle>
                             <DialogDescription>
-                                {step === 'image'
-                                    ? 'Provide the packaged image to load app metadata.'
-                                    : step === 'metadata'
-                                        ? 'Confirm the app metadata before reviewing required envs.'
-                                        : 'Review the required environment variables before creating the app.'}
+                                <span className={step === 'image' ? 'font-medium text-foreground' : undefined}>1. Image</span>
+                                <span className="text-muted-foreground"> / </span>
+                                <span className={step === 'metadata' ? 'font-medium text-foreground' : undefined}>2. Metadata</span>
+                                <span className="text-muted-foreground"> / </span>
+                                <span className={step === 'envs' ? 'font-medium text-foreground' : undefined}>3. Envs</span>
                             </DialogDescription>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {steps.map((item, index) => (
-                                <div key={item.key} className="flex items-center gap-2">
-                                    <span
-                                        className={
-                                            item.key === step
-                                                ? 'font-medium text-foreground'
-                                                : 'text-muted-foreground'
-                                        }
-                                    >
-                                        {index + 1}. {item.label}
-                                    </span>
-                                    {index < steps.length - 1 ? <span aria-hidden={true}>/</span> : null}
-                                </div>
-                            ))}
                         </div>
 
                         {step === 'image' ? (
@@ -255,44 +232,39 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                             </form>
                         ) : (
                             <form className="space-y-4" onSubmit={handleCreateApp}>
-                                <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
-                                    <div className="text-sm font-medium text-foreground">Required envs</div>
-                                    <div className="text-sm text-muted-foreground">{image}</div>
-                                    {imageMetadata?.required_envs.length ? (
-                                        <ScrollArea className="max-h-44 pr-3">
-                                            <div className="mt-3 space-y-2">
-                                                {imageMetadata.required_envs.map((env) => (
-                                                    <div key={env.name} className="rounded-lg border border-border bg-background p-3">
-                                                        <div className="text-sm font-medium text-foreground">
-                                                            {env.name}
-                                                        </div>
-                                                        <div className="text-xs text-muted-foreground">{env.type}</div>
-                                                        {env.description ? (
-                                                            <p className="mt-1 text-sm text-muted-foreground">{env.description}</p>
-                                                        ) : null}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </ScrollArea>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground">No required environment variables were reported.</p>
-                                    )}
-                                </div>
+                                {imageMetadata?.required_envs.length || imageMetadata?.optional_envs.length ? (
+                                    <ScrollArea className="max-h-80 pr-3">
+                                        <div className="space-y-4">
+                                            {imageMetadata.required_envs.map((env) => (
+                                                <div key={`required-${env.name}`} className="space-y-2">
+                                                    <Label htmlFor={`required-env-${env.name}`}>
+                                                        {env.name} <span className="text-muted-foreground">(required)</span>
+                                                    </Label>
+                                                    <Input
+                                                        id={`required-env-${env.name}`}
+                                                        name={env.name}
+                                                        placeholder={env.description ?? `Enter ${env.name}`}
+                                                        autoComplete="off"
+                                                    />
+                                                </div>
+                                            ))}
 
-                                <div className="rounded-xl border border-border bg-muted/30 p-3">
-                                    <div className="text-sm font-medium text-foreground">Metadata summary</div>
-                                    <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                                        <div>
-                                            <span className="text-foreground">Name:</span> {name || '—'}
+                                            {imageMetadata.optional_envs.map((env) => (
+                                                <div key={`optional-${env.name}`} className="space-y-2">
+                                                    <Label htmlFor={`optional-env-${env.name}`}>
+                                                        {env.name} <span className="text-muted-foreground">(Optional)</span>
+                                                    </Label>
+                                                    <Input
+                                                        id={`optional-env-${env.name}`}
+                                                        name={env.name}
+                                                        placeholder={env.description ?? `Enter ${env.name}`}
+                                                        autoComplete="off"
+                                                    />
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div>
-                                            <span className="text-foreground">Description:</span> {description || '—'}
-                                        </div>
-                                        <div>
-                                            <span className="text-foreground">Icon:</span> {icon || '—'}
-                                        </div>
-                                    </div>
-                                </div>
+                                    </ScrollArea>
+                                ) : null}
 
                                 {error ? <p className="text-sm text-destructive">{error}</p> : null}
 

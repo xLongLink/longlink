@@ -45,7 +45,7 @@ function useUserQuery() {
         queryFn: async () => fetchApiJson<User>(userUrl, { credentials: 'include' }),
         // Auth state must refresh immediately after login/logout redirects.
         staleTime: 0,
-        refetchOnWindowFocus: true,
+        refetchOnWindowFocus: false,
         retry: false,
     });
 }

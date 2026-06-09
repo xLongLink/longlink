@@ -24,3 +24,4 @@ class ImageMetadataResponse(BaseModel):
     title: str | None = None
     description: str | None = None
     required_envs: list[EnvironmentMetadata] = Field(default_factory=list)
+    optional_envs: list[EnvironmentMetadata] = Field(default_factory=list)

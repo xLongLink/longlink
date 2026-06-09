@@ -54,6 +54,7 @@ export type ApiImageMetadata = {
     title: string | null;
     description: string | null;
     required_envs: ApiEnvironmentMetadata[];
+    optional_envs: ApiEnvironmentMetadata[];
 };
 
 export type ApiOrgSummary = {
