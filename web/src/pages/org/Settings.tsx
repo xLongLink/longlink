@@ -31,25 +31,33 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
 
     const appColumns: Array<ColumnDef<ApiOrgApp>> = [
         {
-            id: 'icon',
-            header: '',
-            meta: { className: 'w-10' },
-            cell: ({ row }) => {
+            accessorKey: 'name',
+            header: 'App',
+            cell: ({ row, getValue }) => {
                 const iconName = row.original.icon ?? 'Box';
                 const IconComponent = (
                     LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
                 )[iconName];
-                return IconComponent ? <IconComponent className="size-5" /> : <span className="size-5" />;
+
+                return (
+                    <div className="flex items-start gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
+                            {IconComponent ? <IconComponent aria-hidden={true} /> : <span className="size-4" />}
+                        </div>
+                        <div className="min-w-0 space-y-1">
+                            <Link
+                                to={`/orgs/${org}/apps/${row.original.name}`}
+                                className="font-medium text-foreground hover:underline"
+                            >
+                                {getValue<string>()}
+                            </Link>
+                            {row.original.description ? (
+                                <p className="text-sm text-muted-foreground">{row.original.description}</p>
+                            ) : null}
+                        </div>
+                    </div>
+                );
             },
-        },
-        {
-            accessorKey: 'name',
-            header: 'App',
-            cell: ({ row, getValue }) => (
-                <Link to={`/${org}/${row.original.name}`} className="font-medium text-foreground hover:underline">
-                    {getValue<string>()}
-                </Link>
-            ),
         },
         {
             id: 'action',

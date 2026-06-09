@@ -102,6 +102,7 @@ async def create_app(
             payload.name,
             app_slug,
             image=payload.image,
+            description=payload.description,
             icon=payload.icon,
             user=user,
         )

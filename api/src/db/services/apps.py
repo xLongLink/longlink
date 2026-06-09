@@ -66,6 +66,7 @@ class AppsService(ServiceBase):
         name: str,
         slug: str,
         image: str,
+        description: str | None = None,
         icon: str | None = None,
         user: User | None = None,
     ) -> App:
@@ -91,6 +92,7 @@ class AppsService(ServiceBase):
                 'organization': organization,
                 'name': name,
                 'slug': slug,
+                'description': description,
                 'image': image,
                 'icon': icon,
             }

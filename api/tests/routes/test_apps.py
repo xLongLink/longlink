@@ -238,13 +238,18 @@ async def test_create_app_returns_app_response(
     # Act
     response = client.post(
         "/api/apps?organization=acme",
-        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
+        json={
+            "name": "dashboard",
+            "image": "ghcr.io/longlink/dashboard:latest",
+            "description": "Dashboard app",
+        },
     )
 
     # Assert
     assert response.status_code == 200
     payload = response.json()
     expected_data = AppResponse.model_validate(payload).model_dump(mode="json")
+    assert payload["description"] == "Dashboard app"
     assert payload["deleted_by"] is None
     assert payload == expected_data
     assert captured["namespace"] == "acme"

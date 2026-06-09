@@ -108,6 +108,7 @@ async def test_get_organization_returns_member_payload(
             {
                 "id": app.id,
                 "name": "dashboard",
+                "description": None,
                 "icon": None,
                 "created_at": app.created_at,
                 "updated_at": app.updated_at,
@@ -133,6 +134,7 @@ async def test_get_organization_returns_member_payload(
         {
             "id": app.id,
             "name": "dashboard",
+            "description": None,
             "icon": None,
             "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
             "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),

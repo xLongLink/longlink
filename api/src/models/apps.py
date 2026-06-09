@@ -17,6 +17,7 @@ AppName = Annotated[str, BeforeValidator(normalize_app_name)]
 class AppCreate(BaseModel):
     name: AppName
     image: str
+    description: str | None = None
     icon: str | None = None
 
     @field_validator("image", mode="before")
@@ -25,6 +26,13 @@ class AppCreate(BaseModel):
         """Normalize image reference by trimming outer whitespace."""
         return value.strip()
 
+    @field_validator("description", mode="before")
+    @classmethod
+    def normalize_description(cls, value: str | None) -> str | None:
+        """Normalize the optional app description by trimming outer whitespace."""
+
+        return value.strip() if value is not None else None
+
 
 class AppResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -32,6 +40,7 @@ class AppResponse(BaseModel):
     id: int
     name: str
     slug: str
+    description: str | None = None
     icon: str | None = None
     role: Roles | None = None
     created_at: datetime

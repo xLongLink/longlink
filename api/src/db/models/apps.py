@@ -22,6 +22,7 @@ class App(Base, table=True):
     organization: str = Field(foreign_key='organizations.name', max_length=100)
     name: str = Field(unique=True, max_length=100)
     slug: str = Field(max_length=100)
+    description: str | None = Field(default=None, max_length=255)
     image: str = Field(max_length=255)
     icon: str | None = Field(default=None, max_length=50)
     created_by_id: int | None = Field(default=None, foreign_key='users.id')

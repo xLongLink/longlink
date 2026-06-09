@@ -34,12 +34,12 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 │   ├── database
 │   ├── storage
 │   └── compute
-├── :org
-├── :org/applications
-├── :org/people
-├── :org/settings
-└── :org/:app/*
-```
+├── orgs/:org
+├── orgs/:org/applications
+├── orgs/:org/people
+├── orgs/:org/settings
+└── orgs/:org/apps/:app/*
+ ```
 
 ```bash
 bun run dev         # Starts the Vite dev server for live preview.

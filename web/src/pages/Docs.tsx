@@ -127,7 +127,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
                     <div className="pointer-events-auto relative shrink-0 border-b border-border bg-card">
-                        <SidebarTrigger className="absolute top-1/2 left-4 z-10 shrink-0 -translate-y-1/2 cursor-pointer lg:left-6" />
+                        <SidebarTrigger className="absolute top-1/2 left-4 z-10 shrink-0 -translate-y-1/2 cursor-pointer active:!-translate-y-1/2 lg:left-6" />
 
                         <div className="grid h-14 lg:grid-cols-[minmax(0,1fr)_14rem]">
                             <div className="min-w-0 px-4 lg:px-6">
@@ -194,7 +194,7 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
                                 to="/organizations"
                                 className={cn(
                                     buttonVariants({ size: 'sm' }),
-                                    'absolute top-1/2 right-4 z-10 h-7 -translate-y-1/2 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 !transition-none active:!translate-y-1/2 lg:right-6'
+                                    'absolute top-0 bottom-0 right-4 z-10 my-auto h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
                                 )}
                             >
                                 Login

@@ -15,22 +15,16 @@ const organizationColumns: Array<ColumnDef<ApiUserOrgMembership>> = [
     {
         accessorKey: 'name',
         header: 'Name',
-        cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
+        cell: ({ row, getValue }) => (
+            <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                {getValue<string>()}
+            </Link>
+        ),
     },
     {
         accessorKey: 'role',
         header: 'Role',
         meta: { className: 'w-32' },
-    },
-    {
-        id: 'open',
-        header: 'Open',
-        meta: { className: 'w-32' },
-        cell: ({ row }) => (
-            <Link to={`/${row.original.name}`} className="text-sm text-accent hover:underline">
-                Open
-            </Link>
-        ),
     },
 ];
 

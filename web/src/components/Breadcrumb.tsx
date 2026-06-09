@@ -17,12 +17,21 @@ import { Wordmark } from '@/components/Wordmark';
 export function Breadcrumb() {
     const { pathname } = useLocation();
     const segments = pathname.split('/').filter(Boolean);
+    const hiddenSegments = new Set(['orgs', 'apps']);
 
-    // Build one breadcrumb item per visible path segment.
-    const crumbs = segments.map((segment, index) => ({
-        label: startCase(segment),
-        href: `/${segments.slice(0, index + 1).join('/')}`,
-    }));
+    // Build one breadcrumb item per visible path segment while preserving the full route target.
+    const crumbs = segments.flatMap((segment, index) => {
+        if (hiddenSegments.has(segment)) {
+            return [];
+        }
+
+        return [
+            {
+                label: startCase(segment),
+                href: `/${segments.slice(0, index + 1).join('/')}`,
+            },
+        ];
+    });
 
     return (
         <UIBreadcrumb>

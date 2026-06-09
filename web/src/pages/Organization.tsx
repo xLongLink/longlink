@@ -2,7 +2,7 @@ import Layout from '@/layout/Layout';
 import { useOrg } from '@/hooks/use-org';
 import { useUser } from '@/hooks/use-user';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Boxes, Settings2, Users } from 'lucide-react';
+import { LayoutGrid, Settings2, Users } from 'lucide-react';
 import { useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
@@ -21,7 +21,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const { pathname } = useLocation();
     const { orgs } = useUser();
     const org = routeOrg || orgs[0]?.name || '';
-    const pathSection = pathname.split('/')[2] ?? '';
+    const pathSection = pathname.split('/')[3] ?? '';
     const section =
         sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
     const { org: orgDetails, people, invitations, apps, isLoading, error } = useOrg(org);
@@ -32,7 +32,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
     }
 
     let content = (
-        <Hero icon={<Boxes />}>
+        <Hero icon={<LayoutGrid />}>
             <div>
                 <HeroTitle>Applications</HeroTitle>
                 <HeroDescription>Manage the apps attached to this organization.</HeroDescription>
@@ -64,9 +64,9 @@ export default function Organization({ sectionName }: OrganizationProps) {
     return (
         <Layout
             tabs={{
-                Applications: `/${org}`,
-                People: `/${org}/people`,
-                Settings: `/${org}/settings`,
+                Applications: { href: `/orgs/${org}`, icon: LayoutGrid },
+                People: { href: `/orgs/${org}/people`, icon: Users },
+                Settings: { href: `/orgs/${org}/settings`, icon: Settings2 },
             }}
         >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">

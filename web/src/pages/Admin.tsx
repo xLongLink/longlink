@@ -1,5 +1,6 @@
 import Layout from '@/layout/Layout';
 import { Auth } from '@/components/Auth';
+import { Activity, Building2, Cpu, Database, HardDrive, MapPin, Users } from 'lucide-react';
 import { Outlet } from 'react-router';
 
 /** Renders the admin shell with tabbed navigation. */
@@ -8,13 +9,13 @@ export default function Admin() {
         <Auth admin>
             <Layout
                 tabs={{
-                    Users: '/admin/users',
-                    Organizations: '/admin/organizations',
-                    Locations: '/admin/locations',
-                    Database: '/admin/database',
-                    Storage: '/admin/storage',
-                    Compute: '/admin/compute',
-                    Operations: '/admin/operations',
+                    Users: { href: '/admin/users', icon: Users },
+                    Organizations: { href: '/admin/organizations', icon: Building2 },
+                    Locations: { href: '/admin/locations', icon: MapPin },
+                    Database: { href: '/admin/database', icon: Database },
+                    Storage: { href: '/admin/storage', icon: HardDrive },
+                    Compute: { href: '/admin/compute', icon: Cpu },
+                    Operations: { href: '/admin/operations', icon: Activity },
                 }}
             >
                 <section className="mx-auto w-full max-w-[1000px] space-y-8">

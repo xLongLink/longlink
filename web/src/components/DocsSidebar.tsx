@@ -154,7 +154,7 @@ export function DocsSidebar({ currentItemId }: DocsSidebarProps) {
                     to="/"
                     className="flex cursor-pointer items-end justify-center gap-2 text-[1.375rem] font-semibold text-card-foreground transition-opacity hover:opacity-80"
                 >
-                    <Wordmark className="text-base" />
+                    <Wordmark className="text-lg" />
                 </Link>
             </SidebarHeader>
 

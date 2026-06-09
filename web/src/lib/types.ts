@@ -34,6 +34,7 @@ export type ApiUserProfile = ApiUserSummary & {
 export type ApiOrgApp = {
     id: number;
     name: string;
+    description: string | null;
     icon: string | null;
     created_at: string;
     updated_at: string;
@@ -117,6 +118,7 @@ export type ApiAppResponse = {
     id: number;
     name: string;
     role: Role | null;
+    description: string | null;
     icon: string | null;
     created_at: string;
     updated_at: string;

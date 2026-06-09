@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
@@ -9,8 +10,13 @@ import { Link, useLocation } from 'react-router';
 
 import TopLayout from './TopLayout';
 
+type LayoutTab = {
+    href: string;
+    icon?: LucideIcon;
+};
+
 type LayoutProps = {
-    tabs?: Record<string, string>;
+    tabs?: Record<string, string | LayoutTab>;
     brandOnly?: boolean;
     brandHref?: string;
     children: ReactNode;
@@ -50,7 +56,9 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
             {brandOnly || !tabEntries.length ? null : (
                 <div className="mx-auto w-full px-6 pb-0 pt-0">
                     <div className="flex w-full items-center gap-2 border-b border-white/10">
-                        {tabEntries.map(([label, href]) => {
+                        {tabEntries.map(([label, tab]) => {
+                            const href = typeof tab === 'string' ? tab : tab.href;
+                            const Icon = typeof tab === 'string' ? undefined : tab.icon;
                             const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
                             const isActive = `${targetUrl.pathname}${targetUrl.search}` === currentPath;
 
@@ -66,6 +74,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                             'text-white after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-white'
                                     )}
                                 >
+                                    {Icon ? <Icon className="size-4 shrink-0" aria-hidden="true" /> : null}
                                     {label}
                                 </Link>
                             );

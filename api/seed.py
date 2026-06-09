@@ -38,6 +38,7 @@ LOCAL_APP = {
     "name": "sample",
     "slug": "sample",
     "image": "ghcr.io/xlonglink/sample:latest",
+    "description": "Sample application",
     "icon": "Rocket",
 }
 

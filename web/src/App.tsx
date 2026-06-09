@@ -137,7 +137,7 @@ function getRoutes() {
             ],
         },
         {
-            path: ':org',
+            path: 'orgs/:org',
             element: (
                 <Auth>
                     <Organization />
@@ -145,7 +145,7 @@ function getRoutes() {
             ),
         },
         {
-            path: ':org/applications',
+            path: 'orgs/:org/applications',
             element: (
                 <Auth>
                     <Organization sectionName="applications" />
@@ -153,7 +153,7 @@ function getRoutes() {
             ),
         },
         {
-            path: ':org/people',
+            path: 'orgs/:org/people',
             element: (
                 <Auth>
                     <Organization sectionName="people" />
@@ -161,7 +161,7 @@ function getRoutes() {
             ),
         },
         {
-            path: ':org/settings',
+            path: 'orgs/:org/settings',
             element: (
                 <Auth>
                     <Organization sectionName="settings" />
@@ -169,7 +169,7 @@ function getRoutes() {
             ),
         },
         {
-            path: ':org/:app/*',
+            path: 'orgs/:org/apps/:app/*',
             element: (
                 <Auth>
                     <OrgAppView />
