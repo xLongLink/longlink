@@ -4,6 +4,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { Wordmark } from '@/components/Wordmark';
 import { cn } from '@/lib/utils';
+import { ExternalLink } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
 import TopLayout from './TopLayout';
@@ -36,12 +37,15 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                         )}
                     </div>
                     {isSdkMode ? (
-                        <Link
-                            to="/docs"
-                            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+                        <a
+                            href="https://longlink.dev/docs"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
                         >
                             Docs
-                        </Link>
+                            <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                        </a>
                     ) : (
                         <UserProfile />
                     )}

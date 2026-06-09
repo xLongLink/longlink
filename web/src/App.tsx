@@ -1,8 +1,5 @@
 import { Auth } from '@/components/Auth';
 import { useOrg } from '@/hooks/use-org';
-import { content as impressumContent, metadata as impressumMetadata } from '@/legal/impressum';
-import { content as privacyContent, metadata as privacyMetadata } from '@/legal/privacy';
-import { content as termsContent, metadata as termsMetadata } from '@/legal/terms';
 import { apiUrl } from '@/lib/api';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
@@ -14,9 +11,8 @@ import AdminOperations from './pages/admin/Operations';
 import AdminOrganization from './pages/admin/Organization';
 import AdminStorage from './pages/admin/Storage';
 import AdminUsers from './pages/admin/Users';
-import DocsPage from './pages/Docs';
+import DocsLayout from '@/layout/DocsLayout';
 import Home from './pages/Home';
-import { LegalPage } from './pages/LegalPage';
 import NotFound from './pages/NotFound';
 import Organization from './pages/Organization';
 import Organizations from './pages/Organizations';
@@ -45,6 +41,10 @@ import {
 } from '@/pages/docs/xml/components';
 import { content as docsXmlContent, metadata as docsXmlMetadata } from '@/pages/docs/xml/index';
 import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/pages/docs/xml/layout';
+import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
+import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
+import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
+import { LegalLayout } from '@/layout/LegalLayout';
 
 /**
  * Builds the route tree for the current bundle mode.
@@ -58,57 +58,57 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        { path: 'docs', element: <DocsPage content={docsIndexContent} metadata={docsIndexMetadata} /> },
-        { path: 'docs/api', element: <DocsPage content={docsApiContent} metadata={docsApiMetadata} /> },
+        { path: 'docs', element: <DocsLayout content={docsIndexContent} metadata={docsIndexMetadata} /> },
+        { path: 'docs/api', element: <DocsLayout content={docsApiContent} metadata={docsApiMetadata} /> },
         {
             path: 'docs/api/self-hosted',
-            element: <DocsPage content={docsSelfHostedContent} metadata={docsSelfHostedMetadata} />,
+            element: <DocsLayout content={docsSelfHostedContent} metadata={docsSelfHostedMetadata} />,
         },
-        { path: 'docs/sdk', element: <DocsPage content={docsSdkContent} metadata={docsSdkMetadata} /> },
+        { path: 'docs/sdk', element: <DocsLayout content={docsSdkContent} metadata={docsSdkMetadata} /> },
         {
             path: 'docs/sdk/building',
-            element: <DocsPage content={docsSdkBuildingContent} metadata={docsSdkBuildingMetadata} />,
+            element: <DocsLayout content={docsSdkBuildingContent} metadata={docsSdkBuildingMetadata} />,
         },
         {
             path: 'docs/sdk/database',
-            element: <DocsPage content={docsSdkDatabaseContent} metadata={docsSdkDatabaseMetadata} />,
+            element: <DocsLayout content={docsSdkDatabaseContent} metadata={docsSdkDatabaseMetadata} />,
         },
         {
             path: 'docs/sdk/environments',
-            element: <DocsPage content={docsSdkEnvironmentsContent} metadata={docsSdkEnvironmentsMetadata} />,
+            element: <DocsLayout content={docsSdkEnvironmentsContent} metadata={docsSdkEnvironmentsMetadata} />,
         },
         {
             path: 'docs/sdk/routes',
-            element: <DocsPage content={docsSdkRoutesContent} metadata={docsSdkRoutesMetadata} />,
+            element: <DocsLayout content={docsSdkRoutesContent} metadata={docsSdkRoutesMetadata} />,
         },
         {
             path: 'docs/sdk/storage',
-            element: <DocsPage content={docsSdkStorageContent} metadata={docsSdkStorageMetadata} />,
+            element: <DocsLayout content={docsSdkStorageContent} metadata={docsSdkStorageMetadata} />,
         },
         {
             path: 'docs/sdk/testing',
-            element: <DocsPage content={docsSdkTestingContent} metadata={docsSdkTestingMetadata} />,
+            element: <DocsLayout content={docsSdkTestingContent} metadata={docsSdkTestingMetadata} />,
         },
-        { path: 'docs/xml', element: <DocsPage content={docsXmlContent} metadata={docsXmlMetadata} /> },
+        { path: 'docs/xml', element: <DocsLayout content={docsXmlContent} metadata={docsXmlMetadata} /> },
         {
             path: 'docs/xml/components',
-            element: <DocsPage content={docsXmlComponentsContent} metadata={docsXmlComponentsMetadata} />,
+            element: <DocsLayout content={docsXmlComponentsContent} metadata={docsXmlComponentsMetadata} />,
         },
         {
             path: 'docs/xml/layout',
-            element: <DocsPage content={docsXmlLayoutContent} metadata={docsXmlLayoutMetadata} />,
+            element: <DocsLayout content={docsXmlLayoutContent} metadata={docsXmlLayoutMetadata} />,
         },
         { path: 'playground', element: <Playground /> },
         { path: 'theme', element: <Theme /> },
         { path: 'sample', element: <Sample /> },
         {
             path: 'impressum',
-            element: <LegalPage title="Impressum" content={impressumContent} metadata={impressumMetadata} />,
+            element: <LegalLayout title="Impressum" content={impressumContent} metadata={impressumMetadata} />,
         },
-        { path: 'terms', element: <LegalPage title="Terms" content={termsContent} metadata={termsMetadata} /> },
+        { path: 'terms', element: <LegalLayout title="Terms" content={termsContent} metadata={termsMetadata} /> },
         {
             path: 'privacy',
-            element: <LegalPage title="Privacy" content={privacyContent} metadata={privacyMetadata} />,
+            element: <LegalLayout title="Privacy" content={privacyContent} metadata={privacyMetadata} />,
         },
         {
             path: 'organizations',

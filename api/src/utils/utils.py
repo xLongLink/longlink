@@ -51,9 +51,6 @@ def metadata(image: str) -> LongLinkMetadata | None:
                 except (json.JSONDecodeError, TypeError, ValueError):
                     return None
 
-            if all(v is None for v in [result.name, result.description, result.required, result.optional]):
-                return None
-
             return result
     except Exception:
         return None

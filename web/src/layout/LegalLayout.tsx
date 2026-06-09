@@ -9,14 +9,14 @@ type LegalMetadata = {
     editUrl: string;
 };
 
-type LegalPageProps = {
+type LegalLayoutProps = {
     title: string;
     content: ReactNode;
     metadata?: LegalMetadata;
 };
 
-/** Renders the shared public legal page shell. */
-export function LegalPage({ title, content, metadata }: LegalPageProps) {
+/** Renders the shared public legal layout. */
+export function LegalLayout({ title, content, metadata }: LegalLayoutProps) {
     const lastUpdated = metadata?.lastUpdated
         ? (() => {
               const parsedDate = new Date(metadata.lastUpdated);

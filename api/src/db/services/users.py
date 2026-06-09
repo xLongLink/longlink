@@ -85,23 +85,21 @@ class UsersService(ServiceBase):
             if email == ADMIN_EMAIL:
                 org_result = await session.execute(select(Org).where(Org.name == ADMIN_ORG))
                 org = org_result.scalar_one_or_none()
-                if org is None:
-                    session.add(Org(name=ADMIN_ORG))
-
-                membership_result = await session.execute(
-                    select(UserOrganization).where(
-                        UserOrganization.user_id == user.id,
-                        UserOrganization.organization_name == ADMIN_ORG,
-                    )
-                )
-                if membership_result.scalar_one_or_none() is None:
-                    session.add(
-                        UserOrganization(
-                            user_id=user.id,
-                            organization_name=ADMIN_ORG,
-                            role_name=Roles.owner,
+                if org is not None:
+                    membership_result = await session.execute(
+                        select(UserOrganization).where(
+                            UserOrganization.user_id == user.id,
+                            UserOrganization.organization_name == ADMIN_ORG,
                         )
                     )
+                    if membership_result.scalar_one_or_none() is None:
+                        session.add(
+                            UserOrganization(
+                                user_id=user.id,
+                                organization_name=ADMIN_ORG,
+                                role_name=Roles.owner,
+                            )
+                        )
 
                 await session.commit()
 
@@ -144,23 +142,21 @@ class UsersService(ServiceBase):
             if user.email == ADMIN_EMAIL:
                 org_result = await session.execute(select(Org).where(Org.name == ADMIN_ORG))
                 org = org_result.scalar_one_or_none()
-                if org is None:
-                    session.add(Org(name=ADMIN_ORG))
-
-                membership_result = await session.execute(
-                    select(UserOrganization).where(
-                        UserOrganization.user_id == user.id,
-                        UserOrganization.organization_name == ADMIN_ORG,
-                    )
-                )
-                if membership_result.scalar_one_or_none() is None:
-                    session.add(
-                        UserOrganization(
-                            user_id=user.id,
-                            organization_name=ADMIN_ORG,
-                            role_name=Roles.owner,
+                if org is not None:
+                    membership_result = await session.execute(
+                        select(UserOrganization).where(
+                            UserOrganization.user_id == user.id,
+                            UserOrganization.organization_name == ADMIN_ORG,
                         )
                     )
+                    if membership_result.scalar_one_or_none() is None:
+                        session.add(
+                            UserOrganization(
+                                user_id=user.id,
+                                organization_name=ADMIN_ORG,
+                                role_name=Roles.owner,
+                            )
+                        )
 
                 await session.commit()
 

@@ -1,0 +1,29 @@
+import src.db as db
+from fastapi import APIRouter, Depends, HTTPException
+
+from src.auth import authuser
+from src.models import ImageMetadataResponse
+from src.utils.utils import metadata
+
+router = APIRouter(prefix="/api")
+
+
+@router.get("/image", response_model=ImageMetadataResponse)
+async def inspect_image(image: str, _user: db.User = Depends(authuser)) -> ImageMetadataResponse:
+    """Inspect a container image and return its LongLink metadata."""
+
+    image_metadata = metadata(image)
+    # Fail fast when the image cannot be inspected or has no metadata labels.
+    if image_metadata is None:
+        raise HTTPException(status_code=404, detail="Image metadata not found")
+
+    required_envs = []
+    # Expose only the required env metadata in the public inspection response.
+    if image_metadata.required is not None:
+        required_envs.append(image_metadata.required)
+
+    return {
+        "title": image_metadata.name,
+        "description": image_metadata.description,
+        "required_envs": required_envs,
+    }

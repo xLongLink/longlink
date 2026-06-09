@@ -44,6 +44,18 @@ export type ApiOrgApp = {
     deleted_by: ApiUserSummary | null;
 };
 
+export type ApiEnvironmentMetadata = {
+    name: string;
+    type: string;
+    description: string | null;
+};
+
+export type ApiImageMetadata = {
+    title: string | null;
+    description: string | null;
+    required_envs: ApiEnvironmentMetadata[];
+};
+
 export type ApiOrgSummary = {
     name: string;
     location_id: number | null;

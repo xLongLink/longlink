@@ -19,7 +19,7 @@ type DocMetadata = {
     editUrl: string;
 };
 
-type DocsPageProps = {
+type DocsLayoutProps = {
     content: ReactNode;
     metadata: DocMetadata;
 };
@@ -29,12 +29,13 @@ type PageTocItem = {
     label: string;
 };
 
-/** Renders a docs page using the shared docs shell. */
-export default function DocsPage({ content, metadata }: DocsPageProps) {
+/** Renders a docs page using the shared docs layout. */
+export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
     const [activePageTocHref, setActivePageTocHref] = useState('');
+
     // Prefer the longest matching path so nested pages do not resolve to their section overview.
     const currentItem = DOC_GROUPS.flatMap((group) => group.items).reduce<DocItem | undefined>((match, item) => {
         const isPathMatch = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
@@ -260,9 +261,8 @@ export default function DocsPage({ content, metadata }: DocsPageProps) {
     );
 }
 
-/** Renders a docs article with metadata footer. */
-function DocArticle({ content, metadata }: { content: ReactNode; metadata?: DocMetadata }) {
-    const lastUpdated = metadata?.lastUpdated
+function DocArticle({ content, metadata }: DocsLayoutProps) {
+    const lastUpdated = metadata.lastUpdated
         ? (() => {
               const parsedDate = new Date(metadata.lastUpdated);
 
@@ -277,7 +277,7 @@ function DocArticle({ content, metadata }: { content: ReactNode; metadata?: DocM
         : '';
 
     return (
-        <article className="mx-auto w-full max-w-2xl space-y-6">
+        <article className="space-y-6 text-sm leading-6 text-muted-foreground">
             {content}
             {metadata?.lastUpdated || metadata?.editUrl ? (
                 <footer className="flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">

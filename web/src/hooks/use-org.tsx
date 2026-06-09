@@ -108,7 +108,7 @@ export function useCreateApp(org: string) {
     const appsUrl = apiUrl(`/api/apps?organization=${encodeURIComponent(org)}`);
 
     return useMutation({
-        mutationFn: async (payload: { name: string; image: string }) => {
+        mutationFn: async (payload: { name: string; image: string; description?: string | null; icon?: string | null }) => {
             return fetchApiJson<ApiAppResponse>(appsUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

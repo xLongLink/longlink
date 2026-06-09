@@ -43,6 +43,7 @@ def test_setup_creates_full_scaffold(monkeypatch, tmp_path):
     assert (target / 'tests/conftest.py').exists()
     assert (target / 'tests/api').exists()
     assert (target / 'tests/api/test_sample_routes.py').exists()
+    assert not (target / 'uv.lock').exists()
 
     pyproject = (target / 'pyproject.toml').read_text()
     assert 'name = "longlink-app"' in pyproject

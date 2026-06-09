@@ -9,7 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
-import { BookOpen, Building2, Cpu, Database, HardDrive, LogOut, MapPin, Settings2, Users } from 'lucide-react';
+import { BookOpen, Building2, Cpu, Database, ExternalLink, HardDrive, LogOut, MapPin, Settings2, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 
 /** Renders a user profile dropdown with authentication actions. */
@@ -72,11 +72,19 @@ export function UserProfile() {
                         Settings
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        render={<Link to="/docs" className="flex w-full items-center gap-2 text-inherit" />}
+                        render={
+                            <Link
+                                to="/docs"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex w-full items-center gap-2 text-inherit"
+                            />
+                        }
                         className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
                     >
                         <BookOpen className="h-4 w-4" />
                         Documentation
+                        <ExternalLink className="ml-auto size-3.5 shrink-0" aria-hidden="true" />
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 {user.admin ? (

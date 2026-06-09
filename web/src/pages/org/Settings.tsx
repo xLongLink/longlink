@@ -8,7 +8,7 @@ import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Input } from '@ui/input';
 import { Menu, MenuSection } from '@ui/menu';
-import * as LucideIcons from 'lucide-react';
+import { DynamicIcon } from 'lucide-react/dynamic';
 import { Boxes, Building2, Database, HardDrive, Plug, Settings2, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -34,15 +34,16 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
             accessorKey: 'name',
             header: 'App',
             cell: ({ row, getValue }) => {
-                const iconName = row.original.icon ?? 'Box';
-                const IconComponent = (
-                    LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
-                )[iconName];
+                const iconName = (row.original.icon ?? 'box').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
                 return (
                     <div className="flex items-start gap-3">
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                            {IconComponent ? <IconComponent aria-hidden={true} /> : <span className="size-4" />}
+                            <DynamicIcon
+                                name={iconName as Parameters<typeof DynamicIcon>[0]['name']}
+                                aria-hidden={true}
+                                className="size-4"
+                            />
                         </div>
                         <div className="min-w-0 space-y-1">
                             <Link

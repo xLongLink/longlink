@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class EnvironmentMetadata(BaseModel):
@@ -16,3 +16,11 @@ class LongLinkMetadata(BaseModel):
     description: str | None = None
     required: EnvironmentMetadata | None = None
     optional: EnvironmentMetadata | None = None
+
+
+class ImageMetadataResponse(BaseModel):
+    """Public image inspection payload returned by the API."""
+
+    title: str | None = None
+    description: str | None = None
+    required_envs: list[EnvironmentMetadata] = Field(default_factory=list)
