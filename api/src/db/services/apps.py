@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from .base import ServiceBase
-from sqlalchemy import and_, delete, select
-from src.db.models import App, Env
+from sqlalchemy import and_, select
+from src.db.models import App
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.db.models.users import User
@@ -117,8 +117,6 @@ class AppsService(ServiceBase):
             if app is None:
                 raise ValueError('App not found')
 
-            # Remove env rows first so the app row is not blocked by dependent secrets.
-            await session.execute(delete(Env).where(Env.appname == app.name))
             await session.delete(app)
             try:
                 # Surface referential integrity failures as service-level validation errors.

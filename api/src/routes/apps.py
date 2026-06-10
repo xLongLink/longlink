@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, Response, status
 from src.auth import authuser, authadmin
 from src.adapters.database import Postgre
 from src.models.apps import AppCreate, AppResponse
-from src.utils.utils import knames, slugify, metadata
+from src.utils.utils import slugify
 from src.adapters.compute.k8s import K8s
 from src.router import router
 
@@ -80,20 +80,7 @@ async def create_app(
     await database.schema(organization, app_slug)
 
     # Deploy the app on the compute cluster.
-    await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, {})
-
-    # Validate the image metadata after a successful deployment and print env specs.
-    app_metadata = metadata(payload.image)
-    if app_metadata is not None:
-        for label, env in (("required", app_metadata.required), ("optional", app_metadata.optional)):
-            if env is None:
-                continue
-
-            env_payload = {"name": env.name, "type": env.type}
-            if env.description is not None:
-                env_payload["description"] = env.description
-
-            print(label, env_payload)
+    await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
 
     try:
         app = await db.apps.create(

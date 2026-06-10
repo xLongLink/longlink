@@ -1,6 +1,6 @@
 import httpx2
 import src.db as db
-from src.models import AppResponse, ComputeKind, DatabaseKind, LongLinkMetadata, UserSummary
+from src.models import AppResponse, ComputeKind, DatabaseKind, UserSummary
 from src.db.models import User, UserApp
 from src.db.session import get_session
 from src.models.roles import Roles
@@ -222,17 +222,6 @@ async def test_create_app_returns_app_response(
 
     monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
     monkeypatch.setattr("src.routes.apps.Postgre", FakeDatabase)
-    monkeypatch.setattr(
-        "src.routes.apps.metadata",
-        lambda image: LongLinkMetadata(
-            name="dashboard",
-            description="Demo app",
-            required={"name": "API_KEY", "type": "str", "description": "API key used by Longlink"},
-            optional={"name": "PORT", "type": "int", "description": "HTTP listen port"},
-        ),
-    )
-    printed: list[tuple[object, ...]] = []
-    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: printed.append(args))
     client = clients[0]
 
     # Act
@@ -242,6 +231,10 @@ async def test_create_app_returns_app_response(
             "name": "dashboard",
             "image": "ghcr.io/longlink/dashboard:latest",
             "description": "Dashboard app",
+            "envs": {
+                "API_KEY": "secret-value",
+                "PORT": "8080",
+            },
         },
     )
 
@@ -268,18 +261,11 @@ async def test_create_app_returns_app_response(
         "application": "dashboard",
         "image": "ghcr.io/longlink/dashboard:latest",
         "port": 80,
-        "secrets": {},
+        "secrets": {
+            "API_KEY": "secret-value",
+            "PORT": "8080",
+        },
     }
-    assert printed == [
-        (
-            "required",
-            {"name": "API_KEY", "type": "str", "description": "API key used by Longlink"},
-        ),
-        (
-            "optional",
-            {"name": "PORT", "type": "int", "description": "HTTP listen port"},
-        ),
-    ]
 
 
 async def test_delete_app_removes_dependent_env_rows(
@@ -295,7 +281,6 @@ async def test_delete_app_removes_dependent_env_rows(
     remote_location = await db.locations.create("remote", "Remote testing")
     await db.orgs.create("acme", local_location.id, user)
     app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
-    await db.envs.set("TOKEN", "secret", "dashboard")
     captured: dict[str, object] = {}
 
     class FakeCompute:
@@ -366,7 +351,6 @@ async def test_delete_app_removes_dependent_env_rows(
     # Assert
     assert response.status_code == 204
     assert await db.apps.get("acme", "dashboard") is None
-    assert await db.envs.get("TOKEN", "dashboard") is None
     assert captured == {
         "proxy_secret": captured["proxy_secret"],
         "remove": {"organization": "acme", "application": "dashboard"},

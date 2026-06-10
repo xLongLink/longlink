@@ -75,6 +75,20 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
         event.preventDefault();
         setError(null);
 
+        const envs: Record<string, string> = {};
+        // Collect all environment inputs from the final step before creating the app.
+        for (const [key, value] of new FormData(event.currentTarget).entries()) {
+            if (typeof value !== 'string') {
+                continue;
+            }
+
+            if (value.length === 0) {
+                continue;
+            }
+
+            envs[key] = value;
+        }
+
         // Submit the new app and close the dialog on success.
         try {
             await createApp.mutateAsync({
@@ -82,6 +96,7 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                 image: image.trim(),
                 description: description.trim().length > 0 ? description.trim() : null,
                 icon: icon.trim().length > 0 ? icon.trim() : null,
+                envs,
             });
             setOpen(false);
             resetDialogState();
@@ -243,6 +258,7 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                                                     <Input
                                                         id={`required-env-${env.name}`}
                                                         name={env.name}
+                                                        required={true}
                                                         placeholder={env.description ?? `Enter ${env.name}`}
                                                         autoComplete="off"
                                                     />

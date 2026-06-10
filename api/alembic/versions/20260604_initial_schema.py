@@ -153,19 +153,6 @@ def upgrade() -> None:
         sa.UniqueConstraint("name"),
     )
 
-    op.create_table(
-        "envs",
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.Column("deleted_at", sa.DateTime(), nullable=True),
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("key", sa.String(length=128), nullable=False),
-        sa.Column("value", AutoString(), nullable=False),
-        sa.Column("appname", sa.String(length=100), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.ForeignKeyConstraint(["appname"], ["apps.name"]),
-    )
-
     # Association tables are created last so both sides of each relationship already exist.
     op.create_table(
         "user_organizations",
@@ -195,7 +182,6 @@ def downgrade() -> None:
 
     op.drop_table("user_apps")
     op.drop_table("user_organizations")
-    op.drop_table("envs")
     op.drop_table("storage_registries")
     op.drop_table("database_registries")
     op.drop_table("compute_registries")

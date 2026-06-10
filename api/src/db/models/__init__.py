@@ -1,7 +1,6 @@
 # Import all models here to ensure they are registered with Base
 from .org import Org
 from .apps import App
-from .envs import Env
 from .users import User
 from .compute import ComputeRegistry
 from .storage import StorageRegistry
@@ -18,7 +17,6 @@ __all__ = [
     "UserOrganization",
     "ComputeRegistry",
     "DatabaseRegistry",
-    "Env",
     "Operation",
     "Location",
     "Org",
