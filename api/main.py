@@ -2,14 +2,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from pathlib import Path
 
-from src.operations import execute
-from src.env import env
-from src.router import router
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from src.env import env
+from src.logger import logger
+from src.database.services.operations import operations
+from src.operations import complete_ready_operations, execute_claimed_operation, recover_active_operations
+from src.router import router
+from starlette.exceptions import HTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 
@@ -22,19 +24,38 @@ class SPAStaticFiles(StaticFiles):
             return await super().get_response(path, scope)
 
         try:
-            return await super().get_response(path, scope)
-        except StarletteHTTPException as exc:
+            response = await super().get_response(path, scope)
+        except HTTPException as exc:
             if exc.status_code != 404:
                 raise
+            response = await super().get_response("index.html", scope)
 
-        return await super().get_response("index.html", scope)
+        return response
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Drain any queued operations before the API starts serving traffic."""
 
-    await execute()
+    logger.info("Starting operation drain")
+    await recover_active_operations()
+
+    while True:
+        operation = await operations.claim_next()
+        if operation is None:
+            break
+
+        logger.info("Executing operation %s (%s)", operation.id, operation.kind)
+        try:
+            await execute_claimed_operation(operation)
+        except Exception:
+            # Keep draining so one failed operation does not block the queue.
+            logger.exception("Operation drain failed for %s (%s)", operation.id, operation.kind)
+            continue
+
+    # Finalize any operations that only need a readiness check.
+    await complete_ready_operations()
+    logger.info("Finished operation drain")
     yield
 
 
@@ -46,41 +67,21 @@ app = FastAPI(
 )
 
 
-@app.exception_handler(StarletteHTTPException)
-async def handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
-    """Wrap FastAPI HTTP errors in the shared API envelope."""
-
-    detail = "" if exc.detail is None else str(exc.detail)
-
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"success": False, "detail": detail, "data": None},
-    )
-
-
+@app.exception_handler(HTTPException)
 @app.exception_handler(RequestValidationError)
-async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-    """Wrap validation errors in the shared API envelope."""
+async def handle_api_error(_request: Request, exc: Exception) -> JSONResponse:
+    """Wrap API errors in the shared envelope."""
 
-    detail = "; ".join(error["msg"] for error in exc.errors()) or "Validation error"
+    if isinstance(exc, RequestValidationError):
+        detail = "; ".join(error["msg"] for error in exc.errors()) or "Validation error"
+        status_code = 422
+    else:
+        detail = "" if getattr(exc, "detail", None) is None else str(exc.detail)
+        status_code = exc.status_code
 
-    return JSONResponse(
-        status_code=422,
-        content={"success": False, "detail": detail, "data": None},
-    )
+    return JSONResponse(status_code=status_code, content={"success": False, "detail": detail, "data": None})
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8000",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 app.add_middleware(
     SessionMiddleware,
     secret_key=env.SESSION_KEY,
@@ -113,5 +114,17 @@ if static_dir.exists():
 
 if __name__ == "__main__":
     import uvicorn
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:8000",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000)

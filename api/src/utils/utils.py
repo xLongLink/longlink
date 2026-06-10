@@ -1,12 +1,12 @@
-import json
 import re
-
+import json
+import yaml
 import httpx2
-import yaml as pyyaml
-from src.models.metadata import EnvironmentMetadata, LongLinkMetadata
+from yaml import safe_load_all
 from string import Template
 from pathlib import Path
 from urllib.parse import urlparse
+from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
 def metadata(image: str) -> LongLinkMetadata | None:
@@ -213,9 +213,9 @@ def normalize(url: str) -> str:
     return cleaned_url
 
 
-def yaml(template_path: str | Path, **context: str) -> dict | list[dict]:
+def readyml(template_path: str | Path, **context: str) -> dict | list[dict]:
     """Render one YAML template file into a manifest dictionary or list."""
     source = Path(template_path)
     rendered = Template(source.read_text(encoding="utf-8")).safe_substitute(**context)
-    docs = list(pyyaml.safe_load_all(rendered))
+    docs = list(safe_load_all(rendered))
     return docs if len(docs) > 1 else docs[0]

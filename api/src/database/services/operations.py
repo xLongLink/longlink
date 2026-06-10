@@ -187,16 +187,4 @@ class OperationsService(ServiceBase):
             return refreshed.scalar_one_or_none()
 
 
-    async def start(self, operation_id: int) -> Operation | None:
-        """Compatibility wrapper for claiming one operation."""
-
-        return await self.claim(operation_id)
-
-
-    async def stop(self, operation_id: int) -> Operation | None:
-        """Compatibility wrapper for completing one operation."""
-
-        return await self.complete(operation_id)
-
-
 operations = OperationsService()

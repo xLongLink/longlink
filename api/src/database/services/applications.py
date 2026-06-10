@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from .base import ServiceBase
 from sqlalchemy import and_, select
-from src.database.models.apps import App
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.database.models.users import User
+
+from .base import ServiceBase
+from src.database.models.apps import App
 from src.database.models.association import UserApp
+from src.database.models.users import User
 
 
 class AppsService(ServiceBase):
@@ -17,11 +18,7 @@ class AppsService(ServiceBase):
             # Join the membership row so the caller can render the app role in one query.
             statement = (
                 select(App, UserApp.role_name)
-                .options(
-                    selectinload(App.created_by),
-                    selectinload(App.updated_by),
-                    selectinload(App.deleted_by),
-                )
+                .options(*_app_relation_options())
                 .outerjoin(
                     UserApp,
                     and_(
@@ -39,11 +36,10 @@ class AppsService(ServiceBase):
         """Return a registered app by organization and name."""
 
         async with self.session() as session:
-            statement = select(App).options(
-                selectinload(App.created_by),
-                selectinload(App.updated_by),
-                selectinload(App.deleted_by),
-            ).where(App.organization == organization, App.name == name)
+            statement = select(App).options(*_app_relation_options()).where(
+                App.organization == organization,
+                App.name == name,
+            )
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -52,11 +48,7 @@ class AppsService(ServiceBase):
         """Return a registered app by id."""
 
         async with self.session() as session:
-            statement = select(App).options(
-                selectinload(App.created_by),
-                selectinload(App.updated_by),
-                selectinload(App.deleted_by),
-            ).where(App.id == app_id)
+            statement = select(App).options(*_app_relation_options()).where(App.id == app_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -126,6 +118,16 @@ class AppsService(ServiceBase):
                 raise ValueError('App has dependent resources') from exc
 
             return app
+
+
+def _app_relation_options() -> tuple:
+    """Build the shared eager-loading options for app lookups."""
+
+    return (
+        selectinload(App.created_by),
+        selectinload(App.updated_by),
+        selectinload(App.deleted_by),
+    )
 
 
 apps = AppsService()

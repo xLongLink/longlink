@@ -1,15 +1,14 @@
-from fastapi import Depends, HTTPException, Response, status
-from src.adapters.compute.k8s import K8s
-from src.adapters.database import Postgre
+from fastapi import Depends, Response, HTTPException, status
 from src.auth import authuser, authadmin
-from src.database.models.users import User
-from src.database.services.applications import apps
-from src.database.services.compute import compute as compute_service
-from src.database.services.operations import operations
-from src.models.applications import AppCreate, AppResponse
 from src.logger import logger
 from src.router import router
-from src.operations.applications import create_app as build_app, delete_app as teardown_app
+from src.models.applications import AppCreate, AppResponse
+from src.adapters.compute.k8s import K8s
+from src.database.models.users import User
+from src.operations.applications import create_app as run_create_app, delete_app as run_delete_app
+from src.database.services.compute import compute
+from src.database.services.operations import operations
+from src.database.services.applications import apps
 
 
 @router.get("/api/apps", response_model=list[AppResponse])
@@ -68,7 +67,7 @@ async def create_app(
     logger.info("Claimed app creation %s for %s/%s", operation.id, organization, payload.name)
 
     try:
-        app = await build_app(organization, payload, user)
+        app = await run_create_app(organization, payload, user)
     except HTTPException as exc:
         logger.warning("App creation %s failed: %s", operation.id, exc.detail)
         await operations.fail(operation.id, str(exc.detail))
@@ -114,7 +113,7 @@ async def delete_app(
     logger.info("Claimed app deletion %s for %s/%s", operation.id, organization, app_id)
 
     try:
-        await teardown_app(organization, app_id)
+        await run_delete_app(organization, app_id)
     except HTTPException as exc:
         logger.warning("App deletion %s failed: %s", operation.id, exc.detail)
         await operations.fail(operation.id, str(exc.detail))
@@ -145,7 +144,7 @@ async def get_app_logs(organization: str, app_id: int, user: User = Depends(auth
     if org is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
 
-    registries = [registry for registry in await compute_service.list() if registry.deleted_at is None]
+    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 
@@ -157,10 +156,10 @@ async def get_app_logs(organization: str, app_id: int, user: User = Depends(auth
             detail=f"No compute cluster configured for location '{org.location_id}'",
         )
 
-    compute = K8s(registry.kubeconfig, registry.proxy_secret)
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
     try:
-        logs = await compute.logs(organization, app.slug)
+        logs = await k8s.logs(organization, app.slug)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
 

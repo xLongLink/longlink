@@ -4,9 +4,6 @@ import logging
 from uvicorn.config import LOGGING_CONFIG
 from uvicorn.logging import DefaultFormatter
 
-from longlink.constants import DEV_PORT
-
-
 logger = logging.getLogger("longlink")
 
 log_config = copy.deepcopy(LOGGING_CONFIG)

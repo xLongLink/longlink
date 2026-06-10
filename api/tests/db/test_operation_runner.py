@@ -1,7 +1,8 @@
 from types import SimpleNamespace
+from fastapi.testclient import TestClient
+from main import app
 from src.models.kinds import ComputeKind, DatabaseKind
 from src.models.operations import OperationStatus
-from src.operations import execute
 from src.database.services.applications import apps
 from src.database.services.compute import compute
 from src.database.services.database import database
@@ -50,10 +51,11 @@ async def test_drain_scheduled_operations_executes_compute_setup(monkeypatch) ->
         async def setup(self) -> None:
             calls.append("setup")
 
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr("src.adapters.compute.K8s", FakeCompute)
 
     # Act
-    await execute()
+    with TestClient(app):
+        pass
 
     # Assert
     assert calls == ["init", "cleanup", "setup"]
@@ -155,18 +157,19 @@ async def test_drain_active_app_create_operation_resumes_from_database(monkeypat
             calls.append("schema")
             return "postgresql://fake"
 
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
-    monkeypatch.setattr("src.routes.applications.Postgre", FakeDatabase)
+    monkeypatch.setattr("src.operations.applications.K8s", FakeCompute)
+    monkeypatch.setattr("src.operations.applications.Postgre", FakeDatabase)
 
     async def fake_app_is_ready(operation) -> bool:
         """Pretend the app endpoints are already available."""
 
         return True
 
-    monkeypatch.setattr("src.operations._app_is_ready", fake_app_is_ready)
+    monkeypatch.setattr("src.operations.app_is_ready", fake_app_is_ready)
 
     # Act
-    await execute()
+    with TestClient(app):
+        pass
 
     # Assert
     assert calls == ["init", "database", "namespace", "schema", "application"]
@@ -211,10 +214,11 @@ async def test_drain_active_app_create_operation_finishes_existing_app(monkeypat
         calls.append("ready-check")
         return True
 
-    monkeypatch.setattr("src.operations._app_is_ready", fake_app_is_ready)
+    monkeypatch.setattr("src.operations.app_is_ready", fake_app_is_ready)
 
     # Act
-    await execute()
+    with TestClient(app):
+        pass
 
     # Assert
     assert calls == ["ready-check"]

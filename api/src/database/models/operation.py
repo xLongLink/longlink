@@ -1,10 +1,8 @@
-from datetime import datetime
 from typing import Any
-
-from sqlalchemy import JSON, Column, Enum as SQLEnum, String
+from datetime import datetime
 from sqlmodel import Field, SQLModel
-
 from .__base__ import utcnow
+from sqlalchemy import JSON, Enum, Column, String
 from src.models.operations import OperationStatus
 
 
@@ -18,7 +16,7 @@ class Operation(SQLModel, table=True):
     payload: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
     status: OperationStatus = Field(
         default=OperationStatus.scheduled,
-        sa_column=Column(SQLEnum(OperationStatus, name="operation_status_enum", native_enum=False), nullable=False),
+        sa_column=Column(Enum(OperationStatus, name="operation_status_enum", native_enum=False), nullable=False),
     )
     error: str | None = Field(default=None, sa_column=Column(String(length=2000), nullable=True))
     created_at: datetime = Field(default_factory=utcnow)

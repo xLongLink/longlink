@@ -20,6 +20,13 @@ k3d cluster create compute \
 
 Use `localhost:8443` as the compute ingress host in local config.
 
+Install Kong into the cluster before provisioning apps:
+
+```bash
+kubectl apply -k dev/kong
+kubectl -n kong rollout status deployment/kong-ingress-kong --timeout=5m
+```
+
 Export the kubeconfig afterward:
 
 ```bash

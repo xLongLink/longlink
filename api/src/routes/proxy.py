@@ -5,7 +5,7 @@ from src.router import router
 from src.utils.utils import knames, normalize
 from src.utils.namespace import k8name
 from src.database.models.users import User
-from src.database.services.compute import compute as compute_service
+from src.database.services.compute import compute
 from src.database.services.applications import apps
 
 HOP_BY_HOP_HEADERS = {
@@ -34,7 +34,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if org is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{app.organization}' not found")
 
-    registries = [registry for registry in await compute_service.list() if registry.deleted_at is None]
+    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 

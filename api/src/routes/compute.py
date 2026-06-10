@@ -1,10 +1,10 @@
 from fastapi import Depends, HTTPException, status
 from src.auth import authadmin
-from src.database.models.users import User
-from src.database.services.compute import compute
-from src.adapters.compute import K8s
 from src.router import router
 from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse
+from src.adapters.compute import K8s
+from src.database.models.users import User
+from src.database.services.compute import compute
 
 
 @router.get("/api/compute", response_model=list[ComputeRegistryResponse])
@@ -45,7 +45,7 @@ async def create_compute_registry(
         await compute.purge(registry.id)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Failed to bootstrap the cluster proxy",
+            detail="Failed to bootstrap Kong for the cluster",
         ) from exc
 
     return {

@@ -3,12 +3,12 @@ import json
 import pytest
 import pytest_asyncio
 from base64 import b64encode
-from itsdangerous import TimestampSigner
 from pathlib import Path
+from itsdangerous import TimestampSigner
+from src.database import session
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
 
 # Seed the required settings before importing the FastAPI app.
 os.environ.setdefault("SESSION_KEY", "1234")
@@ -19,10 +19,9 @@ os.environ.setdefault("OIDC_ISSUER", "http://localhost:18080/realms/dev")
 os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
 
 from main import app
-import src.database.session as db_session
-from src.database.models.__base__ import Base
-from src.database.models.users import User
 from src.env import env
+from src.database.models.users import User
+from src.database.models.__base__ import Base
 
 SESSION_COOKIE = "longlink_session"
 
@@ -35,21 +34,21 @@ async def reset_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncIter
     monkeypatch.setattr(env, 'DATABASE_URL', db_url)
 
     # Clear any cached session engine before binding the test database.
-    db_session.Session = None
-    db_session._engine = None
+    session.Session = None
+    session._engine = None
 
     engine = create_async_engine(db_url)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    db_session._engine = engine
-    db_session.Session = async_sessionmaker(engine, expire_on_commit=False)
+    session._engine = engine
+    session.Session = async_sessionmaker(engine, expire_on_commit=False)
 
     try:
         yield
     finally:
-        db_session.Session = None
-        db_session._engine = None
+        session.Session = None
+        session._engine = None
         await engine.dispose()
 
 
@@ -65,18 +64,18 @@ def session_cookie(oidc_subject: str) -> dict[str, str]:
 async def users() -> tuple[User, User, User]:
     """Create three persisted users for tests."""
 
-    Session = await db_session.get_session()
-    async with Session() as session:
+    Session = await session.get_session()
+    async with Session() as db_session:
         user1 = User(name='user1', email='user1@example.com', oidc_subject='oidc-user-1', admin=True)
         user2 = User(name='user2', email='user2@example.com', oidc_subject='oidc-user-2')
         user3 = User(name='user3', email='user3@example.com', oidc_subject='oidc-user-3')
 
-        session.add_all([user1, user2, user3])
-        await session.commit()
+        db_session.add_all([user1, user2, user3])
+        await db_session.commit()
 
-        await session.refresh(user1)
-        await session.refresh(user2)
-        await session.refresh(user3)
+        await db_session.refresh(user1)
+        await db_session.refresh(user2)
+        await db_session.refresh(user3)
 
         return user1, user2, user3
 

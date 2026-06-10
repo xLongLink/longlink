@@ -15,6 +15,3 @@ class Envs(BaseSettings):
     STORAGE_ENDPOINT_URL: str | None = None
     STORAGE_ACCESS_KEY_ID: str | None = None
     STORAGE_SECRET_ACCESS_KEY: str | None = None
-
-
-Env = Envs

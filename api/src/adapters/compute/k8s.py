@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import yaml
+import asyncio
+from urllib import error, request
 from datetime import UTC, datetime
 from src.utils import utils
 from .__root__ import Compute
@@ -13,6 +15,12 @@ from kubernetes.client.rest import ApiException
 
 class K8s(Compute):
     """Manage Kubernetes namespaces and internal application workloads."""
+
+    KONG_VERSION = "v3.5.9"
+    KONG_CRD_VERSION = "v1.5.2"
+    KONG_NAMESPACE = "kong"
+    KONG_PROXY_IMAGE = "kong:3.9"
+    KONG_CONTROLLER_IMAGE = "kong/kubernetes-ingress-controller:3.5"
 
     def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
         """Initialize the Kubernetes compute adapter."""
@@ -28,10 +36,134 @@ class K8s(Compute):
         self._dynamic_client = DynamicClient(self._api_client)
 
     async def setup(self) -> None:
-        """No cluster bootstrap is required when Kong is provided externally."""
+        """Install Kong into the target cluster using Kubernetes API calls."""
 
-        return None
+        try:
+            # Install the CRDs first so Kong custom resources are discoverable.
+            await self._apply_remote_manifests(
+                f"https://github.com/kong/kubernetes-configuration/config/crd/ingress-controller?ref={self.KONG_CRD_VERSION}",
+                cluster_scoped=True,
+            )
 
+            # Then install the controller and gateway resources in-cluster.
+            for url in (
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/base/namespace.yaml",
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/rbac/leader_election_role.yaml",
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/rbac/leader_election_role_binding.yaml",
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/rbac/role.yaml",
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/rbac/role_binding.yaml",
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/base/serviceaccount.yaml",
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/base/service.yaml",
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/base/ingressclass.yaml",
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/base/validation-service.yaml",
+            ):
+                await self._apply_remote_manifests(url)
+
+            await self._apply_remote_manifests(
+                f"https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/{self.KONG_VERSION}/config/base/kong-ingress-dbless.yaml",
+                replace={
+                    "kong-placeholder:placeholder": self.KONG_PROXY_IMAGE,
+                    "kic-placeholder:placeholder": self.KONG_CONTROLLER_IMAGE,
+                },
+            )
+
+            await self._wait_for_deployment("ingress-kong", self.KONG_NAMESPACE)
+        except (error.URLError, ApiException, ValueError) as exc:
+            raise ValueError("Failed installing Kong ingress controller") from exc
+
+
+    async def _apply_remote_manifests(self, url: str, cluster_scoped: bool = False, replace: dict[str, str] | None = None) -> None:
+        """Fetch and apply one remote YAML bundle."""
+
+        try:
+            with request.urlopen(url, timeout=30) as response:
+                rendered = response.read().decode("utf-8")
+        except error.URLError as exc:
+            raise ValueError(f"Failed fetching Kong manifest bundle from {url}") from exc
+
+        if replace is not None:
+            for old, new in replace.items():
+                rendered = rendered.replace(old, new)
+
+        documents = [document for document in yaml.safe_load_all(rendered) if document is not None]
+        for manifest in documents:
+            if cluster_scoped and manifest["kind"] == "CustomResourceDefinition":
+                await self._apply_crd(manifest)
+                continue
+
+            await self._apply_manifest(manifest)
+
+
+    async def _apply_crd(self, manifest: dict) -> None:
+        """Create or replace one custom resource definition."""
+
+        api = client.ApiextensionsV1Api(self._api_client)
+        name = manifest["metadata"]["name"]
+        try:
+            api.read_custom_resource_definition(name)
+            api.replace_custom_resource_definition(name, manifest)
+        except ApiException as exc:
+            if exc.status != 404:
+                raise ValueError(f"Failed applying CustomResourceDefinition '{name}'") from exc
+
+            api.create_custom_resource_definition(manifest)
+
+
+    async def _apply_manifest(self, manifest: dict) -> None:
+        """Create or replace one manifest through the dynamic Kubernetes client."""
+
+        resource = self._dynamic_client.resources.get(api_version=manifest["apiVersion"], kind=manifest["kind"])
+        name = manifest["metadata"]["name"]
+        namespace = manifest["metadata"].get("namespace")
+        try:
+            if resource.namespaced:
+                resource.get(name=name, namespace=namespace)
+                resource.patch(
+                    body=manifest,
+                    name=name,
+                    namespace=namespace,
+                    content_type="application/apply-patch+yaml",
+                    field_manager="longlink",
+                    force=True,
+                )
+            else:
+                resource.get(name=name)
+                resource.patch(
+                    body=manifest,
+                    name=name,
+                    content_type="application/apply-patch+yaml",
+                    field_manager="longlink",
+                    force=True,
+                )
+        except ApiException as exc:
+            if exc.status not in (404, 409):
+                raise ValueError(f"Failed applying {manifest['kind']} '{name}'") from exc
+
+            if exc.status == 409:
+                try:
+                    if resource.namespaced:
+                        resource.delete(name=name, namespace=namespace)
+                    else:
+                        resource.delete(name=name)
+                except ApiException:
+                    pass
+            if resource.namespaced:
+                resource.create(body=manifest, namespace=namespace)
+            else:
+                resource.create(body=manifest)
+
+
+    async def _wait_for_deployment(self, name: str, namespace: str) -> None:
+        """Wait for one deployment to report at least one available replica."""
+
+        for _ in range(60):
+            deployment = self._apps_api.read_namespaced_deployment_status(name, namespace)
+            if (deployment.status.available_replicas or 0) > 0 or (deployment.status.ready_replicas or 0) > 0:
+                return
+
+            await asyncio.sleep(2)
+
+        raise ValueError(f"Timed out waiting for deployment '{namespace}/{name}'")
 
     async def cleanup(self) -> None:
         """Delete all Kubernetes resources managed by the control plane."""
@@ -137,7 +269,7 @@ class K8s(Compute):
             },
         )
 
-        app_manifests = utils.yaml(
+        app_manifests = utils.readyml(
             TEMPLATES / "application.yml",
             image=image,
             name=name,
@@ -166,7 +298,7 @@ class K8s(Compute):
                     manifest,
                 )
 
-        kong_manifests = utils.yaml(
+        kong_manifests = utils.readyml(
             TEMPLATES / "kong.yml",
             name=name,
             namespace=namespace,
