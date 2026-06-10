@@ -1,7 +1,8 @@
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
-from src.models.locations import LocationResponse
 from src.models.users import UserSummary
+from src.models.locations import LocationResponse
+from src.models.applications import AppStatus
 
 
 class OrgCreate(BaseModel):
@@ -33,6 +34,7 @@ class OrgAppResponse(BaseModel):
 
     id: int
     name: str
+    status: AppStatus
     description: str | None = None
     icon: str | None = None
     created_at: datetime

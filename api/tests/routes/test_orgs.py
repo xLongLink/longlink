@@ -1,16 +1,16 @@
 from types import SimpleNamespace
+from src.models.users import UserSummary
+from fastapi.testclient import TestClient
+from src.models.organizations import OrgDetails, OrgSummary
 from src.database.models.users import User
-from src.database.services.applications import apps
+from src.database.services.users import users
 from src.database.services.compute import compute
+from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
+from src.database.services.applications import apps
 from src.database.services.organizations import orgs
-from src.database.services.storage import storage
-from src.database.services.users import users
-from fastapi.testclient import TestClient
-from src.models.organizations import OrgDetails, OrgSummary
-from src.models.users import UserSummary
 
 db = SimpleNamespace(
     apps=apps,
@@ -129,6 +129,7 @@ async def test_get_organization_returns_member_payload(
             {
                 "id": app.id,
                 "name": "dashboard",
+                "status": app.status,
                 "description": None,
                 "icon": None,
                 "created_at": app.created_at,
@@ -155,6 +156,7 @@ async def test_get_organization_returns_member_payload(
         {
             "id": app.id,
             "name": "dashboard",
+            "status": "creating",
             "description": None,
             "icon": None,
             "created_at": app.created_at.isoformat().replace("+00:00", "Z"),

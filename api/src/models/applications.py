@@ -1,6 +1,7 @@
+from enum import Enum
 from typing import Annotated
 from datetime import datetime
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+from pydantic import Field, BaseModel, ConfigDict, BeforeValidator
 from src.models.roles import Roles
 from src.models.users import UserSummary
 
@@ -12,6 +13,14 @@ def normalize_app_name(value: str) -> str:
 
 
 AppName = Annotated[str, BeforeValidator(normalize_app_name)]
+
+
+class AppStatus(str, Enum):
+    """Lifecycle states for installed applications."""
+
+    creating = "creating"
+    running = "running"
+    failed = "failed"
 
 
 class AppCreate(BaseModel):
@@ -28,6 +37,7 @@ class AppResponse(BaseModel):
     id: int
     name: str
     slug: str
+    status: AppStatus
     description: str | None = None
     icon: str | None = None
     role: Roles | None = None

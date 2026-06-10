@@ -2,10 +2,11 @@ from fastapi import Depends, Response, HTTPException, status
 from src.auth import authuser, authadmin
 from src.logger import logger
 from src.router import router
-from src.models.applications import AppCreate, AppResponse
+from src.models.applications import AppCreate, AppStatus, AppResponse
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
-from src.operations.applications import create_app as run_create_app, delete_app as run_delete_app
+from src.operations.applications import create_app as run_create_app
+from src.operations.applications import delete_app as run_delete_app
 from src.database.services.compute import compute
 from src.database.services.operations import operations
 from src.database.services.applications import apps
@@ -47,38 +48,23 @@ async def create_app(
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    operation = await operations.create(
-        "app.create",
-        {
-            "organization": organization,
-            "name": payload.name,
-            "image": payload.image,
-            "description": payload.description,
-            "icon": payload.icon,
-            "envs": payload.envs,
-            "user_id": user.id,
-        },
-    )
-    logger.info("Queued app creation %s for %s/%s", operation.id, organization, payload.name)
-
-    if await operations.claim(operation.id) is None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
-
-    logger.info("Claimed app creation %s for %s/%s", operation.id, organization, payload.name)
-
     try:
         app = await run_create_app(organization, payload, user)
     except HTTPException as exc:
-        logger.warning("App creation %s failed: %s", operation.id, exc.detail)
-        await operations.fail(operation.id, str(exc.detail))
+        logger.warning("App creation failed for %s/%s: %s", organization, payload.name, exc.detail)
         raise
     except Exception as exc:
-        logger.exception("App creation %s failed", operation.id)
-        await operations.fail(operation.id, str(exc))
+        logger.exception("App creation failed for %s/%s", organization, payload.name)
         raise
     else:
-        await operations.ready(operation.id)
-        logger.info("Marked app creation %s ready", operation.id)
+        try:
+            operation = await operations.create("app.create", {"app_id": app.id})
+        except Exception as exc:
+            await apps.set_status(app.id, AppStatus.failed)
+            logger.exception("Failed to queue app verification for %s/%s", organization, payload.name)
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Failed to queue app verification") from exc
+
+        logger.info("Queued app creation verification %s for %s/%s", operation.id, organization, payload.name)
 
     return {
         **app.model_dump(),

@@ -1,16 +1,17 @@
-from types import SimpleNamespace
-from fastapi.testclient import TestClient
 from main import app
+from types import SimpleNamespace
 from src.models.kinds import ComputeKind, DatabaseKind
+from fastapi.testclient import TestClient
 from src.models.operations import OperationStatus
-from src.database.services.applications import apps
+from src.models.applications import AppStatus
+from src.database.services.users import users
 from src.database.services.compute import compute
+from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
+from src.database.services.applications import apps
 from src.database.services.organizations import orgs
-from src.database.services.storage import storage
-from src.database.services.users import users
 
 db = SimpleNamespace(
     apps=apps,
@@ -66,8 +67,8 @@ async def test_drain_scheduled_operations_executes_compute_setup(monkeypatch) ->
     assert refreshed.stopped_at is not None
 
 
-async def test_drain_active_app_create_operation_resumes_from_database(monkeypatch) -> None:
-    """Resume a crashed app.create operation without duplicating work."""
+async def test_drain_active_app_create_operation_completes_running_app(monkeypatch) -> None:
+    """Complete an app.create operation once the app is alive."""
 
     # Arrange
     user = await db.users.upsert(
@@ -76,140 +77,15 @@ async def test_drain_active_app_create_operation_resumes_from_database(monkeypat
         name="Dev User",
         avatar=None,
     )
-    local_location = await db.locations.create("local", "Local testing")
-    remote_location = await db.locations.create("remote", "Remote testing")
-    await db.orgs.create("acme", remote_location.id, user)
-    await db.compute.create(
-        kind=ComputeKind.kubernetes,
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        ingress_host="apps.local.longlink.internal",
-        location_id=local_location.id,
-    )
-    await db.compute.create(
-        kind=ComputeKind.kubernetes,
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        ingress_host="apps.remote.longlink.internal",
-        location_id=remote_location.id,
-    )
-    await db.database.create(
-        kind=DatabaseKind.postgre,
-        name="local",
-        host="db.local.longlink.internal",
-        port=5432,
-        username="longlink",
-        password="secret",
-        sslmode="require",
-        maintenance_database="postgres",
-        location_id=local_location.id,
-    )
-    await db.database.create(
-        kind=DatabaseKind.postgre,
-        name="remote",
-        host="db.remote.longlink.internal",
-        port=5432,
-        username="longlink",
-        password="secret",
-        sslmode="require",
-        maintenance_database="postgres",
-        location_id=remote_location.id,
-    )
-    operation = await db.operations.create(
-        "app.create",
-        {
-            "organization": "acme",
-            "name": "dashboard",
-            "image": "ghcr.io/longlink/dashboard:latest",
-            "description": "Dashboard app",
-            "icon": None,
-            "envs": {"API_KEY": "secret-value"},
-            "user_id": user.id,
-        },
-    )
-    await db.operations.claim(operation.id)
-    calls: list[str] = []
-
-    class FakeCompute:
-        """Fake compute adapter for resuming app creation."""
-
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            calls.append("init")
-
-        async def namespace(self, organization: str) -> None:
-            calls.append("namespace")
-
-        async def application(
-            self,
-            organization: str,
-            application: str,
-            image: str,
-            port: int,
-            secrets: dict[str, str],
-        ) -> None:
-            calls.append("application")
-
-    class FakeDatabase:
-        """Fake database adapter for resuming app creation."""
-
-        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str | None, maintenance_database: str) -> None:
-            calls.append("database")
-
-        async def schema(self, organization: str, application: str) -> str:
-            calls.append("schema")
-            return "postgresql://fake"
-
-    monkeypatch.setattr("src.operations.applications.K8s", FakeCompute)
-    monkeypatch.setattr("src.operations.applications.Postgre", FakeDatabase)
-
-    async def fake_app_is_ready(operation) -> bool:
-        """Pretend the app endpoints are already available."""
-
-        return True
-
-    monkeypatch.setattr("src.operations.app_is_ready", fake_app_is_ready)
-
-    # Act
-    with TestClient(app):
-        pass
-
-    # Assert
-    assert calls == ["init", "database", "namespace", "schema", "application"]
-    refreshed = await db.operations.get(operation.id)
-    assert refreshed is not None
-    assert refreshed.status == OperationStatus.completed
-    assert refreshed.started_at is not None
-    assert refreshed.stopped_at is not None
-
-
-async def test_drain_active_app_create_operation_finishes_existing_app(monkeypatch) -> None:
-    """Finish an already-persisted app.create operation without rebuilding it."""
-
-    # Arrange
-    user = await db.users.upsert(
-        oidc_subject="dev-oidc-subject-existing",
-        email="dev-existing@longlink.dev",
-        name="Dev User Existing",
-        avatar=None,
-    )
     location = await db.locations.create("local", "Local testing")
     await db.orgs.create("acme", location.id, user)
-    await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(
-        "app.create",
-        {
-            "organization": "acme",
-            "name": "dashboard",
-            "image": "ghcr.io/longlink/dashboard:latest",
-            "description": "Dashboard app",
-            "icon": None,
-            "envs": {},
-            "user_id": user.id,
-        },
-    )
+    app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    operation = await db.operations.create("app.create", {"app_id": app_record.id})
     await db.operations.claim(operation.id)
     calls: list[str] = []
 
     async def fake_app_is_ready(operation) -> bool:
-        """Pretend the app endpoints are already available."""
+        """Pretend the app is already ready."""
 
         calls.append("ready-check")
         return True
@@ -222,8 +98,59 @@ async def test_drain_active_app_create_operation_finishes_existing_app(monkeypat
 
     # Assert
     assert calls == ["ready-check"]
+    refreshed_app = await db.apps.get_by_id(app_record.id)
+    assert refreshed_app is not None
+    assert refreshed_app.status == AppStatus.running
     refreshed = await db.operations.get(operation.id)
     assert refreshed is not None
     assert refreshed.status == OperationStatus.completed
+    assert refreshed.started_at is not None
+    assert refreshed.stopped_at is not None
+
+
+async def test_drain_active_app_create_operation_marks_failed_when_dead(monkeypatch) -> None:
+    """Fail an app.create operation when the app crashes during startup."""
+
+    # Arrange
+    user = await db.users.upsert(
+        oidc_subject="dev-oidc-subject-existing",
+        email="dev-existing@longlink.dev",
+        name="Dev User Existing",
+        avatar=None,
+    )
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, user)
+    app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    operation = await db.operations.create("app.create", {"app_id": app_record.id})
+    await db.operations.claim(operation.id)
+    calls: list[str] = []
+
+    async def fake_app_is_ready(operation) -> bool:
+        """Pretend the app never becomes ready."""
+
+        calls.append("ready-check")
+        return False
+
+    async def fake_app_is_dead(operation) -> bool:
+        """Pretend the app has crashed."""
+
+        calls.append("dead-check")
+        return True
+
+    monkeypatch.setattr("src.operations.app_is_ready", fake_app_is_ready)
+    monkeypatch.setattr("src.operations.app_is_dead", fake_app_is_dead)
+
+    # Act
+    with TestClient(app):
+        pass
+
+    # Assert
+    assert calls == ["ready-check", "dead-check"]
+    refreshed_app = await db.apps.get_by_id(app_record.id)
+    assert refreshed_app is not None
+    assert refreshed_app.status == AppStatus.failed
+    refreshed = await db.operations.get(operation.id)
+    assert refreshed is not None
+    assert refreshed.status == OperationStatus.failed
     assert refreshed.started_at is not None
     assert refreshed.stopped_at is not None

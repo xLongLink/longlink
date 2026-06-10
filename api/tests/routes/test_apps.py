@@ -263,6 +263,7 @@ async def test_create_app_returns_app_response(
     assert response.status_code == 200
     payload = response.json()
     expected_data = AppResponse.model_validate(payload).model_dump(mode="json")
+    assert payload["status"] == "creating"
     assert payload["description"] == "Dashboard app"
     assert payload["deleted_by"] is None
     assert payload == expected_data

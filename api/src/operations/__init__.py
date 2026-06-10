@@ -1,13 +1,10 @@
 from fastapi import HTTPException
 from src.logger import logger
-from src.utils.utils import slugify
 from src.models.operations import OperationStatus
-from src.models.applications import AppCreate
-from src.database.models.users import User
-from src.database.services.users import users
-from src.operations.applications import create_app, delete_app, app_is_ready
+from src.models.applications import AppStatus
+from src.operations.applications import (delete_app, app_is_dead, app_is_ready,
+                                         complete_app_creation)
 from src.database.models.operation import Operation
-from src.database.services.compute import compute
 from src.database.services.operations import operations
 from src.database.services.applications import apps
 
@@ -24,13 +21,18 @@ async def recover_active_operations() -> None:
             continue
 
         if operation.kind == "app.create":
-            organization = payload.get("organization")
-            app_name = payload.get("name")
-            if isinstance(organization, str) and isinstance(app_name, str):
-                app = await apps.get(organization, slugify(app_name))
-                if app is not None:
+            app_id = payload.get("app_id")
+            if isinstance(app_id, int):
+                app = await apps.get_by_id(app_id)
+                if app is not None and app.status == AppStatus.running:
                     logger.info("Recovering completed app creation %s", operation.id)
                     await operations.ready(operation.id)
+                    await operations.complete(operation.id)
+                    continue
+
+                if app is not None and app.status == AppStatus.failed:
+                    logger.info("Failing recovered app creation %s", operation.id)
+                    await operations.fail(operation.id, "App failed during startup")
                     continue
 
             logger.info("Requeueing interrupted app creation %s", operation.id)
@@ -60,37 +62,12 @@ async def execute_claimed_operation(operation: Operation) -> Operation:
 
     try:
         if operation.kind == "compute.setup":
-            logger.info("Running compute setup %s", operation.id)
-            registry = await compute.get(int(payload["registry_id"]))
-            if registry is None:
-                raise ValueError(f"Compute registry '{payload['registry_id']}' not found")
+            from src.operations.compute import execute_compute_setup
 
-            from src.adapters.compute import K8s
-
-            k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-            await k8s.cleanup()
-            await k8s.setup()
-            ready = await operations.ready(operation.id)
-            if ready is None:
-                return operation
-
-            completed = await operations.complete(operation.id)
-            if completed is not None:
-                logger.info("Completed compute setup %s", operation.id)
-                return completed
+            return await execute_compute_setup(operation)
         elif operation.kind == "app.create":
-            logger.info("Running app creation %s", operation.id)
-            user = None
-            user_id = payload.get("user_id")
-            if isinstance(user_id, int):
-                user = await users.get_by_id(user_id)
-
-            app_payload = AppCreate.model_validate(payload)
-            await create_app(payload["organization"], app_payload, user)
-            ready = await operations.ready(operation.id)
-            if ready is not None:
-                logger.info("Marked app creation ready %s", operation.id)
-                return ready
+            logger.info("Running app startup verification %s", operation.id)
+            return await complete_app_creation(operation)
         elif operation.kind == "app.delete":
             logger.info("Running app deletion %s", operation.id)
             await delete_app(payload["organization"], int(payload["app_id"]))

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+from .base import ServiceBase
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-
-from .base import ServiceBase
+from src.models.applications import AppStatus
 from src.database.models.apps import App
-from src.database.models.association import UserApp
 from src.database.models.users import User
+from src.database.models.association import UserApp
 
 
 class AppsService(ServiceBase):
@@ -58,6 +58,7 @@ class AppsService(ServiceBase):
         name: str,
         slug: str,
         image: str,
+        status: AppStatus = AppStatus.creating,
         description: str | None = None,
         icon: str | None = None,
         user: User | None = None,
@@ -80,10 +81,11 @@ class AppsService(ServiceBase):
             if slug_result.scalar_one_or_none() is not None:
                 raise ValueError('App slug already exists')
 
-            app_kwargs: dict[str, str | None] = {
+            app_kwargs: dict[str, object] = {
                 'organization': organization,
                 'name': name,
                 'slug': slug,
+                'status': status,
                 'description': description,
                 'image': image,
                 'icon': icon,
@@ -94,6 +96,20 @@ class AppsService(ServiceBase):
                 app.created_by_id = user.id
                 app.updated_by_id = user.id
             session.add(app)
+            await session.commit()
+            await session.refresh(app)
+            return app
+
+
+    async def set_status(self, app_id: int, status: AppStatus) -> App | None:
+        """Update one app status and return the refreshed row."""
+
+        async with self.session() as session:
+            app = await session.get(App, app_id)
+            if app is None:
+                return None
+
+            app.status = status
             await session.commit()
             await session.refresh(app)
             return app

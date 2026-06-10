@@ -1,18 +1,20 @@
-from contextlib import asynccontextmanager
+import asyncio
 from fastapi import FastAPI, Request
 from pathlib import Path
-
-from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 from src.env import env
+from contextlib import suppress, asynccontextmanager
 from src.logger import logger
-from src.database.services.operations import operations
-from src.operations import complete_ready_operations, execute_claimed_operation, recover_active_operations
 from src.router import router
+from src.operations import (complete_ready_operations,
+                            execute_claimed_operation,
+                            recover_active_operations)
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from src.database.services.operations import operations
 
 
 class SPAStaticFiles(StaticFiles):
@@ -31,6 +33,23 @@ class SPAStaticFiles(StaticFiles):
             response = await super().get_response("index.html", scope)
 
         return response
+
+
+async def run_operation_scheduler() -> None:
+    """Continuously claim and execute scheduled operations."""
+
+    while True:
+        operation = await operations.claim_next()
+        if operation is None:
+            await asyncio.sleep(1)
+            continue
+
+        logger.info("Executing operation %s (%s)", operation.id, operation.kind)
+        try:
+            await execute_claimed_operation(operation)
+        except Exception:
+            # Keep draining so one failed operation does not block the queue.
+            logger.exception("Operation scheduler failed for %s (%s)", operation.id, operation.kind)
 
 
 @asynccontextmanager
@@ -56,7 +75,13 @@ async def lifespan(app: FastAPI):
     # Finalize any operations that only need a readiness check.
     await complete_ready_operations()
     logger.info("Finished operation drain")
+
+    worker = asyncio.create_task(run_operation_scheduler())
     yield
+
+    worker.cancel()
+    with suppress(asyncio.CancelledError):
+        await worker
 
 
 app = FastAPI(
@@ -90,18 +115,18 @@ app.add_middleware(
     https_only=False,
 )
 
-import src.routes.applications 
 import src.routes.auth
-import src.routes.compute
-import src.routes.database
-import src.routes.health
+import src.routes.user
 import src.routes.image
+import src.routes.proxy
+import src.routes.health
+import src.routes.compute
+import src.routes.storage
+import src.routes.database
 import src.routes.locations
 import src.routes.operations
+import src.routes.applications
 import src.routes.organizations
-import src.routes.proxy 
-import src.routes.storage 
-import src.routes.user
 
 # Register API routes after importing the endpoint modules so their decorators run.
 app.include_router(router)

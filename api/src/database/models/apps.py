@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import Column, UniqueConstraint
+from src.models.applications import AppStatus
 from src.database.models.__base__ import Base
 from src.database.models.association import UserApp
 
@@ -22,6 +24,10 @@ class App(Base, table=True):
     organization: str = Field(foreign_key='organizations.name', max_length=100)
     name: str = Field(unique=True, max_length=100)
     slug: str = Field(max_length=100)
+    status: AppStatus = Field(
+        default=AppStatus.creating,
+        sa_column=Column(SAEnum(AppStatus, name='app_status_enum', native_enum=False), nullable=False),
+    )
     description: str | None = Field(default=None, max_length=255)
     image: str = Field(max_length=255)
     icon: str | None = Field(default=None, max_length=50)
