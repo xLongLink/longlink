@@ -1,9 +1,10 @@
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
+from src.models.countries import Country
 from src.models.compute import ComputeRegistryResponse
 from src.models.database import DatabaseRegistryResponse
-from src.models.users import UserSummary
 from src.models.storage import StorageRegistryResponse
+from src.models.users import UserSummary
 
 
 class LocationOrgSummary(BaseModel):
@@ -26,7 +27,7 @@ class LocationCreate(BaseModel):
 
     name: str = Field(min_length=1, max_length=128)
     display_name: str = Field(min_length=1, max_length=255)
-    country: str = Field(default="", max_length=128)
+    country: Country
 
 
 class LocationResponse(BaseModel):
@@ -37,7 +38,7 @@ class LocationResponse(BaseModel):
     id: int
     name: str
     display_name: str
-    country: str = ""
+    country: Country
     created_at: datetime
     updated_at: datetime
     orgs: list[LocationOrgSummary] = Field(default_factory=list)

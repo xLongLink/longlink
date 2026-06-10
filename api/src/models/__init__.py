@@ -1,12 +1,13 @@
 from .apps import AppCreate, AppResponse
 from .compute import ComputeRegistryCreate, ComputeRegistryResponse
+from .countries import Country
 from .database import DatabaseRegistryCreate, DatabaseRegistryResponse
 from .kinds import ComputeKind, DatabaseKind, StorageKind
 from .locations import LocationCreate, LocationResponse
 from .metadata import EnvironmentMetadata, ImageMetadataResponse, LongLinkMetadata
 from .orgs import OrgCreate, OrgDetails, OrgSummary
+from .operations import OperationResponse, OperationStatus
 from .roles import Roles
-from .operations import OperationResponse
 from .storage import StorageRegistryCreate, StorageRegistryResponse
 from .users import (
     Accent,
@@ -27,6 +28,7 @@ __all__ = [
     "ComputeKind",
     "ComputeRegistryCreate",
     "ComputeRegistryResponse",
+    "Country",
     "DatabaseKind",
     "DatabaseRegistryCreate",
     "DatabaseRegistryResponse",
@@ -37,6 +39,7 @@ __all__ = [
     "ImageMetadataResponse",
     "LongLinkMetadata",
     "OperationResponse",
+    "OperationStatus",
     "OrgCreate",
     "OrgDetails",
     "OrgSummary",

@@ -30,7 +30,9 @@ async def test_operations_endpoint_returns_recorded_operations(
         {
             "id": 1,
             "kind": "app.create",
+            "status": "scheduled",
             "payload": payload,
+            "error": None,
             "created_at": response.json()[0]["created_at"],
             "started_at": None,
             "stopped_at": None,

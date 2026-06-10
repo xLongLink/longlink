@@ -69,6 +69,7 @@ async def test_get_organization_returns_member_payload(
             "id": location.id,
             "name": location.name,
             "display_name": location.display_name,
+            "country": location.country,
             "created_at": location.created_at,
             "updated_at": location.updated_at,
             "orgs": [

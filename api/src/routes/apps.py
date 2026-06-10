@@ -1,13 +1,11 @@
 import src.db as db
 from fastapi import Depends, HTTPException, Response, status
-from src.auth import authuser, authadmin
-from src.adapters.database import Postgre
-from src.models.apps import AppCreate, AppResponse
-from src.utils.utils import slugify
 from src.adapters.compute.k8s import K8s
+from src.adapters.database import Postgre
+from src.auth import authuser, authadmin
+from src.models.apps import AppCreate, AppResponse
 from src.router import router
-
-APP_SERVICE_PORT = 80
+from src.operations.applications import create_app as build_app, delete_app as teardown_app
 
 
 @router.get("/api/apps", response_model=list[AppResponse])
@@ -41,57 +39,37 @@ async def create_app(
     user: db.User = Depends(authuser),
 ) -> AppResponse:
     """Register a new app in the database and deploy it on the compute cluster."""
-    app_slug = slugify(payload.name)
 
     org = next((org for org in user.orgs if org.name == organization), None)
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
-    if not registries:
-        raise HTTPException(status_code=503, detail="No compute cluster configured")
-
-    # Create the app database schema before the workload starts.
-    database_registries = [registry for registry in await db.database.list() if registry.deleted_at is None]
-    if not database_registries:
-        raise HTTPException(status_code=503, detail="No database configured")
-
-    # Prefer the newest registry for the location so bootstrap uses the active gateway.
-    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
-    if registry is None:
-        raise HTTPException(status_code=503, detail=f"No compute cluster configured for location '{org.location_id}'")
-    compute = K8s(registry.kubeconfig, registry.proxy_secret)
-
-    database_registry = next((registry for registry in database_registries if registry.location_id == org.location_id), None)
-    if database_registry is None:
-        raise HTTPException(status_code=503, detail=f"No database configured for location '{org.location_id}'")
-    database = Postgre(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-        database_registry.sslmode,
-        database_registry.maintenance_database,
+    operation = await db.operations.create(
+        "app.create",
+        {
+            "organization": organization,
+            "name": payload.name,
+            "image": payload.image,
+            "description": payload.description,
+            "icon": payload.icon,
+            "envs": payload.envs,
+            "user_id": user.id,
+        },
     )
 
-    await compute.namespace(organization)
-    await database.schema(organization, app_slug)
-
-    # Deploy the app on the compute cluster.
-    await compute.application(organization, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
+    if await db.operations.claim(operation.id) is None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
 
     try:
-        app = await db.apps.create(
-            organization,
-            payload.name,
-            app_slug,
-            image=payload.image,
-            description=payload.description,
-            icon=payload.icon,
-            user=user,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        app = await build_app(organization, payload, user)
+    except HTTPException as exc:
+        await db.operations.fail(operation.id, str(exc.detail))
+        raise
+    except Exception as exc:
+        await db.operations.fail(operation.id, str(exc))
+        raise
+    else:
+        await db.operations.ready(operation.id)
 
     return {
         **app.model_dump(),
@@ -117,21 +95,22 @@ async def delete_app(
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
-    # Prefer the newest registry for the location so teardown targets the active gateway.
-    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
-    if registry is not None:
-        compute = K8s(registry.kubeconfig, registry.proxy_secret)
-        await compute.remove(organization, app.slug)
+    operation = await db.operations.create("app.delete", {"organization": organization, "app_id": app_id})
+
+    if await db.operations.claim(operation.id) is None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
 
     try:
-        await db.apps.delete(organization, app_id)
-    except ValueError as exc:
-        detail = str(exc)
-        if detail == "App not found":
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail) from exc
-
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail) from exc
+        await teardown_app(organization, app_id)
+    except HTTPException as exc:
+        await db.operations.fail(operation.id, str(exc.detail))
+        raise
+    except Exception as exc:
+        await db.operations.fail(operation.id, str(exc))
+        raise
+    else:
+        await db.operations.ready(operation.id)
+        await db.operations.complete(operation.id)
 
     return
 

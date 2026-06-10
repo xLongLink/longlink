@@ -1,5 +1,8 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from pathlib import Path
+
+from src.operations import execute
 from src.env import env
 from src.router import router
 from fastapi.responses import JSONResponse
@@ -27,7 +30,16 @@ class SPAStaticFiles(StaticFiles):
         return await super().get_response("index.html", scope)
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Drain any queued operations before the API starts serving traffic."""
+
+    await execute()
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
     openapi_url=None,

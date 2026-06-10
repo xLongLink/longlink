@@ -2,6 +2,7 @@ from .base import ServiceBase
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.db.models import ComputeRegistry, DatabaseRegistry, Location, Org
+from src.models.countries import Country
 
 
 class LocationsService(ServiceBase):
@@ -37,11 +38,19 @@ class LocationsService(ServiceBase):
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def create(self, name: str, display_name: str, country: str = "") -> Location:
+    async def create(self, name: str, display_name: str, country: Country | None = None) -> Location:
         """Create one location."""
 
         async with self.session() as session:
-            location = Location(name=name, display_name=display_name, country=country)
+            # Omit the column when no country is provided so the database default applies.
+            location_kwargs: dict[str, str | Country] = {
+                "name": name,
+                "display_name": display_name,
+            }
+            if country is not None:
+                location_kwargs["country"] = country
+
+            location = Location(**location_kwargs)
             session.add(location)
             await session.commit()
             await session.refresh(location)

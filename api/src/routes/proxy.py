@@ -3,9 +3,9 @@ from fastapi import Depends, HTTPException, Request, Response, status
 
 import src.db as db
 from src.adapters.compute.k8s import K8s
+from src.constants import APP_SERVICE_PORT
 from src.auth import authuser
 from src.router import router
-from src.routes.apps import APP_SERVICE_PORT
 from src.utils.namespace import k8name
 from src.utils.utils import knames, normalize
 

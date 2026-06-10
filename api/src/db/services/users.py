@@ -19,6 +19,15 @@ class UsersService(ServiceBase):
             result = await session.execute(select(User))
             return result.scalars().all()
 
+
+    async def get_by_id(self, user_id: int) -> User | None:
+        """Return one user by id."""
+
+        async with self.session() as session:
+            statement = select(User).where(User.id == user_id)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
     async def profile(self, user_id: int) -> UserProfile | None:
         """Return one user profile with membership roles included."""
 

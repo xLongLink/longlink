@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING
 
+from sqlalchemy import Column, String, text
 from sqlmodel import Field, Relationship
 from src.db.models.__base__ import Base
+from src.models.countries import Country
 
 if TYPE_CHECKING:
     from src.db.models.compute import ComputeRegistry
@@ -18,7 +20,7 @@ class Location(Base, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(unique=True, max_length=128)
     display_name: str = Field(max_length=255)
-    country: str = Field(default="", max_length=128)
+    country: Country | None = Field(default=None, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False))
     orgs: list['Org'] = Relationship(back_populates='location')
     compute_registries: list['ComputeRegistry'] = Relationship(back_populates='location')
     database_registries: list['DatabaseRegistry'] = Relationship(back_populates='location')

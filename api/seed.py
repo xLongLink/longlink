@@ -4,7 +4,6 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.adapters.compute import K8s
 from src.db.models import Base
 from src.db.models.association import UserOrganization
 from src.db.session import get_session
@@ -41,13 +40,6 @@ LOCAL_APP = {
     "description": "Sample application",
     "icon": "Rocket",
 }
-
-LOCAL_APP_ENVS = {
-    "REQUIRED": "required",
-    "OPTIONAL": "optional",
-}
-
-LOCAL_APP_PORT = 80
 
 LOCAL_COMPUTE = {
     "kind": ComputeKind.kubernetes,
@@ -104,15 +96,25 @@ async def main() -> None:
                 )
                 await session.commit()
 
-    compute = K8s(LOCAL_COMPUTE["kubeconfig"], compute_registry.proxy_secret)
-    await compute.setup()
-    # Create the organization namespace before deploying any workloads into it.
-    await compute.namespace(LOCAL_ORG)
-
-    # Seed the sample app with the required and optional env values.
-    await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, LOCAL_APP_ENVS)
-
-    await db.apps.create(LOCAL_ORG, **LOCAL_APP)
+    # Queue the cluster bootstrap and demo app so the API lifespan can apply them serially.
+    await db.operations.create(
+        "compute.setup",
+        {
+            "registry_id": compute_registry.id,
+        },
+    )
+    await db.operations.create(
+        "app.create",
+        {
+            "organization": LOCAL_ORG,
+            **LOCAL_APP,
+            "envs": {
+                "REQUIRED": "required",
+                "OPTIONAL": "optional",
+            },
+            "user_id": seed_user.id if seed_user is not None else None,
+        },
+    )
 
 
 if __name__ == "__main__":

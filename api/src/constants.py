@@ -5,3 +5,4 @@ ROOT = Path(__file__).resolve().parent
 
 TEMPLATES = ROOT / "templates"
 INGRESS_NAME = "control-ingress"
+APP_SERVICE_PORT = 80
