@@ -34,8 +34,6 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     org = next((org for org in user.orgs if org.name == app.organization), None)
     if org is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{app.organization}' not found")
-    if org.location_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Org '{app.organization}' has no location configured")
 
     registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
     if not registries:

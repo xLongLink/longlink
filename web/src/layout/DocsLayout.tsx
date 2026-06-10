@@ -215,7 +215,9 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
                     <div ref={contentRef} className="px-4 pt-4 pb-32 lg:px-6 lg:pt-6 lg:pb-40">
                         <div className="mx-auto w-full max-w-[56rem]">
-                            <DocArticle content={content} metadata={metadata} />
+                            <div className="mx-auto w-full max-w-2xl">
+                                <DocArticle content={content} metadata={metadata} />
+                            </div>
                         </div>
                     </div>
 
@@ -277,10 +279,10 @@ function DocArticle({ content, metadata }: DocsLayoutProps) {
         : '';
 
     return (
-        <article className="space-y-6 text-sm leading-6 text-white">
+        <article className="space-y-6 text-base leading-7 text-white [&_h1>a]:-left-8 [&_h1>a]:top-0 [&_h1>a]:translate-y-0 [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-2 [&_h2>a]:-left-7 [&_h2>a]:top-[0.6em] [&_h2]:mt-8 [&_h2]:border-b [&_h2]:border-border [&_h2]:pb-2 [&_h3>a]:-left-6 [&_h3>a]:top-[0.6em] [&_h3]:mt-6 [&_h3]:border-b [&_h3]:border-border [&_h3]:pb-2 [&_h4>a]:-left-5 [&_h4>a]:top-[0.6em] [&_h4]:mt-4 [&_h4]:border-b [&_h4]:border-border [&_h4]:pb-2">
             {content}
             {metadata?.lastUpdated || metadata?.editUrl ? (
-                <footer className="flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-white/70 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                <footer className="mt-8 flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-white/70 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
                     {metadata.lastUpdated ? <span>Last updated: {lastUpdated}</span> : <span />}
                     {metadata.editUrl ? (
                         <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">

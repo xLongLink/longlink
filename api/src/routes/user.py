@@ -1,5 +1,5 @@
 import src.db as db
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from src.auth import authuser, authadmin
 from src.models import UserUpdate, UserProfile, UserListItem
 from src.router import router
@@ -34,5 +34,8 @@ async def patch_me(payload: UserUpdate, user: db.User = Depends(authuser)) -> Us
     """Update the authenticated user's details."""
 
     params = payload.model_dump(exclude_unset=True)
-    updated_user = user if not params else await db.users.update(user.id, **params)
-    return await serialize_user(updated_user or user)
+    if user.oidc_subject is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    updated_user = await db.users.upsert(oidc_subject=user.oidc_subject, **params)
+    return await serialize_user(updated_user)

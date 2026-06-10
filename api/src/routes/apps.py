@@ -46,8 +46,6 @@ async def create_app(
     org = next((org for org in user.orgs if org.name == organization), None)
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
-    if org.location_id is None:
-        raise HTTPException(status_code=400, detail=f"Org '{organization}' has no location configured")
 
     registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
     if not registries:
@@ -118,8 +116,6 @@ async def delete_app(
     org = next((org for org in _user.orgs if org.name == organization), None)
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
-    if org.location_id is None:
-        raise HTTPException(status_code=400, detail=f"Org '{organization}' has no location configured")
 
     registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
     # Prefer the newest registry for the location so teardown targets the active gateway.
@@ -153,8 +149,6 @@ async def get_app_logs(organization: str, app_id: int, user: db.User = Depends(a
     org = next((org for org in user.orgs if org.name == organization), None)
     if org is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
-    if org.location_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Org '{organization}' has no location configured")
 
     registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
     if not registries:

@@ -3,7 +3,7 @@ import { CodeBlock } from '@/components/CodeBlock';
 import { Heading } from '@/components/ui/heading';
 
 export const metadata = {
-    lastUpdated: '2026-05-25',
+    lastUpdated: '2026-06-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/environments.tsx',
 };
 
@@ -27,7 +27,11 @@ export const content = (
         <Heading id="usage" level="h2">
             Usage
         </Heading>
-        <CodeBlock language="python">{'from longlink import Environments, LongLink\n\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    FEATURE_FLAG: bool\n    EXTERNAL_API: str\n\n\nenv = Env()\napp = LongLink(env=env)'}</CodeBlock>
+        <p className="leading-7">
+            Use required fields for values that must be present at startup, and optional fields for settings that can
+            fall back to a default.
+        </p>
+        <CodeBlock language="python">{'from longlink import Environments, LongLink\nfrom pydantic import Field\n\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(\n        description="Required example environment value",\n    )\n    OPTIONAL: str = Field(\n        default="optional",\n        description="Optional example environment value",\n    )\n\n\nenv = Env()\napp = LongLink(env=env)'}</CodeBlock>
         <Heading id="resources" level="h2">
             Resources
         </Heading>

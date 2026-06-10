@@ -16,7 +16,7 @@ async def test_create_organization_returns_owner_role(
     location = await db.locations.create("local", "Local testing")
 
     # Act
-    response = client.post("/api/orgs", json={"name": "  acme  ", "location_id": location.id})
+    response = client.post("/api/orgs", json={"name": "acme", "location_id": location.id})
 
     # Assert
     assert response.status_code == 200

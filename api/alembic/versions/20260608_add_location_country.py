@@ -18,13 +18,19 @@ depends_on = None
 def upgrade() -> None:
     """Add the country column to locations."""
 
-    op.add_column(
-        "locations",
-        sa.Column("country", sa.String(length=128), nullable=False, server_default=""),
-    )
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if "country" not in {column["name"] for column in inspector.get_columns("locations")}:
+        op.add_column(
+            "locations",
+            sa.Column("country", sa.String(length=128), nullable=False, server_default=""),
+        )
 
 
 def downgrade() -> None:
     """Remove the country column from locations."""
 
-    op.drop_column("locations", "country")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if "country" in {column["name"] for column in inspector.get_columns("locations")}:
+        op.drop_column("locations", "country")

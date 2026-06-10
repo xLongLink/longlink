@@ -46,7 +46,7 @@ export function LegalLayout({ title, content, metadata }: LegalLayoutProps) {
                         </Heading>
                         <article className="mx-auto w-full max-w-2xl space-y-6">{content}</article>
                         {metadata?.lastUpdated || metadata?.editUrl ? (
-                            <footer className="flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                            <footer className="mt-8 flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
                                 {metadata.lastUpdated ? <span>Last updated: {lastUpdated}</span> : <span />}
                                 {metadata.editUrl ? (
                                     <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">

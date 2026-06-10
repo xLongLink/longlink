@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import Field, BaseModel, ConfigDict, field_validator
+from pydantic import Field, BaseModel, ConfigDict
 from src.models.locations import LocationResponse
 from src.models.users import UserSummary
 
@@ -10,12 +10,6 @@ class OrgCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     location_id: int
 
-    @field_validator("name", mode="before")
-    @classmethod
-    def normalize_name(cls, value: str) -> str:
-        """Trim whitespace from org names."""
-        return value.strip()
-
 
 class OrgSummary(BaseModel):
     """Represent one organization in admin list responses."""
@@ -23,7 +17,7 @@ class OrgSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
-    location_id: int | None = None
+    location_id: int
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None
@@ -53,8 +47,8 @@ class OrgDetails(BaseModel):
     """Represent an organization with its members."""
 
     name: str
-    location_id: int | None = None
-    location: LocationResponse | None = None
+    location_id: int
+    location: LocationResponse
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None

@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import Field, BaseModel, ConfigDict, field_validator
+from pydantic import Field, BaseModel, ConfigDict
 from src.models.compute import ComputeRegistryResponse
 from src.models.database import DatabaseRegistryResponse
 from src.models.users import UserSummary
@@ -12,7 +12,7 @@ class LocationOrgSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
-    location_id: int | None = None
+    location_id: int
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None
@@ -27,25 +27,6 @@ class LocationCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     display_name: str = Field(min_length=1, max_length=255)
     country: str = Field(default="", max_length=128)
-
-    @field_validator("name", mode="before")
-    @classmethod
-    def normalize_name(cls, value: str) -> str:
-        """Trim whitespace from location names."""
-        return value.strip()
-
-    @field_validator("display_name", mode="before")
-    @classmethod
-    def normalize_display_name(cls, value: str) -> str:
-        """Trim whitespace from display names."""
-        return value.strip()
-
-    @field_validator("country", mode="before")
-    @classmethod
-    def normalize_country(cls, value: str) -> str:
-        """Trim whitespace from country names."""
-
-        return value.strip()
 
 
 class LocationResponse(BaseModel):

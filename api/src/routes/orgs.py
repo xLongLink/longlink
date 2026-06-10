@@ -23,7 +23,7 @@ async def get_organization(
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
-    if next((org for org in user.orgs if org.name == name), None) is None:
+    if not any(org.name == name for org in user.orgs):
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
     return organization
@@ -57,7 +57,7 @@ async def create_organization(
 async def delete_organization(name: str, user: db.User = Depends(authuser)) -> None:
     """Delete one org by name."""
 
-    if next((org for org in user.orgs if org.name == name), None) is None:
+    if not any(org.name == name for org in user.orgs):
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
     await db.orgs.delete(name)

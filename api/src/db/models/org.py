@@ -15,11 +15,11 @@ class Org(Base, table=True):
     __tablename__ = 'organizations'
 
     name: str = Field(primary_key=True, max_length=128)
-    location_id: int | None = Field(default=None, foreign_key='locations.id')
+    location_id: int = Field(foreign_key='locations.id')
     created_by_id: int | None = Field(default=None, foreign_key='users.id')
     updated_by_id: int | None = Field(default=None, foreign_key='users.id')
     deleted_by_id: int | None = Field(default=None, foreign_key='users.id')
-    location: Optional['Location'] = Relationship(back_populates='orgs')
+    location: 'Location' = Relationship(back_populates='orgs')
     apps: list['App'] = Relationship(back_populates='organization_rel')
     created_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Org.created_by_id'})
     updated_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Org.updated_by_id'})
