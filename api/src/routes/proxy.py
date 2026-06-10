@@ -1,9 +1,9 @@
-import httpx2
 from fastapi import Depends, Request, Response, HTTPException, status
 from src.auth import authuser
 from src.router import router
-from src.utils.utils import knames, normalize
+from src.utils.utils import knames
 from src.utils.namespace import k8name
+from src.adapters.compute import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
 from src.database.services.applications import apps
@@ -38,7 +38,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 
-    # Prefer the newest registry for the location so the live gateway secret stays in sync.
+    # Prefer the newest registry for the location so the live cluster stays in sync.
     registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
     if registry is None:
         raise HTTPException(
@@ -49,30 +49,34 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     upstream_path = path.lstrip("/")
     namespace = k8name(knames(app.organization, "Org"))
     name = knames(app.slug, "Application name")
-    base = f"{normalize(registry.ingress_host)}/{namespace}/{name}/"
     forward_headers = {
         key: value
         for key, value in request.headers.items()
         if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "authorization"
     }
-    # Kong validates the API key before forwarding the request to the app service.
-    forward_headers["apikey"] = registry.proxy_secret
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    resource_path = f"/api/v1/namespaces/{namespace}/services/{name}/proxy"
+    if upstream_path != "":
+        resource_path = f"{resource_path}/{upstream_path}"
 
-    async with httpx2.AsyncClient(verify=False) as api_client:
-        upstream_response = await api_client.request(
-            request.method,
-            f"{base}{upstream_path}",
-            params=list(request.query_params.multi_items()),
-            headers=forward_headers,
-            content=await request.body(),
-        )
+    upstream_response = k8s._api_client.call_api(
+        resource_path,
+        request.method,
+        query_params=list(request.query_params.multi_items()),
+        header_params=forward_headers,
+        body=await request.body(),
+        auth_settings=["BearerToken"],
+        _preload_content=False,
+        _return_http_data_only=False,
+    )
+    body, status_code, upstream_headers = upstream_response
 
     return Response(
-        content=upstream_response.content,
-        status_code=upstream_response.status_code,
+        content=body.data,
+        status_code=status_code,
         headers={
             key: value
-            for key, value in upstream_response.headers.items()
+            for key, value in upstream_headers.items()
             if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "content-length"
         },
     )

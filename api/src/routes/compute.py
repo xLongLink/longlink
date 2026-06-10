@@ -45,7 +45,7 @@ async def create_compute_registry(
         await compute.purge(registry.id)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Failed to bootstrap Kong for the cluster",
+            detail="Failed to initialize the compute cluster",
         ) from exc
 
     return {

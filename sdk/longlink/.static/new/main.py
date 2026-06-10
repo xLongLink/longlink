@@ -7,5 +7,6 @@ app = LongLink(env=env)
 
 
 # Register routers
-app.include_router(router)
+import src.routes.pages
 import src.routes.sample
+app.include_router(router)
