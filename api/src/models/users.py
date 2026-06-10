@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import Field, EmailStr, BaseModel, ConfigDict, field_validator
+from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import Roles
 
 
@@ -94,21 +94,12 @@ class UserSummary(BaseModel):
     id: int
     name: str
     email: EmailStr
-    avatar: str = ""
+    avatar: str | None = None
     admin: bool = False
-
-    @field_validator("avatar", mode="before")
-    @classmethod
-    def normalize_avatar(cls, value: str | None) -> str:
-        """Default missing avatar URLs to an empty string."""
-
-        return value or ""
 
 
 class UserListItem(UserSummary):
     """Represent one user in admin list responses."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     oidc_subject: str | None = None
 
@@ -119,7 +110,7 @@ class UserProfile(BaseModel):
     id: int
     name: str
     email: EmailStr
-    avatar: str = ""
+    avatar: str | None = None
     admin: bool = False
     theme: Theme
     accent: Accent
@@ -127,10 +118,3 @@ class UserProfile(BaseModel):
     language: Language
     oidc_subject: str | None = None
     orgs: list[UserOrgMembership] = Field(default_factory=list)
-
-    @field_validator("avatar", mode="before")
-    @classmethod
-    def normalize_avatar(cls, value: str | None) -> str:
-        """Default missing avatar URLs to an empty string."""
-
-        return value or ""

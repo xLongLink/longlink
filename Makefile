@@ -1,4 +1,4 @@
-.PHONY: up down format build api web install tests api-tests sdk-tests web-tests web-typecheck web-build-api web-build-sdk
+.PHONY: up down format build api web install tests
 
 
 install:
@@ -19,35 +19,18 @@ tests:
 	cd api && uv sync --extra dev
 	cd sdk && uv sync --extra dev
 	bun i --cwd web
-	$(MAKE) -j5 api-tests sdk-tests web-tests web-build-api web-build-sdk
-
-
-api-tests:
 	cd api && uv run pytest tests
-
-
-sdk-tests:
 	cd sdk && uv run pytest tests
-
-
-web-tests:
 	bun test tests --cwd web
-
-
-web-typecheck:
 	bun run --cwd web typecheck
-
-
-web-build-api: web-typecheck
 	bun run --cwd web build:api:bundle --logLevel warn
-
-
-web-build-sdk: web-typecheck
 	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
 build: 
-	$(MAKE) -j2 web-build-api web-build-sdk
+	bun run --cwd web typecheck
+	bun run --cwd web build:api:bundle --logLevel warn
+	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
 up:

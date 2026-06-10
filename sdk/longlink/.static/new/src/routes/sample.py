@@ -13,7 +13,8 @@ async def sample_get_endpoint():
     filesystem = fs
     return {
         "message": "Sample GET endpoint received data",
-        "sample": env.SAMPLE,
+        "required": env.REQUIRED,
+        "optional": env.OPTIONAL,
         "filesystem_protocol": filesystem.protocol,
         "filesystem_type": type(filesystem).__name__,
     }

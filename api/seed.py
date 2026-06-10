@@ -1,16 +1,16 @@
-import src.db as db
 import asyncio
+import src.db as db
 from pathlib import Path
 from sqlalchemy import select
-from src.env import env
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import create_async_engine
+from src.adapters.compute import K8s
 from src.db.models import Base
 from src.db.models.association import UserOrganization
-from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
-from src.models.roles import Roles
-from sqlalchemy.engine import make_url
-from src.adapters.compute import K8s
 from src.db.session import get_session
-from sqlalchemy.ext.asyncio import create_async_engine
+from src.env import env
+from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
+from src.models.roles import Roles
 
 LOCAL_DATABASE = {
     "kind": DatabaseKind.postgre,
@@ -40,6 +40,11 @@ LOCAL_APP = {
     "image": "ghcr.io/xlonglink/sample:latest",
     "description": "Sample application",
     "icon": "Rocket",
+}
+
+LOCAL_APP_ENVS = {
+    "REQUIRED": "required",
+    "OPTIONAL": "optional",
 }
 
 LOCAL_APP_PORT = 80
@@ -103,7 +108,9 @@ async def main() -> None:
     await compute.setup()
     # Create the organization namespace before deploying any workloads into it.
     await compute.namespace(LOCAL_ORG)
-    await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, {})
+
+    # Seed the sample app with the required and optional env values.
+    await compute.application(LOCAL_ORG, LOCAL_APP["name"], LOCAL_APP["image"], LOCAL_APP_PORT, LOCAL_APP_ENVS)
 
     await db.apps.create(LOCAL_ORG, **LOCAL_APP)
 

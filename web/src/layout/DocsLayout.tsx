@@ -277,10 +277,10 @@ function DocArticle({ content, metadata }: DocsLayoutProps) {
         : '';
 
     return (
-        <article className="space-y-6 text-sm leading-6 text-muted-foreground">
+        <article className="space-y-6 text-sm leading-6 text-white">
             {content}
             {metadata?.lastUpdated || metadata?.editUrl ? (
-                <footer className="flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                <footer className="flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-white/70 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
                     {metadata.lastUpdated ? <span>Last updated: {lastUpdated}</span> : <span />}
                     {metadata.editUrl ? (
                         <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">

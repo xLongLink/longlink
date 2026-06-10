@@ -122,12 +122,12 @@ async def test_get_organization_returns_member_payload(
 
     assert response.json() == expected_payload
 
-    assert response.json()["users"][0]["avatar"] == ""
+    assert response.json()["users"][0]["avatar"] is None
     assert response.json()["users"][0] == {
         "id": owner.id,
         "name": owner.name,
         "email": owner.email,
-        "avatar": "",
+        "avatar": None,
         "admin": owner.admin,
     }
     assert response.json()["apps"] == [
