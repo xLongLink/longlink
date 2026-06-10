@@ -1,7 +1,8 @@
 import pytest
 from types import SimpleNamespace
 from sqlalchemy import select
-from src.database.models import User, UserOrganization
+from src.database.models.users import User
+from src.database.models.association import UserOrganization
 from src.database.session import get_session
 from src.database.services.applications import apps
 from src.database.services.compute import compute

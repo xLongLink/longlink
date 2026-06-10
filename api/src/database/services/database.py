@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from .base import ServiceBase
-from src.database.models import DatabaseRegistry
+from src.database.models.database import DatabaseRegistry
 from src.models.kinds import DatabaseKind
 
 

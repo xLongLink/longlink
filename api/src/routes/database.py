@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from src.auth import authadmin
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.database import database
-from src.models import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.router import router
+from src.models.database import DatabaseRegistryCreate, DatabaseRegistryResponse
 
 
 @router.get("/api/database", response_model=list[DatabaseRegistryResponse])

@@ -1,10 +1,10 @@
 from fastapi import Depends, HTTPException, status
 from src.auth import authadmin
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.compute import compute
-from src.models import ComputeRegistryCreate, ComputeRegistryResponse
 from src.adapters.compute import K8s
 from src.router import router
+from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse
 
 
 @router.get("/api/compute", response_model=list[ComputeRegistryResponse])

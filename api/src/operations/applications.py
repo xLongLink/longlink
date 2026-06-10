@@ -2,12 +2,13 @@ from fastapi import HTTPException, status
 
 from src.constants import APP_SERVICE_PORT
 from src.logger import logger
-from src.database.models import App, User
+from src.database.models.apps import App
+from src.database.models.users import User
 from src.database.services.applications import apps as apps_service
 from src.database.services.compute import compute as compute_service
 from src.database.services.database import database as database_service
 from src.database.services.organizations import orgs as orgs_service
-from src.models.apps import AppCreate
+from src.models.applications import AppCreate
 from src.utils.utils import slugify
 
 

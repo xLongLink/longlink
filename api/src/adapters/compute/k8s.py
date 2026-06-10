@@ -1,22 +1,14 @@
 from __future__ import annotations
 
-import base64
-import hashlib
-import hmac
-import json
-import time
-from datetime import UTC, datetime
-
 import yaml
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
-from kubernetes.dynamic import DynamicClient
-
-from src.constants import TEMPLATES
-from src.utils.namespace import k8name
+from datetime import UTC, datetime
 from src.utils import utils
-
 from .__root__ import Compute
+from kubernetes import client, config
+from src.constants import TEMPLATES
+from kubernetes.dynamic import DynamicClient
+from src.utils.namespace import k8name
+from kubernetes.client.rest import ApiException
 
 
 class K8s(Compute):
@@ -36,83 +28,21 @@ class K8s(Compute):
         self._dynamic_client = DynamicClient(self._api_client)
 
     async def setup(self) -> None:
-        """Bootstrap the shared cluster-wide proxy entrypoint."""
+        """No cluster bootstrap is required when Kong is provided externally."""
 
-        proxy_script = (TEMPLATES / "cluster-proxy.py").read_text(encoding="utf-8")
-        manifests = utils.yaml(
-            TEMPLATES / "cluster-proxy.yml",
-            proxy_script="\n".join(f"    {line}" for line in proxy_script.splitlines()),
-            proxy_secret=self._proxy_secret,
-        )
-        manifests = manifests if isinstance(manifests, list) else [manifests]
-        for manifest in manifests:
-            resource = self._dynamic_client.resources.get(api_version=manifest["apiVersion"], kind=manifest["kind"])
-            name = manifest["metadata"]["name"]
-            namespace = manifest["metadata"].get("namespace")
-            try:
-                if resource.namespaced:
-                    resource.get(name=name, namespace=namespace)
-                    resource.patch(
-                        body=manifest,
-                        name=name,
-                        namespace=namespace,
-                        content_type="application/apply-patch+yaml",
-                        field_manager="longlink",
-                        force=True,
-                    )
-                else:
-                    resource.get(name=name)
-                    resource.patch(
-                        body=manifest,
-                        name=name,
-                        content_type="application/apply-patch+yaml",
-                        field_manager="longlink",
-                        force=True,
-                    )
-            except ApiException as exc:
-                if exc.status not in (404, 409):
-                    raise ValueError(f"Failed applying {manifest['kind']} '{name}'") from exc
-                # Replace conflicting resources so a changed gateway secret can roll out cleanly.
-                if exc.status == 409:
-                    try:
-                        if resource.namespaced:
-                            resource.delete(name=name, namespace=namespace)
-                        else:
-                            resource.delete(name=name)
-                    except ApiException:
-                        pass
-                if resource.namespaced:
-                    resource.create(body=manifest, namespace=namespace)
-                else:
-                    resource.create(body=manifest)
+        return None
 
 
     async def cleanup(self) -> None:
         """Delete all Kubernetes resources managed by the control plane."""
 
         # Remove namespaced resources before namespaces so namespace deletion is not blocked.
-        for item in self._core_api.list_config_map_for_all_namespaces(label_selector="managed-by=longlink").items:
-            try:
-                self._core_api.delete_namespaced_config_map(item.metadata.name, item.metadata.namespace)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(f"Failed deleting ConfigMap '{item.metadata.namespace}/{item.metadata.name}'") from exc
-
         for item in self._core_api.list_secret_for_all_namespaces(label_selector="managed-by=longlink").items:
             try:
                 self._core_api.delete_namespaced_secret(item.metadata.name, item.metadata.namespace)
             except ApiException as exc:
                 if exc.status != 404:
                     raise ValueError(f"Failed deleting Secret '{item.metadata.namespace}/{item.metadata.name}'") from exc
-
-        for item in self._core_api.list_service_account_for_all_namespaces(label_selector="managed-by=longlink").items:
-            try:
-                self._core_api.delete_namespaced_service_account(item.metadata.name, item.metadata.namespace)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(
-                        f"Failed deleting ServiceAccount '{item.metadata.namespace}/{item.metadata.name}'"
-                    ) from exc
 
         for item in self._core_api.list_service_for_all_namespaces(label_selector="managed-by=longlink").items:
             try:
@@ -143,48 +73,6 @@ class K8s(Compute):
             except ApiException as exc:
                 if exc.status != 404:
                     raise ValueError(f"Failed deleting namespace '{item.metadata.name}'") from exc
-
-        # Cluster-scoped bindings must be removed explicitly.
-        rbac_api = client.RbacAuthorizationV1Api(self._api_client)
-        for item in rbac_api.list_cluster_role_binding(label_selector="managed-by=longlink").items:
-            try:
-                rbac_api.delete_cluster_role_binding(item.metadata.name)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(f"Failed deleting ClusterRoleBinding '{item.metadata.name}'") from exc
-
-
-    def _issue_token(self) -> str:
-        """Return a short-lived bearer token for the cluster proxy."""
-
-        header = {"alg": "HS256", "typ": "JWT"}
-        payload = {
-            "iss": "longlink-control-plane",
-            "aud": "longlink-proxy",
-            "sub": "compute-router",
-            "iat": int(time.time()),
-            "exp": int(time.time()) + 60,
-        }
-        header_b64 = base64.urlsafe_b64encode(json.dumps(header, separators=(",", ":")).encode("utf-8")).rstrip(b"=")
-        payload_b64 = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode("utf-8")).rstrip(b"=")
-        signing_input = b".".join((header_b64, payload_b64))
-        signature = hmac.new(self._proxy_secret.encode("utf-8"), signing_input, hashlib.sha256).digest()
-        signature_b64 = base64.urlsafe_b64encode(signature).rstrip(b"=")
-
-        return b".".join((header_b64, payload_b64, signature_b64)).decode("ascii")
-
-    @property
-    def token(self) -> str:
-        """Return the current short-lived bearer token."""
-
-        return self._issue_token()
-
-
-    def authorization_header(self) -> str:
-        """Return the bearer authorization header value for API requests."""
-
-        return f"Bearer {self._issue_token()}"
-
 
     def _upsert(self, create_call, patch_call, namespace: str, name: str, body: dict) -> None:
         """Create a resource when missing, otherwise patch the live object."""
@@ -249,29 +137,6 @@ class K8s(Compute):
             },
         )
 
-        # The shared proxy is part of every organization namespace.
-        proxy_manifests = utils.yaml(TEMPLATES / "proxy.yml", namespace=namespace)
-        proxy_manifests = proxy_manifests if isinstance(proxy_manifests, list) else [proxy_manifests]
-        for manifest in proxy_manifests:
-            if manifest["kind"] == "Deployment":
-                self._upsert(
-                    self._apps_api.create_namespaced_deployment,
-                    self._apps_api.patch_namespaced_deployment,
-                    namespace,
-                    manifest["metadata"]["name"],
-                    manifest,
-                )
-                continue
-
-            if manifest["kind"] == "Service":
-                self._upsert(
-                    self._core_api.create_namespaced_service,
-                    self._core_api.patch_namespaced_service,
-                    namespace,
-                    manifest["metadata"]["name"],
-                    manifest,
-                )
-
         app_manifests = utils.yaml(
             TEMPLATES / "application.yml",
             image=image,
@@ -301,8 +166,57 @@ class K8s(Compute):
                     manifest,
                 )
 
-        api_host = self._api_client.configuration.host.rstrip("/").replace("://0.0.0.0", "://localhost")
-        return f"{api_host}/api/v1/namespaces/{namespace}/services/{name}:{port}/proxy/"
+        kong_manifests = utils.yaml(
+            TEMPLATES / "kong.yml",
+            name=name,
+            namespace=namespace,
+            port=port,
+            proxy_secret=self._proxy_secret,
+        )
+        kong_manifests = kong_manifests if isinstance(kong_manifests, list) else [kong_manifests]
+
+        # Apply the Kong consumer, plugin, and ingress that expose the app through the shared gateway.
+        for manifest in kong_manifests:
+            resource = self._dynamic_client.resources.get(api_version=manifest["apiVersion"], kind=manifest["kind"])
+            manifest_name = manifest["metadata"]["name"]
+            manifest_namespace = manifest["metadata"].get("namespace")
+            try:
+                if resource.namespaced:
+                    resource.get(name=manifest_name, namespace=manifest_namespace)
+                    resource.patch(
+                        body=manifest,
+                        name=manifest_name,
+                        namespace=manifest_namespace,
+                        content_type="application/apply-patch+yaml",
+                        field_manager="longlink",
+                        force=True,
+                    )
+                else:
+                    resource.get(name=manifest_name)
+                    resource.patch(
+                        body=manifest,
+                        name=manifest_name,
+                        content_type="application/apply-patch+yaml",
+                        field_manager="longlink",
+                        force=True,
+                    )
+            except ApiException as exc:
+                if exc.status not in (404, 409):
+                    raise ValueError(f"Failed applying {manifest['kind']} '{manifest_name}'") from exc
+                if exc.status == 409:
+                    try:
+                        if resource.namespaced:
+                            resource.delete(name=manifest_name, namespace=manifest_namespace)
+                        else:
+                            resource.delete(name=manifest_name)
+                    except ApiException:
+                        pass
+                if resource.namespaced:
+                    resource.create(body=manifest, namespace=manifest_namespace)
+                else:
+                    resource.create(body=manifest)
+
+        return f"/{namespace}/{name}/"
 
 
     async def remove(self, organization: str, application: str) -> None:

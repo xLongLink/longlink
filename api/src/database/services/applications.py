@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .base import ServiceBase
 from sqlalchemy import and_, select
-from src.database.models import App
+from src.database.models.apps import App
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.database.models.users import User

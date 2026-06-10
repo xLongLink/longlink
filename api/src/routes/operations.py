@@ -1,10 +1,10 @@
 from fastapi import Depends
 
 from src.auth import authadmin
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.operations import operations
-from src.models import OperationResponse
 from src.router import router
+from src.models.operations import OperationResponse
 
 
 @router.get("/api/operations", response_model=list[OperationResponse])

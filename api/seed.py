@@ -3,7 +3,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.database.models import Base, User
+from src.database.models.__base__ import Base
 from src.database.models.association import UserOrganization
 from src.database.session import get_session
 from src.database.services.applications import apps
@@ -17,6 +17,7 @@ from src.database.services.users import users
 from src.env import env
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 from src.models.roles import Roles
+from src.database.models.users import User
 
 LOCAL_DATABASE = {
     "kind": DatabaseKind.postgre,

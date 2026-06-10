@@ -3,13 +3,14 @@ from kubernetes.client.rest import ApiException
 
 from src.operations.applications import create_app, delete_app
 from src.logger import logger
-from src.database.models import Operation, User
+from src.database.models.operation import Operation
+from src.database.models.users import User
 from src.database.services.applications import apps as apps_service
 from src.database.services.compute import compute as compute_service
 from src.database.services.operations import operations as operations_service
 from src.database.services.organizations import orgs as orgs_service
 from src.database.services.users import users as users_service
-from src.models.apps import AppCreate
+from src.models.applications import AppCreate
 from src.models.operations import OperationStatus
 from src.utils.namespace import k8name
 from src.utils.utils import slugify

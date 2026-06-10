@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from src.auth import authuser, authadmin
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.users import users
-from src.models import UserUpdate, UserProfile, UserListItem
 from src.router import router
+from src.models.users import UserUpdate, UserProfile, UserListItem
 
 
 async def serialize_user(user: User) -> UserProfile:

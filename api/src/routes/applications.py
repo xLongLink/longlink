@@ -2,11 +2,11 @@ from fastapi import Depends, HTTPException, Response, status
 from src.adapters.compute.k8s import K8s
 from src.adapters.database import Postgre
 from src.auth import authuser, authadmin
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.applications import apps
 from src.database.services.compute import compute as compute_service
 from src.database.services.operations import operations
-from src.models.apps import AppCreate, AppResponse
+from src.models.applications import AppCreate, AppResponse
 from src.logger import logger
 from src.router import router
 from src.operations.applications import create_app as build_app, delete_app as teardown_app

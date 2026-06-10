@@ -7,7 +7,7 @@ from fastapi.responses import Response, RedirectResponse
 from pydantic import BaseModel, Field
 
 from src.auth import oauth
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.users import users
 from src.env import env
 from src.router import router

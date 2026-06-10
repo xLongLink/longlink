@@ -1,6 +1,5 @@
 from types import SimpleNamespace
-from src.models import OrgDetails, OrgSummary, UserSummary
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.applications import apps
 from src.database.services.compute import compute
 from src.database.services.database import database
@@ -10,6 +9,8 @@ from src.database.services.organizations import orgs
 from src.database.services.storage import storage
 from src.database.services.users import users
 from fastapi.testclient import TestClient
+from src.models.organizations import OrgDetails, OrgSummary
+from src.models.users import UserSummary
 
 db = SimpleNamespace(
     apps=apps,

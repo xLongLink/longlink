@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from src.auth import authadmin
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.locations import locations
 from src.models.locations import LocationCreate, LocationResponse
 from src.router import router

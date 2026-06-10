@@ -3,7 +3,12 @@ from __future__ import annotations
 from .base import ServiceBase
 from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
-from src.database.models import App, ComputeRegistry, DatabaseRegistry, Location, Org, User
+from src.database.models.apps import App
+from src.database.models.compute import ComputeRegistry
+from src.database.models.database import DatabaseRegistry
+from src.database.models.location import Location
+from src.database.models.org import Org
+from src.database.models.users import User
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import Roles
 from src.database.models.association import UserOrganization

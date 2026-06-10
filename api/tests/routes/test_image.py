@@ -1,4 +1,4 @@
-from src.models import ImageMetadataResponse, LongLinkMetadata
+from src.models.metadata import ImageMetadataResponse, LongLinkMetadata
 
 
 def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:

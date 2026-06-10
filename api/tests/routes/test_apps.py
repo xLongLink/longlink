@@ -1,18 +1,21 @@
 import httpx2
 from types import SimpleNamespace
-from src.models import AppResponse, ComputeKind, DatabaseKind, UserSummary
-from src.database.models import User, UserApp
+from src.models.roles import Roles
+from src.models.applications import AppResponse
+from src.models.kinds import ComputeKind, DatabaseKind
+from src.models.users import UserSummary
+from fastapi.testclient import TestClient
 from src.database.session import get_session
-from src.database.services.applications import apps
+from src.database.models.users import User
+from src.database.services.users import users
 from src.database.services.compute import compute
+from src.database.services.storage import storage
 from src.database.services.database import database
+from src.database.models.association import UserApp
 from src.database.services.locations import locations
 from src.database.services.operations import operations
+from src.database.services.applications import apps
 from src.database.services.organizations import orgs
-from src.database.services.storage import storage
-from src.database.services.users import users
-from src.models.roles import Roles
-from fastapi.testclient import TestClient
 
 db = SimpleNamespace(
     apps=apps,
@@ -535,16 +538,6 @@ async def test_proxy_app_forwards_request_to_internal_service(
     client = clients[0]
     captured: dict[str, object] = {}
 
-    class FakeCompute:
-        """Fake compute adapter for app proxy tests."""
-
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            captured["kubeconfig"] = kubeconfig
-            captured["proxy_secret"] = proxy_secret
-
-        def authorization_header(self) -> str:
-            return "Bearer test-token"
-
     class FakeAsyncClient:
         def __init__(self, *, verify=True):
             captured["verify"] = verify
@@ -563,7 +556,6 @@ async def test_proxy_app_forwards_request_to_internal_service(
             captured["body"] = kwargs.get("content")
             return httpx2.Response(200, content=b"proxied", headers={"content-type": "text/plain"})
 
-    monkeypatch.setattr("src.routes.proxy.K8s", FakeCompute)
     monkeypatch.setattr(httpx2, "AsyncClient", FakeAsyncClient)
 
     # Act
@@ -573,8 +565,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert response.status_code == 200
     assert response.text == "proxied"
     assert captured["method"] == "POST"
-    assert captured["resource_path"] == "http://localhost:9443/api/v1/namespaces/longlink-acme/services/dashboard:80/proxy/anything"
+    assert captured["resource_path"] == "http://localhost:9443/longlink-acme/dashboard/anything"
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
-    assert captured["headers"]["authorization"] == "Bearer test-token"
+    assert captured["headers"]["apikey"] == "latest-secret"
     assert captured["verify"] is False

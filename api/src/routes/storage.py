@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from src.auth import authadmin
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.storage import storage
-from src.models import StorageRegistryCreate, StorageRegistryResponse
 from src.router import router
+from src.models.storage import StorageRegistryCreate, StorageRegistryResponse
 
 
 @router.get("/api/storage", response_model=list[StorageRegistryResponse])

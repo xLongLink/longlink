@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException, status
 from src.auth import authuser, authadmin
-from src.database.models import User
+from src.database.models.users import User
 from src.database.services.organizations import orgs
-from src.models.orgs import OrgCreate, OrgDetails, OrgSummary
+from src.models.organizations import OrgCreate, OrgDetails, OrgSummary
 from src.router import router
 
 

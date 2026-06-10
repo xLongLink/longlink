@@ -20,7 +20,8 @@ os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
 
 from main import app
 import src.database.session as db_session
-from src.database.models import Base, User
+from src.database.models.__base__ import Base
+from src.database.models.users import User
 from src.env import env
 
 SESSION_COOKIE = "longlink_session"

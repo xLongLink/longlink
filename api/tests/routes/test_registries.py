@@ -1,7 +1,8 @@
 from types import SimpleNamespace
 from fastapi.testclient import TestClient
-from src.models import (ComputeRegistryResponse, StorageRegistryResponse,
-                        DatabaseRegistryResponse)
+from src.models.compute import ComputeRegistryResponse
+from src.models.storage import StorageRegistryResponse
+from src.models.database import DatabaseRegistryResponse
 from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
 from src.database.services.applications import apps
 from src.database.services.compute import compute

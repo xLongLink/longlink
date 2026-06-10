@@ -1,15 +1,12 @@
 import httpx2
-from fastapi import Depends, HTTPException, Request, Response, status
-
-from src.adapters.compute.k8s import K8s
-from src.constants import APP_SERVICE_PORT
+from fastapi import Depends, Request, Response, HTTPException, status
 from src.auth import authuser
-from src.database.models import User
-from src.database.services.applications import apps
-from src.database.services.compute import compute as compute_service
 from src.router import router
-from src.utils.namespace import k8name
 from src.utils.utils import knames, normalize
+from src.utils.namespace import k8name
+from src.database.models.users import User
+from src.database.services.compute import compute as compute_service
+from src.database.services.applications import apps
 
 HOP_BY_HOP_HEADERS = {
     "connection",
@@ -49,18 +46,17 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
             detail=f"No compute cluster configured for location '{org.location_id}'",
         )
 
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-
     upstream_path = path.lstrip("/")
     namespace = k8name(knames(app.organization, "Org"))
     name = knames(app.slug, "Application name")
-    base = f"{normalize(registry.ingress_host)}/api/v1/namespaces/{namespace}/services/{name}:{APP_SERVICE_PORT}/proxy/"
+    base = f"{normalize(registry.ingress_host)}/{namespace}/{name}/"
     forward_headers = {
         key: value
         for key, value in request.headers.items()
         if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "authorization"
     }
-    forward_headers["authorization"] = k8s.authorization_header()
+    # Kong validates the API key before forwarding the request to the app service.
+    forward_headers["apikey"] = registry.proxy_secret
 
     async with httpx2.AsyncClient(verify=False) as api_client:
         upstream_response = await api_client.request(

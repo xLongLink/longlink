@@ -1,9 +1,10 @@
 from .base import ServiceBase
 from sqlalchemy import func, select
-from src.models import UserProfile, UserOrgMembership
-from src.database.models import Org, User
+from src.database.models.org import Org
+from src.database.models.users import User
 from sqlalchemy.orm import selectinload
 from src.models.roles import Roles
+from src.models.users import UserProfile, UserOrgMembership
 from src.models.users import Theme, Accent, Radius, Language
 from src.database.models.association import UserOrganization
 
