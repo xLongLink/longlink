@@ -1,7 +1,8 @@
-import src.database as db
 from fastapi import Request, HTTPException
 from src.env import env
 from authlib.integrations.starlette_client import OAuth
+from src.database.models import User
+from src.database.services.users import users
 
 oauth = OAuth()
 oauth.register(
@@ -13,20 +14,20 @@ oauth.register(
 )
 
 
-async def authuser(request: Request) -> db.User:
+async def authuser(request: Request) -> User:
     """Authenticate a user from session and return the User object."""
 
     oidc_subject = request.session.get("oidc_subject")
     if oidc_subject is None:
         raise HTTPException(401, "Not authenticated")
 
-    user = await db.users.get(oidc_subject)
+    user = await users.get(oidc_subject)
     if not user:
         raise HTTPException(401, "Not authenticated")
     return user
 
 
-async def authadmin(request: Request) -> db.User:
+async def authadmin(request: Request) -> User:
     """Authenticate an admin user from session and return the User object."""
 
     user = await authuser(request)

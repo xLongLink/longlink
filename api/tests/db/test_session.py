@@ -1,6 +1,6 @@
 from sqlalchemy.engine import make_url
 
-from src.database import session as db_session
+import src.database.session as db_session
 from src.env import env
 
 

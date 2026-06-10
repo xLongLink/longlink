@@ -74,3 +74,6 @@ class StorageService(ServiceBase):
             await session.delete(storage)
             await session.commit()
             return storage
+
+
+storage = StorageService()

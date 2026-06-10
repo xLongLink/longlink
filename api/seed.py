@@ -1,12 +1,19 @@
 import asyncio
-import src.database as db
 from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.database.models import Base
+from src.database.models import Base, User
 from src.database.models.association import UserOrganization
 from src.database.session import get_session
+from src.database.services.applications import apps
+from src.database.services.compute import compute
+from src.database.services.database import database
+from src.database.services.locations import locations
+from src.database.services.operations import operations
+from src.database.services.organizations import orgs
+from src.database.services.storage import storage
+from src.database.services.users import users
 from src.env import env
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 from src.models.roles import Roles
@@ -68,16 +75,16 @@ async def main() -> None:
             await engine.dispose()
 
     # Keep the local backend registrations available after every seed run.
-    location = await db.locations.create("local", "Local development")
-    await db.database.create(**LOCAL_DATABASE, location_id=location.id)
-    await db.storage.create(**LOCAL_STORAGE, location_id=location.id)
-    compute_registry = await db.compute.create(**LOCAL_COMPUTE, location_id=location.id)
-    await db.orgs.create(LOCAL_ORG, location.id)
+    location = await locations.create("local", "Local development")
+    await database.create(**LOCAL_DATABASE, location_id=location.id)
+    await storage.create(**LOCAL_STORAGE, location_id=location.id)
+    compute_registry = await compute.create(**LOCAL_COMPUTE, location_id=location.id)
+    await orgs.create(LOCAL_ORG, location.id)
 
     # Backfill the seeded demo membership if the admin user already exists locally.
     Session = await get_session()
     async with Session() as session:
-        user_result = await session.execute(select(db.User).where(db.User.email == "example@longlink.dev"))
+        user_result = await session.execute(select(User).where(User.email == "example@longlink.dev"))
         seed_user = user_result.scalar_one_or_none()
         if seed_user is not None:
             membership_result = await session.execute(
@@ -97,13 +104,13 @@ async def main() -> None:
                 await session.commit()
 
     # Queue the cluster bootstrap and demo app so the API lifespan can apply them serially.
-    await db.operations.create(
+    await operations.create(
         "compute.setup",
         {
             "registry_id": compute_registry.id,
         },
     )
-    await db.operations.create(
+    await operations.create(
         "app.create",
         {
             "organization": LOCAL_ORG,

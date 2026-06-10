@@ -79,3 +79,6 @@ class LocationsService(ServiceBase):
             await session.delete(location)
             await session.commit()
             return location
+
+
+locations = LocationsService()

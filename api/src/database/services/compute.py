@@ -86,3 +86,6 @@ class ComputeService(ServiceBase):
             await session.delete(compute)
             await session.commit()
             return compute
+
+
+compute = ComputeService()

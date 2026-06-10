@@ -1,5 +1,24 @@
-import src.database as db
+from types import SimpleNamespace
 from src.models import Roles, UserOrgMembership
+from src.database.services.applications import apps
+from src.database.services.compute import compute
+from src.database.services.database import database
+from src.database.services.locations import locations
+from src.database.services.operations import operations
+from src.database.services.organizations import orgs
+from src.database.services.storage import storage
+from src.database.services.users import users
+
+db = SimpleNamespace(
+    apps=apps,
+    compute=compute,
+    database=database,
+    locations=locations,
+    operations=operations,
+    orgs=orgs,
+    storage=storage,
+    users=users,
+)
 
 
 async def test_upsert_creates_user_when_no_existing_match() -> None:

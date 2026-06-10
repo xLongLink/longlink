@@ -168,3 +168,6 @@ class UsersService(ServiceBase):
             ).where(User.oidc_subject == oidc_subject)
             result = await session.execute(statement)
             return result.scalars().first()
+
+
+users = UsersService()

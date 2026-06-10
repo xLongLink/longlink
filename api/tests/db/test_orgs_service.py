@@ -1,9 +1,28 @@
 import pytest
-import src.database as db
+from types import SimpleNamespace
 from sqlalchemy import select
 from src.database.models import User, UserOrganization
 from src.database.session import get_session
+from src.database.services.applications import apps
+from src.database.services.compute import compute
+from src.database.services.database import database
+from src.database.services.locations import locations
+from src.database.services.operations import operations
+from src.database.services.organizations import orgs
+from src.database.services.storage import storage
+from src.database.services.users import users
 from src.models.roles import Roles
+
+db = SimpleNamespace(
+    apps=apps,
+    compute=compute,
+    database=database,
+    locations=locations,
+    operations=operations,
+    orgs=orgs,
+    storage=storage,
+    users=users,
+)
 
 
 async def test_create_persists_org_and_owner_membership(users: tuple[User, User, User]) -> None:

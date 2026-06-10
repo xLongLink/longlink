@@ -197,3 +197,6 @@ class OperationsService(ServiceBase):
         """Compatibility wrapper for completing one operation."""
 
         return await self.complete(operation_id)
+
+
+operations = OperationsService()

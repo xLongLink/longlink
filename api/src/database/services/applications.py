@@ -126,3 +126,6 @@ class AppsService(ServiceBase):
                 raise ValueError('App has dependent resources') from exc
 
             return app
+
+
+apps = AppsService()

@@ -105,3 +105,6 @@ class DatabaseService(ServiceBase):
             await session.delete(database)
             await session.commit()
             return database
+
+
+database = DatabaseService()

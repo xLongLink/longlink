@@ -1,7 +1,26 @@
-import src.database as db
+from types import SimpleNamespace
 from src.models import UserProfile, UserListItem
 from src.database.models import User
+from src.database.services.applications import apps
+from src.database.services.compute import compute
+from src.database.services.database import database
+from src.database.services.locations import locations
+from src.database.services.operations import operations
+from src.database.services.organizations import orgs
+from src.database.services.storage import storage
+from src.database.services.users import users
 from fastapi.testclient import TestClient
+
+db = SimpleNamespace(
+    apps=apps,
+    compute=compute,
+    database=database,
+    locations=locations,
+    operations=operations,
+    orgs=orgs,
+    storage=storage,
+    users=users,
+)
 
 
 async def test_get_me_returns_authenticated_user_profile_and_org_memberships(

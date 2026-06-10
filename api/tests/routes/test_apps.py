@@ -1,10 +1,29 @@
 import httpx2
-import src.database as db
+from types import SimpleNamespace
 from src.models import AppResponse, ComputeKind, DatabaseKind, UserSummary
 from src.database.models import User, UserApp
 from src.database.session import get_session
+from src.database.services.applications import apps
+from src.database.services.compute import compute
+from src.database.services.database import database
+from src.database.services.locations import locations
+from src.database.services.operations import operations
+from src.database.services.organizations import orgs
+from src.database.services.storage import storage
+from src.database.services.users import users
 from src.models.roles import Roles
 from fastapi.testclient import TestClient
+
+db = SimpleNamespace(
+    apps=apps,
+    compute=compute,
+    database=database,
+    locations=locations,
+    operations=operations,
+    orgs=orgs,
+    storage=storage,
+    users=users,
+)
 
 
 async def test_list_apps_returns_app_membership_role(
@@ -220,8 +239,8 @@ async def test_create_app_returns_app_response(
             }
             return "postgresql://fake"
 
-    monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
-    monkeypatch.setattr("src.routes.apps.Postgre", FakeDatabase)
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.Postgre", FakeDatabase)
     client = clients[0]
 
     # Act
@@ -292,7 +311,7 @@ async def test_delete_app_removes_dependent_env_rows(
         async def remove(self, organization: str, application: str) -> None:
             captured["remove"] = {"organization": organization, "application": application}
 
-    monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -411,7 +430,7 @@ async def test_get_app_logs_returns_pod_logs(
             }
             return "line 1\nline 2"
 
-    monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
     client = clients[0]
 
     # Act

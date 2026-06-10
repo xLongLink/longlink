@@ -86,3 +86,6 @@ class OrgsService(ServiceBase):
             await session.delete(organization)
             await session.commit()
             return organization
+
+
+orgs = OrgsService()

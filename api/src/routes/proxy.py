@@ -1,10 +1,12 @@
 import httpx2
 from fastapi import Depends, HTTPException, Request, Response, status
 
-import src.database as db
 from src.adapters.compute.k8s import K8s
 from src.constants import APP_SERVICE_PORT
 from src.auth import authuser
+from src.database.models import User
+from src.database.services.applications import apps
+from src.database.services.compute import compute as compute_service
 from src.router import router
 from src.utils.namespace import k8name
 from src.utils.utils import knames, normalize
@@ -24,10 +26,10 @@ HOP_BY_HOP_HEADERS = {
 
 @router.api_route("/api/apps/{app_id}/proxy", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
 @router.api_route("/api/apps/{app_id}/proxy/{path:path}", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
-async def proxy_app_request(app_id: int, request: Request, path: str = "", user: db.User = Depends(authuser)) -> Response:
+async def proxy_app_request(app_id: int, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
     """Proxy one request into the deployed application service."""
 
-    app = await db.apps.get_by_id(app_id)
+    app = await apps.get_by_id(app_id)
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
 
@@ -35,7 +37,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if org is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{app.organization}' not found")
 
-    registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
+    registries = [registry for registry in await compute_service.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 
@@ -47,7 +49,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
             detail=f"No compute cluster configured for location '{org.location_id}'",
         )
 
-    compute = K8s(registry.kubeconfig, registry.proxy_secret)
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
     upstream_path = path.lstrip("/")
     namespace = k8name(knames(app.organization, "Org"))
@@ -58,7 +60,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
         for key, value in request.headers.items()
         if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "authorization"
     }
-    forward_headers["authorization"] = compute.authorization_header()
+    forward_headers["authorization"] = k8s.authorization_header()
 
     async with httpx2.AsyncClient(verify=False) as api_client:
         upstream_response = await api_client.request(

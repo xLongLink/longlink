@@ -89,7 +89,7 @@ app.add_middleware(
     https_only=False,
 )
 
-import src.routes.apps 
+import src.routes.applications 
 import src.routes.auth
 import src.routes.compute
 import src.routes.database
@@ -97,7 +97,7 @@ import src.routes.health
 import src.routes.image
 import src.routes.locations
 import src.routes.operations
-import src.routes.orgs
+import src.routes.organizations
 import src.routes.proxy 
 import src.routes.storage 
 import src.routes.user

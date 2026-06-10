@@ -1,13 +1,14 @@
 from typing import cast
 
 import httpx2
-import src.database as db
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 from fastapi import HTTPException, Request, status
 from fastapi.responses import Response, RedirectResponse
 from pydantic import BaseModel, Field
 
 from src.auth import oauth
+from src.database.models import User
+from src.database.services.users import users
 from src.env import env
 from src.router import router
 
@@ -107,7 +108,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
         or f"{given_name} {family_name}"
     )
 
-    await db.users.upsert(
+    await users.upsert(
         oidc_subject=subject,
         email=email,
         name=name,
@@ -146,7 +147,7 @@ async def auth_oidc(request: Request):
         or f"{given_name} {family_name}"
     )
 
-    await db.users.upsert(
+    await users.upsert(
         oidc_subject=subject,
         email=email,
         name=name,

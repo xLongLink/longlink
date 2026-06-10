@@ -1,7 +1,26 @@
-import src.database as db
+from types import SimpleNamespace
 from src.models.kinds import ComputeKind, DatabaseKind
 from src.models.operations import OperationStatus
 from src.operations import execute
+from src.database.services.applications import apps
+from src.database.services.compute import compute
+from src.database.services.database import database
+from src.database.services.locations import locations
+from src.database.services.operations import operations
+from src.database.services.organizations import orgs
+from src.database.services.storage import storage
+from src.database.services.users import users
+
+db = SimpleNamespace(
+    apps=apps,
+    compute=compute,
+    database=database,
+    locations=locations,
+    operations=operations,
+    orgs=orgs,
+    storage=storage,
+    users=users,
+)
 
 
 async def test_drain_scheduled_operations_executes_compute_setup(monkeypatch) -> None:
@@ -31,7 +50,7 @@ async def test_drain_scheduled_operations_executes_compute_setup(monkeypatch) ->
         async def setup(self) -> None:
             calls.append("setup")
 
-    monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
 
     # Act
     await execute()
@@ -136,8 +155,8 @@ async def test_drain_active_app_create_operation_resumes_from_database(monkeypat
             calls.append("schema")
             return "postgresql://fake"
 
-    monkeypatch.setattr("src.routes.apps.K8s", FakeCompute)
-    monkeypatch.setattr("src.routes.apps.Postgre", FakeDatabase)
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.Postgre", FakeDatabase)
 
     async def fake_app_is_ready(operation) -> bool:
         """Pretend the app endpoints are already available."""

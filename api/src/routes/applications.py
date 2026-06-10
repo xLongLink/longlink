@@ -1,8 +1,11 @@
-import src.database as db
 from fastapi import Depends, HTTPException, Response, status
 from src.adapters.compute.k8s import K8s
 from src.adapters.database import Postgre
 from src.auth import authuser, authadmin
+from src.database.models import User
+from src.database.services.applications import apps
+from src.database.services.compute import compute as compute_service
+from src.database.services.operations import operations
 from src.models.apps import AppCreate, AppResponse
 from src.logger import logger
 from src.router import router
@@ -10,17 +13,17 @@ from src.operations.applications import create_app as build_app, delete_app as t
 
 
 @router.get("/api/apps", response_model=list[AppResponse])
-async def list_apps(organization: str, user: db.User = Depends(authuser)) -> list[AppResponse]:
+async def list_apps(organization: str, user: User = Depends(authuser)) -> list[AppResponse]:
     """Return the apps registered in one organization."""
 
     org = next((org for org in user.orgs if org.name == organization), None)
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    apps = await db.apps.list(organization, user.id)
+    app_rows = await apps.list(organization, user.id)
     app_payloads: list[dict[str, object]] = []
 
-    for app, role_name in apps:
+    for app, role_name in app_rows:
         app_payload = {
             **app.model_dump(),
             "created_by": app.created_by or user,
@@ -37,7 +40,7 @@ async def list_apps(organization: str, user: db.User = Depends(authuser)) -> lis
 async def create_app(
     organization: str,
     payload: AppCreate,
-    user: db.User = Depends(authuser),
+    user: User = Depends(authuser),
 ) -> AppResponse:
     """Register a new app in the database and deploy it on the compute cluster."""
 
@@ -45,7 +48,7 @@ async def create_app(
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    operation = await db.operations.create(
+    operation = await operations.create(
         "app.create",
         {
             "organization": organization,
@@ -59,7 +62,7 @@ async def create_app(
     )
     logger.info("Queued app creation %s for %s/%s", operation.id, organization, payload.name)
 
-    if await db.operations.claim(operation.id) is None:
+    if await operations.claim(operation.id) is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
 
     logger.info("Claimed app creation %s for %s/%s", operation.id, organization, payload.name)
@@ -68,14 +71,14 @@ async def create_app(
         app = await build_app(organization, payload, user)
     except HTTPException as exc:
         logger.warning("App creation %s failed: %s", operation.id, exc.detail)
-        await db.operations.fail(operation.id, str(exc.detail))
+        await operations.fail(operation.id, str(exc.detail))
         raise
     except Exception as exc:
         logger.exception("App creation %s failed", operation.id)
-        await db.operations.fail(operation.id, str(exc))
+        await operations.fail(operation.id, str(exc))
         raise
     else:
-        await db.operations.ready(operation.id)
+        await operations.ready(operation.id)
         logger.info("Marked app creation %s ready", operation.id)
 
     return {
@@ -90,11 +93,11 @@ async def create_app(
 async def delete_app(
     organization: str,
     app_id: int,
-    _user: db.User = Depends(authadmin),
+    _user: User = Depends(authadmin),
 ) -> None:
     """Delete an app registration and remove it from the compute cluster."""
 
-    app = await db.apps.get_by_id(app_id)
+    app = await apps.get_by_id(app_id)
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
 
@@ -102,10 +105,10 @@ async def delete_app(
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    operation = await db.operations.create("app.delete", {"organization": organization, "app_id": app_id})
+    operation = await operations.create("app.delete", {"organization": organization, "app_id": app_id})
     logger.info("Queued app deletion %s for %s/%s", operation.id, organization, app_id)
 
-    if await db.operations.claim(operation.id) is None:
+    if await operations.claim(operation.id) is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
 
     logger.info("Claimed app deletion %s for %s/%s", operation.id, organization, app_id)
@@ -114,25 +117,25 @@ async def delete_app(
         await teardown_app(organization, app_id)
     except HTTPException as exc:
         logger.warning("App deletion %s failed: %s", operation.id, exc.detail)
-        await db.operations.fail(operation.id, str(exc.detail))
+        await operations.fail(operation.id, str(exc.detail))
         raise
     except Exception as exc:
         logger.exception("App deletion %s failed", operation.id)
-        await db.operations.fail(operation.id, str(exc))
+        await operations.fail(operation.id, str(exc))
         raise
     else:
-        await db.operations.ready(operation.id)
-        await db.operations.complete(operation.id)
+        await operations.ready(operation.id)
+        await operations.complete(operation.id)
         logger.info("Completed app deletion %s", operation.id)
 
     return
 
 
 @router.get("/api/apps/{app_id}/logs")
-async def get_app_logs(organization: str, app_id: int, user: db.User = Depends(authuser)) -> Response:
+async def get_app_logs(organization: str, app_id: int, user: User = Depends(authuser)) -> Response:
     """Return recent pod logs for one managed app."""
 
-    app = await db.apps.get_by_id(app_id)
+    app = await apps.get_by_id(app_id)
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
     if app.organization != organization:
@@ -142,7 +145,7 @@ async def get_app_logs(organization: str, app_id: int, user: db.User = Depends(a
     if org is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
 
-    registries = [registry for registry in await db.compute.list() if registry.deleted_at is None]
+    registries = [registry for registry in await compute_service.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
 

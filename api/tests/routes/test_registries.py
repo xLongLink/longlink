@@ -1,8 +1,27 @@
-import src.database as db
+from types import SimpleNamespace
 from fastapi.testclient import TestClient
 from src.models import (ComputeRegistryResponse, StorageRegistryResponse,
                         DatabaseRegistryResponse)
 from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
+from src.database.services.applications import apps
+from src.database.services.compute import compute
+from src.database.services.database import database
+from src.database.services.locations import locations
+from src.database.services.operations import operations
+from src.database.services.organizations import orgs
+from src.database.services.storage import storage
+from src.database.services.users import users
+
+db = SimpleNamespace(
+    apps=apps,
+    compute=compute,
+    database=database,
+    locations=locations,
+    operations=operations,
+    orgs=orgs,
+    storage=storage,
+    users=users,
+)
 
 
 async def test_operations_endpoint_returns_recorded_operations(

@@ -1,25 +1,26 @@
-import src.database as db
 from fastapi import Depends, HTTPException, status
 from src.auth import authuser, authadmin
+from src.database.models import User
+from src.database.services.organizations import orgs
 from src.models.orgs import OrgCreate, OrgDetails, OrgSummary
 from src.router import router
 
 
 @router.get("/api/orgs", response_model=list[OrgSummary])
-async def list_organizations(_user: db.User = Depends(authadmin)) -> list[OrgSummary]:
+async def list_organizations(_user: User = Depends(authadmin)) -> list[OrgSummary]:
     """Return all organizations for admin views."""
 
-    return await db.orgs.list()
+    return await orgs.list()
 
 
 @router.get("/api/orgs/{name}", response_model=OrgDetails)
 async def get_organization(
     name: str,
-    user: db.User = Depends(authuser),
+    user: User = Depends(authuser),
 ) -> OrgDetails:
     """Return one organization and its metadata."""
 
-    organization = await db.orgs.get(name)
+    organization = await orgs.get(name)
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
@@ -32,12 +33,12 @@ async def get_organization(
 @router.post("/api/orgs", response_model=OrgSummary)
 async def create_organization(
     payload: OrgCreate,
-    user: db.User = Depends(authuser),
+    user: User = Depends(authuser),
 ) -> OrgSummary:
     """Create a new org."""
 
     try:
-        organization = await db.orgs.create(payload.name, payload.location_id, user)
+        organization = await orgs.create(payload.name, payload.location_id, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -54,11 +55,11 @@ async def create_organization(
 
 
 @router.delete("/api/orgs/{name}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_organization(name: str, user: db.User = Depends(authuser)) -> None:
+async def delete_organization(name: str, user: User = Depends(authuser)) -> None:
     """Delete one org by name."""
 
     if not any(org.name == name for org in user.orgs):
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
-    await db.orgs.delete(name)
+    await orgs.delete(name)
     return
