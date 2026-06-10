@@ -1,6 +1,6 @@
 from .base import ServiceBase
 from sqlalchemy import select
-from src.db.models import StorageRegistry
+from src.database.models import StorageRegistry
 from src.models.kinds import StorageKind
 
 

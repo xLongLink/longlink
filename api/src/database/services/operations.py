@@ -6,7 +6,7 @@ from typing import Any
 from sqlalchemy import select, update
 
 from .base import ServiceBase
-from src.db.models import Operation
+from src.database.models import Operation
 from src.models.operations import OperationStatus
 
 

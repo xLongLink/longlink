@@ -1,7 +1,7 @@
 from .base import ServiceBase
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from src.db.models import ComputeRegistry, DatabaseRegistry, Location, Org
+from src.database.models import ComputeRegistry, DatabaseRegistry, Location, Org
 from src.models.countries import Country
 
 

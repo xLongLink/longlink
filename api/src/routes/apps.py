@@ -1,9 +1,10 @@
-import src.db as db
+import src.database as db
 from fastapi import Depends, HTTPException, Response, status
 from src.adapters.compute.k8s import K8s
 from src.adapters.database import Postgre
 from src.auth import authuser, authadmin
 from src.models.apps import AppCreate, AppResponse
+from src.logger import logger
 from src.router import router
 from src.operations.applications import create_app as build_app, delete_app as teardown_app
 
@@ -56,20 +57,26 @@ async def create_app(
             "user_id": user.id,
         },
     )
+    logger.info("Queued app creation %s for %s/%s", operation.id, organization, payload.name)
 
     if await db.operations.claim(operation.id) is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
 
+    logger.info("Claimed app creation %s for %s/%s", operation.id, organization, payload.name)
+
     try:
         app = await build_app(organization, payload, user)
     except HTTPException as exc:
+        logger.warning("App creation %s failed: %s", operation.id, exc.detail)
         await db.operations.fail(operation.id, str(exc.detail))
         raise
     except Exception as exc:
+        logger.exception("App creation %s failed", operation.id)
         await db.operations.fail(operation.id, str(exc))
         raise
     else:
         await db.operations.ready(operation.id)
+        logger.info("Marked app creation %s ready", operation.id)
 
     return {
         **app.model_dump(),
@@ -96,21 +103,27 @@ async def delete_app(
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
     operation = await db.operations.create("app.delete", {"organization": organization, "app_id": app_id})
+    logger.info("Queued app deletion %s for %s/%s", operation.id, organization, app_id)
 
     if await db.operations.claim(operation.id) is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
 
+    logger.info("Claimed app deletion %s for %s/%s", operation.id, organization, app_id)
+
     try:
         await teardown_app(organization, app_id)
     except HTTPException as exc:
+        logger.warning("App deletion %s failed: %s", operation.id, exc.detail)
         await db.operations.fail(operation.id, str(exc.detail))
         raise
     except Exception as exc:
+        logger.exception("App deletion %s failed", operation.id)
         await db.operations.fail(operation.id, str(exc))
         raise
     else:
         await db.operations.ready(operation.id)
         await db.operations.complete(operation.id)
+        logger.info("Completed app deletion %s", operation.id)
 
     return
 

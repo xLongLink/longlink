@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
-from src.db.models.__base__ import Base
-from src.db.models.association import UserOrganization
+from src.database.models.__base__ import Base
+from src.database.models.association import UserOrganization
 
 if TYPE_CHECKING:
-    from src.db.models.apps import App
-    from src.db.models.location import Location
-    from src.db.models.users import User
+    from src.database.models.apps import App
+    from src.database.models.location import Location
+    from src.database.models.users import User
 
 
 class Org(Base, table=True):

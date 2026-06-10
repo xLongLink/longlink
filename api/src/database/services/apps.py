@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from .base import ServiceBase
 from sqlalchemy import and_, select
-from src.db.models import App
+from src.database.models import App
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.db.models.users import User
-from src.db.models.association import UserApp
+from src.database.models.users import User
+from src.database.models.association import UserApp
 
 
 class AppsService(ServiceBase):

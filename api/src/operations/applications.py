@@ -1,7 +1,8 @@
-import src.db as db
+import src.database as db
 from fastapi import HTTPException, status
 
 from src.constants import APP_SERVICE_PORT
+from src.logger import logger
 from src.models.apps import AppCreate
 from src.utils.utils import slugify
 
@@ -10,6 +11,7 @@ async def create_app(organization: str, payload: AppCreate, user: db.User | None
     """Provision one application and persist its database record."""
 
     app_slug = slugify(payload.name)
+    logger.info("Provisioning app %s/%s", organization, app_slug)
     organization_record = await db.orgs.get(organization)
     if organization_record is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
@@ -70,12 +72,14 @@ async def create_app(organization: str, payload: AppCreate, user: db.User | None
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
+    logger.info("Provisioned app %s/%s", organization, app_slug)
     return app
 
 
 async def delete_app(organization: str, app_id: int) -> None:
     """Remove one application from compute and persistence layers."""
 
+    logger.info("Removing app %s/%s", organization, app_id)
     organization_record = await db.orgs.get(organization)
     if organization_record is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
@@ -112,3 +116,5 @@ async def delete_app(organization: str, app_id: int) -> None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail) from exc
 
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail) from exc
+
+    logger.info("Removed app %s/%s", organization, app_id)

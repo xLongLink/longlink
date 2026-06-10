@@ -3,10 +3,10 @@ from __future__ import annotations
 from .base import ServiceBase
 from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
-from src.db.models import App, ComputeRegistry, DatabaseRegistry, Location, Org, User
+from src.database.models import App, ComputeRegistry, DatabaseRegistry, Location, Org, User
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import Roles
-from src.db.models.association import UserOrganization
+from src.database.models.association import UserOrganization
 
 
 class OrgsService(ServiceBase):

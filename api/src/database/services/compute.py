@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from .base import ServiceBase
-from src.db.models import ComputeRegistry
+from src.database.models import ComputeRegistry
 from src.constants import INGRESS_NAME
 from src.models.kinds import ComputeKind
 

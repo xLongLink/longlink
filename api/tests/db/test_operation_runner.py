@@ -1,4 +1,4 @@
-import src.db as db
+import src.database as db
 from src.models.kinds import ComputeKind, DatabaseKind
 from src.models.operations import OperationStatus
 from src.operations import execute

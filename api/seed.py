@@ -1,12 +1,12 @@
 import asyncio
-import src.db as db
+import src.database as db
 from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.db.models import Base
-from src.db.models.association import UserOrganization
-from src.db.session import get_session
+from src.database.models import Base
+from src.database.models.association import UserOrganization
+from src.database.session import get_session
 from src.env import env
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 from src.models.roles import Roles

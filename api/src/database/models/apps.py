@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
 from sqlalchemy import UniqueConstraint
-from src.db.models.__base__ import Base
-from src.db.models.association import UserApp
+from src.database.models.__base__ import Base
+from src.database.models.association import UserApp
 
 if TYPE_CHECKING:
-    from src.db.models.org import Org
-    from src.db.models.users import User
+    from src.database.models.org import Org
+    from src.database.models.users import User
 
 
 class App(Base, table=True):

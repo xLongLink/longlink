@@ -1,11 +1,11 @@
 from .base import ServiceBase
 from sqlalchemy import func, select
 from src.models import UserProfile, UserOrgMembership
-from src.db.models import Org, User
+from src.database.models import Org, User
 from sqlalchemy.orm import selectinload
 from src.models.roles import Roles
 from src.models.users import Theme, Accent, Radius, Language
-from src.db.models.association import UserOrganization
+from src.database.models.association import UserOrganization
 
 ADMIN_EMAIL = 'example@longlink.dev'
 ADMIN_ORG = 'test'

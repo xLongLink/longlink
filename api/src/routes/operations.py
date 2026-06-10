@@ -1,4 +1,4 @@
-import src.db as db
+import src.database as db
 from fastapi import Depends
 
 from src.auth import authadmin

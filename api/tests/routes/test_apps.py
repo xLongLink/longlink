@@ -1,8 +1,8 @@
 import httpx2
-import src.db as db
+import src.database as db
 from src.models import AppResponse, ComputeKind, DatabaseKind, UserSummary
-from src.db.models import User, UserApp
-from src.db.session import get_session
+from src.database.models import User, UserApp
+from src.database.session import get_session
 from src.models.roles import Roles
 from fastapi.testclient import TestClient
 

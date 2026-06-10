@@ -1,4 +1,4 @@
-import src.db as db
+import src.database as db
 from fastapi.testclient import TestClient
 from src.models import (ComputeRegistryResponse, StorageRegistryResponse,
                         DatabaseRegistryResponse)

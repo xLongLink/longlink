@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Text, Column
 from src.models.kinds import ComputeKind
-from src.db.models.__base__ import Base
+from src.database.models.__base__ import Base
 
 if TYPE_CHECKING:
-    from src.db.models.location import Location
-    from src.db.models.users import User
+    from src.database.models.location import Location
+    from src.database.models.users import User
 
 
 class ComputeRegistry(Base, table=True):

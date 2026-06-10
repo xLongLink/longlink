@@ -19,8 +19,8 @@ os.environ.setdefault("OIDC_ISSUER", "http://localhost:18080/realms/dev")
 os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
 
 from main import app
-from src.db import session as db_session
-from src.db.models import Base, User
+from src.database import session as db_session
+from src.database.models import Base, User
 from src.env import env
 
 SESSION_COOKIE = "longlink_session"

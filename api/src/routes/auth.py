@@ -1,7 +1,7 @@
 from typing import cast
 
 import httpx2
-import src.db as db
+import src.database as db
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 from fastapi import HTTPException, Request, status
 from fastapi.responses import Response, RedirectResponse

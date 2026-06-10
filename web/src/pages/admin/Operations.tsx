@@ -26,20 +26,25 @@ const operationColumns: Array<ColumnDef<ApiOperation>> = [
         meta: { className: 'min-w-56' },
     },
     {
-        accessorKey: 'created_at',
-        header: 'Created',
-        cell: ({ getValue }) => new Date(getValue<string>()).toLocaleString(),
-        meta: { className: 'w-52' },
-    },
-    {
-        accessorKey: 'started_at',
-        header: 'Started',
-        cell: ({ getValue }) => {
-            const value = getValue<string | null>();
+        id: 'timestamp',
+        header: 'Timestamp',
+        cell: ({ row }) => {
+            const operation = row.original;
 
-            return value ? new Date(value).toLocaleString() : '—';
+            return (
+                <div className="flex flex-col gap-1 leading-tight">
+                    <div>
+                        <span className="text-xs text-muted-foreground">Created</span>{' '}
+                        {new Date(operation.created_at).toLocaleString()}
+                    </div>
+                    <div>
+                        <span className="text-xs text-muted-foreground">Started</span>{' '}
+                        {operation.started_at ? new Date(operation.started_at).toLocaleString() : '—'}
+                    </div>
+                </div>
+            );
         },
-        meta: { className: 'w-52' },
+        meta: { className: 'w-72' },
     },
     {
         accessorKey: 'stopped_at',

@@ -1,7 +1,7 @@
 import httpx2
 from fastapi import Depends, HTTPException, Request, Response, status
 
-import src.db as db
+import src.database as db
 from src.adapters.compute.k8s import K8s
 from src.constants import APP_SERVICE_PORT
 from src.auth import authuser

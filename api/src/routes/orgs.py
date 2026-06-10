@@ -1,4 +1,4 @@
-import src.db as db
+import src.database as db
 from fastapi import Depends, HTTPException, status
 from src.auth import authuser, authadmin
 from src.models.orgs import OrgCreate, OrgDetails, OrgSummary

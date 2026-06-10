@@ -2,14 +2,14 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, String, text
 from sqlmodel import Field, Relationship
-from src.db.models.__base__ import Base
+from src.database.models.__base__ import Base
 from src.models.countries import Country
 
 if TYPE_CHECKING:
-    from src.db.models.compute import ComputeRegistry
-    from src.db.models.database import DatabaseRegistry
-    from src.db.models.org import Org
-    from src.db.models.storage import StorageRegistry
+    from src.database.models.compute import ComputeRegistry
+    from src.database.models.database import DatabaseRegistry
+    from src.database.models.org import Org
+    from src.database.models.storage import StorageRegistry
 
 
 class Location(Base, table=True):

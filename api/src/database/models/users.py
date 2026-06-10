@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship
 from src.models.users import Theme, Accent, Radius, Language
-from src.db.models.__base__ import Base
-from src.db.models.association import UserApp, UserOrganization
+from src.database.models.__base__ import Base
+from src.database.models.association import UserApp, UserOrganization
 
 if TYPE_CHECKING:
-    from src.db.models.org import Org
-    from src.db.models.apps import App
+    from src.database.models.org import Org
+    from src.database.models.apps import App
 
 
 class User(Base, table=True):

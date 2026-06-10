@@ -1,4 +1,4 @@
-import src.db as db
+import src.database as db
 from fastapi import Request, HTTPException
 from src.env import env
 from authlib.integrations.starlette_client import OAuth

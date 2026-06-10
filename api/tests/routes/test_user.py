@@ -1,6 +1,6 @@
-import src.db as db
+import src.database as db
 from src.models import UserProfile, UserListItem
-from src.db.models import User
+from src.database.models import User
 from fastapi.testclient import TestClient
 
 
