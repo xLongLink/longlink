@@ -148,13 +148,12 @@ export default function AdminDatabase() {
                 </Hero>
                 <ConnectDatabaseDialog />
             </div>
-            {databaseQuery.isLoading && databaseRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading records...</div>
-            ) : databaseQuery.error && databaseRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-destructive">{databaseQuery.error.message}</div>
-            ) : (
-                <DataTable columns={databaseColumns} data={databaseRows} />
-            )}
+            <DataTable
+                columns={databaseColumns}
+                data={databaseRows}
+                error={databaseQuery.error}
+                isLoading={databaseQuery.isLoading}
+            />
         </div>
     );
 }

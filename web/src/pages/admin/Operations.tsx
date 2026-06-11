@@ -87,13 +87,12 @@ export default function AdminOperations() {
                     </HeroDescription>
                 </div>
             </Hero>
-            {operationsQuery.isLoading && operationRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading records...</div>
-            ) : operationsQuery.error && operationRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-destructive">{operationsQuery.error.message}</div>
-            ) : (
-                <DataTable columns={operationColumns} data={operationRows} />
-            )}
+            <DataTable
+                columns={operationColumns}
+                data={operationRows}
+                error={operationsQuery.error}
+                isLoading={operationsQuery.isLoading}
+            />
         </div>
     );
 }

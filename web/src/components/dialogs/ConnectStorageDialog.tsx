@@ -24,6 +24,14 @@ export default function ConnectStorageDialog() {
 
     const storageUrl = apiUrl('/api/storage');
     const locationsUrl = apiUrl('/api/locations');
+    const canSubmit =
+        kind.trim().length > 0 &&
+        name.trim().length > 0 &&
+        protocol.trim().length > 0 &&
+        endpointUrl.trim().length > 0 &&
+        accessKeyId.trim().length > 0 &&
+        secretAccessKey.length > 0 &&
+        locationId.length > 0;
 
     const locationsQuery = useQuery({
         queryKey: ['api', locationsUrl],
@@ -199,7 +207,7 @@ export default function ConnectStorageDialog() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={connectStorage.isPending}>
+                                <Button type="submit" disabled={connectStorage.isPending || !canSubmit}>
                                     {connectStorage.isPending ? 'Connecting...' : 'Connect'}
                                 </Button>
                             </div>

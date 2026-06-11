@@ -106,9 +106,9 @@ export default function View({ metadata }: ViewProps) {
             nextSearchParams.set('tab', tabValue);
 
             const href = params.app
-                ? `/${params.org}/${params.app}?${nextSearchParams.toString()}`
+                ? `/orgs/${params.org}/apps/${params.app}?${nextSearchParams.toString()}`
                 : params.org
-                  ? `/${params.org}?${nextSearchParams.toString()}`
+                  ? `/orgs/${params.org}?${nextSearchParams.toString()}`
                   : `?${nextSearchParams.toString()}`;
 
             return [startCase(tabValue), href] as const;

@@ -126,13 +126,12 @@ export default function AdminUsers() {
                     <HeroDescription>Review account access, elevated users, and admin onboarding.</HeroDescription>
                 </div>
             </Hero>
-            {usersQuery.isLoading && usersRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading records...</div>
-            ) : usersQuery.error && usersRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-destructive">{usersQuery.error.message}</div>
-            ) : (
-                <DataTable columns={userColumns} data={usersRows} />
-            )}
+            <DataTable
+                columns={userColumns}
+                data={usersRows}
+                error={usersQuery.error}
+                isLoading={usersQuery.isLoading}
+            />
         </div>
     );
 }

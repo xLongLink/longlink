@@ -4,6 +4,17 @@ type ApiErrorPayload = {
     detail?: string;
 } | null;
 
+/** Error thrown for failed API responses. */
+export class ApiError extends Error {
+    status: number;
+
+    constructor(message: string, status: number) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+    }
+}
+
 /** Resolves an API path against the configured API origin. */
 export function apiUrl(path: string): string {
     const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
@@ -36,7 +47,7 @@ async function requestApi(url: string, init?: RequestInit): Promise<Response> {
     });
 
     if (!response.ok) {
-        throw new Error(await readApiError(response));
+        throw new ApiError(await readApiError(response), response.status);
     }
 
     return response;

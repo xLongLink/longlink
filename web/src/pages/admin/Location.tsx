@@ -154,13 +154,12 @@ export default function AdminLocation() {
                 </Hero>
                 <CreateLocationDialog />
             </div>
-            {locationQuery.isLoading && locationRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading records...</div>
-            ) : locationQuery.error && locationRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-destructive">{locationQuery.error.message}</div>
-            ) : (
-                <DataTable columns={locationColumns} data={locationRows} />
-            )}
+            <DataTable
+                columns={locationColumns}
+                data={locationRows}
+                error={locationQuery.error}
+                isLoading={locationQuery.isLoading}
+            />
         </div>
     );
 }

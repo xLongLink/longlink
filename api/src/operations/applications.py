@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import asyncio
+from enum import Enum
 from src.logger import logger
 from src.utils.namespace import k8name
 from src.adapters.compute import K8s
@@ -13,73 +13,42 @@ from src.database.services.applications import apps
 from src.database.services.organizations import orgs
 
 
-async def app_is_ready(operation: Operation) -> bool:
-    """Check whether one app deployment is ready."""
+class AppStartupState(str, Enum):
+    """Runtime startup states for one deployed app."""
+
+    pending = "pending"
+    ready = "ready"
+    dead = "dead"
+
+
+async def inspect_app_startup(operation: Operation) -> AppStartupState:
+    """Inspect one app deployment startup state."""
 
     app_id = operation.app_id
     if not isinstance(app_id, int):
-        return False
+        return AppStartupState.pending
 
     app = await apps.get_by_id(app_id)
     if app is None:
-        return False
+        return AppStartupState.pending
 
     org = await orgs.get(app.organization)
     if org is None:
-        return False
+        return AppStartupState.pending
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
     if registry is None:
-        return False
-
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-
-    namespace = k8name(app.organization)
-    # Inspect the pods for a running workload with all containers ready.
-    try:
-        pods = k8s._core_api.list_namespaced_pod(namespace, label_selector=f"app={app.slug}").items
-    except ApiException:
-        return False
-
-    for pod in pods:
-        if pod.status is None:
-            continue
-
-        statuses = pod.status.container_statuses or []
-        if pod.status.phase == "Running" and statuses and all(container.ready for container in statuses):
-            return True
-
-    return False
-
-
-async def app_is_dead(operation: Operation) -> bool:
-    """Check whether one app deployment has already crashed."""
-
-    app_id = operation.app_id
-    if not isinstance(app_id, int):
-        return False
-
-    app = await apps.get_by_id(app_id)
-    if app is None:
-        return False
-
-    org = await orgs.get(app.organization)
-    if org is None:
-        return False
-
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
-    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
-    if registry is None:
-        return False
+        return AppStartupState.pending
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
     namespace = k8name(app.organization)
-    # Inspect the pods for terminal phases or crash states.
+
+    # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
         pods = k8s._core_api.list_namespaced_pod(namespace, label_selector=f"app={app.slug}").items
     except ApiException:
-        return False
+        return AppStartupState.pending
 
     crashed_reasons = {
         "CrashLoopBackOff",
@@ -94,7 +63,11 @@ async def app_is_dead(operation: Operation) -> bool:
             continue
 
         if pod.status.phase in {"Failed", "Unknown"}:
-            return True
+            return AppStartupState.dead
+
+        statuses = pod.status.container_statuses or []
+        if pod.status.phase == "Running" and statuses and all(container.ready for container in statuses):
+            return AppStartupState.ready
 
         for container in pod.status.container_statuses or []:
             state = container.state
@@ -102,16 +75,16 @@ async def app_is_dead(operation: Operation) -> bool:
                 continue
 
             if state.waiting is not None and state.waiting.reason in crashed_reasons:
-                return True
+                return AppStartupState.dead
 
             if state.terminated is not None and state.terminated.exit_code != 0:
-                return True
+                return AppStartupState.dead
 
-    return False
+    return AppStartupState.pending
 
 
-async def complete_app_creation(operation: Operation) -> Operation:
-    """Wait until one app starts or fails, then finalize its operation."""
+async def execute_app_create(operation: Operation) -> Operation:
+    """Run one app creation verification step."""
 
     app_id = operation.app_id
     if app_id is None:
@@ -121,38 +94,27 @@ async def complete_app_creation(operation: Operation) -> Operation:
     if app is None:
         raise ValueError(f"App '{app_id}' not found")
 
-    deadline = asyncio.get_running_loop().time() + 120.0
-    # Poll until the app becomes ready, fails, or times out.
-    while True:
-        if await app_is_ready(operation):
-            await apps.set_status(app.id, AppStatus.running)
-            ready = await operations.ready(operation.id)
-            if ready is None:
-                return operation
+    if operation.step != "verify":
+        raise ValueError(f"Unsupported app.create step '{operation.step}'")
 
-            completed = await operations.complete(operation.id)
-            if completed is not None:
-                logger.info("Completed app creation %s", operation.id)
-                return completed
+    startup_state = await inspect_app_startup(operation)
+    if startup_state == AppStartupState.ready:
+        await apps.set_status(app.id, AppStatus.running)
+        completed = await operations.complete(operation.id)
+        if completed is not None:
+            logger.info("Completed app creation %s", operation.id)
+            return completed
 
-            return ready
+        return operation
 
-        if await app_is_dead(operation):
-            await apps.set_status(app.id, AppStatus.failed)
-            failed = await operations.fail(operation.id, "App crashed during startup")
-            if failed is not None:
-                logger.info("Failed app creation %s", operation.id)
-                return failed
+    if startup_state == AppStartupState.dead:
+        await apps.set_status(app.id, AppStatus.failed)
+        failed = await operations.fail(operation.id, "App crashed during startup")
+        if failed is not None:
+            logger.info("Failed app creation %s", operation.id)
+            return failed
 
-            return operation
+        return operation
 
-        if asyncio.get_running_loop().time() >= deadline:
-            await apps.set_status(app.id, AppStatus.failed)
-            failed = await operations.fail(operation.id, "App did not become ready in time")
-            if failed is not None:
-                logger.info("Timed out app creation %s", operation.id)
-                return failed
-
-            return operation
-
-        await asyncio.sleep(2)
+    released = await operations.release(operation.id)
+    return released or operation

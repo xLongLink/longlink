@@ -138,13 +138,12 @@ export default function AdminStorage() {
                 </Hero>
                 <ConnectStorageDialog />
             </div>
-            {storageQuery.isLoading && storageRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading records...</div>
-            ) : storageQuery.error && storageRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-destructive">{storageQuery.error.message}</div>
-            ) : (
-                <DataTable columns={storageColumns} data={storageRows} />
-            )}
+            <DataTable
+                columns={storageColumns}
+                data={storageRows}
+                error={storageQuery.error}
+                isLoading={storageQuery.isLoading}
+            />
         </div>
     );
 }

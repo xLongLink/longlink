@@ -1,17 +1,18 @@
 from types import SimpleNamespace
+from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
 from fastapi.testclient import TestClient
 from src.models.compute import ComputeRegistryResponse
 from src.models.storage import StorageRegistryResponse
 from src.models.database import DatabaseRegistryResponse
-from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
-from src.database.services.applications import apps
+from src.models.operations import OperationKind
+from src.database.services.users import users
 from src.database.services.compute import compute
+from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
+from src.database.services.applications import apps
 from src.database.services.organizations import orgs
-from src.database.services.storage import storage
-from src.database.services.users import users
 
 db = SimpleNamespace(
     apps=apps,
@@ -35,7 +36,7 @@ async def test_operations_endpoint_returns_recorded_operations(
     location = await db.locations.create("local", "Local testing")
     await db.orgs.create("acme", location.id)
     app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
-    await db.operations.create("app.create", app_id=app.id)
+    await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
 
     # Act
     response = client.get("/api/operations")
@@ -47,7 +48,7 @@ async def test_operations_endpoint_returns_recorded_operations(
             "id": 1,
             "kind": "app.create",
             "app_id": app.id,
-            "registry_id": None,
+            "step": "verify",
             "status": "scheduled",
             "error": None,
             "created_at": response.json()[0]["created_at"],

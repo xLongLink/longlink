@@ -150,13 +150,12 @@ export default function AdminCompute() {
                 </Hero>
                 <ConnectComputeDialog />
             </div>
-            {computeQuery.isLoading && computeRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading records...</div>
-            ) : computeQuery.error && computeRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-destructive">{computeQuery.error.message}</div>
-            ) : (
-                <DataTable columns={computeColumns} data={computeRows} />
-            )}
+            <DataTable
+                columns={computeColumns}
+                data={computeRows}
+                error={computeQuery.error}
+                isLoading={computeQuery.isLoading}
+            />
         </div>
     );
 }

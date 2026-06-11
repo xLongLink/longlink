@@ -5,6 +5,7 @@ from src.router import router
 from src.constants import APP_SERVICE_PORT
 from src.utils.utils import slugify
 from src.adapters.database import Postgre
+from src.models.operations import OperationKind
 from src.models.applications import AppCreate, AppStatus, AppResponse
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
@@ -122,7 +123,7 @@ async def create_app(
         raise HTTPException(status_code=503, detail="Failed to initialize the application") from exc
 
     try:
-        operation = await operations.create("app.create", app_id=app.id)
+        operation = await operations.create(OperationKind.app_create, app_id=app.id, step="verify")
     except Exception as exc:
         await apps.set_status(app.id, AppStatus.failed)
         logger.exception("Failed to queue app verification for %s/%s", organization, payload.name)

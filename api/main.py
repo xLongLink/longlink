@@ -3,20 +3,18 @@ from fastapi import FastAPI, Request
 from pathlib import Path
 from src.env import env
 from contextlib import suppress, asynccontextmanager
-from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import create_async_engine
 from src.logger import logger
 from src.router import router
-from src.operations import (complete_ready_operations,
-                            execute_claimed_operation,
-                            recover_active_operations)
+from src.operations import execute
 from fastapi.responses import JSONResponse
+from sqlalchemy.engine import make_url
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
+from sqlalchemy.ext.asyncio import create_async_engine
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 from src.database.models.__base__ import Base
+from starlette.middleware.sessions import SessionMiddleware
 from src.database.services.operations import operations
 
 
@@ -53,7 +51,9 @@ async def run_operation_scheduler() -> None:
         logger.info("Executing operation %s (%s)", operation.id, operation.kind)
         # Execute one claimed operation without stopping the worker on failure.
         try:
-            await execute_claimed_operation(operation)
+            result = await execute(operation)
+            if result.started_at is None and result.stopped_at is None and result.step == operation.step:
+                await asyncio.sleep(1)
         except Exception:
             # Keep draining so one failed operation does not block the queue.
             logger.exception("Operation scheduler failed for %s (%s)", operation.id, operation.kind)
@@ -61,7 +61,7 @@ async def run_operation_scheduler() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Drain any queued operations before the API starts serving traffic."""
+    """Start the API and background operation worker."""
 
     # Local SQLite development starts from an empty file, so create the schema before any reads.
     database_url = make_url(env.DATABASE_URL)
@@ -73,27 +73,7 @@ async def lifespan(app: FastAPI):
         finally:
             await engine.dispose()
 
-    logger.info("Starting operation drain")
-    await recover_active_operations()
-
-    # Drain boot-time work before the app starts serving requests.
-    while True:
-        operation = await operations.claim_next()
-        if operation is None:
-            break
-
-        logger.info("Executing operation %s (%s)", operation.id, operation.kind)
-        # Keep draining even if one startup operation fails.
-        try:
-            await execute_claimed_operation(operation)
-        except Exception:
-            # Keep draining so one failed operation does not block the queue.
-            logger.exception("Operation drain failed for %s (%s)", operation.id, operation.kind)
-            continue
-
-    # Finalize any operations that only need a readiness check.
-    await complete_ready_operations()
-    logger.info("Finished operation drain")
+    await operations.reset_active()
 
     worker = asyncio.create_task(run_operation_scheduler())
     yield
@@ -134,11 +114,11 @@ app.add_middleware(
     https_only=False,
 )
 
-import src.routes.health
 import src.routes.auth
 import src.routes.user
 import src.routes.image
 import src.routes.proxy
+import src.routes.health
 import src.routes.compute
 import src.routes.storage
 import src.routes.database

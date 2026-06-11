@@ -22,6 +22,11 @@ export default function ConnectComputeDialog() {
 
     const computeUrl = apiUrl('/api/compute');
     const locationsUrl = apiUrl('/api/locations');
+    const canSubmit =
+        kind.trim().length > 0 &&
+        kubeconfig.trim().length > 0 &&
+        ingressHost.trim().length > 0 &&
+        locationId.length > 0;
 
     const locationsQuery = useQuery({
         queryKey: ['api', locationsUrl],
@@ -158,7 +163,7 @@ export default function ConnectComputeDialog() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={connectCompute.isPending}>
+                                <Button type="submit" disabled={connectCompute.isPending || !canSubmit}>
                                     {connectCompute.isPending ? 'Connecting...' : 'Connect'}
                                 </Button>
                             </div>

@@ -11,15 +11,32 @@ declare module '@tanstack/react-table' {
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    error?: Error | null;
+    loadingLabel?: string;
+    isLoading?: boolean;
 }
 
 /** Renders a shadcn-style data table. */
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+    columns,
+    data,
+    error = null,
+    loadingLabel = 'Loading records...',
+    isLoading = false,
+}: DataTableProps<TData, TValue>) {
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
     });
+
+    if (isLoading && data.length === 0) {
+        return <div className="rounded-md border p-4 text-sm text-muted-foreground">{loadingLabel}</div>;
+    }
+
+    if (error && data.length === 0) {
+        return <div className="rounded-md border p-4 text-sm text-destructive">{error.message}</div>;
+    }
 
     return (
         <div className="overflow-hidden rounded-md border">

@@ -21,7 +21,7 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrgSummary>> = [
             const name = getValue<string>();
 
             return (
-                <Link to={`/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
                     {name}
                 </Link>
             );
@@ -208,13 +208,12 @@ export default function AdminOrganization() {
                     <HeroDescription>Review organization lifecycle, ownership, and access boundaries.</HeroDescription>
                 </div>
             </Hero>
-            {organizationsQuery.isLoading && organizationRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading records...</div>
-            ) : organizationsQuery.error && organizationRows.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-destructive">{organizationsQuery.error.message}</div>
-            ) : (
-                <DataTable columns={organizationColumns} data={organizationRows} />
-            )}
+            <DataTable
+                columns={organizationColumns}
+                data={organizationRows}
+                error={organizationsQuery.error}
+                isLoading={organizationsQuery.isLoading}
+            />
         </div>
     );
 }
