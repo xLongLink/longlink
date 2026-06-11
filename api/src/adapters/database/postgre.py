@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_en
 from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy.sql.elements import quoted_name
 
+from src.env import env
 from src.utils.namespace import dbname
 
 from .__root__ import Database
@@ -23,8 +24,6 @@ class Postgre(Database):
         port: int,
         username: str,
         password: str,
-        sslmode: str | None = None,
-        maintenance_database: str = "postgres",
     ) -> None:
         """Initialize the PostgreSQL database adapter.
 
@@ -33,15 +32,13 @@ class Postgre(Database):
             port: PostgreSQL port.
             username: PostgreSQL username.
             password: PostgreSQL password.
-            sslmode: Optional libpq sslmode value.
-            maintenance_database: Database to connect to for server-level operations.
         """
         self._host = host
         self._port = port
         self._username = username
         self._password = password
-        self._sslmode = sslmode
-        self._maintenance_database = maintenance_database
+        self._sslmode = env.DATABASE_SSLMODE
+        self._maintenance_database = "postgres"
 
     def _url(self, database: str) -> URL:
         """Build one SQLAlchemy URL for the requested database."""
@@ -55,9 +52,7 @@ class Postgre(Database):
             port=self._port,
             database=database,
         )
-        if self._sslmode is not None:
-            url = url.update_query_dict({"sslmode": self._sslmode})
-        return url
+        return url.update_query_dict({"sslmode": self._sslmode})
 
 
     @asynccontextmanager
@@ -158,7 +153,7 @@ class Postgre(Database):
             result = await conn.execute(text("SELECT datname FROM pg_database WHERE datname LIKE 'longlink\\_%' ESCAPE '\\'"))
             for row in result.fetchall():
                 database = row[0]
-                if database in {self._maintenance_database, "postgres"}:
+                if database == self._maintenance_database:
                     continue
 
                 await conn.execute(

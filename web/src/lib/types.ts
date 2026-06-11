@@ -102,8 +102,6 @@ export type ApiDatabaseRegistry = {
     host: string;
     port: number;
     username: string;
-    sslmode: string | null;
-    maintenance_database: string;
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
 };

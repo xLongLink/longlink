@@ -1,4 +1,5 @@
-from fastapi import Depends, Request, Response, HTTPException, status
+from fastapi import APIRouter, Depends, Request, Response, HTTPException
+from fastapi.routing import APIRoute
 from src.auth import authuser
 from src.router import router
 from src.utils.utils import knames
@@ -21,33 +22,51 @@ HOP_BY_HOP_HEADERS = {
 }
 
 
-@router.api_route("/api/apps/{app_id}/proxy", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
-@router.api_route("/api/apps/{app_id}/proxy/{path:path}", methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
+class ProxyRoute(APIRoute):
+    """Keep the proxy route on the explicit HTTP allowlist."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        # Starlette adds HEAD to GET routes automatically; remove it here.
+        self.methods.discard("HEAD")
+
+
+proxy_router = APIRouter(route_class=ProxyRoute)
+
+
+@proxy_router.api_route(
+    "/api/apps/{app_id}/proxy/{path:path}",
+    methods=["DELETE", "GET", "PATCH", "POST"],
+)
 async def proxy_app_request(app_id: int, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
     """Proxy one request into the deployed application service."""
 
     # Load the app first so routing never depends on the caller-supplied path alone.
     app = await apps.get_by_id(app_id)
     if app is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
+        raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
 
     org = next((org for org in user.orgs if org.name == app.organization), None)
     if org is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{app.organization}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{app.organization}' not found")
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     if not registries:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
+        raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     # Prefer the newest registry for the location so the live cluster stays in sync.
     registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
     if registry is None:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=503,
             detail=f"No compute cluster configured for location '{org.location_id}'",
         )
 
     upstream_path = path.lstrip("/")
+    if upstream_path == "":
+        raise HTTPException(status_code=404, detail="Proxy root path is not available")
+
     namespace = k8name(knames(app.organization, "Org"))
     name = knames(app.slug, "Application name")
     # Strip hop-by-hop headers before forwarding the request upstream.
@@ -84,3 +103,6 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
             if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "content-length"
         },
     )
+
+
+router.include_router(proxy_router)

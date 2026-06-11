@@ -36,8 +36,6 @@ class DatabaseService(ServiceBase):
         username: str,
         password: str,
         location_id: int,
-        sslmode: str | None = None,
-        maintenance_database: str = "postgres",
     ) -> DatabaseRegistry:
         """Create or update one database backend registration."""
 
@@ -54,8 +52,6 @@ class DatabaseService(ServiceBase):
                     port=port,
                     username=username,
                     password=password,
-                    sslmode=sslmode,
-                    maintenance_database=maintenance_database,
                     location_id=location_id,
                 )
                 session.add(database)
@@ -65,8 +61,6 @@ class DatabaseService(ServiceBase):
                 database.port = port
                 database.username = username
                 database.password = password
-                database.sslmode = sslmode
-                database.maintenance_database = maintenance_database
                 database.location_id = location_id
                 database.deleted_at = None
                 database.deleted_by_id = None

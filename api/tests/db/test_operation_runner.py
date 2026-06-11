@@ -36,7 +36,7 @@ async def test_drain_scheduled_operations_executes_compute_setup(monkeypatch) ->
         ingress_host="localhost:8443",
         location_id=location.id,
     )
-    operation = await db.operations.create("compute.setup", {"registry_id": registry.id})
+    operation = await db.operations.create("compute.setup", registry_id=registry.id)
     await db.operations.claim(operation.id)
     calls: list[str] = []
 
@@ -80,7 +80,7 @@ async def test_drain_active_app_create_operation_completes_running_app(monkeypat
     location = await db.locations.create("local", "Local testing")
     await db.orgs.create("acme", location.id, user)
     app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create("app.create", {"app_id": app_record.id})
+    operation = await db.operations.create("app.create", app_id=app_record.id)
     await db.operations.claim(operation.id)
     calls: list[str] = []
 
@@ -121,7 +121,7 @@ async def test_drain_active_app_create_operation_marks_failed_when_dead(monkeypa
     location = await db.locations.create("local", "Local testing")
     await db.orgs.create("acme", location.id, user)
     app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create("app.create", {"app_id": app_record.id})
+    operation = await db.operations.create("app.create", app_id=app_record.id)
     await db.operations.claim(operation.id)
     calls: list[str] = []
 

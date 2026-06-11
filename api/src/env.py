@@ -9,6 +9,9 @@ class Env(BaseSettings):
     # Control plane database URL
     DATABASE_URL: str
 
+    # PostgreSQL adapter defaults.
+    DATABASE_SSLMODE: str = "require"
+
     # OIDC bridge credentials
     OIDC_CLIENT_ID: str
     OIDC_CLIENT_SECRET: str

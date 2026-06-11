@@ -1,7 +1,8 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from src.auth import authadmin
 from src.database.models.users import User
 from src.database.services.database import database
+from src.routes.common import not_found
 from src.router import router
 from src.models.database import DatabaseRegistryCreate, DatabaseRegistryResponse
 
@@ -19,7 +20,7 @@ async def get_database_registry(name: str, _user: User = Depends(authadmin)) -> 
 
     registry = await database.get(name)
     if registry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Database '{name}' not found")
+        raise not_found("Database", name)
 
     return registry
 
@@ -40,12 +41,12 @@ async def create_database_registry(
     }
 
 
-@router.delete("/api/database/{name}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/api/database/{name}", status_code=204)
 async def delete_database_registry(name: str, user: User = Depends(authadmin)) -> None:
     """Mark one database backend registration as deleted."""
 
     registry = await database.delete(name, user.id)
     if registry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Database '{name}' not found")
+        raise not_found("Database", name)
 
     return

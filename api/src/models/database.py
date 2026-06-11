@@ -13,8 +13,6 @@ class DatabaseRegistryCreate(BaseModel):
     port: int
     username: str
     password: str
-    sslmode: str | None = None
-    maintenance_database: str = "postgres"
     location_id: int
 
 
@@ -29,8 +27,6 @@ class DatabaseRegistryResponse(BaseModel):
     host: str
     port: int
     username: str
-    sslmode: str | None = None
-    maintenance_database: str = "postgres"
     location_id: int
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None

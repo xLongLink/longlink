@@ -1,8 +1,7 @@
-from typing import Any
 from datetime import datetime
 from sqlmodel import Field, SQLModel
 from .__base__ import utcnow
-from sqlalchemy import JSON, Enum, Column, String
+from sqlalchemy import Enum, Column, String
 from src.models.operations import OperationStatus
 
 
@@ -13,7 +12,8 @@ class Operation(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     kind: str = Field(max_length=100)
-    payload: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
+    app_id: int | None = Field(default=None, foreign_key="apps.id")
+    registry_id: int | None = Field(default=None, foreign_key="compute_registries.id")
     status: OperationStatus = Field(
         default=OperationStatus.scheduled,
         sa_column=Column(Enum(OperationStatus, name="operation_status_enum", native_enum=False), nullable=False),

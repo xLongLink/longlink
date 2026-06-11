@@ -2,14 +2,15 @@ from typing import cast
 
 import httpx2
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
-from fastapi import HTTPException, Request, status
-from fastapi.responses import Response, RedirectResponse
+from fastapi import HTTPException, Request
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from src.auth import oauth
 from src.database.services.users import users
 from src.env import env
 from src.router import router
+from src.models.common import SuccessResponse
 
 
 class PasswordLoginRequest(BaseModel):
@@ -19,13 +20,7 @@ class PasswordLoginRequest(BaseModel):
     password: str = Field(min_length=1)
 
 
-class PasswordLoginResponse(BaseModel):
-    """Response returned after a successful password login."""
-
-    ok: bool = True
-
-
-@router.get("/auth/login/oidc")
+@router.get("/auth/login/oidc", include_in_schema=False)
 async def login_oidc(request: Request):
     """Initiate OIDC login flow by redirecting to the identity provider."""
 
@@ -43,8 +38,8 @@ async def login_oidc(request: Request):
         ) from exc
 
 
-@router.post("/auth/login/password", response_model=PasswordLoginResponse)
-async def login_password(request: Request, payload: PasswordLoginRequest) -> PasswordLoginResponse:
+@router.post("/auth/login/password", response_model=SuccessResponse, include_in_schema=False)
+async def login_password(request: Request, payload: PasswordLoginRequest) -> SuccessResponse:
     """Exchange username/password credentials for a session through Keycloak."""
 
     # Fetch the provider metadata first so the token and userinfo URLs come from discovery.
@@ -55,7 +50,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
             metadata_response = await client.get(metadata_url)
             metadata_response.raise_for_status()
         except httpx2.HTTPStatusError as exc:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider unavailable") from exc
+            raise HTTPException(status_code=502, detail="Authentication provider unavailable") from exc
 
         metadata = metadata_response.json()
 
@@ -75,15 +70,15 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
     try:
         token_response.raise_for_status()
     except httpx2.HTTPStatusError as exc:
-        if exc.response.status_code in {status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED}:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password") from exc
+        if exc.response.status_code in {400, 401}:
+            raise HTTPException(status_code=401, detail="Invalid username or password") from exc
 
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider unavailable") from exc
+        raise HTTPException(status_code=502, detail="Authentication provider unavailable") from exc
 
     token = token_response.json()
     access_token = token.get("access_token")
     if not access_token:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider returned no access token")
+        raise HTTPException(status_code=502, detail="Authentication provider returned no access token")
 
     # Use the access token to fetch the authenticated user's profile.
     async with httpx2.AsyncClient() as client:
@@ -94,12 +89,12 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
             )
             userinfo_response.raise_for_status()
         except httpx2.HTTPStatusError as exc:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to read authenticated user profile") from exc
+            raise HTTPException(status_code=502, detail="Failed to read authenticated user profile") from exc
 
     userinfo = userinfo_response.json()
     subject = str(userinfo.get("sub") or "")
     if not subject:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider returned no subject")
+        raise HTTPException(status_code=502, detail="Authentication provider returned no subject")
 
     # Normalize the provider payload into the local user record shape.
     given_name = userinfo.get("given_name") or "Example"
@@ -119,10 +114,10 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
     )
 
     request.session["oidc_subject"] = subject
-    return PasswordLoginResponse()
+    return SuccessResponse()
 
 
-@router.get("/auth/oidc")
+@router.get("/auth/oidc", include_in_schema=False)
 async def auth_oidc(request: Request):
     """Handle OIDC callback, exchange code for token, and create/update user."""
 
@@ -163,9 +158,9 @@ async def auth_oidc(request: Request):
     return RedirectResponse("/organizations")
 
 
-@router.get("/auth/logout")
-async def logout(request: Request):
+@router.get("/auth/logout", response_model=SuccessResponse, include_in_schema=False)
+async def logout(request: Request) -> SuccessResponse:
     """Clear the user session and log out."""
 
     request.session.clear()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return SuccessResponse()

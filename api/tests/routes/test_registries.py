@@ -32,14 +32,10 @@ async def test_operations_endpoint_returns_recorded_operations(
 
     # Arrange
     client = clients[0]
-    payload = {
-        "organization": "acme",
-        "app": "dashboard",
-    }
-    await db.operations.create(
-        "app.create",
-        payload,
-    )
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id)
+    app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    await db.operations.create("app.create", app_id=app.id)
 
     # Act
     response = client.get("/api/operations")
@@ -50,8 +46,9 @@ async def test_operations_endpoint_returns_recorded_operations(
         {
             "id": 1,
             "kind": "app.create",
+            "app_id": app.id,
+            "registry_id": None,
             "status": "scheduled",
-            "payload": payload,
             "error": None,
             "created_at": response.json()[0]["created_at"],
             "started_at": None,
@@ -78,8 +75,6 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             "port": 5432,
             "username": "longlink",
             "password": "secret",
-            "sslmode": "require",
-            "maintenance_database": "postgres",
             "location_id": 1,
         },
     )
@@ -95,8 +90,6 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         host="db.longlink.internal",
         port=5432,
         username="longlink",
-        sslmode="require",
-        maintenance_database="postgres",
         location_id=1,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
@@ -108,8 +101,6 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             host="db.longlink.internal",
             port=5432,
             username="longlink",
-            sslmode="require",
-            maintenance_database="postgres",
             location_id=1,
         ).model_dump(mode="json")
     ]

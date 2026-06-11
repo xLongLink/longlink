@@ -7,12 +7,15 @@ from src.database.services.operations import operations
 async def execute_compute_setup(operation: Operation) -> Operation:
     """Provision one compute registry and finalize its setup operation."""
 
-    payload = operation.payload or {}
     logger.info("Running compute setup %s", operation.id)
     # Load the registry record before touching the cluster so missing ids fail fast.
-    registry = await compute.get(int(payload["registry_id"]))
+    registry_id = operation.registry_id
+    if registry_id is None:
+        raise ValueError("Operation missing compute registry reference")
+
+    registry = await compute.get(registry_id)
     if registry is None:
-        raise ValueError(f"Compute registry '{payload['registry_id']}' not found")
+        raise ValueError(f"Compute registry '{registry_id}' not found")
 
     from src.adapters.compute import K8s
 

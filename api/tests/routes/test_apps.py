@@ -169,8 +169,6 @@ async def test_create_app_returns_app_response(
         port=5432,
         username="longlink",
         password="secret",
-        sslmode="require",
-        maintenance_database="postgres",
         location_id=local_location.id,
     )
     await db.database.create(
@@ -180,8 +178,6 @@ async def test_create_app_returns_app_response(
         port=5432,
         username="longlink",
         password="secret",
-        sslmode="require",
-        maintenance_database="postgres",
         location_id=remote_location.id,
     )
 
@@ -222,17 +218,13 @@ async def test_create_app_returns_app_response(
             port: int,
             username: str,
             password: str,
-            sslmode: str | None,
-            maintenance_database: str,
         ) -> None:
             captured["database"] = {
                 "host": host,
                 "port": port,
                 "username": username,
                 "password": password,
-                "sslmode": sslmode,
             }
-            captured["maintenance_database"] = maintenance_database
 
         async def schema(self, organization: str, application: str) -> str:
             captured["schema"] = {
@@ -274,10 +266,8 @@ async def test_create_app_returns_app_response(
         "port": 5432,
         "username": "longlink",
         "password": "secret",
-        "sslmode": "require",
     }
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
-    assert captured["maintenance_database"] == "postgres"
     assert captured["application"] == {
         "organization": "acme",
         "application": "dashboard",
@@ -571,3 +561,30 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
     assert captured["auth_settings"] == ["BearerToken"]
+
+
+def test_proxy_app_rejects_root_path(clients: tuple[TestClient, TestClient, TestClient]) -> None:
+    """Reject the root proxy path in production."""
+
+    # Arrange
+    client = clients[0]
+
+    # Act
+    response = client.get("/api/apps/1/proxy/")
+
+    # Assert
+    assert response.status_code == 404
+
+
+@pytest.mark.parametrize("method", ["HEAD", "OPTIONS", "PUT"])
+def test_proxy_app_rejects_unsupported_methods(clients: tuple[TestClient, TestClient, TestClient], method: str) -> None:
+    """Reject proxy methods outside the explicit allowlist."""
+
+    # Arrange
+    client = clients[0]
+
+    # Act
+    response = client.request(method, "/api/apps/1/proxy")
+
+    # Assert
+    assert response.status_code == 405

@@ -18,8 +18,6 @@ export default function ConnectDatabaseDialog() {
     const [port, setPort] = useState('5432');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [sslmode, setSslmode] = useState('');
-    const [maintenanceDatabase, setMaintenanceDatabase] = useState('postgres');
     const [error, setError] = useState<string | null>(null);
 
     const databaseUrl = apiUrl('/api/database');
@@ -39,8 +37,6 @@ export default function ConnectDatabaseDialog() {
                     port: Number(port),
                     username: username.trim(),
                     password,
-                    sslmode: sslmode.trim() || null,
-                    maintenance_database: maintenanceDatabase.trim() || 'postgres',
                 }),
             });
         },
@@ -53,8 +49,6 @@ export default function ConnectDatabaseDialog() {
             setPort('5432');
             setUsername('');
             setPassword('');
-            setSslmode('');
-            setMaintenanceDatabase('postgres');
         },
     });
 
@@ -162,28 +156,6 @@ export default function ConnectDatabaseDialog() {
                                     type="password"
                                     value={password}
                                     onChange={(event) => setPassword(event.target.value)}
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="database-sslmode">SSL mode</Label>
-                                <Input
-                                    id="database-sslmode"
-                                    value={sslmode}
-                                    onChange={(event) => setSslmode(event.target.value)}
-                                    placeholder="prefer"
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="database-maintenance">Maintenance database</Label>
-                                <Input
-                                    id="database-maintenance"
-                                    value={maintenanceDatabase}
-                                    onChange={(event) => setMaintenanceDatabase(event.target.value)}
-                                    placeholder="postgres"
                                     autoComplete="off"
                                 />
                             </div>

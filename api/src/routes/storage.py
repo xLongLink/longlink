@@ -1,7 +1,8 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException
 from src.auth import authadmin
 from src.database.models.users import User
 from src.database.services.storage import storage
+from src.routes.common import not_found
 from src.router import router
 from src.models.storage import StorageRegistryCreate, StorageRegistryResponse
 
@@ -19,7 +20,7 @@ async def get_storage_registry(name: str, _user: User = Depends(authadmin)) -> S
 
     registry = await storage.get(name)
     if registry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Storage '{name}' not found")
+        raise not_found("Storage", name)
 
     return registry
 
@@ -36,12 +37,12 @@ async def create_storage_registry(
     return registry
 
 
-@router.delete("/api/storage/{name}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/api/storage/{name}", status_code=204)
 async def delete_storage_registry(name: str, _user: User = Depends(authadmin)) -> None:
     """Delete one storage backend registration."""
 
     registry = await storage.delete(name)
     if registry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Storage '{name}' not found")
+        raise not_found("Storage", name)
 
     return

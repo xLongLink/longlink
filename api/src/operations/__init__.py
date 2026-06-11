@@ -2,8 +2,7 @@ from fastapi import HTTPException
 from src.logger import logger
 from src.models.operations import OperationStatus
 from src.models.applications import AppStatus
-from src.operations.applications import (delete_app, app_is_dead, app_is_ready,
-                                         complete_app_creation)
+from src.operations.applications import app_is_dead, app_is_ready, complete_app_creation
 from src.database.models.operation import Operation
 from src.database.services.operations import operations
 from src.database.services.applications import apps
@@ -14,8 +13,6 @@ async def recover_active_operations() -> None:
 
     # Walk active operations one by one so each kind can recover independently.
     for operation in await operations.list_active():
-        payload = operation.payload or {}
-
         # Compute setup can always be replayed from scratch.
         if operation.kind == "compute.setup":
             logger.info("Requeueing interrupted compute setup %s", operation.id)
@@ -24,34 +21,25 @@ async def recover_active_operations() -> None:
 
         # App creation can be completed or failed based on the stored app state.
         if operation.kind == "app.create":
-            app_id = payload.get("app_id")
-            if isinstance(app_id, int):
-                app = await apps.get_by_id(app_id)
-                if app is not None and app.status == AppStatus.running:
-                    logger.info("Recovering completed app creation %s", operation.id)
-                    await operations.ready(operation.id)
-                    await operations.complete(operation.id)
-                    continue
-
-                if app is not None and app.status == AppStatus.failed:
-                    logger.info("Failing recovered app creation %s", operation.id)
-                    await operations.fail(operation.id, "App failed during startup")
-                    continue
-
-            logger.info("Requeueing interrupted app creation %s", operation.id)
-            await operations.requeue(operation.id)
-            continue
-
-        # App deletion is finished once the app row is gone.
-        if operation.kind == "app.delete":
-            app_id = payload.get("app_id")
-            if isinstance(app_id, int) and await apps.get_by_id(app_id) is None:
-                logger.info("Completing recovered app deletion %s", operation.id)
-                if await operations.ready(operation.id) is not None:
-                    await operations.complete(operation.id)
+            app_id = operation.app_id
+            if app_id is None:
+                logger.warning("Failing app creation %s without app reference", operation.id)
+                await operations.fail(operation.id, "Operation missing app reference")
                 continue
 
-            logger.info("Requeueing interrupted app deletion %s", operation.id)
+            app = await apps.get_by_id(app_id)
+            if app is not None and app.status == AppStatus.running:
+                logger.info("Recovering completed app creation %s", operation.id)
+                await operations.ready(operation.id)
+                await operations.complete(operation.id)
+                continue
+
+            if app is not None and app.status == AppStatus.failed:
+                logger.info("Failing recovered app creation %s", operation.id)
+                await operations.fail(operation.id, "App failed during startup")
+                continue
+
+            logger.info("Requeueing interrupted app creation %s", operation.id)
             await operations.requeue(operation.id)
             continue
 
@@ -63,8 +51,6 @@ async def recover_active_operations() -> None:
 async def execute_claimed_operation(operation: Operation) -> Operation:
     """Execute one already-claimed operation and advance its status."""
 
-    payload = operation.payload or {}
-
     try:
         # Dispatch each operation kind to its dedicated executor.
         if operation.kind == "compute.setup":
@@ -74,17 +60,6 @@ async def execute_claimed_operation(operation: Operation) -> Operation:
         elif operation.kind == "app.create":
             logger.info("Running app startup verification %s", operation.id)
             return await complete_app_creation(operation)
-        elif operation.kind == "app.delete":
-            logger.info("Running app deletion %s", operation.id)
-            await delete_app(payload["organization"], int(payload["app_id"]))
-            ready = await operations.ready(operation.id)
-            if ready is None:
-                return operation
-
-            completed = await operations.complete(operation.id)
-            if completed is not None:
-                logger.info("Completed app deletion %s", operation.id)
-                return completed
         else:
             raise ValueError(f"Unsupported operation '{operation.kind}'")
     except HTTPException as exc:

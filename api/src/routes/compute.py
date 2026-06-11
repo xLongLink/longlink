@@ -1,5 +1,6 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException
 from src.auth import authadmin
+from src.routes.common import not_found
 from src.router import router
 from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse
 from src.adapters.compute import K8s
@@ -23,7 +24,7 @@ async def get_compute_registry(
 
     registry = await compute.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Compute '{registry_id}' not found")
+        raise not_found("Compute", registry_id)
 
     return registry
 
@@ -45,7 +46,7 @@ async def create_compute_registry(
     except Exception as exc:
         await compute.purge(registry.id)
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=503,
             detail="Failed to initialize the compute cluster",
         ) from exc
 
@@ -56,12 +57,12 @@ async def create_compute_registry(
     }
 
 
-@router.delete("/api/compute/{registry_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/api/compute/{registry_id}", status_code=204)
 async def delete_compute_registry(registry_id: int, user: User = Depends(authadmin)) -> None:
     """Mark one compute backend registration as deleted."""
 
     registry = await compute.delete(registry_id, user.id)
     if registry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Compute '{registry_id}' not found")
+        raise not_found("Compute", registry_id)
 
     return

@@ -3,6 +3,8 @@ from fastapi import FastAPI, Request
 from pathlib import Path
 from src.env import env
 from contextlib import suppress, asynccontextmanager
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import create_async_engine
 from src.logger import logger
 from src.router import router
 from src.operations import (complete_ready_operations,
@@ -14,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from src.database.models.__base__ import Base
 from src.database.services.operations import operations
 
 
@@ -60,6 +63,16 @@ async def run_operation_scheduler() -> None:
 async def lifespan(app: FastAPI):
     """Drain any queued operations before the API starts serving traffic."""
 
+    # Local SQLite development starts from an empty file, so create the schema before any reads.
+    database_url = make_url(env.DATABASE_URL)
+    if database_url.drivername.startswith("sqlite+"):
+        engine = create_async_engine(database_url)
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+        finally:
+            await engine.dispose()
+
     logger.info("Starting operation drain")
     await recover_active_operations()
 
@@ -93,8 +106,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
-    redoc_url=None,
-    openapi_url=None,
+    redoc_url="/redocs",
+    openapi_url="/openapi.json",
 )
 
 
@@ -121,11 +134,11 @@ app.add_middleware(
     https_only=False,
 )
 
+import src.routes.health
 import src.routes.auth
 import src.routes.user
 import src.routes.image
 import src.routes.proxy
-import src.routes.health
 import src.routes.compute
 import src.routes.storage
 import src.routes.database

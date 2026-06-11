@@ -38,17 +38,6 @@ const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry>> = [
         },
     },
     {
-        accessorKey: 'sslmode',
-        header: 'SSL',
-        cell: ({ getValue }) => getValue() ?? 'default',
-        meta: { className: 'w-32' },
-    },
-    {
-        header: 'Maintenance DB',
-        cell: ({ row }) => row.original.maintenance_database,
-        meta: { className: 'w-44' },
-    },
-    {
         accessorKey: 'location_id',
         header: 'Location',
         cell: ({ getValue }) => `#${getValue<number>()}`,

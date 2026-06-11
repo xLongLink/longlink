@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -22,8 +21,9 @@ class OperationResponse(BaseModel):
 
     id: int
     kind: str
+    app_id: int | None = None
+    registry_id: int | None = None
     status: OperationStatus
-    payload: dict[str, Any]
     error: str | None = None
     created_at: datetime
     started_at: datetime | None = None

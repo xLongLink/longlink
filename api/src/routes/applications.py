@@ -1,15 +1,18 @@
-from fastapi import Depends, Response, HTTPException, status
+from fastapi import Depends, Response, HTTPException
 from src.auth import authuser, authadmin
+from src.constants import APP_SERVICE_PORT
 from src.logger import logger
 from src.router import router
 from src.models.applications import AppCreate, AppStatus, AppResponse
 from src.adapters.compute.k8s import K8s
+from src.adapters.database import Postgre
 from src.database.models.users import User
-from src.operations.applications import create_app as run_create_app
-from src.operations.applications import delete_app as run_delete_app
 from src.database.services.compute import compute
 from src.database.services.operations import operations
 from src.database.services.applications import apps
+from src.database.services.database import database
+from src.database.services.organizations import orgs
+from src.utils.utils import slugify
 
 
 @router.get("/api/apps", response_model=list[AppResponse])
@@ -49,24 +52,83 @@ async def create_app(
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    # Let the operation runner handle the long-lived provision step.
+    app_slug = slugify(payload.name)
+    logger.info("Provisioning app %s/%s", organization, app_slug)
+
+    # Resolve the organization location so provisioning uses the active registries.
+    organization_record = await orgs.get(organization)
+    if organization_record is None:
+        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+
+    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    if not registries:
+        raise HTTPException(status_code=503, detail="No compute cluster configured")
+
+    database_registries = [registry for registry in await database.list() if registry.deleted_at is None]
+    if not database_registries:
+        raise HTTPException(status_code=503, detail="No database configured")
+
+    registry = max(
+        (registry for registry in registries if registry.location_id == organization_record.location_id),
+        key=lambda item: item.id,
+        default=None,
+    )
+    if registry is None:
+        raise HTTPException(
+            status_code=503,
+            detail=f"No compute cluster configured for location '{organization_record.location_id}'",
+        )
+
+    database_registry = next((registry for registry in database_registries if registry.location_id == organization_record.location_id), None)
+    if database_registry is None:
+        raise HTTPException(
+            status_code=503,
+            detail=f"No database configured for location '{organization_record.location_id}'",
+        )
+
+    # Create the app row before provisioning external resources.
     try:
-        app = await run_create_app(organization, payload, user)
-    except HTTPException as exc:
-        logger.warning("App creation failed for %s/%s: %s", organization, payload.name, exc.detail)
+        app = await apps.create(
+            organization,
+            payload.name,
+            app_slug,
+            image=payload.image,
+            status=AppStatus.creating,
+            description=payload.description,
+            icon=payload.icon,
+            user=user,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    db_client = Postgre(
+        database_registry.host,
+        database_registry.port,
+        database_registry.username,
+        database_registry.password,
+    )
+
+    # Provision the namespace, schema, and workload in order so failures can mark the app as failed.
+    try:
+        await k8s.namespace(organization)
+        await db_client.schema(organization, app_slug)
+        await k8s.application(organization, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
+    except HTTPException:
+        await apps.set_status(app.id, AppStatus.failed)
         raise
     except Exception as exc:
-        logger.exception("App creation failed for %s/%s", organization, payload.name)
-        raise
-    else:
-        try:
-            operation = await operations.create("app.create", {"app_id": app.id})
-        except Exception as exc:
-            await apps.set_status(app.id, AppStatus.failed)
-            logger.exception("Failed to queue app verification for %s/%s", organization, payload.name)
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Failed to queue app verification") from exc
+        await apps.set_status(app.id, AppStatus.failed)
+        raise HTTPException(status_code=503, detail="Failed to initialize the application") from exc
 
-        logger.info("Queued app creation verification %s for %s/%s", operation.id, organization, payload.name)
+    try:
+        operation = await operations.create("app.create", app_id=app.id)
+    except Exception as exc:
+        await apps.set_status(app.id, AppStatus.failed)
+        logger.exception("Failed to queue app verification for %s/%s", organization, payload.name)
+        raise HTTPException(status_code=503, detail="Failed to queue app verification") from exc
+
+    logger.info("Queued app creation verification %s for %s/%s", operation.id, organization, payload.name)
 
     return {
         **app.model_dump(),
@@ -84,38 +146,44 @@ async def delete_app(
 ) -> None:
     """Delete an app registration and remove it from the compute cluster."""
 
-    # Load the app first so missing rows fail before we queue the delete operation.
+    # Load the app first so missing rows fail before we delete it.
     app = await apps.get_by_id(app_id)
     if app is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
+        raise HTTPException(status_code=404, detail="App not found")
 
-    org = next((org for org in _user.orgs if org.name == organization), None)
-    if org is None:
+    if next((org for org in _user.orgs if org.name == organization), None) is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    operation = await operations.create("app.delete", {"organization": organization, "app_id": app_id})
-    logger.info("Queued app deletion %s for %s/%s", operation.id, organization, app_id)
+    # Resolve the organization location so cleanup targets the live cluster.
+    organization_record = await orgs.get(organization)
+    if organization_record is None:
+        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    # Claim the operation immediately so no second worker can race the cleanup.
-    if await operations.claim(operation.id) is None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
+    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    registry = max(
+        (registry for registry in registries if registry.location_id == organization_record.location_id),
+        key=lambda item: item.id,
+        default=None,
+    )
+    if registry is None:
+        raise HTTPException(
+            status_code=503,
+            detail=f"No compute cluster configured for location '{organization_record.location_id}'",
+        )
 
-    logger.info("Claimed app deletion %s for %s/%s", operation.id, organization, app_id)
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+
+    # Remove compute resources before deleting the database row.
+    await k8s.remove(organization, app.slug)
 
     try:
-        await run_delete_app(organization, app_id)
-    except HTTPException as exc:
-        logger.warning("App deletion %s failed: %s", operation.id, exc.detail)
-        await operations.fail(operation.id, str(exc.detail))
-        raise
-    except Exception as exc:
-        logger.exception("App deletion %s failed", operation.id)
-        await operations.fail(operation.id, str(exc))
-        raise
-    else:
-        await operations.ready(operation.id)
-        await operations.complete(operation.id)
-        logger.info("Completed app deletion %s", operation.id)
+        await apps.delete(organization, app_id)
+    except ValueError as exc:
+        detail = str(exc)
+        if detail == "App not found":
+            raise HTTPException(status_code=404, detail=detail) from exc
+
+        raise HTTPException(status_code=409, detail=detail) from exc
 
     return
 
@@ -127,23 +195,23 @@ async def get_app_logs(organization: str, app_id: int, user: User = Depends(auth
     # Validate the app and organization before connecting to the active cluster.
     app = await apps.get_by_id(app_id)
     if app is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
+        raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
     if app.organization != organization:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
+        raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
 
     org = next((org for org in user.orgs if org.name == organization), None)
     if org is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     if not registries:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
+        raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     # Prefer the newest registry for the location so logs come from the active cluster.
     registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
     if registry is None:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=503,
             detail=f"No compute cluster configured for location '{org.location_id}'",
         )
 
@@ -153,6 +221,6 @@ async def get_app_logs(organization: str, app_id: int, user: User = Depends(auth
     try:
         logs = await k8s.logs(organization, app.slug)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     return Response(content=logs, media_type="text/plain")

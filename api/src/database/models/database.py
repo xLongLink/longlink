@@ -25,8 +25,6 @@ class DatabaseRegistry(Base, table=True):
     port: int
     username: str = Field(max_length=255)
     password: str = Field(max_length=255)
-    sslmode: str | None = Field(default=None, max_length=32)
-    maintenance_database: str = Field(default="postgres", max_length=255)
     location_id: int = Field(foreign_key='locations.id')
     deleted_at: datetime | None = Field(default=None)
     deleted_by_id: int | None = Field(default=None, foreign_key='users.id')

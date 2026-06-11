@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
 
 from sqlalchemy import select, update
 
@@ -47,13 +46,14 @@ class OperationsService(ServiceBase):
     async def create(
         self,
         kind: str,
-        payload: dict[str, Any] | None = None,
+        app_id: int | None = None,
+        registry_id: int | None = None,
         status: OperationStatus = OperationStatus.scheduled,
     ) -> Operation:
         """Create one operation record."""
 
         async with self.session() as session:
-            operation = Operation(kind=kind, payload=payload or {}, status=status)
+            operation = Operation(kind=kind, app_id=app_id, registry_id=registry_id, status=status)
             session.add(operation)
             await session.commit()
             await session.refresh(operation)

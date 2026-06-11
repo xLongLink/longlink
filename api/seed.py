@@ -3,21 +3,26 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
+from fastapi import HTTPException, status
 from src.database.models.__base__ import Base
 from src.database.models.association import UserOrganization
+from src.adapters.compute import K8s
+from src.adapters.database import Postgre
 from src.database.session import get_session
+from src.constants import APP_SERVICE_PORT
 from src.database.services.applications import apps
 from src.database.services.compute import compute
 from src.database.services.database import database
 from src.database.services.locations import locations
-from src.database.services.operations import operations
 from src.database.services.organizations import orgs
 from src.database.services.storage import storage
-from src.database.services.users import users
 from src.env import env
+from src.models.applications import AppCreate
+from src.models.applications import AppStatus
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 from src.models.roles import Roles
 from src.database.models.users import User
+from src.utils.utils import slugify
 
 LOCAL_DATABASE = {
     "kind": DatabaseKind.postgre,
@@ -26,8 +31,6 @@ LOCAL_DATABASE = {
     "port": 15432,
     "username": "admin",
     "password": "admin",
-    "sslmode": None,
-    "maintenance_database": "admin",
 }
 
 LOCAL_STORAGE = {
@@ -79,7 +82,7 @@ async def main() -> None:
     location = await locations.create("local", "Local development")
     await database.create(**LOCAL_DATABASE, location_id=location.id)
     await storage.create(**LOCAL_STORAGE, location_id=location.id)
-    compute_registry = await compute.create(**LOCAL_COMPUTE, location_id=location.id)
+    await compute.create(**LOCAL_COMPUTE, location_id=location.id)
     await orgs.create(LOCAL_ORG, location.id)
 
     # Backfill the seeded demo membership if the admin user already exists locally.
@@ -104,25 +107,65 @@ async def main() -> None:
                 )
                 await session.commit()
 
-    # Queue the cluster bootstrap and demo app so the API lifespan can apply them serially.
-    await operations.create(
-        "compute.setup",
-        {
-            "registry_id": compute_registry.id,
+    # Provision the demo app directly so the seed stays aligned with the endpoint flow.
+    organization_record = await orgs.get(LOCAL_ORG)
+    if organization_record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{LOCAL_ORG}' not found")
+
+    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    registry = max(
+        (registry for registry in registries if registry.location_id == organization_record.location_id),
+        key=lambda item: item.id,
+        default=None,
+    )
+    if registry is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"No compute cluster configured for location '{organization_record.location_id}'",
+        )
+
+    database_registries = [registry for registry in await database.list() if registry.deleted_at is None]
+    database_registry = next((registry for registry in database_registries if registry.location_id == organization_record.location_id), None)
+    if database_registry is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"No database configured for location '{organization_record.location_id}'",
+        )
+
+    app_payload = AppCreate(
+        **LOCAL_APP,
+        envs={
+            "REQUIRED": "required",
+            "OPTIONAL": "optional",
         },
     )
-    await operations.create(
-        "app.create",
-        {
-            "organization": LOCAL_ORG,
-            **LOCAL_APP,
-            "envs": {
-                "REQUIRED": "required",
-                "OPTIONAL": "optional",
-            },
-            "user_id": seed_user.id if seed_user is not None else None,
-        },
+    app_slug = slugify(app_payload.name)
+    app = await apps.create(
+        LOCAL_ORG,
+        app_payload.name,
+        app_slug,
+        image=app_payload.image,
+        status=AppStatus.creating,
+        description=app_payload.description,
+        icon=app_payload.icon,
+        user=seed_user,
     )
+
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    db_client = Postgre(
+        database_registry.host,
+        database_registry.port,
+        database_registry.username,
+        database_registry.password,
+    )
+
+    try:
+        await k8s.namespace(LOCAL_ORG)
+        await db_client.schema(LOCAL_ORG, app_slug)
+        await k8s.application(LOCAL_ORG, app_slug, app_payload.image, APP_SERVICE_PORT, app_payload.envs)
+    except Exception as exc:
+        await apps.set_status(app.id, AppStatus.failed)
+        raise
 
 
 if __name__ == "__main__":

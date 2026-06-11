@@ -1,8 +1,9 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from src.auth import authuser, authadmin
 from src.database.models.users import User
 from src.database.services.organizations import orgs
 from src.models.organizations import OrgCreate, OrgDetails, OrgSummary
+from src.routes.common import conflict, not_found
 from src.router import router
 
 
@@ -23,11 +24,11 @@ async def get_organization(
     # Deny access early when the org does not exist.
     organization = await orgs.get(name)
     if organization is None:
-        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
+        raise not_found("Org", name)
 
     # Keep organization reads scoped to the caller's memberships.
     if not any(org.name == name for org in user.orgs):
-        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
+        raise not_found("Org", name)
 
     return organization
 
@@ -43,7 +44,7 @@ async def create_organization(
     try:
         organization = await orgs.create(payload.name, payload.location_id, user)
     except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        raise conflict(exc) from exc
 
     return {
         "name": organization.name,
@@ -57,13 +58,13 @@ async def create_organization(
     }
 
 
-@router.delete("/api/orgs/{name}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/api/orgs/{name}", status_code=204)
 async def delete_organization(name: str, user: User = Depends(authuser)) -> None:
     """Delete one org by name."""
 
     # Only members can delete their own org.
     if not any(org.name == name for org in user.orgs):
-        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
+        raise not_found("Org", name)
 
     await orgs.delete(name)
     return

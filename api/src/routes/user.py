@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException
 from src.auth import authuser, authadmin
 from src.database.models.users import User
 from src.database.services.users import users
@@ -36,7 +36,7 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> UserP
 
     params = payload.model_dump(exclude_unset=True)
     if user.oidc_subject is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     updated_user = await users.upsert(oidc_subject=user.oidc_subject, **params)
     return await serialize_user(updated_user)
