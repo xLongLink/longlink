@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from src.models.countries import Country
 from src.models.compute import ComputeRegistryResponse
 from src.models.database import DatabaseRegistryResponse
@@ -25,8 +25,8 @@ class LocationOrgSummary(BaseModel):
 class LocationCreate(BaseModel):
     """Request body for creating a location."""
 
-    name: str = Field(min_length=1, max_length=128)
-    display_name: str = Field(min_length=1, max_length=255)
+    name: str = Field(min_length=1, max_length=255)
+    slug: str = Field(min_length=1, max_length=128)
     country: Country
 
 
@@ -37,7 +37,7 @@ class LocationResponse(BaseModel):
 
     id: int
     name: str
-    display_name: str
+    slug: str
     country: Country
     created_at: datetime
     updated_at: datetime

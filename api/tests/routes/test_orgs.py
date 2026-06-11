@@ -1,16 +1,19 @@
 from types import SimpleNamespace
-from src.models.users import UserSummary
+
 from fastapi.testclient import TestClient
-from src.models.organizations import OrgDetails, OrgSummary
+
 from src.database.models.users import User
-from src.database.services.users import users
+from src.database.services.applications import apps
 from src.database.services.compute import compute
-from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.applications import apps
 from src.database.services.organizations import orgs
+from src.database.services.storage import storage
+from src.database.services.users import users
+from src.models.locations import LocationResponse
+from src.models.organizations import OrgDetails, OrgSummary
+from src.models.users import UserSummary
 
 db = SimpleNamespace(
     apps=apps,
@@ -85,30 +88,7 @@ async def test_get_organization_returns_member_payload(
     expected_payload = OrgDetails(
         name="acme",
         location_id=organization.location_id,
-        location={
-            "id": location.id,
-            "name": location.name,
-            "display_name": location.display_name,
-            "country": location.country,
-            "created_at": location.created_at,
-            "updated_at": location.updated_at,
-            "orgs": [
-                {
-                    "name": organization.name,
-                    "avatar": None,
-                    "location_id": location.id,
-                    "created_at": organization.created_at,
-                    "updated_at": organization.updated_at,
-                    "created_by": UserSummary.model_validate(owner.model_dump()),
-                    "updated_by": UserSummary.model_validate(owner.model_dump()),
-                    "deleted_at": None,
-                    "deleted_by": None,
-                }
-            ],
-            "compute_registries": [],
-            "database_registries": [],
-            "storage_registries": [],
-        },
+        location=LocationResponse.model_validate(location),
         created_at=organization.created_at,
         updated_at=organization.updated_at,
         created_by=UserSummary.model_validate(owner.model_dump()),
@@ -141,7 +121,7 @@ async def test_get_organization_returns_member_payload(
                 "deleted_by": None,
             }
         ],
-    ).model_dump(mode="json")
+    ).model_dump(mode="json", by_alias=True)
 
     assert response.json() == expected_payload
 

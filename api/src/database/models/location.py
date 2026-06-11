@@ -18,8 +18,8 @@ class Location(Base, table=True):
     __tablename__ = 'locations'
 
     id: int = Field(default=None, primary_key=True)
-    name: str = Field(unique=True, max_length=128)
-    display_name: str = Field(max_length=255)
+    name: str = Field(max_length=255)
+    slug: str = Field(unique=True, max_length=128)
     country: Country | None = Field(default=None, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False))
     orgs: list['Org'] = Relationship(back_populates='location')
     compute_registries: list['ComputeRegistry'] = Relationship(back_populates='location')

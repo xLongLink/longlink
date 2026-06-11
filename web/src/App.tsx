@@ -11,6 +11,8 @@ import AdminCompute from './pages/admin/Compute';
 import ComputeNamespaces from './pages/admin/ComputeNamespaces';
 import ComputePods from './pages/admin/ComputePods';
 import AdminDatabase from './pages/admin/Database';
+import DatabaseDatabases from './pages/admin/DatabaseDatabases';
+import DatabaseSchemas from './pages/admin/DatabaseSchemas';
 import AdminLocation from './pages/admin/Location';
 import AdminOperations from './pages/admin/Operations';
 import AdminOrganization from './pages/admin/Organization';
@@ -133,6 +135,8 @@ function getRoutes() {
                 { path: 'organizations', element: <AdminOrganization /> },
                 { path: 'locations', element: <AdminLocation /> },
                 { path: 'database', element: <AdminDatabase /> },
+                { path: 'database/:name', element: <DatabaseDatabases /> },
+                { path: 'database/:name/database/:dbname', element: <DatabaseSchemas /> },
                 { path: 'storage', element: <AdminStorage /> },
                 { path: 'compute', element: <AdminCompute /> },
                 { path: 'compute/:id', element: <ComputeNamespaces /> },

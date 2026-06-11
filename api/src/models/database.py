@@ -16,6 +16,18 @@ class DatabaseRegistryCreate(BaseModel):
     location_id: int
 
 
+class DatabaseDatabaseResponse(BaseModel):
+    """Represent one database on a database server."""
+
+    name: str
+
+
+class DatabaseSchemaResponse(BaseModel):
+    """Represent one schema (namespace) in a database."""
+
+    name: str
+
+
 class DatabaseRegistryResponse(BaseModel):
     """Represent one database registry in API responses."""
 

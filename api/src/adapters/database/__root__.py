@@ -44,5 +44,13 @@ class Database(ABC):
         """Delete all databases managed by the control plane."""
 
     @abstractmethod
+    async def databases(self) -> list[str]:
+        """List all databases on the server."""
+
+    @abstractmethod
+    async def schemas(self, database_name: str) -> list[str]:
+        """List all schemas in a database."""
+
+    @abstractmethod
     async def delete(self, organization: str) -> None:
         """Delete the organization database and all managed application schemas."""

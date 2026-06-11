@@ -88,13 +88,21 @@ export type ApiOrgDetails = {
 export type ApiLocation = {
     id: number;
     name: string;
-    display_name: string;
+    slug: string;
     country: string;
     created_at: string;
     updated_at: string;
     compute_registries: Array<ApiComputeRegistry>;
     database_registries: Array<ApiDatabaseRegistry>;
     storage_registries: Array<ApiStorageRegistry>;
+};
+
+export type ApiDatabaseDatabase = {
+    name: string;
+};
+
+export type ApiDatabaseSchema = {
+    name: string;
 };
 
 export type ApiDatabaseRegistry = {

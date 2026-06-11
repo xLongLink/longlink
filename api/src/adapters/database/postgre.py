@@ -119,6 +119,26 @@ class Postgre(Database):
             await conn.execute(DropSchema(quoted_name(application, True), cascade=True, if_exists=True))
 
 
+    async def databases(self) -> list[str]:
+        """List all databases on the server, excluding system databases."""
+
+        async with self._connection(self._maintenance_database) as conn:
+            result = await conn.execute(
+                text("SELECT datname FROM pg_database WHERE datname NOT IN ('postgres', 'template0', 'template1') ORDER BY datname")
+            )
+            return [row[0] for row in result.fetchall()]
+
+
+    async def schemas(self, database_name: str) -> list[str]:
+        """List all schemas in a database, excluding system schemas."""
+
+        async with self._connection(database_name) as conn:
+            result = await conn.execute(
+                text("SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast') ORDER BY schema_name")
+            )
+            return [row[0] for row in result.fetchall()]
+
+
     async def delete(self, organization: str) -> None:
         """Delete the entire database for the given organization."""
 

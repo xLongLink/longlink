@@ -13,7 +13,7 @@ export default function CreateLocationDialog() {
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
-    const [displayName, setDisplayName] = useState('');
+    const [slug, setSlug] = useState('');
     const [country, setCountry] = useState('');
     const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +29,7 @@ export default function CreateLocationDialog() {
                 credentials: 'include',
                 body: JSON.stringify({
                     name: name.trim(),
-                    display_name: displayName.trim(),
+                    slug: slug.trim(),
                     country: country.trim(),
                 }),
             });
@@ -38,7 +38,7 @@ export default function CreateLocationDialog() {
             await queryClient.invalidateQueries({ queryKey: ['api', locationUrl] });
             setOpen(false);
             setName('');
-            setDisplayName('');
+            setSlug('');
             setCountry('');
         },
     });
@@ -88,18 +88,18 @@ export default function CreateLocationDialog() {
                                     id="location-name"
                                     value={name}
                                     onChange={(event) => setName(event.target.value)}
-                                    placeholder="us-east-1"
+                                    placeholder="US East (N. Virginia)"
                                     autoComplete="off"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="location-display-name">Display name</Label>
+                                <Label htmlFor="location-slug">Slug</Label>
                                 <Input
-                                    id="location-display-name"
-                                    value={displayName}
-                                    onChange={(event) => setDisplayName(event.target.value)}
-                                    placeholder="US East (N. Virginia)"
+                                    id="location-slug"
+                                    value={slug}
+                                    onChange={(event) => setSlug(event.target.value)}
+                                    placeholder="us-east-1"
                                     autoComplete="off"
                                 />
                             </div>

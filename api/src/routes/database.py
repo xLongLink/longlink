@@ -1,8 +1,11 @@
 from fastapi import Depends, HTTPException
 from src.auth import authadmin
 from src.router import router
-from src.models.database import (DatabaseRegistryCreate,
-                                 DatabaseRegistryResponse)
+from src.models.database import (DatabaseDatabaseResponse,
+                                 DatabaseRegistryCreate,
+                                 DatabaseRegistryResponse,
+                                 DatabaseSchemaResponse)
+from src.adapters.database.postgre import Postgre
 from src.database.models.users import User
 from src.database.services.database import database
 
@@ -35,6 +38,39 @@ async def create_database_registry(
     registry = await database.create(**payload.model_dump())
 
     return registry
+
+
+@router.get("/api/database/{name}/databases", response_model=list[DatabaseDatabaseResponse])
+async def list_database_databases(name: str, _user: User = Depends(authadmin)) -> list[DatabaseDatabaseResponse]:
+    """List all databases on a database backend."""
+
+    registry = await database.get(name)
+    if registry is None:
+        raise HTTPException(status_code=404, detail=f"Database '{name}' not found")
+
+    postgre = Postgre(registry.host, registry.port, registry.username, registry.password)
+    names = await postgre.databases()
+    return [DatabaseDatabaseResponse(name=n) for n in names]
+
+
+@router.get(
+    "/api/database/{name}/databases/{dbname}/schemas",
+    response_model=list[DatabaseSchemaResponse],
+)
+async def list_database_schemas(
+    name: str,
+    dbname: str,
+    _user: User = Depends(authadmin),
+) -> list[DatabaseSchemaResponse]:
+    """List all schemas in a database on a database backend."""
+
+    registry = await database.get(name)
+    if registry is None:
+        raise HTTPException(status_code=404, detail=f"Database '{name}' not found")
+
+    postgre = Postgre(registry.host, registry.port, registry.username, registry.password)
+    names = await postgre.schemas(dbname)
+    return [DatabaseSchemaResponse(name=n) for n in names]
 
 
 @router.delete("/api/database/{name}", status_code=204)

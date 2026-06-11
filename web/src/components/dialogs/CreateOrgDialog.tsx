@@ -87,7 +87,7 @@ export default function CreateOrgDialog() {
                                     <SelectContent>
                                         {locationsQuery.data?.map((location) => (
                                             <SelectItem key={location.id} value={String(location.id)}>
-                                                {location.display_name}
+                                                {location.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

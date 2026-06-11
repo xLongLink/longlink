@@ -52,6 +52,26 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiL
         meta: { className: 'min-w-56' },
     },
     {
+        id: 'location',
+        header: 'Location',
+        cell: ({ row }) => {
+            const location = row.original.location;
+            const country = location?.country;
+            return (
+                <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
+                        {country?.slice(0, 2).toUpperCase() || '--'}
+                    </div>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground">{location?.name || `#${row.original.location_id}`}</div>
+                        <div className="truncate text-xs text-muted-foreground">{location?.slug || location?.country || ''}</div>
+                    </div>
+                </div>
+            );
+        },
+        meta: { className: 'min-w-56' },
+    },
+    {
         id: 'resources',
         header: 'Resources',
         cell: ({ row }) => {
@@ -73,26 +93,6 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiL
             );
         },
         meta: { className: 'w-48' },
-    },
-    {
-        id: 'location',
-        header: 'Location',
-        cell: ({ row }) => {
-            const location = row.original.location;
-            const country = location?.country;
-            return (
-                <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
-                        {country?.slice(0, 2).toUpperCase() || '--'}
-                    </div>
-                    <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{location?.name || `#${row.original.location_id}`}</div>
-                        <div className="truncate text-xs text-muted-foreground">{location?.display_name || location?.country || ''}</div>
-                    </div>
-                </div>
-            );
-        },
-        meta: { className: 'min-w-56' },
     },
 ];
 

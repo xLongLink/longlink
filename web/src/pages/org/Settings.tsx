@@ -101,7 +101,7 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm text-muted-foreground">Location</label>
-                                <Input value={orgDetails?.location?.display_name ?? '—'} readOnly />
+                                <Input value={orgDetails?.location?.name ?? '—'} readOnly />
                             </div>
                         </div>
                     </div>

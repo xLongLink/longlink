@@ -5,6 +5,7 @@ import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Database, MoreHorizontal } from 'lucide-react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
@@ -21,7 +22,10 @@ const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry>> = [
             const database = row.original;
 
             return (
-                <div className="flex items-center gap-3">
+                <Link
+                    to={`/admin/database/${encodeURIComponent(database.name)}`}
+                    className="flex items-center gap-3"
+                >
                     <img
                         src="/images/Postgresql.png"
                         alt="PostgreSQL"
@@ -33,7 +37,7 @@ const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry>> = [
                             {database.host}:{database.port}
                         </div>
                     </div>
-                </div>
+                </Link>
             );
         },
     },

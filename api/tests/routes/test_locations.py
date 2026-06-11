@@ -12,11 +12,13 @@ async def test_create_location_accepts_iso_country_code(
     # Act
     response = client.post(
         "/api/locations",
-        json={"name": "local", "display_name": "Local testing", "country": "DE"},
+        json={"name": "Local testing", "slug": "local", "country": "DE"},
     )
 
     # Assert
     assert response.status_code == 200
+    assert response.json()["name"] == "Local testing"
+    assert response.json()["slug"] == "local"
     assert response.json()["country"] == "DE"
 
 
@@ -31,7 +33,7 @@ async def test_create_location_rejects_unknown_iso_country_code(
     # Act
     response = client.post(
         "/api/locations",
-        json={"name": "local", "display_name": "Local testing", "country": "ZZ"},
+        json={"name": "Local testing", "slug": "local", "country": "ZZ"},
     )
 
     # Assert

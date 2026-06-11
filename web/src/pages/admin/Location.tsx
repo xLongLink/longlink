@@ -19,18 +19,18 @@ const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
         cell: ({ row }) => {
             const country = row.original.country;
             return (
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
                         {country?.slice(0, 2).toUpperCase() || '--'}
                     </div>
-                    <div className="min-w-0 space-y-1">
-                        <div className="font-medium text-foreground">{row.original.name}</div>
-                        <div className="text-sm text-muted-foreground">{row.original.display_name}</div>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground">{row.original.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">{row.original.slug}</div>
                     </div>
                 </div>
             );
         },
-        meta: { className: 'w-72' },
+        meta: { className: 'min-w-56' },
     },
     {
         id: 'database_registries',
