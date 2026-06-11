@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCreateApp } from '@/hooks/use-org';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiImageMetadata } from '@/lib/types';
-import type { FormEvent } from 'react';
+import type { FormEvent, UIEvent } from 'react';
 import { useState } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
@@ -18,6 +18,9 @@ const ICON_OPTIONS = Object.keys(LucideIcons)
     .map((name) => name.replace(/Icon$/, '').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase())
     .filter((name) => name.length > 0)
     .sort((left, right) => left.localeCompare(right));
+
+const ICON_OPTION_BATCH_SIZE = 80;
+const ICON_OPTION_SCROLL_THRESHOLD = 48;
 
 type CreateAppDialogProps = {
     org: string;
@@ -34,7 +37,13 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
     const [image, setImage] = useState('');
     const [imageMetadata, setImageMetadata] = useState<ApiImageMetadata | null>(null);
     const [isInspecting, setIsInspecting] = useState(false);
+    const [visibleIconCount, setVisibleIconCount] = useState(ICON_OPTION_BATCH_SIZE);
     const [error, setError] = useState<string | null>(null);
+    const visibleIconOptions = ICON_OPTIONS.slice(0, visibleIconCount);
+
+    if (icon.length > 0 && !visibleIconOptions.includes(icon)) {
+        visibleIconOptions.push(icon);
+    }
 
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
@@ -45,7 +54,19 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
         setImage('');
         setImageMetadata(null);
         setIsInspecting(false);
+        setVisibleIconCount(ICON_OPTION_BATCH_SIZE);
         setError(null);
+    }
+
+    /** Load more icon choices as the icon select scroll reaches the bottom. */
+    function handleIconOptionsScroll(event: UIEvent<HTMLElement>) {
+        const target = event.currentTarget;
+
+        if (target.scrollTop + target.clientHeight < target.scrollHeight - ICON_OPTION_SCROLL_THRESHOLD) {
+            return;
+        }
+
+        setVisibleIconCount((count) => Math.min(count + ICON_OPTION_BATCH_SIZE, ICON_OPTIONS.length));
     }
 
     /** Inspect the image and advance to the app details step. */
@@ -192,19 +213,25 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
 
                                 <div className="space-y-2">
                                     <Label htmlFor="application-icon">Icon</Label>
-                                    <Select value={icon} onValueChange={(value) => setIcon(value === '__none__' ? '' : value ?? '')}>
+                                    <Select
+                                        value={icon}
+                                        onValueChange={(value) => setIcon(value === '__none__' ? '' : (value ?? ''))}
+                                    >
                                         <SelectTrigger id="application-icon" className="w-full">
+                                            {icon ? (
+                                                <DynamicIcon
+                                                    name={icon as Parameters<typeof DynamicIcon>[0]['name']}
+                                                    className="size-4 text-muted-foreground"
+                                                    aria-hidden="true"
+                                                />
+                                            ) : null}
                                             <SelectValue placeholder="Choose an icon" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent onScroll={handleIconOptionsScroll}>
                                             <SelectItem value="__none__">None</SelectItem>
-                                            {ICON_OPTIONS.map((name) => (
+                                            {visibleIconOptions.map((name) => (
                                                 <SelectItem key={name} value={name}>
-                                                    <DynamicIcon
-                                                        name={name as Parameters<typeof DynamicIcon>[0]['name']}
-                                                        className="size-4 text-muted-foreground"
-                                                    />
-                                                    <span>{name}</span>
+                                                    {name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

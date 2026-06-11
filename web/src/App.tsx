@@ -6,6 +6,7 @@ import { Toaster } from '@ui/sonner';
 import { Skeleton } from '@ui/skeleton';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import Admin from './pages/Admin';
+import AdminApplications from './pages/admin/Applications';
 import AdminCompute from './pages/admin/Compute';
 import AdminDatabase from './pages/admin/Database';
 import AdminLocation from './pages/admin/Location';
@@ -126,6 +127,7 @@ function getRoutes() {
             children: [
                 { index: true, element: <AdminUsers /> },
                 { path: 'users', element: <AdminUsers /> },
+                { path: 'applications', element: <AdminApplications /> },
                 { path: 'organizations', element: <AdminOrganization /> },
                 { path: 'locations', element: <AdminLocation /> },
                 { path: 'database', element: <AdminDatabase /> },

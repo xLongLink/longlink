@@ -17,8 +17,23 @@ from src.database.services.organizations import orgs
 
 
 @router.get("/api/apps", response_model=list[AppResponse])
-async def list_apps(organization: str, user: User = Depends(authuser)) -> list[AppResponse]:
-    """Return the apps registered in one organization."""
+async def list_apps(organization: str | None = None, user: User = Depends(authuser)) -> list[AppResponse]:
+    """Return organization apps, or all apps for admin views."""
+
+    if organization is None:
+        if not user.admin:
+            raise HTTPException(status_code=403, detail="Admin privileges required")
+
+        return [
+            {
+                **app.model_dump(),
+                "created_by": app.created_by or user,
+                "updated_by": app.updated_by or app.created_by or user,
+                "deleted_by": app.deleted_by,
+                "role": None,
+            }
+            for app in await apps.list_all()
+        ]
 
     org = next((org for org in user.orgs if org.name == organization), None)
     if org is None:
@@ -140,7 +155,7 @@ async def delete_app(
     app_id: int,
     _user: User = Depends(authadmin),
 ) -> None:
-    """Delete an app registration and remove it from the compute cluster."""
+    """Queue app deletion and return immediately."""
 
     # Load the app first so missing rows fail before we delete it.
     app = await apps.get_by_id(app_id)
@@ -150,36 +165,16 @@ async def delete_app(
     if next((org for org in _user.orgs if org.name == organization), None) is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
-    # Resolve the organization location so cleanup targets the live cluster.
-    organization_record = await orgs.get(organization)
-    if organization_record is None:
-        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+    if app.organization != organization:
+        raise HTTPException(status_code=404, detail="App not found")
 
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
-    registry = max(
-        (registry for registry in registries if registry.location_id == organization_record.location_id),
-        key=lambda item: item.id,
-        default=None,
-    )
-    if registry is None:
-        raise HTTPException(
-            status_code=503,
-            detail=f"No compute cluster configured for location '{organization_record.location_id}'",
-        )
-
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-
-    # Remove compute resources before deleting the database row.
-    await k8s.remove(organization, app.slug)
-
+    await apps.set_status(app.id, AppStatus.deleting)
     try:
-        await apps.delete(organization, app_id)
-    except ValueError as exc:
-        detail = str(exc)
-        if detail == "App not found":
-            raise HTTPException(status_code=404, detail=detail) from exc
-
-        raise HTTPException(status_code=409, detail=detail) from exc
+        await operations.create(OperationKind.app_delete, app_id=app.id, step="remove_runtime")
+    except Exception as exc:
+        await apps.set_status(app.id, app.status)
+        logger.exception("Failed to queue app deletion for %s/%s", organization, app.name)
+        raise HTTPException(status_code=503, detail="Failed to queue app deletion") from exc
 
     return
 

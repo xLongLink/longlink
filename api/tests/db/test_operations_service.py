@@ -62,8 +62,8 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
     assert failed.error == "boom"
 
 
-async def test_operations_service_releases_active_operation() -> None:
-    """Release an unfinished active operation back to scheduled."""
+async def test_operations_service_defers_active_operation() -> None:
+    """Defer an unfinished active operation back to scheduled."""
 
     # Arrange
     location = await db.locations.create("local", "Local testing")
@@ -73,16 +73,16 @@ async def test_operations_service_releases_active_operation() -> None:
     # Act
     operation = await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
     claimed = await db.operations.claim(operation.id)
-    released = await db.operations.release(operation.id)
+    deferred = await db.operations.defer(operation.id)
 
     # Assert
     assert operation.status == "scheduled"
     assert claimed is not None
     assert claimed.status == "active"
-    assert released is not None
-    assert released.status == "scheduled"
-    assert released.started_at is None
-    assert released.stopped_at is None
+    assert deferred is not None
+    assert deferred.status == "scheduled"
+    assert deferred.started_at is None
+    assert deferred.stopped_at is None
 
 
 async def test_operations_service_resets_active_operations() -> None:

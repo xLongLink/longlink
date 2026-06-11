@@ -77,8 +77,8 @@ class OperationsService(ServiceBase):
             return refreshed.scalar_one_or_none()
 
 
-    async def release(self, operation_id: int) -> Operation | None:
-        """Make one active operation claimable again without changing its step."""
+    async def defer(self, operation_id: int) -> Operation | None:
+        """Make one active operation claimable later without changing its step."""
 
         async with self.session() as session:
             # A waiting step should be retried later without blocking the worker.

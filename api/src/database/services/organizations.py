@@ -49,7 +49,10 @@ class OrgsService(ServiceBase):
                 selectinload(Org.location).selectinload(Location.storage_registries),
             ).where(Org.name == name)
             result = await session.execute(statement)
-            return result.scalar_one_or_none()
+            org = result.scalar_one_or_none()
+            if org is not None:
+                org.apps = [app for app in org.apps if app.deleted_at is None]
+            return org
 
     async def create(self, name: str, location_id: int, user: User | None = None) -> Org:
         """Create an org."""

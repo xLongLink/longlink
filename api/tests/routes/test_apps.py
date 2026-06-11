@@ -5,6 +5,7 @@ from src.models.roles import Roles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.database.session import get_session
+from src.models.operations import OperationKind
 from src.models.applications import AppResponse
 from src.database.models.users import User
 from src.database.services.users import users
@@ -112,6 +113,81 @@ async def test_list_apps_returns_null_role_without_app_membership(
         }
     ).model_dump(mode="json")
     assert response.json() == [expected_data]
+
+
+async def test_list_apps_without_organization_returns_all_apps_for_admin(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return all apps when an admin does not filter by organization."""
+
+    # Arrange
+    user = users[0]
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, user)
+    await db.orgs.create("globex", location.id, user)
+    dashboard = await db.apps.create(
+        "acme",
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=user,
+    )
+    console = await db.apps.create(
+        "globex",
+        "console",
+        slug="console",
+        image="ghcr.io/longlink/console:latest",
+        user=user,
+    )
+    client = clients[0]
+
+    # Act
+    response = client.get("/api/apps")
+
+    # Assert
+    assert response.status_code == 200
+    expected_data = [
+        AppResponse.model_validate(
+            {
+                **dashboard.model_dump(),
+                "role": None,
+                "created_by": UserSummary.model_validate(user.model_dump()),
+                "updated_by": UserSummary.model_validate(user.model_dump()),
+                "deleted_by": None,
+            }
+        ).model_dump(mode="json"),
+        AppResponse.model_validate(
+            {
+                **console.model_dump(),
+                "role": None,
+                "created_by": UserSummary.model_validate(user.model_dump()),
+                "updated_by": UserSummary.model_validate(user.model_dump()),
+                "deleted_by": None,
+            }
+        ).model_dump(mode="json"),
+    ]
+    assert response.json() == expected_data
+
+
+async def test_list_apps_without_organization_requires_admin(
+    clients: tuple[TestClient, TestClient, TestClient],
+) -> None:
+    """Reject all-app listing for non-admin users."""
+
+    # Arrange
+    client = clients[1]
+
+    # Act
+    response = client.get("/api/apps")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {
+        "success": False,
+        "detail": "Admin privileges required",
+        "data": None,
+    }
 
 
 async def test_list_apps_returns_404_for_non_member(
@@ -284,9 +360,8 @@ async def test_create_app_returns_app_response(
 async def test_delete_app_removes_dependent_env_rows(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
-    monkeypatch,
 ) -> None:
-    """Delete an app even when it still has env secrets."""
+    """Queue app deletion even when it still has env secrets."""
 
     # Arrange
     user = users[0]
@@ -294,18 +369,6 @@ async def test_delete_app_removes_dependent_env_rows(
     remote_location = await db.locations.create("remote", "Remote testing")
     await db.orgs.create("acme", local_location.id, user)
     app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
-    captured: dict[str, object] = {}
-
-    class FakeCompute:
-        """Fake compute adapter for app deletion tests."""
-
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            captured["proxy_secret"] = proxy_secret
-
-        async def remove(self, organization: str, application: str) -> None:
-            captured["remove"] = {"organization": organization, "application": application}
-
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -363,11 +426,13 @@ async def test_delete_app_removes_dependent_env_rows(
 
     # Assert
     assert response.status_code == 204
-    assert await db.apps.get("acme", "dashboard") is None
-    assert captured == {
-        "proxy_secret": captured["proxy_secret"],
-        "remove": {"organization": "acme", "application": "dashboard"},
-    }
+    refreshed_app = await db.apps.get("acme", "dashboard")
+    assert refreshed_app is not None
+    assert refreshed_app.status == "deleting"
+    recorded_operation = (await db.operations.list())[0]
+    assert recorded_operation.kind == OperationKind.app_delete
+    assert recorded_operation.app_id == app.id
+    assert recorded_operation.step == "remove_runtime"
 
 
 async def test_get_app_logs_returns_pod_logs(

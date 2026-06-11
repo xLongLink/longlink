@@ -35,6 +35,17 @@ class ProxyRoute(APIRoute):
 proxy_router = APIRouter(route_class=ProxyRoute)
 
 
+@router.head("/api/apps/{app_id}/proxy")
+async def reject_proxy_head(app_id: int) -> None:
+    """Reject HEAD requests on the application proxy."""
+
+    raise HTTPException(status_code=405, detail="Method not allowed")
+
+
+@proxy_router.api_route(
+    "/api/apps/{app_id}/proxy",
+    methods=["DELETE", "GET", "PATCH", "POST"],
+)
 @proxy_router.api_route(
     "/api/apps/{app_id}/proxy/{path:path}",
     methods=["DELETE", "GET", "PATCH", "POST"],

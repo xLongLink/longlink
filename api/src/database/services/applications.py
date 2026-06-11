@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .base import ServiceBase
+from datetime import UTC, datetime
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -11,6 +12,15 @@ from src.database.models.association import UserApp
 
 
 class AppsService(ServiceBase):
+    async def list_all(self) -> list[App]:
+        """Return all registered apps for admin views."""
+
+        async with self.session() as session:
+            statement = select(App).options(*_app_relation_options()).order_by(App.organization, App.name)
+            result = await session.execute(statement)
+            return list(result.scalars().all())
+
+
     async def list(self, organization: str, user_id: int) -> list[tuple[App, str | None]]:
         """Return all registered apps for one organization with membership roles."""
 
@@ -27,7 +37,7 @@ class AppsService(ServiceBase):
                         UserApp.user_id == user_id,
                     ),
                 )
-                .where(App.organization == organization)
+                .where(App.organization == organization, App.deleted_at.is_(None))
             )
             result = await session.execute(statement)
             return result.all()
@@ -39,6 +49,7 @@ class AppsService(ServiceBase):
             statement = select(App).options(*_app_relation_options()).where(
                 App.organization == organization,
                 App.name == name,
+                App.deleted_at.is_(None),
             )
             result = await session.execute(statement)
             return result.scalar_one_or_none()
@@ -48,7 +59,7 @@ class AppsService(ServiceBase):
         """Return a registered app by id."""
 
         async with self.session() as session:
-            statement = select(App).options(*_app_relation_options()).where(App.id == app_id)
+            statement = select(App).options(*_app_relation_options()).where(App.id == app_id, App.deleted_at.is_(None))
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -122,13 +133,13 @@ class AppsService(ServiceBase):
 
         async with self.session() as session:
             # Load the app first so the delete path can raise a single not-found error.
-            statement = select(App).where(App.organization == organization, App.id == app_id)
+            statement = select(App).where(App.organization == organization, App.id == app_id, App.deleted_at.is_(None))
             result = await session.execute(statement)
             app = result.scalar_one_or_none()
             if app is None:
                 raise ValueError('App not found')
 
-            await session.delete(app)
+            app.deleted_at = datetime.now(UTC)
             try:
                 # Surface referential integrity failures as service-level validation errors.
                 await session.commit()

@@ -1,9 +1,11 @@
 from types import SimpleNamespace
 from src.operations import execute
+from src.models.kinds import ComputeKind
 from src.models.operations import OperationKind
 from src.models.applications import AppStatus
 from src.database.services.users import users
 from src.operations.applications import AppStartupState
+from src.database.services.compute import compute
 from src.database.services.locations import locations
 from src.database.services.operations import operations
 from src.database.services.applications import apps
@@ -11,6 +13,7 @@ from src.database.services.organizations import orgs
 
 db = SimpleNamespace(
     apps=apps,
+    compute=compute,
     locations=locations,
     operations=operations,
     orgs=orgs,
@@ -134,3 +137,49 @@ async def test_execute_app_create_operation_releases_when_not_ready(monkeypatch)
     assert refreshed.step == "verify"
     assert refreshed.started_at is None
     assert refreshed.stopped_at is None
+
+
+async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monkeypatch) -> None:
+    """Remove app runtime resources and soft-delete the app."""
+
+    # Arrange
+    user = await db.users.upsert(
+        oidc_subject="dev-oidc-subject-delete",
+        email="dev-delete@longlink.dev",
+        name="Dev User Delete",
+        avatar=None,
+    )
+    location = await db.locations.create("local", "Local testing")
+    await db.orgs.create("acme", location.id, user)
+    app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        kubeconfig="apiVersion: v1\nclusters: []\n",
+        ingress_host="localhost:8443",
+        location_id=location.id,
+    )
+    operation = await db.operations.create(OperationKind.app_delete, app_id=app_record.id, step="remove_runtime")
+    calls: list[dict[str, str]] = []
+
+    class FakeCompute:
+        """Fake compute adapter for app deletion."""
+
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            pass
+
+        async def remove(self, organization: str, application: str) -> None:
+            calls.append({"organization": organization, "application": application})
+
+    monkeypatch.setattr("src.operations.applications.K8s", FakeCompute)
+
+    # Act
+    claimed = await db.operations.claim(operation.id)
+    assert claimed is not None
+    await execute(claimed)
+
+    # Assert
+    assert calls == [{"organization": "acme", "application": "dashboard"}]
+    assert await db.apps.get("acme", "dashboard") is None
+    refreshed = await db.operations.get(operation.id)
+    assert refreshed is not None
+    assert refreshed.status == "completed"

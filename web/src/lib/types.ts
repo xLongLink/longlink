@@ -127,7 +127,11 @@ export type ApiComputeRegistry = {
 
 export type ApiAppResponse = {
     id: number;
+    organization: string;
     name: string;
+    slug: string;
+    image: string;
+    status: 'creating' | 'running' | 'deleting' | 'failed';
     role: Role | null;
     description: string | null;
     icon: string | null;

@@ -7,6 +7,7 @@ class OperationKind(str, Enum):
     """Supported long-running operation types."""
 
     app_create = "app.create"
+    app_delete = "app.delete"
 
 
 class OperationResponse(BaseModel):

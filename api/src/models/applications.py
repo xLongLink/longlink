@@ -20,6 +20,7 @@ class AppStatus(str, Enum):
 
     creating = "creating"
     running = "running"
+    deleting = "deleting"
     failed = "failed"
 
 
@@ -35,8 +36,10 @@ class AppResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    organization: str
     name: str
     slug: str
+    image: str
     status: AppStatus
     description: str | None = None
     icon: str | None = None

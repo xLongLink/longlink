@@ -116,5 +116,45 @@ async def execute_app_create(operation: Operation) -> Operation:
 
         return operation
 
-    released = await operations.release(operation.id)
-    return released or operation
+    deferred = await operations.defer(operation.id)
+    return deferred or operation
+
+
+async def execute_app_delete(operation: Operation) -> Operation:
+    """Run one app deletion step."""
+
+    app_id = operation.app_id
+    if app_id is None:
+        raise ValueError("Operation missing app reference")
+
+    app = await apps.get_by_id(app_id)
+    if app is None:
+        completed = await operations.complete(operation.id)
+        return completed or operation
+
+    if operation.step != "remove_runtime":
+        raise ValueError(f"Unsupported app.delete step '{operation.step}'")
+
+    org = await orgs.get(app.organization)
+    if org is None:
+        raise ValueError(f"Org '{app.organization}' not found")
+
+    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
+    if registry is None:
+        raise ValueError(f"No compute cluster configured for location '{org.location_id}'")
+
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    await k8s.remove(app.organization, app.slug)
+    try:
+        await apps.delete(app.organization, app.id)
+    except ValueError as exc:
+        if str(exc) != "App not found":
+            raise
+
+    completed = await operations.complete(operation.id)
+    if completed is not None:
+        logger.info("Completed app deletion %s", operation.id)
+        return completed
+
+    return operation
