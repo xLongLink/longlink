@@ -1,6 +1,5 @@
 from fastapi import Depends, HTTPException
 from src.auth import authadmin
-from src.routes.common import not_found
 from src.router import router
 from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse
 from src.adapters.compute import K8s
@@ -24,7 +23,7 @@ async def get_compute_registry(
 
     registry = await compute.get(registry_id)
     if registry is None:
-        raise not_found("Compute", registry_id)
+        raise HTTPException(status_code=404, detail=f"Compute '{registry_id}' not found")
 
     return registry
 
@@ -50,11 +49,7 @@ async def create_compute_registry(
             detail="Failed to initialize the compute cluster",
         ) from exc
 
-    return {
-        **registry.model_dump(),
-        "deleted_at": registry.deleted_at,
-        "deleted_by": None,
-    }
+    return registry
 
 
 @router.delete("/api/compute/{registry_id}", status_code=204)
@@ -63,6 +58,6 @@ async def delete_compute_registry(registry_id: int, user: User = Depends(authadm
 
     registry = await compute.delete(registry_id, user.id)
     if registry is None:
-        raise not_found("Compute", registry_id)
+        raise HTTPException(status_code=404, detail=f"Compute '{registry_id}' not found")
 
     return

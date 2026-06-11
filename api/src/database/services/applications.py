@@ -97,8 +97,11 @@ class AppsService(ServiceBase):
                 app.updated_by_id = user.id
             session.add(app)
             await session.commit()
+
             await session.refresh(app)
-            return app
+            statement = select(App).options(*_app_relation_options()).where(App.id == app.id)
+            result = await session.execute(statement)
+            return result.scalar_one()
 
 
     async def set_status(self, app_id: int, status: AppStatus) -> App | None:

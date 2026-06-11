@@ -1,18 +1,18 @@
 from fastapi import Depends, Response, HTTPException
 from src.auth import authuser, authadmin
-from src.constants import APP_SERVICE_PORT
 from src.logger import logger
 from src.router import router
+from src.constants import APP_SERVICE_PORT
+from src.utils.utils import slugify
+from src.adapters.database import Postgre
 from src.models.applications import AppCreate, AppStatus, AppResponse
 from src.adapters.compute.k8s import K8s
-from src.adapters.database import Postgre
 from src.database.models.users import User
 from src.database.services.compute import compute
+from src.database.services.database import database
 from src.database.services.operations import operations
 from src.database.services.applications import apps
-from src.database.services.database import database
 from src.database.services.organizations import orgs
-from src.utils.utils import slugify
 
 
 @router.get("/api/apps", response_model=list[AppResponse])
@@ -130,12 +130,7 @@ async def create_app(
 
     logger.info("Queued app creation verification %s for %s/%s", operation.id, organization, payload.name)
 
-    return {
-        **app.model_dump(),
-        "created_by": user,
-        "updated_by": user,
-        "deleted_by": None,
-    }
+    return app
 
 
 @router.delete("/api/apps/{app_id}", status_code=204)

@@ -2,7 +2,6 @@ from fastapi import Depends, HTTPException
 from src.auth import authadmin
 from src.database.models.users import User
 from src.database.services.storage import storage
-from src.routes.common import not_found
 from src.router import router
 from src.models.storage import StorageRegistryCreate, StorageRegistryResponse
 
@@ -20,7 +19,7 @@ async def get_storage_registry(name: str, _user: User = Depends(authadmin)) -> S
 
     registry = await storage.get(name)
     if registry is None:
-        raise not_found("Storage", name)
+        raise HTTPException(status_code=404, detail=f"Storage '{name}' not found")
 
     return registry
 
@@ -43,6 +42,6 @@ async def delete_storage_registry(name: str, _user: User = Depends(authadmin)) -
 
     registry = await storage.delete(name)
     if registry is None:
-        raise not_found("Storage", name)
+        raise HTTPException(status_code=404, detail=f"Storage '{name}' not found")
 
     return

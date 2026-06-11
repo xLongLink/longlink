@@ -1,10 +1,10 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from src.auth import authadmin
+from src.router import router
+from src.models.database import (DatabaseRegistryCreate,
+                                 DatabaseRegistryResponse)
 from src.database.models.users import User
 from src.database.services.database import database
-from src.routes.common import not_found
-from src.router import router
-from src.models.database import DatabaseRegistryCreate, DatabaseRegistryResponse
 
 
 @router.get("/api/database", response_model=list[DatabaseRegistryResponse])
@@ -20,7 +20,7 @@ async def get_database_registry(name: str, _user: User = Depends(authadmin)) -> 
 
     registry = await database.get(name)
     if registry is None:
-        raise not_found("Database", name)
+        raise HTTPException(status_code=404, detail=f"Database '{name}' not found")
 
     return registry
 
@@ -34,11 +34,7 @@ async def create_database_registry(
 
     registry = await database.create(**payload.model_dump())
 
-    return {
-        **registry.model_dump(),
-        "deleted_at": registry.deleted_at,
-        "deleted_by": None,
-    }
+    return registry
 
 
 @router.delete("/api/database/{name}", status_code=204)
@@ -47,6 +43,6 @@ async def delete_database_registry(name: str, user: User = Depends(authadmin)) -
 
     registry = await database.delete(name, user.id)
     if registry is None:
-        raise not_found("Database", name)
+        raise HTTPException(status_code=404, detail=f"Database '{name}' not found")
 
     return

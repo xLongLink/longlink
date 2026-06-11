@@ -1,9 +1,8 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from src.auth import authadmin
 from src.database.models.users import User
 from src.database.services.locations import locations
 from src.models.locations import LocationCreate, LocationResponse
-from src.routes.common import conflict, not_found
 from src.router import router
 
 
@@ -20,7 +19,7 @@ async def get_location(location_id: int, _user: User = Depends(authadmin)) -> Lo
 
     location = await locations.get(location_id)
     if location is None:
-        raise not_found("Location", location_id)
+        raise HTTPException(status_code=404, detail=f"Location '{location_id}' not found")
 
     return location
 
@@ -36,7 +35,7 @@ async def create_location(
     try:
         location = await locations.create(payload.name, payload.display_name, payload.country)
     except ValueError as exc:
-        raise conflict(exc) from exc
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     return location
 
@@ -47,6 +46,6 @@ async def delete_location(location_id: int, _user: User = Depends(authadmin)) ->
 
     location = await locations.delete(location_id)
     if location is None:
-        raise not_found("Location", location_id)
+        raise HTTPException(status_code=404, detail=f"Location '{location_id}' not found")
 
     return

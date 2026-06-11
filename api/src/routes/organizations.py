@@ -1,10 +1,9 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from src.auth import authuser, authadmin
+from src.router import router
+from src.models.organizations import OrgCreate, OrgDetails, OrgSummary
 from src.database.models.users import User
 from src.database.services.organizations import orgs
-from src.models.organizations import OrgCreate, OrgDetails, OrgSummary
-from src.routes.common import conflict, not_found
-from src.router import router
 
 
 @router.get("/api/orgs", response_model=list[OrgSummary])
@@ -24,11 +23,11 @@ async def get_organization(
     # Deny access early when the org does not exist.
     organization = await orgs.get(name)
     if organization is None:
-        raise not_found("Org", name)
+        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
     # Keep organization reads scoped to the caller's memberships.
     if not any(org.name == name for org in user.orgs):
-        raise not_found("Org", name)
+        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
     return organization
 
@@ -44,18 +43,9 @@ async def create_organization(
     try:
         organization = await orgs.create(payload.name, payload.location_id, user)
     except ValueError as exc:
-        raise conflict(exc) from exc
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return {
-        "name": organization.name,
-        "location_id": organization.location_id,
-        "created_at": organization.created_at,
-        "updated_at": organization.updated_at,
-        "created_by": user,
-        "updated_by": user,
-        "deleted_at": organization.deleted_at,
-        "deleted_by": None,
-    }
+    return organization
 
 
 @router.delete("/api/orgs/{name}", status_code=204)
@@ -64,7 +54,7 @@ async def delete_organization(name: str, user: User = Depends(authuser)) -> None
 
     # Only members can delete their own org.
     if not any(org.name == name for org in user.orgs):
-        raise not_found("Org", name)
+        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
     await orgs.delete(name)
     return

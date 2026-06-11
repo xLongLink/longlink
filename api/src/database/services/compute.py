@@ -1,13 +1,11 @@
 import secrets
-from datetime import UTC, datetime
-
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-
 from .base import ServiceBase
-from src.database.models.compute import ComputeRegistry
+from datetime import UTC, datetime
+from sqlalchemy import select
 from src.constants import INGRESS_NAME
+from sqlalchemy.orm import selectinload
 from src.models.kinds import ComputeKind
+from src.database.models.compute import ComputeRegistry
 
 
 class ComputeService(ServiceBase):
@@ -54,7 +52,13 @@ class ComputeService(ServiceBase):
 
             await session.commit()
             await session.refresh(compute)
-            return compute
+            statement = (
+                select(ComputeRegistry)
+                .options(selectinload(ComputeRegistry.deleted_by))
+                .where(ComputeRegistry.id == compute.id)
+            )
+            result = await session.execute(statement)
+            return result.scalar_one()
 
     async def delete(self, registry_id: int, deleted_by_id: int | None = None) -> ComputeRegistry | None:
         """Mark one compute backend registration as deleted."""

@@ -1,11 +1,9 @@
+from .base import ServiceBase
 from datetime import UTC, datetime
-
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-
-from .base import ServiceBase
-from src.database.models.database import DatabaseRegistry
 from src.models.kinds import DatabaseKind
+from src.database.models.database import DatabaseRegistry
 
 
 class DatabaseService(ServiceBase):
@@ -67,7 +65,13 @@ class DatabaseService(ServiceBase):
 
             await session.commit()
             await session.refresh(database)
-            return database
+            statement = (
+                select(DatabaseRegistry)
+                .options(selectinload(DatabaseRegistry.deleted_by))
+                .where(DatabaseRegistry.name == name)
+            )
+            result = await session.execute(statement)
+            return result.scalar_one()
 
     async def delete(self, name: str, deleted_by_id: int | None = None) -> DatabaseRegistry | None:
         """Mark one database backend registration as deleted."""

@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from .base import ServiceBase
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from src.models.roles import Roles
+from src.database.models.org import Org
 from src.database.models.apps import App
+from src.database.models.users import User
 from src.database.models.compute import ComputeRegistry
 from src.database.models.database import DatabaseRegistry
 from src.database.models.location import Location
-from src.database.models.org import Org
-from src.database.models.users import User
-from sqlalchemy.exc import IntegrityError
-from src.models.roles import Roles
 from src.database.models.association import UserOrganization
 
 
@@ -77,7 +77,13 @@ class OrgsService(ServiceBase):
                 raise ValueError("Org already exists") from exc
 
             await session.refresh(organization)
-            return organization
+            statement = select(Org).options(
+                selectinload(Org.created_by),
+                selectinload(Org.updated_by),
+                selectinload(Org.deleted_by),
+            ).where(Org.name == name)
+            result = await session.execute(statement)
+            return result.scalar_one()
 
     async def delete(self, name: str) -> Org | None:
         """Delete one org by name."""

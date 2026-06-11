@@ -1,3 +1,4 @@
+import pytest
 from types import SimpleNamespace
 from src.models.kinds import ComputeKind, DatabaseKind
 from src.models.roles import Roles
@@ -233,8 +234,8 @@ async def test_create_app_returns_app_response(
             }
             return "postgresql://fake"
 
-    monkeypatch.setattr("src.operations.applications.K8s", FakeCompute)
-    monkeypatch.setattr("src.operations.applications.Postgre", FakeDatabase)
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.Postgre", FakeDatabase)
     client = clients[0]
 
     # Act
@@ -304,7 +305,7 @@ async def test_delete_app_removes_dependent_env_rows(
         async def remove(self, organization: str, application: str) -> None:
             captured["remove"] = {"organization": organization, "application": application}
 
-    monkeypatch.setattr("src.operations.applications.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
