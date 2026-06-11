@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException
 from src.auth import authadmin
 from src.router import router
-from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse
+from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse, NamespaceResponse, PodResponse
 from src.adapters.compute import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
@@ -61,3 +61,39 @@ async def delete_compute_registry(registry_id: int, user: User = Depends(authadm
         raise HTTPException(status_code=404, detail=f"Compute '{registry_id}' not found")
 
     return
+
+
+@router.get("/api/compute/{registry_id}/namespaces", response_model=list[NamespaceResponse])
+async def list_compute_namespaces(
+    registry_id: int,
+    _user: User = Depends(authadmin),
+) -> list[NamespaceResponse]:
+    """List all namespaces on a compute backend."""
+
+    registry = await compute.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail=f"Compute '{registry_id}' not found")
+
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    names = await k8s.namespaces()
+    return [NamespaceResponse(name=n) for n in names]
+
+
+@router.get(
+    "/api/compute/{registry_id}/namespaces/{namespace_name}/pods",
+    response_model=list[PodResponse],
+)
+async def list_namespace_pods(
+    registry_id: int,
+    namespace_name: str,
+    _user: User = Depends(authadmin),
+) -> list[PodResponse]:
+    """List all pods in a namespace on a compute backend."""
+
+    registry = await compute.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail=f"Compute '{registry_id}' not found")
+
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    pods = await k8s.pods(namespace_name)
+    return [PodResponse(**p) for p in pods]

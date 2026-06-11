@@ -24,3 +24,18 @@ class ComputeRegistryResponse(BaseModel):
     location_id: int
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
+
+
+class NamespaceResponse(BaseModel):
+    """Represent a compute namespace."""
+
+    name: str
+
+
+class PodResponse(BaseModel):
+    """Represent a pod in a namespace."""
+
+    name: str
+    status: str
+    node: str | None = None
+    created_at: str | None = None

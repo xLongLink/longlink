@@ -1,48 +1,64 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Cpu, MoreHorizontal } from 'lucide-react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
-import type { ApiComputeRegistry } from '@/lib/types';
+import type { ApiComputeRegistry, ApiLocation } from '@/lib/types';
 
-const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry>> = [
+const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>> = [
     {
         accessorKey: 'kind',
         header: 'Kind',
         cell: ({ row }) => {
             const kind = row.original.kind;
+            const ingress = row.original.ingress_host;
+            const computeId = String(row.original.id);
 
             return (
-                <div className="flex items-center gap-3">
+                <Link
+                    to={`/admin/compute/${encodeURIComponent(computeId)}`}
+                    className="flex items-center gap-3"
+                >
                     <img
                         src="/images/Kubernetes.png"
                         alt="Kubernetes"
                         className="size-10 rounded-md border border-border bg-background object-contain p-1"
                     />
-                    <div className="truncate font-medium text-foreground">{kind}</div>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground underline-offset-4 hover:underline">{kind}</div>
+                        <div className="truncate text-xs text-muted-foreground">{ingress}</div>
+                    </div>
+                </Link>
+            );
+        },
+        meta: { className: 'min-w-56' },
+    },
+    {
+        id: 'location',
+        header: 'Location',
+        cell: ({ row }) => {
+            const location = row.original.location;
+            const country = location?.country;
+            return (
+                <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
+                        {country?.slice(0, 2).toUpperCase() || '--'}
+                    </div>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground">{location?.name || `#${row.original.location_id}`}</div>
+                        <div className="truncate text-xs text-muted-foreground">{location?.display_name || location?.country || ''}</div>
+                    </div>
                 </div>
             );
         },
-        meta: { className: 'w-40' },
-    },
-    {
-        accessorKey: 'ingress_host',
-        header: 'Ingress host',
-        cell: ({ getValue }) => getValue(),
-        meta: { className: 'w-48' },
-    },
-    {
-        accessorKey: 'location_id',
-        header: 'Location',
-        cell: ({ getValue }) => `#${getValue<number>()}`,
-        meta: { className: 'w-28' },
+        meta: { className: 'min-w-56' },
     },
 ];
 
@@ -50,6 +66,7 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry>> = [
 export default function AdminCompute() {
     const queryClient = useQueryClient();
     const computeUrl = apiUrl('/api/compute');
+    const locationsUrl = apiUrl('/api/locations');
 
     const deleteCompute = useMutation({
         mutationFn: async (registryId: string) => {
@@ -71,7 +88,14 @@ export default function AdminCompute() {
         refetchOnMount: 'always',
     });
 
-    const computeRows = computeQuery.data ?? [];
+    const locationsQuery = useQuery({
+        queryKey: ['api', locationsUrl],
+        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
+        retry: false,
+    });
+
+    const locationById = new Map(locationsQuery.data?.map((l) => [l.id, l]));
+    const computeRows = (computeQuery.data ?? []).map((row) => ({ ...row, location: locationById.get(row.location_id) }));
     const computeColumns = [
         ...computeColumnsBase,
         {
@@ -135,7 +159,7 @@ export default function AdminCompute() {
                 );
             },
         },
-    ] satisfies Array<ColumnDef<ApiComputeRegistry>>;
+    ] satisfies Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>>;
 
     return (
         <div className="space-y-6">

@@ -5,8 +5,8 @@ from src.database.models.__base__ import Base
 from src.database.models.association import UserApp, UserOrganization
 
 if TYPE_CHECKING:
-    from src.database.models.org import Org
-    from src.database.models.apps import App
+    from src.database.models.organizations import Org
+    from src.database.models.applications import App
 
 
 class User(Base, table=True):

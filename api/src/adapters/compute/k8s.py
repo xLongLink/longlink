@@ -223,3 +223,29 @@ class K8s(Compute):
             )
         except ApiException as exc:
             raise ValueError(f"Failed reading logs for '{namespace}/{name}'") from exc
+
+
+    async def namespaces(self) -> list[str]:
+        """List all namespaces managed by the control plane."""
+
+        return [
+            ns.metadata.name
+            for ns in self._core_api.list_namespace(label_selector="managed-by=longlink").items
+        ]
+
+
+    async def pods(self, namespace: str) -> list[dict]:
+        """List all pods in a namespace."""
+
+        return [
+            {
+                "name": pod.metadata.name,
+                "status": pod.status.phase,
+                "node": pod.spec.node_name,
+                "created_at": (
+                    pod.metadata.creation_timestamp.isoformat()
+                    if pod.metadata.creation_timestamp else None
+                ),
+            }
+            for pod in self._core_api.list_namespaced_pod(namespace).items
+        ]

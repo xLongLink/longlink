@@ -4,7 +4,7 @@ from src.database.models.__base__ import Base
 from src.database.models.association import UserOrganization
 
 if TYPE_CHECKING:
-    from src.database.models.apps import App
+    from src.database.models.applications import App
     from src.database.models.location import Location
     from src.database.models.users import User
 

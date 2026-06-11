@@ -5,8 +5,8 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import Roles
-from src.database.models.org import Org
-from src.database.models.apps import App
+from src.database.models.organizations import Org
+from src.database.models.applications import App
 from src.database.models.users import User
 from src.database.models.compute import ComputeRegistry
 from src.database.models.database import DatabaseRegistry

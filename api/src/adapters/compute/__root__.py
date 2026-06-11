@@ -39,3 +39,11 @@ class Compute(ABC):
     @abstractmethod
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
+
+    @abstractmethod
+    async def namespaces(self) -> list[str]:
+        """List all managed namespaces."""
+
+    @abstractmethod
+    async def pods(self, namespace: str) -> list[dict]:
+        """List all pods in a namespace."""

@@ -8,6 +8,8 @@ import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import Admin from './pages/Admin';
 import AdminApplications from './pages/admin/Applications';
 import AdminCompute from './pages/admin/Compute';
+import ComputeNamespaces from './pages/admin/ComputeNamespaces';
+import ComputePods from './pages/admin/ComputePods';
 import AdminDatabase from './pages/admin/Database';
 import AdminLocation from './pages/admin/Location';
 import AdminOperations from './pages/admin/Operations';
@@ -133,6 +135,8 @@ function getRoutes() {
                 { path: 'database', element: <AdminDatabase /> },
                 { path: 'storage', element: <AdminStorage /> },
                 { path: 'compute', element: <AdminCompute /> },
+                { path: 'compute/:id', element: <ComputeNamespaces /> },
+                { path: 'compute/:id/namespace/:namespace', element: <ComputePods /> },
                 { path: 'operations', element: <AdminOperations /> },
             ],
         },

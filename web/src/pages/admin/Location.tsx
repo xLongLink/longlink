@@ -14,22 +14,23 @@ import type { ApiLocation } from '@/lib/types';
 
 const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
     {
-        accessorKey: 'name',
-        header: 'Name',
-        cell: ({ getValue }) => getValue(),
-        meta: { className: 'w-48' },
-    },
-    {
-        accessorKey: 'display_name',
-        header: 'Display name',
-        cell: ({ getValue }) => getValue(),
-        meta: { className: 'w-64' },
-    },
-    {
-        accessorKey: 'country',
-        header: 'Country',
-        cell: ({ getValue }) => getValue() || '—',
-        meta: { className: 'w-40' },
+        id: 'location',
+        header: 'Location',
+        cell: ({ row }) => {
+            const country = row.original.country;
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
+                        {country?.slice(0, 2).toUpperCase() || '--'}
+                    </div>
+                    <div className="min-w-0 space-y-1">
+                        <div className="font-medium text-foreground">{row.original.name}</div>
+                        <div className="text-sm text-muted-foreground">{row.original.display_name}</div>
+                    </div>
+                </div>
+            );
+        },
+        meta: { className: 'w-72' },
     },
     {
         id: 'database_registries',

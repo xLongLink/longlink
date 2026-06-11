@@ -7,7 +7,7 @@ from src.database.models.__base__ import Base
 from src.database.models.association import UserApp
 
 if TYPE_CHECKING:
-    from src.database.models.org import Org
+    from src.database.models.organizations import Org
     from src.database.models.users import User
 
 

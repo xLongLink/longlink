@@ -6,7 +6,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.applications import AppStatus
-from src.database.models.apps import App
+from src.database.models.applications import App
 from src.database.models.users import User
 from src.database.models.association import UserApp
 

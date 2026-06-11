@@ -125,6 +125,17 @@ export type ApiComputeRegistry = {
     deleted_by: ApiUserSummary | null;
 };
 
+export type ApiComputeNamespace = {
+    name: string;
+};
+
+export type ApiComputePod = {
+    name: string;
+    status: string;
+    node: string | null;
+    created_at: string | null;
+};
+
 export type ApiAppResponse = {
     id: number;
     organization: string;
