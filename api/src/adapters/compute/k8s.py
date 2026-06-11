@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from src.utils import utils
 from .__root__ import Compute
 from kubernetes import client, config
+from kubernetes.utils.quantity import parse_quantity
 from src.constants import TEMPLATES
 from src.utils.namespace import k8name
 from kubernetes.client.rest import ApiException
@@ -234,8 +235,78 @@ class K8s(Compute):
         ]
 
 
+    async def resources(self) -> dict:
+        """Return total and allocatable cluster resources."""
+
+        nodes = self._core_api.list_node().items
+        total_ram = 0
+        total_cpu = 0.0
+        allocatable_ram = 0
+        allocatable_cpu = 0.0
+
+        for node in nodes:
+            capacity = node.status.capacity or {}
+            allocatable = node.status.allocatable or {}
+            total_ram += int(parse_quantity(capacity.get("memory", "0")))
+            total_cpu += float(parse_quantity(capacity.get("cpu", "0")))
+            allocatable_ram += int(parse_quantity(allocatable.get("memory", "0")))
+            allocatable_cpu += float(parse_quantity(allocatable.get("cpu", "0")))
+
+        return {
+            "ram_total": total_ram,
+            "ram_free": allocatable_ram,
+            "cpu_total": total_cpu,
+            "cpu_free": allocatable_cpu,
+        }
+
+
     async def pods(self, namespace: str) -> list[dict]:
         """List all pods in a namespace."""
+
+        # Fetch actual usage from the metrics API when available.
+        metrics_by_pod: dict[str, dict] = {}
+        try:
+            custom_api = client.CustomObjectsApi(self._api_client)
+            pod_metrics = custom_api.list_namespaced_custom_object(
+                "metrics.k8s.io", "v1beta1", namespace, "pods"
+            )
+            for item in pod_metrics.get("items", []):
+                cpu_usage = 0.0
+                ram_usage = 0
+                for container in item.get("containers", []):
+                    usage = container.get("usage", {})
+                    cpu_usage += float(parse_quantity(usage.get("cpu", "0")))
+                    ram_usage += int(parse_quantity(usage.get("memory", "0")))
+                metrics_by_pod[item["metadata"]["name"]] = {
+                    "cpu_usage": cpu_usage,
+                    "ram_usage": ram_usage,
+                }
+        except ApiException:
+            pass
+
+        def _pod_resources(pod):
+            cpu_request = 0.0
+            cpu_limit = 0.0
+            ram_request = 0
+            ram_limit = 0
+            for container in pod.spec.containers or []:
+                resources = container.resources
+                if resources:
+                    requests = resources.requests or {}
+                    limits = resources.limits or {}
+                    cpu_request += float(parse_quantity(requests.get("cpu", "0")))
+                    cpu_limit += float(parse_quantity(limits.get("cpu", "0")))
+                    ram_request += int(parse_quantity(requests.get("memory", "0")))
+                    ram_limit += int(parse_quantity(limits.get("memory", "0")))
+            usage = metrics_by_pod.get(pod.metadata.name, {})
+            return {
+                "cpu_request": cpu_request,
+                "cpu_limit": cpu_limit,
+                "ram_request": ram_request,
+                "ram_limit": ram_limit,
+                "cpu_usage": usage.get("cpu_usage", 0.0),
+                "ram_usage": usage.get("ram_usage", 0),
+            }
 
         return [
             {
@@ -246,6 +317,7 @@ class K8s(Compute):
                     pod.metadata.creation_timestamp.isoformat()
                     if pod.metadata.creation_timestamp else None
                 ),
+                "resources": _pod_resources(pod),
             }
             for pod in self._core_api.list_namespaced_pod(namespace).items
         ]

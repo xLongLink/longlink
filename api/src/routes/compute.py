@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException
 from src.auth import authadmin
 from src.router import router
-from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse, NamespaceResponse, PodResponse
+from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse, ComputeResourcesResponse, NamespaceResponse, PodResponse
 from src.adapters.compute import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
@@ -61,6 +61,22 @@ async def delete_compute_registry(registry_id: int, user: User = Depends(authadm
         raise HTTPException(status_code=404, detail=f"Compute '{registry_id}' not found")
 
     return
+
+
+@router.get("/api/compute/{registry_id}/resources", response_model=ComputeResourcesResponse)
+async def get_compute_resources(
+    registry_id: int,
+    _user: User = Depends(authadmin),
+) -> ComputeResourcesResponse:
+    """Return total and allocatable cluster resources."""
+
+    registry = await compute.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail=f"Compute '{registry_id}' not found")
+
+    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    data = await k8s.resources()
+    return ComputeResourcesResponse(**data)
 
 
 @router.get("/api/compute/{registry_id}/namespaces", response_model=list[NamespaceResponse])

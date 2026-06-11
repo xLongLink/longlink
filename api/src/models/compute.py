@@ -32,6 +32,17 @@ class NamespaceResponse(BaseModel):
     name: str
 
 
+class PodResourcesResponse(BaseModel):
+    """Resource requests, limits, and actual usage for a pod."""
+
+    cpu_request: float = 0
+    cpu_limit: float = 0
+    ram_request: int = 0
+    ram_limit: int = 0
+    cpu_usage: float = 0
+    ram_usage: int = 0
+
+
 class PodResponse(BaseModel):
     """Represent a pod in a namespace."""
 
@@ -39,3 +50,13 @@ class PodResponse(BaseModel):
     status: str
     node: str | None = None
     created_at: str | None = None
+    resources: PodResourcesResponse | None = None
+
+
+class ComputeResourcesResponse(BaseModel):
+    """Cluster resource totals and allocatable amounts."""
+
+    ram_total: int
+    ram_free: int
+    cpu_total: float
+    cpu_free: float

@@ -59,6 +59,7 @@ export type ApiImageMetadata = {
 
 export type ApiOrgSummary = {
     name: string;
+    avatar: string | null;
     location_id: number | null;
     created_at: string;
     updated_at: string;
@@ -70,6 +71,7 @@ export type ApiOrgSummary = {
 
 export type ApiOrgDetails = {
     name: string;
+    avatar: string | null;
     location_id: number | null;
     location: ApiLocation | null;
     created_at: string;
@@ -129,11 +131,28 @@ export type ApiComputeNamespace = {
     name: string;
 };
 
+export type ApiComputeResources = {
+    ram_total: number;
+    ram_free: number;
+    cpu_total: number;
+    cpu_free: number;
+};
+
+export type ApiComputePodResources = {
+    cpu_request: number;
+    cpu_limit: number;
+    ram_request: number;
+    ram_limit: number;
+    cpu_usage: number;
+    ram_usage: number;
+};
+
 export type ApiComputePod = {
     name: string;
     status: string;
     node: string | null;
     created_at: string | null;
+    resources: ApiComputePodResources | null;
 };
 
 export type ApiAppResponse = {

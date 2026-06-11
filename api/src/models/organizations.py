@@ -9,6 +9,7 @@ class OrgCreate(BaseModel):
     """Validate org creation payloads."""
 
     name: str = Field(min_length=1, max_length=128)
+    avatar: str | None = None
     location_id: int
 
 
@@ -18,6 +19,7 @@ class OrgSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
+    avatar: str | None = None
     location_id: int
     created_at: datetime
     updated_at: datetime
@@ -49,6 +51,7 @@ class OrgDetails(BaseModel):
     """Represent an organization with its members."""
 
     name: str
+    avatar: str | None = None
     location_id: int
     location: LocationResponse
     created_at: datetime

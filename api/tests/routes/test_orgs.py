@@ -95,6 +95,7 @@ async def test_get_organization_returns_member_payload(
             "orgs": [
                 {
                     "name": organization.name,
+                    "avatar": None,
                     "location_id": location.id,
                     "created_at": organization.created_at,
                     "updated_at": organization.updated_at,

@@ -54,11 +54,11 @@ class OrgsService(ServiceBase):
                 org.apps = [app for app in org.apps if app.deleted_at is None]
             return org
 
-    async def create(self, name: str, location_id: int, user: User | None = None) -> Org:
+    async def create(self, name: str, location_id: int, user: User | None = None, avatar: str | None = None) -> Org:
         """Create an org."""
 
         async with self.session() as session:
-            organization = Org(name=name, location_id=location_id)
+            organization = Org(name=name, avatar=avatar, location_id=location_id)
             if user is not None:
                 # Attach the creator as the initial owner when the caller is authenticated.
                 organization.created_by_id = user.id

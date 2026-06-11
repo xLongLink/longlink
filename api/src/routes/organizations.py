@@ -1,8 +1,11 @@
 from fastapi import Depends, HTTPException
 from src.auth import authuser, authadmin
+from src.logger import logger
 from src.router import router
 from src.models.organizations import OrgCreate, OrgDetails, OrgSummary
+from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
+from src.database.services.compute import compute
 from src.database.services.organizations import orgs
 
 
@@ -41,9 +44,21 @@ async def create_organization(
 
     # Map uniqueness failures to a conflict response.
     try:
-        organization = await orgs.create(payload.name, payload.location_id, user)
+        organization = await orgs.create(payload.name, payload.location_id, user, payload.avatar)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    # Create the Kubernetes namespace for the org when a compute cluster is available
+    # at the same location.  This is best-effort: if no compute registry exists yet the
+    # namespace will be created lazily when the first app is deployed.
+    registries = [r for r in await compute.list() if r.deleted_at is None and r.location_id == payload.location_id]
+    if registries:
+        registry = max(registries, key=lambda r: r.id)
+        k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+        try:
+            await k8s.namespace(payload.name)
+        except Exception:
+            logger.exception("Failed to create namespace for org '%s'", payload.name)
 
     return organization
 

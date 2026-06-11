@@ -15,6 +15,7 @@ class Org(Base, table=True):
     __tablename__ = 'organizations'
 
     name: str = Field(primary_key=True, max_length=128)
+    avatar: str | None = Field(default=None, max_length=2048)
     location_id: int = Field(foreign_key='locations.id')
     created_by_id: int | None = Field(default=None, foreign_key='users.id')
     updated_by_id: int | None = Field(default=None, foreign_key='users.id')

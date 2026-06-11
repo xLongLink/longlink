@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
@@ -10,9 +10,20 @@ import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
-import type { ApiComputeRegistry, ApiLocation } from '@/lib/types';
+import type { ApiComputeRegistry, ApiComputeResources, ApiLocation } from '@/lib/types';
 
-const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>> = [
+function formatBytes(bytes: number): string {
+    const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
+    let value = bytes;
+    let unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit++;
+    }
+    return `${Math.round(value)} ${units[unit]}`;
+}
+
+const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>> = [
     {
         accessorKey: 'kind',
         header: 'Kind',
@@ -39,6 +50,29 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiL
             );
         },
         meta: { className: 'min-w-56' },
+    },
+    {
+        id: 'resources',
+        header: 'Resources',
+        cell: ({ row }) => {
+            const r = row.original.resources;
+            if (!r) return <span className="text-muted-foreground">—</span>;
+            const ramPct = Math.round((r.ram_free / r.ram_total) * 100);
+            const cpuPct = Math.round((r.cpu_free / r.cpu_total) * 100);
+            return (
+                <div className="min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                        <div className="truncate font-medium text-foreground">{formatBytes(r.ram_total)}</div>
+                        <div className="shrink-0 text-xs text-muted-foreground">({ramPct}% Free)</div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="truncate font-medium text-foreground">{r.cpu_total} vCPU</div>
+                        <div className="shrink-0 text-xs text-muted-foreground">({cpuPct}% Free)</div>
+                    </div>
+                </div>
+            );
+        },
+        meta: { className: 'w-48' },
     },
     {
         id: 'location',
@@ -94,8 +128,31 @@ export default function AdminCompute() {
         retry: false,
     });
 
+    const computeList = computeQuery.data ?? [];
+    const resourcesQueries = useQueries({
+        queries: computeList.map((c) => ({
+            queryKey: ['api', apiUrl(`/api/compute/${c.id}/resources`)],
+            queryFn: async () =>
+                fetchApiJson<ApiComputeResources>(apiUrl(`/api/compute/${c.id}/resources`), {
+                    credentials: 'include',
+                }),
+            retry: false,
+        })),
+    });
+
+    const resourcesById = new Map<number, ApiComputeResources>();
+    computeList.forEach((c, i) => {
+        const data = resourcesQueries[i]?.data;
+        if (data) resourcesById.set(c.id, data);
+    });
+
     const locationById = new Map(locationsQuery.data?.map((l) => [l.id, l]));
-    const computeRows = (computeQuery.data ?? []).map((row) => ({ ...row, location: locationById.get(row.location_id) }));
+    const computeRows = computeList.map((row) => ({
+        ...row,
+        location: locationById.get(row.location_id),
+        resources: resourcesById.get(row.id),
+    }));
+
     const computeColumns = [
         ...computeColumnsBase,
         {
@@ -159,7 +216,7 @@ export default function AdminCompute() {
                 );
             },
         },
-    ] satisfies Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>>;
+    ] satisfies Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>>;
 
     return (
         <div className="space-y-6">
