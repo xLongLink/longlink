@@ -31,6 +31,7 @@ async def create_location(
 ) -> LocationResponse:
     """Create one location."""
 
+    # Surface validation errors as a conflict so the API stays consistent with other create flows.
     try:
         location = await locations.create(payload.name, payload.display_name, payload.country)
     except ValueError as exc:

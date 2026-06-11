@@ -47,6 +47,7 @@ async def login_oidc(request: Request):
 async def login_password(request: Request, payload: PasswordLoginRequest) -> PasswordLoginResponse:
     """Exchange username/password credentials for a session through Keycloak."""
 
+    # Fetch the provider metadata first so the token and userinfo URLs come from discovery.
     metadata_url = f"{env.OIDC_ISSUER.rstrip('/')}/.well-known/openid-configuration"
 
     async with httpx2.AsyncClient() as client:
@@ -58,6 +59,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
 
         metadata = metadata_response.json()
 
+        # Exchange the provided credentials for an access token.
         token_response = await client.post(
             metadata["token_endpoint"],
             data={
@@ -83,6 +85,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
     if not access_token:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider returned no access token")
 
+    # Use the access token to fetch the authenticated user's profile.
     async with httpx2.AsyncClient() as client:
         try:
             userinfo_response = await client.get(
@@ -98,6 +101,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Pas
     if not subject:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider returned no subject")
 
+    # Normalize the provider payload into the local user record shape.
     given_name = userinfo.get("given_name") or "Example"
     family_name = userinfo.get("family_name") or "LongLink"
     email = userinfo.get("email") or "example@longlink.dev"
@@ -133,9 +137,11 @@ async def auth_oidc(request: Request):
         ) from exc
 
     userinfo = token.get("userinfo")
+    # Fall back to the userinfo endpoint when the token payload does not include profile claims.
     if userinfo is None:
         userinfo = await oidc.userinfo(token=token)
 
+    # Normalize the provider payload into the local user record shape.
     subject = str(userinfo["sub"])
     given_name = userinfo.get("given_name") or "Example"
     family_name = userinfo.get("family_name") or "LongLink"

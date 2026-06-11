@@ -59,6 +59,7 @@ class S3(Storage):
         """Delete every managed bucket for one organization."""
 
         bucket_prefix = s3name(organization)
+        # Remove only the managed buckets that belong to the organization.
         for bucket_name in self.list():
             if bucket_name == bucket_prefix or bucket_name.startswith(f"{bucket_prefix}-"):
                 self._client.delete_bucket(Bucket=bucket_name)
@@ -76,6 +77,7 @@ class S3(Storage):
 
         # Empty each bucket before deleting it so versioned and non-versioned buckets can be removed.
         for bucket_name in self.list():
+            # Remove versioned objects and delete markers before the final bucket delete.
             version_paginator = self._client.get_paginator("list_object_versions")
             for page in version_paginator.paginate(Bucket=bucket_name):
                 objects = []
@@ -87,10 +89,12 @@ class S3(Storage):
                 if objects:
                     self._client.delete_objects(Bucket=bucket_name, Delete={"Objects": objects, "Quiet": True})
 
+            # Remove the remaining unversioned objects after the versioned cleanup.
             object_paginator = self._client.get_paginator("list_objects_v2")
             for page in object_paginator.paginate(Bucket=bucket_name):
                 objects = [{"Key": item["Key"]} for item in page.get("Contents", [])]
                 if objects:
                     self._client.delete_objects(Bucket=bucket_name, Delete={"Objects": objects, "Quiet": True})
 
+            # Delete the emptied bucket last so repeated cleanup stays idempotent.
             self._client.delete_bucket(Bucket=bucket_name)

@@ -96,6 +96,7 @@ class K8s(Compute):
         """Create the namespace for an organization if it does not exist."""
 
         namespace = k8name(utils.knames(organization, "Org"))
+        # Reuse the namespace when it already exists so setup stays idempotent.
         try:
             self._core_api.read_namespace(namespace)
         except ApiException as exc:
@@ -144,6 +145,7 @@ class K8s(Compute):
         )
         app_manifests = app_manifests if isinstance(app_manifests, list) else [app_manifests]
 
+        # Apply each manifest by kind so deployments and services use the right Kubernetes client.
         for manifest in app_manifests:
             if manifest["kind"] == "Deployment":
                 self._upsert(
@@ -173,6 +175,7 @@ class K8s(Compute):
         namespace = k8name(utils.knames(organization, "Org"))
         name = utils.knames(application, "Application name")
 
+        # Delete the workload resources first so namespace cleanup is not blocked.
         for delete_call in (
             self._apps_api.delete_namespaced_deployment,
             self._core_api.delete_namespaced_service,
@@ -211,6 +214,7 @@ class K8s(Compute):
             key=lambda item: item.metadata.creation_timestamp or datetime.min.replace(tzinfo=UTC),
             reverse=True,
         )[0]
+        # Convert Kubernetes API failures into a simple adapter error.
         try:
             return self._core_api.read_namespaced_pod_log(
                 pod.metadata.name,

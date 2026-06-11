@@ -26,6 +26,7 @@ HOP_BY_HOP_HEADERS = {
 async def proxy_app_request(app_id: int, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
     """Proxy one request into the deployed application service."""
 
+    # Load the app first so routing never depends on the caller-supplied path alone.
     app = await apps.get_by_id(app_id)
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
@@ -49,6 +50,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     upstream_path = path.lstrip("/")
     namespace = k8name(knames(app.organization, "Org"))
     name = knames(app.slug, "Application name")
+    # Strip hop-by-hop headers before forwarding the request upstream.
     forward_headers = {
         key: value
         for key, value in request.headers.items()
@@ -59,6 +61,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if upstream_path != "":
         resource_path = f"{resource_path}/{upstream_path}"
 
+    # Forward the request body and response stream directly through the Kubernetes API client.
     upstream_response = k8s._api_client.call_api(
         resource_path,
         request.method,
@@ -71,6 +74,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     )
     body, status_code, upstream_headers = upstream_response
 
+    # Filter hop-by-hop response headers so FastAPI can return a clean proxied response.
     return Response(
         content=body.data,
         status_code=status_code,

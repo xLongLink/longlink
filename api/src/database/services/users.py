@@ -61,11 +61,13 @@ class UsersService(ServiceBase):
         if user.email != ADMIN_EMAIL:
             return
 
+        # Skip the bootstrap membership if the demo org has not been created yet.
         org_result = await session.execute(select(Org).where(Org.name == ADMIN_ORG))
         org = org_result.scalar_one_or_none()
         if org is None:
             return
 
+        # Avoid duplicating the owner row when the user already belongs to the org.
         membership_result = await session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == user.id,
@@ -155,6 +157,7 @@ class UsersService(ServiceBase):
             await session.commit()
             await session.refresh(user)
 
+            # Attach the admin membership after the user row exists and has an id.
             await self._ensure_admin_membership(session, user)
 
             return user

@@ -20,10 +20,12 @@ async def get_organization(
 ) -> OrgDetails:
     """Return one organization and its metadata."""
 
+    # Deny access early when the org does not exist.
     organization = await orgs.get(name)
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
+    # Keep organization reads scoped to the caller's memberships.
     if not any(org.name == name for org in user.orgs):
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 
@@ -37,6 +39,7 @@ async def create_organization(
 ) -> OrgSummary:
     """Create a new org."""
 
+    # Map uniqueness failures to a conflict response.
     try:
         organization = await orgs.create(payload.name, payload.location_id, user)
     except ValueError as exc:
@@ -58,6 +61,7 @@ async def create_organization(
 async def delete_organization(name: str, user: User = Depends(authuser)) -> None:
     """Delete one org by name."""
 
+    # Only members can delete their own org.
     if not any(org.name == name for org in user.orgs):
         raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
 

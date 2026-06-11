@@ -38,6 +38,7 @@ async def create_compute_registry(
     registry = await compute.create(**payload.model_dump())
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
+    # Initialize the cluster immediately so failed registrations can be rolled back.
     try:
         await k8s.cleanup()
         await k8s.setup()

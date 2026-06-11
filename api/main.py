@@ -21,6 +21,8 @@ class SPAStaticFiles(StaticFiles):
     """Static file server that serves index.html for unmatched SPA routes."""
 
     async def get_response(self, path: str, scope):
+        """Serve `index.html` for non-API paths that miss static assets."""
+
         # Let organization-scoped API paths fall through as real 404s instead of SPA navigation.
         if "api" in path.split("/"):
             return await super().get_response(path, scope)
@@ -38,6 +40,7 @@ class SPAStaticFiles(StaticFiles):
 async def run_operation_scheduler() -> None:
     """Continuously claim and execute scheduled operations."""
 
+    # Keep polling the queue so new claimed operations are drained continuously.
     while True:
         operation = await operations.claim_next()
         if operation is None:
@@ -45,6 +48,7 @@ async def run_operation_scheduler() -> None:
             continue
 
         logger.info("Executing operation %s (%s)", operation.id, operation.kind)
+        # Execute one claimed operation without stopping the worker on failure.
         try:
             await execute_claimed_operation(operation)
         except Exception:
@@ -59,12 +63,14 @@ async def lifespan(app: FastAPI):
     logger.info("Starting operation drain")
     await recover_active_operations()
 
+    # Drain boot-time work before the app starts serving requests.
     while True:
         operation = await operations.claim_next()
         if operation is None:
             break
 
         logger.info("Executing operation %s (%s)", operation.id, operation.kind)
+        # Keep draining even if one startup operation fails.
         try:
             await execute_claimed_operation(operation)
         except Exception:

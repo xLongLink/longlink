@@ -57,6 +57,7 @@ class OrgsService(ServiceBase):
         async with self.session() as session:
             organization = Org(name=name, location_id=location_id)
             if user is not None:
+                # Attach the creator as the initial owner when the caller is authenticated.
                 organization.created_by_id = user.id
                 organization.updated_by_id = user.id
                 session.add(
@@ -71,6 +72,7 @@ class OrgsService(ServiceBase):
             try:
                 await session.commit()
             except IntegrityError as exc:
+                # Keep name collisions at the service boundary as a simple value error.
                 await session.rollback()
                 raise ValueError("Org already exists") from exc
 

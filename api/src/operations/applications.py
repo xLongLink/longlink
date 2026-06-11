@@ -25,10 +25,12 @@ async def create_app(organization: str, payload: AppCreate, user: User | None = 
 
     app_slug = slugify(payload.name)
     logger.info("Provisioning app %s/%s", organization, app_slug)
+    # Resolve the organization first so all later checks can use its location.
     organization_record = await orgs.get(organization)
     if organization_record is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
 
+    # Require both a compute registry and a database registry before creating the app row.
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="No compute cluster configured")
@@ -56,6 +58,7 @@ async def create_app(organization: str, payload: AppCreate, user: User | None = 
             detail=f"No database configured for location '{organization_record.location_id}'",
         )
 
+    # Create the database row before provisioning any external resources.
     try:
         app = await apps.create(
             organization,
@@ -80,8 +83,8 @@ async def create_app(organization: str, payload: AppCreate, user: User | None = 
         database_registry.maintenance_database,
     )
 
+    # Provision the namespace, schema, and workload in order so failures can mark the app as failed.
     try:
-        # Initialize the namespace, schema, and workload before the async readiness check runs.
         await k8s.namespace(organization)
         await db_client.schema(organization, app_slug)
         await k8s.application(organization, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
@@ -100,6 +103,7 @@ async def delete_app(organization: str, app_id: int) -> None:
     """Remove one application from compute and persistence layers."""
 
     logger.info("Removing app %s/%s", organization, app_id)
+    # Verify the organization before touching the app or compute registry state.
     organization_record = await orgs.get(organization)
     if organization_record is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{organization}' not found")
@@ -111,6 +115,7 @@ async def delete_app(organization: str, app_id: int) -> None:
     if app.organization != organization:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
 
+    # Select the newest registry for the organization location so cleanup hits the active cluster.
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     registry = max(
         (registry for registry in registries if registry.location_id == organization_record.location_id),
@@ -126,6 +131,7 @@ async def delete_app(organization: str, app_id: int) -> None:
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
     await k8s.remove(organization, app.slug)
 
+    # Remove the database row after the external cleanup succeeds.
     try:
         await apps.delete(organization, app_id)
     except ValueError as exc:
@@ -162,6 +168,7 @@ async def app_is_ready(operation: Operation) -> bool:
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
     namespace = k8name(app.organization)
+    # Inspect the pods for a running workload with all containers ready.
     try:
         pods = k8s._core_api.list_namespaced_pod(namespace, label_selector=f"app={app.slug}").items
     except ApiException:
@@ -201,6 +208,7 @@ async def app_is_dead(operation: Operation) -> bool:
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
     namespace = k8name(app.organization)
+    # Inspect the pods for terminal phases or crash states.
     try:
         pods = k8s._core_api.list_namespaced_pod(namespace, label_selector=f"app={app.slug}").items
     except ApiException:
@@ -243,11 +251,13 @@ async def complete_app_creation(operation: Operation) -> Operation:
 
     payload = operation.payload or {}
     app_id = payload.get("app_id")
+    # Reuse an existing app row when the operation was claimed after creation.
     if isinstance(app_id, int):
         app = await apps.get_by_id(app_id)
         if app is None:
             raise ValueError(f"App '{app_id}' not found")
     else:
+        # Bootstrap the app record from the queued payload when the operation created it.
         organization = payload.get("organization")
         name = payload.get("name")
         image = payload.get("image")
@@ -261,6 +271,7 @@ async def complete_app_creation(operation: Operation) -> Operation:
             raise ValueError("App record was not created")
 
     deadline = asyncio.get_running_loop().time() + 120.0
+    # Poll until the app becomes ready, fails, or times out.
     while True:
         verification_operation = Operation(kind=operation.kind, payload={"app_id": app_id})
 

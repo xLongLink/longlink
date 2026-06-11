@@ -9,6 +9,7 @@ async def execute_compute_setup(operation: Operation) -> Operation:
 
     payload = operation.payload or {}
     logger.info("Running compute setup %s", operation.id)
+    # Load the registry record before touching the cluster so missing ids fail fast.
     registry = await compute.get(int(payload["registry_id"]))
     if registry is None:
         raise ValueError(f"Compute registry '{payload['registry_id']}' not found")
@@ -16,6 +17,7 @@ async def execute_compute_setup(operation: Operation) -> Operation:
     from src.adapters.compute import K8s
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    # Cleanup and setup run together so a registry always starts from a known cluster state.
     try:
         await k8s.cleanup()
         await k8s.setup()
@@ -31,6 +33,7 @@ async def execute_compute_setup(operation: Operation) -> Operation:
     if ready is None:
         return operation
 
+    # Mark the operation completed only after the ready transition succeeds.
     completed = await operations.complete(operation.id)
     if completed is not None:
         logger.info("Completed compute setup %s", operation.id)

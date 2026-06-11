@@ -12,14 +12,17 @@ from src.database.services.applications import apps
 async def recover_active_operations() -> None:
     """Return interrupted active operations to the queue or finish them."""
 
+    # Walk active operations one by one so each kind can recover independently.
     for operation in await operations.list_active():
         payload = operation.payload or {}
 
+        # Compute setup can always be replayed from scratch.
         if operation.kind == "compute.setup":
             logger.info("Requeueing interrupted compute setup %s", operation.id)
             await operations.requeue(operation.id)
             continue
 
+        # App creation can be completed or failed based on the stored app state.
         if operation.kind == "app.create":
             app_id = payload.get("app_id")
             if isinstance(app_id, int):
@@ -39,6 +42,7 @@ async def recover_active_operations() -> None:
             await operations.requeue(operation.id)
             continue
 
+        # App deletion is finished once the app row is gone.
         if operation.kind == "app.delete":
             app_id = payload.get("app_id")
             if isinstance(app_id, int) and await apps.get_by_id(app_id) is None:
@@ -51,6 +55,7 @@ async def recover_active_operations() -> None:
             await operations.requeue(operation.id)
             continue
 
+        # Fail anything the recovery flow does not understand.
         logger.warning("Failing unsupported recovered operation %s (%s)", operation.id, operation.kind)
         await operations.fail(operation.id, f"Unsupported operation '{operation.kind}' during recovery")
 
@@ -61,6 +66,7 @@ async def execute_claimed_operation(operation: Operation) -> Operation:
     payload = operation.payload or {}
 
     try:
+        # Dispatch each operation kind to its dedicated executor.
         if operation.kind == "compute.setup":
             from src.operations.compute import execute_compute_setup
 
@@ -82,6 +88,7 @@ async def execute_claimed_operation(operation: Operation) -> Operation:
         else:
             raise ValueError(f"Unsupported operation '{operation.kind}'")
     except HTTPException as exc:
+        # Convert API-layer failures into operation failures without hiding the original message.
         logger.warning("Operation %s failed: %s", operation.id, exc.detail)
         failed = await operations.fail(operation.id, str(exc.detail))
         if failed is not None:
@@ -89,6 +96,7 @@ async def execute_claimed_operation(operation: Operation) -> Operation:
 
         raise
     except Exception as exc:
+        # Preserve unexpected errors as failed operations when the database update succeeds.
         logger.exception("Operation %s failed", operation.id)
         failed = await operations.fail(operation.id, str(exc))
         if failed is not None:
@@ -102,10 +110,12 @@ async def execute_claimed_operation(operation: Operation) -> Operation:
 async def complete_ready_operations() -> None:
     """Complete ready operations that have already become available."""
 
+    # Finalize only operations that are already marked ready in the database.
     for operation in await operations.list():
         if operation.status != OperationStatus.ready:
             continue
 
+        # App creation still needs the runtime readiness probe before completion.
         if operation.kind == "app.create" and not await app_is_ready(operation):
             continue
 

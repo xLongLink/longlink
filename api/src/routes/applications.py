@@ -44,10 +44,12 @@ async def create_app(
 ) -> AppResponse:
     """Register a new app in the database and deploy it on the compute cluster."""
 
+    # Require membership in the target organization before creating the app.
     org = next((org for org in user.orgs if org.name == organization), None)
     if org is None:
         raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
 
+    # Let the operation runner handle the long-lived provision step.
     try:
         app = await run_create_app(organization, payload, user)
     except HTTPException as exc:
@@ -82,6 +84,7 @@ async def delete_app(
 ) -> None:
     """Delete an app registration and remove it from the compute cluster."""
 
+    # Load the app first so missing rows fail before we queue the delete operation.
     app = await apps.get_by_id(app_id)
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
@@ -93,6 +96,7 @@ async def delete_app(
     operation = await operations.create("app.delete", {"organization": organization, "app_id": app_id})
     logger.info("Queued app deletion %s for %s/%s", operation.id, organization, app_id)
 
+    # Claim the operation immediately so no second worker can race the cleanup.
     if await operations.claim(operation.id) is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Operation already running")
 
@@ -120,6 +124,7 @@ async def delete_app(
 async def get_app_logs(organization: str, app_id: int, user: User = Depends(authuser)) -> Response:
     """Return recent pod logs for one managed app."""
 
+    # Validate the app and organization before connecting to the active cluster.
     app = await apps.get_by_id(app_id)
     if app is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"App '{app_id}' not found")
@@ -144,6 +149,7 @@ async def get_app_logs(organization: str, app_id: int, user: User = Depends(auth
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
+    # Map adapter errors to a service-unavailable response for the API client.
     try:
         logs = await k8s.logs(organization, app.slug)
     except ValueError as exc:
