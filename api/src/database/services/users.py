@@ -1,9 +1,9 @@
 from .base import ServiceBase
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from src.database.models.organizations import Org
 from src.database.models.users import User
-from sqlalchemy.orm import selectinload
-from src.models.roles import Roles
+from src.models.roles import Roles, PlatformRole
 from src.models.users import UserProfile, UserOrgMembership
 from src.models.users import Theme, Accent, Radius, Language
 from src.database.models.association import UserOrganization
@@ -21,7 +21,7 @@ class UsersService(ServiceBase):
             return result.scalars().all()
 
 
-    async def get_by_id(self, user_id: int) -> User | None:
+    async def get_by_id(self, user_id: str) -> User | None:
         """Return one user by id."""
 
         async with self.session() as session:
@@ -29,7 +29,7 @@ class UsersService(ServiceBase):
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def profile(self, user_id: int) -> UserProfile | None:
+    async def profile(self, user_id: str) -> UserProfile | None:
         """Return one user profile with membership roles included."""
 
         async with self.session() as session:
@@ -40,16 +40,16 @@ class UsersService(ServiceBase):
 
             # Load organization roles from the association table so the profile stays accurate.
             org_result = await session.execute(
-                select(
-                    UserOrganization.organization_name,
-                    UserOrganization.role_name,
-                ).where(UserOrganization.user_id == user.id)
+                select(UserOrganization.organization_id, Org.name, UserOrganization.role_name)
+                .join(Org, Org.id == UserOrganization.organization_id)
+                .where(UserOrganization.user_id == user.id)
             )
 
             payload = user.model_dump()
+            payload["admin"] = user.admin
             payload["orgs"] = [
-                UserOrgMembership(name=organization_name, role=role_name)
-                for organization_name, role_name in org_result.all()
+                UserOrgMembership(id=organization_id, name=organization_name, role=role_name)
+                for organization_id, organization_name, role_name in org_result.all()
             ]
 
             return UserProfile.model_validate(payload)
@@ -71,7 +71,7 @@ class UsersService(ServiceBase):
         membership_result = await session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == user.id,
-                UserOrganization.organization_name == ADMIN_ORG,
+                UserOrganization.organization_id == org.id,
             )
         )
         if membership_result.scalar_one_or_none() is not None:
@@ -80,7 +80,7 @@ class UsersService(ServiceBase):
         session.add(
             UserOrganization(
                 user_id=user.id,
-                organization_name=ADMIN_ORG,
+                organization_id=org.id,
                 role_name=Roles.owner,
             )
         )
@@ -94,6 +94,7 @@ class UsersService(ServiceBase):
         name: str | None = None,
         avatar: str | None = None,
         admin: bool | None = None,
+        role: PlatformRole | None = None,
         theme: Theme | None = None,
         accent: Accent | None = None,
         radius: Radius | None = None,
@@ -110,7 +111,9 @@ class UsersService(ServiceBase):
                 existing_user.name = name
             if avatar is not None:
                 existing_user.avatar = avatar
-            if admin is not None:
+            if role is not None:
+                existing_user.role = role
+            elif admin is not None:
                 existing_user.admin = admin
             if theme is not None:
                 existing_user.theme = theme
@@ -141,12 +144,22 @@ class UsersService(ServiceBase):
             if name is None or email is None:
                 raise ValueError("Missing user fields")
 
+            # Resolve the platform role from explicit input, legacy flags, or the bootstrap default.
+            if role is not None:
+                resolved_role = role
+            elif admin is not None:
+                resolved_role = PlatformRole.administrator if admin else PlatformRole.user
+            elif is_admin:
+                resolved_role = PlatformRole.administrator
+            else:
+                resolved_role = PlatformRole.user
+
             user = User(
                 name=name,
                 email=email,
                 avatar=avatar,
                 oidc_subject=oidc_subject,
-                admin=is_admin if admin is None else admin,
+                role=resolved_role,
                 theme=theme if theme is not None else Theme.dark,
                 accent=accent if accent is not None else Accent.neutral,
                 radius=radius if radius is not None else Radius.medium,
@@ -167,9 +180,7 @@ class UsersService(ServiceBase):
 
         async with self.session() as session:
             # Load memberships so the returned user can be used outside the session.
-            statement = select(User).options(
-                selectinload(User.orgs).selectinload(Org.location),
-            ).where(User.oidc_subject == oidc_subject)
+            statement = select(User).options(selectinload(User.orgs).selectinload(Org.location)).where(User.oidc_subject == oidc_subject)
             result = await session.execute(statement)
             return result.scalars().first()
 

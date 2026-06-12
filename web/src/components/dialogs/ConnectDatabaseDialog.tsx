@@ -6,10 +6,12 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 
 /** Renders the admin database connect dialog. */
 export default function ConnectDatabaseDialog() {
+    const { role } = useUser();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('postgre');
@@ -19,6 +21,10 @@ export default function ConnectDatabaseDialog() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+
+    if (role !== 'administrator') {
+        return null;
+    }
 
     const databaseUrl = apiUrl('/api/database');
 

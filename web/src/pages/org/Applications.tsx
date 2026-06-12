@@ -20,7 +20,7 @@ type ApplicationsProps = {
 /** Renders the organization applications table. */
 export default function Applications({ org, apps, isLoading, error }: ApplicationsProps) {
     const deleteApp = useDeleteApp(org);
-    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
@@ -42,7 +42,7 @@ export default function Applications({ org, apps, isLoading, error }: Applicatio
                             />
                         </div>
                         <div className="min-w-0 space-y-1">
-                            <Link to={`/orgs/${org}/apps/${name}`} className="font-medium text-foreground hover:underline">
+                            <Link to={`/orgs/${org}/apps/${row.original.id}`} className="font-medium text-foreground hover:underline">
                                 {name}
                             </Link>
                             {row.original.description ? (

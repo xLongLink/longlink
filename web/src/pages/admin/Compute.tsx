@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import type { ApiComputeRegistry, ApiComputeResources, ApiLocation } from '@/lib/types';
 
@@ -98,9 +99,11 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiL
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
+    const { role } = useUser();
     const queryClient = useQueryClient();
     const computeUrl = apiUrl('/api/compute');
     const locationsUrl = apiUrl('/api/locations');
+    const canManage = role === 'administrator';
 
     const deleteCompute = useMutation({
         mutationFn: async (registryId: string) => {
@@ -140,7 +143,7 @@ export default function AdminCompute() {
         })),
     });
 
-    const resourcesById = new Map<number, ApiComputeResources>();
+    const resourcesById = new Map<string, ApiComputeResources>();
     computeList.forEach((c, i) => {
         const data = resourcesQueries[i]?.data;
         if (data) resourcesById.set(c.id, data);
@@ -153,70 +156,72 @@ export default function AdminCompute() {
         resources: resourcesById.get(row.id),
     }));
 
-    const computeColumns = [
-        ...computeColumnsBase,
-        {
-            id: 'actions',
-            header: 'Action',
-            meta: { className: 'w-24 text-right' },
-            cell: ({ row }) => {
-                const compute = row.original;
-                const computeId = String(compute.id);
+    const computeColumns = canManage
+        ? [
+              ...computeColumnsBase,
+              {
+                  id: 'actions',
+                  header: 'Action',
+                  meta: { className: 'w-24 text-right' },
+                  cell: ({ row }) => {
+                      const compute = row.original;
+                      const computeId = String(compute.id);
 
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        aria-label={`Open actions for compute ${compute.id}`}
-                                    />
-                                }
-                            >
-                                <MoreHorizontal className="size-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        void navigator.clipboard.writeText(computeId);
-                                        toast.success('Compute ID copied');
-                                    }}
-                                >
-                                    Copy ID
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    variant="destructive"
-                                    onClick={async () => {
-                                        // Confirm the destructive action before deleting the compute registry.
-                                        if (!window.confirm(`Delete compute ${compute.id}?`)) {
-                                            return;
-                                        }
+                      return (
+                          <div className="flex justify-end">
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger
+                                      render={
+                                          <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon-sm"
+                                              aria-label={`Open actions for compute ${compute.id}`}
+                                          />
+                                      }
+                                  >
+                                      <MoreHorizontal className="size-4" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-44">
+                                      <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          onClick={() => {
+                                              void navigator.clipboard.writeText(computeId);
+                                              toast.success('Compute ID copied');
+                                          }}
+                                      >
+                                          Copy ID
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          variant="destructive"
+                                          onClick={async () => {
+                                              // Confirm the destructive action before deleting the compute registry.
+                                              if (!window.confirm(`Delete compute ${compute.id}?`)) {
+                                                  return;
+                                              }
 
-                                        try {
-                                            await deleteCompute.mutateAsync(computeId);
-                                        } catch (mutationError) {
-                                            toast.error(
-                                                mutationError instanceof Error
-                                                    ? mutationError.message
-                                                    : 'Failed to delete compute'
-                                            );
-                                        }
-                                    }}
-                                >
-                                    Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-        },
-    ] satisfies Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>>;
+                                              try {
+                                                  await deleteCompute.mutateAsync(computeId);
+                                              } catch (mutationError) {
+                                                  toast.error(
+                                                      mutationError instanceof Error
+                                                          ? mutationError.message
+                                                          : 'Failed to delete compute'
+                                                  );
+                                              }
+                                          }}
+                                      >
+                                          Delete
+                                      </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                          </div>
+                      );
+                  },
+              },
+          ] satisfies Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>>
+        : computeColumnsBase;
 
     return (
         <div className="space-y-6">
@@ -229,7 +234,7 @@ export default function AdminCompute() {
                         </HeroDescription>
                     </div>
                 </Hero>
-                <ConnectComputeDialog />
+                {canManage ? <ConnectComputeDialog /> : null}
             </div>
             <DataTable
                 columns={computeColumns}

@@ -6,6 +6,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.applications import AppStatus
+from src.database.models.organizations import Org
 from src.database.models.applications import App
 from src.database.models.users import User
 from src.database.models.association import UserApp
@@ -16,12 +17,17 @@ class AppsService(ServiceBase):
         """Return all registered apps for admin views."""
 
         async with self.session() as session:
-            statement = select(App).options(*_app_relation_options()).order_by(App.organization, App.name)
+            statement = (
+                select(App)
+                .join(Org, Org.id == App.organization_id)
+                .options(*_app_relation_options())
+                .order_by(Org.name, App.name)
+            )
             result = await session.execute(statement)
             return list(result.scalars().all())
 
 
-    async def list(self, organization: str, user_id: int) -> list[tuple[App, str | None]]:
+    async def list(self, organization_id: str, user_id: str) -> list[tuple[App, str | None]]:
         """Return all registered apps for one organization with membership roles."""
 
         async with self.session() as session:
@@ -32,22 +38,22 @@ class AppsService(ServiceBase):
                 .outerjoin(
                     UserApp,
                     and_(
-                        App.organization == UserApp.organization_name,
-                        App.name == UserApp.app_name,
+                        App.organization_id == UserApp.organization_id,
+                        App.id == UserApp.app_id,
                         UserApp.user_id == user_id,
                     ),
                 )
-                .where(App.organization == organization, App.deleted_at.is_(None))
+                .where(App.organization_id == organization_id, App.deleted_at.is_(None))
             )
             result = await session.execute(statement)
             return result.all()
 
-    async def get(self, organization: str, name: str) -> App | None:
+    async def get(self, organization_id: str, name: str) -> App | None:
         """Return a registered app by organization and name."""
 
         async with self.session() as session:
             statement = select(App).options(*_app_relation_options()).where(
-                App.organization == organization,
+                App.organization_id == organization_id,
                 App.name == name,
                 App.deleted_at.is_(None),
             )
@@ -55,7 +61,7 @@ class AppsService(ServiceBase):
             return result.scalar_one_or_none()
 
 
-    async def get_by_id(self, app_id: int) -> App | None:
+    async def get_by_id(self, app_id: str) -> App | None:
         """Return a registered app by id."""
 
         async with self.session() as session:
@@ -65,7 +71,7 @@ class AppsService(ServiceBase):
 
     async def create(
         self,
-        organization: str,
+        organization_id: str,
         name: str,
         slug: str,
         image: str,
@@ -85,7 +91,7 @@ class AppsService(ServiceBase):
 
             # Check slug uniqueness so K8s resource names stay collision-free.
             slug_statement = select(App).where(
-                App.organization == organization,
+                App.organization_id == organization_id,
                 App.slug == slug,
             )
             slug_result = await session.execute(slug_statement)
@@ -93,7 +99,7 @@ class AppsService(ServiceBase):
                 raise ValueError('App slug already exists')
 
             app_kwargs: dict[str, object] = {
-                'organization': organization,
+                'organization_id': organization_id,
                 'name': name,
                 'slug': slug,
                 'status': status,
@@ -115,7 +121,7 @@ class AppsService(ServiceBase):
             return result.scalar_one()
 
 
-    async def set_status(self, app_id: int, status: AppStatus) -> App | None:
+    async def set_status(self, app_id: str, status: AppStatus) -> App | None:
         """Update one app status and return the refreshed row."""
 
         async with self.session() as session:
@@ -128,12 +134,12 @@ class AppsService(ServiceBase):
             await session.refresh(app)
             return app
 
-    async def delete(self, organization: str, app_id: int) -> App:
+    async def delete(self, organization_id: str, app_id: str) -> App:
         """Delete an app by organization and id and return it."""
 
         async with self.session() as session:
             # Load the app first so the delete path can raise a single not-found error.
-            statement = select(App).where(App.organization == organization, App.id == app_id, App.deleted_at.is_(None))
+            statement = select(App).where(App.organization_id == organization_id, App.id == app_id, App.deleted_at.is_(None))
             result = await session.execute(statement)
             app = result.scalar_one_or_none()
             if app is None:
@@ -154,6 +160,7 @@ def _app_relation_options() -> tuple:
     """Build the shared eager-loading options for app lookups."""
 
     return (
+        selectinload(App.organization_rel),
         selectinload(App.created_by),
         selectinload(App.updated_by),
         selectinload(App.deleted_by),

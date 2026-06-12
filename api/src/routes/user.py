@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from src.auth import authuser, authadmin
+from src.auth import authuser, authsupport
 from src.database.models.users import User
 from src.database.services.users import users
 from src.router import router
@@ -11,7 +11,7 @@ async def serialize_user(user: User) -> UserProfile:
 
     profile = await users.profile(user.id)
     if profile is None:
-        profile = UserProfile(**{**user.model_dump(), "orgs": []})
+        profile = UserProfile(**{**user.model_dump(), "admin": user.admin, "orgs": []})
 
     return profile
 
@@ -24,8 +24,8 @@ async def get_me(user: User = Depends(authuser)) -> UserProfile:
 
 
 @router.get("/api/users", response_model=list[UserListItem])
-async def list_users(_user: User = Depends(authadmin)) -> list[UserListItem]:
-    """Return all user summaries for admin views."""
+async def list_users(_user: User = Depends(authsupport)) -> list[UserListItem]:
+    """Return all user summaries for support and administrator views."""
 
     return await users.list()
 

@@ -15,9 +15,9 @@ class OperationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
     kind: OperationKind
-    app_id: int | None = None
+    app_id: str | None = None
     step: str
     status: str
     error: str | None = None

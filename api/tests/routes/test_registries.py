@@ -34,9 +34,9 @@ async def test_operations_endpoint_returns_recorded_operations(
     # Arrange
     client = clients[0]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id)
-    app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
-    await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
+    organization = await db.orgs.create("acme", location.id)
+    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    operation = await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
 
     # Act
     response = client.get("/api/operations")
@@ -45,7 +45,7 @@ async def test_operations_endpoint_returns_recorded_operations(
     assert response.status_code == 200
     assert response.json() == [
         {
-            "id": 1,
+            "id": operation.id,
             "kind": "app.create",
             "app_id": app.id,
             "step": "verify",
@@ -65,6 +65,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
 
     # Arrange
     client = clients[0]
+    location = await db.locations.create("local", "Local testing")
 
     # Act
     create_response = client.post(
@@ -76,38 +77,39 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             "port": 5432,
             "username": "longlink",
             "password": "secret",
-            "location_id": 1,
+            "location_id": location.id,
         },
     )
     list_response = client.get("/api/database")
-    delete_response = client.delete("/api/database/primary")
+    registry_id = create_response.json()["id"]
+    delete_response = client.delete(f"/api/database/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
     assert create_response.json() == DatabaseRegistryResponse(
-        id=1,
+        id=registry_id,
         kind=DatabaseKind.postgre,
         name="primary",
         host="db.longlink.internal",
         port=5432,
         username="longlink",
-        location_id=1,
+        location_id=location.id,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
         DatabaseRegistryResponse(
-            id=1,
+            id=registry_id,
             kind=DatabaseKind.postgre,
             name="primary",
             host="db.longlink.internal",
             port=5432,
             username="longlink",
-            location_id=1,
+            location_id=location.id,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
 
-    deleted_response = client.get("/api/database/primary")
+    deleted_response = client.get(f"/api/database/{registry_id}")
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
     assert deleted_response.json()["deleted_by"] is not None
@@ -120,6 +122,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
 
     # Arrange
     client = clients[0]
+    location = await db.locations.create("local", "Local testing")
 
     # Act
     create_response = client.post(
@@ -131,33 +134,34 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
-            "location_id": 1,
+            "location_id": location.id,
         },
     )
     list_response = client.get("/api/storage")
-    delete_response = client.delete("/api/storage/object-store")
+    registry_id = create_response.json()["id"]
+    delete_response = client.delete(f"/api/storage/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
     assert create_response.json() == StorageRegistryResponse(
-        id=1,
+        id=registry_id,
         kind=StorageKind.s3,
         name="object-store",
         protocol="s3",
         endpoint_url="https://storage.longlink.internal",
         access_key_id="access-key",
-        location_id=1,
+        location_id=location.id,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
         StorageRegistryResponse(
-            id=1,
+            id=registry_id,
             kind=StorageKind.s3,
             name="object-store",
             protocol="s3",
             endpoint_url="https://storage.longlink.internal",
             access_key_id="access-key",
-            location_id=1,
+            location_id=location.id,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
@@ -171,6 +175,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
 
     # Arrange
     client = clients[0]
+    location = await db.locations.create("local", "Local testing")
     captured: dict[str, object] = {}
 
     class FakeCompute:
@@ -193,31 +198,32 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             "kind": "kubernetes",
             "kubeconfig": "apiVersion: v1\nclusters: []\n",
             "ingress_host": "apps.longlink.internal",
-            "location_id": 1,
+            "location_id": location.id,
         },
     )
     list_response = client.get("/api/compute")
-    delete_response = client.delete("/api/compute/1")
+    registry_id = create_response.json()["id"]
+    delete_response = client.delete(f"/api/compute/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
     assert create_response.json() == ComputeRegistryResponse(
-        id=1,
+        id=registry_id,
         kind=ComputeKind.kubernetes,
         ingress_host="apps.longlink.internal",
-        location_id=1,
+        location_id=location.id,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
         ComputeRegistryResponse(
-            id=1,
+            id=registry_id,
             kind=ComputeKind.kubernetes,
             ingress_host="apps.longlink.internal",
-            location_id=1,
+            location_id=location.id,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
-    deleted_response = client.get("/api/compute/1")
+    deleted_response = client.get(f"/api/compute/{registry_id}")
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
     assert deleted_response.json()["deleted_by"] is not None

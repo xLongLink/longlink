@@ -35,7 +35,8 @@ class AppCreate(BaseModel):
 class AppResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
+    organization_id: str
     organization: str
     name: str
     slug: str

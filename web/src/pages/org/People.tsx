@@ -34,14 +34,14 @@ const peopleColumns: Array<ColumnDef<ApiUserSummary>> = [
                         <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 space-y-0.5">
-                        <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-foreground">{user.name}</p>
-                            {user.admin ? (
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-foreground">{user.name}</p>
+                            {user.role !== 'user' ? (
                                 <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Admin
+                                    {user.role}
                                 </span>
                             ) : null}
-                        </div>
+                            </div>
                         <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                     </div>
                 </div>
@@ -55,10 +55,9 @@ const peopleColumns: Array<ColumnDef<ApiUserSummary>> = [
         meta: { className: 'w-24' },
     },
     {
-        accessorKey: 'admin',
-        header: 'Admin',
-        cell: ({ getValue }) => (getValue<boolean>() ? 'Yes' : 'No'),
-        meta: { className: 'w-24' },
+        accessorKey: 'role',
+        header: 'Role',
+        meta: { className: 'w-32' },
     },
 ];
 

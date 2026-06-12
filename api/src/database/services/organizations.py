@@ -12,6 +12,7 @@ from src.database.models.compute import ComputeRegistry
 from src.database.models.database import DatabaseRegistry
 from src.database.models.location import Location
 from src.database.models.association import UserOrganization
+from src.database.models.association import UserApp
 
 
 class OrgsService(ServiceBase):
@@ -29,12 +30,13 @@ class OrgsService(ServiceBase):
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def get(self, name: str) -> Org | None:
-        """Return one org by name."""
+    async def get(self, org_id: str) -> Org | None:
+        """Return one org by id."""
 
         async with self.session() as session:
             statement = select(Org).options(
                 selectinload(Org.users),
+                selectinload(Org.apps).selectinload(App.organization_rel),
                 selectinload(Org.apps).selectinload(App.created_by),
                 selectinload(Org.apps).selectinload(App.updated_by),
                 selectinload(Org.apps).selectinload(App.deleted_by),
@@ -47,14 +49,14 @@ class OrgsService(ServiceBase):
                 selectinload(Org.location).selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
                 selectinload(Org.location).selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
                 selectinload(Org.location).selectinload(Location.storage_registries),
-            ).where(Org.name == name)
+            ).where(Org.id == org_id)
             result = await session.execute(statement)
             org = result.scalar_one_or_none()
             if org is not None:
                 org.apps = [app for app in org.apps if app.deleted_at is None]
             return org
 
-    async def create(self, name: str, location_id: int, user: User | None = None, avatar: str | None = None) -> Org:
+    async def create(self, name: str, location_id: str, user: User | None = None, avatar: str | None = None) -> Org:
         """Create an org."""
 
         async with self.session() as session:
@@ -66,7 +68,7 @@ class OrgsService(ServiceBase):
                 session.add(
                     UserOrganization(
                         user_id=user.id,
-                        organization_name=organization.name,
+                        organization_id=organization.id,
                         role_name=Roles.owner,
                     )
                 )
@@ -84,21 +86,23 @@ class OrgsService(ServiceBase):
                 selectinload(Org.created_by),
                 selectinload(Org.updated_by),
                 selectinload(Org.deleted_by),
-            ).where(Org.name == name)
+            ).where(Org.id == organization.id)
             result = await session.execute(statement)
             return result.scalar_one()
 
-    async def delete(self, name: str) -> Org | None:
-        """Delete one org by name."""
+    async def delete(self, org_id: str) -> Org | None:
+        """Delete one org by id."""
 
         async with self.session() as session:
-            result = await session.execute(select(Org).where(Org.name == name))
+            result = await session.execute(select(Org).where(Org.id == org_id))
             organization = result.scalar_one_or_none()
             if organization is None:
                 return None
 
             # Remove the org apps first because apps are stored in a separate table.
-            await session.execute(delete(App).where(App.organization == name))
+            await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == org_id))
+            await session.execute(delete(UserApp).where(UserApp.organization_id == org_id))
+            await session.execute(delete(App).where(App.organization_id == org_id))
             await session.delete(organization)
             await session.commit()
             return organization

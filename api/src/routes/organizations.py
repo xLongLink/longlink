@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from src.auth import authuser, authadmin
+from src.auth import authuser, authadmin, authsupport
 from src.logger import logger
 from src.router import router
 from src.models.organizations import OrgCreate, OrgDetails, OrgSummary
@@ -10,27 +10,27 @@ from src.database.services.organizations import orgs
 
 
 @router.get("/api/orgs", response_model=list[OrgSummary])
-async def list_organizations(_user: User = Depends(authadmin)) -> list[OrgSummary]:
-    """Return all organizations for admin views."""
+async def list_organizations(_user: User = Depends(authsupport)) -> list[OrgSummary]:
+    """Return all organizations for support and administrator views."""
 
     return await orgs.list()
 
 
-@router.get("/api/orgs/{name}", response_model=OrgDetails)
+@router.get("/api/orgs/{org_id}", response_model=OrgDetails)
 async def get_organization(
-    name: str,
+    org_id: str,
     user: User = Depends(authuser),
 ) -> OrgDetails:
     """Return one organization and its metadata."""
 
     # Deny access early when the org does not exist.
-    organization = await orgs.get(name)
+    organization = await orgs.get(org_id)
     if organization is None:
-        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
 
     # Keep organization reads scoped to the caller's memberships.
-    if not any(org.name == name for org in user.orgs):
-        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
+    if not any(org.id == org_id for org in user.orgs):
+        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
 
     return organization
 
@@ -53,23 +53,23 @@ async def create_organization(
     # namespace will be created lazily when the first app is deployed.
     registries = [r for r in await compute.list() if r.deleted_at is None and r.location_id == payload.location_id]
     if registries:
-        registry = max(registries, key=lambda r: r.id)
+        registry = max(registries, key=lambda r: r.created_at)
         k8s = K8s(registry.kubeconfig, registry.proxy_secret)
         try:
-            await k8s.namespace(payload.name)
+            await k8s.namespace(organization.id)
         except Exception:
-            logger.exception("Failed to create namespace for org '%s'", payload.name)
+            logger.exception("Failed to create namespace for org '%s'", organization.id)
 
     return organization
 
 
-@router.delete("/api/orgs/{name}", status_code=204)
-async def delete_organization(name: str, user: User = Depends(authuser)) -> None:
-    """Delete one org by name."""
+@router.delete("/api/orgs/{org_id}", status_code=204)
+async def delete_organization(org_id: str, user: User = Depends(authuser)) -> None:
+    """Delete one org by id."""
 
     # Only members can delete their own org.
-    if not any(org.name == name for org in user.orgs):
-        raise HTTPException(status_code=404, detail=f"Org '{name}' not found")
+    if not any(org.id == org_id for org in user.orgs):
+        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
 
-    await orgs.delete(name)
+    await orgs.delete(org_id)
     return

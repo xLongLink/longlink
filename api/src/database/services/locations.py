@@ -26,7 +26,7 @@ class LocationsService(ServiceBase):
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, location_id: int) -> Location | None:
+    async def get(self, location_id: str) -> Location | None:
         """Return one location by id."""
 
         async with self.session() as session:
@@ -70,7 +70,7 @@ class LocationsService(ServiceBase):
             )
             return result.scalar_one()
 
-    async def delete(self, location_id: int) -> Location | None:
+    async def delete(self, location_id: str) -> Location | None:
         """Delete one location."""
 
         async with self.session() as session:

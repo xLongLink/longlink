@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
-from src.models.roles import Roles
+from src.models.roles import Roles, PlatformRole
 
 
 class Theme(str, Enum):
@@ -82,6 +82,7 @@ class UserUpdate(BaseModel):
 class UserOrgMembership(BaseModel):
     """Represent one organization membership in the user profile."""
 
+    id: str
     name: str
     role: Roles
 
@@ -91,10 +92,11 @@ class UserSummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
     name: str
     email: EmailStr
     avatar: str | None = None
+    role: PlatformRole
     admin: bool = False
 
 
@@ -107,10 +109,11 @@ class UserListItem(UserSummary):
 class UserProfile(BaseModel):
     """Represent the authenticated user payload returned by the API."""
 
-    id: int
+    id: str
     name: str
     email: EmailStr
     avatar: str | None = None
+    role: PlatformRole
     admin: bool = False
     theme: Theme
     accent: Accent

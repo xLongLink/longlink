@@ -36,7 +36,7 @@ proxy_router = APIRouter(route_class=ProxyRoute)
 
 
 @router.head("/api/apps/{app_id}/proxy")
-async def reject_proxy_head(app_id: int) -> None:
+async def reject_proxy_head(app_id: str) -> None:
     """Reject HEAD requests on the application proxy."""
 
     raise HTTPException(status_code=405, detail="Method not allowed")
@@ -50,7 +50,7 @@ async def reject_proxy_head(app_id: int) -> None:
     "/api/apps/{app_id}/proxy/{path:path}",
     methods=["DELETE", "GET", "PATCH", "POST"],
 )
-async def proxy_app_request(app_id: int, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
+async def proxy_app_request(app_id: str, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
     """Proxy one request into the deployed application service."""
 
     # Load the app first so routing never depends on the caller-supplied path alone.
@@ -58,16 +58,20 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if app is None:
         raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
 
-    org = next((org for org in user.orgs if org.name == app.organization), None)
+    org = next((org for org in user.orgs if org.id == app.organization_id), None)
     if org is None:
-        raise HTTPException(status_code=404, detail=f"Org '{app.organization}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{app.organization_id}' not found")
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     # Prefer the newest registry for the location so the live cluster stays in sync.
-    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
+    registry = max(
+        (registry for registry in registries if registry.location_id == org.location_id),
+        key=lambda item: item.created_at,
+        default=None,
+    )
     if registry is None:
         raise HTTPException(
             status_code=503,
@@ -78,7 +82,7 @@ async def proxy_app_request(app_id: int, request: Request, path: str = "", user:
     if upstream_path == "":
         raise HTTPException(status_code=404, detail="Proxy root path is not available")
 
-    namespace = k8name(knames(app.organization, "Org"))
+    namespace = k8name(knames(app.organization_id, "Org"))
     name = knames(app.slug, "Application name")
     # Strip hop-by-hop headers before forwarding the request upstream.
     forward_headers = {

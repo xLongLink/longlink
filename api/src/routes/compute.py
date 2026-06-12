@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from src.auth import authadmin
+from src.auth import authadmin, authsupport
 from src.router import router
 from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse, ComputeResourcesResponse, NamespaceResponse, PodResponse
 from src.adapters.compute import K8s
@@ -8,7 +8,7 @@ from src.database.services.compute import compute
 
 
 @router.get("/api/compute", response_model=list[ComputeRegistryResponse])
-async def list_compute_registries(_user: User = Depends(authadmin)) -> list[ComputeRegistryResponse]:
+async def list_compute_registries(_user: User = Depends(authsupport)) -> list[ComputeRegistryResponse]:
     """Return all registered compute backends."""
 
     return await compute.list()
@@ -16,8 +16,8 @@ async def list_compute_registries(_user: User = Depends(authadmin)) -> list[Comp
 
 @router.get("/api/compute/{registry_id}", response_model=ComputeRegistryResponse)
 async def get_compute_registry(
-    registry_id: int,
-    _user: User = Depends(authadmin),
+    registry_id: str,
+    _user: User = Depends(authsupport),
 ) -> ComputeRegistryResponse:
     """Return one compute backend registration."""
 
@@ -31,7 +31,7 @@ async def get_compute_registry(
 @router.post("/api/compute", response_model=ComputeRegistryResponse)
 async def create_compute_registry(
     payload: ComputeRegistryCreate,
-    _user: User = Depends(authadmin),
+    _user: User = Depends(authsupport),
 ) -> ComputeRegistryResponse:
     """Create one compute backend registration."""
 
@@ -53,7 +53,7 @@ async def create_compute_registry(
 
 
 @router.delete("/api/compute/{registry_id}", status_code=204)
-async def delete_compute_registry(registry_id: int, user: User = Depends(authadmin)) -> None:
+async def delete_compute_registry(registry_id: str, user: User = Depends(authadmin)) -> None:
     """Mark one compute backend registration as deleted."""
 
     registry = await compute.delete(registry_id, user.id)
@@ -65,8 +65,8 @@ async def delete_compute_registry(registry_id: int, user: User = Depends(authadm
 
 @router.get("/api/compute/{registry_id}/resources", response_model=ComputeResourcesResponse)
 async def get_compute_resources(
-    registry_id: int,
-    _user: User = Depends(authadmin),
+    registry_id: str,
+    _user: User = Depends(authsupport),
 ) -> ComputeResourcesResponse:
     """Return total and allocatable cluster resources."""
 
@@ -81,8 +81,8 @@ async def get_compute_resources(
 
 @router.get("/api/compute/{registry_id}/namespaces", response_model=list[NamespaceResponse])
 async def list_compute_namespaces(
-    registry_id: int,
-    _user: User = Depends(authadmin),
+    registry_id: str,
+    _user: User = Depends(authsupport),
 ) -> list[NamespaceResponse]:
     """List all namespaces on a compute backend."""
 
@@ -100,9 +100,9 @@ async def list_compute_namespaces(
     response_model=list[PodResponse],
 )
 async def list_namespace_pods(
-    registry_id: int,
+    registry_id: str,
     namespace_name: str,
-    _user: User = Depends(authadmin),
+    _user: User = Depends(authsupport),
 ) -> list[PodResponse]:
     """List all pods in a namespace on a compute backend."""
 

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, String, text
 from sqlmodel import Field, Relationship
-from src.database.models.__base__ import Base
+from src.database.models.__base__ import Base, new_id
 from src.models.countries import Country
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ class Location(Base, table=True):
 
     __tablename__ = 'locations'
 
-    id: int = Field(default=None, primary_key=True)
+    id: str = Field(default_factory=new_id, primary_key=True, max_length=12)
     name: str = Field(max_length=255)
     slug: str = Field(unique=True, max_length=128)
     country: Country | None = Field(default=None, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False))

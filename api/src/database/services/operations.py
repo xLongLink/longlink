@@ -14,12 +14,12 @@ class OperationsService(ServiceBase):
         """Return all operations ordered by newest first."""
 
         async with self.session() as session:
-            statement = select(Operation).order_by(Operation.created_at.desc(), Operation.id.desc())
+            statement = select(Operation).order_by(Operation.created_at.desc())
             result = await session.execute(statement)
             return result.scalars().all()
 
 
-    async def get(self, operation_id: int) -> Operation | None:
+    async def get(self, operation_id: str) -> Operation | None:
         """Return one operation by id."""
 
         async with self.session() as session:
@@ -46,7 +46,7 @@ class OperationsService(ServiceBase):
         self,
         kind: OperationKind,
         step: str,
-        app_id: int | None = None,
+        app_id: str | None = None,
     ) -> Operation:
         """Create one operation record."""
 
@@ -58,7 +58,7 @@ class OperationsService(ServiceBase):
             return operation
 
 
-    async def claim(self, operation_id: int) -> Operation | None:
+    async def claim(self, operation_id: str) -> Operation | None:
         """Mark one scheduled operation as active if it has not started yet."""
 
         async with self.session() as session:
@@ -77,7 +77,7 @@ class OperationsService(ServiceBase):
             return refreshed.scalar_one_or_none()
 
 
-    async def defer(self, operation_id: int) -> Operation | None:
+    async def defer(self, operation_id: str) -> Operation | None:
         """Make one active operation claimable later without changing its step."""
 
         async with self.session() as session:
@@ -104,7 +104,7 @@ class OperationsService(ServiceBase):
             statement = (
                 select(Operation)
                 .where(Operation.started_at.is_(None), Operation.stopped_at.is_(None))
-                .order_by(Operation.created_at.asc(), Operation.id.asc())
+                .order_by(Operation.created_at.asc())
                 .limit(1)
                 .with_for_update(skip_locked=True)
             )
@@ -119,7 +119,7 @@ class OperationsService(ServiceBase):
             return operation
 
 
-    async def complete(self, operation_id: int) -> Operation | None:
+    async def complete(self, operation_id: str) -> Operation | None:
         """Mark one active operation as completed."""
 
         async with self.session() as session:
@@ -142,7 +142,7 @@ class OperationsService(ServiceBase):
             return refreshed.scalar_one_or_none()
 
 
-    async def fail(self, operation_id: int, error: str) -> Operation | None:
+    async def fail(self, operation_id: str, error: str) -> Operation | None:
         """Mark one active operation as failed and capture the error message."""
 
         async with self.session() as session:

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 type LogsDialogProps = {
     org: string;
-    appId: number;
+    appId: string;
     appName: string;
 };
 
@@ -32,7 +32,7 @@ export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
         void (async () => {
             try {
                 const text = await fetchApiText(
-                    apiUrl(`/api/apps/${appId}/logs?organization=${encodeURIComponent(org)}`),
+                    apiUrl(`/api/apps/${appId}/logs?organization_id=${encodeURIComponent(org)}`),
                     {
                         credentials: 'include',
                     }

@@ -6,7 +6,7 @@ import { Outlet } from 'react-router';
 /** Renders the admin shell with tabbed navigation. */
 export default function Admin() {
     return (
-        <Auth admin>
+        <Auth requiredRole="support">
             <Layout
                 tabs={{
                     Users: { href: '/admin/users', icon: Users },

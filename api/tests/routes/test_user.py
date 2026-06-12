@@ -68,7 +68,10 @@ async def test_list_users_returns_admin_user_summaries(
     # Assert
     assert response.status_code == 200
 
-    expected_payload = [UserListItem.model_validate(user.model_dump()).model_dump(mode="json") for user in users]
+    expected_payload = [
+        UserListItem.model_validate({**user.model_dump(), "admin": user.admin}).model_dump(mode="json")
+        for user in users
+    ]
     assert response.json() == expected_payload
 
 

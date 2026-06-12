@@ -11,7 +11,7 @@ class StorageRegistryCreate(BaseModel):
     endpoint_url: str
     access_key_id: str
     secret_access_key: str
-    location_id: int
+    location_id: str
 
 
 class StorageRegistryResponse(BaseModel):
@@ -19,10 +19,10 @@ class StorageRegistryResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
     kind: StorageKind
     name: str
     protocol: str
     endpoint_url: str
     access_key_id: str
-    location_id: int
+    location_id: str

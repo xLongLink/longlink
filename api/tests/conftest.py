@@ -22,6 +22,7 @@ from main import app
 from src.env import env
 from src.database.models.users import User
 from src.database.models.__base__ import Base
+from src.models.roles import PlatformRole
 
 SESSION_COOKIE = "longlink_session"
 
@@ -66,7 +67,12 @@ async def users() -> tuple[User, User, User]:
 
     Session = await session.get_session()
     async with Session() as db_session:
-        user1 = User(name='user1', email='user1@example.com', oidc_subject='oidc-user-1', admin=True)
+        user1 = User(
+            name='user1',
+            email='user1@example.com',
+            oidc_subject='oidc-user-1',
+            role=PlatformRole.administrator,
+        )
         user2 = User(name='user2', email='user2@example.com', oidc_subject='oidc-user-2')
         user3 = User(name='user3', email='user3@example.com', oidc_subject='oidc-user-3')
 

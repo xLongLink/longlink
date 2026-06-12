@@ -16,7 +16,7 @@ const organizationColumns: Array<ColumnDef<ApiUserOrgMembership>> = [
         accessorKey: 'name',
         header: 'Name',
         cell: ({ row, getValue }) => (
-            <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
+            <Link to={`/orgs/${row.original.id}`} className="font-medium text-foreground hover:underline">
                 {getValue<string>()}
             </Link>
         ),

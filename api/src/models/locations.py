@@ -12,8 +12,9 @@ class LocationOrgSummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    id: str
     name: str
-    location_id: int
+    location_id: str
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None
@@ -35,7 +36,7 @@ class LocationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
     name: str
     slug: str
     country: Country

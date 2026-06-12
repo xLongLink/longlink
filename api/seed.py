@@ -83,7 +83,7 @@ async def main() -> None:
     await database.create(**LOCAL_DATABASE, location_id=location.id)
     await storage.create(**LOCAL_STORAGE, location_id=location.id)
     await compute.create(**LOCAL_COMPUTE, location_id=location.id)
-    await orgs.create(LOCAL_ORG, location.id)
+    organization_record = await orgs.create(LOCAL_ORG, location.id)
 
     # Backfill the seeded demo membership if the admin user already exists locally.
     Session = await get_session()
@@ -94,24 +94,20 @@ async def main() -> None:
             membership_result = await session.execute(
                 select(UserOrganization).where(
                     UserOrganization.user_id == seed_user.id,
-                    UserOrganization.organization_name == LOCAL_ORG,
+                    UserOrganization.organization_id == organization_record.id,
                 )
             )
             if membership_result.scalar_one_or_none() is None:
                 session.add(
                     UserOrganization(
                         user_id=seed_user.id,
-                        organization_name=LOCAL_ORG,
+                        organization_id=organization_record.id,
                         role_name=Roles.owner,
                     )
                 )
                 await session.commit()
 
     # Provision the demo app directly so the seed stays aligned with the endpoint flow.
-    organization_record = await orgs.get(LOCAL_ORG)
-    if organization_record is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Org '{LOCAL_ORG}' not found")
-
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     registry = max(
         (registry for registry in registries if registry.location_id == organization_record.location_id),
@@ -141,7 +137,7 @@ async def main() -> None:
     )
     app_slug = slugify(app_payload.name)
     app = await apps.create(
-        LOCAL_ORG,
+        organization_record.id,
         app_payload.name,
         app_slug,
         image=app_payload.image,
@@ -160,9 +156,9 @@ async def main() -> None:
     )
 
     try:
-        await k8s.namespace(LOCAL_ORG)
-        await db_client.schema(LOCAL_ORG, app_slug)
-        await k8s.application(LOCAL_ORG, app_slug, app_payload.image, APP_SERVICE_PORT, app_payload.envs)
+        await k8s.namespace(organization_record.id)
+        await db_client.schema(organization_record.id, app_slug)
+        await k8s.application(organization_record.id, app_slug, app_payload.image, APP_SERVICE_PORT, app_payload.envs)
     except Exception as exc:
         await apps.set_status(app.id, AppStatus.failed)
         raise

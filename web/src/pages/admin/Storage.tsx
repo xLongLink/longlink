@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import type { ApiStorageRegistry } from '@/lib/types';
 
@@ -37,8 +38,10 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry>> = [
 
 /** Renders the admin storage page. */
 export default function AdminStorage() {
+    const { role } = useUser();
     const queryClient = useQueryClient();
     const storageUrl = apiUrl('/api/storage');
+    const canManage = role === 'administrator';
 
     const deleteStorage = useMutation({
         mutationFn: async (name: string) => {
@@ -61,69 +64,71 @@ export default function AdminStorage() {
     });
 
     const storageRows = storageQuery.data ?? [];
-    const storageColumns = [
-        ...storageColumnsBase,
-        {
-            id: 'actions',
-            header: 'Action',
-            meta: { className: 'w-24 text-right' },
-            cell: ({ row }) => {
-                const storage = row.original;
+    const storageColumns = canManage
+        ? [
+              ...storageColumnsBase,
+              {
+                  id: 'actions',
+                  header: 'Action',
+                  meta: { className: 'w-24 text-right' },
+                  cell: ({ row }) => {
+                      const storage = row.original;
 
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        aria-label={`Open actions for ${storage.name}`}
-                                    />
-                                }
-                            >
-                                <MoreHorizontal className="size-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        void navigator.clipboard.writeText(storage.name);
-                                        toast.success('Storage name copied');
-                                    }}
-                                >
-                                    Copy name
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    variant="destructive"
-                                    onClick={async () => {
-                                        // Confirm the destructive action before deleting the storage registry.
-                                        if (!window.confirm(`Delete storage ${storage.name}?`)) {
-                                            return;
-                                        }
+                      return (
+                          <div className="flex justify-end">
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger
+                                      render={
+                                          <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon-sm"
+                                              aria-label={`Open actions for ${storage.name}`}
+                                          />
+                                      }
+                                  >
+                                      <MoreHorizontal className="size-4" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-44">
+                                      <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          onClick={() => {
+                                              void navigator.clipboard.writeText(storage.name);
+                                              toast.success('Storage name copied');
+                                          }}
+                                      >
+                                          Copy name
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          variant="destructive"
+                                          onClick={async () => {
+                                              // Confirm the destructive action before deleting the storage registry.
+                                              if (!window.confirm(`Delete storage ${storage.name}?`)) {
+                                                  return;
+                                              }
 
-                                        try {
-                                            await deleteStorage.mutateAsync(storage.name);
-                                        } catch (mutationError) {
-                                            toast.error(
-                                                mutationError instanceof Error
-                                                    ? mutationError.message
-                                                    : 'Failed to delete storage'
-                                            );
-                                        }
-                                    }}
-                                >
-                                    Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-        },
-    ] satisfies Array<ColumnDef<ApiStorageRegistry>>;
+                                              try {
+                                                  await deleteStorage.mutateAsync(storage.name);
+                                              } catch (mutationError) {
+                                                  toast.error(
+                                                      mutationError instanceof Error
+                                                          ? mutationError.message
+                                                          : 'Failed to delete storage'
+                                                  );
+                                              }
+                                          }}
+                                      >
+                                          Delete
+                                      </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                          </div>
+                      );
+                  },
+              },
+          ] satisfies Array<ColumnDef<ApiStorageRegistry>>
+        : storageColumnsBase;
 
     return (
         <div className="space-y-6">
@@ -136,7 +141,7 @@ export default function AdminStorage() {
                         </HeroDescription>
                     </div>
                 </Hero>
-                <ConnectStorageDialog />
+                {canManage ? <ConnectStorageDialog /> : null}
             </div>
             <DataTable
                 columns={storageColumns}

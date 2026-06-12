@@ -74,7 +74,7 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("test", location.id)
+    organization = await db.orgs.create("test", location.id)
 
     # Act
     await db.users.upsert(
@@ -87,7 +87,7 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
 
     # Assert
     assert profile is not None
-    assert profile.orgs == [UserOrgMembership(name="test", role=Roles.owner)]
+    assert profile.orgs == [UserOrgMembership(id=organization.id, name="test", role=Roles.owner)]
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:

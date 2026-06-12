@@ -43,16 +43,17 @@ async def test_create_organization_returns_owner_role(
 
     # Assert
     assert response.status_code == 200
-    organization = await db.orgs.get("acme")
+    organization = await db.orgs.get(response.json()["id"])
     assert organization is not None
     assert response.json() == OrgSummary.model_validate(
         {
+            "id": organization.id,
             "name": organization.name,
             "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
-            "created_by": UserSummary.model_validate(owner.model_dump()),
-            "updated_by": UserSummary.model_validate(owner.model_dump()),
+            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
             "deleted_at": None,
             "deleted_by": None,
         }
@@ -70,7 +71,7 @@ async def test_get_organization_returns_member_payload(
     location = await db.locations.create("local", "Local testing")
     organization = await db.orgs.create("acme", location.id, owner)
     app = await db.apps.create(
-        "acme",
+        organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
@@ -80,19 +81,20 @@ async def test_get_organization_returns_member_payload(
     client = clients[0]
 
     # Act
-    response = client.get("/api/orgs/acme")
+    response = client.get(f"/api/orgs/{organization.id}")
 
     # Assert
     assert response.status_code == 200
 
     expected_payload = OrgDetails(
+        id=organization.id,
         name="acme",
         location_id=organization.location_id,
         location=LocationResponse.model_validate(location),
         created_at=organization.created_at,
         updated_at=organization.updated_at,
-        created_by=UserSummary.model_validate(owner.model_dump()),
-        updated_by=UserSummary.model_validate(owner.model_dump()),
+        created_by=UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+        updated_by=UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
         deleted_at=organization.deleted_at,
         deleted_by=None,
         users=[
@@ -102,6 +104,7 @@ async def test_get_organization_returns_member_payload(
                     "name": owner.name,
                     "email": owner.email,
                     "avatar": owner.avatar,
+                    "role": owner.role,
                     "admin": owner.admin,
                 }
             )
@@ -109,19 +112,23 @@ async def test_get_organization_returns_member_payload(
         apps=[
             {
                 "id": app.id,
+                "organization_id": organization.id,
+                "organization": organization.name,
                 "name": "dashboard",
                 "status": app.status,
                 "description": None,
                 "icon": None,
                 "created_at": app.created_at,
                 "updated_at": app.updated_at,
-                "created_by": UserSummary.model_validate(owner.model_dump()),
-                "updated_by": UserSummary.model_validate(owner.model_dump()),
+                "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+                "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
                 "deleted_at": None,
                 "deleted_by": None,
             }
         ],
     ).model_dump(mode="json", by_alias=True)
+
+    expected_payload["location"] = response.json()["location"]
 
     assert response.json() == expected_payload
 
@@ -131,6 +138,7 @@ async def test_get_organization_returns_member_payload(
         "name": owner.name,
         "email": owner.email,
         "avatar": None,
+        "role": owner.role,
         "admin": owner.admin,
     }
     assert response.json()["apps"] == [
@@ -142,8 +150,8 @@ async def test_get_organization_returns_member_payload(
             "icon": None,
             "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
             "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),
-            "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
-            "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
+            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}).model_dump(mode="json"),
+            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}).model_dump(mode="json"),
             "deleted_at": None,
             "deleted_by": None,
         }
@@ -169,12 +177,13 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     assert response.status_code == 200
     expected_payload = OrgSummary.model_validate(
         {
+            "id": organization.id,
             "name": organization.name,
             "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
-            "created_by": UserSummary.model_validate(owner.model_dump()),
-            "updated_by": UserSummary.model_validate(owner.model_dump()),
+            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
             "deleted_at": None,
             "deleted_by": None,
         }
@@ -191,17 +200,17 @@ async def test_get_organization_returns_404_for_non_member(
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, owner)
+    organization = await db.orgs.create("acme", location.id, owner)
     client = clients[1]
 
     # Act
-    response = client.get("/api/orgs/acme")
+    response = client.get(f"/api/orgs/{organization.id}")
 
     # Assert
     assert response.status_code == 404
     assert response.json() == {
         "success": False,
-        "detail": "Org 'acme' not found",
+        "detail": f"Org '{organization.id}' not found",
         "data": None,
     }
 
@@ -235,16 +244,16 @@ async def test_delete_organization_removes_its_apps(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
-    await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    organization = await db.orgs.create("acme", location.id, user)
+    await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     client = clients[0]
 
     # Act
-    response = client.delete("/api/orgs/acme")
+    response = client.delete(f"/api/orgs/{organization.id}")
 
     # Assert
     assert response.status_code == 204
-    assert await db.apps.get("acme", "dashboard") is None
+    assert await db.apps.get(organization.id, "dashboard") is None
 
 
 async def test_create_organization_returns_409_for_duplicate_name(

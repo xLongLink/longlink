@@ -14,19 +14,21 @@ from src.database.services.database import database
 from src.database.services.operations import operations
 from src.database.services.applications import apps
 from src.database.services.organizations import orgs
+from src.models.roles import PlatformRole
 
 
 @router.get("/api/apps", response_model=list[AppResponse])
-async def list_apps(organization: str | None = None, user: User = Depends(authuser)) -> list[AppResponse]:
+async def list_apps(organization_id: str | None = None, user: User = Depends(authuser)) -> list[AppResponse]:
     """Return organization apps, or all apps for admin views."""
 
-    if organization is None:
-        if not user.admin:
-            raise HTTPException(status_code=403, detail="Admin privileges required")
+    if organization_id is None:
+        if user.role == PlatformRole.user:
+            raise HTTPException(status_code=403, detail="Administrator privileges required")
 
         return [
             {
                 **app.model_dump(),
+                "organization": app.organization,
                 "created_by": app.created_by or user,
                 "updated_by": app.updated_by or app.created_by or user,
                 "deleted_by": app.deleted_by,
@@ -35,46 +37,65 @@ async def list_apps(organization: str | None = None, user: User = Depends(authus
             for app in await apps.list_all()
         ]
 
-    org = next((org for org in user.orgs if org.name == organization), None)
-    if org is None:
-        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+    organization_record = await orgs.get(organization_id)
+    if organization_record is None:
+        raise HTTPException(status_code=404, detail=f"Org '{organization_id}' not found")
 
-    app_rows = await apps.list(organization, user.id)
-    app_payloads: list[dict[str, object]] = []
+    if user.role == PlatformRole.user:
+        org = next((org for org in user.orgs if org.id == organization_id), None)
+        if org is None:
+            raise HTTPException(status_code=404, detail=f"Org '{organization_id}' not found")
 
-    for app, role_name in app_rows:
-        app_payload = {
+        app_rows = await apps.list(organization_id, user.id)
+        app_payloads: list[dict[str, object]] = []
+
+        for app, role_name in app_rows:
+            app_payload = {
+                **app.model_dump(),
+                "organization": app.organization,
+                "created_by": app.created_by or user,
+                "updated_by": app.updated_by or app.created_by or user,
+                "deleted_by": app.deleted_by,
+                "role": role_name,
+            }
+            app_payloads.append(app_payload)
+
+        return app_payloads
+
+    return [
+        {
             **app.model_dump(),
+            "organization": app.organization,
             "created_by": app.created_by or user,
             "updated_by": app.updated_by or app.created_by or user,
             "deleted_by": app.deleted_by,
-            "role": role_name,
+            "role": None,
         }
-        app_payloads.append(app_payload)
-
-    return app_payloads
+        for app in await apps.list_all()
+        if app.organization_id == organization_id
+    ]
 
 
 @router.post("/api/apps", response_model=AppResponse)
 async def create_app(
-    organization: str,
+    organization_id: str,
     payload: AppCreate,
     user: User = Depends(authuser),
 ) -> AppResponse:
     """Register a new app in the database and deploy it on the compute cluster."""
 
     # Require membership in the target organization before creating the app.
-    org = next((org for org in user.orgs if org.name == organization), None)
+    org = next((org for org in user.orgs if org.id == organization_id), None)
     if org is None:
-        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{organization_id}' not found")
 
     app_slug = slugify(payload.name)
-    logger.info("Provisioning app %s/%s", organization, app_slug)
+    logger.info("Provisioning app %s/%s", organization_id, app_slug)
 
     # Resolve the organization location so provisioning uses the active registries.
-    organization_record = await orgs.get(organization)
+    organization_record = await orgs.get(organization_id)
     if organization_record is None:
-        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{organization_id}' not found")
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     if not registries:
@@ -86,7 +107,7 @@ async def create_app(
 
     registry = max(
         (registry for registry in registries if registry.location_id == organization_record.location_id),
-        key=lambda item: item.id,
+        key=lambda item: item.created_at,
         default=None,
     )
     if registry is None:
@@ -105,7 +126,7 @@ async def create_app(
     # Create the app row before provisioning external resources.
     try:
         app = await apps.create(
-            organization,
+            organization_id,
             payload.name,
             app_slug,
             image=payload.image,
@@ -127,9 +148,9 @@ async def create_app(
 
     # Provision the namespace, schema, and workload in order so failures can mark the app as failed.
     try:
-        await k8s.namespace(organization)
-        await db_client.schema(organization, app_slug)
-        await k8s.application(organization, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
+        await k8s.namespace(organization_id)
+        await db_client.schema(organization_id, app_slug)
+        await k8s.application(organization_id, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
     except HTTPException:
         await apps.set_status(app.id, AppStatus.failed)
         raise
@@ -141,18 +162,18 @@ async def create_app(
         operation = await operations.create(OperationKind.app_create, app_id=app.id, step="verify")
     except Exception as exc:
         await apps.set_status(app.id, AppStatus.failed)
-        logger.exception("Failed to queue app verification for %s/%s", organization, payload.name)
+        logger.exception("Failed to queue app verification for %s/%s", organization_id, payload.name)
         raise HTTPException(status_code=503, detail="Failed to queue app verification") from exc
 
-    logger.info("Queued app creation verification %s for %s/%s", operation.id, organization, payload.name)
+    logger.info("Queued app creation verification %s for %s/%s", operation.id, organization_id, payload.name)
 
     return app
 
 
 @router.delete("/api/apps/{app_id}", status_code=204)
 async def delete_app(
-    organization: str,
-    app_id: int,
+    organization_id: str,
+    app_id: str,
     _user: User = Depends(authadmin),
 ) -> None:
     """Queue app deletion and return immediately."""
@@ -162,10 +183,10 @@ async def delete_app(
     if app is None:
         raise HTTPException(status_code=404, detail="App not found")
 
-    if next((org for org in _user.orgs if org.name == organization), None) is None:
-        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+    if next((org for org in _user.orgs if org.id == organization_id), None) is None:
+        raise HTTPException(status_code=404, detail=f"Org '{organization_id}' not found")
 
-    if app.organization != organization:
+    if app.organization_id != organization_id:
         raise HTTPException(status_code=404, detail="App not found")
 
     await apps.set_status(app.id, AppStatus.deleting)
@@ -173,44 +194,48 @@ async def delete_app(
         await operations.create(OperationKind.app_delete, app_id=app.id, step="remove_runtime")
     except Exception as exc:
         await apps.set_status(app.id, app.status)
-        logger.exception("Failed to queue app deletion for %s/%s", organization, app.name)
+        logger.exception("Failed to queue app deletion for %s/%s", organization_id, app.name)
         raise HTTPException(status_code=503, detail="Failed to queue app deletion") from exc
 
     return
 
 
 @router.get("/api/apps/{app_id}/logs")
-async def get_app_logs(organization: str, app_id: int, user: User = Depends(authuser)) -> Response:
+async def get_app_logs(organization_id: str, app_id: str, user: User = Depends(authuser)) -> Response:
     """Return recent pod logs for one managed app."""
 
     # Validate the app and organization before connecting to the active cluster.
     app = await apps.get_by_id(app_id)
     if app is None:
         raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
-    if app.organization != organization:
+    if app.organization_id != organization_id:
         raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
 
-    org = next((org for org in user.orgs if org.name == organization), None)
-    if org is None:
-        raise HTTPException(status_code=404, detail=f"Org '{organization}' not found")
+    organization_record = await orgs.get(organization_id)
+    if organization_record is None:
+        raise HTTPException(status_code=404, detail=f"Org '{organization_id}' not found")
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     # Prefer the newest registry for the location so logs come from the active cluster.
-    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
+    registry = max(
+        (registry for registry in registries if registry.location_id == organization_record.location_id),
+        key=lambda item: item.created_at,
+        default=None,
+    )
     if registry is None:
         raise HTTPException(
             status_code=503,
-            detail=f"No compute cluster configured for location '{org.location_id}'",
+            detail=f"No compute cluster configured for location '{organization_record.location_id}'",
         )
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await k8s.logs(organization, app.slug)
+        logs = await k8s.logs(organization_id, app.slug)
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

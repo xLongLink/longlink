@@ -32,8 +32,8 @@ async def test_execute_app_create_operation_completes_running_app(monkeypatch) -
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
-    app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    organization = await db.orgs.create("acme", location.id, user)
+    app_record = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     operation = await db.operations.create(OperationKind.app_create, app_id=app_record.id, step="verify")
     calls: list[str] = []
 
@@ -73,8 +73,8 @@ async def test_execute_app_create_operation_marks_failed_when_dead(monkeypatch) 
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
-    app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    organization = await db.orgs.create("acme", location.id, user)
+    app_record = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     operation = await db.operations.create(OperationKind.app_create, app_id=app_record.id, step="verify")
     calls: list[str] = []
 
@@ -114,8 +114,8 @@ async def test_execute_app_create_operation_releases_when_not_ready(monkeypatch)
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
-    app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    organization = await db.orgs.create("acme", location.id, user)
+    app_record = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     operation = await db.operations.create(OperationKind.app_create, app_id=app_record.id, step="verify")
 
     async def fake_inspect_app_startup(operation) -> AppStartupState:
@@ -150,8 +150,8 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
-    app_record = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    organization = await db.orgs.create("acme", location.id, user)
+    app_record = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig="apiVersion: v1\nclusters: []\n",
@@ -178,8 +178,8 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
     await execute(claimed)
 
     # Assert
-    assert calls == [{"organization": "acme", "application": "dashboard"}]
-    assert await db.apps.get("acme", "dashboard") is None
+    assert calls == [{"organization": organization.id, "application": "dashboard"}]
+    assert await db.apps.get(organization.id, "dashboard") is None
     refreshed = await db.operations.get(operation.id)
     assert refreshed is not None
     assert refreshed.status == "completed"

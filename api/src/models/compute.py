@@ -10,7 +10,7 @@ class ComputeRegistryCreate(BaseModel):
     kind: ComputeKind
     kubeconfig: str
     ingress_host: str
-    location_id: int
+    location_id: str
 
 
 class ComputeRegistryResponse(BaseModel):
@@ -18,10 +18,10 @@ class ComputeRegistryResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
     kind: ComputeKind
     ingress_host: str
-    location_id: int
+    location_id: str
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
 

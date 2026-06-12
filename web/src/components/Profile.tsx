@@ -24,6 +24,7 @@ export function UserProfile() {
     const username = user.name;
     const fullName = user.email;
     const avatarUrl = user.avatar;
+    const isPrivileged = user.role !== 'user';
     /**
      * Signs the current user out and redirects to home.
      */
@@ -50,6 +51,11 @@ export function UserProfile() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <p className="text-sm font-semibold text-foreground">{username}</p>
+                                {isPrivileged ? (
+                                    <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        {user.role}
+                                    </span>
+                                ) : null}
                             </div>
                             <p className="text-xs text-muted-foreground">{fullName}</p>
                         </div>
@@ -87,7 +93,7 @@ export function UserProfile() {
                         <ExternalLink className="ml-auto size-3.5 shrink-0" aria-hidden="true" />
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
-                {user.admin ? (
+                {isPrivileged ? (
                     <>
                         <DropdownMenuSeparator className="my-2" />
                         <DropdownMenuGroup>

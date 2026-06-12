@@ -1,23 +1,25 @@
-import type { Role } from '@/lib/roles';
+import type { PlatformRole, Role } from '@/lib/roles';
 import type { Accent, Radius, Theme } from '@/lib/theme';
 
 export type ApiInvitation = {
-    id: number;
+    id: string;
     email: string;
     role: string;
     created_at: string;
 };
 
 export type ApiUserSummary = {
-    id: number;
+    id: string;
     name: string;
     email: string;
     avatar: string;
+    role: PlatformRole;
     admin: boolean;
     oidc_subject: string | null;
 };
 
 export type ApiUserOrgMembership = {
+    id: string;
     name: string;
     role: Role;
 };
@@ -32,7 +34,7 @@ export type ApiUserProfile = ApiUserSummary & {
 };
 
 export type ApiOrgApp = {
-    id: number;
+    id: string;
     name: string;
     description: string | null;
     icon: string | null;
@@ -58,9 +60,10 @@ export type ApiImageMetadata = {
 };
 
 export type ApiOrgSummary = {
+    id: string;
     name: string;
     avatar: string | null;
-    location_id: number | null;
+    location_id: string | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary | null;
@@ -70,9 +73,10 @@ export type ApiOrgSummary = {
 };
 
 export type ApiOrgDetails = {
+    id: string;
     name: string;
     avatar: string | null;
-    location_id: number | null;
+    location_id: string | null;
     location: ApiLocation | null;
     created_at: string;
     updated_at: string;
@@ -86,7 +90,7 @@ export type ApiOrgDetails = {
 };
 
 export type ApiLocation = {
-    id: number;
+    id: string;
     name: string;
     slug: string;
     country: string;
@@ -106,31 +110,32 @@ export type ApiDatabaseSchema = {
 };
 
 export type ApiDatabaseRegistry = {
-    id: number;
+    id: string;
     kind: string;
     name: string;
     host: string;
     port: number;
     username: string;
+    location_id: string;
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
 };
 
 export type ApiStorageRegistry = {
-    id: number;
+    id: string;
     kind: string;
     name: string;
     protocol: string;
     endpoint_url: string;
     access_key_id: string;
-    location_id: number;
+    location_id: string;
 };
 
 export type ApiComputeRegistry = {
-    id: number;
+    id: string;
     kind: string;
     ingress_host: string;
-    location_id: number;
+    location_id: string;
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
 };
@@ -164,7 +169,8 @@ export type ApiComputePod = {
 };
 
 export type ApiAppResponse = {
-    id: number;
+    id: string;
+    organization_id: string;
     organization: string;
     name: string;
     slug: string;
@@ -182,9 +188,12 @@ export type ApiAppResponse = {
 };
 
 export type ApiOperation = {
-    id: number;
+    id: string;
     kind: string;
-    payload: Record<string, unknown>;
+    app_id: string | null;
+    step: string;
+    status: string;
+    error: string | null;
     created_at: string;
     started_at: string | null;
     stopped_at: string | null;

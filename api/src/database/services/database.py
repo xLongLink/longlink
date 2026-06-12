@@ -17,11 +17,11 @@ class DatabaseService(ServiceBase):
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, name: str) -> DatabaseRegistry | None:
-        """Return one database backend by name."""
+    async def get(self, registry_id: str) -> DatabaseRegistry | None:
+        """Return one database backend by id."""
 
         async with self.session() as session:
-            statement = select(DatabaseRegistry).options(selectinload(DatabaseRegistry.deleted_by)).where(DatabaseRegistry.name == name)
+            statement = select(DatabaseRegistry).options(selectinload(DatabaseRegistry.deleted_by)).where(DatabaseRegistry.id == registry_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -33,7 +33,7 @@ class DatabaseService(ServiceBase):
         port: int,
         username: str,
         password: str,
-        location_id: int,
+        location_id: str,
     ) -> DatabaseRegistry:
         """Create or update one database backend registration."""
 
@@ -73,11 +73,11 @@ class DatabaseService(ServiceBase):
             result = await session.execute(statement)
             return result.scalar_one()
 
-    async def delete(self, name: str, deleted_by_id: int | None = None) -> DatabaseRegistry | None:
+    async def delete(self, registry_id: str, deleted_by_id: str | None = None) -> DatabaseRegistry | None:
         """Mark one database backend registration as deleted."""
 
         async with self.session() as session:
-            statement = select(DatabaseRegistry).options(selectinload(DatabaseRegistry.deleted_by)).where(DatabaseRegistry.name == name)
+            statement = select(DatabaseRegistry).options(selectinload(DatabaseRegistry.deleted_by)).where(DatabaseRegistry.id == registry_id)
             result = await session.execute(statement)
             database = result.scalar_one_or_none()
             if database is None:
@@ -91,11 +91,11 @@ class DatabaseService(ServiceBase):
             return database
 
 
-    async def purge(self, name: str) -> DatabaseRegistry | None:
+    async def purge(self, registry_id: str) -> DatabaseRegistry | None:
         """Hard delete one database backend registration."""
 
         async with self.session() as session:
-            result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.name == name))
+            result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.id == registry_id))
             database = result.scalar_one_or_none()
             if database is None:
                 return None

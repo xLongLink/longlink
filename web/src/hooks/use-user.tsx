@@ -88,6 +88,7 @@ export function useUser() {
     return {
         user,
         orgs,
+        role: user?.role ?? 'user',
         theme:
             user?.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : (user?.theme ?? DEFAULT_USER_PREFERENCES.theme),
         accent: user?.accent ?? DEFAULT_USER_PREFERENCES.accent,

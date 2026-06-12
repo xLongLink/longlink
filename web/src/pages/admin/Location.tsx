@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import CreateLocationDialog from '@/components/dialogs/CreateLocationDialog';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
@@ -54,8 +55,10 @@ const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
 
 /** Renders the admin location page. */
 export default function AdminLocation() {
+    const { role } = useUser();
     const queryClient = useQueryClient();
     const locationUrl = apiUrl('/api/locations');
+    const canManage = role === 'administrator';
 
     const deleteLocation = useMutation({
         mutationFn: async (locationId: string) => {
@@ -78,69 +81,71 @@ export default function AdminLocation() {
     });
 
     const locationRows = locationQuery.data ?? [];
-    const locationColumns = [
-        ...locationColumnsBase,
-        {
-            id: 'actions',
-            header: 'Action',
-            meta: { className: 'w-24 text-right' },
-            cell: ({ row }) => {
-                const location = row.original;
-                const locationId = String(location.id);
+    const locationColumns = canManage
+        ? [
+              ...locationColumnsBase,
+              {
+                  id: 'actions',
+                  header: 'Action',
+                  meta: { className: 'w-24 text-right' },
+                  cell: ({ row }) => {
+                      const location = row.original;
+                      const locationId = String(location.id);
 
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        aria-label={`Open actions for location ${location.name}`}
-                                    />
-                                }
-                            >
-                                <MoreHorizontal className="size-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        void navigator.clipboard.writeText(locationId);
-                                        toast.success('Location ID copied');
-                                    }}
-                                >
-                                    Copy ID
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    variant="destructive"
-                                    onClick={async () => {
-                                        if (!window.confirm(`Delete location ${location.name}?`)) {
-                                            return;
-                                        }
+                      return (
+                          <div className="flex justify-end">
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger
+                                      render={
+                                          <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon-sm"
+                                              aria-label={`Open actions for location ${location.name}`}
+                                          />
+                                      }
+                                  >
+                                      <MoreHorizontal className="size-4" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-44">
+                                      <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          onClick={() => {
+                                              void navigator.clipboard.writeText(locationId);
+                                              toast.success('Location ID copied');
+                                          }}
+                                      >
+                                          Copy ID
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          variant="destructive"
+                                          onClick={async () => {
+                                              if (!window.confirm(`Delete location ${location.name}?`)) {
+                                                  return;
+                                              }
 
-                                        try {
-                                            await deleteLocation.mutateAsync(locationId);
-                                        } catch (mutationError) {
-                                            toast.error(
-                                                mutationError instanceof Error
-                                                    ? mutationError.message
-                                                    : 'Failed to delete location'
-                                            );
-                                        }
-                                    }}
-                                >
-                                    Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-        },
-    ] satisfies Array<ColumnDef<ApiLocation>>;
+                                              try {
+                                                  await deleteLocation.mutateAsync(locationId);
+                                              } catch (mutationError) {
+                                                  toast.error(
+                                                      mutationError instanceof Error
+                                                          ? mutationError.message
+                                                          : 'Failed to delete location'
+                                                  );
+                                              }
+                                          }}
+                                      >
+                                          Delete
+                                      </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                          </div>
+                      );
+                  },
+              },
+          ] satisfies Array<ColumnDef<ApiLocation>>
+        : locationColumnsBase;
 
     return (
         <div className="space-y-6">
@@ -153,7 +158,7 @@ export default function AdminLocation() {
                         </HeroDescription>
                     </div>
                 </Hero>
-                <CreateLocationDialog />
+                {canManage ? <CreateLocationDialog /> : null}
             </div>
             <DataTable
                 columns={locationColumns}

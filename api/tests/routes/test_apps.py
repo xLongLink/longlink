@@ -13,6 +13,7 @@ from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.association import UserApp
+from src.database.models.association import UserOrganization
 from src.database.services.locations import locations
 from src.database.services.operations import operations
 from src.database.services.applications import apps
@@ -37,42 +38,51 @@ async def test_list_apps_returns_app_membership_role(
     """Return the app-specific role instead of the organization role."""
 
     # Arrange
-    user = users[0]
+    owner = users[0]
+    user = users[1]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
+    organization = await db.orgs.create("acme", location.id, owner)
     app = await db.apps.create(
-        "acme",
+        organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
-        user=user,
+        user=owner,
     )
 
     Session = await get_session()
     async with Session() as session:
         session.add(
+            UserOrganization(
+                user_id=user.id,
+                organization_id=organization.id,
+                role_name=Roles.read,
+            )
+        )
+        session.add(
             UserApp(
                 user_id=user.id,
-                organization_name="acme",
-                app_name="dashboard",
+                organization_id=organization.id,
+                app_id=app.id,
                 role_name=Roles.write,
             )
         )
         await session.commit()
 
-    client = clients[0]
+    client = clients[1]
 
     # Act
-    response = client.get("/api/apps?organization=acme")
+    response = client.get(f"/api/apps?organization_id={organization.id}")
 
     # Assert
     assert response.status_code == 200
     expected_data = AppResponse.model_validate(
         {
             **app.model_dump(),
+            "organization": app.organization,
             "role": Roles.write,
-            "created_by": UserSummary.model_validate(user.model_dump()),
-            "updated_by": UserSummary.model_validate(user.model_dump()),
+            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
             "deleted_by": None,
         }
     ).model_dump(mode="json")
@@ -88,9 +98,9 @@ async def test_list_apps_returns_null_role_without_app_membership(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
+    organization = await db.orgs.create("acme", location.id, user)
     app = await db.apps.create(
-        "acme",
+        organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
@@ -99,16 +109,17 @@ async def test_list_apps_returns_null_role_without_app_membership(
     client = clients[0]
 
     # Act
-    response = client.get("/api/apps?organization=acme")
+    response = client.get(f"/api/apps?organization_id={organization.id}")
 
     # Assert
     assert response.status_code == 200
     expected_data = AppResponse.model_validate(
         {
             **app.model_dump(),
+            "organization": app.organization,
             "role": None,
-            "created_by": UserSummary.model_validate(user.model_dump()),
-            "updated_by": UserSummary.model_validate(user.model_dump()),
+            "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
+            "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
             "deleted_by": None,
         }
     ).model_dump(mode="json")
@@ -124,17 +135,17 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
-    await db.orgs.create("globex", location.id, user)
+    acme = await db.orgs.create("acme", location.id, user)
+    globex = await db.orgs.create("globex", location.id, user)
     dashboard = await db.apps.create(
-        "acme",
+        acme.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
     console = await db.apps.create(
-        "globex",
+        globex.id,
         "console",
         slug="console",
         image="ghcr.io/longlink/console:latest",
@@ -151,18 +162,20 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
         AppResponse.model_validate(
             {
                 **dashboard.model_dump(),
+                "organization": dashboard.organization,
                 "role": None,
-                "created_by": UserSummary.model_validate(user.model_dump()),
-                "updated_by": UserSummary.model_validate(user.model_dump()),
+                "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
+                "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
                 "deleted_by": None,
             }
         ).model_dump(mode="json"),
         AppResponse.model_validate(
             {
                 **console.model_dump(),
+                "organization": console.organization,
                 "role": None,
-                "created_by": UserSummary.model_validate(user.model_dump()),
-                "updated_by": UserSummary.model_validate(user.model_dump()),
+                "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
+                "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
                 "deleted_by": None,
             }
         ).model_dump(mode="json"),
@@ -185,7 +198,7 @@ async def test_list_apps_without_organization_requires_admin(
     assert response.status_code == 403
     assert response.json() == {
         "success": False,
-        "detail": "Admin privileges required",
+        "detail": "Administrator privileges required",
         "data": None,
     }
 
@@ -198,19 +211,20 @@ async def test_list_apps_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
+    user = users[1]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, owner)
-    await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    organization = await db.orgs.create("acme", location.id, owner)
+    await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     client = clients[1]
 
     # Act
-    response = client.get("/api/apps?organization=acme")
+    response = client.get(f"/api/apps?organization_id={organization.id}")
 
     # Assert
     assert response.status_code == 404
     assert response.json() == {
         "success": False,
-        "detail": "Org 'acme' not found",
+        "detail": f"Org '{organization.id}' not found",
         "data": None,
     }
 
@@ -226,7 +240,7 @@ async def test_create_app_returns_app_response(
     user = users[0]
     local_location = await db.locations.create("local", "Local testing")
     remote_location = await db.locations.create("remote", "Remote testing")
-    await db.orgs.create("acme", remote_location.id, user)
+    organization = await db.orgs.create("acme", remote_location.id, user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig="apiVersion: v1\nclusters: []\n",
@@ -316,7 +330,7 @@ async def test_create_app_returns_app_response(
 
     # Act
     response = client.post(
-        "/api/apps?organization=acme",
+        f"/api/apps?organization_id={organization.id}",
         json={
             "name": "dashboard",
             "image": "ghcr.io/longlink/dashboard:latest",
@@ -336,7 +350,7 @@ async def test_create_app_returns_app_response(
     assert payload["description"] == "Dashboard app"
     assert payload["deleted_by"] is None
     assert payload == expected_data
-    assert captured["namespace"] == "acme"
+    assert captured["namespace"] == organization.id
     assert captured["proxy_secret"]
     assert captured["database"] == {
         "host": "db.remote.longlink.internal",
@@ -344,9 +358,9 @@ async def test_create_app_returns_app_response(
         "username": "longlink",
         "password": "secret",
     }
-    assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
+    assert captured["schema"] == {"organization": organization.id, "application": "dashboard"}
     assert captured["application"] == {
-        "organization": "acme",
+        "organization": organization.id,
         "application": "dashboard",
         "image": "ghcr.io/longlink/dashboard:latest",
         "port": 80,
@@ -367,8 +381,8 @@ async def test_delete_app_removes_dependent_env_rows(
     user = users[0]
     local_location = await db.locations.create("local", "Local testing")
     remote_location = await db.locations.create("remote", "Remote testing")
-    await db.orgs.create("acme", local_location.id, user)
-    app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    organization = await db.orgs.create("acme", local_location.id, user)
+    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -422,11 +436,11 @@ async def test_delete_app_removes_dependent_env_rows(
     client = clients[0]
 
     # Act
-    response = client.delete(f"/api/apps/{app.id}?organization=acme")
+    response = client.delete(f"/api/apps/{app.id}?organization_id={organization.id}")
 
     # Assert
     assert response.status_code == 204
-    refreshed_app = await db.apps.get("acme", "dashboard")
+    refreshed_app = await db.apps.get(organization.id, "dashboard")
     assert refreshed_app is not None
     assert refreshed_app.status == "deleting"
     recorded_operation = (await db.operations.list())[0]
@@ -445,8 +459,8 @@ async def test_get_app_logs_returns_pod_logs(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
-    app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    organization = await db.orgs.create("acme", location.id, user)
+    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -493,13 +507,13 @@ async def test_get_app_logs_returns_pod_logs(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/apps/{app.id}/logs?organization=acme")
+    response = client.get(f"/api/apps/{app.id}/logs?organization_id={organization.id}")
 
     # Assert
     assert response.status_code == 200
     assert response.text == "line 1\nline 2"
     assert response.headers["content-type"].startswith("text/plain")
-    assert captured["logs"] == {"organization": "acme", "application": "dashboard", "lines": 200}
+    assert captured["logs"] == {"organization": organization.id, "application": "dashboard", "lines": 200}
 
 
 async def test_proxy_app_forwards_request_to_internal_service(
@@ -513,8 +527,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
     user = users[0]
     local_location = await db.locations.create("local", "Local testing")
     remote_location = await db.locations.create("remote", "Remote testing")
-    await db.orgs.create("acme", remote_location.id, user)
-    app = await db.apps.create("acme", "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest")
+    organization = await db.orgs.create("acme", remote_location.id, user)
+    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest")
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -623,7 +637,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert response.status_code == 200
     assert response.text == "proxied"
     assert captured["method"] == "POST"
-    assert captured["resource_path"] == "/api/v1/namespaces/longlink-acme/services/dashboard/proxy/anything"
+    assert captured["resource_path"] == f"/api/v1/namespaces/longlink-{organization.id}/services/dashboard/proxy/anything"
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
     assert captured["auth_settings"] == ["BearerToken"]

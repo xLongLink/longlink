@@ -195,11 +195,11 @@ function getRoutes() {
     ];
 }
 
-/** Resolves an organization app name to its proxy-backed XML view. */
+/** Resolves an organization app id to its proxy-backed XML view. */
 function OrgAppView() {
     const { org = '', app = '' } = useParams();
     const { org: organization, isLoading, error } = useOrg(org);
-    const orgApp = organization?.apps.find((item) => item.name === app);
+    const orgApp = organization?.apps.find((item) => item.id === app);
 
     if (isLoading) {
         // Keep the app chrome visible while the org payload resolves.

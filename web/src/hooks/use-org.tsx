@@ -69,7 +69,7 @@ export function useCreateOrg() {
     const userUrl = apiUrl('/api/me');
 
     return useMutation({
-        mutationFn: async ({ name, location_id }: { name: string; location_id: number }) => {
+        mutationFn: async ({ name, location_id }: { name: string; location_id: string }) => {
             return fetchApiJson<ApiOrgSummary>(orgsUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -89,8 +89,8 @@ export function useDeleteOrg() {
     const userUrl = apiUrl('/api/me');
 
     return useMutation({
-        mutationFn: async (orgName: string) => {
-            await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgName)}`), {
+        mutationFn: async (orgId: string) => {
+            await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgId)}`), {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -105,7 +105,7 @@ export function useDeleteOrg() {
 export function useCreateApp(org: string) {
     const queryClient = useQueryClient();
     const orgUrl = apiUrl(`/api/orgs/${org}`);
-    const appsUrl = apiUrl(`/api/apps?organization=${encodeURIComponent(org)}`);
+    const appsUrl = apiUrl(`/api/apps?organization_id=${encodeURIComponent(org)}`);
 
     return useMutation({
         mutationFn: async (payload: {
@@ -134,8 +134,8 @@ export function useDeleteApp(org: string) {
     const orgUrl = apiUrl(`/api/orgs/${org}`);
 
     return useMutation({
-        mutationFn: async (appId: number) => {
-            await fetchApiVoid(apiUrl(`/api/apps/${appId}?organization=${encodeURIComponent(org)}`), {
+        mutationFn: async (appId: string) => {
+            await fetchApiVoid(apiUrl(`/api/apps/${appId}?organization_id=${encodeURIComponent(org)}`), {
                 method: 'DELETE',
                 credentials: 'include',
             });

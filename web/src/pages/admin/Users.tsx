@@ -46,10 +46,10 @@ const userColumns: Array<ColumnDef<ApiUserSummary>> = [
         meta: { className: 'w-28 pl-1 text-left' },
     },
     {
-        accessorKey: 'admin',
-        header: 'Admin',
-        cell: ({ getValue }) => (getValue() ? 'Yes' : 'No'),
-        meta: { className: 'w-24' },
+        accessorKey: 'role',
+        header: 'Role',
+        cell: ({ getValue }) => <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">{getValue<string>()}</span>,
+        meta: { className: 'w-32' },
     },
     {
         id: 'actions',

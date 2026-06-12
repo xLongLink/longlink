@@ -13,7 +13,7 @@ class DatabaseRegistryCreate(BaseModel):
     port: int
     username: str
     password: str
-    location_id: int
+    location_id: str
 
 
 class DatabaseDatabaseResponse(BaseModel):
@@ -33,12 +33,12 @@ class DatabaseRegistryResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
     kind: DatabaseKind
     name: str
     host: str
     port: int
     username: str
-    location_id: int
+    location_id: str
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None

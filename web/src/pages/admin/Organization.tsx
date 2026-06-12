@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import type { ApiOrgSummary } from '@/lib/types';
 
@@ -21,7 +22,7 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrgSummary>> = [
             const name = getValue<string>();
 
             return (
-                <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                <Link to={`/orgs/${row.original.id}`} className="font-medium text-foreground hover:underline">
                     {name}
                 </Link>
             );
@@ -112,12 +113,14 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrgSummary>> = [
 
 /** Renders the admin organizations page. */
 export default function AdminOrganization() {
+    const { role } = useUser();
     const queryClient = useQueryClient();
     const organizationsUrl = apiUrl('/api/orgs');
+    const canManage = role === 'administrator';
 
     const deleteOrganization = useMutation({
-        mutationFn: async (name: string) => {
-            await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(name)}`), {
+        mutationFn: async (orgId: string) => {
+            await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgId)}`), {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -136,69 +139,71 @@ export default function AdminOrganization() {
     });
 
     const organizationRows = organizationsQuery.data ?? [];
-    const organizationColumns = [
-        ...organizationColumnsBase,
-        {
-            id: 'actions',
-            header: 'Action',
-            meta: { className: 'w-24 text-right' },
-            cell: ({ row }) => {
-                const organization = row.original;
+    const organizationColumns = canManage
+        ? [
+              ...organizationColumnsBase,
+              {
+                  id: 'actions',
+                  header: 'Action',
+                  meta: { className: 'w-24 text-right' },
+                  cell: ({ row }) => {
+                      const organization = row.original;
 
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        aria-label={`Open actions for ${organization.name}`}
-                                    />
-                                }
-                            >
-                                <MoreHorizontal className="size-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        void navigator.clipboard.writeText(organization.name);
-                                        toast.success('Organization name copied');
-                                    }}
-                                >
-                                    Copy name
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    variant="destructive"
-                                    onClick={async () => {
-                                        // Confirm the destructive action before deleting the organization.
-                                        if (!window.confirm(`Delete organization ${organization.name}?`)) {
-                                            return;
-                                        }
+                      return (
+                          <div className="flex justify-end">
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger
+                                      render={
+                                          <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon-sm"
+                                              aria-label={`Open actions for ${organization.name}`}
+                                          />
+                                      }
+                                  >
+                                      <MoreHorizontal className="size-4" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-44">
+                                      <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          onClick={() => {
+                                              void navigator.clipboard.writeText(organization.name);
+                                              toast.success('Organization name copied');
+                                          }}
+                                      >
+                                          Copy name
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          variant="destructive"
+                                          onClick={async () => {
+                                              // Confirm the destructive action before deleting the organization.
+                                              if (!window.confirm(`Delete organization ${organization.name}?`)) {
+                                                  return;
+                                              }
 
-                                        try {
-                                            await deleteOrganization.mutateAsync(organization.name);
-                                        } catch (mutationError) {
-                                            toast.error(
-                                                mutationError instanceof Error
-                                                    ? mutationError.message
-                                                    : 'Failed to delete organization'
-                                            );
-                                        }
-                                    }}
-                                >
-                                    Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-        },
-    ] satisfies Array<ColumnDef<ApiOrgSummary>>;
+                                              try {
+                                                  await deleteOrganization.mutateAsync(organization.id);
+                                              } catch (mutationError) {
+                                                  toast.error(
+                                                      mutationError instanceof Error
+                                                          ? mutationError.message
+                                                          : 'Failed to delete organization'
+                                                  );
+                                              }
+                                          }}
+                                      >
+                                          Delete
+                                      </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                          </div>
+                      );
+                  },
+              },
+          ] satisfies Array<ColumnDef<ApiOrgSummary>>
+        : organizationColumnsBase;
 
     return (
         <div className="space-y-6">

@@ -7,11 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiComputeRegistry, ApiLocation } from '@/lib/types';
 
 /** Renders the admin compute connect dialog. */
 export default function ConnectComputeDialog() {
+    const { role } = useUser();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('kubernetes');
@@ -19,6 +21,10 @@ export default function ConnectComputeDialog() {
     const [ingressHost, setIngressHost] = useState('');
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
+
+    if (role !== 'administrator') {
+        return null;
+    }
 
     const computeUrl = apiUrl('/api/compute');
     const locationsUrl = apiUrl('/api/locations');
@@ -34,6 +40,8 @@ export default function ConnectComputeDialog() {
         retry: false,
     });
 
+    const selectedLocationName = locationsQuery.data?.find((location) => location.id === locationId)?.name;
+
     const connectCompute = useMutation({
         mutationFn: async () => {
             return fetchApiJson<ApiComputeRegistry>(computeUrl, {
@@ -46,7 +54,7 @@ export default function ConnectComputeDialog() {
                     kind: kind.trim(),
                     kubeconfig,
                     ingress_host: ingressHost.trim(),
-                    location_id: Number(locationId),
+                    location_id: locationId,
                 }),
             });
         },
@@ -138,7 +146,7 @@ export default function ConnectComputeDialog() {
                                 <Label htmlFor="compute-location">Location</Label>
                                 <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
                                     <SelectTrigger id="compute-location" className="w-full">
-                                        <SelectValue placeholder="Choose a location" />
+                                        {selectedLocationName ?? 'Choose a location'}
                                     </SelectTrigger>
                                     <SelectContent>
                                         {locationsQuery.data?.map((location) => (

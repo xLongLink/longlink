@@ -25,24 +25,28 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
     """Inspect one app deployment startup state."""
 
     app_id = operation.app_id
-    if not isinstance(app_id, int):
+    if app_id is None:
         return AppStartupState.pending
 
     app = await apps.get_by_id(app_id)
     if app is None:
         return AppStartupState.pending
 
-    org = await orgs.get(app.organization)
+    org = await orgs.get(app.organization_id)
     if org is None:
         return AppStartupState.pending
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
-    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
+    registry = max(
+        (registry for registry in registries if registry.location_id == org.location_id),
+        key=lambda item: item.created_at,
+        default=None,
+    )
     if registry is None:
         return AppStartupState.pending
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    namespace = k8name(app.organization)
+    namespace = k8name(app.organization_id)
 
     # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
@@ -135,19 +139,23 @@ async def execute_app_delete(operation: Operation) -> Operation:
     if operation.step != "remove_runtime":
         raise ValueError(f"Unsupported app.delete step '{operation.step}'")
 
-    org = await orgs.get(app.organization)
+    org = await orgs.get(app.organization_id)
     if org is None:
-        raise ValueError(f"Org '{app.organization}' not found")
+        raise ValueError(f"Org '{app.organization_id}' not found")
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
-    registry = max((registry for registry in registries if registry.location_id == org.location_id), key=lambda item: item.id, default=None)
+    registry = max(
+        (registry for registry in registries if registry.location_id == org.location_id),
+        key=lambda item: item.created_at,
+        default=None,
+    )
     if registry is None:
         raise ValueError(f"No compute cluster configured for location '{org.location_id}'")
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    await k8s.remove(app.organization, app.slug)
+    await k8s.remove(app.organization_id, app.slug)
     try:
-        await apps.delete(app.organization, app.id)
+        await apps.delete(app.organization_id, app.id)
     except ValueError as exc:
         if str(exc) != "App not found":
             raise

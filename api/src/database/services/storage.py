@@ -14,11 +14,11 @@ class StorageService(ServiceBase):
             result = await session.execute(select(StorageRegistry))
             return result.scalars().all()
 
-    async def get(self, name: str) -> StorageRegistry | None:
-        """Return one storage backend by name."""
+    async def get(self, registry_id: str) -> StorageRegistry | None:
+        """Return one storage backend by id."""
 
         async with self.session() as session:
-            result = await session.execute(select(StorageRegistry).where(StorageRegistry.name == name))
+            result = await session.execute(select(StorageRegistry).where(StorageRegistry.id == registry_id))
             return result.scalar_one_or_none()
 
     async def create(
@@ -29,7 +29,7 @@ class StorageService(ServiceBase):
         endpoint_url: str,
         access_key_id: str,
         secret_access_key: str,
-        location_id: int,
+        location_id: str,
     ) -> StorageRegistry:
         """Create or update one storage backend registration."""
 
@@ -61,11 +61,11 @@ class StorageService(ServiceBase):
             await session.refresh(storage)
             return storage
 
-    async def delete(self, name: str) -> StorageRegistry | None:
+    async def delete(self, registry_id: str) -> StorageRegistry | None:
         """Delete one storage backend registration."""
 
         async with self.session() as session:
-            result = await session.execute(select(StorageRegistry).where(StorageRegistry.name == name))
+            result = await session.execute(select(StorageRegistry).where(StorageRegistry.id == registry_id))
             storage = result.scalar_one_or_none()
             # Return early when the registration does not exist.
             if storage is None:

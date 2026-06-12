@@ -29,7 +29,7 @@ const appColumns: Array<ColumnDef<ApiAppResponse>> = [
                     </div>
                     <div className="min-w-0 space-y-1">
                         <Link
-                            to={`/orgs/${app.organization}/apps/${app.name}`}
+                            to={`/orgs/${app.organization_id}/apps/${app.id}`}
                             className="font-medium text-foreground hover:underline"
                         >
                             {getValue<string>()}
@@ -43,11 +43,11 @@ const appColumns: Array<ColumnDef<ApiAppResponse>> = [
     {
         accessorKey: 'organization',
         header: 'Organization',
-        cell: ({ getValue }) => {
+        cell: ({ row, getValue }) => {
             const organization = getValue<string>();
 
             return (
-                <Link to={`/orgs/${organization}`} className="font-medium text-foreground hover:underline">
+                <Link to={`/orgs/${row.original.organization_id}`} className="font-medium text-foreground hover:underline">
                     {organization}
                 </Link>
             );

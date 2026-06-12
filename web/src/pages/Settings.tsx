@@ -26,6 +26,7 @@ export default function Settings() {
     const [accountError, setAccountError] = useState<string | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const deleteTargetOrg = orgs.find((organization) => organization.id === deleteTarget) ?? null;
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {
@@ -260,7 +261,7 @@ export default function Settings() {
                                     <TableBody>
                                         {orgs.length ? (
                                             orgs.map((organization) => (
-                                                <TableRow key={organization.name}>
+                                                <TableRow key={organization.id}>
                                                     <TableCell className="font-medium text-foreground">
                                                         {organization.name}
                                                     </TableCell>
@@ -280,7 +281,7 @@ export default function Settings() {
                                                                 variant="destructive"
                                                                 size="sm"
                                                                 onClick={() => {
-                                                                    setDeleteTarget(organization.name);
+                                                                    setDeleteTarget(organization.id);
                                                                     setDeleteError(null);
                                                                 }}
                                                             >
@@ -329,7 +330,9 @@ export default function Settings() {
                             <div className="space-y-1">
                                 <DialogTitle>Delete org</DialogTitle>
                                 <DialogDescription>
-                                    {deleteTarget ? `Delete ${deleteTarget} from your account?` : 'Delete this org?'}
+                                    {deleteTargetOrg
+                                        ? `Delete ${deleteTargetOrg.name} from your account?`
+                                        : 'Delete this org?'}
                                 </DialogDescription>
                             </div>
 

@@ -6,11 +6,13 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
 /** Renders the admin storage connect dialog. */
 export default function ConnectStorageDialog() {
+    const { role } = useUser();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('s3');
@@ -21,6 +23,10 @@ export default function ConnectStorageDialog() {
     const [secretAccessKey, setSecretAccessKey] = useState('');
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
+
+    if (role !== 'administrator') {
+        return null;
+    }
 
     const storageUrl = apiUrl('/api/storage');
     const locationsUrl = apiUrl('/api/locations');
@@ -39,6 +45,8 @@ export default function ConnectStorageDialog() {
         retry: false,
     });
 
+    const selectedLocationName = locationsQuery.data?.find((location) => location.id === locationId)?.name;
+
     const connectStorage = useMutation({
         mutationFn: async () => {
             return fetchApiJson(storageUrl, {
@@ -54,7 +62,7 @@ export default function ConnectStorageDialog() {
                     endpoint_url: endpointUrl.trim(),
                     access_key_id: accessKeyId.trim(),
                     secret_access_key: secretAccessKey,
-                    location_id: Number(locationId),
+                    location_id: locationId,
                 }),
             });
         },
@@ -182,7 +190,7 @@ export default function ConnectStorageDialog() {
                                 <Label htmlFor="storage-location">Location</Label>
                                 <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
                                     <SelectTrigger id="storage-location" className="w-full">
-                                        <SelectValue placeholder="Choose a location" />
+                                        {selectedLocationName ?? 'Choose a location'}
                                     </SelectTrigger>
                                     <SelectContent>
                                         {locationsQuery.data?.map((location) => (

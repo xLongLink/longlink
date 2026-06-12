@@ -39,7 +39,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     # Assert
     assert organization.name == "acme"
 
-    reloaded = await db.orgs.get("acme")
+    reloaded = await db.orgs.get(organization.id)
     assert reloaded is not None
     assert reloaded.name == "acme"
     assert [member.id for member in reloaded.users] == [owner.id]
@@ -48,7 +48,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     async with Session() as session:
         statement = select(UserOrganization.role_name).where(
             UserOrganization.user_id == owner.id,
-            UserOrganization.organization_name == "acme",
+            UserOrganization.organization_id == organization.id,
         )
         result = await session.execute(statement)
 
@@ -61,21 +61,21 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
     # Arrange
     owner, member = users[0], users[1]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, owner)
+    organization = await db.orgs.create("acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
-                organization_name="acme",
+                organization_id=organization.id,
                 role_name=Roles.write,
             )
         )
         await session.commit()
 
     # Act
-    reloaded = await db.orgs.get("acme")
+    reloaded = await db.orgs.get(organization.id)
 
     # Assert
     assert reloaded is not None

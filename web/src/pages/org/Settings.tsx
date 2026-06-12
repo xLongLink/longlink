@@ -24,7 +24,7 @@ type SettingsProps = {
 /** Renders the organization settings page body. */
 export default function Settings({ org, orgDetails, apps, isLoading, error }: SettingsProps) {
     const deleteApp = useDeleteApp(org);
-    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
@@ -47,7 +47,7 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
                         </div>
                         <div className="min-w-0 space-y-1">
                             <Link
-                                to={`/orgs/${org}/apps/${row.original.name}`}
+                                to={`/orgs/${org}/apps/${row.original.id}`}
                                 className="font-medium text-foreground hover:underline"
                             >
                                 {getValue<string>()}

@@ -3,6 +3,7 @@ from sqlmodel import Field, SQLModel
 from .__base__ import utcnow
 from sqlalchemy import Enum, Column, String
 from src.models.operations import OperationKind
+from src.database.models.__base__ import new_id
 
 
 class Operation(SQLModel, table=True):
@@ -10,7 +11,7 @@ class Operation(SQLModel, table=True):
 
     __tablename__ = "operations"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: str = Field(default_factory=new_id, primary_key=True, max_length=12)
     kind: OperationKind = Field(
         sa_column=Column(
             Enum(
@@ -23,7 +24,7 @@ class Operation(SQLModel, table=True):
             nullable=False,
         ),
     )
-    app_id: int | None = Field(default=None, foreign_key="apps.id")
+    app_id: str | None = Field(default=None, foreign_key="apps.id", max_length=12)
     step: str = Field(sa_column=Column(String(length=100), nullable=False))
     error: str | None = Field(default=None, sa_column=Column(String(length=2000), nullable=True))
     created_at: datetime = Field(default_factory=utcnow)

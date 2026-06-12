@@ -9,3 +9,11 @@ class Roles(str, Enum):
     maintain = "maintain"
     admin = "admin"
     owner = "owner"
+
+
+class PlatformRole(str, Enum):
+    """Supported platform access roles."""
+
+    user = "user"
+    support = "support"
+    administrator = "administrator"

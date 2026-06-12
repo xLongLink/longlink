@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUser } from '@/hooks/use-user';
 import { useCreateApp } from '@/hooks/use-org';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiImageMetadata } from '@/lib/types';
@@ -28,6 +29,7 @@ type CreateAppDialogProps = {
 
 /** Renders the create-application dialog for an organization. */
 export default function CreateAppDialog({ org }: CreateAppDialogProps) {
+    const { role } = useUser();
     const createApp = useCreateApp(org);
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
@@ -40,6 +42,10 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
     const [visibleIconCount, setVisibleIconCount] = useState(ICON_OPTION_BATCH_SIZE);
     const [error, setError] = useState<string | null>(null);
     const visibleIconOptions = ICON_OPTIONS.slice(0, visibleIconCount);
+
+    if (role === 'support') {
+        return null;
+    }
 
     if (icon.length > 0 && !visibleIconOptions.includes(icon)) {
         visibleIconOptions.push(icon);

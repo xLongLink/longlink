@@ -3,6 +3,7 @@ from src.env import env
 from authlib.integrations.starlette_client import OAuth
 from src.database.models.users import User
 from src.database.services.users import users
+from src.models.roles import PlatformRole
 
 oauth = OAuth()
 oauth.register(
@@ -32,8 +33,19 @@ async def authadmin(request: Request) -> User:
 
     user = await authuser(request)
 
-    # Only elevated accounts can continue past this check.
-    if not user.admin:
-        raise HTTPException(403, "Admin privileges required")
+    # Only administrator accounts can continue past this check.
+    if user.role != PlatformRole.administrator:
+        raise HTTPException(403, "Administrator privileges required")
+
+    return user
+
+
+async def authsupport(request: Request) -> User:
+    """Authenticate a support or administrator user from session."""
+
+    user = await authuser(request)
+
+    if user.role not in {PlatformRole.support, PlatformRole.administrator}:
+        raise HTTPException(403, "Support access required")
 
     return user

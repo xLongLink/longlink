@@ -5,17 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
 /** Renders the admin create location dialog. */
 export default function CreateLocationDialog() {
+    const { role } = useUser();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
     const [country, setCountry] = useState('');
     const [error, setError] = useState<string | null>(null);
+
+    if (role !== 'administrator') {
+        return null;
+    }
 
     const locationUrl = apiUrl('/api/locations');
 

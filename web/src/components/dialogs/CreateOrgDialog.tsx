@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { useUser } from '@/hooks/use-user';
 import { useCreateOrg } from '@/hooks/use-org';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
 /** Renders the create-organization dialog. */
 export default function CreateOrgDialog() {
+    const { role } = useUser();
     const createOrg = useCreateOrg();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
@@ -25,6 +27,12 @@ export default function CreateOrgDialog() {
         queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
         retry: false,
     });
+
+    const selectedLocationName = locationsQuery.data?.find((location) => location.id === locationId)?.name;
+
+    if (role === 'support') {
+        return null;
+    }
 
     return (
         <>
@@ -56,7 +64,7 @@ export default function CreateOrgDialog() {
 
                                 // Create the org and close the dialog on success.
                                 try {
-                                    await createOrg.mutateAsync({ name: name.trim(), location_id: Number(locationId) });
+                                    await createOrg.mutateAsync({ name: name.trim(), location_id: locationId });
                                     setOpen(false);
                                     setName('');
                                     setLocationId('');
@@ -82,7 +90,7 @@ export default function CreateOrgDialog() {
                                 <Label htmlFor="org-location">Location</Label>
                                 <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
                                     <SelectTrigger id="org-location" className="w-full">
-                                        <SelectValue placeholder="Choose a location" />
+                                        {selectedLocationName ?? 'Choose a location'}
                                     </SelectTrigger>
                                     <SelectContent>
                                         {locationsQuery.data?.map((location) => (

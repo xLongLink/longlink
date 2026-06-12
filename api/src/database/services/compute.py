@@ -19,7 +19,7 @@ class ComputeService(ServiceBase):
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, registry_id: int) -> ComputeRegistry | None:
+    async def get(self, registry_id: str) -> ComputeRegistry | None:
         """Return one compute backend by id."""
 
         async with self.session() as session:
@@ -32,7 +32,7 @@ class ComputeService(ServiceBase):
         kind: ComputeKind,
         kubeconfig: str,
         ingress_host: str,
-        location_id: int,
+        location_id: str,
         proxy_secret: str | None = None,
     ) -> ComputeRegistry:
         """Create one compute backend registration."""
@@ -60,7 +60,7 @@ class ComputeService(ServiceBase):
             result = await session.execute(statement)
             return result.scalar_one()
 
-    async def delete(self, registry_id: int, deleted_by_id: int | None = None) -> ComputeRegistry | None:
+    async def delete(self, registry_id: str, deleted_by_id: str | None = None) -> ComputeRegistry | None:
         """Mark one compute backend registration as deleted."""
 
         async with self.session() as session:
@@ -78,7 +78,7 @@ class ComputeService(ServiceBase):
             return compute
 
 
-    async def purge(self, registry_id: int) -> ComputeRegistry | None:
+    async def purge(self, registry_id: str) -> ComputeRegistry | None:
         """Hard delete one compute backend registration."""
 
         async with self.session() as session:
