@@ -146,6 +146,7 @@ script.bat
 
 # Project-specific nested ignore rules consolidated at root
 /api/src/.static/web/
+/api/openapi.yml
 /sdk/longlink/.static/web/
 
 /web/logs/

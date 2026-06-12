@@ -1,4 +1,5 @@
 import asyncio
+import yaml
 from fastapi import FastAPI, Request
 from pathlib import Path
 from src.env import env
@@ -6,6 +7,7 @@ from contextlib import suppress, asynccontextmanager
 from src.logger import logger
 from src.router import router
 from src.operations import execute
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from sqlalchemy.engine import make_url
 from fastapi.exceptions import RequestValidationError
@@ -150,5 +152,10 @@ if __name__ == "__main__":
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    schema = get_openapi(title=app.title, version=app.version, routes=app.routes)
+    output_path = Path(__file__).resolve().parent / "openapi.yml"
+    with output_path.open("w", encoding="utf-8") as file:
+        yaml.dump(schema, file, sort_keys=False)
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
