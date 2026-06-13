@@ -12,9 +12,9 @@ import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
-import type { ApiOrgSummary } from '@/lib/types';
+import type { ApiOrganizationSummary } from '@/lib/types';
 
-const organizationColumnsBase: Array<ColumnDef<ApiOrgSummary>> = [
+const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
     {
         accessorKey: 'name',
         header: 'Name',
@@ -133,7 +133,7 @@ export default function AdminOrganization() {
 
     const organizationsQuery = useQuery({
         queryKey: ['api', organizationsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiOrgSummary>>(organizationsUrl, { credentials: 'include' }),
+        queryFn: async () => fetchApiJson<Array<ApiOrganizationSummary>>(organizationsUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });
@@ -202,7 +202,7 @@ export default function AdminOrganization() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiOrgSummary>>
+          ] satisfies Array<ColumnDef<ApiOrganizationSummary>>
         : organizationColumnsBase;
 
     return (

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.models.kinds import DatabaseKind
 from src.database.models.database import DatabaseRegistry
+from src.database.models.users import User
 
 
 class DatabaseService(ServiceBase):
@@ -13,7 +14,11 @@ class DatabaseService(ServiceBase):
         """Return all registered database backends."""
 
         async with self.session() as session:
-            statement = select(DatabaseRegistry).options(selectinload(DatabaseRegistry.deleted_by))
+            statement = select(DatabaseRegistry).options(
+                selectinload(DatabaseRegistry.created_by),
+                selectinload(DatabaseRegistry.updated_by),
+                selectinload(DatabaseRegistry.deleted_by),
+            )
             result = await session.execute(statement)
             return result.scalars().all()
 
@@ -21,7 +26,11 @@ class DatabaseService(ServiceBase):
         """Return one database backend by id."""
 
         async with self.session() as session:
-            statement = select(DatabaseRegistry).options(selectinload(DatabaseRegistry.deleted_by)).where(DatabaseRegistry.id == registry_id)
+            statement = select(DatabaseRegistry).options(
+                selectinload(DatabaseRegistry.created_by),
+                selectinload(DatabaseRegistry.updated_by),
+                selectinload(DatabaseRegistry.deleted_by),
+            ).where(DatabaseRegistry.id == registry_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -34,6 +43,7 @@ class DatabaseService(ServiceBase):
         username: str,
         password: str,
         location_id: str,
+        user: User | None = None,
     ) -> DatabaseRegistry:
         """Create or update one database backend registration."""
 
@@ -52,6 +62,9 @@ class DatabaseService(ServiceBase):
                     password=password,
                     location_id=location_id,
                 )
+                if user is not None:
+                    database.created_id = user.id
+                    database.updated_id = user.id
                 session.add(database)
             else:
                 database.kind = kind
@@ -60,24 +73,34 @@ class DatabaseService(ServiceBase):
                 database.username = username
                 database.password = password
                 database.location_id = location_id
+                if user is not None:
+                    database.updated_id = user.id
                 database.deleted_at = None
-                database.deleted_by_id = None
+                database.deleted_id = None
 
             await session.commit()
             await session.refresh(database)
             statement = (
                 select(DatabaseRegistry)
-                .options(selectinload(DatabaseRegistry.deleted_by))
+                .options(
+                    selectinload(DatabaseRegistry.created_by),
+                    selectinload(DatabaseRegistry.updated_by),
+                    selectinload(DatabaseRegistry.deleted_by),
+                )
                 .where(DatabaseRegistry.name == name)
             )
             result = await session.execute(statement)
             return result.scalar_one()
 
-    async def delete(self, registry_id: str, deleted_by_id: str | None = None) -> DatabaseRegistry | None:
+    async def delete(self, registry_id: str, deleted_id: str | None = None) -> DatabaseRegistry | None:
         """Mark one database backend registration as deleted."""
 
         async with self.session() as session:
-            statement = select(DatabaseRegistry).options(selectinload(DatabaseRegistry.deleted_by)).where(DatabaseRegistry.id == registry_id)
+            statement = select(DatabaseRegistry).options(
+                selectinload(DatabaseRegistry.created_by),
+                selectinload(DatabaseRegistry.updated_by),
+                selectinload(DatabaseRegistry.deleted_by),
+            ).where(DatabaseRegistry.id == registry_id)
             result = await session.execute(statement)
             database = result.scalar_one_or_none()
             if database is None:
@@ -85,7 +108,8 @@ class DatabaseService(ServiceBase):
 
             # Keep the row until cleanup can remove the backing resources.
             database.deleted_at = datetime.now(UTC)
-            database.deleted_by_id = deleted_by_id
+            database.deleted_id = deleted_id
+            database.updated_id = deleted_id
             await session.commit()
             await session.refresh(database)
             return database

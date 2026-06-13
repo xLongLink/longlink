@@ -1,9 +1,10 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship
 from sqlalchemy import and_, Column, Enum as SAEnum
 from src.models.users import Theme, Accent, Radius, Language
 from src.models.roles import PlatformRole
-from src.database.models.__base__ import Base, new_id
+from src.database.models.__base__ import Base, new_id, utcnow
 from src.database.models.association import UserApplication, UserOrganization
 
 if TYPE_CHECKING:
@@ -23,6 +24,11 @@ class User(Base, table=True):
     email: str = Field(unique=True, max_length=255)
     avatar: str | None = Field(default=None, max_length=2048)
     oidc_subject: str | None = Field(default=None, unique=True, max_length=255)
+
+    # Audit
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    deleted_at: datetime | None = Field(default=None)
 
     # State
     role: PlatformRole = Field(default=PlatformRole.user, sa_column=Column(SAEnum(PlatformRole, name='platform_role_enum', native_enum=False), nullable=False))

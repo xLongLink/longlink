@@ -5,6 +5,7 @@ from src.database.models.compute import ComputeRegistry
 from src.database.models.database import DatabaseRegistry
 from src.database.models.location import Location
 from src.database.models.organizations import Organization
+from src.database.models.storage import StorageRegistry
 from src.models.countries import Country
 
 
@@ -19,9 +20,15 @@ class LocationsService(ServiceBase):
                 selectinload(Location.organizations).selectinload(Organization.created_by),
                 selectinload(Location.organizations).selectinload(Organization.updated_by),
                 selectinload(Location.organizations).selectinload(Organization.deleted_by),
+                selectinload(Location.compute_registries).selectinload(ComputeRegistry.created_by),
+                selectinload(Location.compute_registries).selectinload(ComputeRegistry.updated_by),
                 selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
+                selectinload(Location.database_registries).selectinload(DatabaseRegistry.created_by),
+                selectinload(Location.database_registries).selectinload(DatabaseRegistry.updated_by),
                 selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
-                selectinload(Location.storage_registries),
+                selectinload(Location.storage_registries).selectinload(StorageRegistry.created_by),
+                selectinload(Location.storage_registries).selectinload(StorageRegistry.updated_by),
+                selectinload(Location.storage_registries).selectinload(StorageRegistry.deleted_by),
             )
             result = await session.execute(statement)
             return result.scalars().all()
@@ -34,9 +41,15 @@ class LocationsService(ServiceBase):
                 selectinload(Location.organizations).selectinload(Organization.created_by),
                 selectinload(Location.organizations).selectinload(Organization.updated_by),
                 selectinload(Location.organizations).selectinload(Organization.deleted_by),
+                selectinload(Location.compute_registries).selectinload(ComputeRegistry.created_by),
+                selectinload(Location.compute_registries).selectinload(ComputeRegistry.updated_by),
                 selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
+                selectinload(Location.database_registries).selectinload(DatabaseRegistry.created_by),
+                selectinload(Location.database_registries).selectinload(DatabaseRegistry.updated_by),
                 selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
-                selectinload(Location.storage_registries),
+                selectinload(Location.storage_registries).selectinload(StorageRegistry.created_by),
+                selectinload(Location.storage_registries).selectinload(StorageRegistry.updated_by),
+                selectinload(Location.storage_registries).selectinload(StorageRegistry.deleted_by),
             ).where(Location.id == location_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
@@ -63,9 +76,15 @@ class LocationsService(ServiceBase):
                     selectinload(Location.organizations).selectinload(Organization.created_by),
                     selectinload(Location.organizations).selectinload(Organization.updated_by),
                     selectinload(Location.organizations).selectinload(Organization.deleted_by),
+                    selectinload(Location.compute_registries).selectinload(ComputeRegistry.created_by),
+                    selectinload(Location.compute_registries).selectinload(ComputeRegistry.updated_by),
                     selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
+                    selectinload(Location.database_registries).selectinload(DatabaseRegistry.created_by),
+                    selectinload(Location.database_registries).selectinload(DatabaseRegistry.updated_by),
                     selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
-                    selectinload(Location.storage_registries),
+                    selectinload(Location.storage_registries).selectinload(StorageRegistry.created_by),
+                    selectinload(Location.storage_registries).selectinload(StorageRegistry.updated_by),
+                    selectinload(Location.storage_registries).selectinload(StorageRegistry.deleted_by),
                 ).where(Location.id == location.id)
             )
             return result.scalar_one()

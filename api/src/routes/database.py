@@ -31,11 +31,11 @@ async def get_database_registry(registry_id: str, _user: User = Depends(authsupp
 @router.post("/api/database", response_model=DatabaseRegistryResponse)
 async def create_database_registry(
     payload: DatabaseRegistryCreate,
-    _user: User = Depends(authadmin),
+    user: User = Depends(authadmin),
 ) -> DatabaseRegistryResponse:
     """Create or update one database backend registration."""
 
-    registry = await database.create(**payload.model_dump())
+    registry = await database.create(**payload.model_dump(), user=user)
 
     return registry
 

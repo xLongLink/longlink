@@ -1,6 +1,17 @@
 from enum import Enum
-from pydantic import Field, EmailStr, BaseModel, ConfigDict
+from typing import Annotated
+
+from pydantic import Field, EmailStr, BaseModel, ConfigDict, BeforeValidator
 from src.models.roles import Roles, PlatformRole
+
+
+def normalize_avatar(value: str | None) -> str:
+    """Convert missing avatar values into an empty string."""
+
+    return value or ""
+
+
+Avatar = Annotated[str, BeforeValidator(normalize_avatar)]
 
 
 class Theme(str, Enum):
@@ -95,7 +106,7 @@ class UserSummary(BaseModel):
     id: str
     name: str
     email: EmailStr
-    avatar: str | None = None
+    avatar: Avatar = ""
     role: PlatformRole
     admin: bool = False
 
@@ -114,7 +125,7 @@ class UserProfile(BaseModel):
     id: str
     name: str
     email: EmailStr
-    avatar: str | None = None
+    avatar: Avatar = ""
     role: PlatformRole
     admin: bool = False
     theme: Theme
@@ -123,4 +134,3 @@ class UserProfile(BaseModel):
     language: Language
     oidc_subject: str | None = None
     organizations: list[UserOrganizationMembership] = Field(default_factory=list)
-

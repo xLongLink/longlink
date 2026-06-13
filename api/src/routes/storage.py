@@ -27,20 +27,20 @@ async def get_storage_registry(registry_id: str, _user: User = Depends(authsuppo
 @router.post("/api/storage", response_model=StorageRegistryResponse)
 async def create_storage_registry(
     payload: StorageRegistryCreate,
-    _user: User = Depends(authadmin),
+    user: User = Depends(authadmin),
 ) -> StorageRegistryResponse:
     """Create or update one storage backend registration."""
 
-    registry = await storage.create(**payload.model_dump())
+    registry = await storage.create(**payload.model_dump(), user=user)
 
     return registry
 
 
 @router.delete("/api/storage/{registry_id}", status_code=204)
-async def delete_storage_registry(registry_id: str, _user: User = Depends(authadmin)) -> None:
+async def delete_storage_registry(registry_id: str, user: User = Depends(authadmin)) -> None:
     """Delete one storage backend registration."""
 
-    registry = await storage.delete(registry_id)
+    registry = await storage.delete(registry_id, user.id)
     if registry is None:
         raise HTTPException(status_code=404, detail=f"Storage '{registry_id}' not found")
 

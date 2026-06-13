@@ -19,7 +19,7 @@ os.environ.setdefault("OIDC_ISSUER", "http://localhost:18080/realms/dev")
 os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
 
 from main import app
-from src.env import env
+from src.enviroments import env
 from src.database.models.users import User
 from src.database.models.__base__ import Base
 from src.models.roles import PlatformRole

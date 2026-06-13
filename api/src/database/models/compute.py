@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Text, Column
 from src.models.kinds import ComputeKind
-from src.database.models.__base__ import Base, new_id
+from src.database.models.__base__ import Base, new_id, utcnow
 
 if TYPE_CHECKING:
     from src.database.models.location import Location
@@ -28,13 +28,21 @@ class ComputeRegistry(Base, table=True):
     ingress_name: str = Field(max_length=255)
     proxy_secret: str = Field(max_length=255)
 
+    # Audit
+    created_at: datetime = Field(default_factory=utcnow)
+    created_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'ComputeRegistry.created_id'})
+    created_id: str | None = Field(default=None, foreign_key='users.id', max_length=12)
+    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'ComputeRegistry.updated_id'})
+    updated_id: str | None = Field(default=None, foreign_key='users.id', max_length=12)
+    deleted_at: datetime | None = Field(default=None)
+
     # Location
     location_id: str = Field(foreign_key='locations.id', max_length=12)
 
-    # Audit
-    deleted_at: datetime | None = Field(default=None)
-    deleted_by_id: str | None = Field(default=None, foreign_key='users.id', max_length=12)
+    # User
+    deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'ComputeRegistry.deleted_id'})
+    deleted_id: str | None = Field(default=None, foreign_key='users.id', max_length=12)
 
     # Relationships
-    deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'ComputeRegistry.deleted_by_id'})
     location: 'Location' = Relationship(back_populates='compute_registries')

@@ -196,11 +196,7 @@ async def test_list_apps_without_organization_requires_admin(
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {
-        "success": False,
-        "detail": "Administrator privileges required",
-        "data": None,
-    }
+    assert response.json() == {"detail": "Administrator privileges required"}
 
 
 async def test_list_apps_returns_404_for_non_member(
@@ -222,11 +218,7 @@ async def test_list_apps_returns_404_for_non_member(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {
-        "success": False,
-        "detail": f"Org '{organization.id}' not found",
-        "data": None,
-    }
+    assert response.json() == {"detail": f"Org '{organization.id}' not found"}
 
 
 async def test_create_app_returns_app_response(

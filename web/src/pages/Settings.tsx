@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 
 /** Renders the authenticated settings page. */
 export default function Settings() {
-    const { user, orgs, theme, accent, radius, isLoading } = useUser();
+    const { user, organizations, theme, accent, radius, isLoading } = useUser();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrg = useDeleteOrg();
     const [name, setName] = useState('');
@@ -26,7 +26,7 @@ export default function Settings() {
     const [accountError, setAccountError] = useState<string | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
-    const deleteTargetOrg = orgs.find((organization) => organization.id === deleteTarget) ?? null;
+    const deleteTargetOrg = organizations.find((organization) => organization.id === deleteTarget) ?? null;
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {
@@ -236,7 +236,7 @@ export default function Settings() {
                         </div>
                     </MenuSection>
 
-                    <MenuSection value="orgs" label="Organizations" icon={Building2}>
+                    <MenuSection value="organizations" label="Organizations" icon={Building2}>
                         <div className="space-y-4">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
@@ -259,8 +259,8 @@ export default function Settings() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {orgs.length ? (
-                                            orgs.map((organization) => (
+                                        {organizations.length ? (
+                                            organizations.map((organization) => (
                                                 <TableRow key={organization.id}>
                                                     <TableCell className="font-medium text-foreground">
                                                         {organization.name}
@@ -294,7 +294,7 @@ export default function Settings() {
                                         ) : (
                                             <TableRow>
                                                 <TableCell colSpan={3} className="py-8 text-sm text-muted-foreground">
-                                                    No orgs available.
+                                                    No organizations available.
                                                 </TableCell>
                                             </TableRow>
                                         )}

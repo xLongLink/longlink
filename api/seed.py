@@ -16,7 +16,7 @@ from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.organizations import organizations
 from src.database.services.storage import storage
-from src.env import env
+from src.enviroments import env
 from src.models.applications import ApplicationCreate
 from src.models.applications import AppStatus
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind

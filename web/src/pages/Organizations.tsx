@@ -9,9 +9,9 @@ import { Skeleton } from '@ui/skeleton';
 import { Building2, Settings2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
-import type { ApiUserOrgMembership } from '@/lib/types';
+import type { ApiUserOrganizationMembership } from '@/lib/types';
 
-const organizationColumns: Array<ColumnDef<ApiUserOrgMembership>> = [
+const organizationColumns: Array<ColumnDef<ApiUserOrganizationMembership>> = [
     {
         accessorKey: 'name',
         header: 'Name',
@@ -30,7 +30,7 @@ const organizationColumns: Array<ColumnDef<ApiUserOrgMembership>> = [
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
 export default function Organizations() {
-    const { user, orgs, isLoading, error } = useUser();
+    const { user, organizations, isLoading, error } = useUser();
     const location = useLocation();
     const nextPath = new URLSearchParams(location.search).get('next');
     const redirectTo = nextPath?.startsWith('/') ? nextPath : '/organizations';
@@ -76,12 +76,12 @@ export default function Organizations() {
                     </div>
                 </Hero>
 
-                {isLoading && orgs.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading orgs...</div>
-                ) : error && orgs.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-destructive">Failed to load orgs.</div>
+                {isLoading && organizations.length === 0 ? (
+                    <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading organizations...</div>
+                ) : error && organizations.length === 0 ? (
+                    <div className="rounded-md border p-4 text-sm text-destructive">Failed to load organizations.</div>
                 ) : (
-                    <DataTable columns={organizationColumns} data={orgs} />
+                    <DataTable columns={organizationColumns} data={organizations} />
                 )}
             </section>
         </Layout>

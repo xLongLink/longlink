@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_en
 from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy.sql.elements import quoted_name
 
-from src.env import env
+from src.enviroments import env
 from src.utils.namespace import dbname
 
 from .__root__ import Database

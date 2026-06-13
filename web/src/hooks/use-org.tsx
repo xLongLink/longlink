@@ -2,19 +2,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import type {
-    ApiAppResponse,
     ApiInvitation,
-    ApiOrgApp,
-    ApiOrgDetails,
-    ApiOrgSummary,
+    ApiApplicationResponse,
+    ApiOrganizationApplication,
+    ApiOrganizationDetails,
+    ApiOrganizationSummary,
     ApiUserSummary,
 } from '@/lib/types';
 
 type UseOrgResult = {
-    org: ApiOrgDetails | undefined;
+    org: ApiOrganizationDetails | undefined;
     people: ApiUserSummary[];
     invitations: ApiInvitation[];
-    apps: ApiOrgApp[];
+    applications: ApiOrganizationApplication[];
     isLoading: boolean;
     error: (Error & { status?: number }) | null;
 };
@@ -25,7 +25,7 @@ export function useOrg(org: string): UseOrgResult {
 
     const organizationQuery = useQuery({
         queryKey: ['api', orgUrl],
-        queryFn: async () => fetchApiJson<ApiOrgDetails>(orgUrl, { credentials: 'include' }),
+        queryFn: async () => fetchApiJson<ApiOrganizationDetails>(orgUrl, { credentials: 'include' }),
         enabled: org.length > 0,
         retry: false,
     });
@@ -36,7 +36,7 @@ export function useOrg(org: string): UseOrgResult {
         org: organizationQuery.data,
         people: organizationQuery.data?.users ?? [],
         invitations: organizationQuery.data?.invitations ?? [],
-        apps: organizationQuery.data?.applications ?? [],
+        applications: organizationQuery.data?.applications ?? [],
         isLoading: organizationQuery.isLoading,
         error,
     };
@@ -70,7 +70,7 @@ export function useCreateOrg() {
 
     return useMutation({
         mutationFn: async ({ name, location_id }: { name: string; location_id: string }) => {
-            return fetchApiJson<ApiOrgSummary>(orgsUrl, {
+            return fetchApiJson<ApiOrganizationSummary>(orgsUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -115,7 +115,7 @@ export function useCreateApp(org: string) {
             icon?: string | null;
             envs: Record<string, string>;
         }) => {
-            return fetchApiJson<ApiAppResponse>(appsUrl, {
+            return fetchApiJson<ApiApplicationResponse>(appsUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -141,7 +141,7 @@ export function useDeleteApp(org: string) {
             });
         },
         onSuccess: (_data, appId) => {
-            queryClient.setQueryData<ApiOrgDetails>(['api', orgUrl], (current) =>
+            queryClient.setQueryData<ApiOrganizationDetails>(['api', orgUrl], (current) =>
                 current ? { ...current, applications: current.applications.filter((app) => app.id !== appId) } : current
             );
             queryClient.invalidateQueries({ queryKey: ['api', orgUrl] });

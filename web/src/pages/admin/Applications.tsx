@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/DataTable';
 import { apiUrl, fetchApiJson } from '@/lib/api';
-import type { ApiAppResponse } from '@/lib/types';
+import type { ApiApplicationResponse } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@ui/badge';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
@@ -10,7 +10,7 @@ import { Boxes } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { Link } from 'react-router';
 
-const appColumns: Array<ColumnDef<ApiAppResponse>> = [
+const appColumns: Array<ColumnDef<ApiApplicationResponse>> = [
     {
         accessorKey: 'name',
         header: 'Application',
@@ -44,7 +44,7 @@ const appColumns: Array<ColumnDef<ApiAppResponse>> = [
         accessorKey: 'organization',
         header: 'Organization',
         cell: ({ row, getValue }) => {
-            const organization = getValue<ApiAppResponse['organization']>();
+            const organization = getValue<ApiApplicationResponse['organization']>();
 
             return (
                 <Link to={`/orgs/${row.original.organization_id}`} className="font-medium text-foreground hover:underline">
@@ -80,7 +80,7 @@ export default function AdminApplications() {
 
     const appsQuery = useQuery({
         queryKey: ['api', appsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiAppResponse>>(appsUrl, { credentials: 'include' }),
+        queryFn: async () => fetchApiJson<Array<ApiApplicationResponse>>(appsUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });

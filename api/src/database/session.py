@@ -2,7 +2,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
                                     async_sessionmaker, create_async_engine)
 
-from src.env import env
+from src.enviroments import env
 
 _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None

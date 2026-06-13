@@ -2,7 +2,7 @@ import { DataTable } from '@/components/DataTable';
 import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
 import { useDeleteApp } from '@/hooks/use-org';
-import type { ApiOrgApp, ApiOrgDetails } from '@/lib/types';
+import type { ApiOrganizationApplication, ApiOrganizationDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
@@ -15,24 +15,24 @@ import { Link } from 'react-router';
 
 type SettingsProps = {
     org: string;
-    orgDetails: ApiOrgDetails | undefined;
-    apps: ApiOrgApp[];
+    orgDetails: ApiOrganizationDetails | undefined;
+    applications: ApiOrganizationApplication[];
     isLoading: boolean;
     error: Error | null;
 };
 
 /** Renders the organization settings page body. */
-export default function Settings({ org, orgDetails, apps, isLoading, error }: SettingsProps) {
+export default function Settings({ org, orgDetails, applications, isLoading, error }: SettingsProps) {
     const deleteApp = useDeleteApp(org);
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
-    const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
+    const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
 
-    const appColumns: Array<ColumnDef<ApiOrgApp>> = [
+    const appColumns: Array<ColumnDef<ApiOrganizationApplication>> = [
         {
             accessorKey: 'name',
-            header: 'App',
+            header: 'Application',
             cell: ({ row, getValue }) => {
                 const iconName = (row.original.icon ?? 'box').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
@@ -72,7 +72,7 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
                         variant="destructive"
                         size="sm"
                         onClick={() => {
-                            // Select the app and open the delete confirmation dialog.
+                            // Select the application and open the delete confirmation dialog.
                             setDeleteTargetId(row.original.id);
                             setDeleteError(null);
                         }}
@@ -123,7 +123,7 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
                             <div className="space-y-1">
                                 <h2 className="text-lg font-medium text-foreground">Applications</h2>
                                 <p className="text-sm text-muted-foreground">
-                                    Review apps connected to this organization.
+                                    Review applications connected to this organization.
                                 </p>
                             </div>
 
@@ -131,13 +131,13 @@ export default function Settings({ org, orgDetails, apps, isLoading, error }: Se
                         </div>
                         <hr className="border-border" />
                         {isLoading ? (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading apps...</div>
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading applications...</div>
                         ) : error ? (
-                            <div className="rounded-md border p-4 text-sm text-destructive">Failed to load apps.</div>
-                        ) : apps.length ? (
-                            <DataTable columns={appColumns} data={apps} />
+                            <div className="rounded-md border p-4 text-sm text-destructive">Failed to load applications.</div>
+                        ) : applications.length ? (
+                            <DataTable columns={appColumns} data={applications} />
                         ) : (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">No apps found.</div>
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">No applications found.</div>
                         )}
                     </div>
                 </MenuSection>

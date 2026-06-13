@@ -22,6 +22,10 @@ class ComputeRegistryResponse(BaseModel):
     kind: ComputeKind
     ingress_host: str
     location_id: str
+    created_at: datetime
+    created_by: UserSummary | None = None
+    updated_at: datetime
+    updated_by: UserSummary | None = None
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
 
@@ -33,11 +37,9 @@ class NamespaceResponse(BaseModel):
 
 
 class PodResourcesResponse(BaseModel):
-    """Resource requests, limits, and actual usage for a pod."""
+    """Resource limits and actual usage for a pod."""
 
-    cpu_request: float = 0
     cpu_limit: float = 0
-    ram_request: int = 0
     ram_limit: int = 0
     cpu_usage: float = 0
     ram_usage: int = 0

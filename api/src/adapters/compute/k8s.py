@@ -285,24 +285,18 @@ class K8s(Compute):
             pass
 
         def _pod_resources(pod):
-            cpu_request = 0.0
             cpu_limit = 0.0
-            ram_request = 0
             ram_limit = 0
             for container in pod.spec.containers or []:
                 resources = container.resources
                 if resources:
                     requests = resources.requests or {}
                     limits = resources.limits or {}
-                    cpu_request += float(parse_quantity(requests.get("cpu", "0")))
                     cpu_limit += float(parse_quantity(limits.get("cpu", "0")))
-                    ram_request += int(parse_quantity(requests.get("memory", "0")))
                     ram_limit += int(parse_quantity(limits.get("memory", "0")))
             usage = metrics_by_pod.get(pod.metadata.name, {})
             return {
-                "cpu_request": cpu_request,
                 "cpu_limit": cpu_limit,
-                "ram_request": ram_request,
                 "ram_limit": ram_limit,
                 "cpu_usage": usage.get("cpu_usage", 0.0),
                 "ram_usage": usage.get("ram_usage", 0),

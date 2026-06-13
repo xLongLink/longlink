@@ -1,12 +1,11 @@
 from datetime import datetime
-from sqlmodel import Field, SQLModel
-from .__base__ import utcnow
 from sqlalchemy import Enum, Column, String
+from sqlmodel import Field
 from src.models.operations import OperationKind
-from src.database.models.__base__ import new_id
+from src.database.models.__base__ import Base, new_id, utcnow
 
 
-class Operation(SQLModel, table=True):
+class Operation(Base, table=True):
     """Represent one long-running platform operation."""
 
     __tablename__ = "operations"
@@ -26,6 +25,8 @@ class Operation(SQLModel, table=True):
 
     # Timestamps
     created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    deleted_at: datetime | None = Field(default=None)
     started_at: datetime | None = None
     stopped_at: datetime | None = None
 

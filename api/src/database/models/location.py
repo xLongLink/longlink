@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, String, text
 from sqlmodel import Field, Relationship
-from src.database.models.__base__ import Base, new_id
+from src.database.models.__base__ import Base, new_id, utcnow
 from src.models.countries import Country
 
 if TYPE_CHECKING:
@@ -24,6 +25,11 @@ class Location(Base, table=True):
     name: str = Field(max_length=255)
     slug: str = Field(unique=True, max_length=128)
     country: Country | None = Field(default=None, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False))
+
+    # Audit
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    deleted_at: datetime | None = Field(default=None)
 
     # Relationships
     organizations: list['Organization'] = Relationship(back_populates='location')

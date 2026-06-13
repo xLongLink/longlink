@@ -1,6 +1,9 @@
 from .base import ServiceBase
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from src.database.models.__base__ import utcnow
 from src.database.models.storage import StorageRegistry
+from src.database.models.users import User
 from src.models.kinds import StorageKind
 
 
@@ -11,14 +14,24 @@ class StorageService(ServiceBase):
         """Return all registered storage backends."""
 
         async with self.session() as session:
-            result = await session.execute(select(StorageRegistry))
+            statement = select(StorageRegistry).options(
+                selectinload(StorageRegistry.created_by),
+                selectinload(StorageRegistry.updated_by),
+                selectinload(StorageRegistry.deleted_by),
+            )
+            result = await session.execute(statement)
             return result.scalars().all()
 
     async def get(self, registry_id: str) -> StorageRegistry | None:
         """Return one storage backend by id."""
 
         async with self.session() as session:
-            result = await session.execute(select(StorageRegistry).where(StorageRegistry.id == registry_id))
+            statement = select(StorageRegistry).options(
+                selectinload(StorageRegistry.created_by),
+                selectinload(StorageRegistry.updated_by),
+                selectinload(StorageRegistry.deleted_by),
+            ).where(StorageRegistry.id == registry_id)
+            result = await session.execute(statement)
             return result.scalar_one_or_none()
 
     async def create(
@@ -30,6 +43,7 @@ class StorageService(ServiceBase):
         access_key_id: str,
         secret_access_key: str,
         location_id: str,
+        user: User | None = None,
     ) -> StorageRegistry:
         """Create or update one storage backend registration."""
 
@@ -48,6 +62,9 @@ class StorageService(ServiceBase):
                     secret_access_key=secret_access_key,
                     location_id=location_id,
                 )
+                if user is not None:
+                    storage.created_id = user.id
+                    storage.updated_id = user.id
                 session.add(storage)
             else:
                 storage.kind = kind
@@ -56,23 +73,42 @@ class StorageService(ServiceBase):
                 storage.access_key_id = access_key_id
                 storage.secret_access_key = secret_access_key
                 storage.location_id = location_id
+                if user is not None:
+                    storage.updated_id = user.id
+                storage.deleted_at = None
+                storage.deleted_id = None
 
             await session.commit()
             await session.refresh(storage)
-            return storage
+            statement = select(StorageRegistry).options(
+                selectinload(StorageRegistry.created_by),
+                selectinload(StorageRegistry.updated_by),
+                selectinload(StorageRegistry.deleted_by),
+            ).where(StorageRegistry.id == storage.id)
+            result = await session.execute(statement)
+            return result.scalar_one()
 
-    async def delete(self, registry_id: str) -> StorageRegistry | None:
-        """Delete one storage backend registration."""
+    async def delete(self, registry_id: str, deleted_id: str | None = None) -> StorageRegistry | None:
+        """Mark one storage backend registration as deleted."""
 
         async with self.session() as session:
-            result = await session.execute(select(StorageRegistry).where(StorageRegistry.id == registry_id))
+            result = await session.execute(
+                select(StorageRegistry).options(
+                    selectinload(StorageRegistry.created_by),
+                    selectinload(StorageRegistry.updated_by),
+                    selectinload(StorageRegistry.deleted_by),
+                ).where(StorageRegistry.id == registry_id)
+            )
             storage = result.scalar_one_or_none()
             # Return early when the registration does not exist.
             if storage is None:
                 return None
 
-            await session.delete(storage)
+            storage.deleted_at = utcnow()
+            storage.deleted_id = deleted_id
+            storage.updated_id = deleted_id
             await session.commit()
+            await session.refresh(storage)
             return storage
 
 

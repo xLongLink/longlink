@@ -1,21 +1,14 @@
 import asyncio
-import yaml
 from fastapi import FastAPI, Request
 from pathlib import Path
-from src.env import env
+from src.enviroments import env
 from contextlib import suppress, asynccontextmanager
 from src.logger import logger
 from src.router import router
 from src.operations import execute
-from fastapi.openapi.utils import get_openapi
-from fastapi.responses import JSONResponse
-from sqlalchemy.engine import make_url
-from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
-from sqlalchemy.ext.asyncio import create_async_engine
 from fastapi.middleware.cors import CORSMiddleware
-from src.database.models.__base__ import Base
 from starlette.middleware.sessions import SessionMiddleware
 from src.database.services.operations import operations
 
@@ -65,16 +58,6 @@ async def run_operation_scheduler() -> None:
 async def lifespan(app: FastAPI):
     """Start the API and background operation worker."""
 
-    # Local SQLite development starts from an empty file, so create the schema before any reads.
-    database_url = make_url(env.DATABASE_URL)
-    if database_url.drivername.startswith("sqlite+"):
-        engine = create_async_engine(database_url)
-        try:
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-        finally:
-            await engine.dispose()
-
     await operations.reset_active()
 
     worker = asyncio.create_task(run_operation_scheduler())
@@ -91,21 +74,6 @@ app = FastAPI(
     redoc_url="/redocs",
     openapi_url="/openapi.json",
 )
-
-
-@app.exception_handler(HTTPException)
-@app.exception_handler(RequestValidationError)
-async def handle_api_error(_request: Request, exc: Exception) -> JSONResponse:
-    """Wrap API errors in the shared envelope."""
-
-    if isinstance(exc, RequestValidationError):
-        detail = "; ".join(error["msg"] for error in exc.errors()) or "Validation error"
-        status_code = 422
-    else:
-        detail = "" if getattr(exc, "detail", None) is None else str(exc.detail)
-        status_code = exc.status_code
-
-    return JSONResponse(status_code=status_code, content={"success": False, "detail": detail, "data": None})
 
 
 app.add_middleware(
@@ -152,10 +120,5 @@ if __name__ == "__main__":
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    schema = get_openapi(title=app.title, version=app.version, routes=app.routes)
-    output_path = Path(__file__).resolve().parent / "openapi.yml"
-    with output_path.open("w", encoding="utf-8") as file:
-        yaml.dump(schema, file, sort_keys=False)
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000)

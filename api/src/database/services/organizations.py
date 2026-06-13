@@ -11,6 +11,7 @@ from src.database.models.users import User
 from src.database.models.compute import ComputeRegistry
 from src.database.models.database import DatabaseRegistry
 from src.database.models.location import Location
+from src.database.models.storage import StorageRegistry
 from src.database.models.association import UserOrganization
 from src.database.models.association import UserApplication
 
@@ -46,9 +47,15 @@ class OrgsService(ServiceBase):
                 selectinload(Organization.location).selectinload(Location.organizations).selectinload(Organization.created_by),
                 selectinload(Organization.location).selectinload(Location.organizations).selectinload(Organization.updated_by),
                 selectinload(Organization.location).selectinload(Location.organizations).selectinload(Organization.deleted_by),
+                selectinload(Organization.location).selectinload(Location.compute_registries).selectinload(ComputeRegistry.created_by),
+                selectinload(Organization.location).selectinload(Location.compute_registries).selectinload(ComputeRegistry.updated_by),
                 selectinload(Organization.location).selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
+                selectinload(Organization.location).selectinload(Location.database_registries).selectinload(DatabaseRegistry.created_by),
+                selectinload(Organization.location).selectinload(Location.database_registries).selectinload(DatabaseRegistry.updated_by),
                 selectinload(Organization.location).selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
-                selectinload(Organization.location).selectinload(Location.storage_registries),
+                selectinload(Organization.location).selectinload(Location.storage_registries).selectinload(StorageRegistry.created_by),
+                selectinload(Organization.location).selectinload(Location.storage_registries).selectinload(StorageRegistry.updated_by),
+                selectinload(Organization.location).selectinload(Location.storage_registries).selectinload(StorageRegistry.deleted_by),
             ).where(Organization.id == organization_id)
             result = await session.execute(statement)
             organization = result.scalar_one_or_none()
@@ -63,8 +70,8 @@ class OrgsService(ServiceBase):
             organization = Organization(name=name, avatar=avatar, location_id=location_id)
             if user is not None:
                 # Attach the creator as the initial owner when the caller is authenticated.
-                organization.created_by_id = user.id
-                organization.updated_by_id = user.id
+                organization.created_id = user.id
+                organization.updated_id = user.id
                 session.add(
                     UserOrganization(
                         user_id=user.id,

@@ -40,5 +40,9 @@ class DatabaseRegistryResponse(BaseModel):
     port: int
     username: str
     location_id: str
+    created_at: datetime
+    created_by: UserSummary | None = None
+    updated_at: datetime
+    updated_by: UserSummary | None = None
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None

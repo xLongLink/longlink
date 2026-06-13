@@ -75,7 +75,7 @@ export function useUser() {
     if (!context) throw new Error('useUser must be used within a UserProvider');
 
     const user = context.data ?? null;
-    const orgs = user?.orgs ?? [];
+    const organizations = user?.organizations ?? [];
     const userUrl = apiUrl('/api/me');
 
     /** Signs the current user out and clears cached session state. */
@@ -87,7 +87,7 @@ export function useUser() {
 
     return {
         user,
-        orgs,
+        organizations,
         role: user?.role ?? 'user',
         theme:
             user?.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : (user?.theme ?? DEFAULT_USER_PREFERENCES.theme),

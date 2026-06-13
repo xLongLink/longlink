@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 from uuid import uuid4
-from sqlmodel import Field, SQLModel
+from sqlmodel import SQLModel
 
 
 def utcnow() -> datetime:
@@ -16,8 +16,4 @@ def new_id() -> str:
 
 
 class Base(SQLModel):
-    """Shared model base with audit fields."""
-
-    created_at: datetime = Field(default_factory=utcnow)
-    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
-    deleted_at: datetime | None = None
+    """Shared model base for database rows."""

@@ -31,11 +31,11 @@ async def get_compute_registry(
 @router.post("/api/compute", response_model=ComputeRegistryResponse)
 async def create_compute_registry(
     payload: ComputeRegistryCreate,
-    _user: User = Depends(authsupport),
+    user: User = Depends(authsupport),
 ) -> ComputeRegistryResponse:
     """Create one compute backend registration."""
 
-    registry = await compute.create(**payload.model_dump())
+    registry = await compute.create(**payload.model_dump(), user=user)
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
     # Initialize the cluster immediately so failed registrations can be rolled back.

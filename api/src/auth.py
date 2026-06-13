@@ -1,5 +1,5 @@
 from fastapi import Request, HTTPException
-from src.env import env
+from src.enviroments import env
 from authlib.integrations.starlette_client import OAuth
 from src.database.models.users import User
 from src.database.services.users import users

@@ -11,7 +11,7 @@ async def serialize_user(user: User) -> UserProfile:
 
     profile = await users.profile(user.id)
     if profile is None:
-        profile = UserProfile(**{**user.model_dump(), "admin": user.admin, "organizations": []})
+        profile = UserProfile(**{**user.model_dump(), "admin": user.admin, "avatar": user.avatar or "", "organizations": []})
 
     return profile
 

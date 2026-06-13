@@ -19,12 +19,12 @@ type OrganizationProps = {
 export default function Organization({ sectionName }: OrganizationProps) {
     const { org: routeOrg = '' } = useParams();
     const { pathname } = useLocation();
-    const { orgs } = useUser();
-    const org = routeOrg || orgs[0]?.name || '';
+    const { organizations } = useUser();
+    const org = routeOrg || organizations[0]?.name || '';
     const pathSection = pathname.split('/')[3] ?? '';
     const section =
         sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
-    const { org: orgDetails, people, invitations, apps, isLoading, error } = useOrg(org);
+    const { org: orgDetails, people, invitations, applications, isLoading, error } = useOrg(org);
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -35,7 +35,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
         <Hero icon={<LayoutGrid />}>
             <div>
                 <HeroTitle>Applications</HeroTitle>
-                <HeroDescription>Manage the apps attached to this organization.</HeroDescription>
+                <HeroDescription>Manage the applications attached to this organization.</HeroDescription>
             </div>
         </Hero>
     );
@@ -76,10 +76,10 @@ export default function Organization({ sectionName }: OrganizationProps) {
                     <People org={org} people={people} invitations={invitations} isLoading={isLoading} error={error} />
                 ) : null}
                 {section === 'applications' ? (
-                    <Applications org={org} apps={apps} isLoading={isLoading} error={error} />
+                    <Applications org={org} applications={applications} isLoading={isLoading} error={error} />
                 ) : null}
                 {section === 'settings' ? (
-                    <OrgSettings org={org} orgDetails={orgDetails} apps={apps} isLoading={isLoading} error={error} />
+                    <OrgSettings org={org} orgDetails={orgDetails} applications={applications} isLoading={isLoading} error={error} />
                 ) : null}
             </section>
         </Layout>

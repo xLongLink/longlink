@@ -8,26 +8,26 @@ import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { DataTable } from '@/components/DataTable';
 import { useDeleteApp } from '@/hooks/use-org';
-import type { ApiOrgApp } from '@/lib/types';
+import type { ApiOrganizationApplication } from '@/lib/types';
 
 type ApplicationsProps = {
     org: string;
-    apps: ApiOrgApp[];
+    applications: ApiOrganizationApplication[];
     isLoading: boolean;
     error: Error | null;
 };
 
 /** Renders the organization applications table. */
-export default function Applications({ org, apps, isLoading, error }: ApplicationsProps) {
+export default function Applications({ org, applications, isLoading, error }: ApplicationsProps) {
     const deleteApp = useDeleteApp(org);
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
-    const deleteTarget = apps.find((app) => app.id === deleteTargetId) ?? null;
-    const appColumns: Array<ColumnDef<ApiOrgApp>> = [
+    const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
+    const appColumns: Array<ColumnDef<ApiOrganizationApplication>> = [
         {
             accessorKey: 'name',
-            header: 'App',
+            header: 'Application',
             cell: ({ row, getValue }) => {
                 const name = getValue<string>();
                 const iconName = (row.original.icon ?? 'box').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
@@ -98,17 +98,17 @@ export default function Applications({ org, apps, isLoading, error }: Applicatio
                 </Button>
             ),
         },
-    ] satisfies Array<ColumnDef<ApiOrgApp>>;
+    ] satisfies Array<ColumnDef<ApiOrganizationApplication>>;
 
     return (
         <>
             <div className="space-y-4">
-                {isLoading && apps.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading apps...</div>
-                ) : error && apps.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-destructive">Failed to load apps.</div>
+                {isLoading && applications.length === 0 ? (
+                    <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading applications...</div>
+                ) : error && applications.length === 0 ? (
+                    <div className="rounded-md border p-4 text-sm text-destructive">Failed to load applications.</div>
                 ) : (
-                    <DataTable columns={appColumns} data={apps} />
+                    <DataTable columns={appColumns} data={applications} />
                 )}
             </div>
 

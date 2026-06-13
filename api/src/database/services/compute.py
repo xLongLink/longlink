@@ -6,6 +6,7 @@ from src.constants import INGRESS_NAME
 from sqlalchemy.orm import selectinload
 from src.models.kinds import ComputeKind
 from src.database.models.compute import ComputeRegistry
+from src.database.models.users import User
 
 
 class ComputeService(ServiceBase):
@@ -15,7 +16,11 @@ class ComputeService(ServiceBase):
         """Return all registered compute backends."""
 
         async with self.session() as session:
-            statement = select(ComputeRegistry).options(selectinload(ComputeRegistry.deleted_by))
+            statement = select(ComputeRegistry).options(
+                selectinload(ComputeRegistry.created_by),
+                selectinload(ComputeRegistry.updated_by),
+                selectinload(ComputeRegistry.deleted_by),
+            )
             result = await session.execute(statement)
             return result.scalars().all()
 
@@ -23,7 +28,11 @@ class ComputeService(ServiceBase):
         """Return one compute backend by id."""
 
         async with self.session() as session:
-            statement = select(ComputeRegistry).options(selectinload(ComputeRegistry.deleted_by)).where(ComputeRegistry.id == registry_id)
+            statement = select(ComputeRegistry).options(
+                selectinload(ComputeRegistry.created_by),
+                selectinload(ComputeRegistry.updated_by),
+                selectinload(ComputeRegistry.deleted_by),
+            ).where(ComputeRegistry.id == registry_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -34,6 +43,7 @@ class ComputeService(ServiceBase):
         ingress_host: str,
         location_id: str,
         proxy_secret: str | None = None,
+        user: User | None = None,
     ) -> ComputeRegistry:
         """Create one compute backend registration."""
 
@@ -48,23 +58,34 @@ class ComputeService(ServiceBase):
                 proxy_secret=proxy_secret_value,
                 location_id=location_id,
             )
+            if user is not None:
+                compute.created_id = user.id
+                compute.updated_id = user.id
             session.add(compute)
 
             await session.commit()
             await session.refresh(compute)
             statement = (
                 select(ComputeRegistry)
-                .options(selectinload(ComputeRegistry.deleted_by))
+                .options(
+                    selectinload(ComputeRegistry.created_by),
+                    selectinload(ComputeRegistry.updated_by),
+                    selectinload(ComputeRegistry.deleted_by),
+                )
                 .where(ComputeRegistry.id == compute.id)
             )
             result = await session.execute(statement)
             return result.scalar_one()
 
-    async def delete(self, registry_id: str, deleted_by_id: str | None = None) -> ComputeRegistry | None:
+    async def delete(self, registry_id: str, deleted_id: str | None = None) -> ComputeRegistry | None:
         """Mark one compute backend registration as deleted."""
 
         async with self.session() as session:
-            statement = select(ComputeRegistry).options(selectinload(ComputeRegistry.deleted_by)).where(ComputeRegistry.id == registry_id)
+            statement = select(ComputeRegistry).options(
+                selectinload(ComputeRegistry.created_by),
+                selectinload(ComputeRegistry.updated_by),
+                selectinload(ComputeRegistry.deleted_by),
+            ).where(ComputeRegistry.id == registry_id)
             result = await session.execute(statement)
             compute = result.scalar_one_or_none()
             if compute is None:
@@ -72,7 +93,8 @@ class ComputeService(ServiceBase):
 
             # Keep the row until the background cleanup removes the resources.
             compute.deleted_at = datetime.now(UTC)
-            compute.deleted_by_id = deleted_by_id
+            compute.deleted_id = deleted_id
+            compute.updated_id = deleted_id
             await session.commit()
             await session.refresh(compute)
             return compute

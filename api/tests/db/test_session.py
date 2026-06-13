@@ -1,4 +1,4 @@
-from src.env import env
+from src.enviroments import env
 from src.database import session
 from sqlalchemy.engine import make_url
 

@@ -18,7 +18,7 @@ export type ApiUserSummary = {
     oidc_subject: string | null;
 };
 
-export type ApiUserOrgMembership = {
+export type ApiUserOrganizationMembership = {
     id: string;
     name: string;
     role: Role;
@@ -30,10 +30,10 @@ export type ApiUserProfile = ApiUserSummary & {
     radius: Radius;
     language: string;
     oidc_subject: string | null;
-    orgs: ApiUserOrgMembership[];
+    organizations: ApiUserOrganizationMembership[];
 };
 
-export type ApiOrgApp = {
+export type ApiOrganizationApplication = {
     id: string;
     name: string;
     slug: string;
@@ -63,7 +63,7 @@ export type ApiImageMetadata = {
     optional_envs: ApiEnvironmentMetadata[];
 };
 
-export type ApiOrgSummary = {
+export type ApiOrganizationSummary = {
     id: string;
     name: string;
     avatar: string | null;
@@ -76,7 +76,7 @@ export type ApiOrgSummary = {
     deleted_by: ApiUserSummary | null;
 };
 
-export type ApiOrgDetails = {
+export type ApiOrganizationDetails = {
     id: string;
     name: string;
     avatar: string | null;
@@ -90,7 +90,7 @@ export type ApiOrgDetails = {
     deleted_by: ApiUserSummary | null;
     users: ApiUserSummary[];
     invitations: ApiInvitation[];
-    applications: ApiOrgApp[];
+    applications: ApiOrganizationApplication[];
 };
 
 export type ApiLocation = {
@@ -121,6 +121,10 @@ export type ApiDatabaseRegistry = {
     port: number;
     username: string;
     location_id: string;
+    created_at: string;
+    created_by: ApiUserSummary | null;
+    updated_at: string;
+    updated_by: ApiUserSummary | null;
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
 };
@@ -133,6 +137,12 @@ export type ApiStorageRegistry = {
     endpoint_url: string;
     access_key_id: string;
     location_id: string;
+    created_at: string;
+    created_by: ApiUserSummary | null;
+    updated_at: string;
+    updated_by: ApiUserSummary | null;
+    deleted_at: string | null;
+    deleted_by: ApiUserSummary | null;
 };
 
 export type ApiComputeRegistry = {
@@ -140,6 +150,10 @@ export type ApiComputeRegistry = {
     kind: string;
     ingress_host: string;
     location_id: string;
+    created_at: string;
+    created_by: ApiUserSummary | null;
+    updated_at: string;
+    updated_by: ApiUserSummary | null;
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
 };
@@ -156,9 +170,7 @@ export type ApiComputeResources = {
 };
 
 export type ApiComputePodResources = {
-    cpu_request: number;
     cpu_limit: number;
-    ram_request: number;
     ram_limit: number;
     cpu_usage: number;
     ram_usage: number;
@@ -172,10 +184,10 @@ export type ApiComputePod = {
     resources: ApiComputePodResources | null;
 };
 
-export type ApiAppResponse = {
+export type ApiApplicationResponse = {
     id: string;
     organization_id: string;
-    organization: ApiOrgSummary;
+    organization: ApiOrganizationSummary;
     name: string;
     slug: string;
     image: string;
@@ -194,7 +206,7 @@ export type ApiAppResponse = {
 export type ApiOperation = {
     id: string;
     kind: string;
-    app_id: string | null;
+    application_id: string | null;
     step: string;
     status: string;
     error: string | null;

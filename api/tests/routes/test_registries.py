@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from src.models.compute import ComputeRegistryResponse
 from src.models.storage import StorageRegistryResponse
 from src.models.database import DatabaseRegistryResponse
+from src.models.users import UserSummary
 from src.models.operations import OperationKind
 from src.database.services.users import users
 from src.database.services.compute import compute
@@ -60,11 +61,14 @@ async def test_operations_endpoint_returns_recorded_operations(
 
 async def test_database_registry_endpoint_supports_create_list_and_delete(
     clients: tuple[TestClient, TestClient, TestClient],
+    users,
 ) -> None:
     """Create, list, and delete one database registry."""
 
     # Arrange
     client = clients[0]
+    user1, _, _ = users
+    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.admin})
     location = await db.locations.create("local", "Local testing")
 
     # Act
@@ -86,6 +90,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
 
     # Assert
     assert create_response.status_code == 200
+    create_payload = create_response.json()
     assert create_response.json() == DatabaseRegistryResponse(
         id=registry_id,
         kind=DatabaseKind.postgre,
@@ -94,6 +99,12 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         port=5432,
         username="longlink",
         location_id=location.id,
+        created_at=create_payload["created_at"],
+        created_by=user_summary,
+        updated_at=create_payload["updated_at"],
+        updated_by=user_summary,
+        deleted_at=None,
+        deleted_by=None,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
@@ -105,6 +116,12 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             port=5432,
             username="longlink",
             location_id=location.id,
+            created_at=create_payload["created_at"],
+            created_by=user_summary,
+            updated_at=create_payload["updated_at"],
+            updated_by=user_summary,
+            deleted_at=None,
+            deleted_by=None,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
@@ -112,16 +129,19 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     deleted_response = client.get(f"/api/database/{registry_id}")
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
-    assert deleted_response.json()["deleted_by"] is not None
+    assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
 
 
 async def test_storage_registry_endpoint_supports_create_list_and_delete(
     clients: tuple[TestClient, TestClient, TestClient],
+    users,
 ) -> None:
     """Create, list, and delete one storage registry."""
 
     # Arrange
     client = clients[0]
+    user1, _, _ = users
+    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.admin})
     location = await db.locations.create("local", "Local testing")
 
     # Act
@@ -143,6 +163,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
 
     # Assert
     assert create_response.status_code == 200
+    create_payload = create_response.json()
     assert create_response.json() == StorageRegistryResponse(
         id=registry_id,
         kind=StorageKind.s3,
@@ -151,6 +172,12 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
         endpoint_url="https://storage.longlink.internal",
         access_key_id="access-key",
         location_id=location.id,
+        created_at=create_payload["created_at"],
+        created_by=user_summary,
+        updated_at=create_payload["updated_at"],
+        updated_by=user_summary,
+        deleted_at=None,
+        deleted_by=None,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
@@ -162,19 +189,33 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
             endpoint_url="https://storage.longlink.internal",
             access_key_id="access-key",
             location_id=location.id,
+            created_at=create_payload["created_at"],
+            created_by=user_summary,
+            updated_at=create_payload["updated_at"],
+            updated_by=user_summary,
+            deleted_at=None,
+            deleted_by=None,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
+
+    deleted_response = client.get(f"/api/storage/{registry_id}")
+    assert deleted_response.status_code == 200
+    assert deleted_response.json()["deleted_at"] is not None
+    assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
 
 
 async def test_compute_registry_endpoint_supports_create_list_and_delete(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
+    users,
 ) -> None:
     """Create, list, and delete one compute registry."""
 
     # Arrange
     client = clients[0]
+    user1, _, _ = users
+    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.admin})
     location = await db.locations.create("local", "Local testing")
     captured: dict[str, object] = {}
 
@@ -207,11 +248,18 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
 
     # Assert
     assert create_response.status_code == 200
+    create_payload = create_response.json()
     assert create_response.json() == ComputeRegistryResponse(
         id=registry_id,
         kind=ComputeKind.kubernetes,
         ingress_host="apps.longlink.internal",
         location_id=location.id,
+        created_at=create_payload["created_at"],
+        created_by=user_summary,
+        updated_at=create_payload["updated_at"],
+        updated_by=user_summary,
+        deleted_at=None,
+        deleted_by=None,
     ).model_dump(mode="json")
     assert list_response.status_code == 200
     assert list_response.json() == [
@@ -220,13 +268,19 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             kind=ComputeKind.kubernetes,
             ingress_host="apps.longlink.internal",
             location_id=location.id,
+            created_at=create_payload["created_at"],
+            created_by=user_summary,
+            updated_at=create_payload["updated_at"],
+            updated_by=user_summary,
+            deleted_at=None,
+            deleted_by=None,
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
     deleted_response = client.get(f"/api/compute/{registry_id}")
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
-    assert deleted_response.json()["deleted_by"] is not None
+    assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
     assert captured["cleanup_calls"] == 1

@@ -110,8 +110,8 @@ class ApplicationsService(ServiceBase):
 
             application = Application(**app_kwargs)
             if user is not None:
-                application.created_by_id = user.id
-                application.updated_by_id = user.id
+                application.created_id = user.id
+                application.updated_id = user.id
             session.add(application)
             await session.commit()
 

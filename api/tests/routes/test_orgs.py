@@ -132,12 +132,12 @@ async def test_get_organization_returns_member_payload(
 
     assert response.json() == expected_payload
 
-    assert response.json()["users"][0]["avatar"] is None
+    assert response.json()["users"][0]["avatar"] == ""
     assert response.json()["users"][0] == {
         "id": owner.id,
         "name": owner.name,
         "email": owner.email,
-        "avatar": None,
+        "avatar": "",
         "role": owner.role,
         "admin": owner.admin,
     }
@@ -208,17 +208,13 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {
-        "success": False,
-        "detail": f"Org '{organization.id}' not found",
-        "data": None,
-    }
+    assert response.json() == {"detail": f"Org '{organization.id}' not found"}
 
 
-async def test_get_organization_returns_envelope_for_missing_org(
+async def test_get_organization_returns_default_error_for_missing_org(
     clients: tuple[TestClient, TestClient, TestClient],
 ) -> None:
-    """Return 404 when the org does not exist."""
+    """Return FastAPI's default 404 payload when the org does not exist."""
 
     # Arrange
     client = clients[0]
@@ -228,11 +224,7 @@ async def test_get_organization_returns_envelope_for_missing_org(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {
-        "success": False,
-        "detail": "Org 'testo' not found",
-        "data": None,
-    }
+    assert response.json() == {"detail": "Org 'testo' not found"}
 
 
 async def test_delete_organization_removes_its_apps(
@@ -273,17 +265,13 @@ async def test_create_organization_returns_409_for_duplicate_name(
 
     # Assert
     assert response.status_code == 409
-    assert response.json() == {
-        "success": False,
-        "detail": "Org already exists",
-        "data": None,
-    }
+    assert response.json() == {"detail": "Org already exists"}
 
 
-async def test_create_organization_wraps_validation_errors(
+async def test_create_organization_uses_default_validation_error(
     clients: tuple[TestClient, TestClient, TestClient],
 ) -> None:
-    """Return the shared error envelope for request validation failures."""
+    """Return FastAPI's default validation payload for bad requests."""
 
     # Arrange
     client = clients[0]
@@ -294,6 +282,4 @@ async def test_create_organization_wraps_validation_errors(
     # Assert
     assert response.status_code == 422
     payload = response.json()
-    assert payload["success"] is False
-    assert payload["data"] is None
-    assert isinstance(payload["detail"], str)
+    assert isinstance(payload["detail"], list)

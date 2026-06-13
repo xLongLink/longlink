@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from src.auth import oauth
 from src.database.services.users import users
-from src.env import env
+from src.enviroments import env
 from src.router import router
 from src.models.common import SuccessResponse
 

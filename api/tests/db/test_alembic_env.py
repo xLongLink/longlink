@@ -5,7 +5,7 @@ from pathlib import Path
 from alembic import context
 from sqlalchemy.engine import make_url
 
-from src.env import env
+from src.enviroments import env
 
 
 class _FakeTransaction:
