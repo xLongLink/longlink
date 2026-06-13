@@ -8,15 +8,15 @@ from src.operations.applications import AppStartupState
 from src.database.services.compute import compute
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.applications import apps
-from src.database.services.organizations import orgs
+from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 db = SimpleNamespace(
-    apps=apps,
+    applications=applications,
     compute=compute,
     locations=locations,
     operations=operations,
-    orgs=orgs,
+    organizations=organizations,
     users=users,
 )
 
@@ -32,9 +32,9 @@ async def test_execute_app_create_operation_completes_running_app(monkeypatch) -
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id, user)
-    app_record = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(OperationKind.app_create, app_id=app_record.id, step="verify")
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify")
     calls: list[str] = []
 
     async def fake_inspect_app_startup(operation) -> AppStartupState:
@@ -52,9 +52,9 @@ async def test_execute_app_create_operation_completes_running_app(monkeypatch) -
 
     # Assert
     assert calls == ["startup-check"]
-    refreshed_app = await db.apps.get_by_id(app_record.id)
-    assert refreshed_app is not None
-    assert refreshed_app.status == AppStatus.running
+    refreshed_application = await db.applications.get_by_id(application.id)
+    assert refreshed_application is not None
+    assert refreshed_application.status == AppStatus.running
     refreshed = await db.operations.get(operation.id)
     assert refreshed is not None
     assert refreshed.status == "completed"
@@ -73,9 +73,9 @@ async def test_execute_app_create_operation_marks_failed_when_dead(monkeypatch) 
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id, user)
-    app_record = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(OperationKind.app_create, app_id=app_record.id, step="verify")
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify")
     calls: list[str] = []
 
     async def fake_inspect_app_startup(operation) -> AppStartupState:
@@ -93,9 +93,9 @@ async def test_execute_app_create_operation_marks_failed_when_dead(monkeypatch) 
 
     # Assert
     assert calls == ["startup-check"]
-    refreshed_app = await db.apps.get_by_id(app_record.id)
-    assert refreshed_app is not None
-    assert refreshed_app.status == AppStatus.failed
+    refreshed_application = await db.applications.get_by_id(application.id)
+    assert refreshed_application is not None
+    assert refreshed_application.status == AppStatus.failed
     refreshed = await db.operations.get(operation.id)
     assert refreshed is not None
     assert refreshed.status == "failed"
@@ -114,9 +114,9 @@ async def test_execute_app_create_operation_releases_when_not_ready(monkeypatch)
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id, user)
-    app_record = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(OperationKind.app_create, app_id=app_record.id, step="verify")
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify")
 
     async def fake_inspect_app_startup(operation) -> AppStartupState:
         """Pretend the app is still starting."""
@@ -150,15 +150,15 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id, user)
-    app_record = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="localhost:8443",
         location_id=location.id,
     )
-    operation = await db.operations.create(OperationKind.app_delete, app_id=app_record.id, step="remove_runtime")
+    operation = await db.operations.create(OperationKind.app_delete, application_id=application.id, step="remove_runtime")
     calls: list[dict[str, str]] = []
 
     class FakeCompute:
@@ -179,7 +179,7 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
 
     # Assert
     assert calls == [{"organization": organization.id, "application": "dashboard"}]
-    assert await db.apps.get(organization.id, "dashboard") is None
+    assert await db.applications.get(organization.id, "dashboard") is None
     refreshed = await db.operations.get(operation.id)
     assert refreshed is not None
     assert refreshed.status == "completed"

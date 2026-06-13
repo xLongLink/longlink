@@ -4,23 +4,23 @@ from sqlalchemy import select
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.session import get_session
-from src.database.services.applications import apps
+from src.database.services.applications import applications
 from src.database.services.compute import compute
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.organizations import orgs
+from src.database.services.organizations import organizations
 from src.database.services.storage import storage
 from src.database.services.users import users
 from src.models.roles import Roles
 
 db = SimpleNamespace(
-    apps=apps,
+    applications=applications,
     compute=compute,
     database=database,
     locations=locations,
     operations=operations,
-    orgs=orgs,
+    organizations=organizations,
     storage=storage,
     users=users,
 )
@@ -34,12 +34,12 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     location = await db.locations.create("local", "Local testing")
 
     # Act
-    organization = await db.orgs.create("acme", location.id, owner)
+    organization = await db.organizations.create("acme", location.id, owner)
 
     # Assert
     assert organization.name == "acme"
 
-    reloaded = await db.orgs.get(organization.id)
+    reloaded = await db.organizations.get(organization.id)
     assert reloaded is not None
     assert reloaded.name == "acme"
     assert [member.id for member in reloaded.users] == [owner.id]
@@ -61,7 +61,7 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
     # Arrange
     owner, member = users[0], users[1]
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id, owner)
+    organization = await db.organizations.create("acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -75,7 +75,7 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
         await session.commit()
 
     # Act
-    reloaded = await db.orgs.get(organization.id)
+    reloaded = await db.organizations.get(organization.id)
 
     # Assert
     assert reloaded is not None
@@ -88,11 +88,11 @@ async def test_create_raises_value_error_when_org_already_exists(users: tuple[Us
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, owner)
+    await db.organizations.create("acme", location.id, owner)
 
     # Act
     with pytest.raises(ValueError) as exc:
-        await db.orgs.create("acme", location.id, owner)
+        await db.organizations.create("acme", location.id, owner)
 
     # Assert
-    assert str(exc.value) == "Org already exists"
+    assert str(exc.value) == "Organization already exists"

@@ -1,22 +1,22 @@
 from types import SimpleNamespace
-from src.database.services.applications import apps
+from src.database.services.applications import applications
 from src.database.services.compute import compute
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.organizations import orgs
+from src.database.services.organizations import organizations
 from src.database.services.storage import storage
 from src.database.services.users import users
 from src.models.roles import Roles
-from src.models.users import UserOrgMembership
+from src.models.users import UserOrganizationMembership
 
 db = SimpleNamespace(
-    apps=apps,
+    applications=applications,
     compute=compute,
     database=database,
     locations=locations,
     operations=operations,
-    orgs=orgs,
+    organizations=organizations,
     storage=storage,
     users=users,
 )
@@ -74,7 +74,7 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("test", location.id)
+    organization = await db.organizations.create("test", location.id)
 
     # Act
     await db.users.upsert(
@@ -87,7 +87,7 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
 
     # Assert
     assert profile is not None
-    assert profile.orgs == [UserOrgMembership(id=organization.id, name="test", role=Roles.owner)]
+    assert profile.organizations == [UserOrganizationMembership(id=organization.id, name="test", role=Roles.owner)]
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:

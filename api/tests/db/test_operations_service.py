@@ -3,14 +3,14 @@ from src.models.operations import OperationKind
 from src.database.services.users import users
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.applications import apps
-from src.database.services.organizations import orgs
+from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 db = SimpleNamespace(
-    apps=apps,
+    applications=applications,
     locations=locations,
     operations=operations,
-    orgs=orgs,
+    organizations=organizations,
     users=users,
 )
 
@@ -20,11 +20,11 @@ async def test_operations_service_tracks_successful_operation_lifecycle() -> Non
 
     # Arrange
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    organization = await db.organizations.create("acme", location.id)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
     claimed = await db.operations.claim(operation.id)
     completed = await db.operations.complete(operation.id)
 
@@ -44,11 +44,11 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
 
     # Arrange
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    organization = await db.organizations.create("acme", location.id)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
     claimed = await db.operations.claim(operation.id)
     failed = await db.operations.fail(operation.id, "boom")
 
@@ -67,11 +67,11 @@ async def test_operations_service_defers_active_operation() -> None:
 
     # Arrange
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    organization = await db.organizations.create("acme", location.id)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
     claimed = await db.operations.claim(operation.id)
     deferred = await db.operations.defer(operation.id)
 
@@ -90,9 +90,9 @@ async def test_operations_service_resets_active_operations() -> None:
 
     # Arrange
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
-    operation = await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
+    organization = await db.organizations.create("acme", location.id)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
     await db.operations.claim(operation.id)
 
     # Act

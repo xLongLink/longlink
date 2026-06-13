@@ -17,7 +17,9 @@ export const content = (
         <Heading id="usage" level="h2">
             Usage
         </Heading>
-        <CodeBlock language="python">{`from longlink import App, Router, Context
+        <CodeBlock language="python">{`from fastapi import Request
+
+from longlink import LongLink, Router
 from pydantic import BaseModel
 
 router = Router()
@@ -29,12 +31,12 @@ class SampleResponse(BaseModel):
 
 
 @router.get("/sample", response_model=SampleResponse)
-async def sample(ctx: Context) -> SampleResponse:
+async def sample(request: Request) -> SampleResponse:
     return SampleResponse(id=1, name="apple")
 
 
-app = App()
-app.register(router)`}</CodeBlock>
+app = LongLink()
+app.include_router(router)`}</CodeBlock>
         <Heading id="resources" level="h2">
             Resources
         </Heading>

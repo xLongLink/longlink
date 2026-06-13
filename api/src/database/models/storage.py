@@ -11,16 +11,24 @@ if TYPE_CHECKING:
 
 class StorageRegistry(Base, table=True):
     """Represent a registered storage backend."""
+
     __tablename__ = "storage_registries"
 
+    # Identifier
     id: str = Field(default_factory=new_id, primary_key=True, max_length=12)
-    kind: StorageKind = Field(
-        sa_column=Column(Enum(StorageKind, name="storage_kind_enum", native_enum=False), nullable=False)
-    )
+
+    # State
+    kind: StorageKind = Field(sa_column=Column(Enum(StorageKind, name="storage_kind_enum", native_enum=False), nullable=False))
+
+    # Metadata
     name: str = Field(unique=True, max_length=128)
     protocol: str = Field(max_length=16)
     endpoint_url: str = Field(max_length=255)
     access_key_id: str = Field(max_length=255)
     secret_access_key: str = Field(max_length=255)
+
+    # Location
     location_id: str = Field(foreign_key='locations.id', max_length=12)
+
+    # Relationships
     location: 'Location' = Relationship(back_populates='storage_registries')

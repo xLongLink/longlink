@@ -9,8 +9,8 @@ from src.models.applications import AppStatus
 from src.database.models.operation import Operation
 from src.database.services.compute import compute
 from src.database.services.operations import operations
-from src.database.services.applications import apps
-from src.database.services.organizations import orgs
+from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 
 class AppStartupState(str, Enum):
@@ -24,21 +24,21 @@ class AppStartupState(str, Enum):
 async def inspect_app_startup(operation: Operation) -> AppStartupState:
     """Inspect one app deployment startup state."""
 
-    app_id = operation.app_id
-    if app_id is None:
+    application_id = operation.application_id
+    if application_id is None:
         return AppStartupState.pending
 
-    app = await apps.get_by_id(app_id)
-    if app is None:
+    application = await applications.get_by_id(application_id)
+    if application is None:
         return AppStartupState.pending
 
-    org = await orgs.get(app.organization_id)
-    if org is None:
+    organization = await organizations.get(application.organization_id)
+    if organization is None:
         return AppStartupState.pending
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     registry = max(
-        (registry for registry in registries if registry.location_id == org.location_id),
+        (registry for registry in registries if registry.location_id == organization.location_id),
         key=lambda item: item.created_at,
         default=None,
     )
@@ -46,11 +46,11 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
         return AppStartupState.pending
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    namespace = k8name(app.organization_id)
+    namespace = k8name(application.organization_id)
 
     # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
-        pods = k8s._core_api.list_namespaced_pod(namespace, label_selector=f"app={app.slug}").items
+        pods = k8s._core_api.list_namespaced_pod(namespace, label_selector=f"app={application.slug}").items
     except ApiException:
         return AppStartupState.pending
 
@@ -90,20 +90,20 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
 async def execute_app_create(operation: Operation) -> Operation:
     """Run one app creation verification step."""
 
-    app_id = operation.app_id
-    if app_id is None:
-        raise ValueError("Operation missing app reference")
+    application_id = operation.application_id
+    if application_id is None:
+        raise ValueError("Operation missing application reference")
 
-    app = await apps.get_by_id(app_id)
-    if app is None:
-        raise ValueError(f"App '{app_id}' not found")
+    application = await applications.get_by_id(application_id)
+    if application is None:
+        raise ValueError(f"Application '{application_id}' not found")
 
     if operation.step != "verify":
         raise ValueError(f"Unsupported app.create step '{operation.step}'")
 
     startup_state = await inspect_app_startup(operation)
     if startup_state == AppStartupState.ready:
-        await apps.set_status(app.id, AppStatus.running)
+        await applications.set_status(application.id, AppStatus.running)
         completed = await operations.complete(operation.id)
         if completed is not None:
             logger.info("Completed app creation %s", operation.id)
@@ -112,7 +112,7 @@ async def execute_app_create(operation: Operation) -> Operation:
         return operation
 
     if startup_state == AppStartupState.dead:
-        await apps.set_status(app.id, AppStatus.failed)
+        await applications.set_status(application.id, AppStatus.failed)
         failed = await operations.fail(operation.id, "App crashed during startup")
         if failed is not None:
             logger.info("Failed app creation %s", operation.id)
@@ -127,37 +127,37 @@ async def execute_app_create(operation: Operation) -> Operation:
 async def execute_app_delete(operation: Operation) -> Operation:
     """Run one app deletion step."""
 
-    app_id = operation.app_id
-    if app_id is None:
-        raise ValueError("Operation missing app reference")
+    application_id = operation.application_id
+    if application_id is None:
+        raise ValueError("Operation missing application reference")
 
-    app = await apps.get_by_id(app_id)
-    if app is None:
+    application = await applications.get_by_id(application_id)
+    if application is None:
         completed = await operations.complete(operation.id)
         return completed or operation
 
     if operation.step != "remove_runtime":
         raise ValueError(f"Unsupported app.delete step '{operation.step}'")
 
-    org = await orgs.get(app.organization_id)
-    if org is None:
-        raise ValueError(f"Org '{app.organization_id}' not found")
+    organization = await organizations.get(application.organization_id)
+    if organization is None:
+        raise ValueError(f"Organization '{application.organization_id}' not found")
 
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]
     registry = max(
-        (registry for registry in registries if registry.location_id == org.location_id),
+        (registry for registry in registries if registry.location_id == organization.location_id),
         key=lambda item: item.created_at,
         default=None,
     )
     if registry is None:
-        raise ValueError(f"No compute cluster configured for location '{org.location_id}'")
+        raise ValueError(f"No compute cluster configured for location '{organization.location_id}'")
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    await k8s.remove(app.organization_id, app.slug)
+    await k8s.remove(application.organization_id, application.slug)
     try:
-        await apps.delete(app.organization_id, app.id)
+        await applications.delete(application.organization_id, application.id)
     except ValueError as exc:
-        if str(exc) != "App not found":
+        if str(exc) != "Application not found":
             raise
 
     completed = await operations.complete(operation.id)

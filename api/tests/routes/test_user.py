@@ -1,11 +1,11 @@
 from types import SimpleNamespace
 from src.database.models.users import User
-from src.database.services.applications import apps
+from src.database.services.applications import applications as apps
 from src.database.services.compute import compute
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.organizations import orgs
+from src.database.services.organizations import organizations as orgs
 from src.database.services.storage import storage
 from src.database.services.users import users
 from fastapi.testclient import TestClient

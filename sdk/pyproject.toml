@@ -57,7 +57,7 @@ dev = [
 
 [project.urls]
 Homepage = "https://www.longlink.dev"
-Documentation = "https://docs.longlink.dev"
+Documentation = "https://longlink.dev/docs"
 Repository = "https://github.com/xLongLink/longlink.git"
 "Bug Tracker" = "https://github.com/xLongLink/longlink/issues"
 

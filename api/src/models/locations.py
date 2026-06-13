@@ -7,7 +7,7 @@ from src.models.storage import StorageRegistryResponse
 from src.models.users import UserSummary
 
 
-class LocationOrgSummary(BaseModel):
+class LocationOrganizationSummary(BaseModel):
     """Represent one organization nested under a location."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -42,7 +42,8 @@ class LocationResponse(BaseModel):
     country: Country
     created_at: datetime
     updated_at: datetime
-    orgs: list[LocationOrgSummary] = Field(default_factory=list)
+    organizations: list[LocationOrganizationSummary] = Field(default_factory=list)
     compute_registries: list[ComputeRegistryResponse] = Field(default_factory=list)
     database_registries: list[DatabaseRegistryResponse] = Field(default_factory=list)
     storage_registries: list[StorageRegistryResponse] = Field(default_factory=list)
+

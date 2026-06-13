@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload
 from src.database.models.compute import ComputeRegistry
 from src.database.models.database import DatabaseRegistry
 from src.database.models.location import Location
-from src.database.models.organizations import Org
+from src.database.models.organizations import Organization
 from src.models.countries import Country
 
 
@@ -16,9 +16,9 @@ class LocationsService(ServiceBase):
 
         async with self.session() as session:
             statement = select(Location).options(
-                selectinload(Location.orgs).selectinload(Org.created_by),
-                selectinload(Location.orgs).selectinload(Org.updated_by),
-                selectinload(Location.orgs).selectinload(Org.deleted_by),
+                selectinload(Location.organizations).selectinload(Organization.created_by),
+                selectinload(Location.organizations).selectinload(Organization.updated_by),
+                selectinload(Location.organizations).selectinload(Organization.deleted_by),
                 selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
                 selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
                 selectinload(Location.storage_registries),
@@ -31,9 +31,9 @@ class LocationsService(ServiceBase):
 
         async with self.session() as session:
             statement = select(Location).options(
-                selectinload(Location.orgs).selectinload(Org.created_by),
-                selectinload(Location.orgs).selectinload(Org.updated_by),
-                selectinload(Location.orgs).selectinload(Org.deleted_by),
+                selectinload(Location.organizations).selectinload(Organization.created_by),
+                selectinload(Location.organizations).selectinload(Organization.updated_by),
+                selectinload(Location.organizations).selectinload(Organization.deleted_by),
                 selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
                 selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
                 selectinload(Location.storage_registries),
@@ -60,9 +60,9 @@ class LocationsService(ServiceBase):
 
             result = await session.execute(
                 select(Location).options(
-                    selectinload(Location.orgs).selectinload(Org.created_by),
-                    selectinload(Location.orgs).selectinload(Org.updated_by),
-                    selectinload(Location.orgs).selectinload(Org.deleted_by),
+                    selectinload(Location.organizations).selectinload(Organization.created_by),
+                    selectinload(Location.organizations).selectinload(Organization.updated_by),
+                    selectinload(Location.organizations).selectinload(Organization.deleted_by),
                     selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
                     selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
                     selectinload(Location.storage_registries),

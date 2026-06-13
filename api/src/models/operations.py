@@ -17,7 +17,7 @@ class OperationResponse(BaseModel):
 
     id: str
     kind: OperationKind
-    app_id: str | None = None
+    application_id: str | None = None
     step: str
     status: str
     error: str | None = None

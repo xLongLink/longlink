@@ -79,7 +79,7 @@ class UserUpdate(BaseModel):
     language: Language | None = None
 
 
-class UserOrgMembership(BaseModel):
+class UserOrganizationMembership(BaseModel):
     """Represent one organization membership in the user profile."""
 
     id: str
@@ -109,6 +109,8 @@ class UserListItem(UserSummary):
 class UserProfile(BaseModel):
     """Represent the authenticated user payload returned by the API."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     email: EmailStr
@@ -120,4 +122,5 @@ class UserProfile(BaseModel):
     radius: Radius
     language: Language
     oidc_subject: str | None = None
-    orgs: list[UserOrgMembership] = Field(default_factory=list)
+    organizations: list[UserOrganizationMembership] = Field(default_factory=list)
+

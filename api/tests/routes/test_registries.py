@@ -11,16 +11,16 @@ from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.applications import apps
-from src.database.services.organizations import orgs
+from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 db = SimpleNamespace(
-    apps=apps,
+    applications=applications,
     compute=compute,
     database=database,
     locations=locations,
     operations=operations,
-    orgs=orgs,
+    organizations=organizations,
     storage=storage,
     users=users,
 )
@@ -34,9 +34,9 @@ async def test_operations_endpoint_returns_recorded_operations(
     # Arrange
     client = clients[0]
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
-    operation = await db.operations.create(OperationKind.app_create, step="verify", app_id=app.id)
+    organization = await db.organizations.create("acme", location.id)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
 
     # Act
     response = client.get("/api/operations")
@@ -47,7 +47,7 @@ async def test_operations_endpoint_returns_recorded_operations(
         {
             "id": operation.id,
             "kind": "app.create",
-            "app_id": app.id,
+            "application_id": application.id,
             "step": "verify",
             "status": "scheduled",
             "error": None,

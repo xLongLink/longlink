@@ -1,10 +1,10 @@
 from .base import ServiceBase
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
-from src.database.models.organizations import Org
+from src.database.models.organizations import Organization
 from src.database.models.users import User
 from src.models.roles import Roles, PlatformRole
-from src.models.users import UserProfile, UserOrgMembership
+from src.models.users import UserProfile, UserOrganizationMembership
 from src.models.users import Theme, Accent, Radius, Language
 from src.database.models.association import UserOrganization
 
@@ -40,15 +40,15 @@ class UsersService(ServiceBase):
 
             # Load organization roles from the association table so the profile stays accurate.
             org_result = await session.execute(
-                select(UserOrganization.organization_id, Org.name, UserOrganization.role_name)
-                .join(Org, Org.id == UserOrganization.organization_id)
+                select(UserOrganization.organization_id, Organization.name, UserOrganization.role_name)
+                .join(Organization, Organization.id == UserOrganization.organization_id)
                 .where(UserOrganization.user_id == user.id)
             )
 
             payload = user.model_dump()
             payload["admin"] = user.admin
-            payload["orgs"] = [
-                UserOrgMembership(id=organization_id, name=organization_name, role=role_name)
+            payload["organizations"] = [
+                UserOrganizationMembership(id=organization_id, name=organization_name, role=role_name)
                 for organization_id, organization_name, role_name in org_result.all()
             ]
 
@@ -62,9 +62,9 @@ class UsersService(ServiceBase):
             return
 
         # Skip the bootstrap membership if the demo org has not been created yet.
-        org_result = await session.execute(select(Org).where(Org.name == ADMIN_ORG))
-        org = org_result.scalar_one_or_none()
-        if org is None:
+        organization_result = await session.execute(select(Organization).where(Organization.name == ADMIN_ORG))
+        organization = organization_result.scalar_one_or_none()
+        if organization is None:
             return
 
         # Avoid duplicating the owner row when the user already belongs to the org.
@@ -78,12 +78,12 @@ class UsersService(ServiceBase):
             return
 
         session.add(
-            UserOrganization(
-                user_id=user.id,
-                organization_id=org.id,
-                role_name=Roles.owner,
+                UserOrganization(
+                    user_id=user.id,
+                    organization_id=organization.id,
+                    role_name=Roles.owner,
+                )
             )
-        )
         await session.commit()
 
     async def upsert(
@@ -180,7 +180,7 @@ class UsersService(ServiceBase):
 
         async with self.session() as session:
             # Load memberships so the returned user can be used outside the session.
-            statement = select(User).options(selectinload(User.orgs).selectinload(Org.location)).where(User.oidc_subject == oidc_subject)
+            statement = select(User).options(selectinload(User.organizations).selectinload(Organization.location)).where(User.oidc_subject == oidc_subject)
             result = await session.execute(statement)
             return result.scalars().first()
 

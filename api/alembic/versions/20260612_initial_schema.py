@@ -108,7 +108,7 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        "apps",
+        "applications",
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
@@ -199,14 +199,14 @@ def upgrade() -> None:
             sa.Enum("app.create", "app.delete", name="operation_kind_enum", native_enum=False, create_constraint=True),
             nullable=False,
         ),
-        sa.Column("app_id", sa.String(length=12), nullable=True),
+        sa.Column("application_id", sa.String(length=12), nullable=True),
         sa.Column("step", sa.String(length=100), nullable=False),
         sa.Column("error", sa.String(length=2000), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("started_at", sa.DateTime(), nullable=True),
         sa.Column("stopped_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.ForeignKeyConstraint(["app_id"], ["apps.id"]),
+        sa.ForeignKeyConstraint(["application_id"], ["applications.id"]),
     )
 
     # Membership tables are last so their parent rows already exist.
@@ -221,28 +221,28 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        "user_apps",
+        "user_applications",
         sa.Column("user_id", sa.String(length=12), nullable=False),
         sa.Column("organization_id", sa.String(length=12), nullable=False),
-        sa.Column("app_id", sa.String(length=12), nullable=False),
+        sa.Column("application_id", sa.String(length=12), nullable=False),
         sa.Column("role_name", sa.Enum("read", "write", "maintain", "admin", "owner", name="role_name_enum", native_enum=False), nullable=False),
-        sa.PrimaryKeyConstraint("user_id", "organization_id", "app_id"),
+        sa.PrimaryKeyConstraint("user_id", "organization_id", "application_id"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"]),
-        sa.ForeignKeyConstraint(["organization_id", "app_id"], ["apps.organization_id", "apps.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["organization_id", "application_id"], ["applications.organization_id", "applications.id"], ondelete="CASCADE"),
     )
 
 
 def downgrade() -> None:
     """Drop the current schema in reverse dependency order."""
 
-    op.drop_table("user_apps")
+    op.drop_table("user_applications")
     op.drop_table("user_organizations")
     op.drop_table("operations")
     op.drop_table("storage_registries")
     op.drop_table("database_registries")
     op.drop_table("compute_registries")
-    op.drop_table("apps")
+    op.drop_table("applications")
     op.drop_table("organizations")
     op.drop_table("users")
     op.drop_table("locations")

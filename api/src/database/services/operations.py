@@ -46,12 +46,12 @@ class OperationsService(ServiceBase):
         self,
         kind: OperationKind,
         step: str,
-        app_id: str | None = None,
+        application_id: str | None = None,
     ) -> Operation:
         """Create one operation record."""
 
         async with self.session() as session:
-            operation = Operation(kind=kind, app_id=app_id, step=step)
+            operation = Operation(kind=kind, application_id=application_id, step=step)
             session.add(operation)
             await session.commit()
             await session.refresh(operation)

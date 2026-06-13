@@ -2,49 +2,49 @@ from fastapi import Depends, HTTPException
 from src.auth import authuser, authadmin, authsupport
 from src.logger import logger
 from src.router import router
-from src.models.organizations import OrgCreate, OrgDetails, OrgSummary
+from src.models.organizations import OrganizationCreate, OrganizationDetails, OrganizationSummary
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
-from src.database.services.organizations import orgs
+from src.database.services.organizations import organizations
 
 
-@router.get("/api/orgs", response_model=list[OrgSummary])
-async def list_organizations(_user: User = Depends(authsupport)) -> list[OrgSummary]:
+@router.get("/api/orgs", response_model=list[OrganizationSummary])
+async def list_organizations(_user: User = Depends(authsupport)) -> list[OrganizationSummary]:
     """Return all organizations for support and administrator views."""
 
-    return await orgs.list()
+    return await organizations.list()
 
 
-@router.get("/api/orgs/{org_id}", response_model=OrgDetails)
+@router.get("/api/orgs/{org_id}", response_model=OrganizationDetails)
 async def get_organization(
     org_id: str,
     user: User = Depends(authuser),
-) -> OrgDetails:
+) -> OrganizationDetails:
     """Return one organization and its metadata."""
 
     # Deny access early when the org does not exist.
-    organization = await orgs.get(org_id)
+    organization = await organizations.get(org_id)
     if organization is None:
-        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
+        raise HTTPException(status_code=404, detail=f"Organization '{org_id}' not found")
 
     # Keep organization reads scoped to the caller's memberships.
-    if not any(org.id == org_id for org in user.orgs):
-        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
+    if not any(organization.id == org_id for organization in user.organizations):
+        raise HTTPException(status_code=404, detail=f"Organization '{org_id}' not found")
 
     return organization
 
 
-@router.post("/api/orgs", response_model=OrgSummary)
+@router.post("/api/orgs", response_model=OrganizationSummary)
 async def create_organization(
-    payload: OrgCreate,
+    payload: OrganizationCreate,
     user: User = Depends(authuser),
-) -> OrgSummary:
-    """Create a new org."""
+) -> OrganizationSummary:
+    """Create a new organization."""
 
     # Map uniqueness failures to a conflict response.
     try:
-        organization = await orgs.create(payload.name, payload.location_id, user, payload.avatar)
+        organization = await organizations.create(payload.name, payload.location_id, user, payload.avatar)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -58,18 +58,18 @@ async def create_organization(
         try:
             await k8s.namespace(organization.id)
         except Exception:
-            logger.exception("Failed to create namespace for org '%s'", organization.id)
+            logger.exception("Failed to create namespace for organization '%s'", organization.id)
 
     return organization
 
 
 @router.delete("/api/orgs/{org_id}", status_code=204)
 async def delete_organization(org_id: str, user: User = Depends(authuser)) -> None:
-    """Delete one org by id."""
+    """Delete one organization by id."""
 
     # Only members can delete their own org.
-    if not any(org.id == org_id for org in user.orgs):
-        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
+    if not any(organization.id == org_id for organization in user.organizations):
+        raise HTTPException(status_code=404, detail=f"Organization '{org_id}' not found")
 
-    await orgs.delete(org_id)
+    await organizations.delete(org_id)
     return
