@@ -199,7 +199,7 @@ function getRoutes() {
 function OrgAppView() {
     const { org = '', app = '' } = useParams();
     const { org: organization, isLoading, error } = useOrg(org);
-    const orgApp = organization?.apps.find((item) => item.id === app);
+    const orgApp = organization?.applications.find((item) => item.id === app);
 
     if (isLoading) {
         // Keep the app chrome visible while the org payload resolves.

@@ -71,19 +71,19 @@ class UsersService(ServiceBase):
         membership_result = await session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == user.id,
-                UserOrganization.organization_id == org.id,
+                UserOrganization.organization_id == organization.id,
             )
         )
         if membership_result.scalar_one_or_none() is not None:
             return
 
         session.add(
-                UserOrganization(
-                    user_id=user.id,
-                    organization_id=organization.id,
-                    role_name=Roles.owner,
-                )
+            UserOrganization(
+                user_id=user.id,
+                organization_id=organization.id,
+                role_name=Roles.owner,
             )
+        )
         await session.commit()
 
     async def upsert(

@@ -36,7 +36,7 @@ export function useOrg(org: string): UseOrgResult {
         org: organizationQuery.data,
         people: organizationQuery.data?.users ?? [],
         invitations: organizationQuery.data?.invitations ?? [],
-        apps: organizationQuery.data?.apps ?? [],
+        apps: organizationQuery.data?.applications ?? [],
         isLoading: organizationQuery.isLoading,
         error,
     };
@@ -142,7 +142,7 @@ export function useDeleteApp(org: string) {
         },
         onSuccess: (_data, appId) => {
             queryClient.setQueryData<ApiOrgDetails>(['api', orgUrl], (current) =>
-                current ? { ...current, apps: current.apps.filter((app) => app.id !== appId) } : current
+                current ? { ...current, applications: current.applications.filter((app) => app.id !== appId) } : current
             );
             queryClient.invalidateQueries({ queryKey: ['api', orgUrl] });
         },

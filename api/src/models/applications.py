@@ -26,7 +26,7 @@ class AppStatus(str, Enum):
 
 
 class ApplicationCreate(BaseModel):
-    name: AppName
+    name: ApplicationName
     image: str
     description: str | None = None
     icon: str | None = None
@@ -52,4 +52,3 @@ class ApplicationResponse(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
-

@@ -160,7 +160,9 @@ def _app_relation_options() -> tuple:
     """Build the shared eager-loading options for application lookups."""
 
     return (
-        selectinload(Application.organization),
+        selectinload(Application.organization).selectinload(Organization.created_by),
+        selectinload(Application.organization).selectinload(Organization.updated_by),
+        selectinload(Application.organization).selectinload(Organization.deleted_by),
         selectinload(Application.created_by),
         selectinload(Application.updated_by),
         selectinload(Application.deleted_by),

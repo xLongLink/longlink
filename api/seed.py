@@ -10,14 +10,14 @@ from src.adapters.compute import K8s
 from src.adapters.database import Postgre
 from src.database.session import get_session
 from src.constants import APP_SERVICE_PORT
-from src.database.services.applications import apps
+from src.database.services.applications import applications
 from src.database.services.compute import compute
 from src.database.services.database import database
 from src.database.services.locations import locations
-from src.database.services.organizations import orgs
+from src.database.services.organizations import organizations
 from src.database.services.storage import storage
 from src.env import env
-from src.models.applications import AppCreate
+from src.models.applications import ApplicationCreate
 from src.models.applications import AppStatus
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 from src.models.roles import Roles
@@ -83,7 +83,7 @@ async def main() -> None:
     await database.create(**LOCAL_DATABASE, location_id=location.id)
     await storage.create(**LOCAL_STORAGE, location_id=location.id)
     await compute.create(**LOCAL_COMPUTE, location_id=location.id)
-    organization_record = await orgs.create(LOCAL_ORG, location.id)
+    organization_record = await organizations.create(LOCAL_ORG, location.id)
 
     # Backfill the seeded demo membership if the admin user already exists locally.
     Session = await get_session()
@@ -128,7 +128,7 @@ async def main() -> None:
             detail=f"No database configured for location '{organization_record.location_id}'",
         )
 
-    app_payload = AppCreate(
+    app_payload = ApplicationCreate(
         **LOCAL_APP,
         envs={
             "REQUIRED": "required",
@@ -136,7 +136,7 @@ async def main() -> None:
         },
     )
     app_slug = slugify(app_payload.name)
-    app = await apps.create(
+    application = await applications.create(
         organization_record.id,
         app_payload.name,
         app_slug,
@@ -160,7 +160,7 @@ async def main() -> None:
         await db_client.schema(organization_record.id, app_slug)
         await k8s.application(organization_record.id, app_slug, app_payload.image, APP_SERVICE_PORT, app_payload.envs)
     except Exception as exc:
-        await apps.set_status(app.id, AppStatus.failed)
+        await applications.set_status(application.id, AppStatus.failed)
         raise
 
 

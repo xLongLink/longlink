@@ -44,11 +44,11 @@ const appColumns: Array<ColumnDef<ApiAppResponse>> = [
         accessorKey: 'organization',
         header: 'Organization',
         cell: ({ row, getValue }) => {
-            const organization = getValue<string>();
+            const organization = getValue<ApiAppResponse['organization']>();
 
             return (
                 <Link to={`/orgs/${row.original.organization_id}`} className="font-medium text-foreground hover:underline">
-                    {organization}
+                    {organization.name}
                 </Link>
             );
         },

@@ -36,6 +36,10 @@ export type ApiUserProfile = ApiUserSummary & {
 export type ApiOrgApp = {
     id: string;
     name: string;
+    slug: string;
+    image: string;
+    status: 'creating' | 'running' | 'deleting' | 'failed';
+    role: Role | null;
     description: string | null;
     icon: string | null;
     created_at: string;
@@ -86,7 +90,7 @@ export type ApiOrgDetails = {
     deleted_by: ApiUserSummary | null;
     users: ApiUserSummary[];
     invitations: ApiInvitation[];
-    apps: ApiOrgApp[];
+    applications: ApiOrgApp[];
 };
 
 export type ApiLocation = {
@@ -171,7 +175,7 @@ export type ApiComputePod = {
 export type ApiAppResponse = {
     id: string;
     organization_id: string;
-    organization: string;
+    organization: ApiOrgSummary;
     name: string;
     slug: string;
     image: string;
