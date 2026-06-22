@@ -1,13 +1,12 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Column, ForeignKeyConstraint
-from src.database.models.__base__ import Base, utcnow
 from src.models.roles import Roles
 
 
-class UserOrganization(Base, table=True):
+class UserOrganization(SQLModel, table=True):
     """Represent one user's membership in an organization."""
 
     __tablename__ = "user_organizations"
@@ -20,15 +19,15 @@ class UserOrganization(Base, table=True):
     role_name: Roles = Field(sa_column=Column(Enum(Roles, name="role_name_enum", native_enum=False), nullable=False))
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
 
-class UserApplication(Base, table=True):
+class UserApplication(SQLModel, table=True):
     """Represent one user's membership in an application."""
 
     __tablename__ = "user_applications"
@@ -42,9 +41,9 @@ class UserApplication(Base, table=True):
     role_name: Roles = Field(sa_column=Column(Enum(Roles, name="role_name_enum", native_enum=False), nullable=False))
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')

@@ -96,6 +96,7 @@ class UserOrganizationMembership(BaseModel):
 
     id: UUID
     name: str
+    avatar: Avatar = ""
     role: Roles
 
 
@@ -115,7 +116,7 @@ class UserSummary(BaseModel):
 class UserListItem(UserSummary):
     """Represent one user in admin list responses."""
 
-    oidc_subject: str | None = None
+    oidc: str
 
 
 class UserProfile(BaseModel):
@@ -133,5 +134,5 @@ class UserProfile(BaseModel):
     accent: Accent
     radius: Radius
     language: Language
-    oidc_subject: str | None = None
+    oidc: str
     organizations: list[UserOrganizationMembership] = Field(default_factory=list)

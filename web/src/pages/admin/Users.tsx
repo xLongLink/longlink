@@ -40,7 +40,7 @@ const userColumns: Array<ColumnDef<ApiUserSummary>> = [
         cell: ({ row, getValue }) => (
             <div className="flex flex-col leading-tight text-left">
                 <span className="font-medium text-foreground">#{getValue<number>()}</span>
-                <span className="text-xs text-muted-foreground">#{row.original.oidc_subject ?? '—'}</span>
+                <span className="text-xs text-muted-foreground">OIDC: {row.original.oidc ?? '—'}</span>
             </div>
         ),
         meta: { className: 'w-28 pl-1 text-left' },
@@ -85,13 +85,13 @@ const userColumns: Array<ColumnDef<ApiUserSummary>> = [
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 className="cursor-pointer"
-                                disabled={!user.oidc_subject}
+                                disabled={!user.oidc}
                                 onClick={() => {
-                                    if (!user.oidc_subject) {
+                                    if (!user.oidc) {
                                         return;
                                     }
 
-                                    void navigator.clipboard.writeText(user.oidc_subject);
+                                    void navigator.clipboard.writeText(user.oidc);
                                     toast.success('OIDC subject copied');
                                 }}
                             >

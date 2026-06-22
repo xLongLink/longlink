@@ -29,7 +29,7 @@ async def test_upsert_creates_user_when_no_existing_match() -> None:
 
     # Act
     user = await db.users.upsert(
-        oidc_subject="oidc-subject-create",
+        oidc="oidc-subject-create",
         email="create@example.com",
         name="Create User",
         avatar="https://example.com/create.png",
@@ -37,7 +37,7 @@ async def test_upsert_creates_user_when_no_existing_match() -> None:
 
     # Assert
     assert user.id is not None
-    assert user.oidc_subject == "oidc-subject-create"
+    assert user.oidc == "oidc-subject-create"
     assert user.email == "create@example.com"
     assert user.name == "Create User"
     assert user.avatar == "https://example.com/create.png"
@@ -51,7 +51,7 @@ async def test_upsert_marks_first_created_user_as_admin() -> None:
 
     # Act
     user = await db.users.upsert(
-        oidc_subject="oidc-subject-admin",
+        oidc="oidc-subject-admin",
         email="admin@example.com",
         name="First User",
         avatar=None,
@@ -68,17 +68,17 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
 
     # Arrange
     user = await db.users.upsert(
-        oidc_subject="oidc-subject-admin",
+        oidc="oidc-subject-admin",
         email="example@longlink.dev",
         name="First User",
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing")
-    organization = await db.organizations.create("test", location.id)
+    organization = await db.organizations.create("test", location.id, avatar="https://example.com/organizations/test.png")
 
     # Act
     await db.users.upsert(
-        oidc_subject="oidc-subject-admin",
+        oidc="oidc-subject-admin",
         email="example@longlink.dev",
         name="First User",
         avatar=None,
@@ -87,7 +87,14 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
 
     # Assert
     assert profile is not None
-    assert profile.organizations == [UserOrganizationMembership(id=organization.id, name="test", role=Roles.owner)]
+    assert profile.organizations == [
+        UserOrganizationMembership(
+            id=organization.id,
+            name="test",
+            avatar="https://example.com/organizations/test.png",
+            role=Roles.owner,
+        )
+    ]
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:
@@ -95,7 +102,7 @@ async def test_upsert_does_not_mark_second_user_as_admin() -> None:
 
     # Arrange
     await db.users.upsert(
-        oidc_subject="oidc-subject-first",
+        oidc="oidc-subject-first",
         email="first@example.com",
         name="First User",
         avatar=None,
@@ -103,7 +110,7 @@ async def test_upsert_does_not_mark_second_user_as_admin() -> None:
 
     # Act
     user = await db.users.upsert(
-        oidc_subject="oidc-subject-second",
+        oidc="oidc-subject-second",
         email="second@example.com",
         name="Second User",
         avatar=None,
@@ -114,12 +121,12 @@ async def test_upsert_does_not_mark_second_user_as_admin() -> None:
     assert user.admin is False
 
 
-async def test_upsert_updates_existing_user_by_oidc_subject() -> None:
+async def test_upsert_updates_existing_user_by_oidc() -> None:
     """Update the existing user when the OIDC subject already exists."""
 
     # Arrange
     original_user = await db.users.upsert(
-        oidc_subject="oidc-subject-update",
+        oidc="oidc-subject-update",
         email="original@example.com",
         name="Original User",
         avatar=None,
@@ -127,7 +134,7 @@ async def test_upsert_updates_existing_user_by_oidc_subject() -> None:
 
     # Act
     updated_user = await db.users.upsert(
-        oidc_subject="oidc-subject-update",
+        oidc="oidc-subject-update",
         email="updated@example.com",
         name="Updated User",
         avatar="https://example.com/updated.png",
@@ -135,18 +142,18 @@ async def test_upsert_updates_existing_user_by_oidc_subject() -> None:
 
     # Assert
     assert updated_user.id == original_user.id
-    assert updated_user.oidc_subject == "oidc-subject-update"
+    assert updated_user.oidc == "oidc-subject-update"
     assert updated_user.email == "updated@example.com"
     assert updated_user.name == "Updated User"
     assert updated_user.avatar == "https://example.com/updated.png"
 
 
-async def test_get_returns_user_by_oidc_subject() -> None:
+async def test_get_returns_user_by_oidc() -> None:
     """Return a user by OIDC subject only."""
 
     # Arrange
     created_user = await db.users.upsert(
-        oidc_subject="oidc-subject-get",
+        oidc="oidc-subject-get",
         email="get@example.com",
         name="Get User",
         avatar=None,
@@ -158,4 +165,4 @@ async def test_get_returns_user_by_oidc_subject() -> None:
     # Assert
     assert loaded_user is not None
     assert loaded_user.id == created_user.id
-    assert loaded_user.oidc_subject == "oidc-subject-get"
+    assert loaded_user.oidc == "oidc-subject-get"

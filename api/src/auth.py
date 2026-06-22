@@ -18,11 +18,11 @@ oauth.register(
 async def authuser(request: Request) -> User:
     """Authenticate a user from session and return the User object."""
 
-    oidc_subject = request.session.get("oidc_subject")
-    if oidc_subject is None:
+    oidc = request.session.get("oidc")
+    if oidc is None:
         raise HTTPException(401, "Not authenticated")
 
-    user = await users.get(oidc_subject)
+    user = await users.get(oidc)
     if not user:
         raise HTTPException(401, "Not authenticated")
     return user

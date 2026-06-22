@@ -15,12 +15,13 @@ export type ApiUserSummary = {
     avatar: string;
     role: PlatformRole;
     admin: boolean;
-    oidc_subject: string | null;
+    oidc: string;
 };
 
 export type ApiUserOrganizationMembership = {
     id: string;
     name: string;
+    avatar: string;
     role: Role;
 };
 
@@ -29,7 +30,6 @@ export type ApiUserProfile = ApiUserSummary & {
     accent: Accent;
     radius: Radius;
     language: string;
-    oidc_subject: string | null;
     organizations: ApiUserOrganizationMembership[];
 };
 
@@ -66,7 +66,7 @@ export type ApiImageMetadata = {
 export type ApiOrganizationSummary = {
     id: string;
     name: string;
-    avatar: string | null;
+    avatar: string;
     location_id: string | null;
     created_at: string;
     updated_at: string;
@@ -79,7 +79,7 @@ export type ApiOrganizationSummary = {
 export type ApiOrganizationDetails = {
     id: string;
     name: string;
-    avatar: string | null;
+    avatar: string;
     location_id: string | null;
     location: ApiLocation | null;
     created_at: string;

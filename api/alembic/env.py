@@ -4,7 +4,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.database.models.__base__ import Base
+from sqlmodel import SQLModel
 from src.enviroments import env
 
 # this is the Alembic Config object, which provides
@@ -21,7 +21,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

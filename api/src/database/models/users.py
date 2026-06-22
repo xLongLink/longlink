@@ -1,12 +1,11 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 from uuid import uuid4
 from typing import TYPE_CHECKING
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import and_, Column, Enum as SAEnum
 from src.models.users import Theme, Accent, Radius, Language
 from src.models.roles import PlatformRole
-from src.database.models.__base__ import Base, utcnow
 from src.database.models.association import UserApplication, UserOrganization
 
 if TYPE_CHECKING:
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
     from src.database.models.applications import Application
 
 
-class User(Base, table=True):
+class User(SQLModel, table=True):
     """Represent a user account authenticated via OIDC."""
     __tablename__ = 'users'
 
@@ -24,13 +23,13 @@ class User(Base, table=True):
     # Metadata
     name: str
     email: str = Field(unique=True, max_length=255)
-    avatar: str | None = Field(default=None, max_length=2048)
-    oidc_subject: str | None = Field(default=None, unique=True, max_length=255)
+    avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
+    oidc: str = Field(unique=True, max_length=255)
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')

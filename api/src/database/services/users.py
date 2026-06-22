@@ -1,6 +1,6 @@
-from .base import ServiceBase
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
+from src.database.session import session_scope
 from src.database.models.organizations import Organization
 from src.database.models.users import User
 from src.models.roles import Roles, PlatformRole
@@ -12,11 +12,11 @@ ADMIN_EMAIL = 'example@longlink.dev'
 ADMIN_ORG = 'test'
 
 
-class UsersService(ServiceBase):
+class UsersService:
     async def list(self) -> list[User]:
         """Return all users in the database."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             result = await session.execute(select(User))
             return result.scalars().all()
 
@@ -24,7 +24,7 @@ class UsersService(ServiceBase):
     async def get_by_id(self, user_id: str) -> User | None:
         """Return one user by id."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(User).where(User.id == user_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
@@ -32,7 +32,7 @@ class UsersService(ServiceBase):
     async def profile(self, user_id: str) -> UserProfile | None:
         """Return one user profile with membership roles included."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             user_result = await session.execute(select(User).where(User.id == user_id))
             user = user_result.scalars().first()
             if user is None:
@@ -40,16 +40,17 @@ class UsersService(ServiceBase):
 
             # Load organization roles from the association table so the profile stays accurate.
             org_result = await session.execute(
-                select(UserOrganization.organization_id, Organization.name, UserOrganization.role_name)
+                select(UserOrganization.organization_id, Organization.name, Organization.avatar, UserOrganization.role_name)
                 .join(Organization, Organization.id == UserOrganization.organization_id)
                 .where(UserOrganization.user_id == user.id)
             )
 
             payload = user.model_dump()
             payload["admin"] = user.admin
+            payload["oidc"] = user.oidc
             payload["organizations"] = [
-                UserOrganizationMembership(id=organization_id, name=organization_name, role=role_name)
-                for organization_id, organization_name, role_name in org_result.all()
+                UserOrganizationMembership(id=organization_id, name=organization_name, avatar=organization_avatar, role=role_name)
+                for organization_id, organization_name, organization_avatar, role_name in org_result.all()
             ]
 
             return UserProfile.model_validate(payload)
@@ -91,7 +92,7 @@ class UsersService(ServiceBase):
     async def upsert(
         self,
         *,
-        oidc_subject: str,
+        oidc: str,
         email: str | None = None,
         name: str | None = None,
         avatar: str | None = None,
@@ -104,7 +105,7 @@ class UsersService(ServiceBase):
     ) -> User:
         """Create a new OIDC user or update an existing one."""
 
-        existing_user = await self.get(oidc_subject)
+        existing_user = await self.get(oidc)
         # Patch the current record in place when the subject already exists.
         if existing_user is not None:
             if email is not None:
@@ -112,7 +113,7 @@ class UsersService(ServiceBase):
             if name is not None:
                 existing_user.name = name
             if avatar is not None:
-                existing_user.avatar = avatar
+                existing_user.avatar = avatar or ""
             if role is not None:
                 existing_user.role = role
             elif admin is not None:
@@ -126,12 +127,12 @@ class UsersService(ServiceBase):
             if language is not None:
                 existing_user.language = language
 
-            existing_user.oidc_subject = oidc_subject
+            existing_user.oidc = oidc
             if existing_user.created_id is None:
                 existing_user.created_id = existing_user.id
             existing_user.updated_id = existing_user.id
 
-            async with self.session() as session:
+            async with session_scope() as session:
                 session.add(existing_user)
                 await session.commit()
                 await session.refresh(existing_user)
@@ -146,7 +147,7 @@ class UsersService(ServiceBase):
 
             return existing_user
 
-        async with self.session() as session:
+        async with session_scope() as session:
             # Bootstrap the very first user as admin so the instance starts with one owner.
             user_result = await session.execute(select(func.count()).select_from(User))
             is_admin = user_result.scalar_one() == 0
@@ -168,8 +169,8 @@ class UsersService(ServiceBase):
             user = User(
                 name=name,
                 email=email,
-                avatar=avatar,
-                oidc_subject=oidc_subject,
+                avatar=avatar or "",
+                oidc=oidc,
                 role=resolved_role,
                 theme=theme if theme is not None else Theme.dark,
                 accent=accent if accent is not None else Accent.neutral,
@@ -192,12 +193,12 @@ class UsersService(ServiceBase):
 
             return user
 
-    async def get(self, oidc_subject: str) -> User | None:
+    async def get(self, oidc: str) -> User | None:
         """Retrieve a user by OIDC subject."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             # Load memberships so the returned user can be used outside the session.
-            statement = select(User).options(selectinload(User.organizations).selectinload(Organization.location)).where(User.oidc_subject == oidc_subject)
+            statement = select(User).options(selectinload(User.organizations).selectinload(Organization.location)).where(User.oidc == oidc)
             result = await session.execute(statement)
             return result.scalars().first()
 

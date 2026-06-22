@@ -1,19 +1,19 @@
-from .base import ServiceBase
+from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from src.database.models.__base__ import utcnow
+from src.database.session import session_scope
 from src.database.models.storage import StorageRegistry
 from src.database.models.users import User
 from src.models.kinds import StorageKind
 
 
-class StorageService(ServiceBase):
+class StorageService:
     """Manage storage backend registrations."""
 
     async def list(self) -> list[StorageRegistry]:
         """Return all registered storage backends."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(StorageRegistry).options(
                 selectinload(StorageRegistry.created_by),
                 selectinload(StorageRegistry.updated_by),
@@ -25,7 +25,7 @@ class StorageService(ServiceBase):
     async def get(self, registry_id: str) -> StorageRegistry | None:
         """Return one storage backend by id."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(StorageRegistry).options(
                 selectinload(StorageRegistry.created_by),
                 selectinload(StorageRegistry.updated_by),
@@ -47,7 +47,7 @@ class StorageService(ServiceBase):
     ) -> StorageRegistry:
         """Create or update one storage backend registration."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             result = await session.execute(select(StorageRegistry).where(StorageRegistry.name == name))
             storage = result.scalar_one_or_none()
 
@@ -91,7 +91,7 @@ class StorageService(ServiceBase):
     async def delete(self, registry_id: str, deleted_id: str | None = None) -> StorageRegistry | None:
         """Mark one storage backend registration as deleted."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             result = await session.execute(
                 select(StorageRegistry).options(
                     selectinload(StorageRegistry.created_by),
@@ -104,7 +104,7 @@ class StorageService(ServiceBase):
             if storage is None:
                 return None
 
-            storage.deleted_at = utcnow()
+            storage.deleted_at = datetime.now(UTC)
             storage.deleted_id = deleted_id
             storage.updated_id = deleted_id
             await session.commit()

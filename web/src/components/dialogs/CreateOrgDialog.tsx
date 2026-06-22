@@ -17,6 +17,7 @@ export default function CreateOrgDialog() {
     const createOrg = useCreateOrg();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
+    const [avatar, setAvatar] = useState('');
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +47,7 @@ export default function CreateOrgDialog() {
                     setOpen(nextOpen);
                     if (!nextOpen) {
                         setError(null);
+                        setAvatar('');
                     }
                 }}
             >
@@ -64,9 +66,14 @@ export default function CreateOrgDialog() {
 
                                 // Create the org and close the dialog on success.
                                 try {
-                                    await createOrg.mutateAsync({ name: name.trim(), location_id: locationId });
+                                    await createOrg.mutateAsync({
+                                        name: name.trim(),
+                                        location_id: locationId,
+                                        avatar: avatar.trim(),
+                                    });
                                     setOpen(false);
                                     setName('');
+                                    setAvatar('');
                                     setLocationId('');
                                 } catch (mutationError) {
                                     setError(
@@ -82,6 +89,18 @@ export default function CreateOrgDialog() {
                                     value={name}
                                     onChange={(event) => setName(event.target.value)}
                                     placeholder="Example LongLink"
+                                    autoComplete="off"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="organization-avatar">Avatar URL</Label>
+                                <Input
+                                    id="organization-avatar"
+                                    type="url"
+                                    value={avatar}
+                                    onChange={(event) => setAvatar(event.target.value)}
+                                    placeholder="https://example.com/org.png"
                                     autoComplete="off"
                                 />
                             </div>
@@ -105,22 +124,22 @@ export default function CreateOrgDialog() {
                             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
                             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setOpen(false);
-                                        setError(null);
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={createOrg.isPending || name.trim().length === 0 || !locationId}
-                                >
-                                    {createOrg.isPending ? 'Creating...' : 'Create'}
-                                </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setOpen(false);
+                                            setError(null);
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={createOrg.isPending || name.trim().length === 0 || !locationId}
+                                    >
+                                        {createOrg.isPending ? 'Creating...' : 'Create'}
+                                    </Button>
                             </div>
                         </form>
                     </div>

@@ -37,9 +37,13 @@ async def test_create_organization_returns_owner_role(
     owner = users[0]
     client = clients[0]
     location = await db.locations.create("local", "Local testing")
+    avatar = "https://example.com/organizations/acme.png"
 
     # Act
-    response = client.post("/api/orgs", json={"name": "acme", "location_id": str(location.id)})
+    response = client.post(
+        "/api/orgs",
+        json={"name": "acme", "avatar": avatar, "location_id": str(location.id)},
+    )
 
     # Assert
     assert response.status_code == 200
@@ -49,6 +53,7 @@ async def test_create_organization_returns_owner_role(
         {
             "id": organization.id,
             "name": organization.name,
+            "avatar": avatar,
             "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
@@ -69,7 +74,7 @@ async def test_get_organization_returns_member_payload(
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing")
-    organization = await db.orgs.create("acme", location.id, owner)
+    organization = await db.orgs.create("acme", location.id, owner, avatar="https://example.com/organizations/acme.png")
     app = await db.apps.create(
         organization.id,
         "dashboard",
@@ -89,6 +94,7 @@ async def test_get_organization_returns_member_payload(
     expected_payload = OrgDetails(
         id=organization.id,
         name="acme",
+        avatar="https://example.com/organizations/acme.png",
         location_id=organization.location_id,
         location=LocationResponse.model_validate(location),
         created_at=organization.created_at,
@@ -112,6 +118,7 @@ async def test_get_organization_returns_member_payload(
         applications=[
             {
                 "id": str(app.id),
+                "slug": app.slug,
                 "organization_id": organization.id,
                 "organization": organization.name,
                 "name": "dashboard",
@@ -144,6 +151,7 @@ async def test_get_organization_returns_member_payload(
     assert response.json()["applications"] == [
         {
             "id": str(app.id),
+            "slug": app.slug,
             "name": "dashboard",
             "status": "creating",
             "description": None,
@@ -179,6 +187,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
         {
             "id": organization.id,
             "name": organization.name,
+            "avatar": "",
             "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
@@ -189,6 +198,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
         }
     ).model_dump(mode="json")
     assert response.json() == [expected_payload]
+    assert response.json()[0]["avatar"] == ""
 
 
 async def test_get_organization_returns_404_for_non_member(

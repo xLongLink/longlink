@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from .base import ServiceBase
 from datetime import UTC, datetime
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from src.database.session import session_scope
 from src.models.applications import AppStatus
 from src.database.models.organizations import Organization
 from src.database.models.applications import Application
@@ -14,11 +14,11 @@ from src.database.models.users import User
 from src.database.models.association import UserApplication
 
 
-class ApplicationsService(ServiceBase):
+class ApplicationsService:
     async def list_all(self) -> list[Application]:
         """Return all registered applications for admin views."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = (
                 select(Application)
                 .join(Organization, Organization.id == Application.organization_id)
@@ -32,7 +32,7 @@ class ApplicationsService(ServiceBase):
     async def list(self, organization_id: UUID | str, user_id: UUID | str) -> list[tuple[Application, str | None]]:
         """Return all registered applications for one organization with membership roles."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(organization_id, str):
                 organization_id = UUID(organization_id)
             if isinstance(user_id, str):
@@ -58,7 +58,7 @@ class ApplicationsService(ServiceBase):
     async def get(self, organization_id: UUID | str, name: str) -> Application | None:
         """Return a registered application by organization and name."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(organization_id, str):
                 organization_id = UUID(organization_id)
 
@@ -74,7 +74,7 @@ class ApplicationsService(ServiceBase):
     async def get_by_id(self, application_id: UUID | str) -> Application | None:
         """Return a registered application by id."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(application_id, str):
                 application_id = UUID(application_id)
 
@@ -95,7 +95,7 @@ class ApplicationsService(ServiceBase):
     ) -> Application:
         """Add a new application to the database for one organization."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(organization_id, str):
                 organization_id = UUID(organization_id)
 
@@ -140,7 +140,7 @@ class ApplicationsService(ServiceBase):
     async def set_status(self, application_id: UUID | str, status: AppStatus) -> Application | None:
         """Update one application status and return the refreshed row."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(application_id, str):
                 application_id = UUID(application_id)
 
@@ -156,7 +156,7 @@ class ApplicationsService(ServiceBase):
     async def delete(self, organization_id: UUID | str, application_id: UUID | str, deleted_id: UUID | str | None = None) -> Application:
         """Delete an application by organization and id and return it."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(organization_id, str):
                 organization_id = UUID(organization_id)
             if isinstance(application_id, str):

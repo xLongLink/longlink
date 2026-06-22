@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from src.models.users import Avatar
 from src.models.users import UserSummary
 
 
@@ -13,7 +14,7 @@ class OrganizationSummary(BaseModel):
 
     id: UUID
     name: str
-    avatar: str | None = None
+    avatar: Avatar = ""
     location_id: UUID
     created_at: datetime
     updated_at: datetime

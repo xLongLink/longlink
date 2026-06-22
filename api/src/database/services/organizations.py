@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from uuid import UUID
 
-from .base import ServiceBase
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.database.models.__base__ import utcnow
+from src.database.session import session_scope
 from src.models.roles import Roles
 from src.database.models.organizations import Organization
 from src.database.models.applications import Application
@@ -19,13 +19,13 @@ from src.database.models.association import UserOrganization
 from src.database.models.association import UserApplication
 
 
-class OrgsService(ServiceBase):
+class OrgsService:
     """Manage org records."""
 
     async def list(self) -> list[Organization]:
         """Return all organizations in the database."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(Organization).options(
                 selectinload(Organization.created_by),
                 selectinload(Organization.updated_by),
@@ -37,7 +37,7 @@ class OrgsService(ServiceBase):
     async def get(self, organization_id: UUID | str) -> Organization | None:
         """Return one organization by id."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(organization_id, str):
                 organization_id = UUID(organization_id)
 
@@ -79,11 +79,11 @@ class OrgsService(ServiceBase):
     async def create(self, name: str, location_id: UUID | str, user: User | None = None, avatar: str | None = None) -> Organization:
         """Create an organization."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(location_id, str):
                 location_id = UUID(location_id)
 
-            organization = Organization(name=name, avatar=avatar, location_id=location_id)
+            organization = Organization(name=name, avatar=avatar or "", location_id=location_id)
             if user is not None:
                 # Attach the creator as the initial owner when the caller is authenticated.
                 organization.created_id = user.id
@@ -118,7 +118,7 @@ class OrgsService(ServiceBase):
     async def delete(self, organization_id: UUID | str, deleted_id: UUID | str | None = None) -> Organization | None:
         """Mark one organization as deleted."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(organization_id, str):
                 organization_id = UUID(organization_id)
             if isinstance(deleted_id, str):
@@ -132,23 +132,23 @@ class OrgsService(ServiceBase):
             # Mark the organization tree as deleted instead of removing the audit trail.
             memberships_result = await session.execute(select(UserOrganization).where(UserOrganization.organization_id == organization_id))
             for membership in memberships_result.scalars().all():
-                membership.deleted_at = utcnow()
+                membership.deleted_at = datetime.now(UTC)
                 membership.deleted_id = deleted_id
                 membership.updated_id = deleted_id
 
             app_memberships_result = await session.execute(select(UserApplication).where(UserApplication.organization_id == organization_id))
             for membership in app_memberships_result.scalars().all():
-                membership.deleted_at = utcnow()
+                membership.deleted_at = datetime.now(UTC)
                 membership.deleted_id = deleted_id
                 membership.updated_id = deleted_id
 
             applications_result = await session.execute(select(Application).where(Application.organization_id == organization_id, Application.deleted_at.is_(None)))
             for application in applications_result.scalars().all():
-                application.deleted_at = utcnow()
+                application.deleted_at = datetime.now(UTC)
                 application.deleted_id = deleted_id
                 application.updated_id = deleted_id
 
-            organization.deleted_at = utcnow()
+            organization.deleted_at = datetime.now(UTC)
             organization.deleted_id = deleted_id
             organization.updated_id = deleted_id
             await session.commit()

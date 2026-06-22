@@ -4,6 +4,7 @@ import LogsDialog from '@/components/dialogs/LogsDialog';
 import { useDeleteApp } from '@/hooks/use-org';
 import type { ApiOrganizationApplication, ApiOrganizationDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Input } from '@ui/input';
@@ -96,8 +97,14 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                         <hr className="border-border" />
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-sm text-muted-foreground">Name</label>
-                                <Input value={orgDetails?.name ?? org} readOnly />
+                                <label className="text-sm text-muted-foreground">Organization</label>
+                                <div className="flex items-center gap-3 rounded-md border border-input bg-background px-3 py-2">
+                                    <Avatar className="size-8">
+                                        <AvatarImage src={orgDetails?.avatar ?? ''} alt={orgDetails?.name ?? org} />
+                                        <AvatarFallback>{(orgDetails?.name ?? org).slice(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium text-foreground">{orgDetails?.name ?? org}</span>
+                                </div>
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm text-muted-foreground">Location</label>

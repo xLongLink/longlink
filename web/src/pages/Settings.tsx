@@ -1,16 +1,18 @@
 import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
+import { DataTable } from '@/components/DataTable';
 import { useDeleteOrg } from '@/hooks/use-org';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
+import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Menu, MenuSection } from '@ui/menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table';
 import { Bell, Building2, Code2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
@@ -45,6 +47,50 @@ export default function Settings() {
         (accountName !== user.name || accountEmail !== user.email) &&
         accountName.length > 0 &&
         accountEmail.length > 0;
+
+    const organizationColumns: Array<ColumnDef<(typeof organizations)[number]>> = [
+        {
+            accessorKey: 'name',
+            header: 'Name',
+            cell: ({ row, getValue }) => (
+                <div className="flex items-center gap-3">
+                    <Avatar className="size-8">
+                        <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
+                        <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-foreground">{getValue<string>()}</span>
+                </div>
+            ),
+        },
+        {
+            accessorKey: 'role',
+            header: 'Role',
+            meta: { className: 'w-32' },
+        },
+        {
+            id: 'actions',
+            header: 'Actions',
+            meta: { className: 'w-44' },
+            cell: ({ row }) => (
+                <div className="flex items-center gap-2">
+                    <Link to="/organizations" className="text-sm text-accent hover:underline">
+                        Manage
+                    </Link>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                            setDeleteTarget(row.original.id);
+                            setDeleteError(null);
+                        }}
+                    >
+                        Delete
+                    </Button>
+                </div>
+            ),
+        },
+    ];
 
     return (
         <Layout
@@ -249,58 +295,12 @@ export default function Settings() {
                                 <CreateOrgDialog />
                             </div>
 
-                            <div className="w-full overflow-hidden rounded-2xl border border-border bg-card/80">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead className="w-32">Role</TableHead>
-                                            <TableHead className="w-44">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {organizations.length ? (
-                                            organizations.map((organization) => (
-                                                <TableRow key={organization.id}>
-                                                    <TableCell className="font-medium text-foreground">
-                                                        {organization.name}
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {organization.role}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-2">
-                                                            <Link
-                                                                to="/organizations"
-                                                                className="text-sm text-accent hover:underline"
-                                                            >
-                                                                Manage
-                                                            </Link>
-                                                            <Button
-                                                                type="button"
-                                                                variant="destructive"
-                                                                size="sm"
-                                                                onClick={() => {
-                                                                    setDeleteTarget(organization.id);
-                                                                    setDeleteError(null);
-                                                                }}
-                                                            >
-                                                                Delete
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={3} className="py-8 text-sm text-muted-foreground">
-                                                    No organizations available.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                            <DataTable
+                                columns={organizationColumns}
+                                data={organizations}
+                                isLoading={isLoading}
+                                loadingLabel="Loading organizations..."
+                            />
                         </div>
                     </MenuSection>
 

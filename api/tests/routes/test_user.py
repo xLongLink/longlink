@@ -32,7 +32,7 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing")
-    await db.orgs.create("acme", location.id, user)
+    await db.orgs.create("acme", location.id, user, avatar="https://example.com/organizations/acme.png")
 
     client = clients[0]
 

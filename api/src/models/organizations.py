@@ -4,7 +4,7 @@ from pydantic import Field, BaseModel, ConfigDict
 from src.models.locations import LocationResponse
 from src.models.applications import AppStatus
 from src.models.organization_summary import OrganizationSummary
-from src.models.users import UserSummary
+from src.models.users import Avatar, UserSummary
 
 
 class OrganizationCreate(BaseModel):
@@ -22,6 +22,7 @@ class OrganizationApplicationResponse(BaseModel):
 
     id: UUID
     name: str
+    slug: str
     status: AppStatus
     description: str | None = None
     icon: str | None = None
@@ -40,7 +41,7 @@ class OrganizationDetails(BaseModel):
 
     id: UUID
     name: str
-    avatar: str | None = None
+    avatar: Avatar = ""
     location_id: UUID
     location: LocationResponse
     created_at: datetime

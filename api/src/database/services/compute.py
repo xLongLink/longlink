@@ -1,21 +1,21 @@
 import secrets
-from .base import ServiceBase
 from datetime import UTC, datetime
 from sqlalchemy import select
 from src.constants import INGRESS_NAME
 from sqlalchemy.orm import selectinload
+from src.database.session import session_scope
 from src.models.kinds import ComputeKind
 from src.database.models.compute import ComputeRegistry
 from src.database.models.users import User
 
 
-class ComputeService(ServiceBase):
+class ComputeService:
     """Manage compute backend registrations."""
 
     async def list(self) -> list[ComputeRegistry]:
         """Return all registered compute backends."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(ComputeRegistry).options(
                 selectinload(ComputeRegistry.created_by),
                 selectinload(ComputeRegistry.updated_by),
@@ -27,7 +27,7 @@ class ComputeService(ServiceBase):
     async def get(self, registry_id: str) -> ComputeRegistry | None:
         """Return one compute backend by id."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(ComputeRegistry).options(
                 selectinload(ComputeRegistry.created_by),
                 selectinload(ComputeRegistry.updated_by),
@@ -47,7 +47,7 @@ class ComputeService(ServiceBase):
     ) -> ComputeRegistry:
         """Create one compute backend registration."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             # Compute registries are append-only once created.
             proxy_secret_value = proxy_secret or secrets.token_urlsafe(32)
             compute = ComputeRegistry(
@@ -80,7 +80,7 @@ class ComputeService(ServiceBase):
     async def delete(self, registry_id: str, deleted_id: str | None = None) -> ComputeRegistry | None:
         """Mark one compute backend registration as deleted."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(ComputeRegistry).options(
                 selectinload(ComputeRegistry.created_by),
                 selectinload(ComputeRegistry.updated_by),
@@ -103,7 +103,7 @@ class ComputeService(ServiceBase):
     async def purge(self, registry_id: str) -> ComputeRegistry | None:
         """Hard delete one compute backend registration."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             result = await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == registry_id))
             compute = result.scalar_one_or_none()
             if compute is None:

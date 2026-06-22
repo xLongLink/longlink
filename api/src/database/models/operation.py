@@ -1,13 +1,12 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 from uuid import uuid4
 from sqlalchemy import Enum, Column, String
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 from src.models.operations import OperationKind
-from src.database.models.__base__ import Base, utcnow
 
 
-class Operation(Base, table=True):
+class Operation(SQLModel, table=True):
     """Represent one long-running platform operation."""
 
     __tablename__ = "operations"
@@ -26,9 +25,9 @@ class Operation(Base, table=True):
     error: str | None = Field(default=None, sa_column=Column(String(length=2000), nullable=True))
 
     # Timestamps
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')

@@ -1,19 +1,18 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 from uuid import uuid4
 from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import Enum, Column
 from src.models.kinds import StorageKind
-from src.database.models.__base__ import Base, utcnow
 
 if TYPE_CHECKING:
     from src.database.models.location import Location
     from src.database.models.users import User
 
 
-class StorageRegistry(Base, table=True):
+class StorageRegistry(SQLModel, table=True):
     """Represent a registered storage backend."""
 
     __tablename__ = "storage_registries"
@@ -32,10 +31,10 @@ class StorageRegistry(Base, table=True):
     secret_access_key: str = Field(max_length=255)
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     created_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'StorageRegistry.created_id'})
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
     updated_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'StorageRegistry.updated_id'})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
@@ -43,7 +42,5 @@ class StorageRegistry(Base, table=True):
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
     # Location
-    location_id: UUID = Field(foreign_key='locations.id')
-
-    # Relationships
     location: 'Location' = Relationship(back_populates='storage_registries')
+    location_id: UUID = Field(foreign_key='locations.id')

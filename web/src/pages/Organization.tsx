@@ -1,6 +1,7 @@
 import Layout from '@/layout/Layout';
 import { useOrg } from '@/hooks/use-org';
 import { useUser } from '@/hooks/use-user';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { LayoutGrid, Settings2, Users } from 'lucide-react';
 import { useLocation, useParams } from 'react-router';
@@ -25,6 +26,21 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const section =
         sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
     const { org: orgDetails, people, invitations, applications, isLoading, error } = useOrg(org);
+    const orgName = orgDetails?.name ?? org;
+    const orgAvatar = orgDetails?.avatar ?? '';
+
+    const orgHeader = (
+        <div className="flex items-center gap-4">
+            <Avatar className="size-12">
+                <AvatarImage src={orgAvatar} alt={orgName} />
+                <AvatarFallback>{orgName.slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Organization</div>
+                <div className="text-lg font-semibold text-foreground">{orgName}</div>
+            </div>
+        </div>
+    );
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -33,7 +49,8 @@ export default function Organization({ sectionName }: OrganizationProps) {
 
     let content = (
         <Hero icon={<LayoutGrid />}>
-            <div>
+            <div className="space-y-3">
+                {orgHeader}
                 <HeroTitle>Applications</HeroTitle>
                 <HeroDescription>Manage the applications attached to this organization.</HeroDescription>
             </div>
@@ -44,7 +61,8 @@ export default function Organization({ sectionName }: OrganizationProps) {
     if (section === 'people') {
         content = (
             <Hero icon={<Users />}>
-                <div>
+                <div className="space-y-3">
+                    {orgHeader}
                     <HeroTitle>People</HeroTitle>
                     <HeroDescription>See the members and collaborators in this workspace.</HeroDescription>
                 </div>
@@ -53,7 +71,8 @@ export default function Organization({ sectionName }: OrganizationProps) {
     } else if (section === 'settings') {
         content = (
             <Hero icon={<Settings2 />}>
-                <div>
+                <div className="space-y-3">
+                    {orgHeader}
                     <HeroTitle>Settings</HeroTitle>
                     <HeroDescription>Configure the organization and its runtime defaults.</HeroDescription>
                 </div>

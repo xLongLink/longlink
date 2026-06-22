@@ -21,7 +21,7 @@ os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
 from main import app
 from src.enviroments import env
 from src.database.models.users import User
-from src.database.models.__base__ import Base
+from sqlmodel import SQLModel
 from src.models.roles import PlatformRole
 
 SESSION_COOKIE = "longlink_session"
@@ -40,7 +40,7 @@ async def reset_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncIter
 
     engine = create_async_engine(db_url)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(SQLModel.metadata.create_all)
 
     session._engine = engine
     session.Session = async_sessionmaker(engine, expire_on_commit=False)
@@ -53,10 +53,10 @@ async def reset_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncIter
         await engine.dispose()
 
 
-def session_cookie(oidc_subject: str) -> dict[str, str]:
+def session_cookie(oidc: str) -> dict[str, str]:
     """Build a signed session cookie for the given OIDC subject."""
 
-    payload = b64encode(json.dumps({"oidc_subject": oidc_subject}).encode("utf-8"))
+    payload = b64encode(json.dumps({"oidc": oidc}).encode("utf-8"))
     signed = TimestampSigner(str(env.SESSION_KEY)).sign(payload).decode("utf-8")
     return {SESSION_COOKIE: signed}
 
@@ -70,11 +70,11 @@ async def users() -> tuple[User, User, User]:
         user1 = User(
             name='user1',
             email='user1@example.com',
-            oidc_subject='oidc-user-1',
+            oidc='oidc-user-1',
             role=PlatformRole.administrator,
         )
-        user2 = User(name='user2', email='user2@example.com', oidc_subject='oidc-user-2')
-        user3 = User(name='user3', email='user3@example.com', oidc_subject='oidc-user-3')
+        user2 = User(name='user2', email='user2@example.com', oidc='oidc-user-2')
+        user3 = User(name='user3', email='user3@example.com', oidc='oidc-user-3')
 
         db_session.add_all([user1, user2, user3])
         await db_session.commit()
@@ -91,7 +91,7 @@ def clients(users: tuple[User, User, User]) -> tuple[TestClient, TestClient, Tes
     """Build authenticated test clients for all seeded users."""
 
     user1, user2, user3 = users
-    client1 = TestClient(app, cookies=session_cookie(str(user1.oidc_subject)))
-    client2 = TestClient(app, cookies=session_cookie(str(user2.oidc_subject)))
-    client3 = TestClient(app, cookies=session_cookie(str(user3.oidc_subject)))
+    client1 = TestClient(app, cookies=session_cookie(str(user1.oidc)))
+    client2 = TestClient(app, cookies=session_cookie(str(user2.oidc)))
+    client3 = TestClient(app, cookies=session_cookie(str(user3.oidc)))
     return client1, client2, client3

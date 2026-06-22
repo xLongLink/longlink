@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from src.auth import authuser, authsupport
 from src.database.models.users import User
 from src.database.services.users import users
@@ -11,7 +11,14 @@ async def serialize_user(user: User) -> UserProfile:
 
     profile = await users.profile(user.id)
     if profile is None:
-        profile = UserProfile(**{**user.model_dump(), "admin": user.admin, "avatar": user.avatar or "", "organizations": []})
+        profile = UserProfile(
+            **{
+                **user.model_dump(),
+                "admin": user.admin,
+                "avatar": user.avatar or "",
+                "organizations": [],
+            }
+        )
 
     return profile
 
@@ -27,7 +34,10 @@ async def get_me(user: User = Depends(authuser)) -> UserProfile:
 async def list_users(_user: User = Depends(authsupport)) -> list[UserListItem]:
     """Return all user summaries for support and administrator views."""
 
-    return await users.list()
+    return [
+        UserListItem.model_validate({**user.model_dump(), "admin": user.admin})
+        for user in await users.list()
+    ]
 
 
 @router.patch("/api/me", response_model=UserProfile)
@@ -35,8 +45,5 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> UserP
     """Update the authenticated user's details."""
 
     params = payload.model_dump(exclude_unset=True)
-    if user.oidc_subject is None:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    updated_user = await users.upsert(oidc_subject=user.oidc_subject, **params)
+    updated_user = await users.upsert(oidc=user.oidc, **params)
     return await serialize_user(updated_user)

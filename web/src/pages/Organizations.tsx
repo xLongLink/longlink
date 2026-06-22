@@ -4,6 +4,7 @@ import { SignInCard } from '@/components/SignInCard';
 import { useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { type ColumnDef } from '@tanstack/react-table';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
 import { Skeleton } from '@ui/skeleton';
 import { Building2, Settings2 } from 'lucide-react';
@@ -16,9 +17,15 @@ const organizationColumns: Array<ColumnDef<ApiUserOrganizationMembership>> = [
         accessorKey: 'name',
         header: 'Name',
         cell: ({ row, getValue }) => (
-            <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
-                {getValue<string>()}
-            </Link>
+            <div className="flex items-center gap-3">
+                <Avatar className="size-8">
+                    <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
+                    <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                    {getValue<string>()}
+                </Link>
+            </div>
         ),
     },
     {

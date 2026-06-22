@@ -1,19 +1,19 @@
-from .base import ServiceBase
 from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from src.database.session import session_scope
 from src.models.kinds import DatabaseKind
 from src.database.models.database import DatabaseRegistry
 from src.database.models.users import User
 
 
-class DatabaseService(ServiceBase):
+class DatabaseService:
     """Manage database backend registrations."""
 
     async def list(self) -> list[DatabaseRegistry]:
         """Return all registered database backends."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(DatabaseRegistry).options(
                 selectinload(DatabaseRegistry.created_by),
                 selectinload(DatabaseRegistry.updated_by),
@@ -25,7 +25,7 @@ class DatabaseService(ServiceBase):
     async def get(self, registry_id: str) -> DatabaseRegistry | None:
         """Return one database backend by id."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(DatabaseRegistry).options(
                 selectinload(DatabaseRegistry.created_by),
                 selectinload(DatabaseRegistry.updated_by),
@@ -47,7 +47,7 @@ class DatabaseService(ServiceBase):
     ) -> DatabaseRegistry:
         """Create or update one database backend registration."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.name == name))
             database = result.scalar_one_or_none()
 
@@ -95,7 +95,7 @@ class DatabaseService(ServiceBase):
     async def delete(self, registry_id: str, deleted_id: str | None = None) -> DatabaseRegistry | None:
         """Mark one database backend registration as deleted."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(DatabaseRegistry).options(
                 selectinload(DatabaseRegistry.created_by),
                 selectinload(DatabaseRegistry.updated_by),
@@ -118,7 +118,7 @@ class DatabaseService(ServiceBase):
     async def purge(self, registry_id: str) -> DatabaseRegistry | None:
         """Hard delete one database backend registration."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.id == registry_id))
             database = result.scalar_one_or_none()
             if database is None:

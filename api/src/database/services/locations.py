@@ -1,8 +1,8 @@
-from .base import ServiceBase
+from datetime import UTC, datetime
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from src.database.models.__base__ import utcnow
+from src.database.session import session_scope
 from src.database.models.compute import ComputeRegistry
 from src.database.models.database import DatabaseRegistry
 from src.database.models.location import Location
@@ -12,13 +12,13 @@ from src.database.models.users import User
 from src.models.countries import Country
 
 
-class LocationsService(ServiceBase):
+class LocationsService:
     """Manage location records."""
 
     async def list(self) -> list[Location]:
         """Return all registered locations."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             statement = select(Location).options(
                 selectinload(Location.created_by),
                 selectinload(Location.updated_by),
@@ -49,7 +49,7 @@ class LocationsService(ServiceBase):
     async def get(self, location_id: UUID | str) -> Location | None:
         """Return one location by id."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(location_id, str):
                 location_id = UUID(location_id)
 
@@ -84,7 +84,7 @@ class LocationsService(ServiceBase):
     async def create(self, slug: str, name: str, country: Country | None = None, user: User | None = None) -> Location:
         """Create one location."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             # Omit the column when no country is provided so the database default applies.
             location_kwargs: dict[str, str | Country] = {
                 "name": name,
@@ -130,7 +130,7 @@ class LocationsService(ServiceBase):
     async def delete(self, location_id: UUID | str, deleted_id: UUID | str | None = None) -> Location | None:
         """Mark one location as deleted."""
 
-        async with self.session() as session:
+        async with session_scope() as session:
             if isinstance(location_id, str):
                 location_id = UUID(location_id)
             if isinstance(deleted_id, str):
@@ -141,7 +141,7 @@ class LocationsService(ServiceBase):
             if location is None:
                 return None
 
-            location.deleted_at = utcnow()
+            location.deleted_at = datetime.now(UTC)
             location.deleted_id = deleted_id
             location.updated_id = deleted_id
             await session.commit()

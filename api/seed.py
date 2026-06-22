@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 from fastapi import HTTPException, status
-from src.database.models.__base__ import Base
+from sqlmodel import SQLModel
 from src.database.models.association import UserOrganization
 from src.database.models.operation import Operation
 from src.adapters.compute import K8s
@@ -23,7 +23,6 @@ from src.models.applications import AppStatus
 from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
 from src.models.roles import Roles
 from src.database.models.users import User
-from src.utils.utils import slugify
 
 LOCAL_DATABASE = {
     "kind": DatabaseKind.postgre,
@@ -44,6 +43,7 @@ LOCAL_STORAGE = {
 }
 
 LOCAL_ORG = "test"
+LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"
 
 LOCAL_APP = {
     "name": "sample",
@@ -75,7 +75,7 @@ async def main() -> None:
         engine = create_async_engine(env.DATABASE_URL)
         try:
             async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
+                await conn.run_sync(SQLModel.metadata.create_all)
         finally:
             await engine.dispose()
 
@@ -84,7 +84,7 @@ async def main() -> None:
     await database.create(**LOCAL_DATABASE, location_id=location.id)
     await storage.create(**LOCAL_STORAGE, location_id=location.id)
     await compute.create(**LOCAL_COMPUTE, location_id=location.id)
-    organization_record = await organizations.create(LOCAL_ORG, location.id)
+    organization_record = await organizations.create(LOCAL_ORG, location.id, avatar=LOCAL_ORG_AVATAR)
 
     # Backfill the seeded demo membership if the admin user already exists locally.
     Session = await get_session()
@@ -136,7 +136,7 @@ async def main() -> None:
             "OPTIONAL": "optional",
         },
     )
-    app_slug = slugify(app_payload.name)
+    app_slug = app_payload.slug
     application = await applications.create(
         organization_record.id,
         app_payload.name,

@@ -26,7 +26,7 @@ async def test_execute_app_create_operation_completes_running_app(monkeypatch) -
 
     # Arrange
     user = await db.users.upsert(
-        oidc_subject="dev-oidc-subject",
+        oidc="dev-oidc-subject",
         email="dev@longlink.dev",
         name="Dev User",
         avatar=None,
@@ -67,7 +67,7 @@ async def test_execute_app_create_operation_marks_failed_when_dead(monkeypatch) 
 
     # Arrange
     user = await db.users.upsert(
-        oidc_subject="dev-oidc-subject-existing",
+        oidc="dev-oidc-subject-existing",
         email="dev-existing@longlink.dev",
         name="Dev User Existing",
         avatar=None,
@@ -108,7 +108,7 @@ async def test_execute_app_create_operation_releases_when_not_ready(monkeypatch)
 
     # Arrange
     user = await db.users.upsert(
-        oidc_subject="dev-oidc-subject-waiting",
+        oidc="dev-oidc-subject-waiting",
         email="dev-waiting@longlink.dev",
         name="Dev User Waiting",
         avatar=None,
@@ -144,7 +144,7 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
 
     # Arrange
     user = await db.users.upsert(
-        oidc_subject="dev-oidc-subject-delete",
+        oidc="dev-oidc-subject-delete",
         email="dev-delete@longlink.dev",
         name="Dev User Delete",
         avatar=None,

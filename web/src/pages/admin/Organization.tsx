@@ -18,15 +18,21 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
     {
         accessorKey: 'name',
         header: 'Name',
-            cell: ({ row, getValue }) => {
-                const name = getValue<string>();
+        cell: ({ row, getValue }) => {
+            const name = getValue<string>();
 
-                return (
+            return (
+                <div className="flex items-center gap-3">
+                    <Avatar className="size-8">
+                        <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
+                        <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
                     <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
                         {name}
                     </Link>
-                );
-            },
+                </div>
+            );
+        },
     },
     {
         id: 'created_by',

@@ -107,13 +107,13 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Suc
     )
 
     await users.upsert(
-        oidc_subject=subject,
+        oidc=subject,
         email=email,
         name=name,
         avatar=userinfo.get("picture"),
     )
 
-    request.session["oidc_subject"] = subject
+    request.session["oidc"] = subject
     return SuccessResponse()
 
 
@@ -148,13 +148,13 @@ async def auth_oidc(request: Request):
     )
 
     await users.upsert(
-        oidc_subject=subject,
+        oidc=subject,
         email=email,
         name=name,
         avatar=userinfo.get("picture"),
     )
 
-    request.session["oidc_subject"] = subject
+    request.session["oidc"] = subject
     return RedirectResponse("/organizations")
 
 
