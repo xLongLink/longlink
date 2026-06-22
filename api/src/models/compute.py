@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from src.models.kinds import ComputeKind
 from src.models.users import UserSummary
@@ -10,7 +11,7 @@ class ComputeRegistryCreate(BaseModel):
     kind: ComputeKind
     kubeconfig: str
     ingress_host: str
-    location_id: str
+    location_id: UUID
 
 
 class ComputeRegistryResponse(BaseModel):
@@ -18,10 +19,10 @@ class ComputeRegistryResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     kind: ComputeKind
     ingress_host: str
-    location_id: str
+    location_id: UUID
     created_at: datetime
     created_by: UserSummary | None = None
     updated_at: datetime

@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException
+from uuid import UUID
 from src.auth import authadmin, authsupport
 from src.database.models.users import User
 from src.database.services.locations import locations
@@ -14,7 +15,7 @@ async def list_locations(_user: User = Depends(authsupport)) -> list[LocationRes
 
 
 @router.get("/api/locations/{location_id}", response_model=LocationResponse)
-async def get_location(location_id: str, _user: User = Depends(authsupport)) -> LocationResponse:
+async def get_location(location_id: UUID, _user: User = Depends(authsupport)) -> LocationResponse:
     """Return one location and its attached infrastructure."""
 
     location = await locations.get(location_id)
@@ -41,7 +42,7 @@ async def create_location(
 
 
 @router.delete("/api/locations/{location_id}", status_code=204)
-async def delete_location(location_id: str, user: User = Depends(authadmin)) -> None:
+async def delete_location(location_id: UUID, user: User = Depends(authadmin)) -> None:
     """Delete one location."""
 
     location = await locations.delete(location_id, user.id)

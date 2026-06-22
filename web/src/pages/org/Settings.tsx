@@ -47,7 +47,7 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                         </div>
                         <div className="min-w-0 space-y-1">
                             <Link
-                                to={`/orgs/${org}/apps/${row.original.id}`}
+                                to={`/orgs/${org}/apps/${row.original.slug}`}
                                 className="font-medium text-foreground hover:underline"
                             >
                                 {getValue<string>()}

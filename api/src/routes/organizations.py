@@ -27,11 +27,11 @@ async def get_organization(
     # Deny access early when the org does not exist.
     organization = await organizations.get(org_id)
     if organization is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{org_id}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
 
     # Keep organization reads scoped to the caller's memberships.
     if not any(organization.id == org_id for organization in user.organizations):
-        raise HTTPException(status_code=404, detail=f"Organization '{org_id}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
 
     return organization
 
@@ -70,7 +70,7 @@ async def delete_organization(org_id: UUID, user: User = Depends(authuser)) -> N
 
     # Only members can delete their own org.
     if not any(organization.id == org_id for organization in user.organizations):
-        raise HTTPException(status_code=404, detail=f"Organization '{org_id}' not found")
+        raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
 
     await organizations.delete(org_id, user.id)
     return

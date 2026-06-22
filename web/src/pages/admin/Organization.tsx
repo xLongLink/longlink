@@ -18,15 +18,15 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
     {
         accessorKey: 'name',
         header: 'Name',
-        cell: ({ row, getValue }) => {
-            const name = getValue<string>();
+            cell: ({ row, getValue }) => {
+                const name = getValue<string>();
 
-            return (
-                <Link to={`/orgs/${row.original.id}`} className="font-medium text-foreground hover:underline">
-                    {name}
-                </Link>
-            );
-        },
+                return (
+                    <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                        {name}
+                    </Link>
+                );
+            },
     },
     {
         id: 'created_by',

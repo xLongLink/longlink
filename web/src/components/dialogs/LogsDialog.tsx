@@ -1,7 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { resolveOrganizationId } from '@/hooks/use-org';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiText } from '@/lib/api';
+import { useMemo } from 'react';
 import { useEffect, useState } from 'react';
 
 type LogsDialogProps = {
@@ -12,6 +15,8 @@ type LogsDialogProps = {
 
 /** Renders the application logs dialog for an organization. */
 export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
+    const { organizations } = useUser();
+    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
     const [open, setOpen] = useState(false);
     const [logsContent, setLogsContent] = useState('');
     const [logsError, setLogsError] = useState<string | null>(null);
@@ -19,7 +24,7 @@ export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
 
     // Fetch the selected application's pod logs only while the dialog is open.
     useEffect(() => {
-        if (!open) {
+        if (!open || orgId.length === 0) {
             return;
         }
 
@@ -32,7 +37,7 @@ export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
         void (async () => {
             try {
                 const text = await fetchApiText(
-                    apiUrl(`/api/apps/${appId}/logs?organization_id=${encodeURIComponent(org)}`),
+                    apiUrl(`/api/apps/${appId}/logs?organization_id=${encodeURIComponent(orgId)}`),
                     {
                         credentials: 'include',
                     }
@@ -55,7 +60,7 @@ export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
         return () => {
             cancelled = true;
         };
-    }, [appId, open, org]);
+    }, [appId, open, orgId]);
 
     return (
         <>

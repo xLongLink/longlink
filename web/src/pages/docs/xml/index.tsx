@@ -1,4 +1,4 @@
-import { CodeBlock } from '@/components/CodeBlock';
+import { Window } from '@/components/Window';
 import { Heading } from '@/components/ui/heading';
 
 export const metadata = {
@@ -20,12 +20,12 @@ export const content = (
         <p className="leading-7">
             Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">&lt;longlink&gt;</code> as the root page shell.
         </p>
-        <CodeBlock language="xml">{`<State id="filter" value='"day"' />
+        <Window>{`<State id="filter" value='"day"' />
 <Field>
     <FieldLabel htmlFor="filter">Filter</FieldLabel>
     <Input id="filter" value="$filter.value" />
     <FieldDescription>Current filter: \${filter.value}</FieldDescription>
-</Field>`}</CodeBlock>
+</Field>`}</Window>
         <Heading id="if" level="h2">
             if
         </Heading>
@@ -33,12 +33,12 @@ export const content = (
             Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">if</code> on any supported XML element except{' '}
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">&lt;longlink&gt;</code> to render conditionally.
         </p>
-        <CodeBlock language="xml">{`<State id="filter" value='""' />
+        <Window>{`<State id="filter" value='""' />
 <Field>
     <FieldLabel htmlFor="filter">Filter</FieldLabel>
     <Input id="filter" value="$filter.value" />
     <FieldDescription if="\${filter.value in ['if']}">Shown only when the filter is if.</FieldDescription>
-</Field>`}</CodeBlock>
+</Field>`}</Window>
         <Heading id="query" level="h2">
             Query
         </Heading>
@@ -48,7 +48,7 @@ export const content = (
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">path</code> attribute points at the JSON endpoint or absolute URL.{' '}
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">&lt;Query&gt;</code> does not accept children.
         </p>
-        <CodeBlock language="xml">{`<Query id="products" path="/api/products" />`}</CodeBlock>
+        <Window>{`<Query id="products" path="/api/products" />`}</Window>
         <Heading id="action" level="h2">
             Action
         </Heading>
@@ -58,43 +58,43 @@ export const content = (
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">method</code> to set the HTTP method when needed.{' '}
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">&lt;Action&gt;</code> can include content as its label.
         </p>
-        <CodeBlock language="xml">{`<Action action="/issues" method="POST">Save issue</Action>`}</CodeBlock>
+        <Window>{`<Action action="/issues" method="POST">Save issue</Action>`}</Window>
         <Heading id="expressions" level="h2">
             Expressions
         </Heading>
         <p className="leading-7">
             Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">$&#123;count&#125;</code> for wrapped expressions that return typed values.
         </p>
-        <CodeBlock language="xml">{`<P>Current products, \${products.total}</P>`}</CodeBlock>
+        <Window>{`<P>Current products, \${products.total}</P>`}</Window>
         <Heading id="state" level="h2">
             State
         </Heading>
         <p className="leading-7">
             Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">&lt;State /&gt;</code> to seed shared runtime values for sibling content, references, and loops.
         </p>
-        <CodeBlock language="xml">{`<State id="filter" value='"day"' />
+        <Window>{`<State id="filter" value='"day"' />
 <Field>
     <FieldLabel htmlFor="filter">Filter</FieldLabel>
     <Input id="filter" value="$filter.value" />
     <FieldDescription>Current filter: \${filter.value}</FieldDescription>
-</Field>`}</CodeBlock>
+</Field>`}</Window>
         <Heading id="references" level="h2">
             References
         </Heading>
         <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">$name</code> for direct references to a state value.</p>
-        <CodeBlock language="xml">{`<State id="selectedProduct" name="Alpha" status="Active" />
-<P>Selected product: $selectedProduct.name (\${selectedProduct.status})</P>`}</CodeBlock>
+        <Window>{`<State id="selectedProduct" name="Alpha" status="Active" />
+<P>Selected product: $selectedProduct.name (\${selectedProduct.status})</P>`}</Window>
         <Heading id="for" level="h2">
             For
         </Heading>
         <p className="leading-7">
             Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">For</code> to render one child scope for each item in an array state or query result.
         </p>
-        <CodeBlock language="xml">{`<State id="items" value='["Alpha", "Beta"]' />
+        <Window>{`<State id="items" value='["Alpha", "Beta"]' />
 <Ul>
     <For each="\${items.value}" as="item">
         <Li>\${item}</Li>
     </For>
-</Ul>`}</CodeBlock>
+</Ul>`}</Window>
     </div>
 );

@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException
+from uuid import UUID
 from src.auth import authadmin, authsupport
 from src.database.models.users import User
 from src.database.services.storage import storage
@@ -14,7 +15,7 @@ async def list_storage_registries(_user: User = Depends(authsupport)) -> list[St
 
 
 @router.get("/api/storage/{registry_id}", response_model=StorageRegistryResponse)
-async def get_storage_registry(registry_id: str, _user: User = Depends(authsupport)) -> StorageRegistryResponse:
+async def get_storage_registry(registry_id: UUID, _user: User = Depends(authsupport)) -> StorageRegistryResponse:
     """Return one storage backend registration."""
 
     registry = await storage.get(registry_id)
@@ -37,7 +38,7 @@ async def create_storage_registry(
 
 
 @router.delete("/api/storage/{registry_id}", status_code=204)
-async def delete_storage_registry(registry_id: str, user: User = Depends(authadmin)) -> None:
+async def delete_storage_registry(registry_id: UUID, user: User = Depends(authadmin)) -> None:
     """Delete one storage backend registration."""
 
     registry = await storage.delete(registry_id, user.id)

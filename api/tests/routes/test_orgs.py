@@ -39,7 +39,7 @@ async def test_create_organization_returns_owner_role(
     location = await db.locations.create("local", "Local testing")
 
     # Act
-    response = client.post("/api/orgs", json={"name": "acme", "location_id": location.id})
+    response = client.post("/api/orgs", json={"name": "acme", "location_id": str(location.id)})
 
     # Assert
     assert response.status_code == 200
@@ -109,9 +109,9 @@ async def test_get_organization_returns_member_payload(
                 }
             )
         ],
-        apps=[
+        applications=[
             {
-                "id": app.id,
+                "id": str(app.id),
                 "organization_id": organization.id,
                 "organization": organization.name,
                 "name": "dashboard",
@@ -134,16 +134,16 @@ async def test_get_organization_returns_member_payload(
 
     assert response.json()["users"][0]["avatar"] == ""
     assert response.json()["users"][0] == {
-        "id": owner.id,
+        "id": str(owner.id),
         "name": owner.name,
         "email": owner.email,
         "avatar": "",
         "role": owner.role,
         "admin": owner.admin,
     }
-    assert response.json()["apps"] == [
+    assert response.json()["applications"] == [
         {
-            "id": app.id,
+            "id": str(app.id),
             "name": "dashboard",
             "status": "creating",
             "description": None,
@@ -211,10 +211,10 @@ async def test_get_organization_returns_404_for_non_member(
     assert response.json() == {"detail": f"Org '{organization.id}' not found"}
 
 
-async def test_get_organization_returns_default_error_for_missing_org(
+async def test_get_organization_rejects_invalid_uuid(
     clients: tuple[TestClient, TestClient, TestClient],
 ) -> None:
-    """Return FastAPI's default 404 payload when the org does not exist."""
+    """Reject malformed organization ids at the route boundary."""
 
     # Arrange
     client = clients[0]
@@ -223,8 +223,8 @@ async def test_get_organization_returns_default_error_for_missing_org(
     response = client.get("/api/orgs/testo")
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Org 'testo' not found"}
+    assert response.status_code == 422
+    assert isinstance(response.json()["detail"], list)
 
 
 async def test_delete_organization_removes_its_apps(
@@ -261,7 +261,7 @@ async def test_create_organization_returns_409_for_duplicate_name(
     client = clients[0]
 
     # Act
-    response = client.post("/api/orgs", json={"name": "acme", "location_id": location.id})
+    response = client.post("/api/orgs", json={"name": "acme", "location_id": str(location.id)})
 
     # Assert
     assert response.status_code == 409

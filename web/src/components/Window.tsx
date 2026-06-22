@@ -24,16 +24,26 @@ monacoGlobal.MonacoEnvironment = {
 type WindowProps = {
     children: string;
     onRedClick?: () => void;
+    onSourceChange?: (xml: string) => void;
     defaultViewMode?: ViewMode;
+    sourceEditable?: boolean;
 };
 
 type ViewMode = 'rendered' | 'source';
 
 /** Renders a framed XML preview window with a source toggle. */
-export function Window({ children, defaultViewMode = 'rendered', onRedClick }: WindowProps) {
+export function Window({
+    children,
+    defaultViewMode = 'rendered',
+    onRedClick,
+    onSourceChange,
+    sourceEditable = false,
+}: WindowProps) {
     const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode);
     const sourceXml = normalizeXml(children);
     const sourceEditorRef = useRef<HTMLDivElement | null>(null);
+    const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+    const onSourceChangeRef = useRef(onSourceChange);
     const { ast, parseError } = useMemo(() => {
         const documentXml = wrapWindowXml(sourceXml);
 
@@ -48,17 +58,21 @@ export function Window({ children, defaultViewMode = 'rendered', onRedClick }: W
     }, [sourceXml]);
 
     useEffect(() => {
+        onSourceChangeRef.current = onSourceChange;
+    }, [onSourceChange]);
+
+    useEffect(() => {
         if (viewMode !== 'source' || sourceEditorRef.current == null) {
             return;
         }
 
-        // Create a read-only Monaco editor only while the source pane is visible.
+        // Create the Monaco editor only while the source pane is visible.
         const editor = monaco.editor.create(sourceEditorRef.current, {
             value: sourceXml,
             language: 'xml',
             theme: 'vs-dark',
-            readOnly: true,
-            domReadOnly: true,
+            readOnly: !sourceEditable,
+            domReadOnly: !sourceEditable,
             automaticLayout: true,
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
@@ -70,9 +84,36 @@ export function Window({ children, defaultViewMode = 'rendered', onRedClick }: W
             overviewRulerBorder: false,
         });
 
+        editorRef.current = editor;
+
+        const model = editor.getModel();
+        const disposable = model
+            ? model.onDidChangeContent(() => {
+                  if (!sourceEditable || onSourceChangeRef.current == null) {
+                      return;
+                  }
+
+                  onSourceChangeRef.current(editor.getValue());
+              })
+            : null;
+
         return () => {
+            disposable?.dispose();
+            editorRef.current = null;
             editor.dispose();
         };
+    }, [sourceEditable, viewMode]);
+
+    useEffect(() => {
+        const editor = editorRef.current;
+
+        if (viewMode !== 'source' || editor == null) {
+            return;
+        }
+
+        if (editor.getValue() !== sourceXml) {
+            editor.setValue(sourceXml);
+        }
     }, [sourceXml, viewMode]);
 
     return (

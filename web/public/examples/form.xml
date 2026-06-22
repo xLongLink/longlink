@@ -1,101 +1,99 @@
-<longlink>
-    <Stack>
-        <H3>Account profile</H3>
-        <P>A denser backoffice form with inline controls and grouped actions.</P>
+<Stack>
+    <H3>Account profile</H3>
+    <P>A denser backoffice form with inline controls and grouped actions.</P>
 
-        <Grid columns="2">
-            <Field>
-                <FieldLabel htmlFor="name">Full name</FieldLabel>
-                <Input id="name" autoComplete="name" value="Evil Rabbit" placeholder="Evil Rabbit" />
-                <FieldDescription>This appears on invoices and emails.</FieldDescription>
-            </Field>
-
-            <Field>
-                <FieldLabel htmlFor="username">Username</FieldLabel>
-                <InputGroup>
-                    <InputGroupAddon>
-                        <Icon name="user" />
-                    </InputGroupAddon>
-                    <InputGroupInput
-                        id="username"
-                        autoComplete="username"
-                        placeholder="evil.rabbit"
-                        value="evil.rabbit"
-                    />
-                    <InputGroupButton>Check</InputGroupButton>
-                </InputGroup>
-            </Field>
-        </Grid>
-
-        <Grid columns="2">
-            <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <InputGroup>
-                    <InputGroupAddon>
-                        <Icon name="mail" />
-                    </InputGroupAddon>
-                    <InputGroupInput
-                        id="email"
-                        autoComplete="email"
-                        placeholder="ada@longlink.dev"
-                        value="ada@longlink.dev"
-                    />
-                    <InputGroupButton>Invite</InputGroupButton>
-                </InputGroup>
-            </Field>
-
-            <Field>
-                <FieldLabel htmlFor="team">Team</FieldLabel>
-                <Select defaultValue="ops">
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Teams</SelectLabel>
-                            <SelectItem value="ops">Operations</SelectItem>
-                            <SelectItem value="support">Support</SelectItem>
-                            <SelectItem value="product">Product</SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-            </Field>
-        </Grid>
-
-        <Grid columns="2">
-            <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input id="password" type="password" autoComplete="new-password" placeholder="••••••••" value="" />
-            </Field>
-
-            <Field>
-                <FieldLabel htmlFor="role">Role</FieldLabel>
-                <Select defaultValue="operator">
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Roles</SelectLabel>
-                            <SelectItem value="operator">Operator</SelectItem>
-                            <SelectItem value="manager">Manager</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-            </Field>
-        </Grid>
+    <Grid columns="2">
+        <Field>
+            <FieldLabel htmlFor="name">Full name</FieldLabel>
+            <Input id="name" autoComplete="name" value="Evil Rabbit" placeholder="Evil Rabbit" />
+            <FieldDescription>This appears on invoices and emails.</FieldDescription>
+        </Field>
 
         <Field>
-            <FieldLabel htmlFor="notes">Notes</FieldLabel>
-            <Textarea id="notes" label="Notes" rows="4" value="Draft notes for the account review." />
-            <FieldDescription>Keep the note short and clear.</FieldDescription>
+            <FieldLabel htmlFor="username">Username</FieldLabel>
+            <InputGroup>
+                <InputGroupAddon>
+                    <Icon name="user" />
+                </InputGroupAddon>
+                <InputGroupInput
+                    id="username"
+                    autoComplete="username"
+                    placeholder="evil.rabbit"
+                    value="evil.rabbit"
+                />
+                <InputGroupButton>Check</InputGroupButton>
+            </InputGroup>
+        </Field>
+    </Grid>
+
+    <Grid columns="2">
+        <Field>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <InputGroup>
+                <InputGroupAddon>
+                    <Icon name="mail" />
+                </InputGroupAddon>
+                <InputGroupInput
+                    id="email"
+                    autoComplete="email"
+                    placeholder="ada@longlink.dev"
+                    value="ada@longlink.dev"
+                />
+                <InputGroupButton>Invite</InputGroupButton>
+            </InputGroup>
         </Field>
 
-        <Field orientation="horizontal">
-            <FieldLabel></FieldLabel>
-            <Button variant="destructive">Cancel</Button>
-            <Button type="submit">Submit</Button>
+        <Field>
+            <FieldLabel htmlFor="team">Team</FieldLabel>
+            <Select defaultValue="ops">
+                <SelectTrigger>
+                    <SelectValue placeholder="Select a team" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                        <SelectLabel>Teams</SelectLabel>
+                        <SelectItem value="ops">Operations</SelectItem>
+                        <SelectItem value="support">Support</SelectItem>
+                        <SelectItem value="product">Product</SelectItem>
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
         </Field>
-    </Stack>
-</longlink>
+    </Grid>
+
+    <Grid columns="2">
+        <Field>
+            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <Input id="password" type="password" autoComplete="new-password" placeholder="••••••••" value="" />
+        </Field>
+
+        <Field>
+            <FieldLabel htmlFor="role">Role</FieldLabel>
+            <Select defaultValue="operator">
+                <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                        <SelectLabel>Roles</SelectLabel>
+                        <SelectItem value="operator">Operator</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
+        </Field>
+    </Grid>
+
+    <Field>
+        <FieldLabel htmlFor="notes">Notes</FieldLabel>
+        <Textarea id="notes" label="Notes" rows="4" value="Draft notes for the account review." />
+        <FieldDescription>Keep the note short and clear.</FieldDescription>
+    </Field>
+
+    <Field orientation="horizontal">
+        <FieldLabel></FieldLabel>
+        <Button variant="destructive">Cancel</Button>
+        <Button type="submit">Submit</Button>
+    </Field>
+</Stack>

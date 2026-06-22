@@ -99,6 +99,11 @@ export default function Playground() {
 
                 <section className="flex-1">
                     <Window
+                        sourceEditable
+                        onSourceChange={(nextXml) => {
+                            setSelectedExample(null);
+                            setXml(nextXml);
+                        }}
                         onRedClick={() => {
                             setSelectedExample(null);
                             setXml('');

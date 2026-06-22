@@ -104,7 +104,7 @@ class OrgsService(ServiceBase):
             except IntegrityError as exc:
                 # Keep name collisions at the service boundary as a simple value error.
                 await session.rollback()
-                raise ValueError("Organization already exists") from exc
+                raise ValueError("Org already exists") from exc
 
             await session.refresh(organization)
             statement = select(Organization).options(

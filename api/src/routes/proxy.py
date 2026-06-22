@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, Response, HTTPException
 from fastapi.routing import APIRoute
+from uuid import UUID
 from src.auth import authuser
 from src.router import router
 from src.utils.utils import knames
@@ -36,7 +37,7 @@ proxy_router = APIRouter(route_class=ProxyRoute)
 
 
 @router.head("/api/apps/{application_id}/proxy")
-async def reject_proxy_head(application_id: str) -> None:
+async def reject_proxy_head(application_id: UUID) -> None:
     """Reject HEAD requests on the application proxy."""
 
     raise HTTPException(status_code=405, detail="Method not allowed")
@@ -50,7 +51,7 @@ async def reject_proxy_head(application_id: str) -> None:
     "/api/apps/{application_id}/proxy/{path:path}",
     methods=["DELETE", "GET", "PATCH", "POST"],
 )
-async def proxy_app_request(application_id: str, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
+async def proxy_app_request(application_id: UUID, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
     """Proxy one request into the deployed application service."""
 
     # Load the app first so routing never depends on the caller-supplied path alone.

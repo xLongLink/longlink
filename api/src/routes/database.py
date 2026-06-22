@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException
+from uuid import UUID
 from src.auth import authadmin, authsupport
 from src.router import router
 from src.models.database import (DatabaseDatabaseResponse,
@@ -18,7 +19,7 @@ async def list_database_registries(_user: User = Depends(authsupport)) -> list[D
 
 
 @router.get("/api/database/{registry_id}", response_model=DatabaseRegistryResponse)
-async def get_database_registry(registry_id: str, _user: User = Depends(authsupport)) -> DatabaseRegistryResponse:
+async def get_database_registry(registry_id: UUID, _user: User = Depends(authsupport)) -> DatabaseRegistryResponse:
     """Return one database backend registration."""
 
     registry = await database.get(registry_id)
@@ -41,7 +42,7 @@ async def create_database_registry(
 
 
 @router.get("/api/database/{registry_id}/databases", response_model=list[DatabaseDatabaseResponse])
-async def list_database_databases(registry_id: str, _user: User = Depends(authsupport)) -> list[DatabaseDatabaseResponse]:
+async def list_database_databases(registry_id: UUID, _user: User = Depends(authsupport)) -> list[DatabaseDatabaseResponse]:
     """List all databases on a database backend."""
 
     registry = await database.get(registry_id)
@@ -74,7 +75,7 @@ async def list_database_schemas(
 
 
 @router.delete("/api/database/{registry_id}", status_code=204)
-async def delete_database_registry(registry_id: str, user: User = Depends(authadmin)) -> None:
+async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)) -> None:
     """Mark one database backend registration as deleted."""
 
     registry = await database.delete(registry_id, user.id)

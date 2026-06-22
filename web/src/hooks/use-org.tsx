@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { useUser } from '@/hooks/use-user';
 import type {
     ApiInvitation,
     ApiApplicationResponse,
     ApiOrganizationApplication,
     ApiOrganizationDetails,
     ApiOrganizationSummary,
+    ApiUserOrganizationMembership,
     ApiUserSummary,
 } from '@/lib/types';
 
@@ -19,25 +22,39 @@ type UseOrgResult = {
     error: (Error & { status?: number }) | null;
 };
 
+/** Resolves one route organization slug to its canonical UUID. */
+export function resolveOrganizationId(org: string, organizations: ApiUserOrganizationMembership[]): string {
+    const organization = organizations.find((item) => item.name === org);
+    return organization?.id ?? '';
+}
+
 /** Fetches org details and related collections for the current workspace. */
 export function useOrg(org: string): UseOrgResult {
-    const orgUrl = apiUrl(`/api/orgs/${org}`);
+    const { organizations, isLoading: isUserLoading } = useUser();
+    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
+    const orgUrl = apiUrl(`/api/orgs/${orgId}`);
+
+    const missingOrganization = !isUserLoading && org.length > 0 && orgId.length === 0;
 
     const organizationQuery = useQuery({
         queryKey: ['api', orgUrl],
         queryFn: async () => fetchApiJson<ApiOrganizationDetails>(orgUrl, { credentials: 'include' }),
-        enabled: org.length > 0,
+        enabled: orgId.length > 0,
         retry: false,
     });
 
-    const error = organizationQuery.error ?? null;
+    const error =
+        organizationQuery.error ??
+        (missingOrganization
+            ? (Object.assign(new Error('Organization not found'), { status: 404 }) as Error & { status?: number })
+            : null);
 
     return {
         org: organizationQuery.data,
         people: organizationQuery.data?.users ?? [],
         invitations: organizationQuery.data?.invitations ?? [],
         applications: organizationQuery.data?.applications ?? [],
-        isLoading: organizationQuery.isLoading,
+        isLoading: isUserLoading || organizationQuery.isLoading,
         error,
     };
 }
@@ -45,11 +62,17 @@ export function useOrg(org: string): UseOrgResult {
 /** Sends an invitation for a user to join an organization. */
 export function useInviteUser(org: string) {
     const queryClient = useQueryClient();
-    const orgUrl = apiUrl(`/api/orgs/${org}`);
+    const { organizations } = useUser();
+    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
+    const orgUrl = apiUrl(`/api/orgs/${orgId}`);
 
     return useMutation({
         mutationFn: async ({ email, role }: { email: string; role: string }) => {
-            return fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(org)}/invitations`), {
+            if (!orgId) {
+                throw new Error('Organization not found');
+            }
+
+            return fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgId)}/invitations`), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -86,10 +109,16 @@ export function useCreateOrg() {
 /** Deletes one organization and refreshes the authenticated user cache. */
 export function useDeleteOrg() {
     const queryClient = useQueryClient();
+    const { organizations } = useUser();
     const userUrl = apiUrl('/api/me');
 
     return useMutation({
-        mutationFn: async (orgId: string) => {
+        mutationFn: async (org: string) => {
+            const orgId = resolveOrganizationId(org, organizations);
+            if (!orgId) {
+                throw new Error('Organization not found');
+            }
+
             await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgId)}`), {
                 method: 'DELETE',
                 credentials: 'include',
@@ -104,8 +133,10 @@ export function useDeleteOrg() {
 /** Creates a new application in one organization and refreshes the app list cache. */
 export function useCreateApp(org: string) {
     const queryClient = useQueryClient();
-    const orgUrl = apiUrl(`/api/orgs/${org}`);
-    const appsUrl = apiUrl(`/api/apps?organization_id=${encodeURIComponent(org)}`);
+    const { organizations } = useUser();
+    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
+    const orgUrl = apiUrl(`/api/orgs/${orgId}`);
+    const appsUrl = apiUrl(`/api/apps?organization_id=${encodeURIComponent(orgId)}`);
 
     return useMutation({
         mutationFn: async (payload: {
@@ -131,11 +162,17 @@ export function useCreateApp(org: string) {
 /** Deletes an application from one organization and refreshes the app list cache. */
 export function useDeleteApp(org: string) {
     const queryClient = useQueryClient();
-    const orgUrl = apiUrl(`/api/orgs/${org}`);
+    const { organizations } = useUser();
+    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
+    const orgUrl = apiUrl(`/api/orgs/${orgId}`);
 
     return useMutation({
         mutationFn: async (appId: string) => {
-            await fetchApiVoid(apiUrl(`/api/apps/${appId}?organization_id=${encodeURIComponent(org)}`), {
+            if (!orgId) {
+                throw new Error('Organization not found');
+            }
+
+            await fetchApiVoid(apiUrl(`/api/apps/${appId}?organization_id=${encodeURIComponent(orgId)}`), {
                 method: 'DELETE',
                 credentials: 'include',
             });

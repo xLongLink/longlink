@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from src.models.kinds import DatabaseKind
 from src.models.users import UserSummary
@@ -13,7 +14,7 @@ class DatabaseRegistryCreate(BaseModel):
     port: int
     username: str
     password: str
-    location_id: str
+    location_id: UUID
 
 
 class DatabaseDatabaseResponse(BaseModel):
@@ -33,13 +34,13 @@ class DatabaseRegistryResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     kind: DatabaseKind
     name: str
     host: str
     port: int
     username: str
-    location_id: str
+    location_id: UUID
     created_at: datetime
     created_by: UserSummary | None = None
     updated_at: datetime

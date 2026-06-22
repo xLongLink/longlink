@@ -42,7 +42,7 @@ export default function Applications({ org, applications, isLoading, error }: Ap
                             />
                         </div>
                         <div className="min-w-0 space-y-1">
-                            <Link to={`/orgs/${org}/apps/${row.original.id}`} className="font-medium text-foreground hover:underline">
+                            <Link to={`/orgs/${org}/apps/${row.original.slug}`} className="font-medium text-foreground hover:underline">
                                 {name}
                             </Link>
                             {row.original.description ? (

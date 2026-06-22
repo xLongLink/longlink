@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException
+from uuid import UUID
 from src.auth import authadmin, authsupport
 from src.router import router
 from src.models.compute import ComputeRegistryCreate, ComputeRegistryResponse, ComputeResourcesResponse, NamespaceResponse, PodResponse
@@ -53,7 +54,7 @@ async def create_compute_registry(
 
 
 @router.delete("/api/compute/{registry_id}", status_code=204)
-async def delete_compute_registry(registry_id: str, user: User = Depends(authadmin)) -> None:
+async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)) -> None:
     """Mark one compute backend registration as deleted."""
 
     registry = await compute.delete(registry_id, user.id)

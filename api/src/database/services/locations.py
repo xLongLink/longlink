@@ -1,4 +1,5 @@
 from .base import ServiceBase
+from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.database.models.__base__ import utcnow
@@ -45,10 +46,13 @@ class LocationsService(ServiceBase):
 
             return locations
 
-    async def get(self, location_id: str) -> Location | None:
+    async def get(self, location_id: UUID | str) -> Location | None:
         """Return one location by id."""
 
         async with self.session() as session:
+            if isinstance(location_id, str):
+                location_id = UUID(location_id)
+
             statement = select(Location).options(
                 selectinload(Location.created_by),
                 selectinload(Location.updated_by),
@@ -123,10 +127,15 @@ class LocationsService(ServiceBase):
             location.storage_registries = [registry for registry in location.storage_registries if registry.deleted_at is None]
             return location
 
-    async def delete(self, location_id: str, deleted_id: str | None = None) -> Location | None:
+    async def delete(self, location_id: UUID | str, deleted_id: UUID | str | None = None) -> Location | None:
         """Mark one location as deleted."""
 
         async with self.session() as session:
+            if isinstance(location_id, str):
+                location_id = UUID(location_id)
+            if isinstance(deleted_id, str):
+                deleted_id = UUID(deleted_id)
+
             result = await session.execute(select(Location).where(Location.id == location_id, Location.deleted_at.is_(None)))
             location = result.scalar_one_or_none()
             if location is None:
