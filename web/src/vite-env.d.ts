@@ -9,3 +9,9 @@ interface ImportMetaEnv {
 interface ImportMeta {
     readonly env: ImportMetaEnv;
 }
+
+declare module '*?worker' {
+    const WorkerFactory: { new (): Worker };
+
+    export default WorkerFactory;
+}

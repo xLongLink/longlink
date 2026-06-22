@@ -2,7 +2,7 @@ from src.models.metadata import ImageMetadataResponse, LongLinkMetadata
 
 
 def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
-    """Return title, description, and required env metadata for an image."""
+    """Return title, description, and environment metadata for an image."""
 
     # Arrange
     monkeypatch.setattr(
@@ -10,8 +10,20 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
         lambda image: LongLinkMetadata(
             name="dashboard",
             description="Demo app",
-            required={"name": "API_KEY", "type": "str", "description": "API key used by Longlink"},
-            optional={"name": "PORT", "type": "int", "description": "HTTP listen port"},
+            environments=[
+                {
+                    "name": "API_KEY",
+                    "type": "str",
+                    "description": "API key used by Longlink",
+                    "required": True,
+                },
+                {
+                    "name": "PORT",
+                    "type": "int",
+                    "description": "HTTP listen port",
+                    "required": False,
+                },
+            ],
         ),
     )
     client = clients[0]
@@ -27,18 +39,18 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     assert payload == {
         "title": "dashboard",
         "description": "Demo app",
-        "required_envs": [
+        "environments": [
             {
                 "name": "API_KEY",
                 "type": "str",
                 "description": "API key used by Longlink",
-            }
-        ],
-        "optional_envs": [
+                "required": True,
+            },
             {
                 "name": "PORT",
                 "type": "int",
                 "description": "HTTP listen port",
+                "required": False,
             }
         ],
     }
@@ -59,8 +71,7 @@ def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monke
     assert response.json() == {
         "title": None,
         "description": None,
-        "required_envs": [],
-        "optional_envs": [],
+        "environments": [],
     }
 
 

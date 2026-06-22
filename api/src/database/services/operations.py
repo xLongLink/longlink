@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select, update
 from src.models.operations import OperationKind
 from src.database.models.operation import Operation
+from src.database.models.users import User
 
 
 class OperationsService(ServiceBase):
@@ -36,7 +37,7 @@ class OperationsService(ServiceBase):
             statement = (
                 update(Operation)
                 .where(Operation.started_at.is_not(None), Operation.stopped_at.is_(None))
-                .values(started_at=None, error=None)
+                .values(started_at=None, error=None, updated_at=datetime.now(UTC))
             )
             await session.execute(statement)
             await session.commit()
@@ -47,11 +48,15 @@ class OperationsService(ServiceBase):
         kind: OperationKind,
         step: str,
         application_id: str | None = None,
+        user: User | None = None,
     ) -> Operation:
         """Create one operation record."""
 
         async with self.session() as session:
             operation = Operation(kind=kind, application_id=application_id, step=step)
+            if user is not None:
+                operation.created_id = user.id
+                operation.updated_id = user.id
             session.add(operation)
             await session.commit()
             await session.refresh(operation)
@@ -66,7 +71,7 @@ class OperationsService(ServiceBase):
             statement = (
                 update(Operation)
                 .where(Operation.id == operation_id, Operation.started_at.is_(None), Operation.stopped_at.is_(None))
-                .values(started_at=datetime.now(UTC))
+                .values(started_at=datetime.now(UTC), updated_at=datetime.now(UTC))
             )
             result = await session.execute(statement)
             if result.rowcount == 0:
@@ -85,7 +90,7 @@ class OperationsService(ServiceBase):
             statement = (
                 update(Operation)
                 .where(Operation.id == operation_id, Operation.started_at.is_not(None), Operation.stopped_at.is_(None))
-                .values(started_at=None, error=None)
+                .values(started_at=None, error=None, updated_at=datetime.now(UTC))
             )
             result = await session.execute(statement)
             if result.rowcount == 0:
@@ -131,7 +136,7 @@ class OperationsService(ServiceBase):
                     Operation.started_at.is_not(None),
                     Operation.stopped_at.is_(None),
                 )
-                .values(stopped_at=datetime.now(UTC), error=None)
+                .values(stopped_at=datetime.now(UTC), error=None, updated_at=datetime.now(UTC))
             )
             result = await session.execute(statement)
             if result.rowcount == 0:
@@ -154,7 +159,7 @@ class OperationsService(ServiceBase):
                     Operation.started_at.is_not(None),
                     Operation.stopped_at.is_(None),
                 )
-                .values(stopped_at=datetime.now(UTC), error=error)
+                .values(stopped_at=datetime.now(UTC), error=error, updated_at=datetime.now(UTC))
             )
             result = await session.execute(statement)
             if result.rowcount == 0:

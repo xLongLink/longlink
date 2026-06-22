@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.locations import LocationResponse
 from src.models.applications import AppStatus
@@ -11,7 +12,7 @@ class OrganizationCreate(BaseModel):
 
     name: str = Field(min_length=1, max_length=128)
     avatar: str | None = None
-    location_id: str
+    location_id: UUID
 
 
 class OrganizationApplicationResponse(BaseModel):
@@ -19,7 +20,7 @@ class OrganizationApplicationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     name: str
     status: AppStatus
     description: str | None = None
@@ -37,10 +38,10 @@ class OrganizationDetails(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     name: str
     avatar: str | None = None
-    location_id: str
+    location_id: UUID
     location: LocationResponse
     created_at: datetime
     updated_at: datetime
@@ -50,4 +51,3 @@ class OrganizationDetails(BaseModel):
     deleted_by: UserSummary | None = None
     users: list[UserSummary]
     applications: list[OrganizationApplicationResponse] = Field(default_factory=list)
-

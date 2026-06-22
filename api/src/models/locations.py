@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 from src.models.countries import Country
 from src.models.compute import ComputeRegistryResponse
@@ -12,9 +13,9 @@ class LocationOrganizationSummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     name: str
-    location_id: str
+    location_id: UUID
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None
@@ -36,7 +37,7 @@ class LocationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     name: str
     slug: str
     country: Country
@@ -46,4 +47,3 @@ class LocationResponse(BaseModel):
     compute_registries: list[ComputeRegistryResponse] = Field(default_factory=list)
     database_registries: list[DatabaseRegistryResponse] = Field(default_factory=list)
     storage_registries: list[StorageRegistryResponse] = Field(default_factory=list)
-

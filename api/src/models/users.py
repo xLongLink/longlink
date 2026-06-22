@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Annotated
+from uuid import UUID
 
 from pydantic import Field, EmailStr, BaseModel, ConfigDict, BeforeValidator
 from src.models.roles import Roles, PlatformRole
@@ -93,7 +94,7 @@ class UserUpdate(BaseModel):
 class UserOrganizationMembership(BaseModel):
     """Represent one organization membership in the user profile."""
 
-    id: str
+    id: UUID
     name: str
     role: Roles
 
@@ -103,7 +104,7 @@ class UserSummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     name: str
     email: EmailStr
     avatar: Avatar = ""
@@ -122,7 +123,7 @@ class UserProfile(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     name: str
     email: EmailStr
     avatar: Avatar = ""

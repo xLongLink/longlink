@@ -35,18 +35,3 @@ make web    # Run the web app proxied to the api app
 make api    # Run the control plane
 make down   # Stop services and remove the cluster
 ```
-
-## Release
-
-The release workflow runs on `v*` tag pushes and publishes the release automatically.
-
-```bash
-git tag vX.Y.Z
-git push origin vX.Y.Z
-
-# delete local tag
-git tag -d vX.Y.Z
-git push origin :refs/tags/vX.Y.Z
-git tag vX.Y.Z
-git push origin vX.Y.Z
-```

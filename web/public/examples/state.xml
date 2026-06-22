@@ -1,8 +1,0 @@
-<longlink>
-    <State id="filter" value='"day"' />
-    <Field>
-        <FieldLabel htmlFor="filter">Filter</FieldLabel>
-        <Input id="filter" value="$filter.value" />
-        <FieldDescription>Current filter: ${filter.value}</FieldDescription>
-    </Field>
-</longlink>

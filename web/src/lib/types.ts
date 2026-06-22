@@ -54,13 +54,13 @@ export type ApiEnvironmentMetadata = {
     name: string;
     type: string;
     description: string | null;
+    required: boolean;
 };
 
 export type ApiImageMetadata = {
     title: string | null;
     description: string | null;
-    required_envs: ApiEnvironmentMetadata[];
-    optional_envs: ApiEnvironmentMetadata[];
+    environments: ApiEnvironmentMetadata[];
 };
 
 export type ApiOrganizationSummary = {

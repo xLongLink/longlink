@@ -1,8 +1,25 @@
 import { Switch } from '@/components/ui/switch';
 import { fromXml, RenderXML } from '@/xml';
-import { useMemo, useState } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import * as monaco from 'monaco-editor';
+// @ts-ignore Vite resolves the Monaco editor worker entry at build time.
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+// @ts-ignore Vite resolves the Monaco XML language contribution at build time.
+import 'monaco-editor/esm/vs/basic-languages/xml/xml.contribution';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+type MonacoWorkerEnvironment = {
+    MonacoEnvironment?: {
+        getWorker(_: unknown, label: string): Worker;
+    };
+};
+
+const monacoGlobal = globalThis as typeof globalThis & MonacoWorkerEnvironment;
+
+monacoGlobal.MonacoEnvironment = {
+    getWorker(_: unknown, label: string) {
+        return new editorWorker();
+    },
+};
 
 type WindowProps = {
     children: string;
@@ -16,6 +33,7 @@ type ViewMode = 'rendered' | 'source';
 export function Window({ children, defaultViewMode = 'rendered', onRedClick }: WindowProps) {
     const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode);
     const sourceXml = normalizeXml(children);
+    const sourceEditorRef = useRef<HTMLDivElement | null>(null);
     const { ast, parseError } = useMemo(() => {
         const documentXml = wrapWindowXml(sourceXml);
 
@@ -28,6 +46,34 @@ export function Window({ children, defaultViewMode = 'rendered', onRedClick }: W
             };
         }
     }, [sourceXml]);
+
+    useEffect(() => {
+        if (viewMode !== 'source' || sourceEditorRef.current == null) {
+            return;
+        }
+
+        // Create a read-only Monaco editor only while the source pane is visible.
+        const editor = monaco.editor.create(sourceEditorRef.current, {
+            value: sourceXml,
+            language: 'xml',
+            theme: 'vs-dark',
+            readOnly: true,
+            domReadOnly: true,
+            automaticLayout: true,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            wordWrap: 'on',
+            fontSize: 14,
+            lineNumbers: 'on',
+            folding: false,
+            contextmenu: false,
+            overviewRulerBorder: false,
+        });
+
+        return () => {
+            editor.dispose();
+        };
+    }, [sourceXml, viewMode]);
 
     return (
         <div className="relative h-fit overflow-hidden rounded-2xl border border-border bg-card/80 shadow-lg shadow-black/10 ring-1 ring-border/60">
@@ -60,24 +106,8 @@ export function Window({ children, defaultViewMode = 'rendered', onRedClick }: W
                     ) : null}
                 </div>
             ) : (
-                <div className="overflow-auto px-3 pt-8">
-                    <SyntaxHighlighter
-                        language="xml"
-                        style={oneDark}
-                        customStyle={{
-                            margin: 0,
-                            padding: '0.5rem 0.25rem 0.5rem 0',
-                            background: 'transparent',
-                            fontSize: '0.875rem',
-                            lineHeight: '1.5rem',
-                        }}
-                        codeTagProps={{ className: 'font-mono' }}
-                        lineNumberStyle={{ minWidth: '2rem', paddingRight: '0.75rem' }}
-                        showLineNumbers
-                        wrapLongLines
-                    >
-                        {sourceXml}
-                    </SyntaxHighlighter>
+                <div className="px-3 pt-8 pb-3">
+                    <div ref={sourceEditorRef} className="h-[28rem] overflow-hidden rounded-lg border border-border/60" />
                 </div>
             )}
         </div>

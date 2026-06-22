@@ -82,7 +82,7 @@ async def proxy_app_request(application_id: str, request: Request, path: str = "
     if upstream_path == "":
         raise HTTPException(status_code=404, detail="Proxy root path is not available")
 
-    namespace = k8name(knames(application.organization_id, "Organization"))
+    namespace = k8name(knames(str(application.organization_id), "Organization"))
     name = knames(application.slug, "Application name")
     # Strip hop-by-hop headers before forwarding the request upstream.
     forward_headers = {

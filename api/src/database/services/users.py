@@ -82,6 +82,8 @@ class UsersService(ServiceBase):
                 user_id=user.id,
                 organization_id=organization.id,
                 role_name=Roles.owner,
+                created_id=user.id,
+                updated_id=user.id,
             )
         )
         await session.commit()
@@ -125,11 +127,20 @@ class UsersService(ServiceBase):
                 existing_user.language = language
 
             existing_user.oidc_subject = oidc_subject
+            if existing_user.created_id is None:
+                existing_user.created_id = existing_user.id
+            existing_user.updated_id = existing_user.id
 
             async with self.session() as session:
                 session.add(existing_user)
                 await session.commit()
                 await session.refresh(existing_user)
+
+                if existing_user.created_id is None:
+                    existing_user.created_id = existing_user.id
+                    session.add(existing_user)
+                    await session.commit()
+                    await session.refresh(existing_user)
 
                 await self._ensure_admin_membership(session, existing_user)
 
@@ -166,6 +177,12 @@ class UsersService(ServiceBase):
                 language=language if language is not None else Language.en,
             )
 
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
+
+            user.created_id = user.id
+            user.updated_id = user.id
             session.add(user)
             await session.commit()
             await session.refresh(user)

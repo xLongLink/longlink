@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException
+from uuid import UUID
 from src.auth import authuser, authadmin, authsupport
 from src.logger import logger
 from src.router import router
@@ -18,7 +19,7 @@ async def list_organizations(_user: User = Depends(authsupport)) -> list[Organiz
 
 @router.get("/api/orgs/{org_id}", response_model=OrganizationDetails)
 async def get_organization(
-    org_id: str,
+    org_id: UUID,
     user: User = Depends(authuser),
 ) -> OrganizationDetails:
     """Return one organization and its metadata."""
@@ -56,7 +57,7 @@ async def create_organization(
         registry = max(registries, key=lambda r: r.created_at)
         k8s = K8s(registry.kubeconfig, registry.proxy_secret)
         try:
-            await k8s.namespace(organization.id)
+            await k8s.namespace(str(organization.id))
         except Exception:
             logger.exception("Failed to create namespace for organization '%s'", organization.id)
 
@@ -64,12 +65,12 @@ async def create_organization(
 
 
 @router.delete("/api/orgs/{org_id}", status_code=204)
-async def delete_organization(org_id: str, user: User = Depends(authuser)) -> None:
+async def delete_organization(org_id: UUID, user: User = Depends(authuser)) -> None:
     """Delete one organization by id."""
 
     # Only members can delete their own org.
     if not any(organization.id == org_id for organization in user.organizations):
         raise HTTPException(status_code=404, detail=f"Organization '{org_id}' not found")
 
-    await organizations.delete(org_id)
+    await organizations.delete(org_id, user.id)
     return

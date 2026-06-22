@@ -1,8 +1,10 @@
 from datetime import datetime
+from uuid import UUID
+from uuid import uuid4
 from sqlalchemy import Enum, Column, String
 from sqlmodel import Field
 from src.models.operations import OperationKind
-from src.database.models.__base__ import Base, new_id, utcnow
+from src.database.models.__base__ import Base, utcnow
 
 
 class Operation(Base, table=True):
@@ -11,13 +13,13 @@ class Operation(Base, table=True):
     __tablename__ = "operations"
 
     # Identifier
-    id: str = Field(default_factory=new_id, primary_key=True, max_length=12)
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # State
     kind: OperationKind = Field(sa_column=Column(Enum(OperationKind, name="operation_kind_enum", native_enum=False, values_callable=lambda items: [item.value for item in items], create_constraint=True), nullable=False))
 
     # Reference
-    application_id: str | None = Field(default=None, foreign_key="applications.id", max_length=12)
+    application_id: UUID | None = Field(default=None, foreign_key="applications.id")
 
     # Metadata
     step: str = Field(sa_column=Column(String(length=100), nullable=False))
@@ -25,8 +27,11 @@ class Operation(Base, table=True):
 
     # Timestamps
     created_at: datetime = Field(default_factory=utcnow)
+    created_id: UUID | None = Field(default=None, foreign_key='users.id')
     updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
+    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
     started_at: datetime | None = None
     stopped_at: datetime | None = None
 

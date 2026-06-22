@@ -27,13 +27,13 @@ async def get_location(location_id: str, _user: User = Depends(authsupport)) -> 
 @router.post("/api/locations", response_model=LocationResponse)
 async def create_location(
     payload: LocationCreate,
-    _user: User = Depends(authadmin),
+    user: User = Depends(authadmin),
 ) -> LocationResponse:
     """Create one location."""
 
     # Surface validation errors as a conflict so the API stays consistent with other create flows.
     try:
-        location = await locations.create(payload.slug, payload.name, payload.country)
+        location = await locations.create(payload.slug, payload.name, payload.country, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -41,10 +41,10 @@ async def create_location(
 
 
 @router.delete("/api/locations/{location_id}", status_code=204)
-async def delete_location(location_id: str, _user: User = Depends(authadmin)) -> None:
+async def delete_location(location_id: str, user: User = Depends(authadmin)) -> None:
     """Delete one location."""
 
-    location = await locations.delete(location_id)
+    location = await locations.delete(location_id, user.id)
     if location is None:
         raise HTTPException(status_code=404, detail=f"Location '{location_id}' not found")
 

@@ -280,32 +280,21 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                             </form>
                         ) : (
                             <form className="space-y-4" onSubmit={handleCreateApp}>
-                                {imageMetadata?.required_envs.length || imageMetadata?.optional_envs.length ? (
+                                {imageMetadata?.environments.length ? (
                                     <ScrollArea className="max-h-80 pr-3">
                                         <div className="space-y-4">
-                                            {imageMetadata.required_envs.map((env) => (
-                                                <div key={`required-${env.name}`} className="space-y-2">
-                                                    <Label htmlFor={`required-env-${env.name}`}>
-                                                        {env.name} <span className="text-muted-foreground">(required)</span>
+                                            {imageMetadata.environments.map((env) => (
+                                                <div key={env.name} className="space-y-2">
+                                                    <Label htmlFor={`env-${env.name}`}>
+                                                        {env.name}{' '}
+                                                        <span className="text-muted-foreground">
+                                                            {env.required ? '(required)' : '(optional)'}
+                                                        </span>
                                                     </Label>
                                                     <Input
-                                                        id={`required-env-${env.name}`}
+                                                        id={`env-${env.name}`}
                                                         name={env.name}
-                                                        required={true}
-                                                        placeholder={env.description ?? `Enter ${env.name}`}
-                                                        autoComplete="off"
-                                                    />
-                                                </div>
-                                            ))}
-
-                                            {imageMetadata.optional_envs.map((env) => (
-                                                <div key={`optional-${env.name}`} className="space-y-2">
-                                                    <Label htmlFor={`optional-env-${env.name}`}>
-                                                        {env.name} <span className="text-muted-foreground">(Optional)</span>
-                                                    </Label>
-                                                    <Input
-                                                        id={`optional-env-${env.name}`}
-                                                        name={env.name}
+                                                        required={env.required}
                                                         placeholder={env.description ?? `Enter ${env.name}`}
                                                         autoComplete="off"
                                                     />

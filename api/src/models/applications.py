@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Annotated
 from datetime import datetime
+from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict, BeforeValidator
 from src.models.organization_summary import OrganizationSummary
 from src.models.roles import Roles
@@ -36,8 +37,8 @@ class ApplicationCreate(BaseModel):
 class ApplicationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    organization_id: str
+    id: UUID
+    organization_id: UUID
     organization: OrganizationSummary
     name: str
     slug: str

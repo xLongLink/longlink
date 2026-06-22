@@ -7,9 +7,6 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 const exampleFiles = {
     Text: '/examples/text.xml',
-    State: '/examples/state.xml',
-    If: '/examples/if.xml',
-    For: '/examples/for.xml',
     Form: '/examples/form.xml',
     Quote: '/examples/quote.xml',
     Menu: '/examples/menu.xml',

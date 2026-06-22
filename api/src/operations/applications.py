@@ -155,7 +155,7 @@ async def execute_app_delete(operation: Operation) -> Operation:
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
     await k8s.remove(application.organization_id, application.slug)
     try:
-        await applications.delete(application.organization_id, application.id)
+        await applications.delete(application.organization_id, application.id, deleted_id=operation.created_id)
     except ValueError as exc:
         if str(exc) != "Application not found":
             raise

@@ -1,4 +1,5 @@
 from fastapi import Depends, Response, HTTPException
+from uuid import UUID
 from src.auth import authuser, authadmin
 from src.logger import logger
 from src.router import router
@@ -18,7 +19,7 @@ from src.models.roles import PlatformRole
 
 
 @router.get("/api/apps", response_model=list[ApplicationResponse])
-async def list_applications(organization_id: str | None = None, user: User = Depends(authuser)) -> list[ApplicationResponse]:
+async def list_applications(organization_id: UUID | None = None, user: User = Depends(authuser)) -> list[ApplicationResponse]:
     """Return organization applications, or all applications for admin views."""
 
     if organization_id is None:
@@ -78,7 +79,7 @@ async def list_applications(organization_id: str | None = None, user: User = Dep
 
 @router.post("/api/apps", response_model=ApplicationResponse)
 async def create_app(
-    organization_id: str,
+    organization_id: UUID,
     payload: ApplicationCreate,
     user: User = Depends(authuser),
 ) -> ApplicationResponse:
@@ -148,9 +149,9 @@ async def create_app(
 
     # Provision the namespace, schema, and workload in order so failures can mark the app as failed.
     try:
-        await k8s.namespace(organization_id)
-        await db_client.schema(organization_id, app_slug)
-        await k8s.application(organization_id, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
+        await k8s.namespace(str(organization_id))
+        await db_client.schema(str(organization_id), app_slug)
+        await k8s.application(str(organization_id), app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
     except HTTPException:
         await applications.set_status(application.id, AppStatus.failed)
         raise
@@ -159,7 +160,7 @@ async def create_app(
         raise HTTPException(status_code=503, detail="Failed to initialize the application") from exc
 
     try:
-        operation = await operations.create(OperationKind.app_create, application_id=application.id, step="verify")
+        operation = await operations.create(OperationKind.app_create, application_id=application.id, step="verify", user=user)
     except Exception as exc:
         await applications.set_status(application.id, AppStatus.failed)
         logger.exception("Failed to queue application verification for %s/%s", organization_id, payload.name)
@@ -172,8 +173,8 @@ async def create_app(
 
 @router.delete("/api/apps/{application_id}", status_code=204)
 async def delete_app(
-    organization_id: str,
-    application_id: str,
+    organization_id: UUID,
+    application_id: UUID,
     _user: User = Depends(authadmin),
 ) -> None:
     """Queue app deletion and return immediately."""
@@ -191,7 +192,7 @@ async def delete_app(
 
     await applications.set_status(application.id, AppStatus.deleting)
     try:
-        await operations.create(OperationKind.app_delete, application_id=application.id, step="remove_runtime")
+        await operations.create(OperationKind.app_delete, application_id=application.id, step="remove_runtime", user=_user)
     except Exception as exc:
         await applications.set_status(application.id, application.status)
         logger.exception("Failed to queue application deletion for %s/%s", organization_id, application.name)
@@ -201,7 +202,7 @@ async def delete_app(
 
 
 @router.get("/api/apps/{application_id}/logs")
-async def get_application_logs(organization_id: str, application_id: str, user: User = Depends(authuser)) -> Response:
+async def get_application_logs(organization_id: UUID, application_id: UUID, user: User = Depends(authuser)) -> Response:
     """Return recent pod logs for one managed application."""
 
     # Validate the application and organization before connecting to the active cluster.
@@ -235,7 +236,7 @@ async def get_application_logs(organization_id: str, application_id: str, user: 
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await k8s.logs(organization_id, application.slug)
+        logs = await k8s.logs(str(organization_id), application.slug)
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

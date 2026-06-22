@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from fastapi import HTTPException, status
 from src.database.models.__base__ import Base
 from src.database.models.association import UserOrganization
+from src.database.models.operation import Operation
 from src.adapters.compute import K8s
 from src.adapters.database import Postgre
 from src.database.session import get_session
@@ -156,9 +157,9 @@ async def main() -> None:
     )
 
     try:
-        await k8s.namespace(organization_record.id)
-        await db_client.schema(organization_record.id, app_slug)
-        await k8s.application(organization_record.id, app_slug, app_payload.image, APP_SERVICE_PORT, app_payload.envs)
+        await k8s.namespace(organization_record.name)
+        await db_client.schema(organization_record.name, app_slug)
+        await k8s.application(organization_record.name, app_slug, app_payload.image, APP_SERVICE_PORT, app_payload.envs)
     except Exception as exc:
         await applications.set_status(application.id, AppStatus.failed)
         raise

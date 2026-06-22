@@ -1,10 +1,12 @@
 from datetime import datetime
+from uuid import UUID
+from uuid import uuid4
 from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship
 from sqlalchemy import and_, Column, Enum as SAEnum
 from src.models.users import Theme, Accent, Radius, Language
 from src.models.roles import PlatformRole
-from src.database.models.__base__ import Base, new_id, utcnow
+from src.database.models.__base__ import Base, utcnow
 from src.database.models.association import UserApplication, UserOrganization
 
 if TYPE_CHECKING:
@@ -17,7 +19,7 @@ class User(Base, table=True):
     __tablename__ = 'users'
 
     # Identifier
-    id: str = Field(default_factory=new_id, primary_key=True, max_length=12)
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # Metadata
     name: str
@@ -27,8 +29,11 @@ class User(Base, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow)
+    created_id: UUID | None = Field(default=None, foreign_key='users.id')
     updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
+    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
     # State
     role: PlatformRole = Field(default=PlatformRole.user, sa_column=Column(SAEnum(PlatformRole, name='platform_role_enum', native_enum=False), nullable=False))
@@ -38,7 +43,7 @@ class User(Base, table=True):
     language: Language = Field(default=Language.en, max_length=2)
 
     # Relationships
-    organizations: list['Organization'] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserOrganization.__table__})
+    organizations: list['Organization'] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserOrganization.__table__, 'primaryjoin': 'User.id == UserOrganization.user_id', 'secondaryjoin': 'Organization.id == UserOrganization.organization_id'})
     applications: list['Application'] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserApplication.__table__, 'primaryjoin': 'User.id == UserApplication.user_id', 'secondaryjoin': 'and_(UserApplication.organization_id == Application.organization_id, UserApplication.application_id == Application.id)'})
 
     @property

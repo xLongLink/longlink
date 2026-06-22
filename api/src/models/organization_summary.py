@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -10,10 +11,10 @@ class OrganizationSummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     name: str
     avatar: str | None = None
-    location_id: str
+    location_id: UUID
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None

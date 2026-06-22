@@ -1,11 +1,12 @@
-import re
+import httpx2
 import json
 import yaml
-import httpx2
-from yaml import safe_load_all
-from string import Template
+import re
 from pathlib import Path
+from string import Template
 from urllib.parse import urlparse
+from yaml import safe_load_all
+
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
@@ -37,17 +38,14 @@ def metadata(image: str) -> LongLinkMetadata | None:
                 description=labels.get("longlink.description"),
             )
 
-            required = labels.get("longlink.required")
-            if required is not None:
+            environments = labels.get("longlink.environments")
+            if environments is not None:
                 try:
-                    result.required = EnvironmentMetadata.model_validate(json.loads(required))
-                except (json.JSONDecodeError, TypeError, ValueError):
-                    return None
+                    parsed_environments = json.loads(environments)
+                    if not isinstance(parsed_environments, list):
+                        return None
 
-            optional = labels.get("longlink.optional")
-            if optional is not None:
-                try:
-                    result.optional = EnvironmentMetadata.model_validate(json.loads(optional))
+                    result.environments = [EnvironmentMetadata.model_validate(env) for env in parsed_environments]
                 except (json.JSONDecodeError, TypeError, ValueError):
                     return None
 

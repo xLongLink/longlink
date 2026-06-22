@@ -1,9 +1,11 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from uuid import UUID
+from uuid import uuid4
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Column, String, text
 from sqlmodel import Field, Relationship
-from src.database.models.__base__ import Base, new_id, utcnow
+from src.database.models.__base__ import Base, utcnow
 from src.models.countries import Country
 
 if TYPE_CHECKING:
@@ -11,6 +13,7 @@ if TYPE_CHECKING:
     from src.database.models.database import DatabaseRegistry
     from src.database.models.organizations import Organization
     from src.database.models.storage import StorageRegistry
+    from src.database.models.users import User
 
 
 class Location(Base, table=True):
@@ -19,7 +22,7 @@ class Location(Base, table=True):
     __tablename__ = 'locations'
 
     # Identifier
-    id: str = Field(default_factory=new_id, primary_key=True, max_length=12)
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # Metadata
     name: str = Field(max_length=255)
@@ -28,8 +31,14 @@ class Location(Base, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow)
+    created_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Location.created_id'})
+    created_id: UUID | None = Field(default=None, foreign_key='users.id')
     updated_at: datetime = Field(default_factory=utcnow, sa_column_kwargs={'onupdate': utcnow})
+    updated_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Location.updated_id'})
+    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
+    deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Location.deleted_id'})
+    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
     # Relationships
     organizations: list['Organization'] = Relationship(back_populates='location')
