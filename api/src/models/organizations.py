@@ -10,8 +10,11 @@ from src.models.users import Avatar, UserSummary
 class OrganizationCreate(BaseModel):
     """Validate organization creation payloads."""
 
+    # Metadata
     name: str = Field(min_length=1, max_length=128)
     avatar: str | None = None
+
+    # Location
     location_id: UUID
 
 
@@ -20,12 +23,19 @@ class OrganizationApplicationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     name: str
     slug: str
-    status: AppStatus
-    description: str | None = None
     icon: str | None = None
+    description: str | None = None
+
+    # State
+    status: AppStatus
+
+    # Audit
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None
@@ -39,16 +49,25 @@ class OrganizationDetails(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     name: str
     avatar: Avatar = ""
-    location_id: UUID
+
+    # Location
     location: LocationResponse
+    location_id: UUID
+
+    # Audit
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None
     updated_by: UserSummary | None = None
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
+
+    # Relationships
     users: list[UserSummary]
     applications: list[OrganizationApplicationResponse] = Field(default_factory=list)

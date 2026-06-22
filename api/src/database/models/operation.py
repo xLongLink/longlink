@@ -34,7 +34,6 @@ class Operation(SQLModel, table=True):
     started_at: datetime | None = None
     stopped_at: datetime | None = None
 
-
     @property
     def status(self) -> str:
         """Return the derived operation lifecycle state."""

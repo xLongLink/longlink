@@ -1,12 +1,14 @@
 import pytest
 from types import SimpleNamespace
-from src.models.kinds import ComputeKind, DatabaseKind
 from src.models.roles import Roles
+from src.models.roles import PlatformRole
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.database.session import get_session
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse as AppResponse
+from src.models.compute import ComputeKind
+from src.models.database import DatabaseKind
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute
@@ -81,8 +83,8 @@ async def test_list_apps_returns_app_membership_role(
             **app.model_dump(),
             "organization": app.organization,
             "role": Roles.write,
-            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
-            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
             "deleted_by": None,
         }
     ).model_dump(mode="json")
@@ -118,8 +120,8 @@ async def test_list_apps_returns_null_role_without_app_membership(
             **app.model_dump(),
             "organization": app.organization,
             "role": None,
-            "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
-            "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
+            "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
+            "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
             "deleted_by": None,
         }
     ).model_dump(mode="json")
@@ -164,8 +166,8 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
                 **dashboard.model_dump(),
                 "organization": dashboard.organization,
                 "role": None,
-                "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
-                "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
+                "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
+                "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
                 "deleted_by": None,
             }
         ).model_dump(mode="json"),
@@ -174,8 +176,8 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
                 **console.model_dump(),
                 "organization": console.organization,
                 "role": None,
-                "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
-                "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.admin}),
+                "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
+                "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
                 "deleted_by": None,
             }
         ).model_dump(mode="json"),

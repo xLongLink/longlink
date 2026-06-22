@@ -1,11 +1,13 @@
 from types import SimpleNamespace
-from src.models.kinds import ComputeKind, StorageKind, DatabaseKind
 from fastapi.testclient import TestClient
 from src.models.compute import ComputeRegistryResponse
 from src.models.storage import StorageRegistryResponse
 from src.models.database import DatabaseRegistryResponse
 from src.models.users import UserSummary
 from src.models.operations import OperationKind
+from src.models.compute import ComputeKind
+from src.models.storage import StorageKind
+from src.models.database import DatabaseKind
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
@@ -14,6 +16,7 @@ from src.database.services.locations import locations
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
+from src.models.roles import PlatformRole
 
 db = SimpleNamespace(
     applications=applications,
@@ -68,7 +71,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.admin})
+    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
     location = await db.locations.create("local", "Local testing")
 
     # Act
@@ -141,7 +144,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.admin})
+    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
     location = await db.locations.create("local", "Local testing")
 
     # Act
@@ -215,7 +218,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.admin})
+    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
     location = await db.locations.create("local", "Local testing")
     captured: dict[str, object] = {}
 

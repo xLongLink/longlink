@@ -15,12 +15,19 @@ class OperationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: str
+
+    # Metadata
     kind: OperationKind
-    application_id: str | None = None
     step: str
-    status: str
     error: str | None = None
+    status: str
+
+    # Relationships
+    application_id: str | None = None
+
+    # Audit
     created_at: datetime
     started_at: datetime | None = None
     stopped_at: datetime | None = None

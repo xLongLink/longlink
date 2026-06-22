@@ -1,16 +1,25 @@
+from enum import Enum
 from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
-from src.models.kinds import ComputeKind
 from src.models.users import UserSummary
+
+
+class ComputeKind(str, Enum):
+    """Supported compute registry kinds."""
+
+    kubernetes = "kubernetes"
 
 
 class ComputeRegistryCreate(BaseModel):
     """Request body for creating a compute registry."""
 
+    # Metadata
     kind: ComputeKind
     kubeconfig: str
     ingress_host: str
+
+    # Relationships
     location_id: UUID
 
 
@@ -19,10 +28,17 @@ class ComputeRegistryResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     kind: ComputeKind
     ingress_host: str
+
+    # Relationships
     location_id: UUID
+
+    # Audit
     created_at: datetime
     created_by: UserSummary | None = None
     updated_at: datetime

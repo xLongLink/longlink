@@ -1,19 +1,28 @@
+from enum import Enum
 from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
-from src.models.kinds import StorageKind
 from src.models.users import UserSummary
+
+
+class StorageKind(str, Enum):
+    """Supported storage registry kinds."""
+
+    s3 = "s3"
 
 
 class StorageRegistryCreate(BaseModel):
     """Request body for creating a storage registry."""
 
+    # Metadata
     kind: StorageKind
     name: str
     protocol: str
     endpoint_url: str
     access_key_id: str
     secret_access_key: str
+
+    # Relationships
     location_id: UUID
 
 
@@ -22,13 +31,20 @@ class StorageRegistryResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     kind: StorageKind
     name: str
     protocol: str
     endpoint_url: str
     access_key_id: str
+
+    # Relationships
     location_id: UUID
+
+    # Audit
     created_at: datetime
     created_by: UserSummary | None = None
     updated_at: datetime

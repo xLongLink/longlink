@@ -12,6 +12,7 @@ from src.database.services.organizations import organizations as orgs
 from src.database.services.storage import storage
 from src.database.services.users import users
 from src.models.locations import LocationResponse
+from src.models.roles import PlatformRole
 from src.models.organizations import OrganizationDetails as OrgDetails, OrganizationSummary as OrgSummary
 from src.models.users import UserSummary
 
@@ -57,8 +58,8 @@ async def test_create_organization_returns_owner_role(
             "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
-            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
-            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
             "deleted_at": None,
             "deleted_by": None,
         }
@@ -99,8 +100,8 @@ async def test_get_organization_returns_member_payload(
         location=LocationResponse.model_validate(location),
         created_at=organization.created_at,
         updated_at=organization.updated_at,
-        created_by=UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
-        updated_by=UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+        created_by=UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+        updated_by=UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
         deleted_at=organization.deleted_at,
         deleted_by=None,
         users=[
@@ -111,7 +112,7 @@ async def test_get_organization_returns_member_payload(
                     "email": owner.email,
                     "avatar": owner.avatar,
                     "role": owner.role,
-                    "admin": owner.admin,
+                    "admin": owner.role == PlatformRole.administrator,
                 }
             )
         ],
@@ -127,8 +128,8 @@ async def test_get_organization_returns_member_payload(
                 "icon": None,
                 "created_at": app.created_at,
                 "updated_at": app.updated_at,
-                "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
-                "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+                "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+                "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
                 "deleted_at": None,
                 "deleted_by": None,
             }
@@ -146,7 +147,7 @@ async def test_get_organization_returns_member_payload(
         "email": owner.email,
         "avatar": "",
         "role": owner.role,
-        "admin": owner.admin,
+        "admin": owner.role == PlatformRole.administrator,
     }
     assert response.json()["applications"] == [
         {
@@ -158,8 +159,8 @@ async def test_get_organization_returns_member_payload(
             "icon": None,
             "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
             "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),
-            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}).model_dump(mode="json"),
-            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}).model_dump(mode="json"),
+            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}).model_dump(mode="json"),
+            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}).model_dump(mode="json"),
             "deleted_at": None,
             "deleted_by": None,
         }
@@ -191,8 +192,8 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
             "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
-            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
-            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.admin}),
+            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
             "deleted_at": None,
             "deleted_by": None,
         }

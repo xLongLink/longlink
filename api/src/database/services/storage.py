@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
 from src.database.models.storage import StorageRegistry
 from src.database.models.users import User
-from src.models.kinds import StorageKind
+from src.models.storage import StorageKind
 
 
 class StorageService:

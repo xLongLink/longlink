@@ -102,7 +102,7 @@ class Postgre(Database):
             await conn.execute(text("""
                 CREATE TABLE IF NOT EXISTS public.users (
                     id SERIAL PRIMARY KEY,
-                    email VARCHAR(255) NOT NULL,
+                    email VARCHAR(254) NOT NULL,
                     name VARCHAR(255) NOT NULL,
                     created_at TIMESTAMPTZ DEFAULT NOW(),
                     updated_at TIMESTAMPTZ DEFAULT NOW()

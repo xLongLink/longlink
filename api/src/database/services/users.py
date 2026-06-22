@@ -46,7 +46,7 @@ class UsersService:
             )
 
             payload = user.model_dump()
-            payload["admin"] = user.admin
+            payload["admin"] = user.role == PlatformRole.administrator
             payload["oidc"] = user.oidc
             payload["organizations"] = [
                 UserOrganizationMembership(id=organization_id, name=organization_name, avatar=organization_avatar, role=role_name)
@@ -117,7 +117,7 @@ class UsersService:
             if role is not None:
                 existing_user.role = role
             elif admin is not None:
-                existing_user.admin = admin
+                existing_user.role = PlatformRole.administrator if admin else PlatformRole.user
             if theme is not None:
                 existing_user.theme = theme
             if accent is not None:
@@ -128,20 +128,11 @@ class UsersService:
                 existing_user.language = language
 
             existing_user.oidc = oidc
-            if existing_user.created_id is None:
-                existing_user.created_id = existing_user.id
-            existing_user.updated_id = existing_user.id
 
             async with session_scope() as session:
                 session.add(existing_user)
                 await session.commit()
                 await session.refresh(existing_user)
-
-                if existing_user.created_id is None:
-                    existing_user.created_id = existing_user.id
-                    session.add(existing_user)
-                    await session.commit()
-                    await session.refresh(existing_user)
 
                 await self._ensure_admin_membership(session, existing_user)
 
@@ -178,12 +169,6 @@ class UsersService:
                 language=language if language is not None else Language.en,
             )
 
-            session.add(user)
-            await session.commit()
-            await session.refresh(user)
-
-            user.created_id = user.id
-            user.updated_id = user.id
             session.add(user)
             await session.commit()
             await session.refresh(user)

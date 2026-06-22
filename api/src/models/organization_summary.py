@@ -12,10 +12,17 @@ class OrganizationSummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     name: str
     avatar: Avatar = ""
+
+    # Relationships
     location_id: UUID
+
+    # Audit
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None

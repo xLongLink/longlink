@@ -24,7 +24,7 @@ class User(Base, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(max_length=255)
-    email: str = Field(max_length=255)
+    email: str = Field(max_length=254)
     avatar: str | None = Field(default=None, max_length=255)
 
 

@@ -27,26 +27,40 @@ class AppStatus(str, Enum):
 
 
 class ApplicationCreate(BaseModel):
+    """Validate application creation payloads."""
+
+    # Metadata
     name: ApplicationName
+    icon: str | None = None
     image: str
     description: str | None = None
-    icon: str | None = None
+
+    # Relationships
     envs: dict[str, str] = Field(default_factory=dict)
 
 
 class ApplicationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
-    organization_id: UUID
+
+    # Relationships
     organization: OrganizationSummary
+    organization_id: UUID
+
+    # Metadata
     name: str
     slug: str
-    image: str
-    status: AppStatus
-    description: str | None = None
     icon: str | None = None
+    image: str
+    description: str | None = None
+
+    # State
     role: Roles | None = None
+    status: AppStatus
+
+    # Audit
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary

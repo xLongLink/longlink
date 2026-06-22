@@ -13,9 +13,14 @@ class LocationOrganizationSummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     name: str
     location_id: UUID
+
+    # Audit
     created_at: datetime
     updated_at: datetime
     created_by: UserSummary | None = None
@@ -27,6 +32,7 @@ class LocationOrganizationSummary(BaseModel):
 class LocationCreate(BaseModel):
     """Request body for creating a location."""
 
+    # Metadata
     name: str = Field(min_length=1, max_length=255)
     slug: str = Field(min_length=1, max_length=128)
     country: Country
@@ -37,13 +43,20 @@ class LocationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     name: str
     slug: str
     country: Country
+
+    # Audit
     created_at: datetime
     updated_at: datetime
+
+    # Relationships
     organizations: list[LocationOrganizationSummary] = Field(default_factory=list)
     compute_registries: list[ComputeRegistryResponse] = Field(default_factory=list)
-    database_registries: list[DatabaseRegistryResponse] = Field(default_factory=list)
     storage_registries: list[StorageRegistryResponse] = Field(default_factory=list)
+    database_registries: list[DatabaseRegistryResponse] = Field(default_factory=list)

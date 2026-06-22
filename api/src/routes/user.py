@@ -4,6 +4,7 @@ from src.database.models.users import User
 from src.database.services.users import users
 from src.router import router
 from src.models.users import UserUpdate, UserProfile, UserListItem
+from src.models.roles import PlatformRole
 
 
 async def serialize_user(user: User) -> UserProfile:
@@ -12,12 +13,12 @@ async def serialize_user(user: User) -> UserProfile:
     profile = await users.profile(user.id)
     if profile is None:
         profile = UserProfile(
-            **{
-                **user.model_dump(),
-                "admin": user.admin,
-                "avatar": user.avatar or "",
-                "organizations": [],
-            }
+                **{
+                    **user.model_dump(),
+                    "admin": user.role == PlatformRole.administrator,
+                    "avatar": user.avatar or "",
+                    "organizations": [],
+                }
         )
 
     return profile
@@ -35,7 +36,7 @@ async def list_users(_user: User = Depends(authsupport)) -> list[UserListItem]:
     """Return all user summaries for support and administrator views."""
 
     return [
-        UserListItem.model_validate({**user.model_dump(), "admin": user.admin})
+        UserListItem.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator})
         for user in await users.list()
     ]
 

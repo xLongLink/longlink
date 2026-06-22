@@ -22,17 +22,14 @@ class User(SQLModel, table=True):
 
     # Metadata
     name: str
-    email: str = Field(unique=True, max_length=255)
-    avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
     oidc: str = Field(unique=True, max_length=255)
-
+    email: str = Field(unique=True, max_length=254)
+    avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
+    
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_id: UUID | None = Field(default=None, foreign_key='users.id')
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
-    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
-    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
     # State
     role: PlatformRole = Field(default=PlatformRole.user, sa_column=Column(SAEnum(PlatformRole, name='platform_role_enum', native_enum=False), nullable=False))
@@ -44,15 +41,3 @@ class User(SQLModel, table=True):
     # Relationships
     organizations: list['Organization'] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserOrganization.__table__, 'primaryjoin': 'User.id == UserOrganization.user_id', 'secondaryjoin': 'Organization.id == UserOrganization.organization_id'})
     applications: list['Application'] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserApplication.__table__, 'primaryjoin': 'User.id == UserApplication.user_id', 'secondaryjoin': 'and_(UserApplication.organization_id == Application.organization_id, UserApplication.application_id == Application.id)'})
-
-    @property
-    def admin(self) -> bool:
-        """Return whether the user has administrator access."""
-
-        return self.role == PlatformRole.administrator
-
-    @admin.setter
-    def admin(self, value: bool) -> None:
-        """Map legacy admin flags to the platform role column."""
-
-        self.role = PlatformRole.administrator if value else PlatformRole.user

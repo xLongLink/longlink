@@ -94,9 +94,14 @@ class UserUpdate(BaseModel):
 class UserOrganizationMembership(BaseModel):
     """Represent one organization membership in the user profile."""
 
+    # Identifier
     id: UUID
+
+    # Metadata
     name: str
     avatar: Avatar = ""
+
+    # State
     role: Roles
 
 
@@ -105,10 +110,15 @@ class UserSummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     name: str
     email: EmailStr
     avatar: Avatar = ""
+
+    # State
     role: PlatformRole
     admin: bool = False
 
@@ -124,10 +134,15 @@ class UserProfile(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Identifier
     id: UUID
+
+    # Metadata
     name: str
     email: EmailStr
     avatar: Avatar = ""
+
+    # State
     role: PlatformRole
     admin: bool = False
     theme: Theme
@@ -135,4 +150,6 @@ class UserProfile(BaseModel):
     radius: Radius
     language: Language
     oidc: str
+
+    # Relationships
     organizations: list[UserOrganizationMembership] = Field(default_factory=list)

@@ -7,6 +7,7 @@ from src.database.services.operations import operations
 from src.database.services.organizations import organizations
 from src.database.services.storage import storage
 from src.database.services.users import users
+from src.models.roles import PlatformRole
 from src.models.roles import Roles
 from src.models.users import UserOrganizationMembership
 
@@ -41,7 +42,7 @@ async def test_upsert_creates_user_when_no_existing_match() -> None:
     assert user.email == "create@example.com"
     assert user.name == "Create User"
     assert user.avatar == "https://example.com/create.png"
-    assert user.admin is True
+    assert user.role == PlatformRole.administrator
 
 
 async def test_upsert_marks_first_created_user_as_admin() -> None:
@@ -60,7 +61,7 @@ async def test_upsert_marks_first_created_user_as_admin() -> None:
     # Assert
     assert user.id is not None
     assert user.name == "First User"
-    assert user.admin is True
+    assert user.role == PlatformRole.administrator
 
 
 async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None:
@@ -118,7 +119,7 @@ async def test_upsert_does_not_mark_second_user_as_admin() -> None:
 
     # Assert
     assert user.id is not None
-    assert user.admin is False
+    assert user.role == PlatformRole.user
 
 
 async def test_upsert_updates_existing_user_by_oidc() -> None:

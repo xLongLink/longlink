@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
-from src.models.kinds import DatabaseKind
+from src.models.database import DatabaseKind
 from src.database.models.database import DatabaseRegistry
 from src.database.models.users import User
 

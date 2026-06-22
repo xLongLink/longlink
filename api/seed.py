@@ -20,7 +20,9 @@ from src.database.services.storage import storage
 from src.enviroments import env
 from src.models.applications import ApplicationCreate
 from src.models.applications import AppStatus
-from src.models.kinds import ComputeKind, DatabaseKind, StorageKind
+from src.models.compute import ComputeKind
+from src.models.database import DatabaseKind
+from src.models.storage import StorageKind
 from src.models.roles import Roles
 from src.database.models.users import User
 
@@ -136,7 +138,7 @@ async def main() -> None:
             "OPTIONAL": "optional",
         },
     )
-    app_slug = app_payload.slug
+    app_slug = LOCAL_APP["slug"]
     application = await applications.create(
         organization_record.id,
         app_payload.name,

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from src.constants import INGRESS_NAME
 from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
-from src.models.kinds import ComputeKind
+from src.models.compute import ComputeKind
 from src.database.models.compute import ComputeRegistry
 from src.database.models.users import User
 

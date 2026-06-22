@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import Enum, Text, Column
-from src.models.kinds import ComputeKind
+from src.models.compute import ComputeKind
 
 if TYPE_CHECKING:
     from src.database.models.location import Location

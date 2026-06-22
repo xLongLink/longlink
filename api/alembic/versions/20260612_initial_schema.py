@@ -23,14 +23,11 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", AutoString(), nullable=False),
-        sa.Column("email", sa.String(length=255), nullable=False),
+        sa.Column("email", sa.String(length=254), nullable=False),
         sa.Column("avatar", sa.String(length=2048), nullable=True),
         sa.Column("role", sa.Enum("user", "support", "administrator", name="platform_role_enum", native_enum=False), nullable=False),
         sa.Column("theme", sa.Enum("system", "light", "dark", name="theme", native_enum=False), nullable=False),
@@ -74,9 +71,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("email"),
         sa.UniqueConstraint("oidc"),
-        sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["deleted_id"], ["users.id"]),
     )
 
     op.create_table(
@@ -137,7 +131,6 @@ def upgrade() -> None:
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
-        sa.UniqueConstraint("organization_id", "name"),
         sa.UniqueConstraint("organization_id", "slug"),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"]),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),

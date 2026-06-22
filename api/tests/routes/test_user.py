@@ -8,6 +8,7 @@ from src.database.services.operations import operations
 from src.database.services.organizations import organizations as orgs
 from src.database.services.storage import storage
 from src.database.services.users import users
+from src.models.roles import PlatformRole
 from fastapi.testclient import TestClient
 from src.models.users import UserProfile, UserListItem
 
@@ -69,7 +70,7 @@ async def test_list_users_returns_admin_user_summaries(
     assert response.status_code == 200
 
     expected_payload = [
-        UserListItem.model_validate({**user.model_dump(), "admin": user.admin}).model_dump(mode="json")
+        UserListItem.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}).model_dump(mode="json")
         for user in users
     ]
     assert response.json() == expected_payload
