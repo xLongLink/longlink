@@ -58,7 +58,7 @@ export default function Organizations() {
     if (!user) {
         return (
             <Layout brandOnly brandHref="/">
-                <section className="mx-auto flex w-full max-w-[1000px] items-center justify-center py-12">
+                <section className="mx-auto flex w-full max-w-[1000px] flex-1 items-center justify-center py-12">
                     <SignInCard redirectTo={redirectTo} />
                 </section>
             </Layout>

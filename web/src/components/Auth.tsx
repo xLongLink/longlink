@@ -35,7 +35,7 @@ export function Auth({ children, requiredRole }: AuthProps) {
     if (!user) {
         return (
             <Layout brandOnly brandHref="/">
-                <section className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-[1000px] items-center justify-center py-12">
+                <section className="mx-auto flex w-full max-w-[1000px] flex-1 items-center justify-center py-12">
                     <SignInCard redirectTo={redirectTo} />
                 </section>
             </Layout>

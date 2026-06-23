@@ -54,29 +54,25 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
     }
 
     return (
-        <div className="w-full max-w-md space-y-6">
+        <div className="mx-auto w-full max-w-sm space-y-6">
             <div className="space-y-6">
                 <div className="space-y-4 text-center">
                     <div className="space-y-2">
-                        <h1 className="text-2xl font-medium">
-                            Welcome to{' '}
-                            <Wordmark className="inline-flex text-2xl align-baseline" />
+                        <h1 className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-2xl font-medium">
+                            <span>Welcome to</span>
+                            <Wordmark className="text-2xl align-baseline" />
                         </h1>
                     </div>
-                </div>
 
-                <Separator />
-
-                <div className="space-y-3">
-                    <Button type="button" variant="outline" className="w-full" onClick={() => setShowEmailForm(true)}>
-                        Continue with Email
-                    </Button>
-                    <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('github')}>
-                        Continue with GitHub
-                    </Button>
-                    <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('google')}>
-                        Continue with Google
-                    </Button>
+                    {showEmailForm ? (
+                        <button
+                            type="button"
+                            className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+                            onClick={() => setShowEmailForm(false)}
+                        >
+                            Back
+                        </button>
+                    ) : null}
                 </div>
 
                 {showEmailForm ? (
@@ -106,7 +102,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
 
                         <Button
                             type="submit"
-                            className="w-full"
+                            className="mx-auto w-full max-w-sm"
                             disabled={isSubmitting || username.length === 0 || password.length === 0}
                         >
                             {isSubmitting ? 'Signing in...' : 'Continue with Email'}
@@ -114,8 +110,40 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                     </form>
                 ) : null}
 
-                <p className="text-center text-xs text-muted-foreground">
-                    By continuing, you agree to our{' '}
+                {!showEmailForm ? (
+                    <div className="space-y-3">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="mx-auto w-full max-w-sm"
+                            onClick={() => setShowEmailForm(true)}
+                        >
+                            Continue with Email
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="mx-auto w-full max-w-sm"
+                            onClick={() => handleProviderSignIn('github')}
+                        >
+                            Continue with GitHub
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="mx-auto w-full max-w-sm"
+                            onClick={() => handleProviderSignIn('google')}
+                        >
+                            Continue with Google
+                        </Button>
+                    </div>
+                ) : null}
+
+                <Separator />
+
+                <p className="mx-auto max-w-sm text-center text-xs text-muted-foreground">
+                    <span>By continuing, you agree to our</span>
+                    <br />
                     <Link className="underline underline-offset-4 hover:text-foreground" to="/terms">
                         Terms of Service
                     </Link>{' '}
