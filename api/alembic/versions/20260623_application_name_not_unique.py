@@ -7,7 +7,6 @@ Create Date: 2026-06-23 00:00:00.000000
 
 from alembic import op
 
-
 revision = "20260623_application_name_not_unique"
 down_revision = "20260623_app_version_labels"
 branch_labels = None

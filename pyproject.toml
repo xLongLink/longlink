@@ -3,9 +3,7 @@ name = "longlink-workspace"
 version = "0.0.0"
 description = "Development workspace for LongLink"
 requires-python = ">=3.12"
-dependencies = [
-    "prek",
-]
+dependencies = []
 
 [tool.uv]
 package = false
