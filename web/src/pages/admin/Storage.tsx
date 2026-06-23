@@ -44,8 +44,8 @@ export default function AdminStorage() {
     const canManage = role === 'administrator';
 
     const deleteStorage = useMutation({
-        mutationFn: async (name: string) => {
-            await fetchApiVoid(apiUrl(`/api/storage/${encodeURIComponent(name)}`), {
+        mutationFn: async (slug: string) => {
+            await fetchApiVoid(apiUrl(`/api/storage/${encodeURIComponent(slug)}`), {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -79,38 +79,38 @@ export default function AdminStorage() {
                               <DropdownMenu>
                                   <DropdownMenuTrigger
                                       render={
-                                          <Button
+                                        <Button
                                               type="button"
                                               variant="ghost"
                                               size="icon-sm"
-                                              aria-label={`Open actions for ${storage.name}`}
-                                          />
-                                      }
-                                  >
+                                                aria-label={`Open actions for ${storage.name}`}
+                                            />
+                                        }
+                                    >
                                       <MoreHorizontal className="size-4" />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-44">
                                       <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          onClick={() => {
-                                              void navigator.clipboard.writeText(storage.name);
-                                              toast.success('Storage name copied');
-                                          }}
-                                      >
-                                          Copy name
-                                      </DropdownMenuItem>
+                                            className="cursor-pointer"
+                                            onClick={() => {
+                                                void navigator.clipboard.writeText(storage.slug);
+                                                toast.success('Storage slug copied');
+                                            }}
+                                        >
+                                            Copy slug
+                                        </DropdownMenuItem>
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
                                           onClick={async () => {
                                               // Confirm the destructive action before deleting the storage registry.
-                                              if (!window.confirm(`Delete storage ${storage.name}?`)) {
-                                                  return;
-                                              }
+                                                if (!window.confirm(`Delete storage ${storage.slug}?`)) {
+                                                    return;
+                                                }
 
-                                              try {
-                                                  await deleteStorage.mutateAsync(storage.name);
-                                              } catch (mutationError) {
+                                                try {
+                                                    await deleteStorage.mutateAsync(storage.slug);
+                                                } catch (mutationError) {
                                                   toast.error(
                                                       mutationError instanceof Error
                                                           ? mutationError.message

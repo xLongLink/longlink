@@ -29,6 +29,23 @@ class ApplicationsService:
             return list(result.scalars().all())
 
 
+    async def list_by_organization(self, organization_id: UUID | str) -> list[Application]:
+        """Return all registered applications for one organization."""
+
+        async with session_scope() as session:
+            if isinstance(organization_id, str):
+                organization_id = UUID(organization_id)
+
+            statement = (
+                select(Application)
+                .options(*_app_relation_options())
+                .where(Application.organization_id == organization_id, Application.deleted_at.is_(None))
+                .order_by(Application.name)
+            )
+            result = await session.execute(statement)
+            return list(result.scalars().all())
+
+
     async def list(
         self,
         organization_id: UUID | str,

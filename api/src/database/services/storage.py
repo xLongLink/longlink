@@ -5,6 +5,7 @@ from src.models.storage import StorageKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.storage import StorageRegistry
+from src.utils.utils import slugify
 
 
 class StorageService:
@@ -34,6 +35,7 @@ class StorageService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
+
     async def create(
         self,
         kind: StorageKind,
@@ -53,9 +55,11 @@ class StorageService:
 
             # Create a new registration or refresh the stored connection data.
             if storage is None:
+                slug = slugify(name)
                 storage = StorageRegistry(
                     kind=kind,
                     name=name,
+                    slug=slug,
                     protocol=protocol,
                     endpoint_url=endpoint_url,
                     access_key_id=access_key_id,
@@ -72,6 +76,7 @@ class StorageService:
                 storage.access_key_id = access_key_id
                 storage.secret_access_key = secret_access_key
                 storage.location_id = location_id
+                storage.slug = slugify(name)
                 storage.updated_id = user.id
                 storage.deleted_at = None
                 storage.deleted_id = None

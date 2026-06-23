@@ -22,6 +22,7 @@ class ComputeRegistry(SQLModel, table=True):
     kind: ComputeKind = Field(sa_column=Column(Enum(ComputeKind, name="compute_kind_enum", native_enum=False), nullable=False))
 
     # Metadata
+    slug: str = Field(max_length=255, unique=True, sa_column_kwargs={"nullable": False})
     kubeconfig: str = Field(sa_column=Column(Text, nullable=False))
     ingress_host: str = Field(max_length=255)
     ingress_name: str = Field(max_length=255)

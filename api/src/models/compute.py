@@ -33,6 +33,7 @@ class ComputeRegistryResponse(BaseModel):
 
     # Metadata
     kind: ComputeKind
+    slug: str
     ingress_host: str
 
     # Relationships

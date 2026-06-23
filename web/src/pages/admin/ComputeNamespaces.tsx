@@ -11,9 +11,8 @@ import type { ApiComputeNamespace } from '@/lib/types';
 
 /** Renders namespaces for a compute backend. */
 export default function ComputeNamespaces() {
-    const { id = '' } = useParams();
-    const encodedId = encodeURIComponent(id);
-    const namespacesUrl = apiUrl(`/api/compute/${encodedId}/namespaces`);
+    const { compute = '' } = useParams();
+    const namespacesUrl = apiUrl(`/api/compute/${encodeURIComponent(compute)}/namespaces`);
 
     const namespaceColumns: Array<ColumnDef<ApiComputeNamespace>> = [
         {
@@ -21,7 +20,7 @@ export default function ComputeNamespaces() {
             header: 'Namespace',
             cell: ({ row }) => (
                 <Link
-                    to={`/admin/compute/${encodedId}/namespace/${encodeURIComponent(row.original.name)}`}
+                    to={`/admin/compute/${encodeURIComponent(compute)}/namespace/${encodeURIComponent(row.original.name)}`}
                     className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                     {row.original.name}
@@ -46,7 +45,7 @@ export default function ComputeNamespaces() {
                 <Hero icon={<Layers />}>
                     <div>
                         <HeroTitle>Namespaces</HeroTitle>
-                        <HeroDescription>Namespaces managed by compute backend #{id}.</HeroDescription>
+                        <HeroDescription>Namespaces managed by compute backend {compute}.</HeroDescription>
                     </div>
                 </Hero>
             </div>

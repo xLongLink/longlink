@@ -23,7 +23,7 @@ const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry & { location?: Ap
             const database = row.original;
 
             return (
-                <Link to={`/admin/database/${encodeURIComponent(database.name)}`} className="flex items-center gap-3">
+                <Link to={`/admin/database/${encodeURIComponent(database.slug)}`} className="flex items-center gap-3">
                     <img
                         src="/images/Postgresql.png"
                         alt="PostgreSQL"
@@ -75,8 +75,8 @@ export default function AdminDatabase() {
     const canManage = role === 'administrator';
 
     const deleteDatabase = useMutation({
-        mutationFn: async (name: string) => {
-            await fetchApiVoid(apiUrl(`/api/database/${encodeURIComponent(name)}`), {
+        mutationFn: async (slug: string) => {
+            await fetchApiVoid(apiUrl(`/api/database/${encodeURIComponent(slug)}`), {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -114,45 +114,45 @@ export default function AdminDatabase() {
                   header: 'Action',
                   meta: { className: 'w-24 text-right' },
                   cell: ({ row }) => {
-                      const database = row.original;
+                        const database = row.original;
 
-                      return (
+                        return (
                           <div className="flex justify-end">
                               <DropdownMenu>
                                   <DropdownMenuTrigger
                                       render={
-                                          <Button
+                                            <Button
                                               type="button"
                                               variant="ghost"
                                               size="icon-sm"
-                                              aria-label={`Open actions for ${database.name}`}
-                                          />
-                                      }
-                                  >
+                                                aria-label={`Open actions for ${database.name}`}
+                                            />
+                                        }
+                                    >
                                       <MoreHorizontal className="size-4" />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-44">
                                       <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          onClick={() => {
-                                              void navigator.clipboard.writeText(database.name);
-                                              toast.success('Database name copied');
-                                          }}
-                                      >
-                                          Copy name
-                                      </DropdownMenuItem>
+                                            className="cursor-pointer"
+                                            onClick={() => {
+                                                void navigator.clipboard.writeText(database.slug);
+                                                toast.success('Database slug copied');
+                                            }}
+                                        >
+                                            Copy slug
+                                        </DropdownMenuItem>
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
                                           onClick={async () => {
                                               // Confirm the destructive action before deleting the database registry.
-                                              if (!window.confirm(`Delete database ${database.name}?`)) {
-                                                  return;
-                                              }
+                                                if (!window.confirm(`Delete database ${database.slug}?`)) {
+                                                    return;
+                                                }
 
-                                              try {
-                                                  await deleteDatabase.mutateAsync(database.name);
-                                              } catch (mutationError) {
+                                                try {
+                                                    await deleteDatabase.mutateAsync(database.slug);
+                                                } catch (mutationError) {
                                                   toast.error(
                                                       mutationError instanceof Error
                                                           ? mutationError.message

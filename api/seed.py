@@ -79,29 +79,48 @@ async def main() -> None:
         if seed_user is None:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Seed admin user missing")
 
-        # Create the location and organization the same way the UI would.
-        location_response = client.post(
-            "/api/locations",
-            json={"name": "Local development", "slug": "local", "country": "CH"},
-        )
+        # Reuse existing seed records when the bootstrap script is run again.
+        location_response = client.get("/api/locations")
         if location_response.status_code != status.HTTP_200_OK:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed location")
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to list seed locations")
 
-        location_payload = location_response.json()
+        location_payload = next((item for item in location_response.json() if item["slug"] == "local"), None)
+        if location_payload is None:
+            location_response = client.post(
+                "/api/locations",
+                json={"name": "Local development", "slug": "local", "country": "CH"},
+            )
+            if location_response.status_code != status.HTTP_200_OK:
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed location")
+            location_payload = location_response.json()
+
         location_id = UUID(location_payload["id"])
-        organization_response = client.post(
-            "/api/orgs",
-            json={"name": LOCAL_ORG, "avatar": LOCAL_ORG_AVATAR, "location_id": location_payload["id"]},
-        )
+
+        organization_response = client.get("/api/orgs")
         if organization_response.status_code != status.HTTP_200_OK:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed organization")
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to list seed organizations")
+
+        organization_payload = next((item for item in organization_response.json() if item["name"] == LOCAL_ORG), None)
+        if organization_payload is None:
+            organization_response = client.post(
+                "/api/orgs",
+                json={"name": LOCAL_ORG, "avatar": LOCAL_ORG_AVATAR, "location_id": location_payload["id"]},
+            )
+            if organization_response.status_code != status.HTTP_200_OK:
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed organization")
+            organization_payload = organization_response.json()
 
         # Keep the local backend registrations available after every seed run.
         await database.create(**LOCAL_DATABASE, location_id=location_id, user=seed_user)
         await storage.create(**LOCAL_STORAGE, location_id=location_id, user=seed_user)
-        await compute.create(**LOCAL_COMPUTE, location_id=location_id, user=seed_user)
+        compute_response = client.get("/api/compute")
+        if compute_response.status_code != status.HTTP_200_OK:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to list seed compute registries")
 
-        organization_id = organization_response.json()["id"]
+        if next((item for item in compute_response.json() if item["ingress_host"] == LOCAL_COMPUTE["ingress_host"]), None) is None:
+            await compute.create(**LOCAL_COMPUTE, location_id=location_id, user=seed_user)
+
+        organization_id = organization_payload["id"]
         app_response = client.post(
             f"/api/apps?organization_id={organization_id}",
             json={
@@ -116,7 +135,12 @@ async def main() -> None:
             },
         )
         if app_response.status_code != status.HTTP_200_OK:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed application")
+            apps_response = client.get(f"/api/apps?organization_id={organization_id}")
+            if apps_response.status_code != status.HTTP_200_OK:
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to list seed applications")
+
+            if next((item for item in apps_response.json() if item["name"] == LOCAL_APP["name"]), None) is None:
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed application")
 
 
 if __name__ == "__main__":

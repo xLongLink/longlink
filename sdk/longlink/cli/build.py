@@ -1,8 +1,9 @@
-import os
 import ast
+import os
 import json
 import click
 import tomllib
+from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path
 from datetime import UTC, datetime
 
@@ -24,6 +25,15 @@ def create_version() -> str:
     """Generate timestamp-based version string for build artifacts."""
 
     return datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+
+
+def resolve_sdk_version() -> str:
+    """Return the installed LongLink SDK version."""
+
+    try:
+        return package_version("longlink")
+    except PackageNotFoundError:
+        return "0.0.0"
 
 
 def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
@@ -135,6 +145,8 @@ def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, list
 
     label_items = [
         ("longlink.name", metadata.get("name")),
+        ("longlink.sdk", metadata.get("sdk")),
+        ("longlink.version", metadata.get("version")),
         ("longlink.description", metadata.get("description")),
     ]
 
@@ -204,6 +216,7 @@ def build_app(base_path: Path | None = None, tag: str | None = None) -> tuple[Pa
         "title": tool_data.get("title"),
         "summary": tool_data.get("summary"),
         "description": tool_data.get("description") or project_data.get("description"),
+        "sdk": resolve_sdk_version(),
         "version": tool_data.get("version") or project_data.get("version") or "0.0.0",
         "terms_of_service": tool_data.get("terms_of_service"),
         "contact": tool_data.get("contact"),

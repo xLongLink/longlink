@@ -3,10 +3,15 @@ from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles, PlatformRoles
 from src.models.users import (Theme, Accent, Radius, Language, UserProfile,
                               UserOrganizationMembership)
+from src.models.locations import LocationResponse
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.location import Location
 from src.database.models.organizations import Organization
+from src.database.models.compute import ComputeRegistry
+from src.database.models.storage import StorageRegistry
+from src.database.models.database import DatabaseRegistry
 
 ADMIN_EMAIL = 'example@longlink.dev'
 ADMIN_ORG = 'test'
@@ -33,15 +38,53 @@ class UsersService:
         """Return one user profile with membership roles included."""
 
         async with session_scope() as session:
+            # Preload the nested location tree so response serialization does not trigger lazy IO.
             user_result = await session.execute(select(User).where(User.id == user_id))
             user = user_result.scalars().first()
             if user is None:
                 return None
 
-            # Load organization roles from the association table so the profile stays accurate.
             org_result = await session.execute(
-                select(UserOrganization.organization_id, Organization.name, Organization.avatar, UserOrganization.role_name)
-                .join(Organization, Organization.id == UserOrganization.organization_id)
+                select(Organization, UserOrganization.role_name)
+                .join(UserOrganization, Organization.id == UserOrganization.organization_id)
+                .options(
+                    selectinload(Organization.location)
+                    .selectinload(Location.organizations)
+                    .selectinload(Organization.created_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.organizations)
+                    .selectinload(Organization.updated_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.organizations)
+                    .selectinload(Organization.deleted_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.compute_registries)
+                    .selectinload(ComputeRegistry.created_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.compute_registries)
+                    .selectinload(ComputeRegistry.updated_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.compute_registries)
+                    .selectinload(ComputeRegistry.deleted_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.storage_registries)
+                    .selectinload(StorageRegistry.created_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.storage_registries)
+                    .selectinload(StorageRegistry.updated_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.storage_registries)
+                    .selectinload(StorageRegistry.deleted_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.database_registries)
+                    .selectinload(DatabaseRegistry.created_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.database_registries)
+                    .selectinload(DatabaseRegistry.updated_by),
+                    selectinload(Organization.location)
+                    .selectinload(Location.database_registries)
+                    .selectinload(DatabaseRegistry.deleted_by),
+                )
                 .where(UserOrganization.user_id == user.id)
             )
 
@@ -49,8 +92,14 @@ class UsersService:
             payload["admin"] = user.role == PlatformRoles.administrator
             payload["oidc"] = user.oidc
             payload["organizations"] = [
-                UserOrganizationMembership(id=organization_id, name=organization_name, avatar=organization_avatar, role=role_name)
-                for organization_id, organization_name, organization_avatar, role_name in org_result.all()
+                UserOrganizationMembership(
+                    id=organization.id,
+                    name=organization.name,
+                    avatar=organization.avatar,
+                    location=LocationResponse.model_validate(organization.location) if organization.location else None,
+                    role=role_name,
+                )
+                for organization, role_name in org_result.all()
             ]
 
             return UserProfile.model_validate(payload)

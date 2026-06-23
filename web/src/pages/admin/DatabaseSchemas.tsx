@@ -11,10 +11,10 @@ import type { ApiDatabaseSchema } from '@/lib/types';
 
 /** Renders schemas (namespaces) in a database on a database backend. */
 export default function DatabaseSchemas() {
-    const { name = '', dbname = '' } = useParams();
-    const encodedName = encodeURIComponent(name);
+    const { database = '', dbname = '' } = useParams();
+    const encodedDatabase = encodeURIComponent(database);
     const encodedDbname = encodeURIComponent(dbname);
-    const schemasUrl = apiUrl(`/api/database/${encodedName}/databases/${encodedDbname}/schemas`);
+    const schemasUrl = apiUrl(`/api/database/${encodedDatabase}/databases/${encodedDbname}/schemas`);
 
     const schemaColumns: Array<ColumnDef<ApiDatabaseSchema>> = [
         {
@@ -42,7 +42,7 @@ export default function DatabaseSchemas() {
                         <HeroTitle>Schemas</HeroTitle>
                         <HeroDescription>
                             Schemas in database <span className="font-medium text-foreground">{dbname}</span> on
-                            database backend "{name}".
+                            database backend "{database}".
                         </HeroDescription>
                     </div>
                 </Hero>

@@ -17,14 +17,19 @@ const organizationColumns: Array<ColumnDef<ApiUserOrganizationMembership>> = [
         accessorKey: 'name',
         header: 'Name',
         cell: ({ row, getValue }) => (
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
                 <Avatar className="size-8">
                     <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
                     <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
-                    {getValue<string>()}
-                </Link>
+                <div className="min-w-0">
+                    <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                        {getValue<string>()}
+                    </Link>
+                    {row.original.location ? (
+                        <p className="text-sm text-muted-foreground">{row.original.location.name}</p>
+                    ) : null}
+                </div>
             </div>
         ),
     },

@@ -33,10 +33,10 @@ const computeColumnsBase: Array<
         cell: ({ row }) => {
             const kind = row.original.kind;
             const ingress = row.original.ingress_host;
-            const computeId = String(row.original.id);
+            const computeSlug = row.original.slug;
 
             return (
-                <Link to={`/admin/compute/${encodeURIComponent(computeId)}`} className="flex items-center gap-3">
+                <Link to={`/admin/compute/${encodeURIComponent(computeSlug)}`} className="flex items-center gap-3">
                     <img
                         src="/images/Kubernetes.png"
                         alt="Kubernetes"
@@ -111,8 +111,8 @@ export default function AdminCompute() {
     const canManage = role === 'administrator';
 
     const deleteCompute = useMutation({
-        mutationFn: async (registryId: string) => {
-            await fetchApiVoid(apiUrl(`/api/compute/${encodeURIComponent(registryId)}`), {
+        mutationFn: async (registrySlug: string) => {
+            await fetchApiVoid(apiUrl(`/api/compute/${encodeURIComponent(registrySlug)}`), {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -139,9 +139,9 @@ export default function AdminCompute() {
     const computeList = computeQuery.data ?? [];
     const resourcesQueries = useQueries({
         queries: computeList.map((c) => ({
-            queryKey: ['api', apiUrl(`/api/compute/${c.id}/resources`)],
+            queryKey: ['api', apiUrl(`/api/compute/${c.slug}/resources`)],
             queryFn: async () =>
-                fetchApiJson<ApiComputeResources>(apiUrl(`/api/compute/${c.id}/resources`), {
+                fetchApiJson<ApiComputeResources>(apiUrl(`/api/compute/${c.slug}/resources`), {
                     credentials: 'include',
                 }),
             retry: false,
@@ -170,7 +170,7 @@ export default function AdminCompute() {
                   meta: { className: 'w-24 text-right' },
                   cell: ({ row }) => {
                       const compute = row.original;
-                      const computeId = String(compute.id);
+                      const computeSlug = compute.slug;
 
                       return (
                           <div className="flex justify-end">
@@ -181,7 +181,7 @@ export default function AdminCompute() {
                                               type="button"
                                               variant="ghost"
                                               size="icon-sm"
-                                              aria-label={`Open actions for compute ${compute.id}`}
+                                              aria-label={`Open actions for compute ${compute.ingress_host}`}
                                           />
                                       }
                                   >
@@ -191,23 +191,23 @@ export default function AdminCompute() {
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           onClick={() => {
-                                              void navigator.clipboard.writeText(computeId);
-                                              toast.success('Compute ID copied');
+                                              void navigator.clipboard.writeText(computeSlug);
+                                              toast.success('Compute slug copied');
                                           }}
                                       >
-                                          Copy ID
+                                          Copy slug
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
                                           onClick={async () => {
                                               // Confirm the destructive action before deleting the compute registry.
-                                              if (!window.confirm(`Delete compute ${compute.id}?`)) {
+                                              if (!window.confirm(`Delete compute ${compute.slug}?`)) {
                                                   return;
                                               }
 
                                               try {
-                                                  await deleteCompute.mutateAsync(computeId);
+                                                  await deleteCompute.mutateAsync(compute.slug);
                                               } catch (mutationError) {
                                                   toast.error(
                                                       mutationError instanceof Error

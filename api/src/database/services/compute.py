@@ -7,6 +7,7 @@ from src.models.compute import ComputeKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.compute import ComputeRegistry
+from src.utils.utils import slugify
 
 
 class ComputeService:
@@ -35,7 +36,6 @@ class ComputeService:
             ).where(ComputeRegistry.id == registry_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
-
     async def create(
         self,
         kind: ComputeKind,
@@ -50,8 +50,10 @@ class ComputeService:
         async with session_scope() as session:
             # Compute registries are append-only once created.
             proxy_secret_value = proxy_secret or secrets.token_urlsafe(32)
+            slug = slugify(ingress_host)
             compute = ComputeRegistry(
                 kind=kind,
+                slug=slug,
                 kubeconfig=kubeconfig,
                 ingress_host=ingress_host,
                 ingress_name=INGRESS_NAME,
@@ -97,7 +99,6 @@ class ComputeService:
             await session.commit()
             await session.refresh(compute)
             return compute
-
 
     async def purge(self, registry_id: str) -> ComputeRegistry | None:
         """Hard delete one compute backend registration."""

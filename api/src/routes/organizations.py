@@ -70,8 +70,18 @@ async def delete_organization(org_id: UUID, user: User = Depends(authuser)) -> N
     """Delete one organization by id."""
 
     # Only members can delete their own org.
-    if not any(organization.id == org_id for organization in user.organizations):
+    organization = next((organization for organization in user.organizations if organization.id == org_id), None)
+    if organization is None:
         raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
+
+    registries = [registry for registry in await compute.list() if registry.deleted_at is None and registry.location_id == organization.location_id]
+    if registries:
+        registry = max(registries, key=lambda item: item.created_at)
+        k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+        try:
+            await k8s.delete(organization.slug)
+        except Exception:
+            logger.exception("Failed to delete namespace for organization '%s'", organization.slug)
 
     await organizations.delete(org_id, user.id)
     return

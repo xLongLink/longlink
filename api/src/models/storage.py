@@ -37,6 +37,7 @@ class StorageRegistryResponse(BaseModel):
     # Metadata
     kind: StorageKind
     name: str
+    slug: str
     protocol: str
     endpoint_url: str
     access_key_id: str

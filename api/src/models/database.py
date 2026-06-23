@@ -51,9 +51,9 @@ class DatabaseRegistryResponse(BaseModel):
     # Metadata
     kind: DatabaseKind
     name: str
+    slug: str
     host: str
     port: int
-    password: str
     username: str
 
     # Relationships

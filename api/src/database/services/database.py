@@ -5,6 +5,7 @@ from src.models.database import DatabaseKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.database import DatabaseRegistry
+from src.utils.utils import slugify
 
 
 class DatabaseService:
@@ -34,6 +35,7 @@ class DatabaseService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
+
     async def create(
         self,
         kind: DatabaseKind,
@@ -53,9 +55,11 @@ class DatabaseService:
 
             # Create a new registration or refresh the stored connection data.
             if database is None:
+                slug = slugify(name)
                 database = DatabaseRegistry(
                     kind=kind,
                     name=name,
+                    slug=slug,
                     host=host,
                     port=port,
                     username=username,
@@ -72,6 +76,7 @@ class DatabaseService:
                 database.username = username
                 database.password = password
                 database.location_id = location_id
+                database.slug = slugify(name)
                 database.updated_id = user.id
                 database.deleted_at = None
                 database.deleted_id = None

@@ -36,7 +36,7 @@ async def list_applications(organization_id: UUID | None = None, user: User = De
                 "deleted_by": application.deleted_by,
                 "role": None,
             }
-            for application in await applications.list_all()
+        for application in await applications.list_all()
         ]
 
     organization_record = await organizations.get(organization_id)
@@ -73,8 +73,7 @@ async def list_applications(organization_id: UUID | None = None, user: User = De
             "deleted_by": application.deleted_by,
             "role": None,
         }
-        for application in await applications.list_all()
-        if application.organization_id == organization_id
+        for application in await applications.list_by_organization(organization_id)
     ]
 
 

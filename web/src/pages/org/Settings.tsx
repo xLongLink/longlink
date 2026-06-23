@@ -123,7 +123,6 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                             <h2 className="text-lg font-medium text-foreground">Organization</h2>
                             <p className="text-sm text-muted-foreground">View and manage organization details.</p>
                         </div>
-                        <hr className="border-border" />
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <label className="text-sm text-muted-foreground">Organization</label>
@@ -153,7 +152,6 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                                 Predefined roles for member access and repository permissions.
                             </p>
                         </div>
-                        <hr className="border-border" />
                         <div className="overflow-hidden rounded-md border">
                             <Table>
                                 <TableHeader className="bg-muted/50">
@@ -195,7 +193,6 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
 
                             <CreateAppDialog org={org} />
                         </div>
-                        <hr className="border-border" />
                         {isLoading ? (
                             <div className="rounded-md border p-4 text-sm text-muted-foreground">
                                 Loading applications...
@@ -222,7 +219,6 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                                 Configure database-backed services and connections.
                             </p>
                         </div>
-                        <hr className="border-border" />
                         <div className="overflow-hidden rounded-md border">
                             <Table>
                                 <TableHeader className="bg-muted/50">
@@ -246,7 +242,6 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                                 Manage files, buckets, and persisted assets.
                             </p>
                         </div>
-                        <hr className="border-border" />
                         <div className="overflow-hidden rounded-md border">
                             <Table>
                                 <TableHeader className="bg-muted/50">
@@ -268,7 +263,6 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                             <h2 className="text-lg font-medium text-foreground">Logging</h2>
                             <p className="text-sm text-muted-foreground">Configure event and audit logging outputs.</p>
                         </div>
-                        <hr className="border-border" />
                     </div>
                 </MenuSection>
 
@@ -280,7 +274,6 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                                 Connect external services and workflow tools.
                             </p>
                         </div>
-                        <hr className="border-border" />
                     </div>
                 </MenuSection>
             </Menu>

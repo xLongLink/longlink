@@ -11,9 +11,9 @@ import type { ApiDatabaseDatabase } from '@/lib/types';
 
 /** Renders databases for a database backend. */
 export default function DatabaseDatabases() {
-    const { name = '' } = useParams();
-    const encodedName = encodeURIComponent(name);
-    const databasesUrl = apiUrl(`/api/database/${encodedName}/databases`);
+    const { database = '' } = useParams();
+    const encodedDatabase = encodeURIComponent(database);
+    const databasesUrl = apiUrl(`/api/database/${encodedDatabase}/databases`);
 
     const databaseColumns: Array<ColumnDef<ApiDatabaseDatabase>> = [
         {
@@ -21,7 +21,7 @@ export default function DatabaseDatabases() {
             header: 'Database',
             cell: ({ row }) => (
                 <Link
-                    to={`/admin/database/${encodedName}/database/${encodeURIComponent(row.original.name)}`}
+                    to={`/admin/database/${encodedDatabase}/database/${encodeURIComponent(row.original.name)}`}
                     className="flex items-center gap-3"
                 >
                     <img
@@ -55,7 +55,7 @@ export default function DatabaseDatabases() {
                 <Hero icon={<Database />}>
                     <div>
                         <HeroTitle>Databases</HeroTitle>
-                        <HeroDescription>Databases managed by database backend "{name}".</HeroDescription>
+                        <HeroDescription>Databases managed by database backend "{database}".</HeroDescription>
                     </div>
                 </Hero>
             </div>

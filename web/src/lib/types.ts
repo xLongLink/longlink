@@ -22,6 +22,7 @@ export type ApiUserOrganizationMembership = {
     id: string;
     name: string;
     avatar: string;
+    location: ApiLocation | null;
     role: Role;
 };
 
@@ -126,6 +127,7 @@ export type ApiDatabaseRegistry = {
     id: string;
     kind: string;
     name: string;
+    slug: string;
     host: string;
     port: number;
     username: string;
@@ -142,6 +144,7 @@ export type ApiStorageRegistry = {
     id: string;
     kind: string;
     name: string;
+    slug: string;
     protocol: string;
     endpoint_url: string;
     access_key_id: string;
@@ -157,6 +160,7 @@ export type ApiStorageRegistry = {
 export type ApiComputeRegistry = {
     id: string;
     kind: string;
+    slug: string;
     ingress_host: string;
     location_id: string;
     created_at: string;

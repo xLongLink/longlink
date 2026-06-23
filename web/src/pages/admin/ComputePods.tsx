@@ -75,10 +75,9 @@ const podColumns: Array<ColumnDef<ApiComputePod>> = [
 
 /** Renders pods in a namespace on a compute backend. */
 export default function ComputePods() {
-    const { id = '', namespace = '' } = useParams();
-    const encodedId = encodeURIComponent(id);
+    const { compute = '', namespace = '' } = useParams();
     const encodedNamespace = encodeURIComponent(namespace);
-    const podsUrl = apiUrl(`/api/compute/${encodedId}/namespaces/${encodedNamespace}/pods`);
+    const podsUrl = apiUrl(`/api/compute/${encodeURIComponent(compute)}/namespaces/${encodedNamespace}/pods`);
 
     const podsQuery = useQuery({
         queryKey: ['api', podsUrl],
@@ -97,7 +96,7 @@ export default function ComputePods() {
                         <HeroTitle>Pods</HeroTitle>
                         <HeroDescription>
                             Pods in namespace <span className="font-medium text-foreground">{namespace}</span> on
-                            compute backend #{id}.
+                            compute backend {compute}.
                         </HeroDescription>
                     </div>
                 </Hero>
