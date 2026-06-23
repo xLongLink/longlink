@@ -4,13 +4,14 @@ import httpx2
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from src.auth import oauth
 from src.database.services.users import users
 from src.enviroments import env
 from src.router import router
 from src.models.common import SuccessResponse
+from src.models.auth import OidcTokenResponse, OidcUserInfo
 
 
 class PasswordLoginRequest(BaseModel):
@@ -75,9 +76,12 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Suc
 
         raise HTTPException(status_code=502, detail="Authentication provider unavailable") from exc
 
-    token = token_response.json()
-    access_token = token.get("access_token")
-    if not access_token:
+    try:
+        token = OidcTokenResponse.model_validate(token_response.json())
+    except ValidationError as exc:
+        raise HTTPException(status_code=502, detail="Authentication provider returned an invalid token payload") from exc
+
+    if not token.access_token:
         raise HTTPException(status_code=502, detail="Authentication provider returned no access token")
 
     # Use the access token to fetch the authenticated user's profile.
@@ -85,35 +89,39 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Suc
         try:
             userinfo_response = await client.get(
                 metadata["userinfo_endpoint"],
-                headers={"Authorization": f"Bearer {access_token}"},
+                headers={"Authorization": f"Bearer {token.access_token}"},
             )
             userinfo_response.raise_for_status()
         except httpx2.HTTPStatusError as exc:
             raise HTTPException(status_code=502, detail="Failed to read authenticated user profile") from exc
 
-    userinfo = userinfo_response.json()
-    subject = str(userinfo.get("sub") or "")
-    if not subject:
-        raise HTTPException(status_code=502, detail="Authentication provider returned no subject")
+    try:
+        userinfo = OidcUserInfo.model_validate(userinfo_response.json())
+    except ValidationError as exc:
+        raise HTTPException(status_code=502, detail="Authentication provider returned an invalid user profile") from exc
 
     # Normalize the provider payload into the local user record shape.
-    given_name = userinfo.get("given_name") or "Example"
-    family_name = userinfo.get("family_name") or "LongLink"
-    email = userinfo.get("email") or "example@longlink.dev"
-    name = (
-        userinfo.get("name")
-        or userinfo.get("preferred_username")
-        or f"{given_name} {family_name}"
-    )
+    email = userinfo.email
+    if not email:
+        raise HTTPException(status_code=502, detail="Authentication provider returned no email")
+
+    name = userinfo.name or userinfo.preferred_username
+    if not name:
+        given_name = userinfo.given_name
+        family_name = userinfo.family_name
+        if not given_name or not family_name:
+            raise HTTPException(status_code=502, detail="Authentication provider returned no display name")
+
+        name = f"{given_name} {family_name}"
 
     await users.upsert(
-        oidc=subject,
-        email=email,
+        oidc=userinfo.sub,
+        email=str(email),
         name=name,
-        avatar=userinfo.get("picture"),
+        avatar=userinfo.picture,
     )
 
-    request.session["oidc"] = subject
+    request.session["oidc"] = userinfo.sub
     return SuccessResponse()
 
 
@@ -131,30 +139,36 @@ async def auth_oidc(request: Request):
             detail="OIDC token exchange failed. Verify provider URL and client credentials.",
         ) from exc
 
-    userinfo = token.get("userinfo")
+    userinfo = token.userinfo
     # Fall back to the userinfo endpoint when the token payload does not include profile claims.
     if userinfo is None:
-        userinfo = await oidc.userinfo(token=token)
+        try:
+            userinfo = OidcUserInfo.model_validate(await oidc.userinfo(token=token.model_dump(mode="python")))
+        except ValidationError as exc:
+            raise HTTPException(status_code=502, detail="Authentication provider returned an invalid user profile") from exc
 
     # Normalize the provider payload into the local user record shape.
-    subject = str(userinfo["sub"])
-    given_name = userinfo.get("given_name") or "Example"
-    family_name = userinfo.get("family_name") or "LongLink"
-    email = userinfo.get("email") or "example@longlink.dev"
-    name = (
-        userinfo.get("name")
-        or userinfo.get("preferred_username")
-        or f"{given_name} {family_name}"
-    )
+    email = userinfo.email
+    if not email:
+        raise HTTPException(status_code=502, detail="Authentication provider returned no email")
+
+    name = userinfo.name or userinfo.preferred_username
+    if not name:
+        given_name = userinfo.given_name
+        family_name = userinfo.family_name
+        if not given_name or not family_name:
+            raise HTTPException(status_code=502, detail="Authentication provider returned no display name")
+
+        name = f"{given_name} {family_name}"
 
     await users.upsert(
-        oidc=subject,
-        email=email,
+        oidc=userinfo.sub,
+        email=str(email),
         name=name,
-        avatar=userinfo.get("picture"),
+        avatar=userinfo.picture,
     )
 
-    request.session["oidc"] = subject
+    request.session["oidc"] = userinfo.sub
     return RedirectResponse("/organizations")
 
 

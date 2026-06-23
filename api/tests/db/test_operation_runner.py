@@ -31,10 +31,10 @@ async def test_execute_app_create_operation_completes_running_app(monkeypatch) -
         name="Dev User",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify")
+    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify", user=user)
     calls: list[str] = []
 
     async def fake_inspect_app_startup(operation) -> AppStartupState:
@@ -72,10 +72,10 @@ async def test_execute_app_create_operation_marks_failed_when_dead(monkeypatch) 
         name="Dev User Existing",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify")
+    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify", user=user)
     calls: list[str] = []
 
     async def fake_inspect_app_startup(operation) -> AppStartupState:
@@ -113,10 +113,10 @@ async def test_execute_app_create_operation_releases_when_not_ready(monkeypatch)
         name="Dev User Waiting",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify")
+    operation = await db.operations.create(OperationKind.app_create, application_id=application.id, step="verify", user=user)
 
     async def fake_inspect_app_startup(operation) -> AppStartupState:
         """Pretend the app is still starting."""
@@ -149,7 +149,7 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
         name="Dev User Delete",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
@@ -157,8 +157,9 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="localhost:8443",
         location_id=location.id,
+        user=user,
     )
-    operation = await db.operations.create(OperationKind.app_delete, application_id=application.id, step="remove_runtime")
+    operation = await db.operations.create(OperationKind.app_delete, application_id=application.id, step="remove_runtime", user=user)
     calls: list[dict[str, str]] = []
 
     class FakeCompute:

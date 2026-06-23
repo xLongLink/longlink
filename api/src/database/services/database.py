@@ -43,7 +43,7 @@ class DatabaseService:
         username: str,
         password: str,
         location_id: str,
-        user: User | None = None,
+        user: User,
     ) -> DatabaseRegistry:
         """Create or update one database backend registration."""
 
@@ -62,9 +62,8 @@ class DatabaseService:
                     password=password,
                     location_id=location_id,
                 )
-                if user is not None:
-                    database.created_id = user.id
-                    database.updated_id = user.id
+                database.created_id = user.id
+                database.updated_id = user.id
                 session.add(database)
             else:
                 database.kind = kind
@@ -73,8 +72,7 @@ class DatabaseService:
                 database.username = username
                 database.password = password
                 database.location_id = location_id
-                if user is not None:
-                    database.updated_id = user.id
+                database.updated_id = user.id
                 database.deleted_at = None
                 database.deleted_id = None
 

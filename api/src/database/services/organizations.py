@@ -76,7 +76,7 @@ class OrgsService:
                 organization.location.storage_registries = [registry for registry in organization.location.storage_registries if registry.deleted_at is None]
             return organization
 
-    async def create(self, name: str, location_id: UUID | str, user: User | None = None, avatar: str | None = None) -> Organization:
+    async def create(self, name: str, location_id: UUID | str, user: User, avatar: str | None = None) -> Organization:
         """Create an organization."""
 
         async with session_scope() as session:
@@ -84,19 +84,18 @@ class OrgsService:
                 location_id = UUID(location_id)
 
             organization = Organization(name=name, avatar=avatar or "", location_id=location_id)
-            if user is not None:
-                # Attach the creator as the initial owner when the caller is authenticated.
-                organization.created_id = user.id
-                organization.updated_id = user.id
-                session.add(
-                    UserOrganization(
-                        user_id=user.id,
-                        organization_id=organization.id,
-                        role_name=Roles.owner,
-                        created_id=user.id,
-                        updated_id=user.id,
-                    )
+            # Attach the creator as the initial owner for every organization.
+            organization.created_id = user.id
+            organization.updated_id = user.id
+            session.add(
+                UserOrganization(
+                    user_id=user.id,
+                    organization_id=organization.id,
+                    role_name=Roles.owner,
+                    created_id=user.id,
+                    updated_id=user.id,
                 )
+            )
             session.add(organization)
 
             try:

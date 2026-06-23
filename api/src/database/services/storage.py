@@ -43,7 +43,7 @@ class StorageService:
         access_key_id: str,
         secret_access_key: str,
         location_id: str,
-        user: User | None = None,
+        user: User,
     ) -> StorageRegistry:
         """Create or update one storage backend registration."""
 
@@ -62,9 +62,8 @@ class StorageService:
                     secret_access_key=secret_access_key,
                     location_id=location_id,
                 )
-                if user is not None:
-                    storage.created_id = user.id
-                    storage.updated_id = user.id
+                storage.created_id = user.id
+                storage.updated_id = user.id
                 session.add(storage)
             else:
                 storage.kind = kind
@@ -73,8 +72,7 @@ class StorageService:
                 storage.access_key_id = access_key_id
                 storage.secret_access_key = secret_access_key
                 storage.location_id = location_id
-                if user is not None:
-                    storage.updated_id = user.id
+                storage.updated_id = user.id
                 storage.deleted_at = None
                 storage.deleted_id = None
 

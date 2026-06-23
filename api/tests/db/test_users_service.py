@@ -74,8 +74,8 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
         name="First User",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing")
-    organization = await db.organizations.create("test", location.id, avatar="https://example.com/organizations/test.png")
+    location = await db.locations.create("local", "Local testing", user)
+    organization = await db.organizations.create("test", location.id, user, avatar="https://example.com/organizations/test.png")
 
     # Act
     await db.users.upsert(

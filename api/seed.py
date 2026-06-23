@@ -17,6 +17,7 @@ from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.organizations import organizations
 from src.database.services.storage import storage
+from src.database.services.users import users
 from src.enviroments import env
 from src.models.applications import ApplicationCreate
 from src.models.applications import AppStatus
@@ -65,6 +66,14 @@ LOCAL_COMPUTE = {
 async def main() -> None:
     """Seed the control plane database with baseline records."""
 
+    # Create a real seed user so audit fields are always populated.
+    seed_user = await users.upsert(
+        oidc="seed-oidc-subject",
+        email="seed@longlink.dev",
+        name="Seed User",
+        avatar="",
+    )
+
     # Local development uses SQLite, so bootstrap the schema before inserting seed rows.
     if env.DATABASE_URL.startswith('sqlite+'):
         # Recreate the local SQLite file to avoid stale schema from older dev runs.
@@ -82,33 +91,31 @@ async def main() -> None:
             await engine.dispose()
 
     # Keep the local backend registrations available after every seed run.
-    location = await locations.create("local", "Local development")
-    await database.create(**LOCAL_DATABASE, location_id=location.id)
-    await storage.create(**LOCAL_STORAGE, location_id=location.id)
-    await compute.create(**LOCAL_COMPUTE, location_id=location.id)
-    organization_record = await organizations.create(LOCAL_ORG, location.id, avatar=LOCAL_ORG_AVATAR)
+    location = await locations.create("local", "Local development", seed_user)
+    await database.create(**LOCAL_DATABASE, location_id=location.id, user=seed_user)
+    await storage.create(**LOCAL_STORAGE, location_id=location.id, user=seed_user)
+    await compute.create(**LOCAL_COMPUTE, location_id=location.id, user=seed_user)
+    organization_record = await organizations.create(LOCAL_ORG, location.id, seed_user, avatar=LOCAL_ORG_AVATAR)
 
-    # Backfill the seeded demo membership if the admin user already exists locally.
     Session = await get_session()
     async with Session() as session:
-        user_result = await session.execute(select(User).where(User.email == "example@longlink.dev"))
-        seed_user = user_result.scalar_one_or_none()
-        if seed_user is not None:
-            membership_result = await session.execute(
-                select(UserOrganization).where(
-                    UserOrganization.user_id == seed_user.id,
-                    UserOrganization.organization_id == organization_record.id,
+        membership_result = await session.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == seed_user.id,
+                UserOrganization.organization_id == organization_record.id,
+            )
+        )
+        if membership_result.scalar_one_or_none() is None:
+            session.add(
+                UserOrganization(
+                    user_id=seed_user.id,
+                    organization_id=organization_record.id,
+                    role_name=Roles.owner,
+                    created_id=seed_user.id,
+                    updated_id=seed_user.id,
                 )
             )
-            if membership_result.scalar_one_or_none() is None:
-                session.add(
-                    UserOrganization(
-                        user_id=seed_user.id,
-                        organization_id=organization_record.id,
-                        role_name=Roles.owner,
-                    )
-                )
-                await session.commit()
+            await session.commit()
 
     # Provision the demo app directly so the seed stays aligned with the endpoint flow.
     registries = [registry for registry in await compute.list() if registry.deleted_at is None]

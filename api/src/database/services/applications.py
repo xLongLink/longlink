@@ -88,10 +88,10 @@ class ApplicationsService:
         name: str,
         slug: str,
         image: str,
+        user: User,
         status: AppStatus = AppStatus.creating,
         description: str | None = None,
         icon: str | None = None,
-        user: User | None = None,
     ) -> Application:
         """Add a new application to the database for one organization."""
 
@@ -125,9 +125,8 @@ class ApplicationsService:
             }
 
             application = Application(**app_kwargs)
-            if user is not None:
-                application.created_id = user.id
-                application.updated_id = user.id
+            application.created_id = user.id
+            application.updated_id = user.id
             session.add(application)
             await session.commit()
 

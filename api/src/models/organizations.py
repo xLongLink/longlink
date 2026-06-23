@@ -38,8 +38,8 @@ class OrganizationApplicationResponse(BaseModel):
     # Audit
     created_at: datetime
     updated_at: datetime
-    created_by: UserSummary | None = None
-    updated_by: UserSummary | None = None
+    created_by: UserSummary
+    updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
 
@@ -63,8 +63,8 @@ class OrganizationDetails(BaseModel):
     # Audit
     created_at: datetime
     updated_at: datetime
-    created_by: UserSummary | None = None
-    updated_by: UserSummary | None = None
+    created_by: UserSummary
+    updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
 

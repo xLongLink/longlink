@@ -42,8 +42,8 @@ class ComputeService:
         kubeconfig: str,
         ingress_host: str,
         location_id: str,
+        user: User,
         proxy_secret: str | None = None,
-        user: User | None = None,
     ) -> ComputeRegistry:
         """Create one compute backend registration."""
 
@@ -58,9 +58,8 @@ class ComputeService:
                 proxy_secret=proxy_secret_value,
                 location_id=location_id,
             )
-            if user is not None:
-                compute.created_id = user.id
-                compute.updated_id = user.id
+            compute.created_id = user.id
+            compute.updated_id = user.id
             session.add(compute)
 
             await session.commit()

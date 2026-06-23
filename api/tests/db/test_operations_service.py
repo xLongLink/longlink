@@ -19,12 +19,13 @@ async def test_operations_service_tracks_successful_operation_lifecycle() -> Non
     """Track a scheduled operation through step advancement and completion."""
 
     # Arrange
-    location = await db.locations.create("local", "Local testing")
-    organization = await db.organizations.create("acme", location.id)
-    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    user = await db.users.upsert(oidc="ops-oidc", email="ops@longlink.dev", name="Ops User", avatar="")
+    location = await db.locations.create("local", "Local testing", user)
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
     claimed = await db.operations.claim(operation.id)
     completed = await db.operations.complete(operation.id)
 
@@ -43,12 +44,13 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
     """Track a scheduled operation through the failed state."""
 
     # Arrange
-    location = await db.locations.create("local", "Local testing")
-    organization = await db.organizations.create("acme", location.id)
-    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    user = await db.users.upsert(oidc="ops-oidc-2", email="ops2@longlink.dev", name="Ops User 2", avatar="")
+    location = await db.locations.create("local", "Local testing", user)
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
     claimed = await db.operations.claim(operation.id)
     failed = await db.operations.fail(operation.id, "boom")
 
@@ -66,12 +68,13 @@ async def test_operations_service_defers_active_operation() -> None:
     """Defer an unfinished active operation back to scheduled."""
 
     # Arrange
-    location = await db.locations.create("local", "Local testing")
-    organization = await db.organizations.create("acme", location.id)
-    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    user = await db.users.upsert(oidc="ops-oidc-3", email="ops3@longlink.dev", name="Ops User 3", avatar="")
+    location = await db.locations.create("local", "Local testing", user)
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
     claimed = await db.operations.claim(operation.id)
     deferred = await db.operations.defer(operation.id)
 
@@ -89,10 +92,11 @@ async def test_operations_service_resets_active_operations() -> None:
     """Reset interrupted active operations during startup."""
 
     # Arrange
-    location = await db.locations.create("local", "Local testing")
-    organization = await db.organizations.create("acme", location.id)
-    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
+    user = await db.users.upsert(oidc="ops-oidc-4", email="ops4@longlink.dev", name="Ops User 4", avatar="")
+    location = await db.locations.create("local", "Local testing", user)
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
     await db.operations.claim(operation.id)
 
     # Act

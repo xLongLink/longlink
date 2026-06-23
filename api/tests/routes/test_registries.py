@@ -32,15 +32,17 @@ db = SimpleNamespace(
 
 async def test_operations_endpoint_returns_recorded_operations(
     clients: tuple[TestClient, TestClient, TestClient],
+    users,
 ) -> None:
     """Return recorded long-running operations for admin views."""
 
     # Arrange
     client = clients[0]
-    location = await db.locations.create("local", "Local testing")
-    organization = await db.organizations.create("acme", location.id)
-    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id)
+    user = users[0]
+    location = await db.locations.create("local", "Local testing", user)
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
 
     # Act
     response = client.get("/api/operations")
@@ -72,7 +74,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     client = clients[0]
     user1, _, _ = users
     user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user1)
 
     # Act
     create_response = client.post(
@@ -145,7 +147,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     client = clients[0]
     user1, _, _ = users
     user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user1)
 
     # Act
     create_response = client.post(
@@ -219,7 +221,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     client = clients[0]
     user1, _, _ = users
     user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user1)
     captured: dict[str, object] = {}
 
     class FakeCompute:

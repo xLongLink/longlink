@@ -42,7 +42,7 @@ async def test_list_apps_returns_app_membership_role(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", owner)
     organization = await db.orgs.create("acme", location.id, owner)
     app = await db.apps.create(
         organization.id,
@@ -99,7 +99,7 @@ async def test_list_apps_returns_null_role_without_app_membership(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user)
     organization = await db.orgs.create("acme", location.id, user)
     app = await db.apps.create(
         organization.id,
@@ -136,7 +136,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user)
     acme = await db.orgs.create("acme", location.id, user)
     globex = await db.orgs.create("globex", location.id, user)
     dashboard = await db.apps.create(
@@ -210,9 +210,9 @@ async def test_list_apps_returns_404_for_non_member(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", owner)
     organization = await db.orgs.create("acme", location.id, owner)
-    await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=owner)
     client = clients[1]
 
     # Act
@@ -232,20 +232,22 @@ async def test_create_app_returns_app_response(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing")
-    remote_location = await db.locations.create("remote", "Remote testing")
+    local_location = await db.locations.create("local", "Local testing", user)
+    remote_location = await db.locations.create("remote", "Remote testing", user)
     organization = await db.orgs.create("acme", remote_location.id, user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.local.longlink.internal",
         location_id=local_location.id,
+        user=user,
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.remote.longlink.internal",
         location_id=remote_location.id,
+        user=user,
     )
     await db.database.create(
         kind=DatabaseKind.postgre,
@@ -255,6 +257,7 @@ async def test_create_app_returns_app_response(
         username="longlink",
         password="secret",
         location_id=local_location.id,
+        user=user,
     )
     await db.database.create(
         kind=DatabaseKind.postgre,
@@ -264,6 +267,7 @@ async def test_create_app_returns_app_response(
         username="longlink",
         password="secret",
         location_id=remote_location.id,
+        user=user,
     )
 
     captured: dict[str, object] = {}
@@ -373,10 +377,10 @@ async def test_delete_app_removes_dependent_env_rows(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing")
-    remote_location = await db.locations.create("remote", "Remote testing")
+    local_location = await db.locations.create("local", "Local testing", user)
+    remote_location = await db.locations.create("remote", "Remote testing", user)
     organization = await db.orgs.create("acme", local_location.id, user)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -401,6 +405,7 @@ async def test_delete_app_removes_dependent_env_rows(
         ),
         ingress_host="localhost:8443",
         location_id=remote_location.id,
+        user=user,
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -426,6 +431,7 @@ async def test_delete_app_removes_dependent_env_rows(
         ),
         ingress_host="localhost:8443",
         location_id=local_location.id,
+        user=user,
     )
     client = clients[0]
 
@@ -452,9 +458,9 @@ async def test_get_app_logs_returns_pod_logs(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing")
+    location = await db.locations.create("local", "Local testing", user)
     organization = await db.orgs.create("acme", location.id, user)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest")
+    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -479,6 +485,7 @@ async def test_get_app_logs_returns_pod_logs(
         ),
         ingress_host="localhost:8443",
         location_id=location.id,
+        user=user,
     )
     captured: dict[str, object] = {}
 
@@ -519,10 +526,10 @@ async def test_proxy_app_forwards_request_to_internal_service(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing")
-    remote_location = await db.locations.create("remote", "Remote testing")
+    local_location = await db.locations.create("local", "Local testing", user)
+    remote_location = await db.locations.create("remote", "Remote testing", user)
     organization = await db.orgs.create("acme", remote_location.id, user)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest")
+    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         kubeconfig=(
@@ -547,6 +554,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
         ),
         ingress_host="localhost:8443",
         location_id=local_location.id,
+        user=user,
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -572,6 +580,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
         ),
         ingress_host="localhost:8443",
         location_id=remote_location.id,
+        user=user,
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -598,6 +607,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
         ingress_host="localhost:9443",
         location_id=remote_location.id,
         proxy_secret="latest-secret",
+        user=user,
     )
     client = clients[0]
     captured: dict[str, object] = {}

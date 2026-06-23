@@ -81,7 +81,7 @@ class LocationsService:
             location.storage_registries = [registry for registry in location.storage_registries if registry.deleted_at is None]
             return location
 
-    async def create(self, slug: str, name: str, country: Country | None = None, user: User | None = None) -> Location:
+    async def create(self, slug: str, name: str, user: User, country: Country | None = None) -> Location:
         """Create one location."""
 
         async with session_scope() as session:
@@ -94,9 +94,8 @@ class LocationsService:
                 location_kwargs["country"] = country
 
             location = Location(**location_kwargs)
-            if user is not None:
-                location.created_id = user.id
-                location.updated_id = user.id
+            location.created_id = user.id
+            location.updated_id = user.id
             session.add(location)
             await session.commit()
             await session.refresh(location)
