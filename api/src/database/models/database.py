@@ -48,4 +48,4 @@ class DatabaseRegistry(SQLModel, table=True):
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
     # Relationships
-    location: 'Location' = Relationship(back_populates='database_registries')
+    location: 'Location' = Relationship()

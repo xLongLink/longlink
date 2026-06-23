@@ -1,3 +1,4 @@
+from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -23,7 +24,7 @@ class StorageService:
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, registry_id: str) -> StorageRegistry | None:
+    async def get(self, registry_id: UUID) -> StorageRegistry | None:
         """Return one storage backend by id."""
 
         async with session_scope() as session:
@@ -44,7 +45,7 @@ class StorageService:
         endpoint_url: str,
         access_key_id: str,
         secret_access_key: str,
-        location_id: str,
+        location_id: UUID,
         user: User,
     ) -> StorageRegistry:
         """Create or update one storage backend registration."""
@@ -91,7 +92,7 @@ class StorageService:
             result = await session.execute(statement)
             return result.scalar_one()
 
-    async def delete(self, registry_id: str, deleted_id: str | None = None) -> StorageRegistry | None:
+    async def delete(self, registry_id: UUID, deleted_id: UUID | None = None) -> StorageRegistry | None:
         """Mark one storage backend registration as deleted."""
 
         async with session_scope() as session:

@@ -122,9 +122,6 @@ export type ApiLocation = {
     country: string;
     created_at: string;
     updated_at: string;
-    compute_registries: Array<ApiComputeRegistry>;
-    database_registries: Array<ApiDatabaseRegistry>;
-    storage_registries: Array<ApiStorageRegistry>;
 };
 
 export type ApiDatabaseDatabase = {

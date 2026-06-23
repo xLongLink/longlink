@@ -15,8 +15,8 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 import { cn } from '@/lib/utils';
 
 type DocMetadata = {
-    lastUpdated: string;
-    editUrl: string;
+    lastUpdated?: string;
+    editUrl?: string;
 };
 
 type DocsLayoutProps = {
@@ -34,7 +34,6 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
-    const [activePageTocHref, setActivePageTocHref] = useState('');
 
     // Prefer the longest matching path so nested pages do not resolve to their section overview.
     const currentItem = DOC_GROUPS.flatMap((group) => group.items).reduce<DocItem | undefined>((match, item) => {
@@ -58,11 +57,9 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
 
     useEffect(() => {
         const contentElement = contentRef.current;
-        let removeListeners = () => {};
 
         if (!contentElement) {
             setPageToc([]);
-            setActivePageTocHref('');
             return;
         }
 
@@ -85,39 +82,10 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                 .filter((item) => item.label);
 
             setPageToc(headings);
-
-            const updateActivePageTocHref = () => {
-                // Mark the current section from the top-most visible heading.
-                const nextActiveHref =
-                    headings
-                        .map((item) => ({
-                            href: item.href,
-                            top:
-                                document.querySelector(item.href)?.getBoundingClientRect().top ??
-                                Number.POSITIVE_INFINITY,
-                        }))
-                        .filter((item) => item.top <= 120)
-                        .at(-1)?.href ??
-                    headings[0]?.href ??
-                    '';
-
-                setActivePageTocHref(nextActiveHref);
-            };
-
-            updateActivePageTocHref();
-
-            window.addEventListener('scroll', updateActivePageTocHref, { passive: true });
-            window.addEventListener('resize', updateActivePageTocHref);
-
-            removeListeners = () => {
-                window.removeEventListener('scroll', updateActivePageTocHref);
-                window.removeEventListener('resize', updateActivePageTocHref);
-            };
         });
 
         return () => {
             window.cancelAnimationFrame(frame);
-            removeListeners();
         };
     }, [location.pathname, content]);
 
@@ -231,21 +199,11 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                                 <nav aria-label="On this page">
                                     <div className="space-y-1.5 text-sm">
                                         {pageToc.map((item) => {
-                                            const isActive = activePageTocHref === item.href;
-
                                             return (
                                                 <div key={item.href} className="relative">
-                                                    <span
-                                                        aria-hidden="true"
-                                                        className={`absolute left-[-0.5rem] top-1.5 h-5 w-0.5 rounded-full transition-colors ${
-                                                            isActive ? 'bg-primary' : 'bg-transparent'
-                                                        }`}
-                                                    />
                                                     <A
                                                         href={item.href}
-                                                        className={`block pl-3 no-underline transition-colors hover:text-foreground ${
-                                                            isActive ? 'text-foreground' : 'text-muted-foreground'
-                                                        }`}
+                                                        className="block pl-3 text-muted-foreground no-underline transition-colors hover:text-foreground"
                                                     >
                                                         {item.label}
                                                     </A>
@@ -281,7 +239,7 @@ function DocArticle({ content, metadata }: DocsLayoutProps) {
     return (
         <article className="space-y-6 text-base leading-7 text-white [&_h1>a]:-left-8 [&_h1>a]:top-0 [&_h1>a]:translate-y-0 [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-2 [&_h2>a]:-left-7 [&_h2>a]:top-[0.6em] [&_h2]:mt-8 [&_h2]:border-b [&_h2]:border-border [&_h2]:pb-2 [&_h3>a]:-left-6 [&_h3>a]:top-[0.6em] [&_h3]:mt-6 [&_h3]:border-b [&_h3]:border-border [&_h3]:pb-2 [&_h4>a]:-left-5 [&_h4>a]:top-[0.6em] [&_h4]:mt-4 [&_h4]:border-b [&_h4]:border-border [&_h4]:pb-2">
             {content}
-            {metadata?.lastUpdated || metadata?.editUrl ? (
+            {metadata.lastUpdated || metadata.editUrl ? (
                 <footer className="mt-8 flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-white/70 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
                     {metadata.lastUpdated ? <span>Last updated: {lastUpdated}</span> : <span />}
                     {metadata.editUrl ? (

@@ -1,15 +1,10 @@
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
 from src.models.countries import Country
 from src.database.models.users import User
-from src.database.models.compute import ComputeRegistry
-from src.database.models.storage import StorageRegistry
-from src.database.models.database import DatabaseRegistry
 from src.database.models.location import Location
-from src.database.models.organizations import Organization
 
 
 class LocationsService:
@@ -19,67 +14,17 @@ class LocationsService:
         """Return all registered locations."""
 
         async with session_scope() as session:
-            statement = select(Location).options(
-                selectinload(Location.created_by),
-                selectinload(Location.updated_by),
-                selectinload(Location.deleted_by),
-                selectinload(Location.organizations).selectinload(Organization.created_by),
-                selectinload(Location.organizations).selectinload(Organization.updated_by),
-                selectinload(Location.organizations).selectinload(Organization.deleted_by),
-                selectinload(Location.compute_registries).selectinload(ComputeRegistry.created_by),
-                selectinload(Location.compute_registries).selectinload(ComputeRegistry.updated_by),
-                selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
-                selectinload(Location.database_registries).selectinload(DatabaseRegistry.created_by),
-                selectinload(Location.database_registries).selectinload(DatabaseRegistry.updated_by),
-                selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
-                selectinload(Location.storage_registries).selectinload(StorageRegistry.created_by),
-                selectinload(Location.storage_registries).selectinload(StorageRegistry.updated_by),
-                selectinload(Location.storage_registries).selectinload(StorageRegistry.deleted_by),
-            ).where(Location.deleted_at.is_(None))
+            statement = select(Location).where(Location.deleted_at.is_(None))
             result = await session.execute(statement)
-            locations = list(result.scalars().all())
-            for location in locations:
-                location.organizations = [organization for organization in location.organizations if organization.deleted_at is None]
-                location.compute_registries = [registry for registry in location.compute_registries if registry.deleted_at is None]
-                location.database_registries = [registry for registry in location.database_registries if registry.deleted_at is None]
-                location.storage_registries = [registry for registry in location.storage_registries if registry.deleted_at is None]
+            return list(result.scalars().all())
 
-            return locations
-
-    async def get(self, location_id: UUID | str) -> Location | None:
+    async def get(self, location_id: UUID) -> Location | None:
         """Return one location by id."""
 
         async with session_scope() as session:
-            if isinstance(location_id, str):
-                location_id = UUID(location_id)
-
-            statement = select(Location).options(
-                selectinload(Location.created_by),
-                selectinload(Location.updated_by),
-                selectinload(Location.deleted_by),
-                selectinload(Location.organizations).selectinload(Organization.created_by),
-                selectinload(Location.organizations).selectinload(Organization.updated_by),
-                selectinload(Location.organizations).selectinload(Organization.deleted_by),
-                selectinload(Location.compute_registries).selectinload(ComputeRegistry.created_by),
-                selectinload(Location.compute_registries).selectinload(ComputeRegistry.updated_by),
-                selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
-                selectinload(Location.database_registries).selectinload(DatabaseRegistry.created_by),
-                selectinload(Location.database_registries).selectinload(DatabaseRegistry.updated_by),
-                selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
-                selectinload(Location.storage_registries).selectinload(StorageRegistry.created_by),
-                selectinload(Location.storage_registries).selectinload(StorageRegistry.updated_by),
-                selectinload(Location.storage_registries).selectinload(StorageRegistry.deleted_by),
-            ).where(Location.id == location_id, Location.deleted_at.is_(None))
+            statement = select(Location).where(Location.id == location_id, Location.deleted_at.is_(None))
             result = await session.execute(statement)
-            location = result.scalar_one_or_none()
-            if location is None:
-                return None
-
-            location.organizations = [organization for organization in location.organizations if organization.deleted_at is None]
-            location.compute_registries = [registry for registry in location.compute_registries if registry.deleted_at is None]
-            location.database_registries = [registry for registry in location.database_registries if registry.deleted_at is None]
-            location.storage_registries = [registry for registry in location.storage_registries if registry.deleted_at is None]
-            return location
+            return result.scalar_one_or_none()
 
     async def create(self, slug: str, name: str, user: User, country: Country | None = None) -> Location:
         """Create one location."""
@@ -99,42 +44,12 @@ class LocationsService:
             session.add(location)
             await session.commit()
             await session.refresh(location)
-
-            result = await session.execute(
-                select(Location).options(
-                    selectinload(Location.created_by),
-                    selectinload(Location.updated_by),
-                    selectinload(Location.deleted_by),
-                    selectinload(Location.organizations).selectinload(Organization.created_by),
-                    selectinload(Location.organizations).selectinload(Organization.updated_by),
-                    selectinload(Location.organizations).selectinload(Organization.deleted_by),
-                    selectinload(Location.compute_registries).selectinload(ComputeRegistry.created_by),
-                    selectinload(Location.compute_registries).selectinload(ComputeRegistry.updated_by),
-                    selectinload(Location.compute_registries).selectinload(ComputeRegistry.deleted_by),
-                    selectinload(Location.database_registries).selectinload(DatabaseRegistry.created_by),
-                    selectinload(Location.database_registries).selectinload(DatabaseRegistry.updated_by),
-                    selectinload(Location.database_registries).selectinload(DatabaseRegistry.deleted_by),
-                    selectinload(Location.storage_registries).selectinload(StorageRegistry.created_by),
-                    selectinload(Location.storage_registries).selectinload(StorageRegistry.updated_by),
-                    selectinload(Location.storage_registries).selectinload(StorageRegistry.deleted_by),
-                ).where(Location.id == location.id)
-            )
-            location = result.scalar_one()
-            location.organizations = [organization for organization in location.organizations if organization.deleted_at is None]
-            location.compute_registries = [registry for registry in location.compute_registries if registry.deleted_at is None]
-            location.database_registries = [registry for registry in location.database_registries if registry.deleted_at is None]
-            location.storage_registries = [registry for registry in location.storage_registries if registry.deleted_at is None]
             return location
 
-    async def delete(self, location_id: UUID | str, deleted_id: UUID | str | None = None) -> Location | None:
+    async def delete(self, location_id: UUID, deleted_id: UUID | None = None) -> Location | None:
         """Mark one location as deleted."""
 
         async with session_scope() as session:
-            if isinstance(location_id, str):
-                location_id = UUID(location_id)
-            if isinstance(deleted_id, str):
-                deleted_id = UUID(deleted_id)
-
             result = await session.execute(select(Location).where(Location.id == location_id, Location.deleted_at.is_(None)))
             location = result.scalar_one_or_none()
             if location is None:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select, update
 from src.database.session import session_scope
@@ -20,7 +21,7 @@ class OperationsService:
             return result.scalars().all()
 
 
-    async def get(self, operation_id: str) -> Operation | None:
+    async def get(self, operation_id: UUID) -> Operation | None:
         """Return one operation by id."""
 
         async with session_scope() as session:
@@ -47,7 +48,7 @@ class OperationsService:
         self,
         kind: OperationKind,
         step: str,
-        application_id: str | None = None,
+        application_id: UUID | None = None,
         user: User | None = None,
     ) -> Operation:
         """Create one operation record."""
@@ -63,7 +64,7 @@ class OperationsService:
             return operation
 
 
-    async def claim(self, operation_id: str) -> Operation | None:
+    async def claim(self, operation_id: UUID) -> Operation | None:
         """Mark one scheduled operation as active if it has not started yet."""
 
         async with session_scope() as session:
@@ -82,7 +83,7 @@ class OperationsService:
             return refreshed.scalar_one_or_none()
 
 
-    async def defer(self, operation_id: str) -> Operation | None:
+    async def defer(self, operation_id: UUID) -> Operation | None:
         """Make one active operation claimable later without changing its step."""
 
         async with session_scope() as session:
@@ -124,7 +125,7 @@ class OperationsService:
             return operation
 
 
-    async def complete(self, operation_id: str) -> Operation | None:
+    async def complete(self, operation_id: UUID) -> Operation | None:
         """Mark one active operation as completed."""
 
         async with session_scope() as session:
@@ -147,7 +148,7 @@ class OperationsService:
             return refreshed.scalar_one_or_none()
 
 
-    async def fail(self, operation_id: str, error: str) -> Operation | None:
+    async def fail(self, operation_id: UUID, error: str) -> Operation | None:
         """Mark one active operation as failed and capture the error message."""
 
         async with session_scope() as session:

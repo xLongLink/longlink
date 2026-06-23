@@ -29,7 +29,7 @@ class ImageMetadataResponse(BaseModel):
 
     # Metadata
     sdk: str | None = None
-    title: str | None = None
+    name: str | None = None
     version: str | None = None
     description: str | None = None
 

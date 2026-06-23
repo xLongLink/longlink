@@ -7,10 +7,6 @@ from src.models.countries import Country
 
 if TYPE_CHECKING:
     from src.database.models.users import User
-    from src.database.models.compute import ComputeRegistry
-    from src.database.models.storage import StorageRegistry
-    from src.database.models.database import DatabaseRegistry
-    from src.database.models.organizations import Organization
 
 
 class Location(SQLModel, table=True):
@@ -36,9 +32,3 @@ class Location(SQLModel, table=True):
     deleted_at: datetime | None = Field(default=None)
     deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Location.deleted_id'})
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
-
-    # Relationships
-    organizations: list['Organization'] = Relationship(back_populates='location')
-    compute_registries: list['ComputeRegistry'] = Relationship(back_populates='location')
-    storage_registries: list['StorageRegistry'] = Relationship(back_populates='location')
-    database_registries: list['DatabaseRegistry'] = Relationship(back_populates='location')

@@ -8,7 +8,7 @@ from src.models.users import UserSummary
 class DatabaseKind(str, Enum):
     """Supported database registry kinds."""
 
-    postgre = "postgre"
+    postgresql = "postgresql"
 
 
 class DatabaseRegistryCreate(BaseModel):

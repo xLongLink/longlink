@@ -29,13 +29,10 @@ class ApplicationsService:
             return list(result.scalars().all())
 
 
-    async def list_by_organization(self, organization_id: UUID | str) -> list[Application]:
+    async def list_by_organization(self, organization_id: UUID) -> list[Application]:
         """Return all registered applications for one organization."""
 
         async with session_scope() as session:
-            if isinstance(organization_id, str):
-                organization_id = UUID(organization_id)
-
             statement = (
                 select(Application)
                 .options(*_app_relation_options())
@@ -48,17 +45,12 @@ class ApplicationsService:
 
     async def list(
         self,
-        organization_id: UUID | str,
-        user_id: UUID | str,
+        organization_id: UUID,
+        user_id: UUID,
     ) -> list[tuple[Application, ApplicationRoles | None]]:
         """Return all registered applications for one organization with membership roles."""
 
         async with session_scope() as session:
-            if isinstance(organization_id, str):
-                organization_id = UUID(organization_id)
-            if isinstance(user_id, str):
-                user_id = UUID(user_id)
-
             # Join the membership row so the caller can render the app role in one query.
             statement = (
                 select(Application, UserApplication.role_name)
@@ -76,13 +68,10 @@ class ApplicationsService:
             result = await session.execute(statement)
             return result.all()
 
-    async def get(self, organization_id: UUID | str, name: str) -> Application | None:
+    async def get(self, organization_id: UUID, name: str) -> Application | None:
         """Return a registered application by organization and name."""
 
         async with session_scope() as session:
-            if isinstance(organization_id, str):
-                organization_id = UUID(organization_id)
-
             statement = select(Application).options(*_app_relation_options()).where(
                 Application.organization_id == organization_id,
                 Application.name == name,
@@ -92,20 +81,17 @@ class ApplicationsService:
             return result.scalar_one_or_none()
 
 
-    async def get_by_id(self, application_id: UUID | str) -> Application | None:
+    async def get_by_id(self, application_id: UUID) -> Application | None:
         """Return a registered application by id."""
 
         async with session_scope() as session:
-            if isinstance(application_id, str):
-                application_id = UUID(application_id)
-
             statement = select(Application).options(*_app_relation_options()).where(Application.id == application_id, Application.deleted_at.is_(None))
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
     async def create(
         self,
-        organization_id: UUID | str,
+        organization_id: UUID,
         name: str,
         slug: str,
         image: str,
@@ -119,9 +105,6 @@ class ApplicationsService:
         """Add a new application to the database for one organization."""
 
         async with session_scope() as session:
-            if isinstance(organization_id, str):
-                organization_id = UUID(organization_id)
-
             # Check the primary-key conflict first so the API can report a clear message.
             name_statement = select(Application).where(Application.name == name)
             name_result = await session.execute(name_statement)
@@ -161,13 +144,10 @@ class ApplicationsService:
             return result.scalar_one()
 
 
-    async def set_status(self, application_id: UUID | str, status: AppStatus) -> Application | None:
+    async def set_status(self, application_id: UUID, status: AppStatus) -> Application | None:
         """Update one application status and return the refreshed row."""
 
         async with session_scope() as session:
-            if isinstance(application_id, str):
-                application_id = UUID(application_id)
-
             application = await session.get(Application, application_id)
             if application is None:
                 return None
@@ -177,17 +157,10 @@ class ApplicationsService:
             await session.refresh(application)
             return application
 
-    async def delete(self, organization_id: UUID | str, application_id: UUID | str, deleted_id: UUID | str | None = None) -> Application:
+    async def delete(self, organization_id: UUID, application_id: UUID, deleted_id: UUID | None = None) -> Application:
         """Delete an application by organization and id and return it."""
 
         async with session_scope() as session:
-            if isinstance(organization_id, str):
-                organization_id = UUID(organization_id)
-            if isinstance(application_id, str):
-                application_id = UUID(application_id)
-            if isinstance(deleted_id, str):
-                deleted_id = UUID(deleted_id)
-
             # Load the application first so the delete path can raise a single not-found error.
             statement = select(Application).where(Application.organization_id == organization_id, Application.id == application_id, Application.deleted_at.is_(None))
             result = await session.execute(statement)

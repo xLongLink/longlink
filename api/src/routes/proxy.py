@@ -1,8 +1,9 @@
 from uuid import UUID
-from fastapi import Depends, Request, Response, APIRouter, HTTPException
+from fastapi import Depends, Request, Response, APIRouter
 from src.auth import authuser
 from src.router import router
 from fastapi.routing import APIRoute
+from src.errors import MethodNotAllowedError, NotFoundError, UnavailableError
 from src.utils.utils import knames
 from src.utils.namespace import k8name
 from src.adapters.compute import K8s
@@ -36,19 +37,19 @@ class ProxyRoute(APIRoute):
 proxy_router = APIRouter(route_class=ProxyRoute)
 
 
-@router.head("/api/apps/{application_id}/proxy")
+@router.head("/api/applications/{application_id}/proxy")
 async def reject_proxy_head(application_id: UUID) -> None:
     """Reject HEAD requests on the application proxy."""
 
-    raise HTTPException(status_code=405, detail="Method not allowed")
+    raise MethodNotAllowedError()
 
 
 @proxy_router.api_route(
-    "/api/apps/{application_id}/proxy",
+    "/api/applications/{application_id}/proxy",
     methods=["DELETE", "GET", "PATCH", "POST"],
 )
 @proxy_router.api_route(
-    "/api/apps/{application_id}/proxy/{path:path}",
+    "/api/applications/{application_id}/proxy/{path:path}",
     methods=["DELETE", "GET", "PATCH", "POST"],
 )
 async def proxy_app_request(application_id: UUID, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
@@ -57,15 +58,15 @@ async def proxy_app_request(application_id: UUID, request: Request, path: str = 
     # Load the app first so routing never depends on the caller-supplied path alone.
     application = await applications.get_by_id(application_id)
     if application is None:
-        raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found")
+        raise NotFoundError("Application", application_id)
 
     organization = next((organization for organization in user.organizations if organization.id == application.organization_id), None)
     if organization is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{application.organization_id}' not found")
+        raise NotFoundError("Organization", application.organization_id)
 
     registries = await compute.list()
     if not registries:
-        raise HTTPException(status_code=503, detail="No compute cluster configured")
+        raise UnavailableError("No compute cluster configured")
 
     # Prefer the newest registry for the location so the live cluster stays in sync.
     registry = max(
@@ -74,18 +75,15 @@ async def proxy_app_request(application_id: UUID, request: Request, path: str = 
         default=None,
     )
     if registry is None:
-        raise HTTPException(
-            status_code=503,
-            detail=f"No compute cluster configured for location '{organization.location_id}'",
-        )
+        raise UnavailableError(f"No compute cluster configured for location '{organization.location_id}'")
 
     upstream_path = path.lstrip("/")
     if upstream_path == "":
-        raise HTTPException(status_code=404, detail="Proxy root path is not available")
+        raise NotFoundError("Proxy root path", "/")
 
     organization_record = application.organization
     if organization_record is None:
-        raise HTTPException(status_code=503, detail="Application organization not loaded")
+        raise UnavailableError("Application organization not loaded")
 
     namespace = k8name(knames(organization_record.slug, "Organization"))
     name = knames(application.slug, "Application name")

@@ -41,5 +41,5 @@ class StorageRegistry(SQLModel, table=True):
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
     # Location
-    location: 'Location' = Relationship(back_populates='storage_registries')
+    location: 'Location' = Relationship()
     location_id: UUID = Field(foreign_key='locations.id')

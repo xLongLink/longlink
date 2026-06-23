@@ -6,6 +6,7 @@ from src.logger import logger
 from src.router import router
 from src.operations import execute
 from src.environments import env
+from src.errors import register_error_handlers
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -74,6 +75,8 @@ app = FastAPI(
     redoc_url="/redocs",
     openapi_url="/openapi.json",
 )
+
+register_error_handlers(app)
 
 
 app.add_middleware(

@@ -26,4 +26,3 @@ class ApplicationRoles(str, Enum):
     write = "write"
     maintain = "maintain"
     admin = "admin"
-    owner = "owner"

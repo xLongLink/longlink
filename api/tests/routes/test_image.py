@@ -2,7 +2,7 @@ from src.models.metadata import LongLinkMetadata, ImageMetadataResponse
 
 
 def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
-    """Return title, description, and environment metadata for an image."""
+    """Return name, description, and environment metadata for an image."""
 
     # Arrange
     monkeypatch.setattr(
@@ -40,7 +40,7 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     assert payload == expected_data
     assert payload == {
         "sdk": "0.1.0",
-        "title": "dashboard",
+        "name": "dashboard",
         "version": "20250623_120000",
         "description": "Demo app",
         "environments": [
@@ -74,7 +74,7 @@ def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monke
     assert response.status_code == 200
     assert response.json() == {
         "sdk": None,
-        "title": None,
+        "name": None,
         "version": None,
         "description": None,
         "environments": [],
@@ -93,4 +93,4 @@ def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": "Image metadata not found"}
+    assert response.json() == {"detail": "Image metadata 'ghcr.io/longlink/dashboard:latest' not found"}

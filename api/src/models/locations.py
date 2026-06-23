@@ -1,33 +1,7 @@
 from uuid import UUID
 from datetime import datetime
-from pydantic import Field, BaseModel, ConfigDict
-from src.models.users import UserSummary
-from src.models.compute import ComputeRegistryResponse
-from src.models.storage import StorageRegistryResponse
-from src.models.database import DatabaseRegistryResponse
+from pydantic import BaseModel, ConfigDict, Field
 from src.models.countries import Country
-
-
-class LocationOrganizationSummary(BaseModel):
-    """Represent one organization nested under a location."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-    location_id: UUID
-
-    # Audit
-    created_at: datetime
-    updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None
 
 
 class LocationCreate(BaseModel):
@@ -55,9 +29,3 @@ class LocationResponse(BaseModel):
     # Audit
     created_at: datetime
     updated_at: datetime
-
-    # Relationships
-    organizations: list[LocationOrganizationSummary] = Field(default_factory=list)
-    compute_registries: list[ComputeRegistryResponse] = Field(default_factory=list)
-    storage_registries: list[StorageRegistryResponse] = Field(default_factory=list)
-    database_registries: list[DatabaseRegistryResponse] = Field(default_factory=list)

@@ -34,24 +34,6 @@ const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
         },
         meta: { className: 'min-w-56' },
     },
-    {
-        id: 'database_registries',
-        header: 'Databases',
-        cell: ({ row }) => row.original.database_registries.length,
-        meta: { className: 'w-28' },
-    },
-    {
-        id: 'storage_registries',
-        header: 'Storage',
-        cell: ({ row }) => row.original.storage_registries.length,
-        meta: { className: 'w-28' },
-    },
-    {
-        id: 'compute_registries',
-        header: 'Compute',
-        cell: ({ row }) => row.original.compute_registries.length,
-        meta: { className: 'w-28' },
-    },
 ];
 
 /** Renders the admin location page. */

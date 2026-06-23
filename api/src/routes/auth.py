@@ -1,6 +1,6 @@
 import httpx2
 from typing import cast
-from fastapi import Request, HTTPException
+from fastapi import Request
 from pydantic import Field, BaseModel, ValidationError
 from src.auth import oauth
 from src.router import router
@@ -10,6 +10,7 @@ from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
 from src.database.services.users import users
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
+from src.errors import UnauthorizedError, UnavailableError
 
 
 class PasswordLoginRequest(BaseModel):
@@ -28,12 +29,8 @@ async def login_oidc(request: Request):
     try:
         return await oidc.authorize_redirect(request, redirect_uri=env.OIDC_REDIRECT_URI)
     except httpx2.HTTPStatusError as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=(
-                "OIDC provider metadata is unavailable. "
-                "Check OIDC_ISSUER and provider realm configuration."
-            ),
+        raise UnavailableError(
+            "OIDC provider metadata is unavailable. Check OIDC_ISSUER and provider realm configuration."
         ) from exc
 
 
@@ -49,7 +46,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Suc
             metadata_response = await client.get(metadata_url)
             metadata_response.raise_for_status()
         except (httpx2.HTTPStatusError, httpx2.RequestError) as exc:
-            raise HTTPException(status_code=502, detail="Authentication provider unavailable") from exc
+            raise UnavailableError("Authentication provider unavailable") from exc
 
         metadata = metadata_response.json()
 
@@ -70,17 +67,17 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Suc
         token_response.raise_for_status()
     except httpx2.HTTPStatusError as exc:
         if exc.response.status_code in {400, 401}:
-            raise HTTPException(status_code=401, detail="Invalid username or password") from exc
+            raise UnauthorizedError("Invalid username or password") from exc
 
-        raise HTTPException(status_code=502, detail="Authentication provider unavailable") from exc
+        raise UnavailableError("Authentication provider unavailable") from exc
 
     try:
         token = OidcTokenResponse.model_validate(token_response.json())
     except ValidationError as exc:
-        raise HTTPException(status_code=502, detail="Authentication provider returned an invalid token payload") from exc
+        raise UnavailableError("Authentication provider returned an invalid token payload") from exc
 
     if not token.access_token:
-        raise HTTPException(status_code=502, detail="Authentication provider returned no access token")
+        raise UnavailableError("Authentication provider returned no access token")
 
     # Use the access token to fetch the authenticated user's profile.
     async with httpx2.AsyncClient() as client:
@@ -91,24 +88,24 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Suc
             )
             userinfo_response.raise_for_status()
         except (httpx2.HTTPStatusError, httpx2.RequestError) as exc:
-            raise HTTPException(status_code=502, detail="Failed to read authenticated user profile") from exc
+            raise UnavailableError("Failed to read authenticated user profile") from exc
 
     try:
         userinfo = OidcUserInfo.model_validate(userinfo_response.json())
     except ValidationError as exc:
-        raise HTTPException(status_code=502, detail="Authentication provider returned an invalid user profile") from exc
+        raise UnavailableError("Authentication provider returned an invalid user profile") from exc
 
     # Normalize the provider payload into the local user record shape.
     email = userinfo.email
     if not email:
-        raise HTTPException(status_code=502, detail="Authentication provider returned no email")
+        raise UnavailableError("Authentication provider returned no email")
 
     name = userinfo.name or userinfo.preferred_username
     if not name:
         given_name = userinfo.given_name
         family_name = userinfo.family_name
         if not given_name or not family_name:
-            raise HTTPException(status_code=502, detail="Authentication provider returned no display name")
+            raise UnavailableError("Authentication provider returned no display name")
 
         name = f"{given_name} {family_name}"
 
@@ -132,10 +129,7 @@ async def auth_oidc(request: Request):
     try:
         token = await oidc.authorize_access_token(request)
     except httpx2.HTTPStatusError as exc:
-        raise HTTPException(
-            status_code=502,
-            detail="OIDC token exchange failed. Verify provider URL and client credentials.",
-        ) from exc
+        raise UnavailableError("OIDC token exchange failed. Verify provider URL and client credentials.") from exc
 
     userinfo = token.userinfo
     # Fall back to the userinfo endpoint when the token payload does not include profile claims.
@@ -143,19 +137,19 @@ async def auth_oidc(request: Request):
         try:
             userinfo = OidcUserInfo.model_validate(await oidc.userinfo(token=token.model_dump(mode="python")))
         except ValidationError as exc:
-            raise HTTPException(status_code=502, detail="Authentication provider returned an invalid user profile") from exc
+            raise UnavailableError("Authentication provider returned an invalid user profile") from exc
 
     # Normalize the provider payload into the local user record shape.
     email = userinfo.email
     if not email:
-        raise HTTPException(status_code=502, detail="Authentication provider returned no email")
+        raise UnavailableError("Authentication provider returned no email")
 
     name = userinfo.name or userinfo.preferred_username
     if not name:
         given_name = userinfo.given_name
         family_name = userinfo.family_name
         if not given_name or not family_name:
-            raise HTTPException(status_code=502, detail="Authentication provider returned no display name")
+            raise UnavailableError("Authentication provider returned no display name")
 
         name = f"{given_name} {family_name}"
 

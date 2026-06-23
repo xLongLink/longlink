@@ -1,3 +1,4 @@
+from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -23,7 +24,7 @@ class DatabaseService:
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, registry_id: str) -> DatabaseRegistry | None:
+    async def get(self, registry_id: UUID) -> DatabaseRegistry | None:
         """Return one database backend by id."""
 
         async with session_scope() as session:
@@ -44,7 +45,7 @@ class DatabaseService:
         port: int,
         username: str,
         password: str,
-        location_id: str,
+        location_id: UUID,
         user: User,
     ) -> DatabaseRegistry:
         """Create or update one database backend registration."""
@@ -95,7 +96,7 @@ class DatabaseService:
             result = await session.execute(statement)
             return result.scalar_one()
 
-    async def delete(self, registry_id: str, deleted_id: str | None = None) -> DatabaseRegistry | None:
+    async def delete(self, registry_id: UUID, deleted_id: UUID | None = None) -> DatabaseRegistry | None:
         """Mark one database backend registration as deleted."""
 
         async with session_scope() as session:
@@ -118,7 +119,7 @@ class DatabaseService:
             return database
 
 
-    async def purge(self, registry_id: str) -> DatabaseRegistry | None:
+    async def purge(self, registry_id: UUID) -> DatabaseRegistry | None:
         """Hard delete one database backend registration."""
 
         async with session_scope() as session:

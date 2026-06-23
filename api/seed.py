@@ -58,12 +58,12 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Database registry
     # ------------------------------------------------------------------
-    databases = client.get("/api/database").json()
+    databases = client.get("/api/databases").json()
     if not any(db["name"] == "local" for db in databases):
         r = client.post(
-            "/api/database",
+            "/api/databases",
             json={
-                "kind": "postgre",
+                "kind": "postgresql",
                 "name": "local",
                 "host": "localhost",
                 "port": 15432,
@@ -77,10 +77,10 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Storage registry
     # ------------------------------------------------------------------
-    storages = client.get("/api/storage").json()
+    storages = client.get("/api/storages").json()
     if not any(s["name"] == "local" for s in storages):
         r = client.post(
-            "/api/storage",
+            "/api/storages",
             json={
                 "kind": "s3",
                 "name": "local",
@@ -98,10 +98,10 @@ def main() -> None:
     # ------------------------------------------------------------------
     kubeconfig = Path(__file__).with_name("kubeconfig.yaml").read_text(encoding="utf-8")
 
-    computes = client.get("/api/compute").json()
+    computes = client.get("/api/computes").json()
     if not any(c["ingress_host"] == "localhost:8443" for c in computes):
         r = client.post(
-            "/api/compute",
+            "/api/computes",
             json={
                 "kind": "kubernetes",
                 "name": "local",
@@ -115,11 +115,11 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Organization
     # ------------------------------------------------------------------
-    orgs = client.get("/api/orgs").json()
+    orgs = client.get("/api/organizations").json()
     organization = next((org for org in orgs if org["name"] == LOCAL_ORG), None)
     if organization is None:
         r = client.post(
-            "/api/orgs",
+            "/api/organizations",
             json={
                 "name": LOCAL_ORG,
                 "avatar": LOCAL_ORG_AVATAR,
@@ -127,7 +127,7 @@ def main() -> None:
             },
         )
         if r.status_code == 409:
-            orgs = client.get("/api/orgs").json()
+            orgs = client.get("/api/organizations").json()
             organization = next(org for org in orgs if org["name"] == LOCAL_ORG)
         else:
             r.raise_for_status()
@@ -136,10 +136,10 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Application
     # ------------------------------------------------------------------
-    apps = client.get(f"/api/apps?organization_id={organization['id']}").json()
+    apps = client.get(f"/api/applications?organization_id={organization['id']}").json()
     if not any(a["name"] == LOCAL_APP["name"] for a in apps):
         r = client.post(
-            f"/api/apps?organization_id={organization['id']}",
+            f"/api/applications?organization_id={organization['id']}",
             json=LOCAL_APP,
         )
         if r.status_code == 409:

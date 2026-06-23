@@ -170,7 +170,7 @@ def upgrade() -> None:
         sa.Column("updated_id", sa.Uuid(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("kind", sa.Enum("postgre", name="database_kind_enum", native_enum=False), nullable=False),
+        sa.Column("kind", sa.Enum("postgresql", name="database_kind_enum", native_enum=False), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("host", sa.String(length=255), nullable=False),
         sa.Column("port", sa.Integer(), nullable=False),

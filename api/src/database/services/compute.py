@@ -1,4 +1,5 @@
 import secrets
+from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
 from src.constants import INGRESS_NAME
@@ -25,7 +26,7 @@ class ComputeService:
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, registry_id: str) -> ComputeRegistry | None:
+    async def get(self, registry_id: UUID) -> ComputeRegistry | None:
         """Return one compute backend by id."""
 
         async with session_scope() as session:
@@ -44,7 +45,7 @@ class ComputeService:
         name: str,
         kubeconfig: str,
         ingress_host: str,
-        location_id: str,
+        location_id: UUID,
         user: User,
         proxy_secret: str | None = None,
     ) -> ComputeRegistry:
@@ -82,7 +83,7 @@ class ComputeService:
             result = await session.execute(statement)
             return result.scalar_one()
 
-    async def delete(self, registry_id: str, deleted_id: str | None = None) -> ComputeRegistry | None:
+    async def delete(self, registry_id: UUID, deleted_id: UUID | None = None) -> ComputeRegistry | None:
         """Mark one compute backend registration as deleted."""
 
         async with session_scope() as session:
@@ -104,7 +105,7 @@ class ComputeService:
             await session.refresh(compute)
             return compute
 
-    async def purge(self, registry_id: str) -> ComputeRegistry | None:
+    async def purge(self, registry_id: UUID) -> ComputeRegistry | None:
         """Hard delete one compute backend registration."""
 
         async with session_scope() as session:

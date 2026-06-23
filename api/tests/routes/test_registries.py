@@ -73,9 +73,9 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
 
     # Act
     create_response = client.post(
-        "/api/database",
+        "/api/databases",
         json={
-            "kind": "postgre",
+            "kind": "postgresql",
             "name": "primary",
             "host": "db.longlink.internal",
             "port": 5432,
@@ -84,16 +84,16 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
                 "location_id": str(location.id),
             },
         )
-    list_response = client.get("/api/database")
+    list_response = client.get("/api/databases")
     registry_id = create_response.json()["id"]
-    delete_response = client.delete(f"/api/database/{registry_id}")
+    delete_response = client.delete(f"/api/databases/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
     create_payload = create_response.json()
     assert create_response.json() == DatabaseRegistryResponse(
         id=registry_id,
-        kind=DatabaseKind.postgre,
+        kind=DatabaseKind.postgresql,
         name="primary",
         slug="primary",
         host="db.longlink.internal",
@@ -111,7 +111,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     assert list_response.json() == [
         DatabaseRegistryResponse(
             id=registry_id,
-            kind=DatabaseKind.postgre,
+        kind=DatabaseKind.postgresql,
             name="primary",
             slug="primary",
             host="db.longlink.internal",
@@ -128,7 +128,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     ]
     assert delete_response.status_code == 204
 
-    deleted_response = client.get(f"/api/database/{registry_id}")
+    deleted_response = client.get(f"/api/databases/{registry_id}")
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
     assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
@@ -146,9 +146,9 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     user1, _, _ = users
     location = await db.locations.create("local", "Local testing", user1)
     create_response = client.post(
-        "/api/database",
+        "/api/databases",
         json={
-            "kind": "postgre",
+            "kind": "postgresql",
             "name": "primary",
             "host": "db.longlink.internal",
             "port": 5432,
@@ -172,7 +172,7 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     monkeypatch.setattr("src.routes.database.Postgre", FakePostgre)
 
     # Act
-    response = client.get(f"/api/database/{registry_id}/usage")
+    response = client.get(f"/api/databases/{registry_id}/usage")
 
     # Assert
     assert response.status_code == 200
@@ -193,7 +193,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
 
     # Act
     create_response = client.post(
-        "/api/storage",
+        "/api/storages",
         json={
             "kind": "s3",
             "name": "object-store",
@@ -204,9 +204,9 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
                 "location_id": str(location.id),
             },
         )
-    list_response = client.get("/api/storage")
+    list_response = client.get("/api/storages")
     registry_id = create_response.json()["id"]
-    delete_response = client.delete(f"/api/storage/{registry_id}")
+    delete_response = client.delete(f"/api/storages/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
@@ -248,7 +248,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     ]
     assert delete_response.status_code == 204
 
-    deleted_response = client.get(f"/api/storage/{registry_id}")
+    deleted_response = client.get(f"/api/storages/{registry_id}")
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
     assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
@@ -283,7 +283,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
 
     # Act
     create_response = client.post(
-        "/api/compute",
+        "/api/computes",
         json={
                 "kind": "kubernetes",
                 "name": "primary",
@@ -292,9 +292,9 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
                 "location_id": str(location.id),
             },
         )
-    list_response = client.get("/api/compute")
+    list_response = client.get("/api/computes")
     registry_id = create_response.json()["id"]
-    delete_response = client.delete(f"/api/compute/{registry_id}")
+    delete_response = client.delete(f"/api/computes/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
@@ -331,7 +331,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         ).model_dump(mode="json")
     ]
     assert delete_response.status_code == 204
-    deleted_response = client.get(f"/api/compute/{registry_id}")
+    deleted_response = client.get(f"/api/computes/{registry_id}")
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
     assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")

@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from uuid import UUID
 from src.models.roles import PlatformRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
@@ -43,13 +44,13 @@ async def test_create_organization_returns_owner_role(
 
     # Act
     response = client.post(
-        "/api/orgs",
+        "/api/organizations",
         json={"name": "acme", "avatar": avatar, "location_id": str(location.id)},
     )
 
     # Assert
     assert response.status_code == 200
-    organization = await db.orgs.get(response.json()["id"])
+    organization = await db.orgs.get(UUID(response.json()["id"]))
     assert organization is not None
     assert response.json() == OrgSummary.model_validate(
         {
@@ -89,7 +90,7 @@ async def test_get_organization_returns_member_payload(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/orgs/{organization.id}")
+    response = client.get(f"/api/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 200
@@ -140,8 +141,6 @@ async def test_get_organization_returns_member_payload(
             }
         ],
     ).model_dump(mode="json", by_alias=True)
-
-    expected_payload["location"] = response.json()["location"]
     expected_payload["users"][0]["last_access_at"] = response.json()["users"][0]["last_access_at"]
 
     assert response.json() == expected_payload
@@ -188,7 +187,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     client = clients[0]
 
     # Act
-    response = client.get("/api/orgs")
+    response = client.get("/api/organizations")
 
     # Assert
     assert response.status_code == 200
@@ -224,11 +223,11 @@ async def test_get_organization_returns_404_for_non_member(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/orgs/{organization.id}")
+    response = client.get(f"/api/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": f"Org '{organization.id}' not found"}
+    assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
 
 
 async def test_get_organization_rejects_invalid_uuid(
@@ -240,7 +239,7 @@ async def test_get_organization_rejects_invalid_uuid(
     client = clients[0]
 
     # Act
-    response = client.get("/api/orgs/testo")
+    response = client.get("/api/organizations/testo")
 
     # Assert
     assert response.status_code == 422
@@ -261,7 +260,7 @@ async def test_delete_organization_removes_its_apps(
     client = clients[0]
 
     # Act
-    response = client.delete(f"/api/orgs/{organization.id}")
+    response = client.delete(f"/api/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 204
@@ -281,7 +280,7 @@ async def test_create_organization_returns_409_for_duplicate_name(
     client = clients[0]
 
     # Act
-    response = client.post("/api/orgs", json={"name": "acme", "location_id": str(location.id)})
+    response = client.post("/api/organizations", json={"name": "acme", "location_id": str(location.id)})
 
     # Assert
     assert response.status_code == 409
@@ -297,7 +296,7 @@ async def test_create_organization_uses_default_validation_error(
     client = clients[0]
 
     # Act
-    response = client.post("/api/orgs", json={})
+    response = client.post("/api/organizations", json={})
 
     # Assert
     assert response.status_code == 422

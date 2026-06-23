@@ -24,7 +24,7 @@ class Organization(SQLModel, table=True):
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
 
     # Location
-    location: 'Location' = Relationship(back_populates='organizations')
+    location: 'Location' = Relationship()
     location_id: UUID = Field(foreign_key='locations.id')
 
     # User

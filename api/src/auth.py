@@ -1,9 +1,10 @@
-from fastapi import Request, HTTPException
+from fastapi import Request
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User
 from src.database.services.users import users
 from authlib.integrations.starlette_client import OAuth
+from src.errors import ForbiddenError, UnauthorizedError
 
 oauth = OAuth()
 oauth.register(
@@ -20,11 +21,11 @@ async def authuser(request: Request) -> User:
 
     oidc = request.session.get("oidc")
     if oidc is None:
-        raise HTTPException(401, "Not authenticated")
+        raise UnauthorizedError("Not authenticated")
 
     user = await users.get(oidc)
     if not user:
-        raise HTTPException(401, "Not authenticated")
+        raise UnauthorizedError("Not authenticated")
     return user
 
 
@@ -35,7 +36,7 @@ async def authadmin(request: Request) -> User:
 
     # Only administrator accounts can continue past this check.
     if user.role != PlatformRoles.administrator:
-        raise HTTPException(403, "Administrator privileges required")
+        raise ForbiddenError("Administrator privileges required")
 
     return user
 
@@ -46,6 +47,6 @@ async def authsupport(request: Request) -> User:
     user = await authuser(request)
 
     if user.role not in {PlatformRoles.support, PlatformRoles.administrator}:
-        raise HTTPException(403, "Support access required")
+        raise ForbiddenError("Support access required")
 
     return user

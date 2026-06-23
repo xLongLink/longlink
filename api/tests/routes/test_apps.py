@@ -74,7 +74,7 @@ async def test_list_apps_returns_app_membership_role(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/apps?organization_id={organization.id}")
+    response = client.get(f"/api/applications?organization_id={organization.id}")
 
     # Assert
     assert response.status_code == 200
@@ -111,7 +111,7 @@ async def test_list_apps_returns_null_role_without_app_membership(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/apps?organization_id={organization.id}")
+    response = client.get(f"/api/applications?organization_id={organization.id}")
 
     # Assert
     assert response.status_code == 200
@@ -156,7 +156,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     client = clients[0]
 
     # Act
-    response = client.get("/api/apps")
+    response = client.get("/api/applications")
 
     # Assert
     assert response.status_code == 200
@@ -194,7 +194,7 @@ async def test_list_apps_without_organization_requires_admin(
     client = clients[1]
 
     # Act
-    response = client.get("/api/apps")
+    response = client.get("/api/applications")
 
     # Assert
     assert response.status_code == 403
@@ -216,7 +216,7 @@ async def test_list_apps_returns_404_for_non_member(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/apps?organization_id={organization.id}")
+    response = client.get(f"/api/applications?organization_id={organization.id}")
 
     # Assert
     assert response.status_code == 404
@@ -252,7 +252,7 @@ async def test_create_app_returns_app_response(
         user=user,
     )
     await db.database.create(
-        kind=DatabaseKind.postgre,
+        kind=DatabaseKind.postgresql,
         name="local",
         host="db.local.longlink.internal",
         port=5432,
@@ -262,7 +262,7 @@ async def test_create_app_returns_app_response(
         user=user,
     )
     await db.database.create(
-        kind=DatabaseKind.postgre,
+        kind=DatabaseKind.postgresql,
         name="remote",
         host="db.remote.longlink.internal",
         port=5432,
@@ -335,7 +335,7 @@ async def test_create_app_returns_app_response(
 
     # Act
     response = client.post(
-        f"/api/apps?organization_id={organization.id}",
+        f"/api/applications?organization_id={organization.id}",
         json={
             "name": "dashboard",
             "image": "ghcr.io/longlink/dashboard:latest",
@@ -447,7 +447,7 @@ async def test_delete_app_removes_dependent_env_rows(
     client = clients[0]
 
     # Act
-    response = client.delete(f"/api/apps/{app.id}?organization_id={organization.id}")
+    response = client.delete(f"/api/applications/{app.id}")
 
     # Assert
     assert response.status_code == 204
@@ -520,7 +520,7 @@ async def test_get_app_logs_returns_pod_logs(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/apps/{app.id}/logs?organization_id={organization.id}")
+    response = client.get(f"/api/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 200
@@ -650,7 +650,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     monkeypatch.setattr("src.routes.proxy.K8s", FakeCompute)
 
     # Act
-    response = client.post(f"/api/apps/{app.id}/proxy/anything?answer=42", content=b"hello")
+    response = client.post(f"/api/applications/{app.id}/proxy/anything?answer=42", content=b"hello")
 
     # Assert
     assert response.status_code == 200
@@ -669,7 +669,7 @@ def test_proxy_app_rejects_root_path(clients: tuple[TestClient, TestClient, Test
     client = clients[0]
 
     # Act
-    response = client.get("/api/apps/00000000-0000-0000-0000-000000000001/proxy/")
+    response = client.get("/api/applications/00000000-0000-0000-0000-000000000001/proxy/")
 
     # Assert
     assert response.status_code == 404
@@ -683,7 +683,7 @@ def test_proxy_app_rejects_unsupported_methods(clients: tuple[TestClient, TestCl
     client = clients[0]
 
     # Act
-    response = client.request(method, "/api/apps/00000000-0000-0000-0000-000000000001/proxy")
+    response = client.request(method, "/api/applications/00000000-0000-0000-0000-000000000001/proxy")
 
     # Assert
     assert response.status_code == 405
