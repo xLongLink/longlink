@@ -2,12 +2,6 @@ import main
 from fastapi.testclient import TestClient
 
 
-def test_static_frontend_serving_is_enabled_by_default() -> None:
-    """Serve the built web bundle at the API root."""
-
-    assert any(route.name == "static" for route in main.app.router.routes)
-
-
 def test_root_serves_the_static_web_bundle() -> None:
     """Return the bundled web app at the root path."""
 

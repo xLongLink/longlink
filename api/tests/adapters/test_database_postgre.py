@@ -11,6 +11,9 @@ class _FakeResult:
     def scalar_one_or_none(self):
         return self._value
 
+    def scalar_one(self):
+        return self._value
+
     def one(self):
         return self._value
 
