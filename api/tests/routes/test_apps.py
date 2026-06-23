@@ -622,7 +622,6 @@ async def test_proxy_app_forwards_request_to_internal_service(
         ),
         ingress_host="localhost:9443",
         location_id=remote_location.id,
-        proxy_secret="latest-secret",
         user=user,
     )
     client = clients[0]

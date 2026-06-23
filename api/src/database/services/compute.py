@@ -47,13 +47,12 @@ class ComputeService:
         ingress_host: str,
         location_id: UUID,
         user: User,
-        proxy_secret: str | None = None,
     ) -> ComputeRegistry:
         """Create one compute backend registration."""
 
         async with session_scope() as session:
             # Compute registries are append-only once created.
-            proxy_secret_value = proxy_secret or secrets.token_urlsafe(32)
+            proxy_secret_value = secrets.token_urlsafe(32)
             slug = slugify(name)
             compute = ComputeRegistry(
                 kind=kind,

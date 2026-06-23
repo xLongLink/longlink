@@ -10,7 +10,7 @@ from src.models.roles import PlatformRoles
 from src.adapters.database import Postgre
 from src.models.operations import OperationKind
 from src.models.applications import (AppStatus, ApplicationCreate,
-                                     ApplicationResponse)
+                                      ApplicationResponse)
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute

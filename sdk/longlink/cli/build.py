@@ -3,7 +3,9 @@ import ast
 import json
 import click
 import tomllib
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError
@@ -14,6 +16,8 @@ DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.12-bookworm
 COPY . /workspace
 
 WORKDIR {workdir}
+
+ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 
 {labels}
 
@@ -197,18 +201,23 @@ def resolve_docker_paths(root: Path) -> tuple[Path, str]:
     return common_root, workdir
 
 
-def render_dockerfile(workdir: str, labels: str) -> str:
+def render_dockerfile(workdir: str, labels: str, sdk_version: str) -> str:
     """Render Dockerfile content for a specific in-container workdir."""
 
-    return DOCKERFILE_TEMPLATE.format(workdir=workdir, labels=labels)
+    return DOCKERFILE_TEMPLATE.format(
+        workdir=workdir,
+        labels=labels,
+        sdk_version=json.dumps(sdk_version),
+    )
 
 
-def build_app(base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str, Path]:
-    """Create Dockerfile artifacts for the current app."""
+def build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
+    """Create Docker build artifacts for the current app."""
 
     root = (base_path or Path.cwd()).resolve()
     version = tag or create_version()
-    build_context, workdir = resolve_docker_paths(root)
+    source_root, workdir = resolve_docker_paths(root)
+    repo_root = next((parent for parent in root.parents if (parent / ".git").exists()), None)
     env_spec = read_env_spec(root)
     pyproject_data = tomllib.loads((root / "pyproject.toml").read_text())
     project_data = pyproject_data.get("project", {})
@@ -226,18 +235,50 @@ def build_app(base_path: Path | None = None, tag: str | None = None) -> tuple[Pa
     }
     labels = render_longlink_labels(metadata, env_spec)
 
-    dockerfile_path = root / "Dockerfile"
-    dockerfile_path.write_text(render_dockerfile(workdir, labels))
+    # Copy the source tree into a throwaway Docker build context.
+    shutil.copytree(
+        source_root,
+        build_context,
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns(
+            ".dockerignore",
+            ".git",
+            ".mypy_cache",
+            ".pytest_cache",
+            ".ruff_cache",
+            ".venv",
+            "Dockerfile",
+            "__pycache__",
+            "*.pyc",
+        ),
+    )
 
-    return dockerfile_path, version, metadata["name"], build_context
+    # Preserve VCS metadata so setuptools-scm can resolve package versions in Docker.
+    if repo_root is not None:
+        shutil.copytree(repo_root / ".git", build_context / ".git", dirs_exist_ok=True)
+
+    dockerfile_path = build_context / "Dockerfile"
+    dockerfile_path.write_text(render_dockerfile(workdir, labels, metadata["sdk"]))
+
+    return dockerfile_path, version, metadata["name"]
 
 
-def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: str) -> None:
+def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: str, image_id_path: Path) -> None:
     """Build the Docker image for the current app."""
 
     # Build from a context that includes local path dependencies referenced by uv.
     subprocess.run(
-        ["docker", "build", "-f", str(dockerfile_path), "-t", image_tag, str(build_context)],
+        [
+            "docker",
+            "build",
+            "--iidfile",
+            str(image_id_path),
+            "-f",
+            str(dockerfile_path),
+            "-t",
+            image_tag,
+            str(build_context),
+        ],
         check=True,
     )
 
@@ -249,18 +290,22 @@ def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: st
     help="Version tag to use instead of a timestamp, for example dev.",
 )
 def build_command(tag: str | None):
-    """Create Dockerfile artifacts and build the Docker image locally."""
+    """Create temporary Docker build artifacts and build the image locally."""
 
     try:
-        dockerfile_path, version, app_name, build_context = build_app(tag=tag)
-        image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
-        image_tag = f"{image_name}:{version}"
+        with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
+            build_context = Path(temp_dir)
+            dockerfile_path, version, app_name = build_app(build_context, tag=tag)
+            image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
+            image_tag = f"{image_name}:{version}"
+            image_id_path = build_context / "image-id.txt"
 
-        build_docker_image(dockerfile_path, build_context, image_tag)
+            build_docker_image(dockerfile_path, build_context, image_tag, image_id_path)
+            image_id = image_id_path.read_text().strip()
 
-        click.echo(f"Build artifacts created for version {version}")
-        click.echo(f"- Dockerfile: {dockerfile_path}")
+        click.echo(f"Build completed for version {version}")
         click.echo(f"- Built image: {image_tag}")
+        click.echo(f"- Image ID: {image_id}")
     except subprocess.CalledProcessError as error:
         raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
     except FileNotFoundError as error:
