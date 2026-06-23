@@ -1,8 +1,8 @@
 from types import SimpleNamespace
-from src.models.countries import Country
-from src.models.roles import OrganizationRoles, PlatformRoles
-from src.models.locations import LocationResponse
+from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.users import UserOrganizationMembership
+from src.models.countries import Country
+from src.models.locations import LocationResponse
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage

@@ -1,7 +1,7 @@
 from types import SimpleNamespace
-from src.models.countries import Country
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
+from src.models.countries import Country
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute

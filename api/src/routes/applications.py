@@ -1,23 +1,23 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, Response, HTTPException
+from fastapi import Depends, Response, APIRouter, HTTPException
 from src.auth import authuser, authadmin
+from src.errors import (ConflictError, NotFoundError, ForbiddenError,
+                        UnavailableError)
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
-from src.utils.utils import metadata, slugify
+from src.utils.utils import slugify, metadata
 from src.models.roles import PlatformRoles
 from src.adapters.database import Postgre
 from src.models.operations import OperationKind
 from src.models.applications import (AppStatus, ApplicationCreate,
-                                      ApplicationResponse)
+                                     ApplicationResponse)
 from src.adapters.compute.k8s import K8s
-from src.errors import ConflictError, ForbiddenError, NotFoundError, UnavailableError
 from src.database.models.users import User
 from src.database.services.compute import compute
 from src.database.services.database import database
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
-
 
 router = APIRouter()
 
@@ -30,42 +30,20 @@ async def list_applications(organization_id: UUID | None = None, user: User = De
         if user.role == PlatformRoles.user:
             raise ForbiddenError("Administrator privileges required")
 
-        return [
-            {
-                **application.model_dump(),
-                "organization": application.organization,
-                "created_by": application.created_by or user,
-                "updated_by": application.updated_by or application.created_by or user,
-                "deleted_by": application.deleted_by,
-                "role": None,
-            }
-        for application in await applications.list_all()
-        ]
-
-    organization_record = await organizations.get(organization_id)
-    if organization_record is None:
-        raise NotFoundError("Organization", organization_id)
-
-    if user.role == PlatformRoles.user:
-        organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
-        if organization is None:
+        application_rows = [(application, None) for application in await applications.list_all()]
+    else:
+        organization_record = await organizations.get(organization_id)
+        if organization_record is None:
             raise NotFoundError("Organization", organization_id)
 
-        application_rows = await applications.list(organization_id, user.id)
-        application_payloads: list[dict[str, object]] = []
+        if user.role == PlatformRoles.user:
+            organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
+            if organization is None:
+                raise NotFoundError("Organization", organization_id)
 
-        for application, role_name in application_rows:
-            application_payload = {
-                **application.model_dump(),
-                "organization": application.organization,
-                "created_by": application.created_by or user,
-                "updated_by": application.updated_by or application.created_by or user,
-                "deleted_by": application.deleted_by,
-                "role": role_name,
-            }
-            application_payloads.append(application_payload)
-
-        return application_payloads
+            application_rows = await applications.list(organization_id, user.id)
+        else:
+            application_rows = [(application, None) for application in await applications.list_by_organization(organization_id)]
 
     return [
         {
@@ -74,9 +52,9 @@ async def list_applications(organization_id: UUID | None = None, user: User = De
             "created_by": application.created_by or user,
             "updated_by": application.updated_by or application.created_by or user,
             "deleted_by": application.deleted_by,
-            "role": None,
+            "role": role_name,
         }
-        for application in await applications.list_by_organization(organization_id)
+        for application, role_name in application_rows
     ]
 
 

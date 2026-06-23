@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends
+from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import NotFoundError, UnavailableError
 from src.models.compute import (PodResponse, NamespaceResponse,
@@ -8,7 +8,6 @@ from src.models.compute import (PodResponse, NamespaceResponse,
 from src.adapters.compute import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
-
 
 router = APIRouter()
 

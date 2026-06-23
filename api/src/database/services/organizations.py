@@ -5,16 +5,14 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.models.roles import OrganizationRoles
-from src.models.locations import LocationResponse
-from src.models.organizations import (
-    OrganizationApplicationResponse,
-    OrganizationDetails,
-    OrganizationMemberSummary,
-)
-from src.models.users import UserSummary
 from src.utils.utils import slugify
+from src.models.roles import OrganizationRoles
+from src.models.users import UserSummary
 from src.database.session import session_scope
+from src.models.locations import LocationResponse
+from src.models.organizations import (OrganizationDetails,
+                                      OrganizationMemberSummary,
+                                      OrganizationApplicationResponse)
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application

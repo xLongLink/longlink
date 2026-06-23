@@ -1,10 +1,10 @@
 from fastapi import Request
+from src.errors import ForbiddenError, UnauthorizedError
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User
 from src.database.services.users import users
 from authlib.integrations.starlette_client import OAuth
-from src.errors import ForbiddenError, UnauthorizedError
 
 oauth = OAuth()
 oauth.register(

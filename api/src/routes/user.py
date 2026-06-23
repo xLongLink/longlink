@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends, APIRouter
 from src.auth import authuser, authsupport
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
 from src.database.services.users import users
-
 
 router = APIRouter()
 

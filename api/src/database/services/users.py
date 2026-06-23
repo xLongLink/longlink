@@ -1,17 +1,11 @@
 from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
-from src.models.roles import OrganizationRoles, PlatformRoles
-from src.models.users import (
-    Accent,
-    Language,
-    Radius,
-    Theme,
-    UserOrganizationMembership,
-    UserProfile,
-)
-from src.models.locations import LocationResponse
+from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.users import (Theme, Accent, Radius, Language, UserProfile,
+                              UserOrganizationMembership)
 from src.database.session import session_scope
+from src.models.locations import LocationResponse
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization

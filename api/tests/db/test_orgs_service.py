@@ -1,9 +1,9 @@
 import pytest
 from types import SimpleNamespace
 from sqlalchemy import select
-from src.models.countries import Country
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
+from src.models.countries import Country
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute

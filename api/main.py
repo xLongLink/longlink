@@ -1,17 +1,18 @@
 import asyncio
-from contextlib import suppress, asynccontextmanager
-from pathlib import Path
-
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
-
+from pathlib import Path
+from contextlib import suppress, asynccontextmanager
+from src.errors import register_error_handlers
 from src.logger import logger
+from src.routes import (auth, user, image, proxy, health, compute, storage,
+                        database, locations)
+from src.routes import operations as operations_route
+from src.routes import applications, organizations
 from src.operations import execute
 from src.environments import env
-from src.errors import register_error_handlers
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from src.database.services.operations import operations
-from src.routes import auth, applications, compute, database, health, image, locations, operations as operations_route, organizations, proxy, storage, user
 
 
 async def run_operation_scheduler() -> None:

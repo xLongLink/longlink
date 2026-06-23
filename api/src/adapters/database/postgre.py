@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .base import Database
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 from src.environments import env
@@ -9,8 +10,6 @@ from src.utils.namespace import dbname
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncConnection,
                                     create_async_engine)
 from sqlalchemy.sql.elements import quoted_name
-
-from .base import Database
 
 
 class Postgre(Database):

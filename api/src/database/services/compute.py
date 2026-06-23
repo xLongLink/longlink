@@ -4,11 +4,11 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from src.constants import INGRESS_NAME
 from sqlalchemy.orm import selectinload
+from src.utils.utils import slugify
 from src.models.compute import ComputeKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.compute import ComputeRegistry
-from src.utils.utils import slugify
 
 
 class ComputeService:

@@ -2,11 +2,11 @@ from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from src.utils.utils import slugify
 from src.models.storage import StorageKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.storage import StorageRegistry
-from src.utils.utils import slugify
 
 
 class StorageService:

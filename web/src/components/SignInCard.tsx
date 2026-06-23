@@ -47,7 +47,6 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
         }
     }
 
-
     /** Redirects the browser to the OIDC login endpoint. */
     function handleProviderSignIn(provider: 'github' | 'google') {
         window.location.assign(`/auth/login/oidc?provider=${provider}`);

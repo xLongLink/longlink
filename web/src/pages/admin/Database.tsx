@@ -29,7 +29,9 @@ function formatBytes(bytes: number): string {
     return `${Math.round(value)} ${units[unit]}`;
 }
 
-const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>> = [
+const databaseColumnsBase: Array<
+    ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>
+> = [
     {
         id: 'database',
         header: 'Database',

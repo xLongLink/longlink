@@ -1,11 +1,10 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends
+from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import ConflictError, NotFoundError
 from src.models.locations import LocationCreate, LocationResponse
 from src.database.models.users import User
 from src.database.services.locations import locations
-
 
 router = APIRouter()
 

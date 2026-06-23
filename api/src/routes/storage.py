@@ -1,11 +1,10 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends
+from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import NotFoundError
 from src.models.storage import StorageRegistryCreate, StorageRegistryResponse
 from src.database.models.users import User
 from src.database.services.storage import storage
-
 
 router = APIRouter()
 

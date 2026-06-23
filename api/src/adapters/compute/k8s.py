@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import yaml
+from .base import Compute
 from datetime import UTC, datetime
 from src.utils import utils
-from .base import Compute
 from kubernetes import client, config
 from src.constants import TEMPLATES
 from src.utils.namespace import k8name

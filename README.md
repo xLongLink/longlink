@@ -46,7 +46,6 @@ LongLink provides that structure. The platform defines the shared infrastructure
 
 The result is a faster, clearer, and more maintainable way to build internal applications.
 
-
 <br />
 <br />
 

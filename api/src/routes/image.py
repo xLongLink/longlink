@@ -1,16 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends, APIRouter
 from src.auth import authuser
-from src.utils.utils import metadata
-from src.models.metadata import ImageMetadataResponse
-from src.database.models.users import User
 from src.errors import NotFoundError
-
+from src.utils.utils import metadata
+from src.models.metadata import LongLinkMetadata
+from src.database.models.users import User
 
 router = APIRouter()
 
 
-@router.get("/api/image", response_model=ImageMetadataResponse)
-async def inspect_image(image: str, _user: User = Depends(authuser)) -> ImageMetadataResponse:
+@router.get("/api/image", response_model=LongLinkMetadata)
+async def inspect_image(image: str, _user: User = Depends(authuser)) -> LongLinkMetadata:
     """Inspect a container image and return its LongLink metadata."""
 
     image_metadata = metadata(image)
@@ -18,10 +17,4 @@ async def inspect_image(image: str, _user: User = Depends(authuser)) -> ImageMet
     if image_metadata is None:
         raise NotFoundError("Image metadata", image)
 
-    return {
-        "sdk": image_metadata.sdk,
-        "name": image_metadata.name,
-        "version": image_metadata.version,
-        "description": image_metadata.description,
-        "environments": image_metadata.environments,
-    }
+    return image_metadata

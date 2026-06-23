@@ -1,16 +1,15 @@
 import httpx2
 from typing import cast
-from fastapi import APIRouter, Request
+from fastapi import Request, APIRouter
 from pydantic import Field, BaseModel, ValidationError
 from src.auth import oauth
-from src.environments import env
+from src.errors import UnavailableError, UnauthorizedError
 from src.models.auth import OidcUserInfo, OidcTokenResponse
+from src.environments import env
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
 from src.database.services.users import users
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
-from src.errors import UnauthorizedError, UnavailableError
-
 
 router = APIRouter()
 

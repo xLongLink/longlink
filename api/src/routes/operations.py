@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends, APIRouter
 from src.auth import authsupport
 from src.models.operations import OperationResponse
 from src.database.models.users import User
 from src.database.services.operations import operations
-
 
 router = APIRouter()
 

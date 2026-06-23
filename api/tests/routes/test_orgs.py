@@ -1,14 +1,13 @@
-from types import SimpleNamespace
 from uuid import UUID
-from src.models.countries import Country
-from src.models.roles import PlatformRoles
+from types import SimpleNamespace
+from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
+from src.models.countries import Country
 from src.models.locations import LocationResponse
 from src.models.organizations import OrganizationDetails as OrgDetails
-from src.models.organizations import OrganizationMemberSummary
 from src.models.organizations import OrganizationSummary as OrgSummary
-from src.models.roles import OrganizationRoles
+from src.models.organizations import OrganizationMemberSummary
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute
