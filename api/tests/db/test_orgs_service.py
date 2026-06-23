@@ -1,7 +1,7 @@
 import pytest
 from types import SimpleNamespace
 from sqlalchemy import select
-from src.models.roles import Roles
+from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.database.models.users import User
 from src.database.services.users import users
@@ -54,7 +54,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
         )
         result = await session.execute(statement)
 
-        assert result.scalar_one() == Roles.owner
+        assert result.scalar_one() == OrganizationRoles.owner
 
 
 async def test_get_returns_users_from_membership_table(users: tuple[User, User, User]) -> None:
@@ -71,7 +71,7 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=Roles.write,
+                role_name=OrganizationRoles.write,
             )
         )
         await session.commit()

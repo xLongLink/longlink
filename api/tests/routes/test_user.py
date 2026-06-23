@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from src.models.roles import PlatformRole
+from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
 from src.database.models.users import User
@@ -70,7 +70,7 @@ async def test_list_users_returns_admin_user_summaries(
     assert response.status_code == 200
 
     expected_payload = [
-        UserListItem.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}).model_dump(mode="json")
+        UserListItem.model_validate({**user.model_dump(), "admin": user.role == PlatformRoles.administrator}).model_dump(mode="json")
         for user in users
     ]
     assert response.json() == expected_payload

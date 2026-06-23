@@ -1,6 +1,6 @@
 import pytest
 from types import SimpleNamespace
-from src.models.roles import Roles, PlatformRole
+from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.compute import ComputeKind
@@ -57,7 +57,7 @@ async def test_list_apps_returns_app_membership_role(
             UserOrganization(
                 user_id=user.id,
                 organization_id=organization.id,
-                role_name=Roles.read,
+                role_name=OrganizationRoles.read,
             )
         )
         session.add(
@@ -65,7 +65,7 @@ async def test_list_apps_returns_app_membership_role(
                 user_id=user.id,
                 organization_id=organization.id,
                 application_id=app.id,
-                role_name=Roles.write,
+                role_name=ApplicationRoles.write,
             )
         )
         await session.commit()
@@ -81,7 +81,7 @@ async def test_list_apps_returns_app_membership_role(
         {
             **app.model_dump(),
             "organization": app.organization,
-            "role": Roles.write,
+            "role": ApplicationRoles.write,
             "created_by": UserSummary.model_validate(owner.model_dump()),
             "updated_by": UserSummary.model_validate(owner.model_dump()),
             "deleted_by": None,

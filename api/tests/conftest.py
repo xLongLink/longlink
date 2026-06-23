@@ -21,7 +21,7 @@ os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
 from main import app
 from sqlmodel import SQLModel
 from src.enviroments import env
-from src.models.roles import PlatformRole
+from src.models.roles import PlatformRoles
 from src.database.models.users import User
 
 SESSION_COOKIE = "longlink_session"
@@ -71,7 +71,7 @@ async def users() -> tuple[User, User, User]:
             name='user1',
             email='user1@example.com',
             oidc='oidc-user-1',
-            role=PlatformRole.administrator,
+            role=PlatformRoles.administrator,
         )
         user2 = User(name='user2', email='user2@example.com', oidc='oidc-user-2')
         user3 = User(name='user3', email='user3@example.com', oidc='oidc-user-3')

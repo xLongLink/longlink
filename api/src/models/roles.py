@@ -27,7 +27,3 @@ class ApplicationRoles(str, Enum):
     maintain = "maintain"
     admin = "admin"
     owner = "owner"
-
-
-Roles = OrganizationRoles
-PlatformRole = PlatformRoles

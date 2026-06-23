@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from src.models.roles import PlatformRole
+from src.models.roles import PlatformRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.compute import ComputeKind, ComputeRegistryResponse
