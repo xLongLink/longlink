@@ -27,6 +27,14 @@ make format     # Format the code
 make build      # Build the web UI into the packaged .static/web assets
 ```
 
+### Hooks
+
+```bash
+uv run prek install    # Install the pre-commit hooks
+```
+
+The hooks run before each commit to format code and catch lint issues early.
+
 ### Control plane
 
 ```bash

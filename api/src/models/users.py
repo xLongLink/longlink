@@ -121,7 +121,6 @@ class UserSummary(BaseModel):
 
     # State
     role: PlatformRoles
-    admin: bool = False
 
 
 class UserListItem(UserSummary):
@@ -130,22 +129,9 @@ class UserListItem(UserSummary):
     oidc: str
 
 
-class UserProfile(BaseModel):
+class UserProfile(UserSummary):
     """Represent the authenticated user payload returned by the API."""
 
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    email: EmailStr
-    avatar: Avatar = ""
-
-    # State
-    role: PlatformRoles
-    admin: bool = False
     theme: Theme
     accent: Accent
     radius: Radius

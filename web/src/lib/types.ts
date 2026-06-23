@@ -14,7 +14,6 @@ export type ApiUserSummary = {
     email: string;
     avatar: string;
     role: PlatformRole;
-    admin: boolean;
     oidc: string;
 };
 
@@ -113,8 +112,6 @@ export type ApiLocation = {
     name: string;
     slug: string;
     country: string;
-    created_at: string;
-    updated_at: string;
 };
 
 export type ApiDatabaseDatabase = {

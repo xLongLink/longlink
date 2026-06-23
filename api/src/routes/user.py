@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 from src.auth import authuser, authsupport
-from src.models.roles import PlatformRoles
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
 from src.database.services.users import users
@@ -26,10 +25,7 @@ async def get_me(user: User = Depends(authuser)) -> UserProfile:
 async def list_users(_user: User = Depends(authsupport)) -> list[UserListItem]:
     """Return all user summaries for support and administrator views."""
 
-    return [
-        UserListItem.model_validate({**user.model_dump(), "admin": user.role == PlatformRoles.administrator})
-        for user in await users.list()
-    ]
+    return [UserListItem.model_validate(user) for user in await users.list()]
 
 
 @router.patch("/api/me", response_model=UserProfile)

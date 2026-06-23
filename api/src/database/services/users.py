@@ -63,7 +63,6 @@ class UsersService:
                 email=user.email,
                 avatar=user.avatar,
                 role=user.role,
-                admin=user.role == PlatformRoles.administrator,
                 theme=user.theme,
                 accent=user.accent,
                 radius=user.radius,
@@ -122,7 +121,6 @@ class UsersService:
         email: str | None = None,
         name: str | None = None,
         avatar: str | None = None,
-        admin: bool | None = None,
         role: PlatformRoles | None = None,
         theme: Theme | None = None,
         accent: Accent | None = None,
@@ -143,8 +141,6 @@ class UsersService:
                 existing_user.avatar = avatar or ""
             if role is not None:
                 existing_user.role = role
-            elif admin is not None:
-                existing_user.role = PlatformRoles.administrator if admin else PlatformRoles.user
             if theme is not None:
                 existing_user.theme = theme
             if accent is not None:
@@ -177,8 +173,6 @@ class UsersService:
             # Resolve the platform role from explicit input, legacy flags, or the bootstrap default.
             if role is not None:
                 resolved_role = role
-            elif admin is not None:
-                resolved_role = PlatformRoles.administrator if admin else PlatformRoles.user
             elif is_admin:
                 resolved_role = PlatformRoles.administrator
             else:
