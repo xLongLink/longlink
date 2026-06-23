@@ -6,6 +6,7 @@ from src.models.users import (
     Language,
     Radius,
     Theme,
+    OrganizationLocationSummary,
     UserOrganizationMembership,
     UserProfile,
 )
@@ -101,6 +102,7 @@ class UsersService:
                     id=organization.id,
                     name=organization.name,
                     avatar=organization.avatar,
+                    location=OrganizationLocationSummary.model_validate(organization.location),
                     role=role_name,
                 )
                 for organization, role_name in org_result.all()

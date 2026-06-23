@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 from src.models.roles import OrganizationRoles, PlatformRoles
-from src.models.users import UserOrganizationMembership
+from src.models.users import OrganizationLocationSummary, UserOrganizationMembership
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
@@ -92,6 +92,7 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
             id=organization.id,
             name="test",
             avatar="https://example.com/organizations/test.png",
+            location=OrganizationLocationSummary.model_validate(location),
             role=OrganizationRoles.owner,
         )
     ]

@@ -17,8 +17,8 @@ const organizationColumns: Array<ColumnDef<ApiUserOrganizationMembership>> = [
         accessorKey: 'name',
         header: 'Name',
         cell: ({ row, getValue }) => (
-            <div className="flex items-start gap-3">
-                <Avatar className="size-8">
+            <div className="flex items-center gap-3">
+                <Avatar shape="squircle" className="size-8 shrink-0">
                     <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
                     <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -26,9 +26,9 @@ const organizationColumns: Array<ColumnDef<ApiUserOrganizationMembership>> = [
                     <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
                         {getValue<string>()}
                     </Link>
-                    {row.original.location ? (
-                        <p className="text-sm text-muted-foreground">{row.original.location.name}</p>
-                    ) : null}
+                    <div className="truncate text-sm text-muted-foreground">
+                        {row.original.location.country} · {row.original.location.name}
+                    </div>
                 </div>
             </div>
         ),

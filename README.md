@@ -23,6 +23,8 @@ LongLink does not replace technical teams. It gives them a structured way to bui
 
 By exposing users to defined entities, fields, actions, permissions, and workflow states, LongLink reduces the gap between business requirements and technical implementation. Requirements become clearer, processes become easier to model, and applications evolve on a more stable foundation.
 
+<br />
+
 ## Mental model: GitHub and LongLink
 
 | GitHub                                                       | LongLink                                                                     |
@@ -33,6 +35,8 @@ By exposing users to defined entities, fields, actions, permissions, and workflo
 | Handles collaboration, permissions, and repository workflows | Handles authentication, permissions, organization management, and deployment |
 | Developers manage the structure of each repository           | The SDK defines the application structure: data layer, API, and UI           |
 | Repository is the unit of work                               | Application is the unit of work                                              |
+
+<br />
 
 ## Why LongLink
 
@@ -48,13 +52,12 @@ The result is a faster, clearer, and more maintainable way to build internal app
 
 ## TODO:
 
-LongLink vs [Airtable](https://www.airtable.com/)
-LongLink vs [Baserow](https://baserow.io/)
-LongLink vs [SmartSuite](https://www.smartsuite.com/)
-
-LongLink vs [Retool](https://retool.com/)
-LongLink vs [Appsmith](https://www.appsmith.com/)
-LongLink vs [Budibase](https://budibase.com/)
+- LongLink vs [Airtable](https://www.airtable.com/)
+- LongLink vs [Baserow](https://baserow.io/)
+- LongLink vs [SmartSuite](https://www.smartsuite.com/)
+- LongLink vs [Retool](https://retool.com/)
+- LongLink vs [Appsmith](https://www.appsmith.com/)
+- LongLink vs [Budibase](https://budibase.com/)
 
 ---
 

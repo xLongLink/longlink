@@ -2,6 +2,7 @@ from enum import Enum
 from uuid import UUID
 from typing import Annotated
 from pydantic import Field, EmailStr, BaseModel, ConfigDict, BeforeValidator
+from src.models.countries import Country
 from src.models.roles import OrganizationRoles, PlatformRoles
 
 
@@ -90,6 +91,20 @@ class UserUpdate(BaseModel):
     language: Language | None = None
 
 
+class OrganizationLocationSummary(BaseModel):
+    """Represent the location attached to a user organization membership."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str
+    slug: str
+    country: Country
+
+
 class UserOrganizationMembership(BaseModel):
     """Represent one organization membership in the user profile."""
 
@@ -99,6 +114,7 @@ class UserOrganizationMembership(BaseModel):
     # Metadata
     name: str
     avatar: Avatar = ""
+    location: OrganizationLocationSummary
 
     # State
     role: OrganizationRoles

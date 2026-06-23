@@ -24,7 +24,7 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
 
             return (
                 <div className="flex items-center gap-3">
-                    <Avatar className="size-8">
+                    <Avatar shape="squircle" className="size-8">
                         <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
                         <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>

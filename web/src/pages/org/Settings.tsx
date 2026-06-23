@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
-import { Input } from '@ui/input';
 import { Menu, MenuSection } from '@ui/menu';
 import {
     BookOpen,
@@ -161,22 +160,16 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                             <h2 className="text-lg font-medium text-foreground">Organization</h2>
                             <p className="text-sm text-muted-foreground">View and manage organization details.</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-sm text-muted-foreground">Organization</label>
-                                <div className="flex items-center gap-3 rounded-md border border-input bg-background px-3 py-2">
-                                    <Avatar className="size-8">
-                                        <AvatarImage src={orgDetails?.avatar ?? ''} alt={orgDetails?.name ?? org} />
-                                        <AvatarFallback>
-                                            {(orgDetails?.name ?? org).slice(0, 2).toUpperCase()}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <span className="font-medium text-foreground">{orgDetails?.name ?? org}</span>
+                        <div className="flex items-center gap-3">
+                            <Avatar shape="squircle" className="size-8 shrink-0">
+                                <AvatarImage src={orgDetails?.avatar ?? ''} alt={orgDetails?.name ?? org} />
+                                <AvatarFallback>{(orgDetails?.name ?? org).slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                                <div className="truncate font-medium text-foreground">{orgDetails?.name ?? org}</div>
+                                <div className="truncate text-sm text-muted-foreground">
+                                    {orgDetails?.location.country} · {orgDetails?.location.name}
                                 </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm text-muted-foreground">Location</label>
-                                <Input value={orgDetails?.location?.name ?? '—'} readOnly />
                             </div>
                         </div>
                     </div>
