@@ -1,4 +1,4 @@
-from src.models.metadata import LongLinkMetadata, ImageMetadataResponse
+from src.models.metadata import LongLinkMetadata
 
 
 def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
@@ -8,7 +8,7 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     monkeypatch.setattr(
         "src.routes.image.metadata",
         lambda image: LongLinkMetadata(
-            name="dashboard",
+            title="dashboard",
             description="Demo app",
             version="20250623_120000",
             sdk="0.1.0",
@@ -36,11 +36,11 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    expected_data = ImageMetadataResponse.model_validate(payload).model_dump(mode="json")
+    expected_data = LongLinkMetadata.model_validate(payload).model_dump(mode="json")
     assert payload == expected_data
     assert payload == {
         "sdk": "0.1.0",
-        "name": "dashboard",
+        "title": "dashboard",
         "version": "20250623_120000",
         "description": "Demo app",
         "environments": [
@@ -74,7 +74,7 @@ def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monke
     assert response.status_code == 200
     assert response.json() == {
         "sdk": None,
-        "name": None,
+        "title": None,
         "version": None,
         "description": None,
         "environments": [],

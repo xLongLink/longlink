@@ -16,20 +16,7 @@ class LongLinkMetadata(BaseModel):
 
     # Metadata
     sdk: str | None = None
-    name: str | None = None
-    version: str | None = None
-    description: str | None = None
-
-    # Relationships
-    environments: list[EnvironmentMetadata] = Field(default_factory=list)
-
-
-class ImageMetadataResponse(BaseModel):
-    """Public image inspection payload returned by the API."""
-
-    # Metadata
-    sdk: str | None = None
-    name: str | None = None
+    title: str | None = None
     version: str | None = None
     description: str | None = None
 

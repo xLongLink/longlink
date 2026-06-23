@@ -200,6 +200,8 @@ export type ApiComputePod = {
     resources: ApiComputePodResources | null;
 };
 
+export type ApiOperationStatus = 'scheduled' | 'active' | 'completed' | 'failed';
+
 export type ApiApplicationResponse = {
     id: string;
     organization_id: string;
@@ -224,7 +226,7 @@ export type ApiOperation = {
     kind: string;
     application_id: string | null;
     step: string;
-    status: string;
+    status: ApiOperationStatus;
     error: string | null;
     created_at: string;
     started_at: string | null;

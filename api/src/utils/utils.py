@@ -33,7 +33,7 @@ def metadata(image: str) -> LongLinkMetadata | None:
 
             result = LongLinkMetadata(
                 sdk=labels.get("longlink.sdk"),
-                name=labels.get("longlink.name"),
+                title=labels.get("longlink.name"),
                 version=labels.get("longlink.version"),
                 description=labels.get("longlink.description"),
             )

@@ -6,18 +6,24 @@ import { DataTable } from '@/components/DataTable';
 import { useApiQuery } from '@/hooks/use-api';
 import type { ApiOperation } from '@/lib/types';
 
+const OPERATION_STATUS_LABELS: Record<ApiOperation['status'], string> = {
+    scheduled: 'Scheduled',
+    active: 'Active',
+    completed: 'Completed',
+    failed: 'Failed',
+};
+
 const operationColumns: Array<ColumnDef<ApiOperation>> = [
     {
         accessorKey: 'kind',
         header: 'Operation',
         cell: ({ row }) => {
             const operation = row.original;
-            const status = operation.stopped_at ? 'Stopped' : operation.started_at ? 'Running' : 'Pending';
 
             return (
                 <div className="min-w-0">
                     <div className="truncate font-medium text-foreground">{operation.kind}</div>
-                    <div className="text-xs text-muted-foreground">{status}</div>
+                    <div className="text-xs text-muted-foreground">{OPERATION_STATUS_LABELS[operation.status]}</div>
                 </div>
             );
         },

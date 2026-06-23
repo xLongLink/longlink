@@ -1,11 +1,13 @@
-import ast
 import os
+import ast
 import json
 import click
 import tomllib
-from importlib.metadata import PackageNotFoundError, version as package_version
+import subprocess
 from pathlib import Path
 from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
 
 DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.12-bookworm
 
@@ -202,7 +204,7 @@ def render_dockerfile(workdir: str, labels: str) -> str:
 
 
 def build_app(base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str, Path]:
-    """Create Dockerfile for the current app."""
+    """Create Dockerfile artifacts for the current app."""
 
     root = (base_path or Path.cwd()).resolve()
     version = tag or create_version()
@@ -230,6 +232,16 @@ def build_app(base_path: Path | None = None, tag: str | None = None) -> tuple[Pa
     return dockerfile_path, version, metadata["name"], build_context
 
 
+def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: str) -> None:
+    """Build the Docker image for the current app."""
+
+    # Build from a context that includes local path dependencies referenced by uv.
+    subprocess.run(
+        ["docker", "build", "-f", str(dockerfile_path), "-t", image_tag, str(build_context)],
+        check=True,
+    )
+
+
 @click.command(name="build")
 @click.option(
     "--tag",
@@ -237,9 +249,19 @@ def build_app(base_path: Path | None = None, tag: str | None = None) -> tuple[Pa
     help="Version tag to use instead of a timestamp, for example dev.",
 )
 def build_command(tag: str | None):
-    """Create Dockerfile artifacts for the current app."""
+    """Create Dockerfile artifacts and build the Docker image locally."""
 
-    dockerfile_path, version, _, _ = build_app(tag=tag)
+    try:
+        dockerfile_path, version, app_name, build_context = build_app(tag=tag)
+        image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
+        image_tag = f"{image_name}:{version}"
 
-    click.echo(f"Build artifacts created for version {version}")
-    click.echo(f"- Dockerfile: {dockerfile_path}")
+        build_docker_image(dockerfile_path, build_context, image_tag)
+
+        click.echo(f"Build artifacts created for version {version}")
+        click.echo(f"- Dockerfile: {dockerfile_path}")
+        click.echo(f"- Built image: {image_tag}")
+    except subprocess.CalledProcessError as error:
+        raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
+    except FileNotFoundError as error:
+        raise click.ClickException("Docker CLI is not installed or not available on PATH") from error

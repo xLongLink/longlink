@@ -3,31 +3,36 @@ repos:
     hooks:
       - id: api-format
         name: api format
-        entry: bash -lc 'cd api && uv run --extra dev isort "$@"' --
+        entry: bash -lc 'cd api && set -- "${@#api/}" && uv run --extra dev isort "$@"' --
         language: system
         files: ^api/.*\.py$
       - id: api-lint
         name: api lint
-        entry: bash -lc 'cd api && uv run --extra dev ruff check "$@"' --
+        entry: bash -lc 'cd api && set -- "${@#api/}" && uv run --extra dev ruff check "$@"' --
         language: system
         files: ^api/.*\.py$
       - id: sdk-format
         name: sdk format
-        entry: bash -lc 'cd sdk && uv run --extra dev isort "$@"' --
+        entry: bash -lc 'cd sdk && set -- "${@#sdk/}" && uv run --extra dev isort "$@"' --
         language: system
         files: ^sdk/.*\.py$
       - id: sdk-lint
         name: sdk lint
-        entry: bash -lc 'cd sdk && uv run --extra dev --with ruff==0.14.0 ruff check "$@"' --
+        entry: bash -lc 'cd sdk && set -- "${@#sdk/}" && uv run --extra dev --with ruff==0.14.0 ruff check "$@"' --
         language: system
         files: ^sdk/.*\.py$
       - id: web-format
-        name: prettier format
-        entry: bash -lc 'bunx prettier --config web/package.json --write "$@"' --
+        name: web format
+        entry: bash -lc 'cd web && set -- "${@#web/}" && bunx prettier --write "$@"' --
         language: system
-        files: \.(json|md|ya?ml|js|jsx|ts|tsx)$
+        files: ^web/.*\.(json|md|ya?ml|js|jsx|ts|tsx)$
       - id: web-lint
         name: web lint
-        entry: bash -lc 'cd web && bunx eslint "$@"' --
+        entry: bash -lc 'cd web && set -- "${@#web/}" && bunx eslint --fix "$@"' --
         language: system
         files: ^web/.*\.(js|jsx|ts|tsx)$
+      - id: docs-format
+        name: docs format
+        entry: bash -lc 'cd web && set -- "${@/#/../}" && bunx prettier --write "$@"' --
+        language: system
+        files: ^(README\.md|CONTRIBUTING\.md|api/CONTRIBUTING\.md|sdk/CONTRIBUTING\.md|dev/|\.github/)
