@@ -179,7 +179,7 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
     await execute(claimed)
 
     # Assert
-    assert calls == [{"organization": organization.id, "application": "dashboard"}]
+    assert calls == [{"organization": "acme", "application": "dashboard"}]
     assert await db.applications.get(organization.id, "dashboard") is None
     refreshed = await db.operations.get(operation.id)
     assert refreshed is not None

@@ -46,6 +46,7 @@ down:
 
 api: 
 	cd api && uv sync --extra dev
+	cd api && uv run alembic upgrade head
 	cd api && uv run python seed.py
 	cd api && DEV=True uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 

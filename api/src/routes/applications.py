@@ -150,9 +150,9 @@ async def create_app(
 
     # Provision the namespace, schema, and workload in order so failures can mark the app as failed.
     try:
-        await k8s.namespace(str(organization_id))
-        await db_client.schema(str(organization_id), app_slug)
-        await k8s.application(str(organization_id), app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
+        await k8s.namespace(organization_record.name)
+        await db_client.schema(organization_record.name, app_slug)
+        await k8s.application(organization_record.name, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
     except HTTPException:
         await applications.set_status(application.id, AppStatus.failed)
         raise
@@ -237,7 +237,7 @@ async def get_application_logs(organization_id: UUID, application_id: UUID, user
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await k8s.logs(str(organization_id), application.slug)
+        logs = await k8s.logs(organization_record.name, application.slug)
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

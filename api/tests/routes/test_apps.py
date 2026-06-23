@@ -64,7 +64,7 @@ async def test_list_apps_returns_app_membership_role(
             UserApp(
                 user_id=user.id,
                 organization_id=organization.id,
-                app_id=app.id,
+                application_id=app.id,
                 role_name=Roles.write,
             )
         )
@@ -82,8 +82,8 @@ async def test_list_apps_returns_app_membership_role(
             **app.model_dump(),
             "organization": app.organization,
             "role": Roles.write,
-            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
-            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+            "created_by": UserSummary.model_validate(owner.model_dump()),
+            "updated_by": UserSummary.model_validate(owner.model_dump()),
             "deleted_by": None,
         }
     ).model_dump(mode="json")
@@ -119,8 +119,8 @@ async def test_list_apps_returns_null_role_without_app_membership(
             **app.model_dump(),
             "organization": app.organization,
             "role": None,
-            "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
-            "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
+            "created_by": UserSummary.model_validate(user.model_dump()),
+            "updated_by": UserSummary.model_validate(user.model_dump()),
             "deleted_by": None,
         }
     ).model_dump(mode="json")
@@ -165,8 +165,8 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
                 **dashboard.model_dump(),
                 "organization": dashboard.organization,
                 "role": None,
-                "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
-                "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
+                "created_by": UserSummary.model_validate(user.model_dump()),
+                "updated_by": UserSummary.model_validate(user.model_dump()),
                 "deleted_by": None,
             }
         ).model_dump(mode="json"),
@@ -175,8 +175,8 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
                 **console.model_dump(),
                 "organization": console.organization,
                 "role": None,
-                "created_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
-                "updated_by": UserSummary.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator}),
+                "created_by": UserSummary.model_validate(user.model_dump()),
+                "updated_by": UserSummary.model_validate(user.model_dump()),
                 "deleted_by": None,
             }
         ).model_dump(mode="json"),
@@ -219,7 +219,7 @@ async def test_list_apps_returns_404_for_non_member(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": f"Org '{organization.id}' not found"}
+    assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
 
 
 async def test_create_app_returns_app_response(
@@ -347,7 +347,7 @@ async def test_create_app_returns_app_response(
     assert payload["description"] == "Dashboard app"
     assert payload["deleted_by"] is None
     assert payload == expected_data
-    assert captured["namespace"] == organization.id
+    assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
     assert captured["database"] == {
         "host": "db.remote.longlink.internal",
@@ -355,9 +355,9 @@ async def test_create_app_returns_app_response(
         "username": "longlink",
         "password": "secret",
     }
-    assert captured["schema"] == {"organization": organization.id, "application": "dashboard"}
+    assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
     assert captured["application"] == {
-        "organization": organization.id,
+        "organization": "acme",
         "application": "dashboard",
         "image": "ghcr.io/longlink/dashboard:latest",
         "port": 80,
@@ -444,7 +444,7 @@ async def test_delete_app_removes_dependent_env_rows(
     assert refreshed_app.status == "deleting"
     recorded_operation = (await db.operations.list())[0]
     assert recorded_operation.kind == OperationKind.app_delete
-    assert recorded_operation.app_id == app.id
+    assert recorded_operation.application_id == app.id
     assert recorded_operation.step == "remove_runtime"
 
 
@@ -513,7 +513,7 @@ async def test_get_app_logs_returns_pod_logs(
     assert response.status_code == 200
     assert response.text == "line 1\nline 2"
     assert response.headers["content-type"].startswith("text/plain")
-    assert captured["logs"] == {"organization": organization.id, "application": "dashboard", "lines": 200}
+    assert captured["logs"] == {"organization": "acme", "application": "dashboard", "lines": 200}
 
 
 async def test_proxy_app_forwards_request_to_internal_service(
@@ -640,7 +640,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert response.status_code == 200
     assert response.text == "proxied"
     assert captured["method"] == "POST"
-    assert captured["resource_path"] == f"/api/v1/namespaces/longlink-{organization.id}/services/dashboard/proxy/anything"
+    assert captured["resource_path"] == "/api/v1/namespaces/longlink-acme/services/dashboard/proxy/anything"
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
     assert captured["auth_settings"] == ["BearerToken"]
@@ -653,7 +653,7 @@ def test_proxy_app_rejects_root_path(clients: tuple[TestClient, TestClient, Test
     client = clients[0]
 
     # Act
-    response = client.get("/api/apps/1/proxy/")
+    response = client.get("/api/apps/00000000-0000-0000-0000-000000000001/proxy/")
 
     # Assert
     assert response.status_code == 404
@@ -667,7 +667,7 @@ def test_proxy_app_rejects_unsupported_methods(clients: tuple[TestClient, TestCl
     client = clients[0]
 
     # Act
-    response = client.request(method, "/api/apps/1/proxy")
+    response = client.request(method, "/api/apps/00000000-0000-0000-0000-000000000001/proxy")
 
     # Assert
     assert response.status_code == 405

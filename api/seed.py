@@ -1,23 +1,18 @@
 import asyncio
-from fastapi import HTTPException, status
 from pathlib import Path
-from sqlmodel import SQLModel
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from src.constants import APP_SERVICE_PORT
-from src.enviroments import env
 from src.models.roles import Roles
-from sqlalchemy.engine import make_url
 from src.models.compute import ComputeKind
 from src.models.storage import StorageKind
 from src.models.database import DatabaseKind
 from src.adapters.compute import K8s
 from src.database.session import get_session
 from src.adapters.database import Postgre
-from sqlalchemy.ext.asyncio import create_async_engine
 from src.models.applications import AppStatus, ApplicationCreate
 from src.database.models.users import User
 from src.database.services.users import users
-from src.database.models.operation import Operation
 from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
@@ -72,22 +67,6 @@ async def main() -> None:
         name="Seed User",
         avatar="",
     )
-
-    # Local development uses SQLite, so bootstrap the schema before inserting seed rows.
-    if env.DATABASE_URL.startswith('sqlite+'):
-        # Recreate the local SQLite file to avoid stale schema from older dev runs.
-        sqlite_url = make_url(env.DATABASE_URL)
-        if sqlite_url.database and sqlite_url.database != ':memory:':
-            db_path = Path(sqlite_url.database)
-            if db_path.exists():
-                db_path.unlink()
-
-        engine = create_async_engine(env.DATABASE_URL)
-        try:
-            async with engine.begin() as conn:
-                await conn.run_sync(SQLModel.metadata.create_all)
-        finally:
-            await engine.dispose()
 
     # Keep the local backend registrations available after every seed run.
     location = await locations.create("local", "Local development", seed_user)

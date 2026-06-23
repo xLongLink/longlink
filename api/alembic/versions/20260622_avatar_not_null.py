@@ -19,18 +19,30 @@ def upgrade() -> None:
 
     op.execute("UPDATE users SET avatar = '' WHERE avatar IS NULL")
     op.execute("UPDATE organizations SET avatar = '' WHERE avatar IS NULL")
-    op.alter_column("users", "avatar", existing_type=sa.String(length=2048), nullable=False, server_default=sa.text("''"))
-    op.alter_column(
-        "organizations",
-        "avatar",
-        existing_type=sa.String(length=2048),
-        nullable=False,
-        server_default=sa.text("''"),
-    )
+    # SQLite needs batch mode for column rebuilds.
+    with op.batch_alter_table("users") as batch_op:
+        batch_op.alter_column(
+            "avatar",
+            existing_type=sa.String(length=2048),
+            nullable=False,
+            server_default=sa.text("''"),
+        )
+
+    with op.batch_alter_table("organizations") as batch_op:
+        batch_op.alter_column(
+            "avatar",
+            existing_type=sa.String(length=2048),
+            nullable=False,
+            server_default=sa.text("''"),
+        )
 
 
 def downgrade() -> None:
     """Restore nullable avatar columns."""
 
-    op.alter_column("organizations", "avatar", existing_type=sa.String(length=2048), nullable=True, server_default=None)
-    op.alter_column("users", "avatar", existing_type=sa.String(length=2048), nullable=True, server_default=None)
+    # Rebuild the tables in batch mode so SQLite can drop the constraint.
+    with op.batch_alter_table("organizations") as batch_op:
+        batch_op.alter_column("avatar", existing_type=sa.String(length=2048), nullable=True, server_default=None)
+
+    with op.batch_alter_table("users") as batch_op:
+        batch_op.alter_column("avatar", existing_type=sa.String(length=2048), nullable=True, server_default=None)
