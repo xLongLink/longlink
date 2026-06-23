@@ -105,12 +105,6 @@ class ApplicationsService:
         """Add a new application to the database for one organization."""
 
         async with session_scope() as session:
-            # Check the primary-key conflict first so the API can report a clear message.
-            name_statement = select(Application).where(Application.name == name)
-            name_result = await session.execute(name_statement)
-            if name_result.scalar_one_or_none() is not None:
-                raise ValueError('Application name already exists')
-
             # Check slug uniqueness so K8s resource names stay collision-free.
             slug_statement = select(Application).where(
                 Application.organization_id == organization_id,

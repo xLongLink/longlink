@@ -27,7 +27,7 @@ class Application(SQLModel, table=True):
     organization_id: UUID = Field(foreign_key='organizations.id')
 
     # Metadata
-    name: str = Field(unique=True, max_length=100)
+    name: str = Field(max_length=100)
     slug: str = Field(max_length=100)
     icon: str | None = Field(default=None, max_length=50)
     image: str = Field(max_length=255)
