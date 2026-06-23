@@ -19,7 +19,7 @@ async def list_compute_registries(_user: User = Depends(authsupport)) -> list[Co
 
 @router.get("/api/compute/{registry_id}", response_model=ComputeRegistryResponse)
 async def get_compute_registry(
-    registry_id: str,
+    registry_id: UUID,
     _user: User = Depends(authsupport),
 ) -> ComputeRegistryResponse:
     """Return one compute backend registration."""
@@ -68,7 +68,7 @@ async def delete_compute_registry(registry_id: UUID, user: User = Depends(authad
 
 @router.get("/api/compute/{registry_id}/resources", response_model=ComputeResourcesResponse)
 async def get_compute_resources(
-    registry_id: str,
+    registry_id: UUID,
     _user: User = Depends(authsupport),
 ) -> ComputeResourcesResponse:
     """Return total and allocatable cluster resources."""
@@ -84,7 +84,7 @@ async def get_compute_resources(
 
 @router.get("/api/compute/{registry_id}/namespaces", response_model=list[NamespaceResponse])
 async def list_compute_namespaces(
-    registry_id: str,
+    registry_id: UUID,
     _user: User = Depends(authsupport),
 ) -> list[NamespaceResponse]:
     """List all namespaces on a compute backend."""
@@ -103,7 +103,7 @@ async def list_compute_namespaces(
     response_model=list[PodResponse],
 )
 async def list_namespace_pods(
-    registry_id: str,
+    registry_id: UUID,
     namespace_name: str,
     _user: User = Depends(authsupport),
 ) -> list[PodResponse]:

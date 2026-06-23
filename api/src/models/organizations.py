@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
+from src.models.roles import OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.locations import LocationResponse
 from src.models.applications import AppStatus
@@ -44,6 +45,26 @@ class OrganizationApplicationResponse(BaseModel):
     deleted_by: UserSummary | None = None
 
 
+class OrganizationMemberSummary(BaseModel):
+    """Represent one organization member in API responses."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str
+    email: str
+    avatar: Avatar = ""
+
+    # State
+    role: OrganizationRoles
+
+    # Audit
+    last_access_at: datetime | None = None
+
+
 class OrganizationDetails(BaseModel):
     """Represent an organization with its members."""
 
@@ -54,6 +75,7 @@ class OrganizationDetails(BaseModel):
 
     # Metadata
     name: str
+    slug: str
     avatar: Avatar = ""
 
     # Location
@@ -69,5 +91,5 @@ class OrganizationDetails(BaseModel):
     deleted_by: UserSummary | None = None
 
     # Relationships
-    users: list[UserSummary]
+    users: list[OrganizationMemberSummary]
     applications: list[OrganizationApplicationResponse] = Field(default_factory=list)

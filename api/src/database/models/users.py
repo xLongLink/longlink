@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, and_
-from src.models.roles import PlatformRole
+from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius, Language
 from src.database.models.association import UserApplication, UserOrganization
 
@@ -32,7 +32,10 @@ class User(SQLModel, table=True):
     deleted_at: datetime | None = Field(default=None)
 
     # State
-    role: PlatformRole = Field(default=PlatformRole.user, sa_column=Column(SAEnum(PlatformRole, name='platform_role_enum', native_enum=False), nullable=False))
+    role: PlatformRoles = Field(
+        default=PlatformRoles.user,
+        sa_column=Column(SAEnum(PlatformRoles, name='platform_role_enum', native_enum=False), nullable=False),
+    )
     theme: Theme = Field(default=Theme.dark)
     accent: Accent = Field(default=Accent.neutral, max_length=7)
     radius: Radius = Field(default=Radius.medium, max_length=6)

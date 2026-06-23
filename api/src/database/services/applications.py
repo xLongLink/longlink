@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
 from src.models.applications import AppStatus
+from src.models.roles import ApplicationRoles
 from src.database.models.users import User
 from src.database.models.association import UserApplication
 from src.database.models.applications import Application
@@ -28,7 +29,11 @@ class ApplicationsService:
             return list(result.scalars().all())
 
 
-    async def list(self, organization_id: UUID | str, user_id: UUID | str) -> list[tuple[Application, str | None]]:
+    async def list(
+        self,
+        organization_id: UUID | str,
+        user_id: UUID | str,
+    ) -> list[tuple[Application, ApplicationRoles | None]]:
         """Return all registered applications for one organization with membership roles."""
 
         async with session_scope() as session:

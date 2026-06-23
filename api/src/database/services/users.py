@@ -1,6 +1,6 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
-from src.models.roles import Roles, PlatformRole
+from src.models.roles import OrganizationRoles, PlatformRoles
 from src.models.users import (Theme, Accent, Radius, Language, UserProfile,
                               UserOrganizationMembership)
 from src.database.session import session_scope
@@ -46,7 +46,7 @@ class UsersService:
             )
 
             payload = user.model_dump()
-            payload["admin"] = user.role == PlatformRole.administrator
+            payload["admin"] = user.role == PlatformRoles.administrator
             payload["oidc"] = user.oidc
             payload["organizations"] = [
                 UserOrganizationMembership(id=organization_id, name=organization_name, avatar=organization_avatar, role=role_name)
@@ -82,7 +82,7 @@ class UsersService:
             UserOrganization(
                 user_id=user.id,
                 organization_id=organization.id,
-                role_name=Roles.owner,
+                role_name=OrganizationRoles.owner,
                 created_id=user.id,
                 updated_id=user.id,
             )
@@ -97,7 +97,7 @@ class UsersService:
         name: str | None = None,
         avatar: str | None = None,
         admin: bool | None = None,
-        role: PlatformRole | None = None,
+        role: PlatformRoles | None = None,
         theme: Theme | None = None,
         accent: Accent | None = None,
         radius: Radius | None = None,
@@ -117,7 +117,7 @@ class UsersService:
             if role is not None:
                 existing_user.role = role
             elif admin is not None:
-                existing_user.role = PlatformRole.administrator if admin else PlatformRole.user
+                existing_user.role = PlatformRoles.administrator if admin else PlatformRoles.user
             if theme is not None:
                 existing_user.theme = theme
             if accent is not None:
@@ -151,11 +151,11 @@ class UsersService:
             if role is not None:
                 resolved_role = role
             elif admin is not None:
-                resolved_role = PlatformRole.administrator if admin else PlatformRole.user
+                resolved_role = PlatformRoles.administrator if admin else PlatformRoles.user
             elif is_admin:
-                resolved_role = PlatformRole.administrator
+                resolved_role = PlatformRoles.administrator
             else:
-                resolved_role = PlatformRole.user
+                resolved_role = PlatformRoles.user
 
             user = User(
                 name=name,

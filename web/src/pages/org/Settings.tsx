@@ -9,10 +9,39 @@ import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Input } from '@ui/input';
 import { Menu, MenuSection } from '@ui/menu';
-import { Boxes, Building2, Database, HardDrive, Plug, Settings2, ShieldCheck } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { BookOpen, Boxes, Building2, Crown, Database, GitPullRequest, HardDrive, PenLine, Plug, Settings2, ShieldCheck } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { useState } from 'react';
 import { Link } from 'react-router';
+
+const permissionRoles = [
+    {
+        name: 'read',
+        description: 'View organization data and access assigned resources.',
+        icon: BookOpen,
+    },
+    {
+        name: 'write',
+        description: 'Read access plus create and update organization resources.',
+        icon: GitPullRequest,
+    },
+    {
+        name: 'maintain',
+        description: 'Write access plus manage settings for supported resources.',
+        icon: PenLine,
+    },
+    {
+        name: 'admin',
+        description: 'Full access to the organization and its resources.',
+        icon: Settings2,
+    },
+    {
+        name: 'owner',
+        description: 'Highest access. Can manage ownership and all organization settings.',
+        icon: Crown,
+    },
+] as const;
 
 type SettingsProps = {
     org: string;
@@ -120,9 +149,37 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                     <div className="space-y-4">
                         <div className="space-y-1">
                             <h2 className="text-lg font-medium text-foreground">Permissions</h2>
-                            <p className="text-sm text-muted-foreground">Control member roles and access policies.</p>
+                            <p className="text-sm text-muted-foreground">
+                                Predefined roles for member access and repository permissions.
+                            </p>
                         </div>
                         <hr className="border-border" />
+                        <div className="overflow-hidden rounded-md border">
+                            <Table>
+                                <TableHeader className="bg-muted/50">
+                                    <TableRow>
+                                        <TableHead className="bg-muted/50">Permission</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {permissionRoles.map((role) => (
+                                        <TableRow key={role.name}>
+                                            <TableCell>
+                                                <div className="flex items-start gap-3">
+                                                    <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
+                                                        <role.icon aria-hidden={true} className="size-4" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <div className="font-medium text-foreground">{role.name}</div>
+                                                        <div className="text-sm text-muted-foreground">{role.description}</div>
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </div>
                 </MenuSection>
 
@@ -166,6 +223,18 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                             </p>
                         </div>
                         <hr className="border-border" />
+                        <div className="overflow-hidden rounded-md border">
+                            <Table>
+                                <TableHeader className="bg-muted/50">
+                                    <TableRow>
+                                        <TableHead className="bg-muted/50">Name</TableHead>
+                                        <TableHead className="bg-muted/50">Type</TableHead>
+                                        <TableHead className="bg-muted/50">Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody />
+                            </Table>
+                        </div>
                     </div>
                 </MenuSection>
 
@@ -178,6 +247,18 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                             </p>
                         </div>
                         <hr className="border-border" />
+                        <div className="overflow-hidden rounded-md border">
+                            <Table>
+                                <TableHeader className="bg-muted/50">
+                                    <TableRow>
+                                        <TableHead className="bg-muted/50">Name</TableHead>
+                                        <TableHead className="bg-muted/50">Type</TableHead>
+                                        <TableHead className="bg-muted/50">Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody />
+                            </Table>
+                        </div>
                     </div>
                 </MenuSection>
 

@@ -5,61 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInviteUser } from '@/hooks/use-org';
 import { ROLE_NAMES } from '@/lib/roles';
-import type { ApiInvitation, ApiUserSummary } from '@/lib/types';
+import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Menu, MenuSection } from '@ui/menu';
-import { Mail, Users } from 'lucide-react';
+import { Mail, MoreVertical, Users } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 type PeopleProps = {
     org: string;
-    people: ApiUserSummary[];
+    people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
     isLoading: boolean;
     error: Error | null;
 };
-
-const peopleColumns: Array<ColumnDef<ApiUserSummary>> = [
-    {
-        id: 'user',
-        header: 'User',
-        cell: ({ row }) => {
-            const user = row.original;
-
-            return (
-                <div className="flex items-center gap-3">
-                    <Avatar className="size-8">
-                        <AvatarImage src={user.avatar} alt={`${user.name} avatar`} />
-                        <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 space-y-0.5">
-                        <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-foreground">{user.name}</p>
-                            {user.role !== 'user' ? (
-                                <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                    {user.role}
-                                </span>
-                            ) : null}
-                        </div>
-                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'id',
-        header: 'ID',
-        cell: ({ getValue }) => <span className="font-medium text-foreground">#{getValue<number>()}</span>,
-        meta: { className: 'w-24' },
-    },
-    {
-        accessorKey: 'role',
-        header: 'Role',
-        meta: { className: 'w-32' },
-    },
-];
 
 const invitationColumns: Array<ColumnDef<ApiInvitation>> = [
     {
@@ -88,6 +48,66 @@ export default function People({ org, people, invitations, isLoading, error }: P
     const [inviteRole, setInviteRole] = useState<string>('write');
     const [inviteError, setInviteError] = useState<string | null>(null);
     const inviteUser = useInviteUser(org);
+
+    const peopleColumns: Array<ColumnDef<ApiOrganizationMemberSummary>> = [
+        {
+            id: 'member',
+            header: 'User',
+            cell: ({ row }) => {
+                const user = row.original;
+
+                return (
+                    <div className="flex items-center gap-3">
+                        <Avatar className="size-8">
+                            <AvatarImage src={user.avatar} alt={`${user.name} avatar`} />
+                            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 space-y-0.5">
+                            <Link
+                                to={`/orgs/${org}/people/${user.id}`}
+                                className="text-sm font-medium text-foreground hover:underline"
+                            >
+                                {user.name}
+                            </Link>
+                            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                    </div>
+                );
+            },
+            meta: { className: 'w-px pr-1 whitespace-nowrap' },
+        },
+        {
+            id: 'membership',
+            header: () => null,
+            cell: ({ row }) => {
+                const user = row.original;
+
+                return (
+                    <div className="flex flex-col items-start gap-1">
+                        <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">
+                            {user.role}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                            Last access {user.last_access_at ? new Date(user.last_access_at).toLocaleString() : '—'}
+                        </span>
+                    </div>
+                );
+            },
+            meta: { className: 'w-px pl-1 whitespace-nowrap text-left' },
+        },
+        {
+            id: 'actions',
+            header: 'Action',
+            cell: () => (
+                <div className="flex justify-end">
+                    <Button type="button" variant="ghost" size="icon-sm" aria-label="More actions">
+                        <MoreVertical className="size-4" />
+                    </Button>
+                </div>
+            ),
+            meta: { className: 'w-px pl-1 whitespace-nowrap text-right' },
+        },
+    ];
 
     return (
         <Menu

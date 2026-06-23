@@ -1,4 +1,5 @@
 from enum import Enum
+from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
@@ -16,7 +17,7 @@ class OperationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     # Identifier
-    id: str
+    id: UUID
 
     # Metadata
     kind: OperationKind
@@ -25,7 +26,7 @@ class OperationResponse(BaseModel):
     status: str
 
     # Relationships
-    application_id: str | None = None
+    application_id: UUID | None = None
 
     # Audit
     created_at: datetime

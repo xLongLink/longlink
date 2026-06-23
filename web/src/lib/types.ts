@@ -50,6 +50,15 @@ export type ApiOrganizationApplication = {
     deleted_by: ApiUserSummary | null;
 };
 
+export type ApiOrganizationMemberSummary = {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    role: Role;
+    last_access_at: string | null;
+};
+
 export type ApiEnvironmentMetadata = {
     name: string;
     type: string;
@@ -88,7 +97,7 @@ export type ApiOrganizationDetails = {
     updated_by: ApiUserSummary | null;
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
-    users: ApiUserSummary[];
+    users: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
     applications: ApiOrganizationApplication[];
 };

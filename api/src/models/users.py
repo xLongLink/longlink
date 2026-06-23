@@ -2,7 +2,7 @@ from enum import Enum
 from uuid import UUID
 from typing import Annotated
 from pydantic import Field, EmailStr, BaseModel, ConfigDict, BeforeValidator
-from src.models.roles import Roles, PlatformRole
+from src.models.roles import OrganizationRoles, PlatformRoles
 
 
 def normalize_avatar(value: str | None) -> str:
@@ -101,7 +101,7 @@ class UserOrganizationMembership(BaseModel):
     avatar: Avatar = ""
 
     # State
-    role: Roles
+    role: OrganizationRoles
 
 
 class UserSummary(BaseModel):
@@ -118,7 +118,7 @@ class UserSummary(BaseModel):
     avatar: Avatar = ""
 
     # State
-    role: PlatformRole
+    role: PlatformRoles
     admin: bool = False
 
 
@@ -142,7 +142,7 @@ class UserProfile(BaseModel):
     avatar: Avatar = ""
 
     # State
-    role: PlatformRole
+    role: PlatformRoles
     admin: bool = False
     theme: Theme
     accent: Accent

@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Column, ForeignKeyConstraint
-from src.models.roles import Roles
+from src.models.roles import ApplicationRoles, OrganizationRoles
 
 
 class UserOrganization(SQLModel, table=True):
@@ -15,7 +15,9 @@ class UserOrganization(SQLModel, table=True):
     organization_id: UUID = Field(default=None, primary_key=True, foreign_key="organizations.id")
 
     # State
-    role_name: Roles = Field(sa_column=Column(Enum(Roles, name="role_name_enum", native_enum=False), nullable=False))
+    role_name: OrganizationRoles = Field(
+        sa_column=Column(Enum(OrganizationRoles, name="role_name_enum", native_enum=False), nullable=False)
+    )
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -37,7 +39,9 @@ class UserApplication(SQLModel, table=True):
     organization_id: UUID = Field(default=None, primary_key=True, foreign_key="organizations.id")
 
     # State
-    role_name: Roles = Field(sa_column=Column(Enum(Roles, name="role_name_enum", native_enum=False), nullable=False))
+    role_name: ApplicationRoles = Field(
+        sa_column=Column(Enum(ApplicationRoles, name="role_name_enum", native_enum=False), nullable=False)
+    )
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

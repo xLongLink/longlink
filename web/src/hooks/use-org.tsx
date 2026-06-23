@@ -9,13 +9,13 @@ import type {
     ApiOrganizationApplication,
     ApiOrganizationDetails,
     ApiOrganizationSummary,
+    ApiOrganizationMemberSummary,
     ApiUserOrganizationMembership,
-    ApiUserSummary,
 } from '@/lib/types';
 
 type UseOrgResult = {
     org: ApiOrganizationDetails | undefined;
-    people: ApiUserSummary[];
+    people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
     applications: ApiOrganizationApplication[];
     isLoading: boolean;

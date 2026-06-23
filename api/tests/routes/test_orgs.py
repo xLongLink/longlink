@@ -4,7 +4,9 @@ from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.locations import LocationResponse
 from src.models.organizations import OrganizationDetails as OrgDetails
+from src.models.organizations import OrganizationMemberSummary
 from src.models.organizations import OrganizationSummary as OrgSummary
+from src.models.roles import OrganizationRoles
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute
@@ -53,12 +55,13 @@ async def test_create_organization_returns_owner_role(
         {
             "id": organization.id,
             "name": organization.name,
+            "slug": organization.slug,
             "avatar": avatar,
             "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
-            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
-            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+            "created_by": UserSummary.model_validate(owner.model_dump()),
+            "updated_by": UserSummary.model_validate(owner.model_dump()),
             "deleted_at": None,
             "deleted_by": None,
         }
@@ -94,24 +97,25 @@ async def test_get_organization_returns_member_payload(
     expected_payload = OrgDetails(
         id=organization.id,
         name="acme",
+        slug=organization.slug,
         avatar="https://example.com/organizations/acme.png",
         location_id=organization.location_id,
         location=LocationResponse.model_validate(location),
         created_at=organization.created_at,
         updated_at=organization.updated_at,
-        created_by=UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
-        updated_by=UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+        created_by=UserSummary.model_validate(owner.model_dump()),
+        updated_by=UserSummary.model_validate(owner.model_dump()),
         deleted_at=organization.deleted_at,
         deleted_by=None,
         users=[
-            UserSummary.model_validate(
+            OrganizationMemberSummary.model_validate(
                 {
                     "id": owner.id,
                     "name": owner.name,
                     "email": owner.email,
                     "avatar": owner.avatar,
-                    "role": owner.role,
-                    "admin": owner.role == PlatformRole.administrator,
+                    "role": OrganizationRoles.owner,
+                    "last_access_at": None,
                 }
             )
         ],
@@ -127,8 +131,8 @@ async def test_get_organization_returns_member_payload(
                 "icon": None,
                 "created_at": app.created_at,
                 "updated_at": app.updated_at,
-                "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
-                "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+                "created_by": UserSummary.model_validate(owner.model_dump()),
+                "updated_by": UserSummary.model_validate(owner.model_dump()),
                 "deleted_at": None,
                 "deleted_by": None,
             }
@@ -136,6 +140,7 @@ async def test_get_organization_returns_member_payload(
     ).model_dump(mode="json", by_alias=True)
 
     expected_payload["location"] = response.json()["location"]
+    expected_payload["users"][0]["last_access_at"] = response.json()["users"][0]["last_access_at"]
 
     assert response.json() == expected_payload
 
@@ -145,8 +150,8 @@ async def test_get_organization_returns_member_payload(
         "name": owner.name,
         "email": owner.email,
         "avatar": "",
-        "role": owner.role,
-        "admin": owner.role == PlatformRole.administrator,
+        "role": "owner",
+        "last_access_at": response.json()["users"][0]["last_access_at"],
     }
     assert response.json()["applications"] == [
         {
@@ -158,8 +163,8 @@ async def test_get_organization_returns_member_payload(
             "icon": None,
             "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
             "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),
-            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}).model_dump(mode="json"),
-            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}).model_dump(mode="json"),
+            "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
+            "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
             "deleted_at": None,
             "deleted_by": None,
         }
@@ -187,12 +192,13 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
         {
             "id": organization.id,
             "name": organization.name,
+            "slug": organization.slug,
             "avatar": "",
             "location_id": location.id,
             "created_at": organization.created_at,
             "updated_at": organization.updated_at,
-            "created_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
-            "updated_by": UserSummary.model_validate({**owner.model_dump(), "admin": owner.role == PlatformRole.administrator}),
+            "created_by": UserSummary.model_validate(owner.model_dump()),
+            "updated_by": UserSummary.model_validate(owner.model_dump()),
             "deleted_at": None,
             "deleted_by": None,
         }
@@ -209,7 +215,7 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", owner)
     organization = await db.orgs.create("acme", location.id, owner)
     client = clients[1]
 

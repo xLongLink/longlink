@@ -14,6 +14,7 @@ class OrganizationSummary(BaseModel):
 
     # Metadata
     name: str
+    slug: str
     avatar: Avatar = ""
 
     # Relationships

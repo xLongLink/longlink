@@ -58,9 +58,9 @@ async def create_organization(
         registry = max(registries, key=lambda r: r.created_at)
         k8s = K8s(registry.kubeconfig, registry.proxy_secret)
         try:
-            await k8s.namespace(str(organization.id))
+            await k8s.namespace(organization.slug)
         except Exception:
-            logger.exception("Failed to create namespace for organization '%s'", organization.id)
+            logger.exception("Failed to create namespace for organization '%s'", organization.slug)
 
     return organization
 

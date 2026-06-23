@@ -46,7 +46,7 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
         return AppStartupState.pending
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    namespace = k8name(organization.name)
+    namespace = k8name(organization.slug)
 
     # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
@@ -153,7 +153,7 @@ async def execute_app_delete(operation: Operation) -> Operation:
         raise ValueError(f"No compute cluster configured for location '{organization.location_id}'")
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    await k8s.remove(organization.name, application.slug)
+    await k8s.remove(organization.slug, application.slug)
     try:
         await applications.delete(application.organization_id, application.id, deleted_id=operation.created_id)
     except ValueError as exc:

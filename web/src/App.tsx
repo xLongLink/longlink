@@ -22,6 +22,7 @@ import AdminUsers from './pages/admin/Users';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import Organization from './pages/Organization';
+import Person from './pages/org/Person';
 import Organizations from './pages/Organizations';
 import Playground from './pages/Playground';
 import Settings from './pages/Settings';
@@ -165,6 +166,14 @@ function getRoutes() {
             element: (
                 <Auth>
                     <Organization sectionName="people" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:org/people/:person',
+            element: (
+                <Auth>
+                    <Person />
                 </Auth>
             ),
         },

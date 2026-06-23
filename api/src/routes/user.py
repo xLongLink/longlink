@@ -1,7 +1,7 @@
 from fastapi import Depends
 from src.auth import authuser, authsupport
 from src.router import router
-from src.models.roles import PlatformRole
+from src.models.roles import PlatformRoles
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
 from src.database.services.users import users
@@ -15,7 +15,7 @@ async def serialize_user(user: User) -> UserProfile:
         profile = UserProfile(
                 **{
                     **user.model_dump(),
-                    "admin": user.role == PlatformRole.administrator,
+                    "admin": user.role == PlatformRoles.administrator,
                     "avatar": user.avatar or "",
                     "organizations": [],
                 }
@@ -36,7 +36,7 @@ async def list_users(_user: User = Depends(authsupport)) -> list[UserListItem]:
     """Return all user summaries for support and administrator views."""
 
     return [
-        UserListItem.model_validate({**user.model_dump(), "admin": user.role == PlatformRole.administrator})
+        UserListItem.model_validate({**user.model_dump(), "admin": user.role == PlatformRoles.administrator})
         for user in await users.list()
     ]
 

@@ -1,25 +1,16 @@
 import asyncio
 from pathlib import Path
+from uuid import UUID
 from fastapi import HTTPException, status
-from sqlalchemy import select
-from src.constants import APP_SERVICE_PORT
-from src.models.roles import Roles
+from fastapi.testclient import TestClient
 from src.models.compute import ComputeKind
 from src.models.storage import StorageKind
 from src.models.database import DatabaseKind
-from src.adapters.compute import K8s
-from src.database.session import get_session
-from src.adapters.database import Postgre
-from src.models.applications import AppStatus, ApplicationCreate
-from src.database.models.users import User
+from main import app
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
-from src.database.models.association import UserOrganization
-from src.database.services.locations import locations
-from src.database.services.applications import applications
-from src.database.services.organizations import organizations
 
 LOCAL_DATABASE = {
     "kind": DatabaseKind.postgre,
@@ -44,7 +35,6 @@ LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"
 
 LOCAL_APP = {
     "name": "sample",
-    "slug": "sample",
     "image": "ghcr.io/xlonglink/sample:latest",
     "description": "Sample application",
     "icon": "Rocket",
@@ -60,96 +50,73 @@ LOCAL_COMPUTE = {
 async def main() -> None:
     """Seed the control plane database with baseline records."""
 
-    # Create a real seed user so audit fields are always populated.
-    seed_user = await users.upsert(
-        oidc="seed-oidc-subject",
-        email="seed@longlink.dev",
-        name="Seed User",
-        avatar="",
-    )
-
-    # Keep the local backend registrations available after every seed run.
-    location = await locations.create("local", "Local development", seed_user)
-    await database.create(**LOCAL_DATABASE, location_id=location.id, user=seed_user)
-    await storage.create(**LOCAL_STORAGE, location_id=location.id, user=seed_user)
-    await compute.create(**LOCAL_COMPUTE, location_id=location.id, user=seed_user)
-    organization_record = await organizations.create(LOCAL_ORG, location.id, seed_user, avatar=LOCAL_ORG_AVATAR)
-
-    Session = await get_session()
-    async with Session() as session:
-        membership_result = await session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == seed_user.id,
-                UserOrganization.organization_id == organization_record.id,
-            )
-        )
-        if membership_result.scalar_one_or_none() is None:
-            session.add(
-                UserOrganization(
-                    user_id=seed_user.id,
-                    organization_id=organization_record.id,
-                    role_name=Roles.owner,
-                    created_id=seed_user.id,
-                    updated_id=seed_user.id,
+    # Log in through the real password flow so the seed exercises the UI path.
+    with TestClient(app) as client:
+        login_response = None
+        for _ in range(30):
+            try:
+                login_response = client.post(
+                    "/auth/login/password",
+                    json={"username": "admin", "password": "admin"},
                 )
-            )
-            await session.commit()
+            except Exception:
+                login_response = None
 
-    # Provision the demo app directly so the seed stays aligned with the endpoint flow.
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
-    registry = max(
-        (registry for registry in registries if registry.location_id == organization_record.location_id),
-        key=lambda item: item.id,
-        default=None,
-    )
-    if registry is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"No compute cluster configured for location '{organization_record.location_id}'",
+            if login_response is not None and login_response.status_code == status.HTTP_200_OK:
+                break
+
+            await asyncio.sleep(1)
+
+        if login_response is None or login_response.status_code != status.HTTP_200_OK:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to authenticate seed admin")
+
+        profile_response = client.get("/api/me")
+        if profile_response.status_code != status.HTTP_200_OK:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to read seed admin profile")
+
+        profile = profile_response.json()
+        seed_user = await users.get(profile["oidc"])
+        if seed_user is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Seed admin user missing")
+
+        # Create the location and organization the same way the UI would.
+        location_response = client.post(
+            "/api/locations",
+            json={"name": "Local development", "slug": "local", "country": "CH"},
         )
+        if location_response.status_code != status.HTTP_200_OK:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed location")
 
-    database_registries = [registry for registry in await database.list() if registry.deleted_at is None]
-    database_registry = next((registry for registry in database_registries if registry.location_id == organization_record.location_id), None)
-    if database_registry is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"No database configured for location '{organization_record.location_id}'",
+        location_payload = location_response.json()
+        location_id = UUID(location_payload["id"])
+        organization_response = client.post(
+            "/api/orgs",
+            json={"name": LOCAL_ORG, "avatar": LOCAL_ORG_AVATAR, "location_id": location_payload["id"]},
         )
+        if organization_response.status_code != status.HTTP_200_OK:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed organization")
 
-    app_payload = ApplicationCreate(
-        **LOCAL_APP,
-        envs={
-            "REQUIRED": "required",
-            "OPTIONAL": "optional",
-        },
-    )
-    app_slug = LOCAL_APP["slug"]
-    application = await applications.create(
-        organization_record.id,
-        app_payload.name,
-        app_slug,
-        image=app_payload.image,
-        status=AppStatus.creating,
-        description=app_payload.description,
-        icon=app_payload.icon,
-        user=seed_user,
-    )
+        # Keep the local backend registrations available after every seed run.
+        await database.create(**LOCAL_DATABASE, location_id=location_id, user=seed_user)
+        await storage.create(**LOCAL_STORAGE, location_id=location_id, user=seed_user)
+        await compute.create(**LOCAL_COMPUTE, location_id=location_id, user=seed_user)
 
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    db_client = Postgre(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-    )
-
-    try:
-        await k8s.namespace(organization_record.name)
-        await db_client.schema(organization_record.name, app_slug)
-        await k8s.application(organization_record.name, app_slug, app_payload.image, APP_SERVICE_PORT, app_payload.envs)
-    except Exception as exc:
-        await applications.set_status(application.id, AppStatus.failed)
-        raise
+        organization_id = organization_response.json()["id"]
+        app_response = client.post(
+            f"/api/apps?organization_id={organization_id}",
+            json={
+                "name": LOCAL_APP["name"],
+                "image": LOCAL_APP["image"],
+                "description": LOCAL_APP["description"],
+                "icon": LOCAL_APP["icon"],
+                "envs": {
+                    "REQUIRED": "required",
+                    "OPTIONAL": "optional",
+                },
+            },
+        )
+        if app_response.status_code != status.HTTP_200_OK:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to create seed application")
 
 
 if __name__ == "__main__":

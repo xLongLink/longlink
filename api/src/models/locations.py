@@ -18,6 +18,7 @@ class LocationOrganizationSummary(BaseModel):
 
     # Metadata
     name: str
+    slug: str
     location_id: UUID
 
     # Audit

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from src.models.compute import ComputeKind, ComputeRegistryResponse
 from src.models.storage import StorageKind, StorageRegistryResponse
 from src.models.database import DatabaseKind, DatabaseRegistryResponse
-from src.models.operations import OperationKind
+from src.models.operations import OperationKind, OperationResponse
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
@@ -47,17 +47,15 @@ async def test_operations_endpoint_returns_recorded_operations(
     # Assert
     assert response.status_code == 200
     assert response.json() == [
-        {
-            "id": operation.id,
-            "kind": "app.create",
-            "application_id": application.id,
-            "step": "verify",
-            "status": "scheduled",
-            "error": None,
-            "created_at": response.json()[0]["created_at"],
-            "started_at": None,
-            "stopped_at": None,
-        }
+        OperationResponse.model_validate(
+            {
+                **operation.model_dump(),
+                "status": operation.status,
+                "created_at": response.json()[0]["created_at"],
+                "started_at": None,
+                "stopped_at": None,
+            }
+        ).model_dump(mode="json")
     ]
 
 
@@ -70,7 +68,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
+    user_summary = UserSummary.model_validate(user1.model_dump())
     location = await db.locations.create("local", "Local testing", user1)
 
     # Act
@@ -81,11 +79,11 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             "name": "primary",
             "host": "db.longlink.internal",
             "port": 5432,
-            "username": "longlink",
-            "password": "secret",
-            "location_id": location.id,
-        },
-    )
+                "username": "longlink",
+                "password": "secret",
+                "location_id": str(location.id),
+            },
+        )
     list_response = client.get("/api/database")
     registry_id = create_response.json()["id"]
     delete_response = client.delete(f"/api/database/{registry_id}")
@@ -99,6 +97,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         name="primary",
         host="db.longlink.internal",
         port=5432,
+        password="secret",
         username="longlink",
         location_id=location.id,
         created_at=create_payload["created_at"],
@@ -116,6 +115,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             name="primary",
             host="db.longlink.internal",
             port=5432,
+            password="secret",
             username="longlink",
             location_id=location.id,
             created_at=create_payload["created_at"],
@@ -143,7 +143,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
+    user_summary = UserSummary.model_validate(user1.model_dump())
     location = await db.locations.create("local", "Local testing", user1)
 
     # Act
@@ -154,11 +154,11 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
             "name": "object-store",
             "protocol": "s3",
             "endpoint_url": "https://storage.longlink.internal",
-            "access_key_id": "access-key",
-            "secret_access_key": "secret-key",
-            "location_id": location.id,
-        },
-    )
+                "access_key_id": "access-key",
+                "secret_access_key": "secret-key",
+                "location_id": str(location.id),
+            },
+        )
     list_response = client.get("/api/storage")
     registry_id = create_response.json()["id"]
     delete_response = client.delete(f"/api/storage/{registry_id}")
@@ -217,7 +217,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate({**user1.model_dump(), "admin": user1.role == PlatformRole.administrator})
+    user_summary = UserSummary.model_validate(user1.model_dump())
     location = await db.locations.create("local", "Local testing", user1)
     captured: dict[str, object] = {}
 
@@ -238,12 +238,12 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     create_response = client.post(
         "/api/compute",
         json={
-            "kind": "kubernetes",
-            "kubeconfig": "apiVersion: v1\nclusters: []\n",
-            "ingress_host": "apps.longlink.internal",
-            "location_id": location.id,
-        },
-    )
+                "kind": "kubernetes",
+                "kubeconfig": "apiVersion: v1\nclusters: []\n",
+                "ingress_host": "apps.longlink.internal",
+                "location_id": str(location.id),
+            },
+        )
     list_response = client.get("/api/compute")
     registry_id = create_response.json()["id"]
     delete_response = client.delete(f"/api/compute/{registry_id}")

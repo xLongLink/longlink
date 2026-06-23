@@ -5,7 +5,15 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.models.roles import Roles
+from src.models.roles import OrganizationRoles
+from src.models.locations import LocationResponse
+from src.models.organizations import (
+    OrganizationApplicationResponse,
+    OrganizationDetails,
+    OrganizationMemberSummary,
+)
+from src.models.users import UserSummary
+from src.utils.utils import slugify
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.compute import ComputeRegistry
@@ -32,7 +40,7 @@ class OrgsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def get(self, organization_id: UUID | str) -> Organization | None:
+    async def get(self, organization_id: UUID | str) -> OrganizationDetails | None:
         """Return one organization by id."""
 
         async with session_scope() as session:
@@ -40,7 +48,6 @@ class OrgsService:
                 organization_id = UUID(organization_id)
 
             statement = select(Organization).options(
-                selectinload(Organization.users),
                 selectinload(Organization.applications).selectinload(Application.organization),
                 selectinload(Organization.applications).selectinload(Application.created_by),
                 selectinload(Organization.applications).selectinload(Application.updated_by),
@@ -72,7 +79,42 @@ class OrgsService:
                 organization.location.compute_registries = [registry for registry in organization.location.compute_registries if registry.deleted_at is None]
                 organization.location.database_registries = [registry for registry in organization.location.database_registries if registry.deleted_at is None]
                 organization.location.storage_registries = [registry for registry in organization.location.storage_registries if registry.deleted_at is None]
-            return organization
+            if organization is None:
+                return None
+
+            memberships_result = await session.execute(
+                select(User, UserOrganization.role_name, UserOrganization.updated_at)
+                .join(UserOrganization, UserOrganization.user_id == User.id)
+                .where(UserOrganization.organization_id == organization.id, UserOrganization.deleted_at.is_(None))
+            )
+            members = [
+                OrganizationMemberSummary(
+                    id=user.id,
+                    name=user.name,
+                    email=user.email,
+                    avatar=user.avatar or "",
+                    role=role_name,
+                    last_access_at=updated_at,
+                )
+                for user, role_name, updated_at in memberships_result.all()
+            ]
+
+            return OrganizationDetails(
+                id=organization.id,
+                name=organization.name,
+                slug=organization.slug,
+                avatar=organization.avatar,
+                location=LocationResponse.model_validate(organization.location),
+                location_id=organization.location_id,
+                created_at=organization.created_at,
+                updated_at=organization.updated_at,
+                created_by=UserSummary.model_validate(organization.created_by),
+                updated_by=UserSummary.model_validate(organization.updated_by),
+                deleted_at=organization.deleted_at,
+                deleted_by=UserSummary.model_validate(organization.deleted_by) if organization.deleted_by is not None else None,
+                users=members,
+                applications=[OrganizationApplicationResponse.model_validate(application) for application in organization.applications],
+            )
 
     async def create(self, name: str, location_id: UUID | str, user: User, avatar: str | None = None) -> Organization:
         """Create an organization."""
@@ -81,7 +123,7 @@ class OrgsService:
             if isinstance(location_id, str):
                 location_id = UUID(location_id)
 
-            organization = Organization(name=name, avatar=avatar or "", location_id=location_id)
+            organization = Organization(name=name, slug=slugify(name), avatar=avatar or "", location_id=location_id)
             # Attach the creator as the initial owner for every organization.
             organization.created_id = user.id
             organization.updated_id = user.id
@@ -89,7 +131,7 @@ class OrgsService:
                 UserOrganization(
                     user_id=user.id,
                     organization_id=organization.id,
-                    role_name=Roles.owner,
+                    role_name=OrganizationRoles.owner,
                     created_id=user.id,
                     updated_id=user.id,
                 )

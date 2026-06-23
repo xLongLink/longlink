@@ -20,6 +20,7 @@ class Organization(SQLModel, table=True):
 
     # Metadata
     name: str = Field(unique=True, max_length=128)
+    slug: str = Field(unique=True, max_length=128)
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
 
     # Location

@@ -59,7 +59,7 @@ async def list_database_databases(registry_id: UUID, _user: User = Depends(auths
     response_model=list[DatabaseSchemaResponse],
 )
 async def list_database_schemas(
-    registry_id: str,
+    registry_id: UUID,
     dbname: str,
     _user: User = Depends(authsupport),
 ) -> list[DatabaseSchemaResponse]:

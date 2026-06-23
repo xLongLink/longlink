@@ -5,7 +5,7 @@ from src.logger import logger
 from src.router import router
 from src.constants import APP_SERVICE_PORT
 from src.utils.utils import slugify
-from src.models.roles import PlatformRole
+from src.models.roles import PlatformRoles
 from src.adapters.database import Postgre
 from src.models.operations import OperationKind
 from src.models.applications import (AppStatus, ApplicationCreate,
@@ -24,7 +24,7 @@ async def list_applications(organization_id: UUID | None = None, user: User = De
     """Return organization applications, or all applications for admin views."""
 
     if organization_id is None:
-        if user.role == PlatformRole.user:
+        if user.role == PlatformRoles.user:
             raise HTTPException(status_code=403, detail="Administrator privileges required")
 
         return [
@@ -43,7 +43,7 @@ async def list_applications(organization_id: UUID | None = None, user: User = De
     if organization_record is None:
         raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
-    if user.role == PlatformRole.user:
+    if user.role == PlatformRoles.user:
         organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
         if organization is None:
             raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
@@ -92,7 +92,7 @@ async def create_app(
         raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
     app_slug = slugify(payload.name)
-    logger.info("Provisioning app %s/%s", organization_id, app_slug)
+    logger.info("Provisioning app %s/%s", organization.slug, app_slug)
 
     # Resolve the organization location so provisioning uses the active registries.
     organization_record = await organizations.get(organization_id)
@@ -150,9 +150,9 @@ async def create_app(
 
     # Provision the namespace, schema, and workload in order so failures can mark the app as failed.
     try:
-        await k8s.namespace(organization_record.name)
-        await db_client.schema(organization_record.name, app_slug)
-        await k8s.application(organization_record.name, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
+        await k8s.namespace(organization_record.slug)
+        await db_client.schema(organization_record.slug, app_slug)
+        await k8s.application(organization_record.slug, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
     except HTTPException:
         await applications.set_status(application.id, AppStatus.failed)
         raise
@@ -164,10 +164,10 @@ async def create_app(
         operation = await operations.create(OperationKind.app_create, application_id=application.id, step="verify", user=user)
     except Exception as exc:
         await applications.set_status(application.id, AppStatus.failed)
-        logger.exception("Failed to queue application verification for %s/%s", organization_id, payload.name)
+        logger.exception("Failed to queue application verification for %s/%s", organization.slug, payload.name)
         raise HTTPException(status_code=503, detail="Failed to queue app verification") from exc
 
-    logger.info("Queued application creation verification %s for %s/%s", operation.id, organization_id, payload.name)
+    logger.info("Queued application creation verification %s for %s/%s", operation.id, organization.slug, payload.name)
 
     return application
 
@@ -237,7 +237,7 @@ async def get_application_logs(organization_id: UUID, application_id: UUID, user
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await k8s.logs(organization_record.name, application.slug)
+        logs = await k8s.logs(organization_record.slug, application.slug)
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

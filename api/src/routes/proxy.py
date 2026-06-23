@@ -87,7 +87,7 @@ async def proxy_app_request(application_id: UUID, request: Request, path: str = 
     if organization_record is None:
         raise HTTPException(status_code=503, detail="Application organization not loaded")
 
-    namespace = k8name(knames(organization_record.name, "Organization"))
+    namespace = k8name(knames(organization_record.slug, "Organization"))
     name = knames(application.slug, "Application name")
     # Strip hop-by-hop headers before forwarding the request upstream.
     forward_headers = {

@@ -38,10 +38,12 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Assert
     assert organization.name == "acme"
+    assert organization.slug == "acme"
 
     reloaded = await db.organizations.get(organization.id)
     assert reloaded is not None
     assert reloaded.name == "acme"
+    assert reloaded.slug == "acme"
     assert [member.id for member in reloaded.users] == [owner.id]
 
     Session = await get_session()

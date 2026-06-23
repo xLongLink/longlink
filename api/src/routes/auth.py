@@ -48,7 +48,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Suc
         try:
             metadata_response = await client.get(metadata_url)
             metadata_response.raise_for_status()
-        except httpx2.HTTPStatusError as exc:
+        except (httpx2.HTTPStatusError, httpx2.RequestError) as exc:
             raise HTTPException(status_code=502, detail="Authentication provider unavailable") from exc
 
         metadata = metadata_response.json()
@@ -90,7 +90,7 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Suc
                 headers={"Authorization": f"Bearer {token.access_token}"},
             )
             userinfo_response.raise_for_status()
-        except httpx2.HTTPStatusError as exc:
+        except (httpx2.HTTPStatusError, httpx2.RequestError) as exc:
             raise HTTPException(status_code=502, detail="Failed to read authenticated user profile") from exc
 
     try:

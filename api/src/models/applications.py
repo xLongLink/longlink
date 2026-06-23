@@ -3,7 +3,7 @@ from uuid import UUID
 from typing import Annotated
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, BeforeValidator
-from src.models.roles import Roles
+from src.models.roles import ApplicationRoles
 from src.models.users import UserSummary
 from src.models.organization_summary import OrganizationSummary
 
@@ -57,7 +57,7 @@ class ApplicationResponse(BaseModel):
     description: str | None = None
 
     # State
-    role: Roles | None = None
+    role: ApplicationRoles | None = None
     status: AppStatus
 
     # Audit
