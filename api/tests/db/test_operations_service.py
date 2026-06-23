@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from src.models.countries import Country
 from src.models.operations import OperationKind
 from src.database.services.users import users
 from src.database.services.locations import locations
@@ -20,7 +21,7 @@ async def test_operations_service_tracks_successful_operation_lifecycle() -> Non
 
     # Arrange
     user = await db.users.upsert(oidc="ops-oidc", email="ops@longlink.dev", name="Ops User", avatar="")
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
@@ -45,7 +46,7 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
 
     # Arrange
     user = await db.users.upsert(oidc="ops-oidc-2", email="ops2@longlink.dev", name="Ops User 2", avatar="")
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
@@ -69,7 +70,7 @@ async def test_operations_service_defers_active_operation() -> None:
 
     # Arrange
     user = await db.users.upsert(oidc="ops-oidc-3", email="ops3@longlink.dev", name="Ops User 3", avatar="")
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
@@ -93,7 +94,7 @@ async def test_operations_service_resets_active_operations() -> None:
 
     # Arrange
     user = await db.users.upsert(oidc="ops-oidc-4", email="ops4@longlink.dev", name="Ops User 4", avatar="")
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)

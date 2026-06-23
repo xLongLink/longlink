@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from uuid import UUID
+from src.models.countries import Country
 from src.models.roles import PlatformRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
@@ -39,7 +40,7 @@ async def test_create_organization_returns_owner_role(
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
     avatar = "https://example.com/organizations/acme.png"
 
     # Act
@@ -77,7 +78,7 @@ async def test_get_organization_returns_member_payload(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.orgs.create("acme", location.id, owner, avatar="https://example.com/organizations/acme.png")
     app = await db.apps.create(
         organization.id,
@@ -182,7 +183,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.orgs.create("acme", location.id, owner)
     client = clients[0]
 
@@ -218,7 +219,7 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.orgs.create("acme", location.id, owner)
     client = clients[1]
 
@@ -254,7 +255,7 @@ async def test_delete_organization_removes_its_apps(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.orgs.create("acme", location.id, user)
     await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     client = clients[0]
@@ -275,7 +276,7 @@ async def test_create_organization_returns_409_for_duplicate_name(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     await db.orgs.create("acme", location.id, user)
     client = clients[0]
 

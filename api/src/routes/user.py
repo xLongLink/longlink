@@ -1,10 +1,12 @@
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from src.auth import authuser, authsupport
-from src.router import router
 from src.models.roles import PlatformRoles
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
 from src.database.services.users import users
+
+
+router = APIRouter()
 
 
 async def serialize_user(user: User) -> UserProfile:

@@ -1,7 +1,6 @@
 from uuid import UUID
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from src.auth import authadmin, authsupport
-from src.router import router
 from src.errors import NotFoundError
 from src.models.database import (DatabaseRegistryCreate,
                                   DatabaseSchemaResponse,
@@ -11,6 +10,9 @@ from src.models.database import (DatabaseRegistryCreate,
 from src.database.models.users import User
 from src.adapters.database.postgre import Postgre
 from src.database.services.database import database
+
+
+router = APIRouter()
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])

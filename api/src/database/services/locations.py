@@ -26,19 +26,11 @@ class LocationsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def create(self, slug: str, name: str, user: User, country: Country | None = None) -> Location:
+    async def create(self, slug: str, name: str, user: User, country: Country) -> Location:
         """Create one location."""
 
         async with session_scope() as session:
-            # Omit the column when no country is provided so the database default applies.
-            location_kwargs: dict[str, str | Country] = {
-                "name": name,
-                "slug": slug,
-            }
-            if country is not None:
-                location_kwargs["country"] = country
-
-            location = Location(**location_kwargs)
+            location = Location(name=name, slug=slug, country=country)
             location.created_id = user.id
             location.updated_id = user.id
             session.add(location)

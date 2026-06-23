@@ -7,10 +7,10 @@ from src.models.users import (
     Language,
     Radius,
     Theme,
-    OrganizationLocationSummary,
     UserOrganizationMembership,
     UserProfile,
 )
+from src.models.locations import LocationResponse
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -47,6 +47,7 @@ class UsersService:
             if user is None:
                 return None
 
+            # Load organization memberships and their locations without lazy IO.
             org_result = await session.execute(
                 select(Organization, UserOrganization.role_name)
                 .join(UserOrganization, Organization.id == UserOrganization.organization_id)
@@ -56,21 +57,29 @@ class UsersService:
                 .where(UserOrganization.user_id == user.id)
             )
 
-            payload = user.model_dump()
-            payload["admin"] = user.role == PlatformRoles.administrator
-            payload["oidc"] = user.oidc
-            payload["organizations"] = [
-                UserOrganizationMembership(
-                    id=organization.id,
-                    name=organization.name,
-                    avatar=organization.avatar,
-                    location=OrganizationLocationSummary.model_validate(organization.location),
-                    role=role_name,
-                )
-                for organization, role_name in org_result.all()
-            ]
-
-            return UserProfile.model_validate(payload)
+            return UserProfile(
+                id=user.id,
+                name=user.name,
+                email=user.email,
+                avatar=user.avatar,
+                role=user.role,
+                admin=user.role == PlatformRoles.administrator,
+                theme=user.theme,
+                accent=user.accent,
+                radius=user.radius,
+                language=user.language,
+                oidc=user.oidc,
+                organizations=[
+                    UserOrganizationMembership(
+                        id=organization.id,
+                        name=organization.name,
+                        avatar=organization.avatar,
+                        location=LocationResponse.model_validate(organization.location),
+                        role=role_name,
+                    )
+                    for organization, role_name in org_result.all()
+                ],
+            )
 
     async def _ensure_admin_membership(self, session, user: User) -> None:
         """Attach the seeded admin account to the demo org when it exists."""

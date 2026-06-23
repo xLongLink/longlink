@@ -1,5 +1,4 @@
 from uuid import UUID
-from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 from src.models.countries import Country
 
@@ -25,7 +24,3 @@ class LocationResponse(BaseModel):
     name: str
     slug: str
     country: Country
-
-    # Audit
-    created_at: datetime
-    updated_at: datetime

@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from src.models.countries import Country
 from src.models.roles import PlatformRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
@@ -36,7 +37,7 @@ async def test_operations_endpoint_returns_recorded_operations(
     # Arrange
     client = clients[0]
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
@@ -69,7 +70,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     client = clients[0]
     user1, _, _ = users
     user_summary = UserSummary.model_validate(user1.model_dump())
-    location = await db.locations.create("local", "Local testing", user1)
+    location = await db.locations.create("local", "Local testing", user1, Country.CH)
 
     # Act
     create_response = client.post(
@@ -144,7 +145,7 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await db.locations.create("local", "Local testing", user1)
+    location = await db.locations.create("local", "Local testing", user1, Country.CH)
     create_response = client.post(
         "/api/databases",
         json={
@@ -189,7 +190,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     client = clients[0]
     user1, _, _ = users
     user_summary = UserSummary.model_validate(user1.model_dump())
-    location = await db.locations.create("local", "Local testing", user1)
+    location = await db.locations.create("local", "Local testing", user1, Country.CH)
 
     # Act
     create_response = client.post(
@@ -265,7 +266,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     client = clients[0]
     user1, _, _ = users
     user_summary = UserSummary.model_validate(user1.model_dump())
-    location = await db.locations.create("local", "Local testing", user1)
+    location = await db.locations.create("local", "Local testing", user1, Country.CH)
     captured: dict[str, object] = {}
 
     class FakeCompute:

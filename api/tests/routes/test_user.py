@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from src.models.countries import Country
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
@@ -32,7 +33,7 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     await db.orgs.create("acme", location.id, user, avatar="https://example.com/organizations/acme.png")
 
     client = clients[0]
@@ -58,7 +59,7 @@ async def test_list_users_returns_admin_user_summaries(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     await db.orgs.create("acme", location.id, user)
 
     client = clients[0]

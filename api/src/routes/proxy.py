@@ -1,7 +1,6 @@
 from uuid import UUID
-from fastapi import Depends, Request, Response, APIRouter
+from fastapi import APIRouter, Depends, Request, Response
 from src.auth import authuser
-from src.router import router
 from fastapi.routing import APIRoute
 from src.errors import MethodNotAllowedError, NotFoundError, UnavailableError
 from src.utils.utils import knames
@@ -34,6 +33,7 @@ class ProxyRoute(APIRoute):
         self.methods.discard("HEAD")
 
 
+router = APIRouter()
 proxy_router = APIRouter(route_class=ProxyRoute)
 
 

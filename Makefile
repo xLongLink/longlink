@@ -19,7 +19,7 @@ tests:
 	cd api && uv sync --extra dev
 	cd sdk && uv sync --extra dev
 	bun i --cwd web
-	cd api && uv run pytest tests
+	cd api && uv run --with pytest-cov pytest --cov=src --cov-report=term-missing tests
 	cd sdk && uv run pytest tests
 	bun test tests --cwd web
 	bun run --cwd web typecheck

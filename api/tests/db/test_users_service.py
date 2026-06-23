@@ -1,6 +1,8 @@
 from types import SimpleNamespace
+from src.models.countries import Country
 from src.models.roles import OrganizationRoles, PlatformRoles
-from src.models.users import OrganizationLocationSummary, UserOrganizationMembership
+from src.models.locations import LocationResponse
+from src.models.users import UserOrganizationMembership
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
@@ -73,7 +75,7 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
         name="First User",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("test", location.id, user, avatar="https://example.com/organizations/test.png")
 
     # Act
@@ -92,7 +94,7 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
             id=organization.id,
             name="test",
             avatar="https://example.com/organizations/test.png",
-            location=OrganizationLocationSummary.model_validate(location),
+            location=LocationResponse.model_validate(location),
             role=OrganizationRoles.owner,
         )
     ]

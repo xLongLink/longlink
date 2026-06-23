@@ -13,7 +13,7 @@ dependencies = [
     'alembic',
     'authlib',
     'email-validator',
-    'fastapi',
+    'fastapi==0.138.0',
     'httpx',
     'httpx2',
     'itsdangerous',

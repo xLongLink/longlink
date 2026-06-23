@@ -1,10 +1,12 @@
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from src.auth import authuser
-from src.router import router
 from src.utils.utils import metadata
 from src.models.metadata import ImageMetadataResponse
 from src.database.models.users import User
 from src.errors import NotFoundError
+
+
+router = APIRouter()
 
 
 @router.get("/api/image", response_model=ImageMetadataResponse)

@@ -1,4 +1,7 @@
-from src.router import router
+from fastapi import APIRouter
+
+
+router = APIRouter()
 
 
 @router.get("/api/healthz")

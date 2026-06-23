@@ -1,37 +1,17 @@
 import asyncio
-from fastapi import FastAPI, Request
-from pathlib import Path
 from contextlib import suppress, asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+
 from src.logger import logger
-from src.router import router
 from src.operations import execute
 from src.environments import env
 from src.errors import register_error_handlers
-from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 from src.database.services.operations import operations
-
-
-class SPAStaticFiles(StaticFiles):
-    """Static file server that serves index.html for unmatched SPA routes."""
-
-    async def get_response(self, path: str, scope):
-        """Serve `index.html` for non-API paths that miss static assets."""
-
-        # Let organization-scoped API paths fall through as real 404s instead of SPA navigation.
-        if "api" in path.split("/"):
-            return await super().get_response(path, scope)
-
-        try:
-            response = await super().get_response(path, scope)
-        except HTTPException as exc:
-            if exc.status_code != 404:
-                raise
-            response = await super().get_response("index.html", scope)
-
-        return response
+from src.routes import auth, applications, compute, database, health, image, locations, operations as operations_route, organizations, proxy, storage, user
 
 
 async def run_operation_scheduler() -> None:
@@ -87,26 +67,24 @@ app.add_middleware(
     https_only=False,
 )
 
-import src.routes.auth
-import src.routes.user
-import src.routes.image
-import src.routes.proxy
-import src.routes.health
-import src.routes.compute
-import src.routes.storage
-import src.routes.database
-import src.routes.locations
-import src.routes.operations
-import src.routes.applications
-import src.routes.organizations
-
 # Register API routes after importing the endpoint modules so their decorators run.
-app.include_router(router)
+app.include_router(auth.router)
+app.include_router(applications.router)
+app.include_router(compute.router)
+app.include_router(database.router)
+app.include_router(health.router)
+app.include_router(image.router)
+app.include_router(locations.router)
+app.include_router(operations_route.router)
+app.include_router(organizations.router)
+app.include_router(proxy.router)
+app.include_router(storage.router)
+app.include_router(user.router)
 
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
-    app.mount("/", SPAStaticFiles(directory=static_dir, html=True), name="static")
+    app.frontend("/", directory=static_dir)
 
 
 if __name__ == "__main__":

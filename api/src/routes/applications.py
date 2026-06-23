@@ -1,8 +1,7 @@
 from uuid import UUID
-from fastapi import Depends, Response, HTTPException
+from fastapi import APIRouter, Depends, Response, HTTPException
 from src.auth import authuser, authadmin
 from src.logger import logger
-from src.router import router
 from src.constants import APP_SERVICE_PORT
 from src.utils.utils import metadata, slugify
 from src.models.roles import PlatformRoles
@@ -18,6 +17,9 @@ from src.database.services.database import database
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
+
+
+router = APIRouter()
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])

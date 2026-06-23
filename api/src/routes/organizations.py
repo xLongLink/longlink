@@ -1,8 +1,7 @@
 from uuid import UUID
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from src.auth import authuser, authadmin, authsupport
 from src.logger import logger
-from src.router import router
 from src.adapters.compute.k8s import K8s
 from src.errors import ConflictError, NotFoundError
 from src.models.organizations import (OrganizationCreate, OrganizationDetails,
@@ -10,6 +9,9 @@ from src.models.organizations import (OrganizationCreate, OrganizationDetails,
 from src.database.models.users import User
 from src.database.services.compute import compute
 from src.database.services.organizations import organizations
+
+
+router = APIRouter()
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])

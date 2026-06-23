@@ -1,6 +1,7 @@
 import pytest
 from types import SimpleNamespace
 from sqlalchemy import select
+from src.models.countries import Country
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.database.models.users import User
@@ -31,7 +32,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
 
     # Act
     organization = await db.organizations.create("acme", location.id, owner)
@@ -62,7 +63,7 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
 
     # Arrange
     owner, member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
 
     Session = await get_session()
@@ -89,7 +90,7 @@ async def test_create_raises_value_error_when_org_already_exists(users: tuple[Us
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
     await db.organizations.create("acme", location.id, owner)
 
     # Act

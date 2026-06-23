@@ -1,5 +1,6 @@
 import pytest
 from types import SimpleNamespace
+from src.models.countries import Country
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
@@ -42,7 +43,7 @@ async def test_list_apps_returns_app_membership_role(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.orgs.create("acme", location.id, owner)
     app = await db.apps.create(
         organization.id,
@@ -99,7 +100,7 @@ async def test_list_apps_returns_null_role_without_app_membership(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.orgs.create("acme", location.id, user)
     app = await db.apps.create(
         organization.id,
@@ -136,7 +137,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     acme = await db.orgs.create("acme", location.id, user)
     globex = await db.orgs.create("globex", location.id, user)
     dashboard = await db.apps.create(
@@ -210,7 +211,7 @@ async def test_list_apps_returns_404_for_non_member(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner)
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.orgs.create("acme", location.id, owner)
     await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=owner)
     client = clients[1]
@@ -232,8 +233,8 @@ async def test_create_app_returns_app_response(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user)
-    remote_location = await db.locations.create("remote", "Remote testing", user)
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
     organization = await db.orgs.create("acme", remote_location.id, user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -386,8 +387,8 @@ async def test_delete_app_removes_dependent_env_rows(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user)
-    remote_location = await db.locations.create("remote", "Remote testing", user)
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
     organization = await db.orgs.create("acme", local_location.id, user)
     app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
@@ -469,7 +470,7 @@ async def test_get_app_logs_returns_pod_logs(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user)
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.orgs.create("acme", location.id, user)
     app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
@@ -538,8 +539,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user)
-    remote_location = await db.locations.create("remote", "Remote testing", user)
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
     organization = await db.orgs.create("acme", remote_location.id, user)
     app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
     await db.compute.create(

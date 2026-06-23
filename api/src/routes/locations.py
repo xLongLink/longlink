@@ -1,11 +1,13 @@
 from uuid import UUID
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from src.auth import authadmin, authsupport
-from src.router import router
 from src.errors import ConflictError, NotFoundError
 from src.models.locations import LocationCreate, LocationResponse
 from src.database.models.users import User
 from src.database.services.locations import locations
+
+
+router = APIRouter()
 
 
 @router.get("/api/locations", response_model=list[LocationResponse])
@@ -17,7 +19,7 @@ async def list_locations(_user: User = Depends(authsupport)) -> list[LocationRes
 
 @router.get("/api/locations/{location_id}", response_model=LocationResponse)
 async def get_location(location_id: UUID, _user: User = Depends(authsupport)) -> LocationResponse:
-    """Return one location and its attached infrastructure."""
+    """Return one location."""
 
     location = await locations.get(location_id)
     if location is None:
@@ -49,5 +51,3 @@ async def delete_location(location_id: UUID, user: User = Depends(authadmin)) ->
     location = await locations.delete(location_id, user.id)
     if location is None:
         raise NotFoundError("Location", location_id)
-
-    return

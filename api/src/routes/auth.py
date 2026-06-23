@@ -1,9 +1,8 @@
 import httpx2
 from typing import cast
-from fastapi import Request
+from fastapi import APIRouter, Request
 from pydantic import Field, BaseModel, ValidationError
 from src.auth import oauth
-from src.router import router
 from src.environments import env
 from src.models.auth import OidcUserInfo, OidcTokenResponse
 from fastapi.responses import RedirectResponse
@@ -11,6 +10,9 @@ from src.models.common import SuccessResponse
 from src.database.services.users import users
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 from src.errors import UnauthorizedError, UnavailableError
+
+
+router = APIRouter()
 
 
 class PasswordLoginRequest(BaseModel):

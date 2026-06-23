@@ -18,19 +18,12 @@ export type ApiUserSummary = {
     oidc: string;
 };
 
-export type ApiOrganizationLocationSummary = {
-    id: string;
-    name: string;
-    slug: string;
-    country: string;
-};
-
 export type ApiUserOrganizationMembership = {
     id: string;
     name: string;
     slug: string;
     avatar: string;
-    location: ApiOrganizationLocationSummary;
+    location: ApiLocation;
     role: Role;
 };
 

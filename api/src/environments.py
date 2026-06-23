@@ -1,10 +1,12 @@
+import secrets
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
-    SESSION_KEY: str
+    SESSION_KEY: str = secrets.token_urlsafe(32)
 
     # Control plane database URL
     DATABASE_URL: str
