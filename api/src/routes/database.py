@@ -1,13 +1,13 @@
-from fastapi import Depends, HTTPException
 from uuid import UUID
+from fastapi import Depends, HTTPException
 from src.auth import authadmin, authsupport
 from src.router import router
-from src.models.database import (DatabaseDatabaseResponse,
-                                 DatabaseRegistryCreate,
-                                 DatabaseRegistryResponse,
-                                 DatabaseSchemaResponse)
-from src.adapters.database.postgre import Postgre
+from src.models.database import (DatabaseRegistryCreate,
+                                 DatabaseSchemaResponse,
+                                 DatabaseDatabaseResponse,
+                                 DatabaseRegistryResponse)
 from src.database.models.users import User
+from src.adapters.database.postgre import Postgre
 from src.database.services.database import database
 
 

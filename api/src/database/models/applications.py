@@ -1,17 +1,15 @@
-from datetime import UTC, datetime
-from uuid import UUID
-from uuid import uuid4
+from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
-
-from sqlalchemy import Column, Enum as SAEnum, UniqueConstraint, and_
-from sqlmodel import Field, Relationship, SQLModel
-
-from src.database.models.association import UserApplication
+from datetime import UTC, datetime
+from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import Column, UniqueConstraint, and_
 from src.models.applications import AppStatus
+from src.database.models.association import UserApplication
 
 if TYPE_CHECKING:
-    from src.database.models.organizations import Organization
     from src.database.models.users import User
+    from src.database.models.organizations import Organization
 
 
 class Application(SQLModel, table=True):

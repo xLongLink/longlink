@@ -1,4 +1,4 @@
-from .base import Table, User, get_session, create_engine
+from .base import User, Table, get_session, create_engine
 from longlink.utils.settings import Envs
 
 

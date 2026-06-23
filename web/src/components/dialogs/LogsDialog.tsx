@@ -4,8 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { resolveOrganizationId } from '@/hooks/use-org';
 import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiText } from '@/lib/api';
-import { useMemo } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type LogsDialogProps = {
     org: string;

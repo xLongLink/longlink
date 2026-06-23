@@ -48,7 +48,11 @@ const userColumns: Array<ColumnDef<ApiUserSummary>> = [
     {
         accessorKey: 'role',
         header: 'Role',
-        cell: ({ getValue }) => <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">{getValue<string>()}</span>,
+        cell: ({ getValue }) => (
+            <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">
+                {getValue<string>()}
+            </span>
+        ),
         meta: { className: 'w-32' },
     },
     {

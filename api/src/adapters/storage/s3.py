@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import boto3
-from src.utils.namespace import s3name
-
 from .__root__ import Storage
+from src.utils.namespace import s3name
 
 
 class S3(Storage):

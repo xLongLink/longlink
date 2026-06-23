@@ -82,7 +82,7 @@ export default function AdminLocation() {
 
     const locationRows = locationQuery.data ?? [];
     const locationColumns = canManage
-        ? [
+        ? ([
               ...locationColumnsBase,
               {
                   id: 'actions',
@@ -144,7 +144,7 @@ export default function AdminLocation() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiLocation>>
+          ] satisfies Array<ColumnDef<ApiLocation>>)
         : locationColumnsBase;
 
     return (

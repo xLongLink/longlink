@@ -146,7 +146,7 @@ export default function AdminOrganization() {
 
     const organizationRows = organizationsQuery.data ?? [];
     const organizationColumns = canManage
-        ? [
+        ? ([
               ...organizationColumnsBase,
               {
                   id: 'actions',
@@ -208,7 +208,7 @@ export default function AdminOrganization() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiOrganizationSummary>>
+          ] satisfies Array<ColumnDef<ApiOrganizationSummary>>)
         : organizationColumnsBase;
 
     return (

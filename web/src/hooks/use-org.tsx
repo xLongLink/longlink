@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { useUser } from '@/hooks/use-user';
+import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import type {
-    ApiInvitation,
     ApiApplicationResponse,
+    ApiInvitation,
     ApiOrganizationApplication,
     ApiOrganizationDetails,
     ApiOrganizationSummary,
@@ -92,7 +92,15 @@ export function useCreateOrg() {
     const userUrl = apiUrl('/api/me');
 
     return useMutation({
-        mutationFn: async ({ name, location_id, avatar }: { name: string; location_id: string; avatar?: string | null }) => {
+        mutationFn: async ({
+            name,
+            location_id,
+            avatar,
+        }: {
+            name: string;
+            location_id: string;
+            avatar?: string | null;
+        }) => {
             return fetchApiJson<ApiOrganizationSummary>(orgsUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

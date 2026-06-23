@@ -30,7 +30,7 @@ def __getattr__(name: str) -> Any:
     elif name == "create_db":
         from longlink.database import create_db as exported
     elif name in {"Element", "Longlink", "Envs", "Environments"}:
-        from longlink.utils import Element, Longlink, Envs, Environments
+        from longlink.utils import Envs, Element, Longlink, Environments
 
         exports = {
             "Element": Element,
@@ -40,9 +40,9 @@ def __getattr__(name: str) -> Any:
         }
         exported = exports[name]
     elif name in {"fs", "db"}:
+        from longlink.utils import Envs
         from longlink.storage import create_fs
         from longlink.database import create_db
-        from longlink.utils import Envs
 
         env = Envs()
         globals()["fs"] = create_fs(env)

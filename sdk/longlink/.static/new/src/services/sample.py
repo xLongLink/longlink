@@ -1,6 +1,6 @@
 from longlink import fs
-from src.models.project import Project
 from src.types.user import UserModel
+from src.models.project import Project
 
 
 class SampleService:

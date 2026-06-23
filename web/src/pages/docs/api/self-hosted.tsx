@@ -10,7 +10,9 @@ export const content = (
         <Heading id="self-hosted-control-plane" level="h1">
             Self-hosted Control Plane
         </Heading>
-        <p className="leading-7">Use self-hosted mode when you run the LongLink control plane in your own infrastructure.</p>
+        <p className="leading-7">
+            Use self-hosted mode when you run the LongLink control plane in your own infrastructure.
+        </p>
         <Heading id="infrastructure" level="h2">
             Infrastructure
         </Heading>
@@ -24,8 +26,8 @@ export const content = (
             Required Environment Variables
         </Heading>
         <p className="leading-7">
-            Configure the API container with session and control-plane settings. Database, storage, and compute
-            backends are registered through the API.
+            Configure the API container with session and control-plane settings. Database, storage, and compute backends
+            are registered through the API.
         </p>
         <Heading id="session" level="h3">
             Session
@@ -35,7 +37,9 @@ export const content = (
                 <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">SESSION_KEY</code>
             </li>
             <li>
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">DATABASE_URL</code>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                    DATABASE_URL
+                </code>
             </li>
             <li>
                 <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">URL</code>
@@ -64,7 +68,9 @@ export const content = (
         <Heading id="deployment-model" level="h2">
             Deployment Model
         </Heading>
-        <p className="leading-7">Deploy the control plane container and application containers in the same Kubernetes cluster.</p>
+        <p className="leading-7">
+            Deploy the control plane container and application containers in the same Kubernetes cluster.
+        </p>
         <p className="leading-7">
             This keeps control-plane traffic inside the cluster boundary and avoids public ingress for application
             routing.

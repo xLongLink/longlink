@@ -1,15 +1,14 @@
 from types import SimpleNamespace
-from src.database.services.applications import applications
+from src.models.roles import Roles, PlatformRole
+from src.models.users import UserOrganizationMembership
+from src.database.services.users import users
 from src.database.services.compute import compute
+from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
+from src.database.services.applications import applications
 from src.database.services.organizations import organizations
-from src.database.services.storage import storage
-from src.database.services.users import users
-from src.models.roles import PlatformRole
-from src.models.roles import Roles
-from src.models.users import UserOrganizationMembership
 
 db = SimpleNamespace(
     applications=applications,

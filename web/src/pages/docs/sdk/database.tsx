@@ -1,5 +1,5 @@
-import { A } from '@/components/ui/a';
 import { CodeBlock } from '@/components/CodeBlock';
+import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -14,10 +14,15 @@ export const content = (
             Database
         </Heading>
         <p className="leading-7">
-            LongLink SDK exposes a <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">db</code>{' '}
-            object for database access. You use{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">db.Table</code> to define tables and{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">await db.get_session()</code> to open a session.
+            LongLink SDK exposes a{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">db</code> object for
+            database access. You use{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">db.Table</code> to
+            define tables and{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                await db.get_session()
+            </code>{' '}
+            to open a session.
         </p>
         <p className="leading-7">The SDK keeps the database API small and explicit.</p>
         <Heading id="usage" level="h2">

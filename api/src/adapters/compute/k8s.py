@@ -6,10 +6,10 @@ from datetime import UTC, datetime
 from src.utils import utils
 from .__root__ import Compute
 from kubernetes import client, config
-from kubernetes.utils.quantity import parse_quantity
 from src.constants import TEMPLATES
 from src.utils.namespace import k8name
 from kubernetes.client.rest import ApiException
+from kubernetes.utils.quantity import parse_quantity
 
 
 class K8s(Compute):

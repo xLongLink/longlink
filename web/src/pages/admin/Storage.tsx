@@ -65,7 +65,7 @@ export default function AdminStorage() {
 
     const storageRows = storageQuery.data ?? [];
     const storageColumns = canManage
-        ? [
+        ? ([
               ...storageColumnsBase,
               {
                   id: 'actions',
@@ -127,7 +127,7 @@ export default function AdminStorage() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiStorageRegistry>>
+          ] satisfies Array<ColumnDef<ApiStorageRegistry>>)
         : storageColumnsBase;
 
     return (

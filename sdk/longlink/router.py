@@ -17,7 +17,8 @@ class Router(APIRouter):
     def page(self, path: str):
         """Register a GET route that serves an XML page."""
 
-        from longlink.pages import PageDefinition, XMLResponse, _normalize_page_path, page_registry
+        from longlink.pages import (XMLResponse, PageDefinition, page_registry,
+                                    _normalize_page_path)
 
         normalized_path = _normalize_page_path(path)
 

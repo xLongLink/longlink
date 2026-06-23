@@ -1,9 +1,7 @@
-from inspect import isawaitable
-
 from fastapi import APIRouter
-from fastapi.responses import Response
-
+from inspect import isawaitable
 from longlink.pages import page_registry
+from fastapi.responses import Response
 from longlink.utils.metadata import load_metadata
 
 router = APIRouter()

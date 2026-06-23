@@ -1,5 +1,4 @@
-from sqlalchemy.schema import CreateSchema, DropSchema
-
+from sqlalchemy.schema import DropSchema, CreateSchema
 from src.adapters.database.postgre import Postgre
 
 

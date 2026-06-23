@@ -148,7 +148,10 @@ export function Window({
                 </div>
             ) : (
                 <div className="px-3 pt-8 pb-3">
-                    <div ref={sourceEditorRef} className="h-[28rem] overflow-hidden rounded-lg border border-border/60" />
+                    <div
+                        ref={sourceEditorRef}
+                        className="h-[28rem] overflow-hidden rounded-lg border border-border/60"
+                    />
                 </div>
             )}
         </div>

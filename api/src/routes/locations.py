@@ -1,10 +1,10 @@
-from fastapi import Depends, HTTPException
 from uuid import UUID
+from fastapi import Depends, HTTPException
 from src.auth import authadmin, authsupport
+from src.router import router
+from src.models.locations import LocationCreate, LocationResponse
 from src.database.models.users import User
 from src.database.services.locations import locations
-from src.models.locations import LocationCreate, LocationResponse
-from src.router import router
 
 
 @router.get("/api/locations", response_model=list[LocationResponse])

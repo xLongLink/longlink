@@ -1,5 +1,5 @@
-import Layout from '@/layout/Layout';
 import { Auth } from '@/components/Auth';
+import Layout from '@/layout/Layout';
 import { Activity, Boxes, Building2, Cpu, Database, HardDrive, MapPin, Users } from 'lucide-react';
 import { Outlet } from 'react-router';
 

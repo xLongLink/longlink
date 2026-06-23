@@ -23,10 +23,7 @@ const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry & { location?: Ap
             const database = row.original;
 
             return (
-                <Link
-                    to={`/admin/database/${encodeURIComponent(database.name)}`}
-                    className="flex items-center gap-3"
-                >
+                <Link to={`/admin/database/${encodeURIComponent(database.name)}`} className="flex items-center gap-3">
                     <img
                         src="/images/Postgresql.png"
                         alt="PostgreSQL"
@@ -58,7 +55,9 @@ const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry & { location?: Ap
                         <div className="truncate font-medium text-foreground">
                             {location?.name || `#${row.original.location_id}`}
                         </div>
-                        <div className="truncate text-xs text-muted-foreground">{location?.slug || location?.country || ''}</div>
+                        <div className="truncate text-xs text-muted-foreground">
+                            {location?.slug || location?.country || ''}
+                        </div>
                     </div>
                 </div>
             );
@@ -108,7 +107,7 @@ export default function AdminDatabase() {
         location: locationById.get(row.location_id),
     }));
     const databaseColumns = canManage
-        ? [
+        ? ([
               ...databaseColumnsBase,
               {
                   id: 'actions',
@@ -170,7 +169,7 @@ export default function AdminDatabase() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>>
+          ] satisfies Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>>)
         : databaseColumnsBase;
 
     return (

@@ -1,6 +1,5 @@
 import click
 
-
 COMMANDS = {
     "build": "longlink.cli.build:build_command",
     "dev": "longlink.cli.dev:dev_command",

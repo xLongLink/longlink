@@ -1,14 +1,13 @@
 import pytest
 from types import SimpleNamespace
-from src.models.roles import Roles
-from src.models.roles import PlatformRole
+from src.models.roles import Roles, PlatformRole
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
+from src.models.compute import ComputeKind
+from src.models.database import DatabaseKind
 from src.database.session import get_session
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse as AppResponse
-from src.models.compute import ComputeKind
-from src.models.database import DatabaseKind
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute

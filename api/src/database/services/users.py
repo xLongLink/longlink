@@ -1,12 +1,12 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
-from src.database.session import session_scope
-from src.database.models.organizations import Organization
-from src.database.models.users import User
 from src.models.roles import Roles, PlatformRole
-from src.models.users import UserProfile, UserOrganizationMembership
-from src.models.users import Theme, Accent, Radius, Language
+from src.models.users import (Theme, Accent, Radius, Language, UserProfile,
+                              UserOrganizationMembership)
+from src.database.session import session_scope
+from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 ADMIN_EMAIL = 'example@longlink.dev'
 ADMIN_ORG = 'test'

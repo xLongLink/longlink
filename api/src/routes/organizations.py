@@ -1,10 +1,11 @@
-from fastapi import Depends, HTTPException
 from uuid import UUID
+from fastapi import Depends, HTTPException
 from src.auth import authuser, authadmin, authsupport
 from src.logger import logger
 from src.router import router
-from src.models.organizations import OrganizationCreate, OrganizationDetails, OrganizationSummary
 from src.adapters.compute.k8s import K8s
+from src.models.organizations import (OrganizationCreate, OrganizationDetails,
+                                      OrganizationSummary)
 from src.database.models.users import User
 from src.database.services.compute import compute
 from src.database.services.organizations import organizations

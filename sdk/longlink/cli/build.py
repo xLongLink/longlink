@@ -1,11 +1,10 @@
+import os
 import ast
 import json
-import os
-from datetime import UTC, datetime
-from pathlib import Path
-
 import click
 import tomllib
+from pathlib import Path
+from datetime import UTC, datetime
 
 DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.12-bookworm
 

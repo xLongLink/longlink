@@ -1,11 +1,9 @@
-import importlib.util
 import sys
-from pathlib import Path
-
+import importlib.util
 from alembic import context
-from sqlalchemy.engine import make_url
-
+from pathlib import Path
 from src.enviroments import env
+from sqlalchemy.engine import make_url
 
 
 class _FakeTransaction:

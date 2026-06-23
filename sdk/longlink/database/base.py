@@ -1,10 +1,10 @@
-from datetime import datetime, timezone
 from typing import Any, ClassVar
-
+from datetime import datetime, timezone
+from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Column, DateTime
 from sqlalchemy.orm import declared_attr
-from sqlmodel import Field, Relationship, SQLModel
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
+                                    async_sessionmaker, create_async_engine)
 from longlink.utils.settings import Envs
 
 

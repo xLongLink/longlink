@@ -2,9 +2,9 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
+import { DynamicIcon } from 'lucide-react/dynamic';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { DataTable } from '@/components/DataTable';
 import { useDeleteApp } from '@/hooks/use-org';
@@ -42,7 +42,10 @@ export default function Applications({ org, applications, isLoading, error }: Ap
                             />
                         </div>
                         <div className="min-w-0 space-y-1">
-                            <Link to={`/orgs/${org}/apps/${row.original.slug}`} className="font-medium text-foreground hover:underline">
+                            <Link
+                                to={`/orgs/${org}/apps/${row.original.slug}`}
+                                className="font-medium text-foreground hover:underline"
+                            >
                                 {name}
                             </Link>
                             {row.original.description ? (

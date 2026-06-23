@@ -42,8 +42,7 @@ export default function DatabaseDatabases() {
 
     const databasesQuery = useQuery({
         queryKey: ['api', databasesUrl],
-        queryFn: async () =>
-            fetchApiJson<Array<ApiDatabaseDatabase>>(databasesUrl, { credentials: 'include' }),
+        queryFn: async () => fetchApiJson<Array<ApiDatabaseDatabase>>(databasesUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });
@@ -56,9 +55,7 @@ export default function DatabaseDatabases() {
                 <Hero icon={<Database />}>
                     <div>
                         <HeroTitle>Databases</HeroTitle>
-                        <HeroDescription>
-                            Databases managed by database backend "{name}".
-                        </HeroDescription>
+                        <HeroDescription>Databases managed by database backend "{name}".</HeroDescription>
                     </div>
                 </Hero>
             </div>

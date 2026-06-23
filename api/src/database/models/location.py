@@ -1,18 +1,16 @@
-from datetime import UTC, datetime
-from uuid import UUID
-from uuid import uuid4
+from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
-
+from datetime import UTC, datetime
+from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Column, String, text
-from sqlmodel import Field, Relationship, SQLModel
 from src.models.countries import Country
 
 if TYPE_CHECKING:
+    from src.database.models.users import User
     from src.database.models.compute import ComputeRegistry
+    from src.database.models.storage import StorageRegistry
     from src.database.models.database import DatabaseRegistry
     from src.database.models.organizations import Organization
-    from src.database.models.storage import StorageRegistry
-    from src.database.models.users import User
 
 
 class Location(SQLModel, table=True):

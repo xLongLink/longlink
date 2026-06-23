@@ -1,15 +1,15 @@
-from datetime import UTC, datetime
 from uuid import UUID
+from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
+from src.models.countries import Country
+from src.database.models.users import User
 from src.database.models.compute import ComputeRegistry
+from src.database.models.storage import StorageRegistry
 from src.database.models.database import DatabaseRegistry
 from src.database.models.location import Location
 from src.database.models.organizations import Organization
-from src.database.models.storage import StorageRegistry
-from src.database.models.users import User
-from src.models.countries import Country
 
 
 class LocationsService:

@@ -1,16 +1,16 @@
-from datetime import UTC, datetime
-from uuid import UUID
-from uuid import uuid4
+from uuid import UUID, uuid4
 from typing import TYPE_CHECKING
-from sqlmodel import Field, Relationship, SQLModel
-from sqlalchemy import and_, Column, Enum as SAEnum
-from src.models.users import Theme, Accent, Radius, Language
+from datetime import UTC, datetime
+from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import Column, and_
 from src.models.roles import PlatformRole
+from src.models.users import Theme, Accent, Radius, Language
 from src.database.models.association import UserApplication, UserOrganization
 
 if TYPE_CHECKING:
-    from src.database.models.organizations import Organization
     from src.database.models.applications import Application
+    from src.database.models.organizations import Organization
 
 
 class User(SQLModel, table=True):

@@ -1,5 +1,5 @@
-import { A } from '@/components/ui/a';
 import { CodeBlock } from '@/components/CodeBlock';
+import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
 
 export const metadata = {
@@ -13,9 +13,10 @@ export const content = (
             Storage
         </Heading>
         <p className="leading-7">
-            LongLink SDK exposes a native <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">fs</code>{' '}
-            object. You can use it like a standard{' '}
-            <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec</A> filesystem.
+            LongLink SDK exposes a native{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">fs</code> object. You
+            can use it like a standard <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec</A>{' '}
+            filesystem.
         </p>
         <Heading id="usage" level="h2">
             Usage

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Callable
-
+from dataclasses import dataclass
 from fastapi.responses import Response
+
 
 class XMLResponse(Response):
     """Render page content with the XML media type."""

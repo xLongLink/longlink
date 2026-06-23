@@ -1,14 +1,13 @@
-from datetime import UTC, datetime
-from uuid import UUID
-from uuid import uuid4
+from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
-from sqlmodel import Field, Relationship, SQLModel
+from datetime import UTC, datetime
+from sqlmodel import Field, SQLModel, Relationship
 from src.database.models.association import UserOrganization
 
 if TYPE_CHECKING:
-    from src.database.models.applications import Application
-    from src.database.models.location import Location
     from src.database.models.users import User
+    from src.database.models.location import Location
+    from src.database.models.applications import Application
 
 
 class Organization(SQLModel, table=True):

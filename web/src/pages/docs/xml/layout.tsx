@@ -11,7 +11,9 @@ export const content = (
         <Heading id="layout" level="h1">
             Layout
         </Heading>
-        <p className="leading-7">XML layout components organize content into responsive sections and dialog-style surfaces.</p>
+        <p className="leading-7">
+            XML layout components organize content into responsive sections and dialog-style surfaces.
+        </p>
         <Heading id="card" level="h2">
             Card
         </Heading>
@@ -22,7 +24,9 @@ export const content = (
         <Heading id="columns" level="h2">
             Columns
         </Heading>
-        <p className="leading-7">Columns render side-by-side sections. Column widths should add up to 100 across the row.</p>
+        <p className="leading-7">
+            Columns render side-by-side sections. Column widths should add up to 100 across the row.
+        </p>
         <CodeBlock language="xml">{`<Columns>
   <Column width="70">Main content</Column>
   <Column width="30">Sidebar</Column>
@@ -31,7 +35,11 @@ export const content = (
             Dialog
         </Heading>
         <p className="leading-7">Dialog renders an overlay for focused actions and confirmations.</p>
-        <p className="leading-7">Use a trigger to open the dialog. Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">open</code> only when you need a controlled dialog.</p>
+        <p className="leading-7">
+            Use a trigger to open the dialog. Use{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">open</code> only when
+            you need a controlled dialog.
+        </p>
         <CodeBlock language="xml">{`<Dialog>
   <DialogTrigger>
     <Button variant="outline">Open dialog</Button>
@@ -46,10 +54,30 @@ export const content = (
         </Heading>
         <p className="leading-7">Flex arranges children in a row and can distribute space between them.</p>
         <ul className="ml-6 list-disc space-y-2">
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">space=&quot;center&quot;</code> centers the group.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">space=&quot;around&quot;</code> adds equal space around each item.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">space=&quot;between&quot;</code> pushes items to the edges.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">space=&quot;evenly&quot;</code> keeps equal spacing across the row.</li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                    space=&quot;center&quot;
+                </code>{' '}
+                centers the group.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                    space=&quot;around&quot;
+                </code>{' '}
+                adds equal space around each item.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                    space=&quot;between&quot;
+                </code>{' '}
+                pushes items to the edges.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                    space=&quot;evenly&quot;
+                </code>{' '}
+                keeps equal spacing across the row.
+            </li>
         </ul>
         <CodeBlock language="xml">{`<Flex space="between">
   <Button variant="outline">Cancel</Button>

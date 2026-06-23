@@ -33,8 +33,7 @@ export default function ComputeNamespaces() {
 
     const namespacesQuery = useQuery({
         queryKey: ['api', namespacesUrl],
-        queryFn: async () =>
-            fetchApiJson<Array<ApiComputeNamespace>>(namespacesUrl, { credentials: 'include' }),
+        queryFn: async () => fetchApiJson<Array<ApiComputeNamespace>>(namespacesUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });
@@ -47,9 +46,7 @@ export default function ComputeNamespaces() {
                 <Hero icon={<Layers />}>
                     <div>
                         <HeroTitle>Namespaces</HeroTitle>
-                        <HeroDescription>
-                            Namespaces managed by compute backend #{id}.
-                        </HeroDescription>
+                        <HeroDescription>Namespaces managed by compute backend #{id}.</HeroDescription>
                     </div>
                 </Hero>
             </div>

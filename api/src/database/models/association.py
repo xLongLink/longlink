@@ -1,6 +1,5 @@
-from datetime import UTC, datetime
 from uuid import UUID
-
+from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Column, ForeignKeyConstraint
 from src.models.roles import Roles

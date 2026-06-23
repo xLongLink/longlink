@@ -1,5 +1,5 @@
-import { A } from '@/components/ui/a';
 import { CodeBlock } from '@/components/CodeBlock';
+import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
 
 export const metadata = {
@@ -13,7 +13,8 @@ export const content = (
             Environments
         </Heading>
         <p className="leading-7">
-            The <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Environments</code>{' '}
+            The{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Environments</code>{' '}
             class defines and validates environment variables for an application.
         </p>
         <p className="leading-7">
@@ -31,7 +32,11 @@ export const content = (
             Use required fields for values that must be present at startup, and optional fields for settings that can
             fall back to a default.
         </p>
-        <CodeBlock language="python">{'from longlink import Environments, LongLink\nfrom pydantic import Field\n\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(\n        description="Required example environment value",\n    )\n    OPTIONAL: str = Field(\n        default="optional",\n        description="Optional example environment value",\n    )\n\n\nenv = Env()\napp = LongLink(env=env)'}</CodeBlock>
+        <CodeBlock language="python">
+            {
+                'from longlink import Environments, LongLink\nfrom pydantic import Field\n\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(\n        description="Required example environment value",\n    )\n    OPTIONAL: str = Field(\n        default="optional",\n        description="Optional example environment value",\n    )\n\n\nenv = Env()\napp = LongLink(env=env)'
+            }
+        </CodeBlock>
         <Heading id="resources" level="h2">
             Resources
         </Heading>

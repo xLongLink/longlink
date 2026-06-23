@@ -1,5 +1,5 @@
-import { A } from '@/components/ui/a';
 import { CodeBlock } from '@/components/CodeBlock';
+import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -14,9 +14,9 @@ export const content = (
             Application SDK
         </Heading>
         <p className="leading-7">
-            The LongLink SDK is a thin integration layer built on top of the standard Python backend ecosystem. It
-            does not introduce a new framework or replace existing tools. Instead, it provides a structured way to
-            compose and connect them within the LongLink platform.
+            The LongLink SDK is a thin integration layer built on top of the standard Python backend ecosystem. It does
+            not introduce a new framework or replace existing tools. Instead, it provides a structured way to compose
+            and connect them within the LongLink platform.
         </p>
         <p className="leading-7">Applications follow a simple model:</p>
         <ul className="ml-6 list-disc space-y-2">
@@ -66,7 +66,11 @@ export const content = (
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">longlink dev</code>{' '}
             can run immediately:
         </p>
-        <CodeBlock language="text">{'├── src/\n│   ├── api/          # Route registration\n│   ├── models/       # Database models\n│   ├── pages/        # XML page definitions\n│   ├── types/        # Data schemas\n│   └── envs.py       # Configuration\n├── tests/\n│   ├── api/          # API tests\n│   └── conftest.py   # Test setup\n├── main.py           # Entry point\n├── Dockerfile        # Container build definition\n├── pyproject.toml    # Project configuration\n├── .env.sample       # Environment template\n├── AGENTS.md         # Platform metadata\n└── README.md'}</CodeBlock>
+        <CodeBlock language="text">
+            {
+                '├── src/\n│   ├── api/          # Route registration\n│   ├── models/       # Database models\n│   ├── pages/        # XML page definitions\n│   ├── types/        # Data schemas\n│   └── envs.py       # Configuration\n├── tests/\n│   ├── api/          # API tests\n│   └── conftest.py   # Test setup\n├── main.py           # Entry point\n├── Dockerfile        # Container build definition\n├── pyproject.toml    # Project configuration\n├── .env.sample       # Environment template\n├── AGENTS.md         # Platform metadata\n└── README.md'
+            }
+        </CodeBlock>
         <Heading id="local-development" level="h2">
             Local Development
         </Heading>

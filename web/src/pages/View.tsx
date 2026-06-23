@@ -1,11 +1,11 @@
+import XML from '@/layout/XmlLayout';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
 import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@ui/skeleton';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { Skeleton } from '@ui/skeleton';
 import NotFound from './NotFound';
-import XML from '@/layout/XmlLayout';
 
 type ViewProps = {
     metadata: string;

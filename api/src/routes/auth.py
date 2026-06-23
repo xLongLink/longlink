@@ -1,17 +1,15 @@
-from typing import cast
-
 import httpx2
-from authlib.integrations.starlette_client.apps import StarletteOAuth2App
-from fastapi import HTTPException, Request
-from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, Field, ValidationError
-
+from typing import cast
+from fastapi import Request, HTTPException
+from pydantic import Field, BaseModel, ValidationError
 from src.auth import oauth
-from src.database.services.users import users
-from src.enviroments import env
 from src.router import router
+from src.enviroments import env
+from src.models.auth import OidcUserInfo, OidcTokenResponse
+from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
-from src.models.auth import OidcTokenResponse, OidcUserInfo
+from src.database.services.users import users
+from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
 
 class PasswordLoginRequest(BaseModel):

@@ -1,5 +1,5 @@
-import { A } from '@/components/ui/a';
 import { CodeBlock } from '@/components/CodeBlock';
+import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
 
 export const metadata = {
@@ -45,7 +45,9 @@ app.include_router(router)`}</CodeBlock>
                 <A href="https://fastapi.tiangolo.com/tutorial/">FastAPI tutorial</A>
             </li>
             <li>
-                <A href="https://fastapi.tiangolo.com/tutorial/path-operation-configuration/">Path operation decorators</A>
+                <A href="https://fastapi.tiangolo.com/tutorial/path-operation-configuration/">
+                    Path operation decorators
+                </A>
             </li>
             <li>
                 <A href="https://fastapi.tiangolo.com/tutorial/body/">Request body with Pydantic</A>

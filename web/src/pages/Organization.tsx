@@ -1,6 +1,6 @@
-import Layout from '@/layout/Layout';
 import { useOrg } from '@/hooks/use-org';
 import { useUser } from '@/hooks/use-user';
+import Layout from '@/layout/Layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { LayoutGrid, Settings2, Users } from 'lucide-react';
@@ -98,7 +98,13 @@ export default function Organization({ sectionName }: OrganizationProps) {
                     <Applications org={org} applications={applications} isLoading={isLoading} error={error} />
                 ) : null}
                 {section === 'settings' ? (
-                    <OrgSettings org={org} orgDetails={orgDetails} applications={applications} isLoading={isLoading} error={error} />
+                    <OrgSettings
+                        org={org}
+                        orgDetails={orgDetails}
+                        applications={applications}
+                        isLoading={isLoading}
+                        error={error}
+                    />
                 ) : null}
             </section>
         </Layout>

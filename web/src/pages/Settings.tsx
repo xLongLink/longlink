@@ -1,12 +1,12 @@
-import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
 import { DataTable } from '@/components/DataTable';
+import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
 import { useDeleteOrg } from '@/hooks/use-org';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Button } from '@ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Input } from '@ui/input';

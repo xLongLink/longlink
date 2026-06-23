@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { useUser } from '@/hooks/use-user';
 import { useCreateOrg } from '@/hooks/use-org';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
@@ -124,22 +124,22 @@ export default function CreateOrgDialog() {
                             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
                             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => {
-                                            setOpen(false);
-                                            setError(null);
-                                        }}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={createOrg.isPending || name.trim().length === 0 || !locationId}
-                                    >
-                                        {createOrg.isPending ? 'Creating...' : 'Create'}
-                                    </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setOpen(false);
+                                        setError(null);
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={createOrg.isPending || name.trim().length === 0 || !locationId}
+                                >
+                                    {createOrg.isPending ? 'Creating...' : 'Create'}
+                                </Button>
                             </div>
                         </form>
                     </div>

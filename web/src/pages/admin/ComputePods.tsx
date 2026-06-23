@@ -38,18 +38,12 @@ const podColumns: Array<ColumnDef<ApiComputePod>> = [
                     <div className="flex items-center gap-1.5">
                         <span className="font-medium text-foreground">{formatBytes(r.ram_usage)}</span>
                         {r.ram_limit > 0 && (
-                            <span className="text-xs text-muted-foreground">
-                                / {formatBytes(r.ram_limit)}
-                            </span>
+                            <span className="text-xs text-muted-foreground">/ {formatBytes(r.ram_limit)}</span>
                         )}
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="font-medium text-foreground">{r.cpu_usage.toFixed(2)} vCPU</span>
-                        {r.cpu_limit > 0 && (
-                            <span className="text-xs text-muted-foreground">
-                                / {r.cpu_limit} vCPU
-                            </span>
-                        )}
+                        {r.cpu_limit > 0 && <span className="text-xs text-muted-foreground">/ {r.cpu_limit} vCPU</span>}
                     </div>
                 </div>
             );
@@ -102,8 +96,8 @@ export default function ComputePods() {
                     <div>
                         <HeroTitle>Pods</HeroTitle>
                         <HeroDescription>
-                            Pods in namespace <span className="font-medium text-foreground">{namespace}</span> on compute
-                            backend #{id}.
+                            Pods in namespace <span className="font-medium text-foreground">{namespace}</span> on
+                            compute backend #{id}.
                         </HeroDescription>
                     </div>
                 </Hero>

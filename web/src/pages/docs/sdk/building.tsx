@@ -15,9 +15,16 @@ export const content = (
         <ul className="ml-6 list-disc space-y-2">
             <li>Applications can be built using Docker.</li>
             <li>
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">longlink build</code>{' '}
-                generates the <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Dockerfile</code>{' '}
-                and the <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">manifest.json</code>.
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                    longlink build
+                </code>{' '}
+                generates the{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Dockerfile</code>{' '}
+                and the{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                    manifest.json
+                </code>
+                .
             </li>
             <li>Once containerized, applications can be pushed to any registry.</li>
             <li>Applications can be connected to the control plane and deployed.</li>

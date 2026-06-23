@@ -1,5 +1,5 @@
-import { A } from '@/components/ui/a';
 import { CodeBlock } from '@/components/CodeBlock';
+import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -16,8 +16,8 @@ export const content = (
         <p className="leading-7">
             Applications built with the LongLink SDK can be tested using standard{' '}
             <A href="https://docs.pytest.org/en/stable/">pytest</A> and{' '}
-            <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio</A> workflows. When a project
-            is generated, these tools are already included as development dependencies in the{' '}
+            <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio</A> workflows. When a project is
+            generated, these tools are already included as development dependencies in the{' '}
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">pyproject.toml</code>{' '}
             file.
         </p>
@@ -42,12 +42,14 @@ export const content = (
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">sdk/tests</code> for
             SDK test files and keep file paths aligned with the repository layout:
         </p>
-        <CodeBlock language="bash">pytest
-pytest sdk/tests/cli/test_init.py</CodeBlock>
+        <CodeBlock language="bash">pytest pytest sdk/tests/cli/test_init.py</CodeBlock>
         <Heading id="example" level="h2">
             Example
         </Heading>
-        <p className="leading-7">Illustrative snippet: asynchronous testing with <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">pytest</code></p>
+        <p className="leading-7">
+            Illustrative snippet: asynchronous testing with{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">pytest</code>
+        </p>
         <CodeBlock language="python">{`import pytest
 
 

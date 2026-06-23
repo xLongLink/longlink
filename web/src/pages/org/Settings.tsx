@@ -9,8 +9,8 @@ import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { Input } from '@ui/input';
 import { Menu, MenuSection } from '@ui/menu';
-import { DynamicIcon } from 'lucide-react/dynamic';
 import { Boxes, Building2, Database, HardDrive, Plug, Settings2, ShieldCheck } from 'lucide-react';
+import { DynamicIcon } from 'lucide-react/dynamic';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -101,7 +101,9 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                                 <div className="flex items-center gap-3 rounded-md border border-input bg-background px-3 py-2">
                                     <Avatar className="size-8">
                                         <AvatarImage src={orgDetails?.avatar ?? ''} alt={orgDetails?.name ?? org} />
-                                        <AvatarFallback>{(orgDetails?.name ?? org).slice(0, 2).toUpperCase()}</AvatarFallback>
+                                        <AvatarFallback>
+                                            {(orgDetails?.name ?? org).slice(0, 2).toUpperCase()}
+                                        </AvatarFallback>
                                     </Avatar>
                                     <span className="font-medium text-foreground">{orgDetails?.name ?? org}</span>
                                 </div>
@@ -138,13 +140,19 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                         </div>
                         <hr className="border-border" />
                         {isLoading ? (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading applications...</div>
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                Loading applications...
+                            </div>
                         ) : error ? (
-                            <div className="rounded-md border p-4 text-sm text-destructive">Failed to load applications.</div>
+                            <div className="rounded-md border p-4 text-sm text-destructive">
+                                Failed to load applications.
+                            </div>
                         ) : applications.length ? (
                             <DataTable columns={appColumns} data={applications} />
                         ) : (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">No applications found.</div>
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                No applications found.
+                            </div>
                         )}
                     </div>
                 </MenuSection>

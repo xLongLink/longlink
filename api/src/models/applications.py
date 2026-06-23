@@ -1,11 +1,11 @@
 from enum import Enum
+from uuid import UUID
 from typing import Annotated
 from datetime import datetime
-from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict, BeforeValidator
-from src.models.organization_summary import OrganizationSummary
 from src.models.roles import Roles
 from src.models.users import UserSummary
+from src.models.organization_summary import OrganizationSummary
 
 
 def normalize_application_name(value: str) -> str:

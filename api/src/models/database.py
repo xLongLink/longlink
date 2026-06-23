@@ -1,6 +1,6 @@
 from enum import Enum
-from datetime import datetime
 from uuid import UUID
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from src.models.users import UserSummary
 

@@ -1,9 +1,9 @@
 from fastapi import Request, HTTPException
 from src.enviroments import env
-from authlib.integrations.starlette_client import OAuth
+from src.models.roles import PlatformRole
 from src.database.models.users import User
 from src.database.services.users import users
-from src.models.roles import PlatformRole
+from authlib.integrations.starlette_client import OAuth
 
 oauth = OAuth()
 oauth.register(

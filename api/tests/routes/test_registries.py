@@ -1,13 +1,11 @@
 from types import SimpleNamespace
-from fastapi.testclient import TestClient
-from src.models.compute import ComputeRegistryResponse
-from src.models.storage import StorageRegistryResponse
-from src.models.database import DatabaseRegistryResponse
+from src.models.roles import PlatformRole
 from src.models.users import UserSummary
+from fastapi.testclient import TestClient
+from src.models.compute import ComputeKind, ComputeRegistryResponse
+from src.models.storage import StorageKind, StorageRegistryResponse
+from src.models.database import DatabaseKind, DatabaseRegistryResponse
 from src.models.operations import OperationKind
-from src.models.compute import ComputeKind
-from src.models.storage import StorageKind
-from src.models.database import DatabaseKind
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
@@ -16,7 +14,6 @@ from src.database.services.locations import locations
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
-from src.models.roles import PlatformRole
 
 db = SimpleNamespace(
     applications=applications,

@@ -1,10 +1,7 @@
-from datetime import datetime
 from uuid import UUID
-
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict
-
-from src.models.users import Avatar
-from src.models.users import UserSummary
+from src.models.users import Avatar, UserSummary
 
 
 class OrganizationSummary(BaseModel):

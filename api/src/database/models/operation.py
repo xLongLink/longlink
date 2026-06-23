@@ -1,8 +1,7 @@
+from uuid import UUID, uuid4
 from datetime import UTC, datetime
-from uuid import UUID
-from uuid import uuid4
-from sqlalchemy import Enum, Column, String
 from sqlmodel import Field, SQLModel
+from sqlalchemy import Enum, Column, String
 from src.models.operations import OperationKind
 
 

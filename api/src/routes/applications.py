@@ -1,13 +1,15 @@
-from fastapi import Depends, Response, HTTPException
 from uuid import UUID
+from fastapi import Depends, Response, HTTPException
 from src.auth import authuser, authadmin
 from src.logger import logger
 from src.router import router
 from src.constants import APP_SERVICE_PORT
 from src.utils.utils import slugify
+from src.models.roles import PlatformRole
 from src.adapters.database import Postgre
 from src.models.operations import OperationKind
-from src.models.applications import ApplicationCreate, AppStatus, ApplicationResponse
+from src.models.applications import (AppStatus, ApplicationCreate,
+                                     ApplicationResponse)
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
@@ -15,7 +17,6 @@ from src.database.services.database import database
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
-from src.models.roles import PlatformRole
 
 
 @router.get("/api/apps", response_model=list[ApplicationResponse])

@@ -22,7 +22,9 @@ export const content = (
         <Heading id="infrastructure" level="h2">
             Infrastructure
         </Heading>
-        <p className="leading-7">The control plane manages and connects to the core infrastructure required to run applications:</p>
+        <p className="leading-7">
+            The control plane manages and connects to the core infrastructure required to run applications:
+        </p>
         <ul className="ml-6 list-disc space-y-2">
             <li>Database, isolated per application</li>
             <li>Object storage, S3-compatible</li>

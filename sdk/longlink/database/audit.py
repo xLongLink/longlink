@@ -1,13 +1,10 @@
-from contextlib import contextmanager
-from contextvars import ContextVar
-from typing import Any, Iterator
-
-from fastapi import FastAPI, Request
-from sqlalchemy import event
-from sqlalchemy.orm import Session as SyncSession
-
 from .base import Table, utcnow
-
+from typing import Any, Iterator
+from fastapi import FastAPI, Request
+from contextlib import contextmanager
+from sqlalchemy import event
+from contextvars import ContextVar
+from sqlalchemy.orm import Session as SyncSession
 
 _current_user_id: ContextVar[int | None] = ContextVar("current_user_id", default=None)
 

@@ -1,22 +1,27 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUser } from '@/hooks/use-user';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateApp } from '@/hooks/use-org';
+import { useUser } from '@/hooks/use-user';
 import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiImageMetadata } from '@/lib/types';
-import type { FormEvent, UIEvent } from 'react';
-import { useState } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
+import type { FormEvent, UIEvent } from 'react';
+import { useState } from 'react';
 
 const ICON_OPTIONS = Object.keys(LucideIcons)
     .filter((name) => /^[A-Z]/.test(name))
     .filter((name) => name.endsWith('Icon'))
-    .map((name) => name.replace(/Icon$/, '').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase())
+    .map((name) =>
+        name
+            .replace(/Icon$/, '')
+            .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+            .toLowerCase()
+    )
     .filter((name) => name.length > 0)
     .sort((left, right) => left.localeCompare(right));
 
@@ -82,9 +87,12 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
         setIsInspecting(true);
 
         try {
-            const metadata = await fetchApiJson<ApiImageMetadata>(apiUrl(`/api/image?image=${encodeURIComponent(image.trim())}`), {
-                credentials: 'include',
-            });
+            const metadata = await fetchApiJson<ApiImageMetadata>(
+                apiUrl(`/api/image?image=${encodeURIComponent(image.trim())}`),
+                {
+                    credentials: 'include',
+                }
+            );
 
             setImageMetadata(metadata);
             setName(metadata.title ?? '');
@@ -151,14 +159,24 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                     <div className="space-y-4">
                         <div className="space-y-1">
                             <DialogTitle>
-                                {step === 'image' ? 'Inspect image' : step === 'metadata' ? 'Review metadata' : 'Review envs'}
+                                {step === 'image'
+                                    ? 'Inspect image'
+                                    : step === 'metadata'
+                                      ? 'Review metadata'
+                                      : 'Review envs'}
                             </DialogTitle>
                             <DialogDescription>
-                                <span className={step === 'image' ? 'font-medium text-foreground' : undefined}>1. Image</span>
+                                <span className={step === 'image' ? 'font-medium text-foreground' : undefined}>
+                                    1. Image
+                                </span>
                                 <span className="text-muted-foreground"> / </span>
-                                <span className={step === 'metadata' ? 'font-medium text-foreground' : undefined}>2. Metadata</span>
+                                <span className={step === 'metadata' ? 'font-medium text-foreground' : undefined}>
+                                    2. Metadata
+                                </span>
                                 <span className="text-muted-foreground"> / </span>
-                                <span className={step === 'envs' ? 'font-medium text-foreground' : undefined}>3. Envs</span>
+                                <span className={step === 'envs' ? 'font-medium text-foreground' : undefined}>
+                                    3. Envs
+                                </span>
                             </DialogDescription>
                         </div>
 
@@ -330,7 +348,11 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                                         </Button>
                                         <Button
                                             type="submit"
-                                            disabled={createApp.isPending || name.trim().length === 0 || image.trim().length === 0}
+                                            disabled={
+                                                createApp.isPending ||
+                                                name.trim().length === 0 ||
+                                                image.trim().length === 0
+                                            }
                                         >
                                             {createApp.isPending ? 'Creating...' : 'Create'}
                                         </Button>

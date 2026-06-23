@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import EmailStr, BaseModel, ConfigDict
 
 
 class OidcUserInfo(BaseModel):

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
@@ -46,7 +46,10 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                     {user ? (
                         <UserProfile />
                     ) : (
-                        <Link to="/docs" className="text-sm font-medium text-white/70 transition-colors hover:text-white">
+                        <Link
+                            to="/docs"
+                            className="text-sm font-medium text-white/70 transition-colors hover:text-white"
+                        >
                             Docs
                         </Link>
                     )}
@@ -85,7 +88,5 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         </>
     );
 
-    return (
-        <TopLayout header={header}>{children}</TopLayout>
-    );
+    return <TopLayout header={header}>{children}</TopLayout>;
 }

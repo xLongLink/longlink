@@ -1,11 +1,11 @@
 from fastapi import FastAPI
-from longlink.database.audit import install_audit_middleware
 from longlink.utils import Envs
 from longlink.routes import routes
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from longlink.database.audit import install_audit_middleware
 
 
 class LongLink(FastAPI):

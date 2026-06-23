@@ -5,10 +5,9 @@ Revises:
 Create Date: 2026-06-12 00:00:00.000000
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlmodel.sql.sqltypes import AutoString
-
 
 revision = "20260612_initial_schema"
 down_revision = None

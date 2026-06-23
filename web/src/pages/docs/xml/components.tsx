@@ -1,4 +1,3 @@
-import { A } from '@/components/ui/a';
 import { CodeBlock } from '@/components/CodeBlock';
 import { Heading } from '@/components/ui/heading';
 
@@ -37,9 +36,22 @@ export const content = (
         </Heading>
         <p className="leading-7">Buttons trigger actions or navigation.</p>
         <ul className="ml-6 list-disc space-y-2">
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Button</code> renders a single action.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">ButtonGroup</code> arranges related buttons.</li>
-            <li>Supported variants include <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">default</code>, <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">outline</code>, <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">ghost</code>, <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">destructive</code>, and <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">link</code>.</li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Button</code>{' '}
+                renders a single action.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">ButtonGroup</code>{' '}
+                arranges related buttons.
+            </li>
+            <li>
+                Supported variants include{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">default</code>,{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">outline</code>,{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">ghost</code>,{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">destructive</code>
+                , and <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">link</code>.
+            </li>
         </ul>
         <CodeBlock language="xml">{`<Flex space="around">
   <Button>Create issue</Button>
@@ -59,7 +71,12 @@ export const content = (
         <Heading id="hr" level="h2">
             Hr
         </Heading>
-        <p className="leading-7"><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Hr</code> renders a visual separator and <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Br</code> inserts vertical spacing.</p>
+        <p className="leading-7">
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Hr</code> renders a
+            visual separator and{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Br</code> inserts
+            vertical spacing.
+        </p>
         <CodeBlock language="xml">{`<Hr />
 <Br />`}</CodeBlock>
         <Heading id="hero" level="h2">
@@ -98,7 +115,11 @@ export const content = (
         <Heading id="input" level="h2">
             Input
         </Heading>
-        <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Input</code> inside <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Field</code> when the input needs a label and description.</p>
+        <p className="leading-7">
+            Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Input</code>{' '}
+            inside <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Field</code>{' '}
+            when the input needs a label and description.
+        </p>
         <CodeBlock language="xml">{`<Field>
   <FieldLabel htmlFor="name">
     <FieldTitle>Full name</FieldTitle>
@@ -113,9 +134,20 @@ export const content = (
         </Heading>
         <p className="leading-7">Lists render ordered and unordered lists.</p>
         <ul className="ml-6 list-disc space-y-2">
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Ol</code> renders an ordered list.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Ul</code> renders an unordered list.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Li</code> renders a list item inside <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Ol</code> or <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Ul</code>.</li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Ol</code> renders
+                an ordered list.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Ul</code> renders
+                an unordered list.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Li</code> renders
+                a list item inside{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Ol</code> or{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Ul</code>.
+            </li>
         </ul>
         <CodeBlock language="xml">{`<Ol>
   <Li>First item</Li>
@@ -124,7 +156,10 @@ export const content = (
         <Heading id="radiogroup" level="h2">
             RadioGroup
         </Heading>
-        <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">RadioGroup</code> for mutually exclusive options and label the group clearly.</p>
+        <p className="leading-7">
+            Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">RadioGroup</code>{' '}
+            for mutually exclusive options and label the group clearly.
+        </p>
         <CodeBlock language="xml">{`<Field>
   <FieldLegend>
     <FieldTitle>Priority</FieldTitle>
@@ -141,7 +176,10 @@ export const content = (
         <Heading id="select" level="h2">
             Select
         </Heading>
-        <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Select</code> for single-choice dropdowns with a title and description.</p>
+        <p className="leading-7">
+            Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Select</code> for
+            single-choice dropdowns with a title and description.
+        </p>
         <CodeBlock language="xml">{`<Field>
   <FieldLabel htmlFor="department">
     <FieldTitle>Department</FieldTitle>
@@ -162,7 +200,10 @@ export const content = (
         <Heading id="slider" level="h2">
             Slider
         </Heading>
-        <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Slider</code> for numeric ranges and step-based input.</p>
+        <p className="leading-7">
+            Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Slider</code> for
+            numeric ranges and step-based input.
+        </p>
         <CodeBlock language="xml">{`<Field>
   <FieldLabel htmlFor="budget">
     <FieldTitle>Budget</FieldTitle>
@@ -175,7 +216,10 @@ export const content = (
         <Heading id="switch" level="h2">
             Switch
         </Heading>
-        <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Switch</code> for on/off settings with an explicit title and description.</p>
+        <p className="leading-7">
+            Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Switch</code> for
+            on/off settings with an explicit title and description.
+        </p>
         <CodeBlock language="xml">{`<Field>
   <FieldLabel>
     <Switch id="notifications" />
@@ -215,14 +259,38 @@ export const content = (
         </Heading>
         <p className="leading-7">Text renders inline text content and formatting.</p>
         <ul className="ml-6 list-disc space-y-2">
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">A</code> links to another page or resource.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">B</code> renders bold inline text.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Code</code> renders inline monospace text.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">S</code> renders strikethrough text.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Sub</code> renders subscript text.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Sup</code> renders superscript text.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">P</code> renders a standard paragraph.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">U</code> renders underlined text.</li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">A</code> links to
+                another page or resource.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">B</code> renders
+                bold inline text.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Code</code>{' '}
+                renders inline monospace text.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">S</code> renders
+                strikethrough text.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Sub</code> renders
+                subscript text.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Sup</code> renders
+                superscript text.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">P</code> renders a
+                standard paragraph.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">U</code> renders
+                underlined text.
+            </li>
         </ul>
         <CodeBlock language="xml">{`<P>
   <A href="/settings">Open settings</A>
@@ -236,7 +304,10 @@ export const content = (
         <Heading id="textarea" level="h2">
             Textarea
         </Heading>
-        <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Textarea</code> for longer text entry and keep it inside a complete field block.</p>
+        <p className="leading-7">
+            Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Textarea</code>{' '}
+            for longer text entry and keep it inside a complete field block.
+        </p>
         <CodeBlock language="xml">{`<Field>
   <FieldLabel htmlFor="notes">
     <FieldTitle>Notes</FieldTitle>
@@ -249,7 +320,10 @@ export const content = (
         <Heading id="toggle" level="h2">
             Toggle
         </Heading>
-        <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Toggle</code> for a single pressed state with supporting field text.</p>
+        <p className="leading-7">
+            Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Toggle</code> for
+            a single pressed state with supporting field text.
+        </p>
         <CodeBlock language="xml">{`<Field>
   <FieldLabel htmlFor="enabled">
     <FieldTitle>Enabled</FieldTitle>
@@ -262,7 +336,10 @@ export const content = (
         <Heading id="togglegroup" level="h2">
             ToggleGroup
         </Heading>
-        <p className="leading-7">Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">ToggleGroup</code> for related toggle choices and show the group label above it.</p>
+        <p className="leading-7">
+            Use <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">ToggleGroup</code>{' '}
+            for related toggle choices and show the group label above it.
+        </p>
         <CodeBlock language="xml">{`<Field>
   <FieldLegend>
     <FieldTitle>Text alignment</FieldTitle>
@@ -281,10 +358,22 @@ export const content = (
         </Heading>
         <p className="leading-7">Title renders page title levels.</p>
         <ul className="ml-6 list-disc space-y-2">
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">H1</code> primary heading for a page.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">H2</code> second-level heading.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">H3</code> third-level heading.</li>
-            <li><code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">H4</code> fourth-level heading.</li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">H1</code> primary
+                heading for a page.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">H2</code>{' '}
+                second-level heading.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">H3</code>{' '}
+                third-level heading.
+            </li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">H4</code>{' '}
+                fourth-level heading.
+            </li>
         </ul>
         <CodeBlock language="xml">{`<H1>Dashboard</H1>`}</CodeBlock>
     </div>

@@ -1,8 +1,7 @@
 import click
 import uvicorn
-
-from longlink.constants import DEV_PORT
 from longlink.logger import log_config
+from longlink.constants import DEV_PORT
 
 
 @click.command(name="dev")

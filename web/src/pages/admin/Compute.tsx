@@ -24,7 +24,9 @@ function formatBytes(bytes: number): string {
     return `${Math.round(value)} ${units[unit]}`;
 }
 
-const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>> = [
+const computeColumnsBase: Array<
+    ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>
+> = [
     {
         accessorKey: 'kind',
         header: 'Kind',
@@ -34,17 +36,16 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiL
             const computeId = String(row.original.id);
 
             return (
-                <Link
-                    to={`/admin/compute/${encodeURIComponent(computeId)}`}
-                    className="flex items-center gap-3"
-                >
+                <Link to={`/admin/compute/${encodeURIComponent(computeId)}`} className="flex items-center gap-3">
                     <img
                         src="/images/Kubernetes.png"
                         alt="Kubernetes"
                         className="size-10 rounded-md border border-border bg-background object-contain p-1"
                     />
                     <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground underline-offset-4 hover:underline">{kind}</div>
+                        <div className="truncate font-medium text-foreground underline-offset-4 hover:underline">
+                            {kind}
+                        </div>
                         <div className="truncate text-xs text-muted-foreground">{ingress}</div>
                     </div>
                 </Link>
@@ -64,8 +65,12 @@ const computeColumnsBase: Array<ColumnDef<ApiComputeRegistry & { location?: ApiL
                         {country?.slice(0, 2).toUpperCase() || '--'}
                     </div>
                     <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{location?.name || `#${row.original.location_id}`}</div>
-                        <div className="truncate text-xs text-muted-foreground">{location?.slug || location?.country || ''}</div>
+                        <div className="truncate font-medium text-foreground">
+                            {location?.name || `#${row.original.location_id}`}
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">
+                            {location?.slug || location?.country || ''}
+                        </div>
                     </div>
                 </div>
             );
@@ -157,7 +162,7 @@ export default function AdminCompute() {
     }));
 
     const computeColumns = canManage
-        ? [
+        ? ([
               ...computeColumnsBase,
               {
                   id: 'actions',
@@ -220,7 +225,9 @@ export default function AdminCompute() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>>
+          ] satisfies Array<
+              ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>
+          >)
         : computeColumnsBase;
 
     return (

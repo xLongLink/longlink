@@ -1,10 +1,9 @@
 from fastapi import Depends, HTTPException
-
 from src.auth import authuser
-from src.database.models.users import User
-from src.utils.utils import metadata
 from src.router import router
+from src.utils.utils import metadata
 from src.models.metadata import ImageMetadataResponse
+from src.database.models.users import User
 
 
 @router.get("/api/image", response_model=ImageMetadataResponse)

@@ -1,10 +1,10 @@
-from datetime import datetime
 from uuid import UUID
+from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
+from src.models.users import Avatar, UserSummary
 from src.models.locations import LocationResponse
 from src.models.applications import AppStatus
 from src.models.organization_summary import OrganizationSummary
-from src.models.users import Avatar, UserSummary
 
 
 class OrganizationCreate(BaseModel):

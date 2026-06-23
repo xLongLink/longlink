@@ -20,17 +20,14 @@ export default function DatabaseSchemas() {
         {
             accessorKey: 'name',
             header: 'Schema',
-            cell: ({ row }) => (
-                <div className="truncate font-medium text-foreground">{row.original.name}</div>
-            ),
+            cell: ({ row }) => <div className="truncate font-medium text-foreground">{row.original.name}</div>,
             meta: { className: 'min-w-56' },
         },
     ];
 
     const schemasQuery = useQuery({
         queryKey: ['api', schemasUrl],
-        queryFn: async () =>
-            fetchApiJson<Array<ApiDatabaseSchema>>(schemasUrl, { credentials: 'include' }),
+        queryFn: async () => fetchApiJson<Array<ApiDatabaseSchema>>(schemasUrl, { credentials: 'include' }),
         retry: false,
         refetchOnMount: 'always',
     });
@@ -44,9 +41,8 @@ export default function DatabaseSchemas() {
                     <div>
                         <HeroTitle>Schemas</HeroTitle>
                         <HeroDescription>
-                            Schemas in database{' '}
-                            <span className="font-medium text-foreground">{dbname}</span> on database
-                            backend "{name}".
+                            Schemas in database <span className="font-medium text-foreground">{dbname}</span> on
+                            database backend "{name}".
                         </HeroDescription>
                     </div>
                 </Hero>

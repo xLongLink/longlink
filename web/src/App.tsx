@@ -1,9 +1,10 @@
 import { Auth } from '@/components/Auth';
 import { useOrg } from '@/hooks/use-org';
-import { apiUrl } from '@/lib/api';
+import DocsLayout from '@/layout/DocsLayout';
 import Layout from '@/layout/Layout';
-import { Toaster } from '@ui/sonner';
+import { apiUrl } from '@/lib/api';
 import { Skeleton } from '@ui/skeleton';
+import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import Admin from './pages/Admin';
 import AdminApplications from './pages/admin/Applications';
@@ -18,7 +19,6 @@ import AdminOperations from './pages/admin/Operations';
 import AdminOrganization from './pages/admin/Organization';
 import AdminStorage from './pages/admin/Storage';
 import AdminUsers from './pages/admin/Users';
-import DocsLayout from '@/layout/DocsLayout';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import Organization from './pages/Organization';
@@ -27,6 +27,7 @@ import Playground from './pages/Playground';
 import Settings from './pages/Settings';
 import View from './pages/View';
 
+import { LegalLayout } from '@/layout/LegalLayout';
 import { content as docsApiContent, metadata as docsApiMetadata } from '@/pages/docs/api/index';
 import { content as docsSelfHostedContent, metadata as docsSelfHostedMetadata } from '@/pages/docs/api/self-hosted';
 import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
@@ -49,7 +50,6 @@ import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } fr
 import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
 import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
-import { LegalLayout } from '@/layout/LegalLayout';
 
 /**
  * Builds the route tree for the current bundle mode.

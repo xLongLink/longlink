@@ -81,7 +81,5 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         </>
     );
 
-    return (
-        <TopLayout header={header}>{children}</TopLayout>
-    );
+    return <TopLayout header={header}>{children}</TopLayout>;
 }

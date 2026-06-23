@@ -9,7 +9,18 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
-import { BookOpen, Building2, Cpu, Database, ExternalLink, HardDrive, LogOut, MapPin, Settings2, Users } from 'lucide-react';
+import {
+    BookOpen,
+    Building2,
+    Cpu,
+    Database,
+    ExternalLink,
+    HardDrive,
+    LogOut,
+    MapPin,
+    Settings2,
+    Users,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 
 /** Renders a user profile dropdown with authentication actions. */

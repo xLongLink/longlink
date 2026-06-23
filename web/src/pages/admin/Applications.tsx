@@ -90,7 +90,9 @@ export default function AdminApplications() {
             <Hero icon={<Boxes />}>
                 <div>
                     <HeroTitle>Applications</HeroTitle>
-                    <HeroDescription>Review all applications across organizations and deployment states.</HeroDescription>
+                    <HeroDescription>
+                        Review all applications across organizations and deployment states.
+                    </HeroDescription>
                 </div>
             </Hero>
             <DataTable

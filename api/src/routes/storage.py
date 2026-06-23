@@ -1,10 +1,10 @@
-from fastapi import Depends, HTTPException
 from uuid import UUID
+from fastapi import Depends, HTTPException
 from src.auth import authadmin, authsupport
-from src.database.models.users import User
-from src.database.services.storage import storage
 from src.router import router
 from src.models.storage import StorageRegistryCreate, StorageRegistryResponse
+from src.database.models.users import User
+from src.database.services.storage import storage
 
 
 @router.get("/api/storage", response_model=list[StorageRegistryResponse])
