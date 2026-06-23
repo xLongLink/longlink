@@ -1,13 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Container } from 'lucide-react';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { apiUrl, fetchApiJson } from '@/lib/api';
-import type { ApiComputePod } from '@/lib/types';
+import { useApiQuery } from '@/hooks/use-api';
+import type { ApiComputePod, ApiComputeRegistry } from '@/lib/types';
 
 function formatBytes(bytes: number): string {
     const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
@@ -76,17 +74,27 @@ const podColumns: Array<ColumnDef<ApiComputePod>> = [
 /** Renders pods in a namespace on a compute backend. */
 export default function ComputePods() {
     const { compute = '', namespace = '' } = useParams();
-    const encodedNamespace = encodeURIComponent(namespace);
-    const podsUrl = apiUrl(`/api/compute/${encodeURIComponent(compute)}/namespaces/${encodedNamespace}/pods`);
 
-    const podsQuery = useQuery({
-        queryKey: ['api', podsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiComputePod>>(podsUrl, { credentials: 'include' }),
+    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/compute', {
+        retry: false,
+        refetchOnMount: 'always',
+    });
+
+    const computeRegistry = computeQuery.data?.find((registry) => registry.slug === compute || registry.id === compute);
+    const podsPath = computeRegistry
+        ? `/api/compute/${computeRegistry.id}/namespaces/${encodeURIComponent(namespace)}/pods`
+        : null;
+
+    const podsQuery = useApiQuery<Array<ApiComputePod>>(podsPath ?? `/api/compute/__missing__/${compute}/${namespace}`, {
+        enabled: Boolean(podsPath),
         retry: false,
         refetchOnMount: 'always',
     });
 
     const rows = podsQuery.data ?? [];
+    const error =
+        computeQuery.error ??
+        (!computeQuery.isLoading && !computeRegistry ? new Error(`Compute "${compute}" not found`) : podsQuery.error);
 
     return (
         <div className="space-y-6">
@@ -96,7 +104,7 @@ export default function ComputePods() {
                         <HeroTitle>Pods</HeroTitle>
                         <HeroDescription>
                             Pods in namespace <span className="font-medium text-foreground">{namespace}</span> on
-                            compute backend {compute}.
+                            compute backend {computeRegistry?.slug || compute}.
                         </HeroDescription>
                     </div>
                 </Hero>
@@ -104,8 +112,8 @@ export default function ComputePods() {
             <DataTable
                 columns={podColumns}
                 data={rows}
-                error={podsQuery.error}
-                isLoading={podsQuery.isLoading}
+                error={error}
+                isLoading={computeQuery.isLoading || podsQuery.isLoading}
                 loadingLabel="Loading pods..."
             />
         </div>

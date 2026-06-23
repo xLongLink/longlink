@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
 /** Renders the admin storage connect dialog. */
@@ -28,8 +29,6 @@ export default function ConnectStorageDialog() {
         return null;
     }
 
-    const storageUrl = apiUrl('/api/storage');
-    const locationsUrl = apiUrl('/api/locations');
     const canSubmit =
         kind.trim().length > 0 &&
         name.trim().length > 0 &&
@@ -39,9 +38,7 @@ export default function ConnectStorageDialog() {
         secretAccessKey.length > 0 &&
         locationId.length > 0;
 
-    const locationsQuery = useQuery({
-        queryKey: ['api', locationsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
+    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
         retry: false,
     });
 
@@ -49,12 +46,11 @@ export default function ConnectStorageDialog() {
 
     const connectStorage = useMutation({
         mutationFn: async () => {
-            return fetchApiJson(storageUrl, {
+            return fetchApiJson('/api/storage', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     kind: kind.trim(),
                     name: name.trim(),
@@ -67,7 +63,7 @@ export default function ConnectStorageDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', storageUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/storage') });
             setOpen(false);
             setKind('s3');
             setName('');

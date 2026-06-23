@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { fetchApiJson } from '@/lib/api';
 import type { ExecutionContext } from '../types';
 import { resolveUrl } from './url';
 
@@ -9,11 +10,7 @@ export async function query(ctx: ExecutionContext, id: string, path: string, bas
 
     /* Start the request during render and suspend until it resolves. */
     try {
-        const response = await fetch(url, { credentials: 'include' });
-
-        if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
-
-        values[id] = await response.json();
+        values[id] = await fetchApiJson<unknown>(url);
     } catch (error: unknown) {
         toast.error(error instanceof Error ? error.message : 'Failed to load query data');
         throw error;

@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -6,9 +5,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { useApiQuery } from '@/hooks/use-api';
 import { useCreateOrg } from '@/hooks/use-org';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
 /** Renders the create-organization dialog. */
@@ -21,11 +20,7 @@ export default function CreateOrgDialog() {
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
-    const locationsUrl = apiUrl('/api/locations');
-
-    const locationsQuery = useQuery({
-        queryKey: ['api', locationsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
+    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
         retry: false,
     });
 

@@ -5,7 +5,7 @@ import { Label } from '@ui/label';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { apiQueryKey, fetchApiJson } from '@/lib/api';
 
 type SignInCardProps = {
     redirectTo: string;
@@ -19,7 +19,6 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const userUrl = apiUrl('/api/me');
 
     /** Submits credentials, refreshes the session cache, and redirects. */
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -28,17 +27,16 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
         setIsSubmitting(true);
 
         try {
-            await fetchApiJson<{ ok: boolean }>(apiUrl('/auth/login/password'), {
+            await fetchApiJson<{ ok: boolean }>('/auth/login/password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({
                     username,
                     password,
                 }),
             });
 
-            await queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
             navigate(redirectTo, { replace: true });
         } catch (loginError) {
             setError(loginError instanceof Error ? loginError.message : 'Login failed');

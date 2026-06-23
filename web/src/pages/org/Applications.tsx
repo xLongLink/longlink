@@ -2,6 +2,8 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
+import { MoreVertical } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -86,19 +88,37 @@ export default function Applications({ org, applications, isLoading, error }: Ap
         {
             id: 'action',
             header: 'Action',
-            meta: { className: 'w-32' },
+            meta: { className: 'w-32 text-right' },
             cell: ({ row }) => (
-                <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                        setDeleteTargetId(row.original.id);
-                        setDeleteError(null);
-                    }}
-                >
-                    Delete
-                </Button>
+                <div className="flex justify-end">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    className="cursor-pointer"
+                                    aria-label={`Open actions for ${row.original.name}`}
+                                />
+                            }
+                        >
+                            <MoreVertical className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                variant="destructive"
+                                onClick={() => {
+                                    setDeleteTargetId(row.original.id);
+                                    setDeleteError(null);
+                                }}
+                            >
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             ),
         },
     ] satisfies Array<ColumnDef<ApiOrganizationApplication>>;

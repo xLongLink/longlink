@@ -1,9 +1,4 @@
 from abc import ABC, abstractmethod
-from sqlalchemy.orm import DeclarativeBase
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class Database(ABC):

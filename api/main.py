@@ -5,7 +5,7 @@ from contextlib import suppress, asynccontextmanager
 from src.logger import logger
 from src.router import router
 from src.operations import execute
-from src.enviroments import env
+from src.environments import env
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware

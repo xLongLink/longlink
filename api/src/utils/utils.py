@@ -5,7 +5,6 @@ import httpx2
 from yaml import safe_load_all
 from string import Template
 from pathlib import Path
-from urllib.parse import urlparse
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
@@ -178,36 +177,6 @@ def knames(value: str, label: str = "Value") -> str:
         )
 
     return value
-
-
-def normalize(url: str) -> str:
-    """Normalize an app URL by ensuring it has a scheme and no trailing slash."""
-    cleaned_url = url.strip().rstrip("/")
-    if cleaned_url == "":
-        raise ValueError("App URL is required")
-
-    # Treat bare host:port values as missing a scheme before parsing.
-    if "://" not in cleaned_url:
-        local_hosts = {"localhost", "127.0.0.1", "::1"}
-        host = cleaned_url.split("/", 1)[0].split(":", 1)[0].strip("[]").lower()
-        port = None
-        if ":" in cleaned_url and not cleaned_url.startswith("["):
-            port = cleaned_url.rsplit(":", 1)[1].split("/", 1)[0]
-
-        default_scheme = "http"
-        if host in local_hosts:
-            default_scheme = "https" if port == "8443" else "http"
-        else:
-            default_scheme = "https"
-
-        cleaned_url = f"{default_scheme}://{cleaned_url}"
-
-    parsed = urlparse(cleaned_url)
-
-    if parsed.netloc == "":
-        raise ValueError("Invalid app URL")
-
-    return cleaned_url
 
 
 def readyml(template_path: str | Path, **context: str) -> dict | list[dict]:

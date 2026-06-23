@@ -1,15 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { MoreHorizontal, Users } from 'lucide-react';
+import { MoreVertical, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { useApiQuery } from '@/hooks/use-api';
 import type { ApiUserSummary } from '@/lib/types';
 
 const userColumns: Array<ColumnDef<ApiUserSummary>> = [
@@ -71,11 +69,12 @@ const userColumns: Array<ColumnDef<ApiUserSummary>> = [
                                     type="button"
                                     variant="ghost"
                                     size="icon-sm"
+                                    className="cursor-pointer"
                                     aria-label={`Open actions for ${user.name}`}
                                 />
                             }
                         >
-                            <MoreHorizontal className="size-4" />
+                            <MoreVertical className="size-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                             <DropdownMenuItem
@@ -111,11 +110,7 @@ const userColumns: Array<ColumnDef<ApiUserSummary>> = [
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
-    const usersUrl = apiUrl('/api/users');
-
-    const usersQuery = useQuery({
-        queryKey: ['api', usersUrl],
-        queryFn: async () => fetchApiJson<Array<ApiUserSummary>>(usersUrl, { credentials: 'include' }),
+    const usersQuery = useApiQuery<Array<ApiUserSummary>>('/api/users', {
         retry: false,
         refetchOnMount: 'always',
     });

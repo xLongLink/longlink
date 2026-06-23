@@ -3,27 +3,47 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { resolveOrganizationId } from '@/hooks/use-org';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiText } from '@/lib/api';
+import { fetchApiText } from '@/lib/api';
+import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 
 type LogsDialogProps = {
     org: string;
     appId: string;
     appName: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    trigger?: ReactNode | null;
 };
 
 /** Renders the application logs dialog for an organization. */
-export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
+export default function LogsDialog({ org, appId, appName, open, onOpenChange, trigger }: LogsDialogProps) {
     const { organizations } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const [open, setOpen] = useState(false);
+    const [internalOpen, setInternalOpen] = useState(false);
     const [logsContent, setLogsContent] = useState('');
     const [logsError, setLogsError] = useState<string | null>(null);
     const [logsLoading, setLogsLoading] = useState(false);
+    const isControlled = open !== undefined;
+    const dialogOpen = isControlled ? open : internalOpen;
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!isControlled) {
+            setInternalOpen(nextOpen);
+        }
+
+        onOpenChange?.(nextOpen);
+
+        if (!nextOpen) {
+            setLogsContent('');
+            setLogsError(null);
+            setLogsLoading(false);
+        }
+    };
 
     // Fetch the selected application's pod logs only while the dialog is open.
     useEffect(() => {
-        if (!open || orgId.length === 0) {
+        if (!dialogOpen || orgId.length === 0) {
             return;
         }
 
@@ -35,12 +55,7 @@ export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
 
         void (async () => {
             try {
-                const text = await fetchApiText(
-                    apiUrl(`/api/apps/${appId}/logs?organization_id=${encodeURIComponent(orgId)}`),
-                    {
-                        credentials: 'include',
-                    }
-                );
+                const text = await fetchApiText(`/api/apps/${appId}/logs?organization_id=${orgId}`);
 
                 if (!cancelled) {
                     setLogsContent(text);
@@ -59,25 +74,19 @@ export default function LogsDialog({ org, appId, appName }: LogsDialogProps) {
         return () => {
             cancelled = true;
         };
-    }, [appId, open, orgId]);
+    }, [appId, dialogOpen, orgId]);
 
     return (
         <>
-            <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
-                Logs
-            </Button>
+            {trigger === null
+                ? null
+                : (trigger ?? (
+                      <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(true)}>
+                          Logs
+                      </Button>
+                  ))}
 
-            <Dialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    setOpen(nextOpen);
-                    if (!nextOpen) {
-                        setLogsContent('');
-                        setLogsError(null);
-                        setLogsLoading(false);
-                    }
-                }}
-            >
+            <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
                 <DialogContent className="sm:max-w-3xl">
                     <div className="space-y-4">
                         <div className="space-y-1">

@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
-import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { useApiQuery } from '@/hooks/use-api';
+import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applyTheme, THEME_PRESETS, type Accent, type Radius, type Theme, type ThemeConfig } from '@/lib/theme';
 import type { ApiUserProfile } from '@/lib/types';
 
@@ -38,11 +39,7 @@ function applyUserPreferences(user: User) {
 
 /** Hook that fetches the current user. */
 function useUserQuery() {
-    const userUrl = apiUrl('/api/me');
-
-    return useQuery<User | null, Error>({
-        queryKey: ['api', userUrl],
-        queryFn: async () => fetchApiJson<User>(userUrl, { credentials: 'include' }),
+    return useApiQuery<User | null>('/api/me', {
         // Auth state must refresh immediately after login/logout redirects.
         staleTime: 0,
         refetchOnWindowFocus: false,
@@ -76,13 +73,12 @@ export function useUser() {
 
     const user = context.data ?? null;
     const organizations = user?.organizations ?? [];
-    const userUrl = apiUrl('/api/me');
 
     /** Signs the current user out and clears cached session state. */
     const signOut = async () => {
-        await fetchApiVoid(apiUrl('/auth/logout'), { credentials: 'include' });
-        queryClient.setQueryData(['api', userUrl], null);
-        queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
+        await fetchApiVoid('/auth/logout');
+        queryClient.setQueryData(apiQueryKey('/api/me'), null);
+        queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
     };
 
     return {
@@ -103,19 +99,17 @@ export function useUser() {
 /** Updates the current user profile. */
 export function useUpdateUser() {
     const queryClient = useQueryClient();
-    const userUrl = apiUrl('/api/me');
 
     return useMutation({
         mutationFn: async (payload: UserUpdate) => {
-            return fetchApiJson<User>(userUrl, {
+            return fetchApiJson<User>('/api/me', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify(payload),
             });
         },
         onSuccess: (user) => {
-            queryClient.setQueryData(['api', userUrl], user);
+            queryClient.setQueryData(apiQueryKey('/api/me'), user);
         },
     });
 }

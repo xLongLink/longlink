@@ -1,7 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { DataTable } from '@/components/DataTable';
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { useApiQuery } from '@/hooks/use-api';
 import type { ApiApplicationResponse } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@ui/badge';
@@ -76,11 +74,7 @@ const appColumns: Array<ColumnDef<ApiApplicationResponse>> = [
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
-    const appsUrl = apiUrl('/api/apps');
-
-    const appsQuery = useQuery({
-        queryKey: ['api', appsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiApplicationResponse>>(appsUrl, { credentials: 'include' }),
+    const appsQuery = useApiQuery<Array<ApiApplicationResponse>>('/api/apps', {
         retry: false,
         refetchOnMount: 'always',
     });

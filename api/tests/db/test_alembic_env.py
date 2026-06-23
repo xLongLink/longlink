@@ -2,7 +2,7 @@ import sys
 import importlib.util
 from alembic import context
 from pathlib import Path
-from src.enviroments import env
+from src.environments import env
 from sqlalchemy.engine import make_url
 
 

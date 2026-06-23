@@ -1,16 +1,30 @@
 import { DataTable } from '@/components/DataTable';
 import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useDeleteApp } from '@/hooks/use-org';
 import type { ApiOrganizationApplication, ApiOrganizationDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Input } from '@ui/input';
 import { Menu, MenuSection } from '@ui/menu';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BookOpen, Boxes, Building2, Crown, Database, GitPullRequest, HardDrive, PenLine, Plug, Settings2, ShieldCheck } from 'lucide-react';
+import {
+    BookOpen,
+    Boxes,
+    Building2,
+    Crown,
+    Database,
+    GitPullRequest,
+    HardDrive,
+    MoreVertical,
+    PenLine,
+    Plug,
+    Settings2,
+    ShieldCheck,
+} from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -56,6 +70,7 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
     const deleteApp = useDeleteApp(org);
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
 
     const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
 
@@ -93,22 +108,45 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
         {
             id: 'action',
             header: 'Action',
-            meta: { className: 'w-44' },
+            meta: { className: 'w-44 text-right' },
             cell: ({ row }) => (
-                <div className="flex items-center gap-2">
-                    <LogsDialog org={org} appId={row.original.id} appName={row.original.name} />
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                            // Select the application and open the delete confirmation dialog.
-                            setDeleteTargetId(row.original.id);
-                            setDeleteError(null);
-                        }}
-                    >
-                        Delete
-                    </Button>
+                <div className="flex justify-end">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    className="cursor-pointer"
+                                    aria-label={`Open actions for ${row.original.name}`}
+                                />
+                            }
+                        >
+                            <MoreVertical className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => {
+                                    setLogsTarget(row.original);
+                                }}
+                            >
+                                Logs
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                variant="destructive"
+                                onClick={() => {
+                                    // Select the application and open the delete confirmation dialog.
+                                    setDeleteTargetId(row.original.id);
+                                    setDeleteError(null);
+                                }}
+                            >
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             ),
         },
@@ -169,7 +207,9 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                                                     </div>
                                                     <div className="space-y-1">
                                                         <div className="font-medium text-foreground">{role.name}</div>
-                                                        <div className="text-sm text-muted-foreground">{role.description}</div>
+                                                        <div className="text-sm text-muted-foreground">
+                                                            {role.description}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TableCell>
@@ -277,6 +317,21 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                     </div>
                 </MenuSection>
             </Menu>
+
+            {logsTarget ? (
+                <LogsDialog
+                    org={org}
+                    appId={logsTarget.id}
+                    appName={logsTarget.name}
+                    open={logsTarget !== null}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setLogsTarget(null);
+                        }
+                    }}
+                    trigger={null}
+                />
+            ) : null}
 
             <Dialog
                 open={deleteTargetId !== null}

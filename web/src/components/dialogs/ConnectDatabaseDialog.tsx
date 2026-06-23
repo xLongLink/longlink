@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { apiQueryKey, fetchApiJson } from '@/lib/api';
 
 /** Renders the admin database connect dialog. */
 export default function ConnectDatabaseDialog() {
@@ -26,16 +26,13 @@ export default function ConnectDatabaseDialog() {
         return null;
     }
 
-    const databaseUrl = apiUrl('/api/database');
-
     const connectDatabase = useMutation({
         mutationFn: async () => {
-            return fetchApiJson(databaseUrl, {
+            return fetchApiJson('/api/database', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     kind: kind.trim(),
                     name: name.trim(),
@@ -47,7 +44,7 @@ export default function ConnectDatabaseDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', databaseUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/database') });
             setOpen(false);
             setKind('postgre');
             setName('');

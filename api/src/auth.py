@@ -1,5 +1,5 @@
 from fastapi import Request, HTTPException
-from src.enviroments import env
+from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User
 from src.database.services.users import users

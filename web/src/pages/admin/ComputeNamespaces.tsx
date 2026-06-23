@@ -1,18 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Layers } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { apiUrl, fetchApiJson } from '@/lib/api';
-import type { ApiComputeNamespace } from '@/lib/types';
+import { useApiQuery } from '@/hooks/use-api';
+import type { ApiComputeNamespace, ApiComputeRegistry } from '@/lib/types';
 
 /** Renders namespaces for a compute backend. */
 export default function ComputeNamespaces() {
     const { compute = '' } = useParams();
-    const namespacesUrl = apiUrl(`/api/compute/${encodeURIComponent(compute)}/namespaces`);
+
+    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/compute', {
+        retry: false,
+        refetchOnMount: 'always',
+    });
+
+    const computeRegistry = computeQuery.data?.find((registry) => registry.slug === compute || registry.id === compute);
+    const namespacesPath = computeRegistry ? `/api/compute/${computeRegistry.id}/namespaces` : null;
 
     const namespaceColumns: Array<ColumnDef<ApiComputeNamespace>> = [
         {
@@ -30,14 +35,16 @@ export default function ComputeNamespaces() {
         },
     ];
 
-    const namespacesQuery = useQuery({
-        queryKey: ['api', namespacesUrl],
-        queryFn: async () => fetchApiJson<Array<ApiComputeNamespace>>(namespacesUrl, { credentials: 'include' }),
+    const namespacesQuery = useApiQuery<Array<ApiComputeNamespace>>(namespacesPath ?? `/api/compute/__missing__/${compute}`, {
+        enabled: Boolean(namespacesPath),
         retry: false,
         refetchOnMount: 'always',
     });
 
     const rows = namespacesQuery.data ?? [];
+    const error =
+        computeQuery.error ??
+        (!computeQuery.isLoading && !computeRegistry ? new Error(`Compute "${compute}" not found`) : namespacesQuery.error);
 
     return (
         <div className="space-y-6">
@@ -45,15 +52,15 @@ export default function ComputeNamespaces() {
                 <Hero icon={<Layers />}>
                     <div>
                         <HeroTitle>Namespaces</HeroTitle>
-                        <HeroDescription>Namespaces managed by compute backend {compute}.</HeroDescription>
+                        <HeroDescription>Namespaces managed by compute backend {computeRegistry?.slug || compute}.</HeroDescription>
                     </div>
                 </Hero>
             </div>
             <DataTable
                 columns={namespaceColumns}
                 data={rows}
-                error={namespacesQuery.error}
-                isLoading={namespacesQuery.isLoading}
+                error={error}
+                isLoading={computeQuery.isLoading || namespacesQuery.isLoading}
                 loadingLabel="Loading namespaces..."
             />
         </div>

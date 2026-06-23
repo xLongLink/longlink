@@ -1,5 +1,5 @@
 from src.database import session
-from src.enviroments import env
+from src.environments import env
 from sqlalchemy.engine import make_url
 
 

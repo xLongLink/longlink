@@ -1,19 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Database } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { apiUrl, fetchApiJson } from '@/lib/api';
-import type { ApiDatabaseDatabase } from '@/lib/types';
+import { useApiQuery } from '@/hooks/use-api';
+import type { ApiDatabaseDatabase, ApiDatabaseRegistry } from '@/lib/types';
 
 /** Renders databases for a database backend. */
 export default function DatabaseDatabases() {
     const { database = '' } = useParams();
-    const encodedDatabase = encodeURIComponent(database);
-    const databasesUrl = apiUrl(`/api/database/${encodedDatabase}/databases`);
+
+    const registriesQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/database', {
+        retry: false,
+        refetchOnMount: 'always',
+    });
+
+    const databaseRegistry = registriesQuery.data?.find((registry) => registry.slug === database || registry.id === database);
+    const databasesPath = databaseRegistry ? `/api/database/${databaseRegistry.id}/databases` : '/api/database/missing/databases';
 
     const databaseColumns: Array<ColumnDef<ApiDatabaseDatabase>> = [
         {
@@ -21,7 +25,7 @@ export default function DatabaseDatabases() {
             header: 'Database',
             cell: ({ row }) => (
                 <Link
-                    to={`/admin/database/${encodedDatabase}/database/${encodeURIComponent(row.original.name)}`}
+                    to={`/admin/database/${encodeURIComponent(database)}/database/${encodeURIComponent(row.original.name)}`}
                     className="flex items-center gap-3"
                 >
                     <img
@@ -40,14 +44,16 @@ export default function DatabaseDatabases() {
         },
     ];
 
-    const databasesQuery = useQuery({
-        queryKey: ['api', databasesUrl],
-        queryFn: async () => fetchApiJson<Array<ApiDatabaseDatabase>>(databasesUrl, { credentials: 'include' }),
+    const databasesQuery = useApiQuery<Array<ApiDatabaseDatabase>>(databasesPath, {
+        enabled: Boolean(databaseRegistry),
         retry: false,
         refetchOnMount: 'always',
     });
 
     const rows = databasesQuery.data ?? [];
+    const error =
+        registriesQuery.error ??
+        (!registriesQuery.isLoading && !databaseRegistry ? new Error(`Database "${database}" not found`) : databasesQuery.error);
 
     return (
         <div className="space-y-6">
@@ -55,15 +61,17 @@ export default function DatabaseDatabases() {
                 <Hero icon={<Database />}>
                     <div>
                         <HeroTitle>Databases</HeroTitle>
-                        <HeroDescription>Databases managed by database backend "{database}".</HeroDescription>
+                        <HeroDescription>
+                            Databases managed by database backend "{databaseRegistry?.name || database}".
+                        </HeroDescription>
                     </div>
                 </Hero>
             </div>
             <DataTable
                 columns={databaseColumns}
                 data={rows}
-                error={databasesQuery.error}
-                isLoading={databasesQuery.isLoading}
+                error={error}
+                isLoading={registriesQuery.isLoading || databasesQuery.isLoading}
                 loadingLabel="Loading databases..."
             />
         </div>

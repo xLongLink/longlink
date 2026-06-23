@@ -2,7 +2,6 @@ import { Auth } from '@/components/Auth';
 import { useOrg } from '@/hooks/use-org';
 import DocsLayout from '@/layout/DocsLayout';
 import Layout from '@/layout/Layout';
-import { apiUrl } from '@/lib/api';
 import { Skeleton } from '@ui/skeleton';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
@@ -231,7 +230,7 @@ function OrgAppView() {
         return <NotFound />;
     }
 
-    return <View metadata={apiUrl(`/api/apps/${orgApp.id}/proxy/metadata.json`)} />;
+    return <View metadata={`/api/apps/${orgApp.id}/proxy/metadata.json`} />;
 }
 
 const router = createBrowserRouter(getRoutes());

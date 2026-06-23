@@ -4,7 +4,7 @@ from fastapi import Request, HTTPException
 from pydantic import Field, BaseModel, ValidationError
 from src.auth import oauth
 from src.router import router
-from src.enviroments import env
+from src.environments import env
 from src.models.auth import OidcUserInfo, OidcTokenResponse
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse

@@ -1,16 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { MapPin, MoreHorizontal } from 'lucide-react';
+import { MapPin, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import CreateLocationDialog from '@/components/dialogs/CreateLocationDialog';
+import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { apiQueryKey, fetchApiVoid } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
 const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
@@ -57,25 +58,21 @@ const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
 export default function AdminLocation() {
     const { role } = useUser();
     const queryClient = useQueryClient();
-    const locationUrl = apiUrl('/api/locations');
     const canManage = role === 'administrator';
 
     const deleteLocation = useMutation({
         mutationFn: async (locationId: string) => {
-            await fetchApiVoid(apiUrl(`/api/locations/${encodeURIComponent(locationId)}`), {
+            await fetchApiVoid(`/api/locations/${locationId}`, {
                 method: 'DELETE',
-                credentials: 'include',
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', locationUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/locations') });
             toast.success('Location deleted');
         },
     });
 
-    const locationQuery = useQuery({
-        queryKey: ['api', locationUrl],
-        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationUrl, { credentials: 'include' }),
+    const locationQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
         retry: false,
         refetchOnMount: 'always',
     });
@@ -101,11 +98,12 @@ export default function AdminLocation() {
                                               type="button"
                                               variant="ghost"
                                               size="icon-sm"
+                                              className="cursor-pointer"
                                               aria-label={`Open actions for location ${location.name}`}
                                           />
                                       }
                                   >
-                                      <MoreHorizontal className="size-4" />
+                                      <MoreVertical className="size-4" />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-44">
                                       <DropdownMenuItem

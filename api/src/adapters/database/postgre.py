@@ -3,7 +3,7 @@ from __future__ import annotations
 from .__root__ import Database
 from contextlib import asynccontextmanager
 from sqlalchemy import text
-from src.enviroments import env
+from src.environments import env
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import DropSchema, CreateSchema
 from src.utils.namespace import dbname

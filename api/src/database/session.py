@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
-from src.enviroments import env
+from src.environments import env
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
                                     async_sessionmaker, create_async_engine)

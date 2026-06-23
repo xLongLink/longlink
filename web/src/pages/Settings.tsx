@@ -8,12 +8,13 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Menu, MenuSection } from '@ui/menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Bell, Building2, Code2, Paintbrush, Settings2, UserRound } from 'lucide-react';
+import { Bell, Building2, Code2, MoreVertical, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -70,23 +71,42 @@ export default function Settings() {
         {
             id: 'actions',
             header: 'Actions',
-            meta: { className: 'w-44' },
+            meta: { className: 'w-44 text-right' },
             cell: ({ row }) => (
-                <div className="flex items-center gap-2">
-                    <Link to="/organizations" className="text-sm text-accent hover:underline">
-                        Manage
-                    </Link>
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                            setDeleteTarget(row.original.id);
-                            setDeleteError(null);
-                        }}
-                    >
-                        Delete
-                    </Button>
+                <div className="flex justify-end">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    className="cursor-pointer"
+                                    aria-label={`Open actions for ${row.original.name}`}
+                                />
+                            }
+                        >
+                            <MoreVertical className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                                render={<Link to="/organizations" className="flex w-full items-center text-inherit" />}
+                                className="cursor-pointer"
+                            >
+                                Manage
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                variant="destructive"
+                                onClick={() => {
+                                    setDeleteTarget(row.original.id);
+                                    setDeleteError(null);
+                                }}
+                            >
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             ),
         },

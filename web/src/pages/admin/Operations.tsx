@@ -1,11 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Activity } from 'lucide-react';
 
 import { DataTable } from '@/components/DataTable';
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { useApiQuery } from '@/hooks/use-api';
 import type { ApiOperation } from '@/lib/types';
 
 const operationColumns: Array<ColumnDef<ApiOperation>> = [
@@ -66,11 +64,7 @@ const operationColumns: Array<ColumnDef<ApiOperation>> = [
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
-    const operationsUrl = apiUrl('/api/operations');
-
-    const operationsQuery = useQuery({
-        queryKey: ['api', operationsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiOperation>>(operationsUrl, { credentials: 'include' }),
+    const operationsQuery = useApiQuery<Array<ApiOperation>>('/api/operations', {
         retry: false,
         refetchOnMount: 'always',
     });

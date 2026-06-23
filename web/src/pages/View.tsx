@@ -1,6 +1,7 @@
 import XML from '@/layout/XmlLayout';
+import { fetchApiText } from '@/lib/api';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
-import { useQuery } from '@tanstack/react-query';
+import { useApiQuery } from '@/hooks/use-api';
 import { Skeleton } from '@ui/skeleton';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
@@ -55,24 +56,8 @@ export default function View({ metadata }: ViewProps) {
         data: metadataDocument,
         isLoading,
         error,
-    } = useQuery({
-        queryKey: ['api', resolvedMetadata],
-        queryFn: async () => {
-            const response = await fetch(resolvedMetadata, {
-                headers: { Accept: 'application/json' },
-                credentials: 'include',
-            });
-
-            if (response.status === 404) {
-                return null;
-            }
-
-            if (!response.ok) {
-                throw new Error(`API request failed (${response.status})`);
-            }
-
-            return (await response.json()) as MetadataResponse;
-        },
+    } = useApiQuery<MetadataResponse | null>(resolvedMetadata, {
+        notFound: null,
     });
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
     const selectedTab = searchParams.get('tab');
@@ -139,18 +124,10 @@ export default function View({ metadata }: ViewProps) {
         setPageError(null);
         setPageErrorPath(null);
 
-        void fetch(pageUrl, {
+        void fetchApiText(pageUrl, {
             headers: { Accept: 'application/xml' },
-            credentials: 'include',
             signal: controller.signal,
         })
-            .then(async (response) => {
-                if (!response.ok) {
-                    throw new Error(`Document request failed (${response.status})`);
-                }
-
-                return response.text();
-            })
             .then((content) => {
                 if (!controller.signal.aborted) {
                     setPageContent(content);

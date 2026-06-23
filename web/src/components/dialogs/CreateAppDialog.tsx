@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateApp } from '@/hooks/use-org';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { fetchApiJson } from '@/lib/api';
 import type { ApiImageMetadata } from '@/lib/types';
 import * as LucideIcons from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
@@ -87,12 +87,7 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
         setIsInspecting(true);
 
         try {
-            const metadata = await fetchApiJson<ApiImageMetadata>(
-                apiUrl(`/api/image?image=${encodeURIComponent(image.trim())}`),
-                {
-                    credentials: 'include',
-                }
-            );
+            const metadata = await fetchApiJson<ApiImageMetadata>(`/api/image?image=${encodeURIComponent(image.trim())}`);
 
             setImageMetadata(metadata);
             setName(metadata.title ?? '');

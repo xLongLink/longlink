@@ -98,14 +98,20 @@ export default function People({ org, people, invitations, isLoading, error }: P
         {
             id: 'actions',
             header: 'Action',
+            meta: { className: 'w-px pl-1 whitespace-nowrap text-right' },
             cell: () => (
                 <div className="flex justify-end">
-                    <Button type="button" variant="ghost" size="icon-sm" aria-label="More actions">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="cursor-pointer"
+                        aria-label="More actions"
+                    >
                         <MoreVertical className="size-4" />
                     </Button>
                 </div>
             ),
-            meta: { className: 'w-px pl-1 whitespace-nowrap text-right' },
         },
     ];
 

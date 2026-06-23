@@ -36,6 +36,8 @@ class ComputeService:
             ).where(ComputeRegistry.id == registry_id)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
+
+
     async def create(
         self,
         kind: ComputeKind,

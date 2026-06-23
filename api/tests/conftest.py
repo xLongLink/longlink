@@ -20,7 +20,7 @@ os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
 
 from main import app
 from sqlmodel import SQLModel
-from src.enviroments import env
+from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User
 

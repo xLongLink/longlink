@@ -1,17 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Building2, MoreHorizontal } from 'lucide-react';
+import { Building2, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
+import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { apiQueryKey, fetchApiVoid } from '@/lib/api';
 import type { ApiOrganizationSummary } from '@/lib/types';
 
 const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
@@ -121,25 +122,21 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
 export default function AdminOrganization() {
     const { role } = useUser();
     const queryClient = useQueryClient();
-    const organizationsUrl = apiUrl('/api/orgs');
     const canManage = role === 'administrator';
 
     const deleteOrganization = useMutation({
         mutationFn: async (orgId: string) => {
-            await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgId)}`), {
+            await fetchApiVoid(`/api/orgs/${orgId}`, {
                 method: 'DELETE',
-                credentials: 'include',
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', organizationsUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/orgs') });
             toast.success('Organization deleted');
         },
     });
 
-    const organizationsQuery = useQuery({
-        queryKey: ['api', organizationsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiOrganizationSummary>>(organizationsUrl, { credentials: 'include' }),
+    const organizationsQuery = useApiQuery<Array<ApiOrganizationSummary>>('/api/orgs', {
         retry: false,
         refetchOnMount: 'always',
     });
@@ -164,11 +161,12 @@ export default function AdminOrganization() {
                                               type="button"
                                               variant="ghost"
                                               size="icon-sm"
+                                              className="cursor-pointer"
                                               aria-label={`Open actions for ${organization.name}`}
                                           />
                                       }
                                   >
-                                      <MoreHorizontal className="size-4" />
+                                      <MoreVertical className="size-4" />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-44">
                                       <DropdownMenuItem

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import type { ApiComputeRegistry, ApiLocation } from '@/lib/types';
 
 /** Renders the admin compute connect dialog. */
@@ -26,17 +27,13 @@ export default function ConnectComputeDialog() {
         return null;
     }
 
-    const computeUrl = apiUrl('/api/compute');
-    const locationsUrl = apiUrl('/api/locations');
     const canSubmit =
         kind.trim().length > 0 &&
         kubeconfig.trim().length > 0 &&
         ingressHost.trim().length > 0 &&
         locationId.length > 0;
 
-    const locationsQuery = useQuery({
-        queryKey: ['api', locationsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
+    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
         retry: false,
     });
 
@@ -44,12 +41,11 @@ export default function ConnectComputeDialog() {
 
     const connectCompute = useMutation({
         mutationFn: async () => {
-            return fetchApiJson<ApiComputeRegistry>(computeUrl, {
+            return fetchApiJson<ApiComputeRegistry>('/api/compute', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     kind: kind.trim(),
                     kubeconfig,
@@ -59,7 +55,7 @@ export default function ConnectComputeDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', computeUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/compute') });
             setOpen(false);
             setKind('kubernetes');
             setKubeconfig('');

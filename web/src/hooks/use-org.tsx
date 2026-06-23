@@ -1,8 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
+import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import type {
     ApiApplicationResponse,
     ApiInvitation,
@@ -32,13 +33,11 @@ export function resolveOrganizationId(org: string, organizations: ApiUserOrganiz
 export function useOrg(org: string): UseOrgResult {
     const { organizations, isLoading: isUserLoading } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgUrl = apiUrl(`/api/orgs/${orgId}`);
+    const orgPath = `/api/orgs/${orgId}`;
 
     const missingOrganization = !isUserLoading && org.length > 0 && orgId.length === 0;
 
-    const organizationQuery = useQuery({
-        queryKey: ['api', orgUrl],
-        queryFn: async () => fetchApiJson<ApiOrganizationDetails>(orgUrl, { credentials: 'include' }),
+    const organizationQuery = useApiQuery<ApiOrganizationDetails>(orgPath, {
         enabled: orgId.length > 0,
         retry: false,
     });
@@ -64,7 +63,7 @@ export function useInviteUser(org: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgUrl = apiUrl(`/api/orgs/${orgId}`);
+    const orgPath = `/api/orgs/${orgId}`;
 
     return useMutation({
         mutationFn: async ({ email, role }: { email: string; role: string }) => {
@@ -72,15 +71,14 @@ export function useInviteUser(org: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgId)}/invitations`), {
+            return fetchApiVoid(`/api/orgs/${orgId}/invitations`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({ email, role }),
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['api', orgUrl] });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(orgPath) });
         },
     });
 }
@@ -88,8 +86,6 @@ export function useInviteUser(org: string) {
 /** Creates a new organization and refreshes the authenticated user cache. */
 export function useCreateOrg() {
     const queryClient = useQueryClient();
-    const orgsUrl = apiUrl('/api/orgs');
-    const userUrl = apiUrl('/api/me');
 
     return useMutation({
         mutationFn: async ({
@@ -101,15 +97,14 @@ export function useCreateOrg() {
             location_id: string;
             avatar?: string | null;
         }) => {
-            return fetchApiJson<ApiOrganizationSummary>(orgsUrl, {
+            return fetchApiJson<ApiOrganizationSummary>('/api/orgs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({ name, location_id, avatar: avatar?.trim() ? avatar.trim() : null }),
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
         },
     });
 }
@@ -118,7 +113,6 @@ export function useCreateOrg() {
 export function useDeleteOrg() {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
-    const userUrl = apiUrl('/api/me');
 
     return useMutation({
         mutationFn: async (org: string) => {
@@ -127,13 +121,12 @@ export function useDeleteOrg() {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(apiUrl(`/api/orgs/${encodeURIComponent(orgId)}`), {
+            await fetchApiVoid(`/api/orgs/${orgId}`, {
                 method: 'DELETE',
-                credentials: 'include',
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['api', userUrl] });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
         },
     });
 }
@@ -143,8 +136,8 @@ export function useCreateApp(org: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgUrl = apiUrl(`/api/orgs/${orgId}`);
-    const appsUrl = apiUrl(`/api/apps?organization_id=${encodeURIComponent(orgId)}`);
+    const orgPath = `/api/orgs/${orgId}`;
+    const appsPath = `/api/apps?organization_id=${orgId}`;
 
     return useMutation({
         mutationFn: async (payload: {
@@ -154,15 +147,14 @@ export function useCreateApp(org: string) {
             icon?: string | null;
             envs: Record<string, string>;
         }) => {
-            return fetchApiJson<ApiApplicationResponse>(appsUrl, {
+            return fetchApiJson<ApiApplicationResponse>(appsPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify(payload),
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['api', orgUrl] });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(orgPath) });
         },
     });
 }
@@ -172,7 +164,7 @@ export function useDeleteApp(org: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgUrl = apiUrl(`/api/orgs/${orgId}`);
+    const orgPath = `/api/orgs/${orgId}`;
 
     return useMutation({
         mutationFn: async (appId: string) => {
@@ -180,16 +172,15 @@ export function useDeleteApp(org: string) {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(apiUrl(`/api/apps/${appId}?organization_id=${encodeURIComponent(orgId)}`), {
+            await fetchApiVoid(`/api/apps/${appId}?organization_id=${orgId}`, {
                 method: 'DELETE',
-                credentials: 'include',
             });
         },
         onSuccess: (_data, appId) => {
-            queryClient.setQueryData<ApiOrganizationDetails>(['api', orgUrl], (current) =>
+            queryClient.setQueryData<ApiOrganizationDetails>(apiQueryKey(orgPath), (current) =>
                 current ? { ...current, applications: current.applications.filter((app) => app.id !== appId) } : current
             );
-            queryClient.invalidateQueries({ queryKey: ['api', orgUrl] });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(orgPath) });
         },
     });
 }

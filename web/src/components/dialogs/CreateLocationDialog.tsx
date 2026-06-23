@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson } from '@/lib/api';
+import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import type { ApiLocation } from '@/lib/types';
 
 /** Renders the admin create location dialog. */
@@ -23,16 +23,13 @@ export default function CreateLocationDialog() {
         return null;
     }
 
-    const locationUrl = apiUrl('/api/locations');
-
     const createLocation = useMutation({
         mutationFn: async () => {
-            return fetchApiJson<ApiLocation>(locationUrl, {
+            return fetchApiJson<ApiLocation>('/api/locations', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     name: name.trim(),
                     slug: slug.trim(),
@@ -41,7 +38,7 @@ export default function CreateLocationDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', locationUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/locations') });
             setOpen(false);
             setName('');
             setSlug('');

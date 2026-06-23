@@ -1,16 +1,17 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Cpu, MoreHorizontal } from 'lucide-react';
+import { Cpu, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
+import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import type { ApiComputeRegistry, ApiComputeResources, ApiLocation } from '@/lib/types';
 
 function formatBytes(bytes: number): string {
@@ -106,44 +107,34 @@ const computeColumnsBase: Array<
 export default function AdminCompute() {
     const { role } = useUser();
     const queryClient = useQueryClient();
-    const computeUrl = apiUrl('/api/compute');
-    const locationsUrl = apiUrl('/api/locations');
     const canManage = role === 'administrator';
 
     const deleteCompute = useMutation({
-        mutationFn: async (registrySlug: string) => {
-            await fetchApiVoid(apiUrl(`/api/compute/${encodeURIComponent(registrySlug)}`), {
+        mutationFn: async (registryId: string) => {
+            await fetchApiVoid(`/api/compute/${registryId}`, {
                 method: 'DELETE',
-                credentials: 'include',
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', computeUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/compute') });
             toast.success('Compute deleted');
         },
     });
 
-    const computeQuery = useQuery({
-        queryKey: ['api', computeUrl],
-        queryFn: async () => fetchApiJson<Array<ApiComputeRegistry>>(computeUrl, { credentials: 'include' }),
+    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/compute', {
         retry: false,
         refetchOnMount: 'always',
     });
 
-    const locationsQuery = useQuery({
-        queryKey: ['api', locationsUrl],
-        queryFn: async () => fetchApiJson<Array<ApiLocation>>(locationsUrl, { credentials: 'include' }),
+    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
         retry: false,
     });
 
     const computeList = computeQuery.data ?? [];
     const resourcesQueries = useQueries({
         queries: computeList.map((c) => ({
-            queryKey: ['api', apiUrl(`/api/compute/${c.slug}/resources`)],
-            queryFn: async () =>
-                fetchApiJson<ApiComputeResources>(apiUrl(`/api/compute/${c.slug}/resources`), {
-                    credentials: 'include',
-                }),
+            queryKey: apiQueryKey(`/api/compute/${c.id}/resources`),
+            queryFn: async () => fetchApiJson<ApiComputeResources>(`/api/compute/${c.id}/resources`),
             retry: false,
         })),
     });
@@ -181,11 +172,12 @@ export default function AdminCompute() {
                                               type="button"
                                               variant="ghost"
                                               size="icon-sm"
+                                              className="cursor-pointer"
                                               aria-label={`Open actions for compute ${compute.ingress_host}`}
                                           />
                                       }
                                   >
-                                      <MoreHorizontal className="size-4" />
+                                      <MoreVertical className="size-4" />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-44">
                                       <DropdownMenuItem
@@ -207,7 +199,7 @@ export default function AdminCompute() {
                                               }
 
                                               try {
-                                                  await deleteCompute.mutateAsync(compute.slug);
+                                                  await deleteCompute.mutateAsync(compute.id);
                                               } catch (mutationError) {
                                                   toast.error(
                                                       mutationError instanceof Error

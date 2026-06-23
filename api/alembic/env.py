@@ -3,7 +3,7 @@ from alembic import context
 from sqlmodel import SQLModel
 from sqlalchemy import pool, engine_from_config
 from logging.config import fileConfig
-from src.enviroments import env
+from src.environments import env
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 

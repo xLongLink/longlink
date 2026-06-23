@@ -1,16 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { HardDrive, MoreHorizontal } from 'lucide-react';
+import { HardDrive, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
+import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import { apiUrl, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { apiQueryKey, fetchApiVoid } from '@/lib/api';
 import type { ApiStorageRegistry } from '@/lib/types';
 
 const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry>> = [
@@ -40,25 +41,21 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry>> = [
 export default function AdminStorage() {
     const { role } = useUser();
     const queryClient = useQueryClient();
-    const storageUrl = apiUrl('/api/storage');
     const canManage = role === 'administrator';
 
     const deleteStorage = useMutation({
-        mutationFn: async (slug: string) => {
-            await fetchApiVoid(apiUrl(`/api/storage/${encodeURIComponent(slug)}`), {
+        mutationFn: async (registryId: string) => {
+            await fetchApiVoid(`/api/storage/${registryId}`, {
                 method: 'DELETE',
-                credentials: 'include',
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', storageUrl] });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/storage') });
             toast.success('Storage deleted');
         },
     });
 
-    const storageQuery = useQuery({
-        queryKey: ['api', storageUrl],
-        queryFn: async () => fetchApiJson<Array<ApiStorageRegistry>>(storageUrl, { credentials: 'include' }),
+    const storageQuery = useApiQuery<Array<ApiStorageRegistry>>('/api/storage', {
         retry: false,
         refetchOnMount: 'always',
     });
@@ -79,38 +76,39 @@ export default function AdminStorage() {
                               <DropdownMenu>
                                   <DropdownMenuTrigger
                                       render={
-                                        <Button
+                                          <Button
                                               type="button"
                                               variant="ghost"
                                               size="icon-sm"
-                                                aria-label={`Open actions for ${storage.name}`}
-                                            />
-                                        }
-                                    >
-                                      <MoreHorizontal className="size-4" />
+                                              className="cursor-pointer"
+                                              aria-label={`Open actions for ${storage.name}`}
+                                          />
+                                      }
+                                  >
+                                      <MoreVertical className="size-4" />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-44">
                                       <DropdownMenuItem
-                                            className="cursor-pointer"
-                                            onClick={() => {
-                                                void navigator.clipboard.writeText(storage.slug);
-                                                toast.success('Storage slug copied');
-                                            }}
-                                        >
-                                            Copy slug
-                                        </DropdownMenuItem>
+                                          className="cursor-pointer"
+                                          onClick={() => {
+                                              void navigator.clipboard.writeText(storage.slug);
+                                              toast.success('Storage slug copied');
+                                          }}
+                                      >
+                                          Copy slug
+                                      </DropdownMenuItem>
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
                                           onClick={async () => {
                                               // Confirm the destructive action before deleting the storage registry.
-                                                if (!window.confirm(`Delete storage ${storage.slug}?`)) {
-                                                    return;
-                                                }
+                                              if (!window.confirm(`Delete storage ${storage.slug}?`)) {
+                                                  return;
+                                              }
 
-                                                try {
-                                                    await deleteStorage.mutateAsync(storage.slug);
-                                                } catch (mutationError) {
+                                              try {
+                                                  await deleteStorage.mutateAsync(storage.id);
+                                              } catch (mutationError) {
                                                   toast.error(
                                                       mutationError instanceof Error
                                                           ? mutationError.message
