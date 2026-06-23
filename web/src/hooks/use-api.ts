@@ -1,4 +1,4 @@
-import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 
 import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 
@@ -16,6 +16,7 @@ export function useApiQuery<TData>(
     options: UseApiQueryOptions<TData> = {}
 ): UseQueryResult<TData, Error> {
     const { notFound, request, ...queryOptions } = options;
+    const queryClient = useQueryClient();
 
     const enabled = path !== null && (queryOptions.enabled ?? true);
 
@@ -27,6 +28,11 @@ export function useApiQuery<TData>(
             try {
                 return await fetchApiJson<TData>(path!, request);
             } catch (error) {
+                // Clear the cached session immediately when any request reports auth loss.
+                if (error instanceof ApiError && error.status === 401) {
+                    queryClient.setQueryData(apiQueryKey('/api/me'), null);
+                }
+
                 if (error instanceof ApiError && error.status === 404 && 'notFound' in options) {
                     return notFound as TData;
                 }

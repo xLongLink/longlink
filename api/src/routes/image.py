@@ -16,7 +16,9 @@ async def inspect_image(image: str, _user: User = Depends(authuser)) -> ImageMet
         raise HTTPException(status_code=404, detail="Image metadata not found")
 
     return {
+        "sdk": image_metadata.sdk,
         "title": image_metadata.name,
+        "version": image_metadata.version,
         "description": image_metadata.description,
         "environments": image_metadata.environments,
     }

@@ -10,7 +10,9 @@ import {
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
 import {
+    Activity,
     BookOpen,
+    Boxes,
     Building2,
     Cpu,
     Database,
@@ -62,11 +64,6 @@ export function UserProfile() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <p className="text-sm font-semibold text-foreground">{username}</p>
-                                {isPrivileged ? (
-                                    <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                        {user.role}
-                                    </span>
-                                ) : null}
                             </div>
                             <p className="text-xs text-muted-foreground">{fullName}</p>
                         </div>
@@ -119,6 +116,15 @@ export function UserProfile() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
+                                    <Link to="/admin/applications" className="flex w-full items-center gap-2 text-inherit" />
+                                }
+                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                            >
+                                <Boxes className="h-4 w-4" />
+                                Applications
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                render={
                                     <Link
                                         to="/admin/organizations"
                                         className="flex w-full items-center gap-2 text-inherit"
@@ -164,6 +170,15 @@ export function UserProfile() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
+                                    <Link to="/admin/compute" className="flex w-full items-center gap-2 text-inherit" />
+                                }
+                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                            >
+                                <Cpu className="h-4 w-4" />
+                                Compute
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                render={
                                     <Link
                                         to="/admin/operations"
                                         className="flex w-full items-center gap-2 text-inherit"
@@ -171,17 +186,8 @@ export function UserProfile() {
                                 }
                                 className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
                             >
-                                <Settings2 className="h-4 w-4" />
+                                <Activity className="h-4 w-4" />
                                 Operations
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                render={
-                                    <Link to="/admin/compute" className="flex w-full items-center gap-2 text-inherit" />
-                                }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
-                            >
-                                <Cpu className="h-4 w-4" />
-                                Compute
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                     </>

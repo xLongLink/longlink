@@ -10,6 +10,8 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
         lambda image: LongLinkMetadata(
             name="dashboard",
             description="Demo app",
+            version="20250623_120000",
+            sdk="0.1.0",
             environments=[
                 {
                     "name": "API_KEY",
@@ -37,7 +39,9 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     expected_data = ImageMetadataResponse.model_validate(payload).model_dump(mode="json")
     assert payload == expected_data
     assert payload == {
+        "sdk": "0.1.0",
         "title": "dashboard",
+        "version": "20250623_120000",
         "description": "Demo app",
         "environments": [
             {
@@ -69,7 +73,9 @@ def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monke
     # Assert
     assert response.status_code == 200
     assert response.json() == {
+        "sdk": None,
         "title": None,
+        "version": None,
         "description": None,
         "environments": [],
     }

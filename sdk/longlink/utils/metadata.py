@@ -9,12 +9,12 @@ class Metadata(BaseModel):
 
     name: str = "longlink-app"
     title: str | None = None
-    summary: str | None = None
-    description: str | None = None
     version: str = "0.0.0"
-    terms_of_service: str | None = None
+    summary: str | None = None
     contact: dict[str, Any] | None = None
+    description: str | None = None
     license_info: dict[str, Any] | None = None
+    terms_of_service: str | None = None
 
     @model_validator(mode="before")
     @classmethod

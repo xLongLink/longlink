@@ -42,7 +42,7 @@ function useUserQuery() {
     return useApiQuery<User | null>('/api/me', {
         // Auth state must refresh immediately after login/logout redirects.
         staleTime: 0,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
         retry: false,
     });
 }

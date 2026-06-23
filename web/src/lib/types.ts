@@ -71,6 +71,8 @@ export type ApiEnvironmentMetadata = {
 export type ApiImageMetadata = {
     title: string | null;
     description: string | null;
+    version: string | null;
+    sdk: string | null;
     environments: ApiEnvironmentMetadata[];
 };
 

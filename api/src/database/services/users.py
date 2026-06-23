@@ -159,6 +159,7 @@ class UsersService:
         """Create a new OIDC user or update an existing one."""
 
         existing_user = await self.get(oidc)
+
         # Patch the current record in place when the subject already exists.
         if existing_user is not None:
             if email is not None:
