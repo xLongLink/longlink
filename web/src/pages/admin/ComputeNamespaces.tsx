@@ -43,7 +43,9 @@ export default function ComputeNamespaces() {
     const rows = namespacesQuery.data ?? [];
     const error =
         computeQuery.error ??
-        (!computeQuery.isLoading && !computeRegistry ? new Error(`Compute "${compute}" not found`) : namespacesQuery.error);
+        (!computeQuery.isLoading && !computeRegistry
+            ? new Error(`Compute "${compute}" not found`)
+            : namespacesQuery.error);
 
     return (
         <div className="space-y-6">
@@ -51,7 +53,9 @@ export default function ComputeNamespaces() {
                 <Hero icon={<Layers />}>
                     <div>
                         <HeroTitle>Namespaces</HeroTitle>
-                        <HeroDescription>Namespaces managed by compute backend {computeRegistry?.slug || compute}.</HeroDescription>
+                        <HeroDescription>
+                            Namespaces managed by compute backend {computeRegistry?.slug || compute}.
+                        </HeroDescription>
                     </div>
                 </Hero>
             </div>

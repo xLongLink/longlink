@@ -31,7 +31,7 @@ function TopLayout({ className, header, children, ...props }: TopLayoutProps) {
                 <header className="bg-black text-white">{header}</header>
                 <main className="mx-auto flex w-full flex-1 gap-8 bg-black p-0.5 lg:p-1">
                     <div className="flex w-full flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card px-6 py-4 shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
-                        <div className="flex-1">{children}</div>
+                        <div className="flex min-h-full flex-1 flex-col">{children}</div>
                     </div>
                 </main>
             </div>

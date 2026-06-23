@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
@@ -12,10 +12,24 @@ import { DataTable } from '@/components/DataTable';
 import ConnectDatabaseDialog from '@/components/dialogs/ConnectDatabaseDialog';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiVoid } from '@/lib/api';
-import type { ApiDatabaseRegistry, ApiLocation } from '@/lib/types';
+import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type { ApiDatabaseRegistry, ApiDatabaseUsage, ApiLocation } from '@/lib/types';
 
-const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>> = [
+/** Format one byte count for the admin usage table. */
+function formatBytes(bytes: number): string {
+    const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
+    let value = bytes;
+    let unit = 0;
+
+    while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit++;
+    }
+
+    return `${Math.round(value)} ${units[unit]}`;
+}
+
+const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>> = [
     {
         id: 'database',
         header: 'Database',
@@ -65,6 +79,22 @@ const databaseColumnsBase: Array<ColumnDef<ApiDatabaseRegistry & { location?: Ap
         },
         meta: { className: 'min-w-56' },
     },
+    {
+        id: 'usage',
+        header: 'Usage',
+        cell: ({ row }) => {
+            const usage = row.original.usage;
+            if (!usage) return <span className="text-muted-foreground">—</span>;
+
+            return (
+                <div className="min-w-0">
+                    <div className="truncate font-medium text-foreground">{formatBytes(usage.space_used)}</div>
+                    <div className="text-xs text-muted-foreground">Used</div>
+                </div>
+            );
+        },
+        meta: { className: 'w-48' },
+    },
 ];
 
 /** Renders the admin database page. */
@@ -95,10 +125,25 @@ export default function AdminDatabase() {
     });
 
     const databaseRows = databaseQuery.data ?? [];
+    const usageQueries = useQueries({
+        queries: databaseRows.map((registry) => ({
+            queryKey: apiQueryKey(`/api/database/${registry.id}/usage`),
+            queryFn: async () => fetchApiJson<ApiDatabaseUsage>(`/api/database/${registry.id}/usage`),
+            retry: false,
+        })),
+    });
+
+    const usageById = new Map<string, ApiDatabaseUsage>();
+    databaseRows.forEach((registry, index) => {
+        const data = usageQueries[index]?.data;
+        if (data) usageById.set(registry.id, data);
+    });
+
     const locationById = new Map(locationsQuery.data?.map((location) => [location.id, location]));
     const databaseTableRows = databaseRows.map((row) => ({
         ...row,
         location: locationById.get(row.location_id),
+        usage: usageById.get(row.id),
     }));
     const databaseColumns = canManage
         ? ([
@@ -164,7 +209,7 @@ export default function AdminDatabase() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>>)
+          ] satisfies Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>>)
         : databaseColumnsBase;
 
     return (

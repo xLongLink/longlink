@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from .base import Database
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 from src.environments import env
@@ -10,6 +9,8 @@ from src.utils.namespace import dbname
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncConnection,
                                     create_async_engine)
 from sqlalchemy.sql.elements import quoted_name
+
+from .base import Database
 
 
 class Postgre(Database):
@@ -134,6 +135,23 @@ class Postgre(Database):
                 text("SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast') ORDER BY schema_name")
             )
             return [row[0] for row in result.fetchall()]
+
+
+    async def usage(self) -> dict[str, int]:
+        """Return the total non-system database size in bytes."""
+
+        async with self._connection(self._maintenance_database) as conn:
+            result = await conn.execute(
+                text(
+                    """
+                    SELECT COALESCE(SUM(pg_database_size(datname)), 0) AS database_size
+                    FROM pg_database
+                    WHERE datname NOT IN ('postgres', 'template0', 'template1')
+                    """
+                )
+            )
+            database_size = result.scalar_one()
+            return {"space_used": int(database_size)}
 
 
     async def delete(self, organization: str) -> None:

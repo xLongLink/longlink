@@ -16,7 +16,9 @@ export default function DatabaseSchemas() {
         refetchOnMount: 'always',
     });
 
-    const databaseRegistry = registriesQuery.data?.find((registry) => registry.slug === database || registry.id === database);
+    const databaseRegistry = registriesQuery.data?.find(
+        (registry) => registry.slug === database || registry.id === database
+    );
     const schemasPath = databaseRegistry
         ? `/api/database/${databaseRegistry.id}/databases/${encodeURIComponent(dbname)}/schemas`
         : null;
@@ -38,7 +40,9 @@ export default function DatabaseSchemas() {
     const rows = schemasQuery.data ?? [];
     const error =
         registriesQuery.error ??
-        (!registriesQuery.isLoading && !databaseRegistry ? new Error(`Database "${database}" not found`) : schemasQuery.error);
+        (!registriesQuery.isLoading && !databaseRegistry
+            ? new Error(`Database "${database}" not found`)
+            : schemasQuery.error);
 
     return (
         <div className="space-y-6">

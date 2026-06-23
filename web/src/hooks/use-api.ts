@@ -2,10 +2,7 @@ import { useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } f
 
 import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 
-type UseApiQueryOptions<TData> = Omit<
-    UseQueryOptions<TData, Error, TData, Array<string>>,
-    'queryKey' | 'queryFn'
-> & {
+type UseApiQueryOptions<TData> = Omit<UseQueryOptions<TData, Error, TData, Array<string>>, 'queryKey' | 'queryFn'> & {
     notFound?: TData;
     request?: RequestInit;
 };

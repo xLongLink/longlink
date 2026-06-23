@@ -1,14 +1,19 @@
 import { DataTable } from '@/components/DataTable';
 import { useApiQuery } from '@/hooks/use-api';
-import type { ApiApplicationResponse } from '@/lib/types';
+import type { ApiApplicationResponse, ApiLocation } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Badge } from '@ui/badge';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Boxes } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { Link } from 'react-router';
 
-const appColumns: Array<ColumnDef<ApiApplicationResponse>> = [
+type AdminApplicationResponse = ApiApplicationResponse & {
+    organization: ApiApplicationResponse['organization'] & { location?: ApiLocation };
+};
+
+const appColumns: Array<ColumnDef<AdminApplicationResponse>> = [
     {
         accessorKey: 'name',
         header: 'Application',
@@ -45,12 +50,26 @@ const appColumns: Array<ColumnDef<ApiApplicationResponse>> = [
             const organization = getValue<ApiApplicationResponse['organization']>();
 
             return (
-                <Link to={`/orgs/${organization.name}`} className="font-medium text-foreground hover:underline">
-                    {organization.name}
-                </Link>
+                <div className="flex items-center gap-3">
+                    <Avatar shape="squircle" className="size-9 shrink-0">
+                        <AvatarImage src={organization.avatar ?? ''} alt={organization.name} />
+                        <AvatarFallback>{organization.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                        <Link to={`/orgs/${organization.name}`} className="font-medium text-foreground hover:underline">
+                            {organization.name}
+                        </Link>
+                        <div className="truncate text-sm text-muted-foreground">
+                            {row.original.organization.location?.country ?? 'Unknown location'}
+                            {row.original.organization.location?.name
+                                ? ` · ${row.original.organization.location.name}`
+                                : ''}
+                        </div>
+                    </div>
+                </div>
             );
         },
-        meta: { className: 'w-40' },
+        meta: { className: 'min-w-64' },
     },
     {
         accessorKey: 'status',
@@ -79,6 +98,20 @@ export default function AdminApplications() {
         refetchOnMount: 'always',
     });
 
+    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
+        retry: false,
+    });
+
+    // Resolve each application's organization location so the table can show the full organization context.
+    const locationById = new Map(locationsQuery.data?.map((location) => [location.id, location]));
+    const appRows = (appsQuery.data ?? []).map((row) => ({
+        ...row,
+        organization: {
+            ...row.organization,
+            location: row.organization.location_id ? locationById.get(row.organization.location_id) : undefined,
+        },
+    }));
+
     return (
         <div className="space-y-6">
             <Hero icon={<Boxes />}>
@@ -91,9 +124,9 @@ export default function AdminApplications() {
             </Hero>
             <DataTable
                 columns={appColumns}
-                data={appsQuery.data ?? []}
-                error={appsQuery.error}
-                isLoading={appsQuery.isLoading}
+                data={appRows}
+                error={appsQuery.error ?? locationsQuery.error}
+                isLoading={appsQuery.isLoading || locationsQuery.isLoading}
             />
         </div>
     );

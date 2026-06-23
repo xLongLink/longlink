@@ -135,6 +135,10 @@ export type ApiDatabaseSchema = {
     name: string;
 };
 
+export type ApiDatabaseUsage = {
+    space_used: number;
+};
+
 export type ApiDatabaseRegistry = {
     id: string;
     kind: string;

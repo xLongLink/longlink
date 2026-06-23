@@ -11,6 +11,9 @@ class _FakeResult:
     def scalar_one_or_none(self):
         return self._value
 
+    def one(self):
+        return self._value
+
 
 class _FakePreparer:
     """Quote identifiers like the PostgreSQL dialect."""
@@ -59,6 +62,9 @@ class _FakeConnection:
         text = str(statement)
         if "SELECT 1 FROM pg_database" in text:
             return _FakeResult(None)
+
+        if "SELECT COALESCE(SUM(pg_database_size(datname)), 0) AS database_size" in text:
+            return _FakeResult(123456789)
 
         return _FakeResult(None)
 
@@ -129,3 +135,30 @@ async def test_remove_and_delete_use_managed_sqlalchemy_connections(monkeypatch)
     # Assert
     assert any(isinstance(entry[1], DropSchema) for entry in log if entry[0] == "execute")
     assert any(entry == ("driver_sql", 'DROP DATABASE IF EXISTS "longlink_acme"') for entry in log)
+
+
+async def test_usage_reads_server_disk_capacity_through_managed_connection(monkeypatch) -> None:
+    """Read backend disk usage through the managed SQLAlchemy connection."""
+
+    # Arrange
+    log: list[tuple[str, object]] = []
+
+    def fake_create_async_engine(url, **kwargs):
+        log.append(("engine", (str(url), kwargs)))
+        return _FakeEngine(log)
+
+    monkeypatch.setattr("src.adapters.database.postgre.create_async_engine", fake_create_async_engine)
+
+    adapter = Postgre(
+        host="db.longlink.internal",
+        port=5432,
+        username="longlink",
+        password="secret",
+    )
+
+    # Act
+    usage = await adapter.usage()
+
+    # Assert
+    assert usage == {"space_used": 123456789}
+    assert any("SELECT COALESCE(SUM(pg_database_size(datname)), 0) AS database_size" in str(entry[1]) for entry in log if entry[0] == "execute")

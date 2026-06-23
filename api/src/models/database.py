@@ -40,6 +40,13 @@ class DatabaseSchemaResponse(BaseModel):
     name: str
 
 
+class DatabaseUsageResponse(BaseModel):
+    """Represent database storage usage in API responses."""
+
+    # Capacity
+    space_used: int
+
+
 class DatabaseRegistryResponse(BaseModel):
     """Represent one database registry in API responses."""
 

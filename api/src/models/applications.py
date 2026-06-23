@@ -54,6 +54,8 @@ class ApplicationResponse(BaseModel):
     slug: str
     icon: str | None = None
     image: str
+    version: str | None = None
+    sdk_version: str | None = None
     description: str | None = None
 
     # State

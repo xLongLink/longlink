@@ -9,8 +9,8 @@ import type {
     ApiInvitation,
     ApiOrganizationApplication,
     ApiOrganizationDetails,
-    ApiOrganizationSummary,
     ApiOrganizationMemberSummary,
+    ApiOrganizationSummary,
     ApiUserOrganizationMembership,
 } from '@/lib/types';
 

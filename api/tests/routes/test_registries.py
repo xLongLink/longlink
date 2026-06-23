@@ -4,7 +4,7 @@ from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.compute import ComputeKind, ComputeRegistryResponse
 from src.models.storage import StorageKind, StorageRegistryResponse
-from src.models.database import DatabaseKind, DatabaseRegistryResponse
+from src.models.database import DatabaseKind, DatabaseRegistryResponse, DatabaseUsageResponse
 from src.models.operations import OperationKind, OperationResponse
 from src.database.services.users import users
 from src.database.services.compute import compute
@@ -132,6 +132,51 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
     assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
+
+
+async def test_database_usage_endpoint_returns_backend_capacity(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users,
+) -> None:
+    """Return backend storage usage for one database registry."""
+
+    # Arrange
+    client = clients[0]
+    user1, _, _ = users
+    location = await db.locations.create("local", "Local testing", user1)
+    create_response = client.post(
+        "/api/database",
+        json={
+            "kind": "postgre",
+            "name": "primary",
+            "host": "db.longlink.internal",
+            "port": 5432,
+            "username": "longlink",
+            "password": "secret",
+            "location_id": str(location.id),
+        },
+    )
+    registry_id = create_response.json()["id"]
+
+    class FakePostgre:
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            self.host = host
+            self.port = port
+            self.username = username
+            self.password = password
+
+        async def usage(self) -> dict[str, int]:
+            return {"space_used": 987654321}
+
+    monkeypatch.setattr("src.routes.database.Postgre", FakePostgre)
+
+    # Act
+    response = client.get(f"/api/database/{registry_id}/usage")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == DatabaseUsageResponse(space_used=987654321).model_dump(mode="json")
 
 
 async def test_storage_registry_endpoint_supports_create_list_and_delete(

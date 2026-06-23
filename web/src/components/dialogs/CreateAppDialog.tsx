@@ -87,7 +87,9 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
         setIsInspecting(true);
 
         try {
-            const metadata = await fetchApiJson<ApiImageMetadata>(`/api/image?image=${encodeURIComponent(image.trim())}`);
+            const metadata = await fetchApiJson<ApiImageMetadata>(
+                `/api/image?image=${encodeURIComponent(image.trim())}`
+            );
 
             setImageMetadata(metadata);
             setName(metadata.title ?? '');

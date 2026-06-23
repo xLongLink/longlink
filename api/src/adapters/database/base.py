@@ -46,5 +46,9 @@ class Database(ABC):
         """List all schemas in a database."""
 
     @abstractmethod
+    async def usage(self) -> dict[str, int]:
+        """Return database usage for the backend."""
+
+    @abstractmethod
     async def delete(self, organization: str) -> None:
         """Delete the organization database and all managed application schemas."""

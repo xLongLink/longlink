@@ -4,7 +4,7 @@ from src.auth import authuser, authadmin
 from src.logger import logger
 from src.router import router
 from src.constants import APP_SERVICE_PORT
-from src.utils.utils import slugify
+from src.utils.utils import metadata, slugify
 from src.models.roles import PlatformRoles
 from src.adapters.database import Postgre
 from src.models.operations import OperationKind
@@ -98,6 +98,9 @@ async def create_app(
     if organization_record is None:
         raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
+    # Capture image build labels when the SDK image was built with them.
+    image_metadata = metadata(payload.image)
+
     registries = await compute.list()
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
@@ -131,6 +134,8 @@ async def create_app(
             payload.name,
             app_slug,
             image=payload.image,
+            version=image_metadata.version if image_metadata is not None else None,
+            sdk_version=image_metadata.sdk if image_metadata is not None else None,
             status=AppStatus.creating,
             description=payload.description,
             icon=payload.icon,

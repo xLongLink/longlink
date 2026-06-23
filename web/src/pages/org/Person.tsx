@@ -43,7 +43,10 @@ export default function Person() {
                     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
                         <div className="flex items-start gap-4">
                             <Avatar className="size-14">
-                                <AvatarImage src={person?.avatar ?? ''} alt={person?.name ? `${person.name} avatar` : ''} />
+                                <AvatarImage
+                                    src={person?.avatar ?? ''}
+                                    alt={person?.name ? `${person.name} avatar` : ''}
+                                />
                                 <AvatarFallback>{person?.name?.slice(0, 2).toUpperCase() ?? '??'}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0 space-y-1">
@@ -54,7 +57,10 @@ export default function Person() {
                                         {person?.role ?? '—'}
                                     </span>
                                     <span className="text-xs text-muted-foreground">
-                                        Last access {person?.last_access_at ? new Date(person.last_access_at).toLocaleString() : '—'}
+                                        Last access{' '}
+                                        {person?.last_access_at
+                                            ? new Date(person.last_access_at).toLocaleString()
+                                            : '—'}
                                     </span>
                                 </div>
                                 <Link
@@ -70,8 +76,12 @@ export default function Person() {
                     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
                         <div className="space-y-4">
                             <div>
-                                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Organization</div>
-                                <div className="mt-1 text-sm font-medium text-foreground">{orgDetails?.name ?? org}</div>
+                                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                    Organization
+                                </div>
+                                <div className="mt-1 text-sm font-medium text-foreground">
+                                    {orgDetails?.name ?? org}
+                                </div>
                             </div>
                             <div>
                                 <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Role</div>
@@ -79,7 +89,9 @@ export default function Person() {
                             </div>
                             <div>
                                 <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">ID</div>
-                                <div className="mt-1 break-all text-sm font-medium text-foreground">{person?.id ?? '—'}</div>
+                                <div className="mt-1 break-all text-sm font-medium text-foreground">
+                                    {person?.id ?? '—'}
+                                </div>
                             </div>
                         </div>
                     </div>

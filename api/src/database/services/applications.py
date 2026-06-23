@@ -111,6 +111,8 @@ class ApplicationsService:
         image: str,
         user: User,
         status: AppStatus = AppStatus.creating,
+        version: str | None = None,
+        sdk_version: str | None = None,
         description: str | None = None,
         icon: str | None = None,
     ) -> Application:
@@ -140,6 +142,8 @@ class ApplicationsService:
                 'name': name,
                 'slug': slug,
                 'status': status,
+                'version': version,
+                'sdk_version': sdk_version,
                 'description': description,
                 'image': image,
                 'icon': icon,

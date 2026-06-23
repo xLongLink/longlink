@@ -1,7 +1,7 @@
+import { useApiQuery } from '@/hooks/use-api';
 import XML from '@/layout/XmlLayout';
 import { fetchApiText } from '@/lib/api';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
-import { useApiQuery } from '@/hooks/use-api';
 import { Skeleton } from '@ui/skeleton';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';

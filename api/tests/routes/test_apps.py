@@ -8,6 +8,7 @@ from src.models.database import DatabaseKind
 from src.database.session import get_session
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse as AppResponse
+from src.models.metadata import LongLinkMetadata
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute
@@ -271,6 +272,11 @@ async def test_create_app_returns_app_response(
         user=user,
     )
 
+    monkeypatch.setattr(
+        "src.routes.applications.metadata",
+        lambda image: LongLinkMetadata(version="20250623_120000", sdk="0.1.0"),
+    )
+
     captured: dict[str, object] = {}
 
     class FakeCompute:
@@ -347,6 +353,8 @@ async def test_create_app_returns_app_response(
     expected_data = AppResponse.model_validate(payload).model_dump(mode="json")
     assert payload["status"] == "creating"
     assert payload["description"] == "Dashboard app"
+    assert payload["version"] == "20250623_120000"
+    assert payload["sdk_version"] == "0.1.0"
     assert payload["deleted_by"] is None
     assert payload == expected_data
     assert captured["namespace"] == "acme"

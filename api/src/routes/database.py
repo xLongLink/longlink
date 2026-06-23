@@ -3,9 +3,10 @@ from fastapi import Depends, HTTPException
 from src.auth import authadmin, authsupport
 from src.router import router
 from src.models.database import (DatabaseRegistryCreate,
-                                 DatabaseSchemaResponse,
-                                 DatabaseDatabaseResponse,
-                                 DatabaseRegistryResponse)
+                                  DatabaseSchemaResponse,
+                                  DatabaseDatabaseResponse,
+                                  DatabaseRegistryResponse,
+                                  DatabaseUsageResponse)
 from src.database.models.users import User
 from src.adapters.database.postgre import Postgre
 from src.database.services.database import database
@@ -72,6 +73,19 @@ async def list_database_schemas(
     postgre = Postgre(registry.host, registry.port, registry.username, registry.password)
     names = await postgre.schemas(dbname)
     return [DatabaseSchemaResponse(name=n) for n in names]
+
+
+@router.get("/api/database/{registry_id}/usage", response_model=DatabaseUsageResponse)
+async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)) -> DatabaseUsageResponse:
+    """Return total and free storage for one database backend."""
+
+    registry = await database.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail=f"Database '{registry_id}' not found")
+
+    postgre = Postgre(registry.host, registry.port, registry.username, registry.password)
+    data = await postgre.usage()
+    return DatabaseUsageResponse(**data)
 
 
 @router.delete("/api/database/{registry_id}", status_code=204)

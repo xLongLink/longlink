@@ -16,7 +16,9 @@ export default function DatabaseDatabases() {
         refetchOnMount: 'always',
     });
 
-    const databaseRegistry = registriesQuery.data?.find((registry) => registry.slug === database || registry.id === database);
+    const databaseRegistry = registriesQuery.data?.find(
+        (registry) => registry.slug === database || registry.id === database
+    );
     const databasesPath = databaseRegistry ? `/api/database/${databaseRegistry.id}/databases` : null;
 
     const databaseColumns: Array<ColumnDef<ApiDatabaseDatabase>> = [
@@ -52,7 +54,9 @@ export default function DatabaseDatabases() {
     const rows = databasesQuery.data ?? [];
     const error =
         registriesQuery.error ??
-        (!registriesQuery.isLoading && !databaseRegistry ? new Error(`Database "${database}" not found`) : databasesQuery.error);
+        (!registriesQuery.isLoading && !databaseRegistry
+            ? new Error(`Database "${database}" not found`)
+            : databasesQuery.error);
 
     return (
         <div className="space-y-6">
