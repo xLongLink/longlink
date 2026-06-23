@@ -16,6 +16,7 @@ class ComputeRegistryCreate(BaseModel):
 
     # Metadata
     kind: ComputeKind
+    name: str
     kubeconfig: str
     ingress_host: str
 
@@ -33,6 +34,7 @@ class ComputeRegistryResponse(BaseModel):
 
     # Metadata
     kind: ComputeKind
+    name: str
     slug: str
     ingress_host: str
 

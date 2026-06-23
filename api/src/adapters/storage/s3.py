@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import boto3
-from .__root__ import Storage
+from .base import Storage
 from src.utils.namespace import s3name
 
 

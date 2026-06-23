@@ -21,6 +21,7 @@ export type ApiUserSummary = {
 export type ApiUserOrganizationMembership = {
     id: string;
     name: string;
+    slug: string;
     avatar: string;
     location: ApiLocation | null;
     role: Role;
@@ -76,6 +77,7 @@ export type ApiImageMetadata = {
 export type ApiOrganizationSummary = {
     id: string;
     name: string;
+    slug: string;
     avatar: string;
     location_id: string | null;
     created_at: string;
@@ -89,6 +91,7 @@ export type ApiOrganizationSummary = {
 export type ApiOrganizationDetails = {
     id: string;
     name: string;
+    slug: string;
     avatar: string;
     location_id: string | null;
     location: ApiLocation | null;

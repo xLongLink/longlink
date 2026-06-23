@@ -19,7 +19,7 @@ class StorageService:
                 selectinload(StorageRegistry.created_by),
                 selectinload(StorageRegistry.updated_by),
                 selectinload(StorageRegistry.deleted_by),
-            )
+            ).where(StorageRegistry.deleted_at.is_(None))
             result = await session.execute(statement)
             return result.scalars().all()
 

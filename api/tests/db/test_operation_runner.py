@@ -154,6 +154,7 @@ async def test_execute_app_delete_operation_removes_runtime_and_deletes_app(monk
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="localhost:8443",
         location_id=location.id,

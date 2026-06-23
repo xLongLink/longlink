@@ -36,7 +36,7 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
     if organization is None:
         return AppStartupState.pending
 
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    registries = await compute.list()
     registry = max(
         (registry for registry in registries if registry.location_id == organization.location_id),
         key=lambda item: item.created_at,
@@ -143,7 +143,7 @@ async def execute_app_delete(operation: Operation) -> Operation:
     if organization is None:
         raise ValueError(f"Organization '{application.organization_id}' not found")
 
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    registries = await compute.list()
     registry = max(
         (registry for registry in registries if registry.location_id == organization.location_id),
         key=lambda item: item.created_at,

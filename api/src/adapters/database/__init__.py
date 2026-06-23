@@ -1,4 +1,4 @@
 """Database adapter exports."""
 
 from .postgre import Postgre
-from .__root__ import Database
+from .base import Database

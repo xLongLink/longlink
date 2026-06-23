@@ -53,7 +53,7 @@ async def create_organization(
     # Create the Kubernetes namespace for the org when a compute cluster is available
     # at the same location.  This is best-effort: if no compute registry exists yet the
     # namespace will be created lazily when the first app is deployed.
-    registries = [r for r in await compute.list() if r.deleted_at is None and r.location_id == payload.location_id]
+    registries = [r for r in await compute.list() if r.location_id == payload.location_id]
     if registries:
         registry = max(registries, key=lambda r: r.created_at)
         k8s = K8s(registry.kubeconfig, registry.proxy_secret)
@@ -74,7 +74,7 @@ async def delete_organization(org_id: UUID, user: User = Depends(authuser)) -> N
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Org '{org_id}' not found")
 
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None and registry.location_id == organization.location_id]
+    registries = [registry for registry in await compute.list() if registry.location_id == organization.location_id]
     if registries:
         registry = max(registries, key=lambda item: item.created_at)
         k8s = K8s(registry.kubeconfig, registry.proxy_secret)

@@ -63,7 +63,7 @@ async def proxy_app_request(application_id: UUID, request: Request, path: str = 
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Organization '{application.organization_id}' not found")
 
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    registries = await compute.list()
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 

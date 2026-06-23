@@ -21,7 +21,7 @@ class ComputeService:
                 selectinload(ComputeRegistry.created_by),
                 selectinload(ComputeRegistry.updated_by),
                 selectinload(ComputeRegistry.deleted_by),
-            )
+            ).where(ComputeRegistry.deleted_at.is_(None))
             result = await session.execute(statement)
             return result.scalars().all()
 
@@ -41,6 +41,7 @@ class ComputeService:
     async def create(
         self,
         kind: ComputeKind,
+        name: str,
         kubeconfig: str,
         ingress_host: str,
         location_id: str,
@@ -52,9 +53,10 @@ class ComputeService:
         async with session_scope() as session:
             # Compute registries are append-only once created.
             proxy_secret_value = proxy_secret or secrets.token_urlsafe(32)
-            slug = slugify(ingress_host)
+            slug = slugify(name)
             compute = ComputeRegistry(
                 kind=kind,
+                name=name,
                 slug=slug,
                 kubeconfig=kubeconfig,
                 ingress_host=ingress_host,

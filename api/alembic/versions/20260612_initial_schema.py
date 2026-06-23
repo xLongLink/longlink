@@ -147,6 +147,7 @@ def upgrade() -> None:
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("kind", sa.Enum("kubernetes", name="compute_kind_enum", native_enum=False), nullable=False),
+        sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("kubeconfig", sa.Text(), nullable=False),
         sa.Column("ingress_host", sa.String(length=255), nullable=False),
         sa.Column("ingress_name", sa.String(length=255), nullable=False),
@@ -154,6 +155,7 @@ def upgrade() -> None:
         sa.Column("location_id", sa.Uuid(), nullable=False),
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
         sa.ForeignKeyConstraint(["location_id"], ["locations.id"]),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
         sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
@@ -224,15 +226,12 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
-        sa.Column("deleted_at", sa.DateTime(), nullable=True),
         sa.Column("started_at", sa.DateTime(), nullable=True),
         sa.Column("stopped_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["application_id"], ["applications.id"]),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
         sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["deleted_id"], ["users.id"]),
     )
 
     # Membership tables are last so their parent rows already exist.

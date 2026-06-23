@@ -10,18 +10,7 @@ from src.database.services.users import users
 async def serialize_user(user: User) -> UserProfile:
     """Return the authenticated user payload with memberships included."""
 
-    profile = await users.profile(user.id)
-    if profile is None:
-        profile = UserProfile(
-                **{
-                    **user.model_dump(),
-                    "admin": user.role == PlatformRoles.administrator,
-                    "avatar": user.avatar or "",
-                    "organizations": [],
-                }
-        )
-
-    return profile
+    return await users.profile(user.id)
 
 
 @router.get("/api/me", response_model=UserProfile)

@@ -28,8 +28,6 @@ class Operation(SQLModel, table=True):
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
-    deleted_at: datetime | None = Field(default=None)
-    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
     started_at: datetime | None = None
     stopped_at: datetime | None = None
 

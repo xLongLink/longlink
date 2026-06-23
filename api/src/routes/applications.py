@@ -98,11 +98,11 @@ async def create_app(
     if organization_record is None:
         raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    registries = await compute.list()
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
-    database_registries = [registry for registry in await database.list() if registry.deleted_at is None]
+    database_registries = await database.list()
     if not database_registries:
         raise HTTPException(status_code=503, detail="No database configured")
 
@@ -216,7 +216,7 @@ async def get_application_logs(organization_id: UUID, application_id: UUID, user
     if organization_record is None:
         raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
-    registries = [registry for registry in await compute.list() if registry.deleted_at is None]
+    registries = await compute.list()
     if not registries:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 

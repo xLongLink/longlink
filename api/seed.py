@@ -43,6 +43,7 @@ LOCAL_APP = {
 
 LOCAL_COMPUTE = {
     "kind": ComputeKind.kubernetes,
+    "name": "local",
     "kubeconfig": Path(__file__).with_name("kubeconfig.yaml").read_text(encoding="utf-8"),
     "ingress_host": "localhost:8443",
 }

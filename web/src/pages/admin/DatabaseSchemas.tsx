@@ -19,7 +19,7 @@ export default function DatabaseSchemas() {
     const databaseRegistry = registriesQuery.data?.find((registry) => registry.slug === database || registry.id === database);
     const schemasPath = databaseRegistry
         ? `/api/database/${databaseRegistry.id}/databases/${encodeURIComponent(dbname)}/schemas`
-        : '/api/database/missing/databases/missing/schemas';
+        : null;
 
     const schemaColumns: Array<ColumnDef<ApiDatabaseSchema>> = [
         {
@@ -31,7 +31,6 @@ export default function DatabaseSchemas() {
     ];
 
     const schemasQuery = useApiQuery<Array<ApiDatabaseSchema>>(schemasPath, {
-        enabled: Boolean(databaseRegistry),
         retry: false,
         refetchOnMount: 'always',
     });

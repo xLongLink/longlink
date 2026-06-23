@@ -236,6 +236,7 @@ async def test_create_app_returns_app_response(
     organization = await db.orgs.create("acme", remote_location.id, user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.local.longlink.internal",
         location_id=local_location.id,
@@ -243,6 +244,7 @@ async def test_create_app_returns_app_response(
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="remote",
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.remote.longlink.internal",
         location_id=remote_location.id,
@@ -382,6 +384,7 @@ async def test_delete_app_removes_dependent_env_rows(
     app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="primary",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -408,6 +411,7 @@ async def test_delete_app_removes_dependent_env_rows(
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="secondary",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -462,6 +466,7 @@ async def test_get_app_logs_returns_pod_logs(
     app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="local",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -531,6 +536,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="local",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -557,6 +563,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="remote",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -583,6 +590,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
+        name="remote-extra",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"

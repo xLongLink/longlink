@@ -35,8 +35,7 @@ export default function ComputeNamespaces() {
         },
     ];
 
-    const namespacesQuery = useApiQuery<Array<ApiComputeNamespace>>(namespacesPath ?? `/api/compute/__missing__/${compute}`, {
-        enabled: Boolean(namespacesPath),
+    const namespacesQuery = useApiQuery<Array<ApiComputeNamespace>>(namespacesPath, {
         retry: false,
         refetchOnMount: 'always',
     });

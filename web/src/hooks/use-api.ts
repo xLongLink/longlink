@@ -3,7 +3,7 @@ import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/r
 import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 
 type UseApiQueryOptions<TData> = Omit<
-    UseQueryOptions<TData, Error, TData, ReturnType<typeof apiQueryKey>>,
+    UseQueryOptions<TData, Error, TData, Array<string>>,
     'queryKey' | 'queryFn'
 > & {
     notFound?: TData;
@@ -12,17 +12,20 @@ type UseApiQueryOptions<TData> = Omit<
 
 /** Fetches one API resource through the shared transport and React Query cache. */
 export function useApiQuery<TData>(
-    path: string,
+    path: string | null,
     options: UseApiQueryOptions<TData> = {}
 ): UseQueryResult<TData, Error> {
     const { notFound, request, ...queryOptions } = options;
 
-    return useQuery<TData, Error, TData, ReturnType<typeof apiQueryKey>>({
+    const enabled = path !== null && (queryOptions.enabled ?? true);
+
+    return useQuery<TData, Error, TData, Array<string>>({
         ...queryOptions,
-        queryKey: apiQueryKey(path),
+        enabled,
+        queryKey: path !== null ? apiQueryKey(path) : ['api', 'disabled'],
         queryFn: async () => {
             try {
-                return await fetchApiJson<TData>(path, request);
+                return await fetchApiJson<TData>(path!, request);
             } catch (error) {
                 if (error instanceof ApiError && error.status === 404 && 'notFound' in options) {
                     return notFound as TData;

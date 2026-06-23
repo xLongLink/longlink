@@ -85,8 +85,7 @@ export default function ComputePods() {
         ? `/api/compute/${computeRegistry.id}/namespaces/${encodeURIComponent(namespace)}/pods`
         : null;
 
-    const podsQuery = useApiQuery<Array<ApiComputePod>>(podsPath ?? `/api/compute/__missing__/${compute}/${namespace}`, {
-        enabled: Boolean(podsPath),
+    const podsQuery = useApiQuery<Array<ApiComputePod>>(podsPath, {
         retry: false,
         refetchOnMount: 'always',
     });

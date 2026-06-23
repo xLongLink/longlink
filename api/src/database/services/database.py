@@ -19,7 +19,7 @@ class DatabaseService:
                 selectinload(DatabaseRegistry.created_by),
                 selectinload(DatabaseRegistry.updated_by),
                 selectinload(DatabaseRegistry.deleted_by),
-            )
+            ).where(DatabaseRegistry.deleted_at.is_(None))
             result = await session.execute(statement)
             return result.scalars().all()
 

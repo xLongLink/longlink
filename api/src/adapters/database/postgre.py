@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .__root__ import Database
+from .base import Database
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 from src.environments import env

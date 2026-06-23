@@ -17,7 +17,7 @@ export default function DatabaseDatabases() {
     });
 
     const databaseRegistry = registriesQuery.data?.find((registry) => registry.slug === database || registry.id === database);
-    const databasesPath = databaseRegistry ? `/api/database/${databaseRegistry.id}/databases` : '/api/database/missing/databases';
+    const databasesPath = databaseRegistry ? `/api/database/${databaseRegistry.id}/databases` : null;
 
     const databaseColumns: Array<ColumnDef<ApiDatabaseDatabase>> = [
         {
@@ -45,7 +45,6 @@ export default function DatabaseDatabases() {
     ];
 
     const databasesQuery = useApiQuery<Array<ApiDatabaseDatabase>>(databasesPath, {
-        enabled: Boolean(databaseRegistry),
         retry: false,
         refetchOnMount: 'always',
     });
