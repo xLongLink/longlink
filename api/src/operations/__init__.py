@@ -1,25 +1,24 @@
 from fastapi import HTTPException
 from src.logger import logger
-from src.models.operations import OperationKind
-from src.operations.applications import execute_application_create, execute_application_delete
 from src.database.models.operations import Operation
 from src.database.services.operations import operations
+from src.operations.registry import get_operation_handler
 
 
 async def execute(operation: Operation) -> Operation:
     """Execute one claimed operation step and persist the next state."""
 
     try:
-        # Dispatch each operation kind to its dedicated executor.
-        if operation.kind == OperationKind.application_create:
-            logger.info("Running application startup verification %s", operation.id)
-            return await execute_application_create(operation)
+        # Import the built-in handlers lazily so package imports stay free of cycles.
+        from src.operations import applications as _applications  # noqa: F401
 
-        if operation.kind == OperationKind.application_delete:
-            logger.info("Running application deletion %s", operation.id)
-            return await execute_application_delete(operation)
+        # Dispatch the operation to the registered handler for its kind and step.
+        handler = get_operation_handler(operation.kind, operation.step)
+        if handler is None:
+            raise ValueError(f"Unsupported operation '{operation.kind}' step '{operation.step}'")
 
-        raise ValueError(f"Unsupported operation '{operation.kind}'")
+        logger.info("Running operation %s (%s/%s)", operation.id, operation.kind, operation.step)
+        return await handler(operation)
     except Exception as exc:
         detail = str(exc.detail) if isinstance(exc, HTTPException) else str(exc)
         if isinstance(exc, HTTPException):

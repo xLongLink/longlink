@@ -4,8 +4,8 @@ from pathlib import Path
 from contextlib import suppress, asynccontextmanager
 from src.errors import register_error_handlers
 from src.logger import logger
-from src.routes import (auth, user, image, health, compute, storage,
-                        database, locations)
+from src.routes import (auth, users, image, health, computes, storages,
+                         databases, locations)
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations import execute
@@ -71,15 +71,15 @@ app.add_middleware(
 # Register API routes after importing the endpoint modules so their decorators run.
 app.include_router(auth.router)
 app.include_router(applications.router)
-app.include_router(compute.router)
-app.include_router(database.router)
+app.include_router(computes.router)
+app.include_router(databases.router)
 app.include_router(health.router)
 app.include_router(image.router)
 app.include_router(locations.router)
 app.include_router(operations_route.router)
 app.include_router(organizations.router)
-app.include_router(storage.router)
-app.include_router(user.router)
+app.include_router(storages.router)
+app.include_router(users.router)
 
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"

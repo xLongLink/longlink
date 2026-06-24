@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter
-from src.auth import authuser, authsupport
+from src.auth import authuser, authsupport, organization_access
 from src.errors import ConflictError, NotFoundError
 from src.logger import logger
 from src.models.common import SuccessResponse
@@ -27,31 +27,14 @@ async def list_organizations(_user: User = Depends(authsupport)) -> list[Organiz
 async def get_organization(organization_id: UUID, user: User = Depends(authuser)) -> OrganizationDetails:
     """Return one organization and its metadata."""
 
-    # Deny access early when the organization does not exist.
-    organization = await organizations.get(organization_id)
-    if organization is None:
-        raise NotFoundError("Organization", organization_id)
-
-    # Keep organization reads scoped to the caller's memberships.
-    if not any(organization.id == organization_id for organization in user.organizations):
-        raise NotFoundError("Organization", organization_id)
-
-    return organization
+    return await organization_access(organization_id, user)
 
 
 @router.get("/api/organizations/{organization_id}/applications", response_model=list[ApplicationResponse])
 async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)) -> list[ApplicationResponse]:
     """Return the applications for one organization."""
 
-    # Deny access early when the organization does not exist.
-    organization = await organizations.get(organization_id)
-    if organization is None:
-        raise NotFoundError("Organization", organization_id)
-
-    # Keep organization reads scoped to the caller's memberships.
-    if not any(organization.id == organization_id for organization in user.organizations):
-        raise NotFoundError("Organization", organization_id)
-
+    await organization_access(organization_id, user)
     return await applications.list_responses(organization_id, user.id, user)
 
 

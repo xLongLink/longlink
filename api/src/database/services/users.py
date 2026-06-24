@@ -31,7 +31,7 @@ class UsersService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def profile(self, user_id: str) -> UserProfile | None:
+    async def profile(self, user_id: UUID) -> UserProfile | None:
         """Return one user profile with membership roles included."""
 
         async with session_scope() as session:

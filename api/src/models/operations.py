@@ -4,6 +4,15 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
+class OperationStatus(str, Enum):
+    """Supported long-running operation lifecycle states."""
+
+    active = "active"
+    completed = "completed"
+    failed = "failed"
+    scheduled = "scheduled"
+
+
 class OperationKind(str, Enum):
     """Supported long-running operation types."""
 
@@ -23,7 +32,7 @@ class OperationResponse(BaseModel):
     kind: OperationKind
     step: str
     error: str | None = None
-    status: str
+    status: OperationStatus
 
     # Relationships
     application_id: UUID | None = None

@@ -172,7 +172,7 @@ async def test_database_usage_endpoint_returns_backend_capacity(
         async def usage(self) -> dict[str, int]:
             return {"space_used": 987654321}
 
-    monkeypatch.setattr("src.routes.database.Postgre", FakePostgre)
+    monkeypatch.setattr("src.routes.databases.Postgre", FakePostgre)
 
     # Act
     response = client.get(f"/api/databases/{registry_id}/usage")
@@ -283,7 +283,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
         async def setup(self) -> None:
             captured["setup_calls"] = int(captured.get("setup_calls", 0)) + 1
 
-    monkeypatch.setattr("src.routes.compute.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.computes.K8s", FakeCompute)
 
     # Act
     create_response = client.post(

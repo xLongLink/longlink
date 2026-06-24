@@ -49,17 +49,6 @@ class UnavailableError(ApiError):
     status_code = 503
 
 
-class MethodNotAllowedError(ApiError):
-    """Return a standard method-not-allowed response."""
-
-    status_code = 405
-
-    def __init__(self) -> None:
-        """Build the fixed method-not-allowed message."""
-
-        super().__init__("Method not allowed")
-
-
 def register_error_handlers(app: FastAPI) -> None:
     """Register the shared API error handler on the FastAPI app."""
 

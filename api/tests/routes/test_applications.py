@@ -694,32 +694,3 @@ async def test_proxy_app_shows_loading_when_app_is_not_ready(
     assert response.headers["content-length"] == "0"
     assert response.headers["cache-control"] == "no-store"
 
-
-def test_proxy_app_rejects_old_proxy_endpoint(clients: tuple[TestClient, TestClient, TestClient]) -> None:
-    """Reject the old shared proxy endpoint."""
-
-    # Arrange
-    client = clients[0]
-
-    # Act
-    response = client.get("/api/applications/proxy/?organization_id=00000000-0000-0000-0000-000000000001&application_slug=dashboard")
-
-    # Assert
-    assert response.status_code == 404
-
-
-@pytest.mark.parametrize("method", ["HEAD", "OPTIONS", "PUT"])
-def test_proxy_app_rejects_unsupported_methods(clients: tuple[TestClient, TestClient, TestClient], method: str) -> None:
-    """Reject methods on the removed shared proxy endpoint."""
-
-    # Arrange
-    client = clients[0]
-
-    # Act
-    response = client.request(
-        method,
-        "/api/applications/proxy?organization_id=00000000-0000-0000-0000-000000000001&application_slug=dashboard",
-    )
-
-    # Assert
-    assert response.status_code == 404

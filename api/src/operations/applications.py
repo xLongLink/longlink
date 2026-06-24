@@ -6,11 +6,13 @@ from src.utils.namespace import k8name
 from src.adapters.compute import K8s
 from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
+from src.models.operations import OperationKind
 from src.database.models.operations import Operation
 from src.database.services.compute import compute
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
+from src.operations.registry import operation_handler
 
 
 class ApplicationStartupState(str, Enum):
@@ -87,6 +89,7 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     return ApplicationStartupState.pending
 
 
+@operation_handler(OperationKind.application_create, step="verify")
 async def execute_application_create(operation: Operation) -> Operation:
     """Run one application creation verification step."""
 
@@ -124,6 +127,7 @@ async def execute_application_create(operation: Operation) -> Operation:
     return deferred or operation
 
 
+@operation_handler(OperationKind.application_delete, step="remove_runtime")
 async def execute_application_delete(operation: Operation) -> Operation:
     """Run one application deletion step."""
 

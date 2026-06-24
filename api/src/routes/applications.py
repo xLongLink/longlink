@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from kubernetes.client.rest import ApiException
-from src.auth import authuser, authadmin
+from src.auth import authuser, authadmin, organization_access
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
@@ -18,7 +18,6 @@ from src.database.services.compute import compute
 from src.database.services.database import database
 from src.database.services.operations import operations
 from src.database.services.applications import applications
-from src.database.services.organizations import organizations
 
 HOP_BY_HOP_HEADERS = {
     "connection",
@@ -46,18 +45,10 @@ async def list_applications(user: User = Depends(authadmin)) -> list[Application
 async def create_app(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)) -> ApplicationResponse:
     """Register a new application in the database and deploy it on the compute cluster."""
 
-    # Require membership in the target organization before creating the application.
-    organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
-    if organization is None:
-        raise NotFoundError("Organization", organization_id)
+    organization_record = await organization_access(organization_id, user)
 
     application_slug = slugify(payload.name)
-    logger.info("Provisioning application %s/%s", organization.slug, application_slug)
-
-    # Resolve the organization location so provisioning uses the active registries.
-    organization_record = await organizations.get(organization_id)
-    if organization_record is None:
-        raise NotFoundError("Organization", organization_id)
+    logger.info("Provisioning application %s/%s", organization_record.slug, application_slug)
 
     # Capture image build labels when the SDK image was built with them.
     image_metadata = metadata(payload.image)
@@ -123,10 +114,10 @@ async def create_app(organization_id: UUID, payload: ApplicationCreate, user: Us
         operation = await operations.create(OperationKind.application_create, application_id=application.id, step="verify", user=user)
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        logger.exception("Failed to queue application verification for %s/%s", organization.slug, payload.name)
+        logger.exception("Failed to queue application verification for %s/%s", organization_record.slug, payload.name)
         raise UnavailableError("Failed to queue application verification") from exc
 
-    logger.info("Queued application creation verification %s for %s/%s", operation.id, organization.slug, payload.name)
+    logger.info("Queued application creation verification %s for %s/%s", operation.id, organization_record.slug, payload.name)
 
     return application
 
@@ -160,13 +151,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     if application is None:
         raise NotFoundError("Application", application_id)
 
-    _organization = next((organization for organization in user.organizations if organization.id == application.organization_id), None)
-    if _organization is None:
-        raise NotFoundError("Organization", application.organization_id)
-
-    organization_record = await organizations.get(application.organization_id)
-    if organization_record is None:
-        raise NotFoundError("Organization", application.organization_id)
+    organization_record = await organization_access(application.organization_id, user)
 
     registries = await compute.list()
     if not registries:
@@ -209,12 +194,7 @@ async def proxy_application_request(
     if application is None:
         raise NotFoundError("Application", application_id)
 
-    organization = await organizations.get(application.organization_id)
-    if organization is None:
-        raise NotFoundError("Organization", application.organization_id)
-
-    if not any(member.id == organization.id for member in user.organizations):
-        raise NotFoundError("Organization", organization.id)
+    organization = await organization_access(application.organization_id, user)
 
     if application.status != ApplicationStatus.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})

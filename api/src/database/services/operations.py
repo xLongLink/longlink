@@ -63,12 +63,11 @@ class OperationsService:
             await session.refresh(operation)
             return operation
 
-
     async def claim(self, operation_id: UUID) -> Operation | None:
         """Mark one scheduled operation as active if it has not started yet."""
 
         async with session_scope() as session:
-            # Claim the row atomically so multiple replicas cannot start the same operation twice.
+            # Claim the row atomically so concurrent workers cannot start it twice.
             statement = (
                 update(Operation)
                 .where(Operation.id == operation_id, Operation.started_at.is_(None), Operation.stopped_at.is_(None))

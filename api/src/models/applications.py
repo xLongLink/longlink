@@ -3,6 +3,8 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles
 from src.models.users import UserSummary
+
+# Import late to avoid a circular dependency with organizations.py.
 from src.models.organizations import ApplicationStatus, OrganizationSummary
 
 
@@ -26,7 +28,7 @@ class ApplicationResponse(BaseModel):
     id: UUID
 
     # Relationships
-    organization: OrganizationSummary
+    organization: 'OrganizationSummary'
     organization_id: UUID
 
     # Metadata
@@ -49,3 +51,6 @@ class ApplicationResponse(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
+
+
+ApplicationResponse.model_rebuild()

@@ -118,19 +118,4 @@ class DatabaseService:
             await session.refresh(database)
             return database
 
-
-    async def purge(self, registry_id: UUID) -> DatabaseRegistry | None:
-        """Hard delete one database backend registration."""
-
-        async with session_scope() as session:
-            result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.id == registry_id))
-            database = result.scalar_one_or_none()
-            if database is None:
-                return None
-
-            await session.delete(database)
-            await session.commit()
-            return database
-
-
 database = DatabaseService()

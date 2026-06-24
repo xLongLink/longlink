@@ -115,5 +115,4 @@ class StorageService:
             await session.refresh(storage)
             return storage
 
-
 storage = StorageService()

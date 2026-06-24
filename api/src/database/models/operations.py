@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Column, String
-from src.models.operations import OperationKind
+from src.models.operations import OperationKind, OperationStatus
 
 
 class Operation(SQLModel, table=True):
@@ -32,16 +32,16 @@ class Operation(SQLModel, table=True):
     stopped_at: datetime | None = None
 
     @property
-    def status(self) -> str:
+    def status(self) -> OperationStatus:
         """Return the derived operation lifecycle state."""
 
         if self.stopped_at is not None:
             if self.error is not None:
-                return "failed"
+                return OperationStatus.failed
 
-            return "completed"
+            return OperationStatus.completed
 
         if self.started_at is not None:
-            return "active"
+            return OperationStatus.active
 
-        return "scheduled"
+        return OperationStatus.scheduled

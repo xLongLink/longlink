@@ -21,7 +21,7 @@ class Location(SQLModel, table=True):
     # Metadata
     name: str = Field(max_length=255)
     slug: str = Field(unique=True, max_length=128)
-    country: Country | None = Field(default=None, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False))
+    country: Country = Field(default=Country.CH, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False))
     provider: LocationProvider = Field(
         default=LocationProvider.local,
         sa_column=Column(

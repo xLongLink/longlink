@@ -25,8 +25,6 @@ class ApplicationStatus(str, Enum):
     running = "running"
     deleting = "deleting"
     failed = "failed"
-
-
 class OrganizationSummary(BaseModel):
     """Represent one organization in admin list responses."""
 
