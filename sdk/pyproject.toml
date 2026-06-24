@@ -13,7 +13,7 @@ dependencies = [
     "pydantic",
     "pydantic-settings",
     "fsspec",
-    "fastapi",
+    "fastapi>=0.138.0",
     "aiosqlite",
     "sqlmodel",
     "xmltodict",

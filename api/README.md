@@ -14,6 +14,7 @@
 ├───────────────────────────────────┤
 │ • Authentication                  │
 │ • Permissions                     │
+│ • Roles                           │
 │ • Routing                         │
 │ • Logging                         │
 └───────────────────────────────────┘
@@ -32,6 +33,14 @@
 │ • Storage                         │
 └───────────────────────────────────┘
 ```
+
+<br />
+
+## Roles
+
+- Platform roles: apply across the full control plane.
+- Organization roles: scope permissions within an organization.
+- Application roles: scope permissions within a single application.
 
 <br />
 

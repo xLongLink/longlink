@@ -126,17 +126,17 @@ export default function AdminOrganization() {
 
     const deleteOrganization = useMutation({
         mutationFn: async (orgId: string) => {
-            await fetchApiVoid(`/api/orgs/${orgId}`, {
+            await fetchApiVoid(`/api/organizations/${orgId}`, {
                 method: 'DELETE',
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/orgs') });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/organizations') });
             toast.success('Organization deleted');
         },
     });
 
-    const organizationsQuery = useApiQuery<Array<ApiOrganizationSummary>>('/api/orgs', {
+    const organizationsQuery = useApiQuery<Array<ApiOrganizationSummary>>('/api/organizations', {
         retry: false,
         refetchOnMount: 'always',
     });

@@ -33,7 +33,7 @@ export function resolveOrganizationId(org: string, organizations: ApiUserOrganiz
 export function useOrg(org: string): UseOrgResult {
     const { organizations, isLoading: isUserLoading } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgPath = `/api/orgs/${orgId}`;
+    const orgPath = `/api/organizations/${orgId}`;
 
     const missingOrganization = !isUserLoading && org.length > 0 && orgId.length === 0;
 
@@ -63,7 +63,7 @@ export function useInviteUser(org: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgPath = `/api/orgs/${orgId}`;
+    const orgPath = `/api/organizations/${orgId}`;
 
     return useMutation({
         mutationFn: async ({ email, role }: { email: string; role: string }) => {
@@ -71,7 +71,7 @@ export function useInviteUser(org: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiVoid(`/api/orgs/${orgId}/invitations`, {
+            return fetchApiVoid(`/api/organizations/${orgId}/invitations`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, role }),
@@ -97,7 +97,7 @@ export function useCreateOrg() {
             location_id: string;
             avatar?: string | null;
         }) => {
-            return fetchApiJson<ApiOrganizationSummary>('/api/orgs', {
+            return fetchApiJson<ApiOrganizationSummary>('/api/organizations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, location_id, avatar: avatar?.trim() ? avatar.trim() : null }),
@@ -121,7 +121,7 @@ export function useDeleteOrg() {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(`/api/orgs/${orgId}`, {
+            await fetchApiVoid(`/api/organizations/${orgId}`, {
                 method: 'DELETE',
             });
         },
@@ -136,8 +136,8 @@ export function useCreateApp(org: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgPath = `/api/orgs/${orgId}`;
-    const appsPath = `/api/apps?organization_id=${orgId}`;
+    const orgPath = `/api/organizations/${orgId}`;
+    const appsPath = `/api/applications?organization_id=${orgId}`;
 
     return useMutation({
         mutationFn: async (payload: {
@@ -164,7 +164,7 @@ export function useDeleteApp(org: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
     const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgPath = `/api/orgs/${orgId}`;
+    const orgPath = `/api/organizations/${orgId}`;
 
     return useMutation({
         mutationFn: async (appId: string) => {
@@ -172,7 +172,7 @@ export function useDeleteApp(org: string) {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(`/api/apps/${appId}?organization_id=${orgId}`, {
+            await fetchApiVoid(`/api/applications/${appId}`, {
                 method: 'DELETE',
             });
         },

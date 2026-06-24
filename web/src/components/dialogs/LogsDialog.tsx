@@ -55,7 +55,7 @@ export default function LogsDialog({ org, appId, appName, open, onOpenChange, tr
 
         void (async () => {
             try {
-                const text = await fetchApiText(`/api/apps/${appId}/logs?organization_id=${orgId}`);
+                const text = await fetchApiText(`/api/applications/${appId}/logs`);
 
                 if (!cancelled) {
                     setLogsContent(text);

@@ -93,7 +93,7 @@ const appColumns: Array<ColumnDef<AdminApplicationResponse>> = [
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
-    const appsQuery = useApiQuery<Array<ApiApplicationResponse>>('/api/apps', {
+    const appsQuery = useApiQuery<Array<ApiApplicationResponse>>('/api/applications', {
         retry: false,
         refetchOnMount: 'always',
     });

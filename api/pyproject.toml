@@ -14,8 +14,8 @@ dependencies = [
     'authlib',
     'email-validator',
     'fastapi==0.138.0',
-    'httpx',
     'httpx2',
+    'httpx',
     'itsdangerous',
     'asyncmy',
     'pydantic',
@@ -26,7 +26,6 @@ dependencies = [
     'starlette',
     'boto3',
     'kubernetes',
-    'longlink',
     "uvicorn<0.48.0",
 ]
 
@@ -50,10 +49,6 @@ py-modules = ['main']
 
 [tool.setuptools.packages.find]
 include = ['src*']
-
-[tool.uv.sources]
-longlink = { path = '../sdk', editable = true }
-
 
 [tool.ruff]
 target-version = "py312"

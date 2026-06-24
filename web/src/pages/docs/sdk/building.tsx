@@ -3,7 +3,7 @@ import { Heading } from '@/components/ui/heading';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const metadata = {
-    lastUpdated: '2026-06-23',
+    lastUpdated: '2026-06-24',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/building.tsx',
 };
 
@@ -18,18 +18,7 @@ export const content = (
                 <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
                     longlink build
                 </code>{' '}
-                generates the{' '}
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Dockerfile</code>{' '}
-                and the{' '}
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                    manifest.json
-                </code>
-                .
-            </li>
-            <li>
-                The generated{' '}
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">Dockerfile</code>{' '}
-                includes labels for the app and SDK versions.
+                builds the image from a temporary Docker context and leaves no build files in the app folder.
             </li>
             <li>Once containerized, applications can be pushed to any registry.</li>
             <li>Applications can be connected to the control plane and deployed.</li>
@@ -121,5 +110,89 @@ export const content = (
                 <CodeBlock language="bash">uv run longlink build</CodeBlock>
             </TabsContent>
         </Tabs>
+        <div className="flex flex-col gap-2">
+            <Heading id="ci-workflows" level="h2">
+                CI Workflows
+            </Heading>
+            <p className="leading-7">Use the same flow in GitHub Actions or GitLab CI. Strip a leading `v` from release tags.</p>
+            <Tabs defaultValue="github">
+                <TabsList>
+                    <TabsTrigger value="github">GitHub</TabsTrigger>
+                    <TabsTrigger value="gitlab">GitLab</TabsTrigger>
+                </TabsList>
+                <TabsContent value="github">
+                    <CodeBlock language="yaml">{`name: build-sample-image
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install SDK dependencies
+        working-directory: sdk
+        run: uv sync
+
+      - name: Generate sample app scaffold
+        working-directory: sdk
+        run: uv run longlink init --folder sample-app
+
+      - name: Build sample app image
+        working-directory: sdk/sample-app
+        run: |
+          image_version="${'$'}{GITHUB_REF_NAME#v}"
+          uv run longlink build --tag "$image_version"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${'$'}{{ github.actor }}
+          password: ${'$'}{{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish sample image
+        working-directory: sdk/sample-app
+        run: |
+          image_version="${'$'}{GITHUB_REF_NAME#v}"
+          docker tag longlink-app:"$image_version" ghcr.io/xlonglink/sample:latest
+          docker tag longlink-app:"$image_version" ghcr.io/xlonglink/sample:"$image_version"
+          docker push ghcr.io/xlonglink/sample:latest
+          docker push ghcr.io/xlonglink/sample:"$image_version"`}</CodeBlock>
+                </TabsContent>
+                <TabsContent value="gitlab">
+                    <CodeBlock language="yaml">{`build-sample-image:
+  image: ghcr.io/astral-sh/uv:python3.12-bookworm
+  stage: build
+
+  script:
+    - cd sdk
+    - uv sync
+    - uv run longlink init --folder sample-app
+    - cd sample-app
+    - image_version="${'$'}{CI_COMMIT_TAG#v}"
+    - uv run longlink build --tag "$image_version"
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker tag longlink-app:"$image_version" "$CI_REGISTRY_IMAGE":latest
+    - docker tag longlink-app:"$image_version" "$CI_REGISTRY_IMAGE":"$image_version"
+    - docker push "$CI_REGISTRY_IMAGE":latest
+    - docker push "$CI_REGISTRY_IMAGE":"$image_version"`}</CodeBlock>
+                </TabsContent>
+            </Tabs>
+        </div>
     </div>
 );

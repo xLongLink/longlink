@@ -7,11 +7,10 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 
-DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.12-bookworm
+DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS builder
 
 COPY . /workspace
 
@@ -19,20 +18,20 @@ WORKDIR {workdir}
 
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 
-{labels}
-
 RUN uv sync
 
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--log-level", "debug"]
+FROM python:3.12-slim-bookworm
+
+WORKDIR {workdir}
+
+COPY --from=builder {workdir} {workdir}
+
+{labels}
+
+ENV PATH="{workdir}/.venv/bin:$PATH"
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--log-level", "debug"]
 """
-
-
-def create_version() -> str:
-    """Generate timestamp-based version string for build artifacts."""
-
-    return datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-
-
 def resolve_sdk_version() -> str:
     """Return the installed LongLink SDK version."""
 
@@ -215,7 +214,6 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     """Create Docker build artifacts for the current app."""
 
     root = (base_path or Path.cwd()).resolve()
-    version = tag or create_version()
     source_root, workdir = resolve_docker_paths(root)
     repo_root = next((parent for parent in root.parents if (parent / ".git").exists()), None)
     env_spec = read_env_spec(root)
@@ -233,6 +231,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         "contact": tool_data.get("contact"),
         "license_info": tool_data.get("license_info"),
     }
+    version = tag or metadata["version"]
     labels = render_longlink_labels(metadata, env_spec)
 
     # Copy the source tree into a throwaway Docker build context.
@@ -306,6 +305,9 @@ def build_command(tag: str | None):
         click.echo(f"Build completed for version {version}")
         click.echo(f"- Built image: {image_tag}")
         click.echo(f"- Image ID: {image_id}")
+        click.echo(f"- View it with: docker image inspect {image_tag}")
+        click.echo(f"- Run it with: docker run --rm -p 80:80 {image_tag}")
+        click.echo(f"- Remove it with: docker rmi {image_tag}")
     except subprocess.CalledProcessError as error:
         raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
     except FileNotFoundError as error:
