@@ -11,7 +11,7 @@ import type { ApiDatabaseDatabase, ApiDatabaseRegistry } from '@/lib/types';
 export default function DatabaseDatabases() {
     const { database = '' } = useParams();
 
-    const registriesQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/database', {
+    const registriesQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/databases', {
         retry: false,
         refetchOnMount: 'always',
     });
@@ -19,7 +19,7 @@ export default function DatabaseDatabases() {
     const databaseRegistry = registriesQuery.data?.find(
         (registry) => registry.slug === database || registry.id === database
     );
-    const databasesPath = databaseRegistry ? `/api/database/${databaseRegistry.id}/databases` : null;
+    const databasesPath = databaseRegistry ? `/api/databases/${databaseRegistry.id}/databases` : null;
 
     const databaseColumns: Array<ColumnDef<ApiDatabaseDatabase>> = [
         {

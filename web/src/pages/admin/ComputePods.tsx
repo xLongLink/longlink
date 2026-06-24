@@ -75,14 +75,14 @@ const podColumns: Array<ColumnDef<ApiComputePod>> = [
 export default function ComputePods() {
     const { compute = '', namespace = '' } = useParams();
 
-    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/compute', {
+    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/computes', {
         retry: false,
         refetchOnMount: 'always',
     });
 
     const computeRegistry = computeQuery.data?.find((registry) => registry.slug === compute || registry.id === compute);
     const podsPath = computeRegistry
-        ? `/api/compute/${computeRegistry.id}/namespaces/${encodeURIComponent(namespace)}/pods`
+        ? `/api/computes/${computeRegistry.id}/namespaces/${encodeURIComponent(namespace)}/pods`
         : null;
 
     const podsQuery = useApiQuery<Array<ApiComputePod>>(podsPath, {

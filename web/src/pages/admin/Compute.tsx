@@ -111,17 +111,17 @@ export default function AdminCompute() {
 
     const deleteCompute = useMutation({
         mutationFn: async (registryId: string) => {
-            await fetchApiVoid(`/api/compute/${registryId}`, {
+            await fetchApiVoid(`/api/computes/${registryId}`, {
                 method: 'DELETE',
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/compute') });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/computes') });
             toast.success('Compute deleted');
         },
     });
 
-    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/compute', {
+    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/computes', {
         retry: false,
         refetchOnMount: 'always',
     });
@@ -133,8 +133,8 @@ export default function AdminCompute() {
     const computeList = computeQuery.data ?? [];
     const resourcesQueries = useQueries({
         queries: computeList.map((c) => ({
-            queryKey: apiQueryKey(`/api/compute/${c.id}/resources`),
-            queryFn: async () => fetchApiJson<ApiComputeResources>(`/api/compute/${c.id}/resources`),
+            queryKey: apiQueryKey(`/api/computes/${c.id}/resources`),
+            queryFn: async () => fetchApiJson<ApiComputeResources>(`/api/computes/${c.id}/resources`),
             retry: false,
         })),
     });

@@ -11,13 +11,13 @@ import type { ApiComputeNamespace, ApiComputeRegistry } from '@/lib/types';
 export default function ComputeNamespaces() {
     const { compute = '' } = useParams();
 
-    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/compute', {
+    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/computes', {
         retry: false,
         refetchOnMount: 'always',
     });
 
     const computeRegistry = computeQuery.data?.find((registry) => registry.slug === compute || registry.id === compute);
-    const namespacesPath = computeRegistry ? `/api/compute/${computeRegistry.id}/namespaces` : null;
+    const namespacesPath = computeRegistry ? `/api/computes/${computeRegistry.id}/namespaces` : null;
 
     const namespaceColumns: Array<ColumnDef<ApiComputeNamespace>> = [
         {

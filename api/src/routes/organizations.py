@@ -21,10 +21,7 @@ async def list_organizations(_user: User = Depends(authsupport)) -> list[Organiz
 
 
 @router.get("/api/organizations/{org_id}", response_model=OrganizationDetails)
-async def get_organization(
-    org_id: UUID,
-    user: User = Depends(authuser),
-) -> OrganizationDetails:
+async def get_organization(org_id: UUID, user: User = Depends(authuser)) -> OrganizationDetails:
     """Return one organization and its metadata."""
 
     # Deny access early when the org does not exist.
@@ -40,10 +37,7 @@ async def get_organization(
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary)
-async def create_organization(
-    payload: OrganizationCreate,
-    user: User = Depends(authuser),
-) -> OrganizationSummary:
+async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)) -> OrganizationSummary:
     """Create a new organization."""
 
     # Map uniqueness failures to a conflict response.

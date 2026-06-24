@@ -41,7 +41,7 @@ export default function ConnectComputeDialog() {
 
     const connectCompute = useMutation({
         mutationFn: async () => {
-            return fetchApiJson<ApiComputeRegistry>('/api/compute', {
+            return fetchApiJson<ApiComputeRegistry>('/api/computes', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ export default function ConnectComputeDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/compute') });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/computes') });
             setOpen(false);
             setKind('kubernetes');
             setKubeconfig('');

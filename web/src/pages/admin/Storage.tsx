@@ -45,17 +45,17 @@ export default function AdminStorage() {
 
     const deleteStorage = useMutation({
         mutationFn: async (registryId: string) => {
-            await fetchApiVoid(`/api/storage/${registryId}`, {
+            await fetchApiVoid(`/api/storages/${registryId}`, {
                 method: 'DELETE',
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/storage') });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/storages') });
             toast.success('Storage deleted');
         },
     });
 
-    const storageQuery = useApiQuery<Array<ApiStorageRegistry>>('/api/storage', {
+    const storageQuery = useApiQuery<Array<ApiStorageRegistry>>('/api/storages', {
         retry: false,
         refetchOnMount: 'always',
     });

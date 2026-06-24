@@ -107,17 +107,17 @@ export default function AdminDatabase() {
 
     const deleteDatabase = useMutation({
         mutationFn: async (registryId: string) => {
-            await fetchApiVoid(`/api/database/${registryId}`, {
+            await fetchApiVoid(`/api/databases/${registryId}`, {
                 method: 'DELETE',
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/database') });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/databases') });
             toast.success('Database deleted');
         },
     });
 
-    const databaseQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/database', {
+    const databaseQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/databases', {
         retry: false,
         refetchOnMount: 'always',
     });
@@ -129,8 +129,8 @@ export default function AdminDatabase() {
     const databaseRows = databaseQuery.data ?? [];
     const usageQueries = useQueries({
         queries: databaseRows.map((registry) => ({
-            queryKey: apiQueryKey(`/api/database/${registry.id}/usage`),
-            queryFn: async () => fetchApiJson<ApiDatabaseUsage>(`/api/database/${registry.id}/usage`),
+            queryKey: apiQueryKey(`/api/databases/${registry.id}/usage`),
+            queryFn: async () => fetchApiJson<ApiDatabaseUsage>(`/api/databases/${registry.id}/usage`),
             retry: false,
         })),
     });

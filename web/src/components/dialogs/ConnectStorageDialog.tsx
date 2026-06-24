@@ -46,7 +46,7 @@ export default function ConnectStorageDialog() {
 
     const connectStorage = useMutation({
         mutationFn: async () => {
-            return fetchApiJson('/api/storage', {
+            return fetchApiJson('/api/storages', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export default function ConnectStorageDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/storage') });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/storages') });
             setOpen(false);
             setKind('s3');
             setName('');

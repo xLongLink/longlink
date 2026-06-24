@@ -11,7 +11,7 @@ import type { ApiDatabaseRegistry, ApiDatabaseSchema } from '@/lib/types';
 export default function DatabaseSchemas() {
     const { database = '', dbname = '' } = useParams();
 
-    const registriesQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/database', {
+    const registriesQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/databases', {
         retry: false,
         refetchOnMount: 'always',
     });
@@ -20,7 +20,7 @@ export default function DatabaseSchemas() {
         (registry) => registry.slug === database || registry.id === database
     );
     const schemasPath = databaseRegistry
-        ? `/api/database/${databaseRegistry.id}/databases/${encodeURIComponent(dbname)}/schemas`
+        ? `/api/databases/${databaseRegistry.id}/databases/${encodeURIComponent(dbname)}/schemas`
         : null;
 
     const schemaColumns: Array<ColumnDef<ApiDatabaseSchema>> = [

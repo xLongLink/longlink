@@ -28,7 +28,7 @@ export default function ConnectDatabaseDialog() {
 
     const connectDatabase = useMutation({
         mutationFn: async () => {
-            return fetchApiJson('/api/database', {
+            return fetchApiJson('/api/databases', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export default function ConnectDatabaseDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/database') });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/databases') });
             setOpen(false);
             setKind('postgre');
             setName('');
