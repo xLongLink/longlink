@@ -1,6 +1,6 @@
 import { DataTable } from '@/components/DataTable';
-import CreateOrgDialog from '@/components/dialogs/CreateOrgDialog';
-import { useDeleteOrg } from '@/hooks/use-org';
+import CreateOrganizationDialog from '@/components/dialogs/CreateOrganizationDialog';
+import { useDeleteOrganization } from '@/hooks/use-organization';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
@@ -23,13 +23,13 @@ import { toast } from 'sonner';
 export default function Settings() {
     const { user, organizations, theme, accent, radius, isLoading } = useUser();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
-    const deleteOrg = useDeleteOrg();
+    const deleteOrganization = useDeleteOrganization();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [accountError, setAccountError] = useState<string | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
-    const deleteTargetOrg = organizations.find((organization) => organization.id === deleteTarget) ?? null;
+    const deleteTargetOrganization = organizations.find((organization) => organization.id === deleteTarget) ?? null;
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {
@@ -301,7 +301,7 @@ export default function Settings() {
                                     </p>
                                 </div>
 
-                                <CreateOrgDialog />
+                                <CreateOrganizationDialog />
                             </div>
 
                             <DataTable
@@ -327,11 +327,11 @@ export default function Settings() {
                     <DialogContent>
                         <div className="space-y-4">
                             <div className="space-y-1">
-                                <DialogTitle>Delete org</DialogTitle>
+                                <DialogTitle>Delete organization</DialogTitle>
                                 <DialogDescription>
-                                    {deleteTargetOrg
-                                        ? `Delete ${deleteTargetOrg.name} from your account?`
-                                        : 'Delete this org?'}
+                                    {deleteTargetOrganization
+                                        ? `Delete ${deleteTargetOrganization.name} from your account?`
+                                        : 'Delete this organization?'}
                                 </DialogDescription>
                             </div>
 
@@ -351,27 +351,27 @@ export default function Settings() {
                                 <Button
                                     type="button"
                                     variant="destructive"
-                                    disabled={deleteOrg.isPending || deleteTarget === null}
+                                    disabled={deleteOrganization.isPending || deleteTarget === null}
                                     onClick={async () => {
                                         if (!deleteTarget) {
                                             return;
                                         }
 
-                                        // Delete the selected org and close the dialog on success.
+                                        // Delete the selected organization and close the dialog on success.
                                         try {
-                                            await deleteOrg.mutateAsync(deleteTarget);
+                                            await deleteOrganization.mutateAsync(deleteTarget);
                                             setDeleteTarget(null);
                                             setDeleteError(null);
                                         } catch (mutationError) {
                                             setDeleteError(
                                                 mutationError instanceof Error
                                                     ? mutationError.message
-                                                    : 'Failed to delete org'
+                                                    : 'Failed to delete organization'
                                             );
                                         }
                                     }}
                                 >
-                                    {deleteOrg.isPending ? 'Deleting...' : 'Delete'}
+                                        {deleteOrganization.isPending ? 'Deleting...' : 'Delete'}
                                 </Button>
                             </div>
                         </div>

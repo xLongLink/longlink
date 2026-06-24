@@ -40,7 +40,7 @@ router = APIRouter()
 proxy_router = APIRouter(route_class=ProxyRoute)
 
 
-@router.head("/api/organizations/{organization_id}/applications/{application_slug}/proxy")
+@router.head("/api/applications/proxy")
 async def reject_proxy_head(organization_id: UUID, application_slug: str) -> None:
     """Reject HEAD requests on the application proxy."""
 
@@ -48,11 +48,11 @@ async def reject_proxy_head(organization_id: UUID, application_slug: str) -> Non
 
 
 @proxy_router.api_route(
-    "/api/organizations/{organization_id}/applications/{application_slug}/proxy",
+    "/api/applications/proxy",
     methods=["DELETE", "GET", "PATCH", "POST"],
 )
 @proxy_router.api_route(
-    "/api/organizations/{organization_id}/applications/{application_slug}/proxy/{path:path}",
+    "/api/applications/proxy/{path:path}",
     methods=["DELETE", "GET", "PATCH", "POST"],
 )
 async def proxy_app_request(
@@ -111,10 +111,16 @@ async def proxy_app_request(
 
     # Forward the request body and response stream directly through the Kubernetes API client.
     try:
+        # Keep proxy routing identifiers local to this service.
+        query_params = [
+            (key, value)
+            for key, value in request.query_params.multi_items()
+            if key not in {"organization_id", "application_slug"}
+        ]
         upstream_response = k8s._api_client.call_api(
             resource_path,
             request.method,
-            query_params=list(request.query_params.multi_items()),
+            query_params=query_params,
             header_params=forward_headers,
             body=await request.body(),
             auth_settings=["BearerToken"],

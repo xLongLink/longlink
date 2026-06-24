@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useInviteUser } from '@/hooks/use-org';
+import { useInviteOrganizationMember } from '@/hooks/use-organization';
 import { ROLE_NAMES } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 type PeopleProps = {
-    org: string;
+    organization: string;
     people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
     isLoading: boolean;
@@ -41,13 +41,13 @@ const invitationColumns: Array<ColumnDef<ApiInvitation>> = [
 ];
 
 /** Renders the organization people menu and member tables. */
-export default function People({ org, people, invitations, isLoading, error }: PeopleProps) {
+export default function People({ organization, people, invitations, isLoading, error }: PeopleProps) {
     const [peopleSection, setPeopleSection] = useState<'members' | 'invitations'>('members');
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<string>('write');
     const [inviteError, setInviteError] = useState<string | null>(null);
-    const inviteUser = useInviteUser(org);
+    const inviteUser = useInviteOrganizationMember(organization);
 
     const peopleColumns: Array<ColumnDef<ApiOrganizationMemberSummary>> = [
         {
@@ -64,7 +64,7 @@ export default function People({ org, people, invitations, isLoading, error }: P
                         </Avatar>
                         <div className="min-w-0 space-y-0.5">
                             <Link
-                                to={`/orgs/${org}/people/${user.id}`}
+                                to={`/orgs/${organization}/people/${user.id}`}
                                 className="text-sm font-medium text-foreground hover:underline"
                             >
                                 {user.name}
@@ -151,7 +151,7 @@ export default function People({ org, people, invitations, isLoading, error }: P
                                 Pending invitations to join this organization.
                             </p>
                         </div>
-                        <Button type="button" onClick={() => setInviteOpen(true)} disabled={org.length === 0}>
+                        <Button type="button" onClick={() => setInviteOpen(true)} disabled={organization.length === 0}>
                             Invite
                         </Button>
                     </div>

@@ -14,7 +14,7 @@ from src.database.services.organizations import organizations
 
 
 class ApplicationStartupState(str, Enum):
-    """Runtime startup states for one deployed app."""
+    """Runtime startup states for one deployed application."""
 
     pending = "pending"
     ready = "ready"
@@ -99,23 +99,23 @@ async def execute_application_create(operation: Operation) -> Operation:
         raise ValueError(f"Application '{application_id}' not found")
 
     if operation.step != "verify":
-        raise ValueError(f"Unsupported application.create step '{operation.step}'")
+        raise ValueError(f"Unsupported application create step '{operation.step}'")
 
     startup_state = await inspect_application_startup(operation)
     if startup_state == ApplicationStartupState.ready:
         await applications.set_status(application.id, ApplicationStatus.running)
         completed = await operations.complete(operation.id)
         if completed is not None:
-            logger.info("Completed app creation %s", operation.id)
+            logger.info("Completed application creation %s", operation.id)
             return completed
 
         return operation
 
     if startup_state == ApplicationStartupState.dead:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        failed = await operations.fail(operation.id, "App crashed during startup")
+        failed = await operations.fail(operation.id, "Application crashed during startup")
         if failed is not None:
-            logger.info("Failed app creation %s", operation.id)
+            logger.info("Failed application creation %s", operation.id)
             return failed
 
         return operation
@@ -137,7 +137,7 @@ async def execute_application_delete(operation: Operation) -> Operation:
         return completed or operation
 
     if operation.step != "remove_runtime":
-        raise ValueError(f"Unsupported application.delete step '{operation.step}'")
+        raise ValueError(f"Unsupported application delete step '{operation.step}'")
 
     organization = await organizations.get(application.organization_id)
     if organization is None:
@@ -162,7 +162,7 @@ async def execute_application_delete(operation: Operation) -> Operation:
 
     completed = await operations.complete(operation.id)
     if completed is not None:
-        logger.info("Completed app deletion %s", operation.id)
+        logger.info("Completed application deletion %s", operation.id)
         return completed
 
     return operation

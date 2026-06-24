@@ -1,4 +1,4 @@
-import { useOrg } from '@/hooks/use-org';
+import { useOrganization } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
@@ -7,7 +7,7 @@ import { useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
 import People from './org/People';
-import OrgSettings from './org/Settings';
+import OrganizationSettings from './org/Settings';
 
 type OrganizationSection = 'applications' | 'people' | 'settings';
 
@@ -17,14 +17,16 @@ type OrganizationProps = {
 
 /** Renders the organization page shell and tab-specific hero content. */
 export default function Organization({ sectionName }: OrganizationProps) {
-    const { org: routeOrg = '' } = useParams();
+    const { organization: routeOrganization = '' } = useParams();
     const { pathname } = useLocation();
     const { organizations } = useUser();
-    const org = routeOrg || organizations[0]?.name || '';
+    const organization = routeOrganization || organizations[0]?.name || '';
     const pathSection = pathname.split('/')[3] ?? '';
     const section =
         sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
-    const { org: orgDetails, people, invitations, applications, isLoading, error } = useOrg(org);
+    const { organization: organizationDetails, people, invitations, applications, isLoading, error } = useOrganization(
+        organization
+    );
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -70,24 +72,35 @@ export default function Organization({ sectionName }: OrganizationProps) {
     return (
         <Layout
             tabs={{
-                Applications: { href: `/orgs/${org}`, icon: LayoutGrid },
-                People: { href: `/orgs/${org}/people`, icon: Users },
-                Settings: { href: `/orgs/${org}/settings`, icon: Settings2 },
+                Applications: { href: `/orgs/${organization}`, icon: LayoutGrid },
+                People: { href: `/orgs/${organization}/people`, icon: Users },
+                Settings: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 {content}
 
                 {section === 'people' ? (
-                    <People org={org} people={people} invitations={invitations} isLoading={isLoading} error={error} />
+                    <People
+                        organization={organization}
+                        people={people}
+                        invitations={invitations}
+                        isLoading={isLoading}
+                        error={error}
+                    />
                 ) : null}
                 {section === 'applications' ? (
-                    <Applications org={org} applications={applications} isLoading={isLoading} error={error} />
+                    <Applications
+                        organization={organization}
+                        applications={applications}
+                        isLoading={isLoading}
+                        error={error}
+                    />
                 ) : null}
                 {section === 'settings' ? (
-                    <OrgSettings
-                        org={org}
-                        orgDetails={orgDetails}
+                    <OrganizationSettings
+                        organization={organization}
+                        organizationDetails={organizationDetails}
                         applications={applications}
                         isLoading={isLoading}
                         error={error}

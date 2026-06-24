@@ -1,25 +1,32 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { resolveOrganizationId } from '@/hooks/use-org';
+import { resolveOrganizationId } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import { fetchApiText } from '@/lib/api';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 
 type LogsDialogProps = {
-    org: string;
-    appId: string;
-    appName: string;
+    organization: string;
+    applicationId: string;
+    applicationName: string;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     trigger?: ReactNode | null;
 };
 
 /** Renders the application logs dialog for an organization. */
-export default function LogsDialog({ org, appId, appName, open, onOpenChange, trigger }: LogsDialogProps) {
+export default function LogsDialog({
+    organization,
+    applicationId,
+    applicationName,
+    open,
+    onOpenChange,
+    trigger,
+}: LogsDialogProps) {
     const { organizations } = useUser();
-    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
+    const organizationId = useMemo(() => resolveOrganizationId(organization, organizations), [organization, organizations]);
     const [internalOpen, setInternalOpen] = useState(false);
     const [logsContent, setLogsContent] = useState('');
     const [logsError, setLogsError] = useState<string | null>(null);
@@ -43,7 +50,7 @@ export default function LogsDialog({ org, appId, appName, open, onOpenChange, tr
 
     // Fetch the selected application's pod logs only while the dialog is open.
     useEffect(() => {
-        if (!dialogOpen || orgId.length === 0) {
+        if (!dialogOpen || organizationId.length === 0) {
             return;
         }
 
@@ -55,7 +62,7 @@ export default function LogsDialog({ org, appId, appName, open, onOpenChange, tr
 
         void (async () => {
             try {
-                const text = await fetchApiText(`/api/applications/${appId}/logs`);
+                const text = await fetchApiText(`/api/applications/${applicationId}/logs`);
 
                 if (!cancelled) {
                     setLogsContent(text);
@@ -74,7 +81,7 @@ export default function LogsDialog({ org, appId, appName, open, onOpenChange, tr
         return () => {
             cancelled = true;
         };
-    }, [appId, dialogOpen, orgId]);
+    }, [applicationId, dialogOpen, organizationId]);
 
     return (
         <>
@@ -91,7 +98,7 @@ export default function LogsDialog({ org, appId, appName, open, onOpenChange, tr
                     <div className="space-y-4">
                         <div className="space-y-1">
                             <DialogTitle>Pod logs</DialogTitle>
-                            <DialogDescription>Recent logs for {appName}</DialogDescription>
+                            <DialogDescription>Recent logs for {applicationName}</DialogDescription>
                         </div>
 
                         {logsLoading ? (

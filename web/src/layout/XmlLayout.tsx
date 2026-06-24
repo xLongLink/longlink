@@ -25,7 +25,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
 
     const header = (
         <>
-            <div className="mx-auto w-full px-6 pb-2 pt-4 text-white/80">
+            <div className="mx-auto w-full px-6 pb-2 pt-4 text-foreground/80">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         {brandOnly ? (
@@ -41,7 +41,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                             href="https://longlink.dev/docs"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+                            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
                         >
                             Docs
                             <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
@@ -66,9 +66,8 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                     replace
                                     aria-current={isActive ? 'page' : undefined}
                                     className={cn(
-                                        'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white',
-                                        isActive &&
-                                            'text-white after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-white'
+                                        'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground',
+                                        isActive && 'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
                                     )}
                                 >
                                     {label}

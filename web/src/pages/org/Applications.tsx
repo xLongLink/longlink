@@ -9,19 +9,19 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useDeleteApp } from '@/hooks/use-org';
+import { useDeleteApplication } from '@/hooks/use-organization';
 import type { ApiOrganizationApplication } from '@/lib/types';
 
 type ApplicationsProps = {
-    org: string;
+    organization: string;
     applications: ApiOrganizationApplication[];
     isLoading: boolean;
     error: Error | null;
 };
 
 /** Renders the organization applications table. */
-export default function Applications({ org, applications, isLoading, error }: ApplicationsProps) {
-    const deleteApp = useDeleteApp(org);
+export default function Applications({ organization, applications, isLoading, error }: ApplicationsProps) {
+    const deleteApplication = useDeleteApplication(organization);
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -45,7 +45,7 @@ export default function Applications({ org, applications, isLoading, error }: Ap
                         </div>
                         <div className="min-w-0 space-y-1">
                             <Link
-                                to={`/orgs/${org}/apps/${row.original.slug}`}
+                                to={`/orgs/${organization}/apps/${row.original.slug}`}
                                 className="font-medium text-foreground hover:underline"
                             >
                                 {name}
@@ -147,7 +147,7 @@ export default function Applications({ org, applications, isLoading, error }: Ap
                 <DialogContent>
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <DialogTitle>Delete app</DialogTitle>
+                            <DialogTitle>Delete application</DialogTitle>
                             <DialogDescription>
                                 {deleteTarget
                                     ? `Delete ${deleteTarget.name} from this organization?`
@@ -171,7 +171,7 @@ export default function Applications({ org, applications, isLoading, error }: Ap
                             <Button
                                 type="button"
                                 variant="destructive"
-                                disabled={deleteApp.isPending || deleteTargetId === null}
+                                disabled={deleteApplication.isPending || deleteTargetId === null}
                                 onClick={async () => {
                                     if (deleteTargetId === null) {
                                         return;
@@ -180,19 +180,19 @@ export default function Applications({ org, applications, isLoading, error }: Ap
                                     const id = deleteTargetId;
 
                                     try {
-                                        await deleteApp.mutateAsync(id);
+                                        await deleteApplication.mutateAsync(id);
                                         setDeleteTargetId(null);
                                         setDeleteError(null);
                                     } catch (mutationError) {
                                         setDeleteError(
                                             mutationError instanceof Error
                                                 ? mutationError.message
-                                                : 'Failed to delete app'
+                                                : 'Failed to delete application'
                                         );
                                     }
                                 }}
                             >
-                                {deleteApp.isPending ? 'Deleting...' : 'Delete'}
+                                {deleteApplication.isPending ? 'Deleting...' : 'Delete'}
                             </Button>
                         </div>
                     </div>

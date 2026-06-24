@@ -129,8 +129,8 @@ export default function AdminOrganization() {
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteOrganization = useMutation({
-        mutationFn: async (orgId: string) => {
-            await fetchApiVoid(`/api/organizations/${orgId}`, {
+        mutationFn: async (organizationId: string) => {
+            await fetchApiVoid(`/api/organizations/${organizationId}`, {
                 method: 'DELETE',
             });
         },

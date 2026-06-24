@@ -35,7 +35,7 @@ async def create_app(
 ) -> ApplicationResponse:
     """Register a new application in the database and deploy it on the compute cluster."""
 
-    # Require membership in the target organization before creating the app.
+    # Require membership in the target organization before creating the application.
     organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
     if organization is None:
         raise NotFoundError("Organization", organization_id)
@@ -71,7 +71,7 @@ async def create_app(
     if database_registry is None:
         raise UnavailableError(f"No database configured for location '{organization_record.location_id}'")
 
-    # Create the app row before provisioning external resources.
+    # Create the application row before provisioning external resources.
     try:
         application = await applications.create(
             organization_id,
@@ -96,7 +96,7 @@ async def create_app(
         database_registry.password,
     )
 
-    # Provision the namespace, schema, and workload in order so failures can mark the app as failed.
+    # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
     try:
         await k8s.namespace(organization_record.slug)
         await db_client.schema(organization_record.slug, application_slug)
@@ -113,7 +113,7 @@ async def create_app(
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
         logger.exception("Failed to queue application verification for %s/%s", organization.slug, payload.name)
-        raise UnavailableError("Failed to queue app verification") from exc
+        raise UnavailableError("Failed to queue application verification") from exc
 
     logger.info("Queued application creation verification %s for %s/%s", operation.id, organization.slug, payload.name)
 
@@ -125,9 +125,9 @@ async def delete_app(
     application_id: UUID,
     _user: User = Depends(authadmin),
 ) -> None:
-    """Queue app deletion and return immediately."""
+    """Queue application deletion and return immediately."""
 
-    # Load the app first so missing rows fail before we delete it.
+    # Load the application first so missing rows fail before we delete it.
     application = await applications.get_by_id(application_id)
     if application is None:
         raise NotFoundError("Application", application_id)

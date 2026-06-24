@@ -6,14 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { useApiQuery } from '@/hooks/use-api';
-import { useCreateOrg } from '@/hooks/use-org';
+import { useCreateOrganization } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import type { ApiLocation } from '@/lib/types';
 
 /** Renders the create-organization dialog. */
-export default function CreateOrgDialog() {
+export default function CreateOrganizationDialog() {
     const { role } = useUser();
-    const createOrg = useCreateOrg();
+    const createOrganization = useCreateOrganization();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [avatar, setAvatar] = useState('');
@@ -61,7 +61,7 @@ export default function CreateOrgDialog() {
 
                                 // Create the org and close the dialog on success.
                                 try {
-                                    await createOrg.mutateAsync({
+                                    await createOrganization.mutateAsync({
                                         name: name.trim(),
                                         location_id: locationId,
                                         avatar: avatar.trim(),
@@ -72,7 +72,7 @@ export default function CreateOrgDialog() {
                                     setLocationId('');
                                 } catch (mutationError) {
                                     setError(
-                                        mutationError instanceof Error ? mutationError.message : 'Failed to create org'
+                                        mutationError instanceof Error ? mutationError.message : 'Failed to create organization'
                                     );
                                 }
                             }}
@@ -131,9 +131,9 @@ export default function CreateOrgDialog() {
                                 </Button>
                                 <Button
                                     type="submit"
-                                    disabled={createOrg.isPending || name.trim().length === 0 || !locationId}
+                                    disabled={createOrganization.isPending || name.trim().length === 0 || !locationId}
                                 >
-                                    {createOrg.isPending ? 'Creating...' : 'Create'}
+                                    {createOrganization.isPending ? 'Creating...' : 'Create'}
                                 </Button>
                             </div>
                         </form>

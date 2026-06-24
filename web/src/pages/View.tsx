@@ -45,10 +45,10 @@ function resolveTemplate(template: string, params: Record<string, string | undef
 }
 
 /**
- * Renders metadata-backed XML pages for control-plane and app routes.
+ * Renders metadata-backed XML pages for control-plane and application routes.
  */
 export default function View({ metadata }: ViewProps) {
-    const params = useParams();
+    const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [pageContent, setPageContent] = useState<string | null>(null);
@@ -56,8 +56,7 @@ export default function View({ metadata }: ViewProps) {
     const [pageError, setPageError] = useState<string | null>(null);
     const [pageErrorPath, setPageErrorPath] = useState<string | null>(null);
     const [pageLoading, setPageLoading] = useState(false);
-    const routeParams = params as Record<string, string | undefined>;
-    const { '*': wildcardPath } = params;
+    const routeParams = { organization, application } as Record<string, string | undefined>;
     const resolvedMetadata = resolveTemplate(metadata, routeParams);
     const resolvedMetadataBaseUrl = resolvedMetadata.replace(/metadata\.json(?:[?#].*)?$/i, '');
     const {
@@ -98,10 +97,10 @@ export default function View({ metadata }: ViewProps) {
             const nextSearchParams = new URLSearchParams(searchParams);
             nextSearchParams.set('tab', tabValue);
 
-            const href = params.app
-                ? `/orgs/${params.org}/apps/${params.app}?${nextSearchParams.toString()}`
-                : params.org
-                  ? `/orgs/${params.org}?${nextSearchParams.toString()}`
+            const href = application
+                ? `/orgs/${organization}/apps/${application}?${nextSearchParams.toString()}`
+                : organization
+                  ? `/orgs/${organization}?${nextSearchParams.toString()}`
                   : `?${nextSearchParams.toString()}`;
 
             return [startCase(tabValue), href] as const;
@@ -161,10 +160,10 @@ export default function View({ metadata }: ViewProps) {
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
                     <ErrorState
-                        actionHref={params.org ? `/orgs/${params.org}` : '/organizations'}
-                        actionLabel={params.org ? 'Back to organization' : 'Back to organizations'}
-                        message={error.message || 'The app definition could not be loaded.'}
-                        title="Unable to load this app"
+                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
+                        message={error.message || 'The application definition could not be loaded.'}
+                        title="Unable to load this application"
                     />
                 </section>
             </XML>
@@ -180,8 +179,8 @@ export default function View({ metadata }: ViewProps) {
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
                     <ErrorState
-                        actionHref={params.org ? `/orgs/${params.org}` : '/organizations'}
-                        actionLabel={params.org ? 'Back to organization' : 'Back to organizations'}
+                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
                         message={pageError || 'This page could not be loaded.'}
                         title="Unable to load this page"
                     />
@@ -211,10 +210,10 @@ export default function View({ metadata }: ViewProps) {
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
                     <ErrorState
-                        actionHref={params.org ? `/orgs/${params.org}` : '/organizations'}
-                        actionLabel={params.org ? 'Back to organization' : 'Back to organizations'}
+                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
                         message="The application did not expose any pages to render."
-                        title="Unexpected app response"
+                        title="Unexpected application response"
                     />
                 </section>
             </XML>
@@ -226,10 +225,10 @@ export default function View({ metadata }: ViewProps) {
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
                     <ErrorState
-                        actionHref={params.org ? `/orgs/${params.org}` : '/organizations'}
-                        actionLabel={params.org ? 'Back to organization' : 'Back to organizations'}
+                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
                         message="The application returned an empty response."
-                        title="Unexpected app response"
+                        title="Unexpected application response"
                     />
                 </section>
             </XML>
@@ -247,7 +246,7 @@ export default function View({ metadata }: ViewProps) {
     );
 }
 
-/** Renders a centered in-shell error message for failed app loads. */
+/** Renders a centered in-shell error message for failed application loads. */
 function ErrorState({ actionHref, actionLabel, message, title }: ErrorStateProps) {
     return (
         <div className="w-full max-w-xl rounded-2xl border border-border bg-card/80 px-6 py-8 text-center shadow-sm">

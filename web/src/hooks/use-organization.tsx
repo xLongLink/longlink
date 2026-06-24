@@ -14,8 +14,8 @@ import type {
     ApiUserOrganizationMembership,
 } from '@/lib/types';
 
-type UseOrgResult = {
-    org: ApiOrganizationDetails | undefined;
+type UseOrganizationResult = {
+    organization: ApiOrganizationDetails | undefined;
     people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
     applications: ApiOrganizationApplication[];
@@ -24,21 +24,21 @@ type UseOrgResult = {
 };
 
 /** Resolves one route organization slug to its canonical UUID. */
-export function resolveOrganizationId(org: string, organizations: ApiUserOrganizationMembership[]): string {
-    const organization = organizations.find((item) => item.name === org);
+export function resolveOrganizationId(organizationSlug: string, organizations: ApiUserOrganizationMembership[]): string {
+    const organization = organizations.find((item) => item.name === organizationSlug);
     return organization?.id ?? '';
 }
 
-/** Fetches org details and related collections for the current workspace. */
-export function useOrg(org: string): UseOrgResult {
+/** Fetches organization details and related collections for the current workspace. */
+export function useOrganization(organizationSlug: string): UseOrganizationResult {
     const { organizations, isLoading: isUserLoading } = useUser();
-    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgPath = `/api/organizations/${orgId}`;
+    const organizationId = useMemo(() => resolveOrganizationId(organizationSlug, organizations), [organizationSlug, organizations]);
+    const organizationPath = `/api/organizations/${organizationId}`;
 
-    const missingOrganization = !isUserLoading && org.length > 0 && orgId.length === 0;
+    const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
-    const organizationQuery = useApiQuery<ApiOrganizationDetails>(orgPath, {
-        enabled: orgId.length > 0,
+    const organizationQuery = useApiQuery<ApiOrganizationDetails>(organizationPath, {
+        enabled: organizationId.length > 0,
         retry: false,
     });
 
@@ -49,7 +49,7 @@ export function useOrg(org: string): UseOrgResult {
             : null);
 
     return {
-        org: organizationQuery.data,
+        organization: organizationQuery.data,
         people: organizationQuery.data?.users ?? [],
         invitations: organizationQuery.data?.invitations ?? [],
         applications: organizationQuery.data?.applications ?? [],
@@ -59,32 +59,32 @@ export function useOrg(org: string): UseOrgResult {
 }
 
 /** Sends an invitation for a user to join an organization. */
-export function useInviteUser(org: string) {
+export function useInviteOrganizationMember(organizationSlug: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
-    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgPath = `/api/organizations/${orgId}`;
+    const organizationId = useMemo(() => resolveOrganizationId(organizationSlug, organizations), [organizationSlug, organizations]);
+    const organizationPath = `/api/organizations/${organizationId}`;
 
     return useMutation({
         mutationFn: async ({ email, role }: { email: string; role: string }) => {
-            if (!orgId) {
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiVoid(`/api/organizations/${orgId}/invitations`, {
+            return fetchApiVoid(`/api/organizations/${organizationId}/invitations`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, role }),
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: apiQueryKey(orgPath) });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });
 }
 
 /** Creates a new organization and refreshes the authenticated user cache. */
-export function useCreateOrg() {
+export function useCreateOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -110,18 +110,18 @@ export function useCreateOrg() {
 }
 
 /** Deletes one organization and refreshes the authenticated user cache. */
-export function useDeleteOrg() {
+export function useDeleteOrganization() {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
 
     return useMutation({
-        mutationFn: async (org: string) => {
-            const orgId = resolveOrganizationId(org, organizations);
-            if (!orgId) {
+        mutationFn: async (organizationSlug: string) => {
+            const organizationId = resolveOrganizationId(organizationSlug, organizations);
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(`/api/organizations/${orgId}`, {
+            await fetchApiVoid(`/api/organizations/${organizationId}`, {
                 method: 'DELETE',
             });
         },
@@ -132,12 +132,12 @@ export function useDeleteOrg() {
 }
 
 /** Creates a new application in one organization and refreshes the app list cache. */
-export function useCreateApp(org: string) {
+export function useCreateApplication(organizationSlug: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
-    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgPath = `/api/organizations/${orgId}`;
-    const appsPath = `/api/applications?organization_id=${orgId}`;
+    const organizationId = useMemo(() => resolveOrganizationId(organizationSlug, organizations), [organizationSlug, organizations]);
+    const organizationPath = `/api/organizations/${organizationId}`;
+    const applicationsPath = `/api/applications?organization_id=${organizationId}`;
 
     return useMutation({
         mutationFn: async (payload: {
@@ -147,40 +147,40 @@ export function useCreateApp(org: string) {
             icon?: string | null;
             envs: Record<string, string>;
         }) => {
-            return fetchApiJson<ApiApplicationResponse>(appsPath, {
+            return fetchApiJson<ApiApplicationResponse>(applicationsPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: apiQueryKey(orgPath) });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });
 }
 
 /** Deletes an application from one organization and refreshes the app list cache. */
-export function useDeleteApp(org: string) {
+export function useDeleteApplication(organizationSlug: string) {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
-    const orgId = useMemo(() => resolveOrganizationId(org, organizations), [org, organizations]);
-    const orgPath = `/api/organizations/${orgId}`;
+    const organizationId = useMemo(() => resolveOrganizationId(organizationSlug, organizations), [organizationSlug, organizations]);
+    const organizationPath = `/api/organizations/${organizationId}`;
 
     return useMutation({
-        mutationFn: async (appId: string) => {
-            if (!orgId) {
+        mutationFn: async (applicationId: string) => {
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(`/api/applications/${appId}`, {
+            await fetchApiVoid(`/api/applications/${applicationId}`, {
                 method: 'DELETE',
             });
         },
-        onSuccess: (_data, appId) => {
-            queryClient.setQueryData<ApiOrganizationDetails>(apiQueryKey(orgPath), (current) =>
-                current ? { ...current, applications: current.applications.filter((app) => app.id !== appId) } : current
+        onSuccess: (_data, applicationId) => {
+            queryClient.setQueryData<ApiOrganizationDetails>(apiQueryKey(organizationPath), (current) =>
+                current ? { ...current, applications: current.applications.filter((application) => application.id !== applicationId) } : current
             );
-            queryClient.invalidateQueries({ queryKey: apiQueryKey(orgPath) });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });
 }

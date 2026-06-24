@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateApp } from '@/hooks/use-org';
+import { useCreateApplication } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import type { ApiImageMetadata } from '@/lib/types';
@@ -28,14 +28,14 @@ const ICON_OPTIONS = Object.keys(LucideIcons)
 const ICON_OPTION_BATCH_SIZE = 80;
 const ICON_OPTION_SCROLL_THRESHOLD = 48;
 
-type CreateAppDialogProps = {
-    org: string;
+type CreateApplicationDialogProps = {
+    organization: string;
 };
 
 /** Renders the create-application dialog for an organization. */
-export default function CreateAppDialog({ org }: CreateAppDialogProps) {
+export default function CreateApplicationDialog({ organization }: CreateApplicationDialogProps) {
     const { role } = useUser();
-    const createApp = useCreateApp(org);
+    const createApplication = useCreateApplication(organization);
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
     const [name, setName] = useState('');
@@ -123,7 +123,7 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
 
         // Submit the new app and close the dialog on success.
         try {
-            await createApp.mutateAsync({
+            await createApplication.mutateAsync({
                 name: name.trim(),
                 image: image.trim(),
                 description: description.trim().length > 0 ? description.trim() : null,
@@ -133,13 +133,13 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
             setOpen(false);
             resetDialogState();
         } catch (mutationError) {
-            setError(mutationError instanceof Error ? mutationError.message : 'Failed to create app');
+            setError(mutationError instanceof Error ? mutationError.message : 'Failed to create application');
         }
     }
 
     return (
         <>
-            <Button type="button" onClick={() => setOpen(true)} disabled={org.length === 0}>
+            <Button type="button" onClick={() => setOpen(true)} disabled={organization.length === 0}>
                 Create
             </Button>
 
@@ -346,12 +346,12 @@ export default function CreateAppDialog({ org }: CreateAppDialogProps) {
                                         <Button
                                             type="submit"
                                             disabled={
-                                                createApp.isPending ||
+                                                createApplication.isPending ||
                                                 name.trim().length === 0 ||
                                                 image.trim().length === 0
                                             }
                                         >
-                                            {createApp.isPending ? 'Creating...' : 'Create'}
+                                            {createApplication.isPending ? 'Creating...' : 'Create'}
                                         </Button>
                                     </div>
                                 </div>

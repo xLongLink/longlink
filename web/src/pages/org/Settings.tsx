@@ -1,8 +1,8 @@
 import { DataTable } from '@/components/DataTable';
-import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
+import CreateApplicationDialog from '@/components/dialogs/CreateApplicationDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useDeleteApp } from '@/hooks/use-org';
+import { useDeleteApplication } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import type { ApiOrganizationApplication, ApiOrganizationDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -58,22 +58,22 @@ const permissionRoles = [
 ] as const;
 
 type SettingsProps = {
-    org: string;
-    orgDetails: ApiOrganizationDetails | undefined;
+    organization: string;
+    organizationDetails: ApiOrganizationDetails | undefined;
     applications: ApiOrganizationApplication[];
     isLoading: boolean;
     error: Error | null;
 };
 
 /** Renders the organization settings page body. */
-export default function Settings({ org, orgDetails, applications, isLoading, error }: SettingsProps) {
+export default function Settings({ organization, organizationDetails, applications, isLoading, error }: SettingsProps) {
     const { role: platformRole, organizations: userOrganizations } = useUser();
-    const deleteApp = useDeleteApp(org);
+    const deleteApplication = useDeleteApplication(organization);
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
 
-    const organizationMembership = userOrganizations.find((organization) => organization.name === org);
+    const organizationMembership = userOrganizations.find((item) => item.name === organization);
     const canViewLogs =
         platformRole === 'administrator' ||
         organizationMembership?.role === 'admin' ||
@@ -99,7 +99,7 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                         </div>
                         <div className="min-w-0 space-y-1">
                             <Link
-                                to={`/orgs/${org}/apps/${row.original.slug}`}
+                                to={`/orgs/${organization}/apps/${row.original.slug}`}
                                 className="font-medium text-foreground hover:underline"
                             >
                                 {getValue<string>()}
@@ -172,13 +172,13 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                         </div>
                         <div className="flex items-center gap-3">
                             <Avatar shape="squircle" className="size-8 shrink-0">
-                                <AvatarImage src={orgDetails?.avatar ?? ''} alt={orgDetails?.name ?? org} />
-                                <AvatarFallback>{(orgDetails?.name ?? org).slice(0, 2).toUpperCase()}</AvatarFallback>
+                                <AvatarImage src={organizationDetails?.avatar ?? ''} alt={organizationDetails?.name ?? organization} />
+                                <AvatarFallback>{(organizationDetails?.name ?? organization).slice(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                                <div className="truncate font-medium text-foreground">{orgDetails?.name ?? org}</div>
+                                <div className="truncate font-medium text-foreground">{organizationDetails?.name ?? organization}</div>
                                 <div className="truncate text-sm text-muted-foreground">
-                                    {orgDetails?.location.country} · {orgDetails?.location.name}
+                                    {organizationDetails?.location.country} · {organizationDetails?.location.name}
                                 </div>
                             </div>
                         </div>
@@ -234,7 +234,7 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                                 </p>
                             </div>
 
-                            <CreateAppDialog org={org} />
+                            <CreateApplicationDialog organization={organization} />
                         </div>
                         {isLoading ? (
                             <div className="rounded-md border p-4 text-sm text-muted-foreground">
@@ -323,9 +323,9 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
 
             {canViewLogs && logsTarget ? (
                 <LogsDialog
-                    org={org}
-                    appId={logsTarget.id}
-                    appName={logsTarget.name}
+                    organization={organization}
+                    applicationId={logsTarget.id}
+                    applicationName={logsTarget.name}
                     open={logsTarget !== null}
                     onOpenChange={(open) => {
                         if (!open) {
@@ -348,7 +348,7 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                 <DialogContent>
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <DialogTitle>Delete app</DialogTitle>
+                            <DialogTitle>Delete application</DialogTitle>
                             <DialogDescription>
                                 {deleteTarget
                                     ? `Delete ${deleteTarget.name} from this organization?`
@@ -372,7 +372,7 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                             <Button
                                 type="button"
                                 variant="destructive"
-                                disabled={deleteApp.isPending || deleteTargetId === null}
+                                disabled={deleteApplication.isPending || deleteTargetId === null}
                                 onClick={async () => {
                                     if (deleteTargetId === null) {
                                         return;
@@ -381,19 +381,19 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                                     const id = deleteTargetId;
 
                                     try {
-                                        await deleteApp.mutateAsync(id);
+                                        await deleteApplication.mutateAsync(id);
                                         setDeleteTargetId(null);
                                         setDeleteError(null);
                                     } catch (mutationError) {
                                         setDeleteError(
                                             mutationError instanceof Error
                                                 ? mutationError.message
-                                                : 'Failed to delete app'
+                                                : 'Failed to delete application'
                                         );
                                     }
                                 }}
                             >
-                                {deleteApp.isPending ? 'Deleting...' : 'Delete'}
+                                {deleteApplication.isPending ? 'Deleting...' : 'Delete'}
                             </Button>
                         </div>
                     </div>

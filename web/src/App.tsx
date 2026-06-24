@@ -1,5 +1,5 @@
 import { Auth } from '@/components/Auth';
-import { useOrg } from '@/hooks/use-org';
+import { useOrganization } from '@/hooks/use-organization';
 import DocsLayout from '@/layout/DocsLayout';
 import Layout from '@/layout/Layout';
 import { DOC_PAGES } from '@/pages/docs/catalog';
@@ -90,7 +90,7 @@ function getRoutes() {
             ],
         },
         {
-            path: 'orgs/:org',
+            path: 'orgs/:organization',
             element: (
                 <Auth>
                     <Organization />
@@ -98,7 +98,7 @@ function getRoutes() {
             ),
         },
         {
-            path: 'orgs/:org/applications',
+            path: 'orgs/:organization/applications',
             element: (
                 <Auth>
                     <Organization sectionName="applications" />
@@ -106,7 +106,7 @@ function getRoutes() {
             ),
         },
         {
-            path: 'orgs/:org/people',
+            path: 'orgs/:organization/people',
             element: (
                 <Auth>
                     <Organization sectionName="people" />
@@ -114,7 +114,7 @@ function getRoutes() {
             ),
         },
         {
-            path: 'orgs/:org/people/:person',
+            path: 'orgs/:organization/people/:person',
             element: (
                 <Auth>
                     <Person />
@@ -122,7 +122,7 @@ function getRoutes() {
             ),
         },
         {
-            path: 'orgs/:org/settings',
+            path: 'orgs/:organization/settings',
             element: (
                 <Auth>
                     <Organization sectionName="settings" />
@@ -130,10 +130,10 @@ function getRoutes() {
             ),
         },
         {
-            path: 'orgs/:org/apps/:app/*',
+            path: 'orgs/:organization/apps/:application/*',
             element: (
                 <Auth>
-                    <OrgAppView />
+                    <OrganizationApplicationView />
                 </Auth>
             ),
         },
@@ -148,11 +148,11 @@ function getRoutes() {
     ];
 }
 
-/** Resolves an organization app slug to its proxy-backed XML view. */
-function OrgAppView() {
-    const { org = '', app = '' } = useParams();
-    const { org: organization, isLoading, error } = useOrg(org);
-    const orgApp = organization?.applications.find((item) => item.slug === app);
+/** Resolves an organization application slug to its proxy-backed XML view. */
+function OrganizationApplicationView() {
+    const { organization = '', application = '' } = useParams();
+    const { organization: organizationDetails, isLoading, error } = useOrganization(organization);
+    const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
 
     if (isLoading) {
         // Keep the app chrome visible while the org payload resolves.
@@ -171,11 +171,15 @@ function OrgAppView() {
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.
-    if (error?.status === 404 || !organization || !orgApp) {
+    if (error?.status === 404 || !organizationDetails || !organizationApplication) {
         return <NotFound />;
     }
 
-    return <View metadata={`/api/organizations/${organization.id}/applications/${orgApp.slug}/proxy/metadata.json`} />;
+    return (
+        <View
+            metadata={`/api/applications/proxy/metadata.json?organization_id=${organizationDetails.id}&application_slug=${organizationApplication.slug}`}
+        />
+    );
 }
 
 const router = createBrowserRouter(getRoutes());

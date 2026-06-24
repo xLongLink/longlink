@@ -1,5 +1,5 @@
 from pathlib import Path
-from src.router import router
+from src.routes import router
 
 
 @router.page("/dashboard.xml")

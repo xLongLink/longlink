@@ -32,11 +32,11 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 │   ├── database
 │   ├── storage
 │   └── compute
-├── orgs/:org
-├── orgs/:org/applications
-├── orgs/:org/people
-├── orgs/:org/settings
-└── orgs/:org/apps/:app/*
+├── orgs/:organization
+├── orgs/:organization/applications
+├── orgs/:organization/people
+├── orgs/:organization/settings
+└── orgs/:organization/apps/:application/*
 ```
 
 ```bash

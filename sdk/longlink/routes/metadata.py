@@ -1,10 +1,8 @@
-from fastapi import APIRouter
 from inspect import isawaitable
-from longlink.pages import page_registry
 from fastapi.responses import Response
+from longlink.pages import page_registry
+from longlink.routes import router
 from longlink.utils.metadata import load_metadata
-
-router = APIRouter()
 
 
 @router.get("/metadata.json")

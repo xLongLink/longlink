@@ -1,7 +1,7 @@
 from fastapi import Depends
 from longlink import db, fs
 from src.envs import env
-from src.router import router
+from src.routes import router
 from src.types.user import UserModel
 from src.services.sample import sample
 

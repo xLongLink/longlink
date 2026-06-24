@@ -31,7 +31,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
 
     const header = (
         <>
-            <div className="mx-auto w-full px-6 pb-2 pt-4 text-white/80">
+            <div className="mx-auto w-full px-6 pb-2 pt-4 text-foreground/80">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         {brandOnly ? (
@@ -48,7 +48,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                     ) : (
                         <Link
                             to="/docs"
-                            className="text-sm font-medium text-white/70 transition-colors hover:text-white"
+                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
                             Docs
                         </Link>
@@ -72,9 +72,8 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                     replace
                                     aria-current={isActive ? 'page' : undefined}
                                     className={cn(
-                                        'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white',
-                                        isActive &&
-                                            'text-white after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-white'
+                                        'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground',
+                                        isActive && 'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
                                     )}
                                 >
                                     {Icon ? <Icon className="size-4 shrink-0" aria-hidden="true" /> : null}

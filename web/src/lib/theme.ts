@@ -49,9 +49,17 @@ export type Radius = (typeof RADIUS_OPTIONS)[number]['value'];
 export type ThemeConfig = {
     theme: Theme;
     background: string;
+    border: string;
+    cardForeground: string;
     primary: string;
+    card: string;
+    input: string;
     accent: Accent;
+    mutedBackground: string;
     muted: string;
+    popoverForeground: string;
+    popover: string;
+    ring: string;
     radius: Radius;
 };
 
@@ -96,16 +104,32 @@ const RADIUS_TOKENS: Record<Radius, string> = {
 export const THEME_PRESETS: Record<Exclude<Theme, 'system'>, Omit<ThemeConfig, 'theme'>> = {
     light: {
         background: 'oklch(1 0 0)',
+        border: 'oklch(0.928 0 0)',
+        card: 'oklch(1 0 0)',
+        cardForeground: 'oklch(0.145 0 0)',
         primary: 'oklch(0.145 0 0)',
         accent: 'neutral',
+        input: 'oklch(0.928 0 0)',
+        mutedBackground: 'oklch(0.97 0 0)',
         muted: 'oklch(0.556 0 0)',
+        popoverForeground: 'oklch(0.145 0 0)',
+        popover: 'oklch(1 0 0)',
+        ring: 'oklch(0.556 0 0)',
         radius: 'medium',
     },
     dark: {
         background: 'oklch(0.145 0 0)',
+        border: 'oklch(1 0 0 / 10%)',
+        card: 'oklch(0.205 0 0)',
+        cardForeground: 'oklch(0.985 0 0)',
         primary: 'oklch(0.985 0 0)',
         accent: 'neutral',
+        input: 'oklch(1 0 0 / 15%)',
+        mutedBackground: 'oklch(0.269 0 0)',
         muted: 'oklch(0.708 0 0)',
+        popoverForeground: 'oklch(0.985 0 0)',
+        popover: 'oklch(0.205 0 0)',
+        ring: 'oklch(0.556 0 0)',
         radius: 'medium',
     },
 };
@@ -135,11 +159,19 @@ export function applyTheme(root: HTMLElement, config: ThemeConfig) {
     root.classList.remove('light', 'dark');
     root.classList.add(resolvedTheme);
     root.style.setProperty('--background', config.background);
+    root.style.setProperty('--border', config.border);
+    root.style.setProperty('--card', config.card);
+    root.style.setProperty('--card-foreground', config.cardForeground);
+    root.style.setProperty('--input', config.input);
     root.style.setProperty('--foreground', config.primary);
+    root.style.setProperty('--muted', config.mutedBackground);
     root.style.setProperty('--muted-foreground', config.muted);
+    root.style.setProperty('--popover', config.popover);
+    root.style.setProperty('--popover-foreground', config.popoverForeground);
     root.style.setProperty('--accent', accent.accent);
     root.style.setProperty('--primary', accent.accent);
     root.style.setProperty('--accent-foreground', accent.accentForeground);
     root.style.setProperty('--primary-foreground', accent.accentForeground);
+    root.style.setProperty('--ring', config.ring);
     root.style.setProperty('--radius', RADIUS_TOKENS[config.radius]);
 }

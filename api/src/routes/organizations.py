@@ -64,9 +64,9 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
-    # Create the Kubernetes namespace for the org when a compute cluster is available
-    # at the same location.  This is best-effort: if no compute registry exists yet the
-    # namespace will be created lazily when the first app is deployed.
+    # Create the Kubernetes namespace for the organization when a compute cluster is
+    # available at the same location. This is best-effort: if no compute registry exists
+    # yet the namespace will be created lazily when the first application is deployed.
     registries = [r for r in await compute.list() if r.location_id == payload.location_id]
     if registries:
         registry = max(registries, key=lambda r: r.created_at)
@@ -83,7 +83,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> None:
     """Delete one organization by id."""
 
-    # Only members can delete their own org.
+    # Only members can delete their own organization.
     organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
     if organization is None:
         raise NotFoundError("Organization", organization_id)

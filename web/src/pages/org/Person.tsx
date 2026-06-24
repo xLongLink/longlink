@@ -1,4 +1,4 @@
-import { useOrg } from '@/hooks/use-org';
+import { useOrganization } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
@@ -10,10 +10,10 @@ import NotFound from '../NotFound';
 
 /** Renders an organization member detail page. */
 export default function Person() {
-    const { org: routeOrg = '', person: personId = '' } = useParams();
+    const { organization: routeOrganization = '', person: personId = '' } = useParams();
     const { organizations } = useUser();
-    const org = routeOrg || organizations[0]?.name || '';
-    const { org: orgDetails, people, isLoading, error } = useOrg(org);
+    const organization = routeOrganization || organizations[0]?.name || '';
+    const { organization: organizationDetails, people, isLoading, error } = useOrganization(organization);
     const person = people.find((item) => item.id === personId || item.name === personId);
 
     // Hide missing or inaccessible orgs and people behind the shared 404 page.
@@ -24,9 +24,9 @@ export default function Person() {
     return (
         <Layout
             tabs={{
-                Applications: { href: `/orgs/${org}`, icon: LayoutGrid },
-                People: { href: `/orgs/${org}/people`, icon: Users },
-                Settings: { href: `/orgs/${org}/settings`, icon: Settings2 },
+                Applications: { href: `/orgs/${organization}`, icon: LayoutGrid },
+                People: { href: `/orgs/${organization}/people`, icon: Users },
+                Settings: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
@@ -64,7 +64,7 @@ export default function Person() {
                                     </span>
                                 </div>
                                 <Link
-                                    to={`/orgs/${org}/people`}
+                                    to={`/orgs/${organization}/people`}
                                     className="inline-flex text-sm font-medium text-foreground hover:underline"
                                 >
                                     Back to people
@@ -80,7 +80,7 @@ export default function Person() {
                                     Organization
                                 </div>
                                 <div className="mt-1 text-sm font-medium text-foreground">
-                                    {orgDetails?.name ?? org}
+                                    {organizationDetails?.name ?? organization}
                                 </div>
                             </div>
                             <div>

@@ -653,7 +653,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
 
     # Act
     response = client.post(
-        f"/api/organizations/{organization.id}/applications/{app.slug}/proxy/anything?answer=42",
+        f"/api/applications/proxy/anything?organization_id={organization.id}&application_slug={app.slug}&answer=42",
         content=b"hello",
     )
 
@@ -687,7 +687,9 @@ async def test_proxy_app_shows_loading_when_app_is_not_ready(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/organizations/{organization.id}/applications/{app.slug}/proxy/metadata.json")
+    response = client.get(
+        f"/api/applications/proxy/metadata.json?organization_id={organization.id}&application_slug={app.slug}"
+    )
 
     # Assert
     assert response.status_code == 503
@@ -703,7 +705,9 @@ def test_proxy_app_rejects_root_path(clients: tuple[TestClient, TestClient, Test
     client = clients[0]
 
     # Act
-    response = client.get("/api/organizations/00000000-0000-0000-0000-000000000001/applications/dashboard/proxy/")
+    response = client.get(
+        "/api/applications/proxy/?organization_id=00000000-0000-0000-0000-000000000001&application_slug=dashboard"
+    )
 
     # Assert
     assert response.status_code == 404
@@ -719,7 +723,7 @@ def test_proxy_app_rejects_unsupported_methods(clients: tuple[TestClient, TestCl
     # Act
     response = client.request(
         method,
-        "/api/organizations/00000000-0000-0000-0000-000000000001/applications/dashboard/proxy",
+        "/api/applications/proxy?organization_id=00000000-0000-0000-0000-000000000001&application_slug=dashboard",
     )
 
     # Assert

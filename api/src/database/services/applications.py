@@ -59,8 +59,8 @@ class ApplicationsService:
                 )
                 .where(Application.organization_id == organization_id, Application.deleted_at.is_(None))
             )
-        result = await session.execute(statement)
-        return result.all()
+            result = await session.execute(statement)
+            return result.all()
 
 
     async def list_responses(self, organization_id: UUID, user_id: UUID, user: User) -> list[ApplicationResponse]:
