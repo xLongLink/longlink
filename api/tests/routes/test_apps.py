@@ -4,6 +4,7 @@ from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.compute import ComputeKind
+from src.models.applications import AppStatus
 from src.models.database import DatabaseKind
 from src.models.metadata import LongLinkMetadata
 from src.database.session import get_session
@@ -34,7 +35,7 @@ db = SimpleNamespace(
 )
 
 
-async def test_list_apps_returns_app_membership_role(
+async def test_list_organization_apps_returns_app_membership_role(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
@@ -75,7 +76,7 @@ async def test_list_apps_returns_app_membership_role(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/applications?organization_id={organization.id}")
+    response = client.get(f"/api/organizations/{organization.id}/applications")
 
     # Assert
     assert response.status_code == 200
@@ -92,7 +93,7 @@ async def test_list_apps_returns_app_membership_role(
     assert response.json() == [expected_data]
 
 
-async def test_list_apps_returns_null_role_without_app_membership(
+async def test_list_organization_apps_returns_null_role_without_app_membership(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
@@ -112,7 +113,7 @@ async def test_list_apps_returns_null_role_without_app_membership(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/applications?organization_id={organization.id}")
+    response = client.get(f"/api/organizations/{organization.id}/applications")
 
     # Assert
     assert response.status_code == 200
@@ -202,7 +203,7 @@ async def test_list_apps_without_organization_requires_admin(
     assert response.json() == {"detail": "Administrator privileges required"}
 
 
-async def test_list_apps_returns_404_for_non_member(
+async def test_list_organization_apps_returns_404_for_non_member(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
@@ -217,7 +218,7 @@ async def test_list_apps_returns_404_for_non_member(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/applications?organization_id={organization.id}")
+    response = client.get(f"/api/organizations/{organization.id}/applications")
 
     # Assert
     assert response.status_code == 404
@@ -543,6 +544,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
     remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
     organization = await db.orgs.create("acme", remote_location.id, user)
     app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    await db.apps.set_status(app.id, AppStatus.running)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
@@ -650,7 +652,10 @@ async def test_proxy_app_forwards_request_to_internal_service(
     monkeypatch.setattr("src.routes.proxy.K8s", FakeCompute)
 
     # Act
-    response = client.post(f"/api/applications/{app.id}/proxy/anything?answer=42", content=b"hello")
+    response = client.post(
+        f"/api/organizations/{organization.id}/applications/{app.slug}/proxy/anything?answer=42",
+        content=b"hello",
+    )
 
     # Assert
     assert response.status_code == 200
@@ -662,6 +667,35 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert captured["auth_settings"] == ["BearerToken"]
 
 
+async def test_proxy_app_shows_loading_when_app_is_not_ready(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return a loading page while the application is still provisioning."""
+
+    # Arrange
+    owner = users[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.orgs.create("acme", location.id, owner)
+    app = await db.apps.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
+    client = clients[0]
+
+    # Act
+    response = client.get(f"/api/organizations/{organization.id}/applications/{app.slug}/proxy/metadata.json")
+
+    # Assert
+    assert response.status_code == 503
+    assert response.headers["content-type"].startswith("text/html")
+    assert "Application is creating" in response.text
+    assert response.headers["cache-control"] == "no-store"
+
+
 def test_proxy_app_rejects_root_path(clients: tuple[TestClient, TestClient, TestClient]) -> None:
     """Reject the root proxy path in production."""
 
@@ -669,7 +703,7 @@ def test_proxy_app_rejects_root_path(clients: tuple[TestClient, TestClient, Test
     client = clients[0]
 
     # Act
-    response = client.get("/api/applications/00000000-0000-0000-0000-000000000001/proxy/")
+    response = client.get("/api/organizations/00000000-0000-0000-0000-000000000001/applications/dashboard/proxy/")
 
     # Assert
     assert response.status_code == 404
@@ -683,7 +717,10 @@ def test_proxy_app_rejects_unsupported_methods(clients: tuple[TestClient, TestCl
     client = clients[0]
 
     # Act
-    response = client.request(method, "/api/applications/00000000-0000-0000-0000-000000000001/proxy")
+    response = client.request(
+        method,
+        "/api/organizations/00000000-0000-0000-0000-000000000001/applications/dashboard/proxy",
+    )
 
     # Assert
     assert response.status_code == 405

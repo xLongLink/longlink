@@ -1,6 +1,18 @@
 from uuid import UUID
+from enum import Enum
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.countries import Country
+
+
+class LocationProvider(str, Enum):
+    """Supported datacenter providers for locations."""
+
+    local = "local"
+    infomaniak = "infomaniak"
+    ovh = "ovh"
+    scaleway = "scaleway"
+    hetzner = "hetzner"
+    exoscale = "exoscale"
 
 
 class LocationCreate(BaseModel):
@@ -10,6 +22,7 @@ class LocationCreate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     slug: str = Field(min_length=1, max_length=128)
     country: Country
+    provider: LocationProvider = LocationProvider.local
 
 
 class LocationResponse(BaseModel):
@@ -24,3 +37,4 @@ class LocationResponse(BaseModel):
     name: str
     slug: str
     country: Country
+    provider: LocationProvider

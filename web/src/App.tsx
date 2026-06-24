@@ -230,7 +230,7 @@ function OrgAppView() {
         return <NotFound />;
     }
 
-    return <View metadata={`/api/applications/${orgApp.id}/proxy/metadata.json`} />;
+    return <View metadata={`/api/organizations/${organization.id}/applications/${orgApp.slug}/proxy/metadata.json`} />;
 }
 
 const router = createBrowserRouter(getRoutes());

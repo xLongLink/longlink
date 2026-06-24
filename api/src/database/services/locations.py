@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from src.database.session import session_scope
 from src.models.countries import Country
+from src.models.locations import LocationProvider
 from src.database.models.users import User
 from src.database.models.location import Location
 
@@ -26,11 +27,18 @@ class LocationsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def create(self, slug: str, name: str, user: User, country: Country) -> Location:
+    async def create(
+        self,
+        slug: str,
+        name: str,
+        user: User,
+        country: Country,
+        provider: LocationProvider = LocationProvider.local,
+    ) -> Location:
         """Create one location."""
 
         async with session_scope() as session:
-            location = Location(name=name, slug=slug, country=country)
+            location = Location(name=name, slug=slug, country=country, provider=provider)
             location.created_id = user.id
             location.updated_id = user.id
             session.add(location)

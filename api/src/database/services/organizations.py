@@ -51,7 +51,7 @@ class OrgsService:
             result = await session.execute(statement)
             organization = result.scalar_one_or_none()
             if organization is not None:
-                organization.applications = [application for application in organization.applications if application.deleted_at is None]
+                applications = [application for application in organization.applications if application.deleted_at is None]
             if organization is None:
                 return None
 
@@ -86,7 +86,7 @@ class OrgsService:
                 deleted_at=organization.deleted_at,
                 deleted_by=UserSummary.model_validate(organization.deleted_by) if organization.deleted_by is not None else None,
                 users=members,
-                applications=[OrganizationApplicationResponse.model_validate(application) for application in organization.applications],
+                applications=[OrganizationApplicationResponse.model_validate(application) for application in applications],
             )
 
     async def create(self, name: str, location_id: UUID, user: User, avatar: str | None = None) -> Organization:

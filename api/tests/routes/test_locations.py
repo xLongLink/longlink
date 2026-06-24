@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from src.models.locations import LocationProvider
 
 
 async def test_create_location_accepts_iso_country_code(
@@ -12,7 +13,7 @@ async def test_create_location_accepts_iso_country_code(
     # Act
     response = client.post(
         "/api/locations",
-        json={"name": "Local testing", "slug": "local", "country": "DE"},
+        json={"name": "Local testing", "slug": "local", "country": "DE", "provider": LocationProvider.infomaniak.value},
     )
 
     # Assert
@@ -46,6 +47,7 @@ async def test_get_locations_returns_pure_location_payload(
     assert response.json()[0]["name"] == "Local testing"
     assert response.json()[0]["slug"] == "local"
     assert response.json()[0]["country"] == "DE"
+    assert response.json()[0]["provider"] == LocationProvider.local.value
     assert "compute_registries" not in response.json()[0]
     assert "database_registries" not in response.json()[0]
     assert "storage_registries" not in response.json()[0]
@@ -63,6 +65,24 @@ async def test_create_location_rejects_unknown_iso_country_code(
     response = client.post(
         "/api/locations",
         json={"name": "Local testing", "slug": "local", "country": "ZZ"},
+    )
+
+    # Assert
+    assert response.status_code == 422
+
+
+async def test_create_location_rejects_unknown_provider(
+    clients: tuple[TestClient, TestClient, TestClient],
+) -> None:
+    """Reject a provider value outside the supported provider list."""
+
+    # Arrange
+    client = clients[0]
+
+    # Act
+    response = client.post(
+        "/api/locations",
+        json={"name": "Local testing", "slug": "local", "country": "DE", "provider": "aws"},
     )
 
     # Assert

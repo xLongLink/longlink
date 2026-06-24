@@ -23,6 +23,7 @@ class ApplicationsService:
                 select(Application)
                 .join(Organization, Organization.id == Application.organization_id)
                 .options(*_app_relation_options())
+                .where(Application.deleted_at.is_(None))
                 .order_by(Organization.name, Application.name)
             )
             result = await session.execute(statement)
@@ -75,6 +76,19 @@ class ApplicationsService:
             statement = select(Application).options(*_app_relation_options()).where(
                 Application.organization_id == organization_id,
                 Application.name == name,
+                Application.deleted_at.is_(None),
+            )
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
+
+    async def get_by_slug(self, organization_id: UUID, slug: str) -> Application | None:
+        """Return a registered application by organization and slug."""
+
+        async with session_scope() as session:
+            statement = select(Application).options(*_app_relation_options()).where(
+                Application.organization_id == organization_id,
+                Application.slug == slug,
                 Application.deleted_at.is_(None),
             )
             result = await session.execute(statement)

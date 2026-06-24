@@ -2,8 +2,9 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Column, String, text
+from sqlalchemy import Column, Enum as SAEnum, String, text
 from src.models.countries import Country
+from src.models.locations import LocationProvider
 
 if TYPE_CHECKING:
     from src.database.models.users import User
@@ -21,6 +22,14 @@ class Location(SQLModel, table=True):
     name: str = Field(max_length=255)
     slug: str = Field(unique=True, max_length=128)
     country: Country | None = Field(default=None, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False))
+    provider: LocationProvider = Field(
+        default=LocationProvider.local,
+        sa_column=Column(
+            SAEnum(LocationProvider, name="location_provider_enum", native_enum=False, create_constraint=True),
+            server_default=text("'local'"),
+            nullable=False,
+        ),
+    )
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

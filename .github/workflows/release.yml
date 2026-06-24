@@ -111,13 +111,13 @@ jobs:
 
       - name: Generate sample app scaffold
         working-directory: sdk
-        run: uv run longlink init --folder sample-app
+        run: .venv/bin/longlink init --folder sample-app
 
       - name: Build sample app image
         working-directory: sdk/sample-app
         run: |
           image_version="${GITHUB_REF_NAME#v}"
-          uv run longlink build --tag "$image_version"
+          ../.venv/bin/longlink build --tag "$image_version"
 
       - name: Log in to GHCR
         uses: docker/login-action@v4

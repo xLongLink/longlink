@@ -150,13 +150,13 @@ jobs:
 
       - name: Generate sample app scaffold
         working-directory: sdk
-        run: uv run longlink init --folder sample-app
+        run: .venv/bin/longlink init --folder sample-app
 
       - name: Build sample app image
         working-directory: sdk/sample-app
         run: |
           image_version="${'$'}{GITHUB_REF_NAME#v}"
-          uv run longlink build --tag "$image_version"
+          ../.venv/bin/longlink build --tag "$image_version"
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -182,10 +182,10 @@ jobs:
   script:
     - cd sdk
     - uv sync
-    - uv run longlink init --folder sample-app
+    - .venv/bin/longlink init --folder sample-app
     - cd sample-app
     - image_version="${'$'}{CI_COMMIT_TAG#v}"
-    - uv run longlink build --tag "$image_version"
+    - ../.venv/bin/longlink build --tag "$image_version"
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - docker tag longlink-app:"$image_version" "$CI_REGISTRY_IMAGE":latest
     - docker tag longlink-app:"$image_version" "$CI_REGISTRY_IMAGE":"$image_version"

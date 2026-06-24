@@ -1,12 +1,10 @@
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter, HTTPException
 from src.auth import authuser, authadmin
-from src.errors import (ConflictError, NotFoundError, ForbiddenError,
-                        UnavailableError)
+from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from src.utils.utils import slugify, metadata
-from src.models.roles import PlatformRoles
 from src.adapters.database import Postgre
 from src.models.operations import OperationKind
 from src.models.applications import (AppStatus, ApplicationCreate,
@@ -23,27 +21,10 @@ router = APIRouter()
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
-async def list_applications(organization_id: UUID | None = None, user: User = Depends(authuser)) -> list[ApplicationResponse]:
-    """Return organization applications, or all applications for admin views."""
+async def list_applications(user: User = Depends(authadmin)) -> list[ApplicationResponse]:
+    """Return all applications for administrator views."""
 
-    if organization_id is None:
-        if user.role == PlatformRoles.user:
-            raise ForbiddenError("Administrator privileges required")
-
-        application_rows = [(application, None) for application in await applications.list_all()]
-    else:
-        organization_record = await organizations.get(organization_id)
-        if organization_record is None:
-            raise NotFoundError("Organization", organization_id)
-
-        if user.role == PlatformRoles.user:
-            organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
-            if organization is None:
-                raise NotFoundError("Organization", organization_id)
-
-            application_rows = await applications.list(organization_id, user.id)
-        else:
-            application_rows = [(application, None) for application in await applications.list_by_organization(organization_id)]
+    application_rows = [(application, None) for application in await applications.list_all()]
 
     return [
         {

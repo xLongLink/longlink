@@ -1,5 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter
+from kubernetes.client.rest import ApiException
 from src.auth import authuser
 from src.errors import NotFoundError, UnavailableError, MethodNotAllowedError
 from fastapi.routing import APIRoute
@@ -7,8 +8,10 @@ from src.utils.utils import knames
 from src.utils.namespace import k8name
 from src.adapters.compute import K8s
 from src.database.models.users import User
+from src.models.applications import AppStatus
 from src.database.services.compute import compute
 from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 HOP_BY_HOP_HEADERS = {
     "connection",
@@ -37,32 +40,44 @@ router = APIRouter()
 proxy_router = APIRouter(route_class=ProxyRoute)
 
 
-@router.head("/api/applications/{application_id}/proxy")
-async def reject_proxy_head(application_id: UUID) -> None:
+@router.head("/api/organizations/{organization_id}/applications/{application_slug}/proxy")
+async def reject_proxy_head(organization_id: UUID, application_slug: str) -> None:
     """Reject HEAD requests on the application proxy."""
 
     raise MethodNotAllowedError()
 
 
 @proxy_router.api_route(
-    "/api/applications/{application_id}/proxy",
+    "/api/organizations/{organization_id}/applications/{application_slug}/proxy",
     methods=["DELETE", "GET", "PATCH", "POST"],
 )
 @proxy_router.api_route(
-    "/api/applications/{application_id}/proxy/{path:path}",
+    "/api/organizations/{organization_id}/applications/{application_slug}/proxy/{path:path}",
     methods=["DELETE", "GET", "PATCH", "POST"],
 )
-async def proxy_app_request(application_id: UUID, request: Request, path: str = "", user: User = Depends(authuser)) -> Response:
+async def proxy_app_request(
+    organization_id: UUID,
+    application_slug: str,
+    request: Request,
+    path: str = "",
+    user: User = Depends(authuser),
+) -> Response:
     """Proxy one request into the deployed application service."""
 
-    # Load the app first so routing never depends on the caller-supplied path alone.
-    application = await applications.get_by_id(application_id)
-    if application is None:
-        raise NotFoundError("Application", application_id)
-
-    organization = next((organization for organization in user.organizations if organization.id == application.organization_id), None)
+    # Load the organization and application from canonical route identifiers.
+    organization = await organizations.get(organization_id)
     if organization is None:
-        raise NotFoundError("Organization", application.organization_id)
+        raise NotFoundError("Organization", organization_id)
+
+    if not any(organization.id == organization_id for organization in user.organizations):
+        raise NotFoundError("Organization", organization_id)
+
+    application = await applications.get_by_slug(organization_id, application_slug)
+    if application is None:
+        raise NotFoundError("Application", application_slug)
+
+    if application.status != AppStatus.running:
+        return _loading_response(application.status)
 
     registries = await compute.list()
     if not registries:
@@ -81,11 +96,7 @@ async def proxy_app_request(application_id: UUID, request: Request, path: str = 
     if upstream_path == "":
         raise NotFoundError("Proxy root path", "/")
 
-    organization_record = application.organization
-    if organization_record is None:
-        raise UnavailableError("Application organization not loaded")
-
-    namespace = k8name(knames(organization_record.slug, "Organization"))
+    namespace = k8name(knames(organization.slug, "Organization"))
     name = knames(application.slug, "Application name")
     # Strip hop-by-hop headers before forwarding the request upstream.
     forward_headers = {
@@ -99,16 +110,22 @@ async def proxy_app_request(application_id: UUID, request: Request, path: str = 
         resource_path = f"{resource_path}/{upstream_path}"
 
     # Forward the request body and response stream directly through the Kubernetes API client.
-    upstream_response = k8s._api_client.call_api(
-        resource_path,
-        request.method,
-        query_params=list(request.query_params.multi_items()),
-        header_params=forward_headers,
-        body=await request.body(),
-        auth_settings=["BearerToken"],
-        _preload_content=False,
-        _return_http_data_only=False,
-    )
+    try:
+        upstream_response = k8s._api_client.call_api(
+            resource_path,
+            request.method,
+            query_params=list(request.query_params.multi_items()),
+            header_params=forward_headers,
+            body=await request.body(),
+            auth_settings=["BearerToken"],
+            _preload_content=False,
+            _return_http_data_only=False,
+        )
+    except ApiException as exc:
+        if exc.status == 503:
+            return _loading_response(application.status)
+        raise
+
     body, status_code, upstream_headers = upstream_response
 
     # Filter hop-by-hop response headers so FastAPI can return a clean proxied response.
@@ -120,6 +137,22 @@ async def proxy_app_request(application_id: UUID, request: Request, path: str = 
             for key, value in upstream_headers.items()
             if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "content-length"
         },
+    )
+
+
+def _loading_response(status: AppStatus) -> Response:
+    """Return a lightweight loading page while the app is not ready."""
+
+    return Response(
+        content=(
+            "<html><body style='font-family: sans-serif; padding: 2rem;'>"
+            f"<h1>Application is {status.value}</h1>"
+            "<p>Please try again in a moment.</p>"
+            "</body></html>"
+        ),
+        status_code=503,
+        media_type="text/html",
+        headers={"cache-control": "no-store"},
     )
 
 

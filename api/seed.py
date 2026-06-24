@@ -45,7 +45,7 @@ def main() -> None:
     locations = client.get("/api/locations").json()
     location = next((loc for loc in locations if loc["slug"] == "local"), None)
     if location is None:
-        r = client.post("/api/locations", json={"name": "local", "slug": "local", "country": "CH"})
+        r = client.post("/api/locations", json={"name": "local", "slug": "local", "country": "CH", "provider": "local"})
         if r.status_code == 409:
             locations = client.get("/api/locations").json()
             location = next(loc for loc in locations if loc["slug"] == "local")
@@ -136,7 +136,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Application
     # ------------------------------------------------------------------
-    apps = client.get(f"/api/applications?organization_id={organization['id']}").json()
+    apps = client.get(f"/api/organizations/{organization['id']}/applications").json()
     if not any(a["name"] == LOCAL_APP["name"] for a in apps):
         r = client.post(
             f"/api/applications?organization_id={organization['id']}",

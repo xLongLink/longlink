@@ -1,13 +1,15 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter
-from src.auth import authuser, authadmin, authsupport
+from src.auth import authuser, authsupport
 from src.errors import ConflictError, NotFoundError
 from src.logger import logger
 from src.adapters.compute.k8s import K8s
+from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails,
                                       OrganizationSummary)
 from src.database.models.users import User
 from src.database.services.compute import compute
+from src.database.services.applications import applications
 from src.database.services.organizations import organizations
 
 router = APIRouter()
@@ -34,6 +36,33 @@ async def get_organization(org_id: UUID, user: User = Depends(authuser)) -> Orga
         raise NotFoundError("Organization", org_id)
 
     return organization
+
+
+@router.get("/api/organizations/{organization_id}/applications", response_model=list[ApplicationResponse])
+async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)) -> list[ApplicationResponse]:
+    """Return the applications for one organization."""
+
+    # Deny access early when the org does not exist.
+    organization = await organizations.get(organization_id)
+    if organization is None:
+        raise NotFoundError("Organization", organization_id)
+
+    # Keep organization reads scoped to the caller's memberships.
+    if not any(organization.id == organization_id for organization in user.organizations):
+        raise NotFoundError("Organization", organization_id)
+
+    application_rows = await applications.list(organization_id, user.id)
+    return [
+        {
+            **application.model_dump(),
+            "organization": application.organization,
+            "created_by": application.created_by or user,
+            "updated_by": application.updated_by or application.created_by or user,
+            "deleted_by": application.deleted_by,
+            "role": role_name,
+        }
+        for application, role_name in application_rows
+    ]
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary)
