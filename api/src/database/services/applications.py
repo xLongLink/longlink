@@ -83,13 +83,13 @@ class ApplicationsService:
             result = await session.execute(statement)
             return list(result.scalars().all())
 
-    async def get(self, organization_id: UUID, name: str) -> Application | None:
-        """Return a registered application by organization and name."""
+    async def get(self, organization_id: UUID, slug: str) -> Application | None:
+        """Return a registered application by organization and slug."""
 
         async with session_scope() as session:
             statement = select(Application).options(*_app_relation_options()).where(
                 Application.organization_id == organization_id,
-                Application.name == name,
+                Application.slug == slug,
                 Application.deleted_at.is_(None),
             )
             result = await session.execute(statement)

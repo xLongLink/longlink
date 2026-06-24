@@ -164,7 +164,7 @@ class UsersService:
             if name is None or email is None:
                 raise ValueError("Missing user fields")
 
-            # Resolve the platform role from explicit input, legacy flags, or the bootstrap default.
+            # Resolve the platform role from explicit input or the bootstrap default.
             if role is not None:
                 resolved_role = role
             elif is_admin:
