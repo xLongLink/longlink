@@ -11,6 +11,7 @@ from src.models.common import SuccessResponse
 from src.database.services.users import users
 from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
+
 router = APIRouter()
 
 

@@ -10,6 +10,7 @@ from src.models.metadata import LongLinkMetadata
 from src.database.session import get_session
 from src.models.countries import Country
 from src.models.operations import OperationKind
+from src.models.common import SuccessResponse
 from src.models.applications import ApplicationResponse as AppResponse
 from src.database.models.users import User
 from src.database.services.users import users
@@ -452,7 +453,8 @@ async def test_delete_app_removes_dependent_env_rows(
     response = client.delete(f"/api/applications/{app.id}")
 
     # Assert
-    assert response.status_code == 204
+    assert response.status_code == 200
+    assert response.json() == SuccessResponse().model_dump(mode="json")
     refreshed_app = await db.applications.get(organization.id, "dashboard")
     assert refreshed_app is not None
     assert refreshed_app.status == "deleting"
@@ -649,13 +651,10 @@ async def test_proxy_app_forwards_request_to_internal_service(
             captured["proxy_secret"] = proxy_secret
             self._api_client = FakeApiClient()
 
-    monkeypatch.setattr("src.routes.proxy.K8s", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
 
     # Act
-    response = client.post(
-        f"/api/applications/proxy/anything?organization_id={organization.id}&application_slug={app.slug}&answer=42",
-        content=b"hello",
-    )
+    response = client.post(f"/api/applications/{app.id}/proxy/anything?answer=42", content=b"hello")
 
     # Assert
     assert response.status_code == 200
@@ -687,27 +686,23 @@ async def test_proxy_app_shows_loading_when_app_is_not_ready(
     client = clients[0]
 
     # Act
-    response = client.get(
-        f"/api/applications/proxy/metadata.json?organization_id={organization.id}&application_slug={app.slug}"
-    )
+    response = client.get(f"/api/applications/{app.id}/proxy/metadata.json")
 
     # Assert
     assert response.status_code == 503
-    assert response.headers["content-type"].startswith("text/html")
-    assert "Application is creating" in response.text
+    assert response.text == ""
+    assert response.headers["content-length"] == "0"
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_proxy_app_rejects_root_path(clients: tuple[TestClient, TestClient, TestClient]) -> None:
-    """Reject the root proxy path in production."""
+def test_proxy_app_rejects_old_proxy_endpoint(clients: tuple[TestClient, TestClient, TestClient]) -> None:
+    """Reject the old shared proxy endpoint."""
 
     # Arrange
     client = clients[0]
 
     # Act
-    response = client.get(
-        "/api/applications/proxy/?organization_id=00000000-0000-0000-0000-000000000001&application_slug=dashboard"
-    )
+    response = client.get("/api/applications/proxy/?organization_id=00000000-0000-0000-0000-000000000001&application_slug=dashboard")
 
     # Assert
     assert response.status_code == 404
@@ -715,7 +710,7 @@ def test_proxy_app_rejects_root_path(clients: tuple[TestClient, TestClient, Test
 
 @pytest.mark.parametrize("method", ["HEAD", "OPTIONS", "PUT"])
 def test_proxy_app_rejects_unsupported_methods(clients: tuple[TestClient, TestClient, TestClient], method: str) -> None:
-    """Reject proxy methods outside the explicit allowlist."""
+    """Reject methods on the removed shared proxy endpoint."""
 
     # Arrange
     client = clients[0]
@@ -727,4 +722,4 @@ def test_proxy_app_rejects_unsupported_methods(clients: tuple[TestClient, TestCl
     )
 
     # Assert
-    assert response.status_code == 405
+    assert response.status_code == 404

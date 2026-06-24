@@ -1,5 +1,8 @@
 from pathlib import Path
-from src.routes import router
+from longlink import Router
+
+
+router = Router()
 
 
 @router.page("/dashboard.xml")

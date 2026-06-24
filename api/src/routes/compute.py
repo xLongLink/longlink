@@ -2,12 +2,12 @@ from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import NotFoundError, UnavailableError
-from src.models.compute import (PodResponse, NamespaceResponse,
-                                ComputeRegistryCreate, ComputeRegistryResponse,
-                                ComputeResourcesResponse)
+from src.models.common import SuccessResponse
+from src.models.compute import PodResponse, NamespaceResponse, ComputeRegistryCreate, ComputeRegistryResponse, ComputeResourcesResponse
 from src.adapters.compute import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
+
 
 router = APIRouter()
 
@@ -20,10 +20,7 @@ async def list_compute_registries(_user: User = Depends(authsupport)) -> list[Co
 
 
 @router.get("/api/computes/{registry_id}", response_model=ComputeRegistryResponse)
-async def get_compute_registry(
-    registry_id: UUID,
-    _user: User = Depends(authsupport),
-) -> ComputeRegistryResponse:
+async def get_compute_registry(registry_id: UUID,_: User = Depends(authsupport)) -> ComputeRegistryResponse:
     """Return one compute backend registration."""
 
     registry = await compute.get(registry_id)
@@ -34,10 +31,7 @@ async def get_compute_registry(
 
 
 @router.post("/api/computes", response_model=ComputeRegistryResponse)
-async def create_compute_registry(
-    payload: ComputeRegistryCreate,
-    user: User = Depends(authsupport),
-) -> ComputeRegistryResponse:
+async def create_compute_registry(payload: ComputeRegistryCreate,user: User = Depends(authsupport)) -> ComputeRegistryResponse:
     """Create one compute backend registration."""
 
     registry = await compute.create(**payload.model_dump(), user=user)
@@ -54,22 +48,19 @@ async def create_compute_registry(
     return registry
 
 
-@router.delete("/api/computes/{registry_id}", status_code=204)
-async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)) -> None:
+@router.delete("/api/computes/{registry_id}", response_model=SuccessResponse)
+async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
     """Mark one compute backend registration as deleted."""
 
     registry = await compute.delete(registry_id, user.id)
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    return
+    return SuccessResponse()
 
 
 @router.get("/api/computes/{registry_id}/resources", response_model=ComputeResourcesResponse)
-async def get_compute_resources(
-    registry_id: UUID,
-    _user: User = Depends(authsupport),
-) -> ComputeResourcesResponse:
+async def get_compute_resources(registry_id: UUID,_: User = Depends(authsupport)) -> ComputeResourcesResponse:
     """Return total and allocatable cluster resources."""
 
     registry = await compute.get(registry_id)
@@ -82,10 +73,7 @@ async def get_compute_resources(
 
 
 @router.get("/api/computes/{registry_id}/namespaces", response_model=list[NamespaceResponse])
-async def list_compute_namespaces(
-    registry_id: UUID,
-    _user: User = Depends(authsupport),
-) -> list[NamespaceResponse]:
+async def list_compute_namespaces(registry_id: UUID,_: User = Depends(authsupport)) -> list[NamespaceResponse]:
     """List all namespaces on a compute backend."""
 
     registry = await compute.get(registry_id)
@@ -97,15 +85,8 @@ async def list_compute_namespaces(
     return [NamespaceResponse(name=n) for n in names]
 
 
-@router.get(
-    "/api/computes/{registry_id}/namespaces/{namespace_name}/pods",
-    response_model=list[PodResponse],
-)
-async def list_namespace_pods(
-    registry_id: UUID,
-    namespace_name: str,
-    _user: User = Depends(authsupport),
-) -> list[PodResponse]:
+@router.get("/api/computes/{registry_id}/namespaces/{namespace_name}/pods", response_model=list[PodResponse])
+async def list_namespace_pods(registry_id: UUID,namespace_name: str,_: User = Depends(authsupport)) -> list[PodResponse]:
     """List all pods in a namespace on a compute backend."""
 
     registry = await compute.get(registry_id)

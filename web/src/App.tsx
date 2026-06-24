@@ -1,5 +1,6 @@
 import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
+import { useUser } from '@/hooks/use-user';
 import DocsLayout from '@/layout/DocsLayout';
 import Layout from '@/layout/Layout';
 import { DOC_PAGES } from '@/pages/docs/catalog';
@@ -152,7 +153,11 @@ function getRoutes() {
 function OrganizationApplicationView() {
     const { organization = '', application = '' } = useParams();
     const { organization: organizationDetails, isLoading, error } = useOrganization(organization);
+    const { role: platformRole, organizations: userOrganizations } = useUser();
     const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
+    const organizationMembership = userOrganizations.find((item) => item.name === organization);
+    const canViewLogs =
+        platformRole === 'administrator' || organizationMembership?.role === 'admin' || organizationMembership?.role === 'owner';
 
     if (isLoading) {
         // Keep the app chrome visible while the org payload resolves.
@@ -177,7 +182,11 @@ function OrganizationApplicationView() {
 
     return (
         <View
-            metadata={`/api/applications/proxy/metadata.json?organization_id=${organizationDetails.id}&application_slug=${organizationApplication.slug}`}
+            applicationId={organizationApplication.id}
+            applicationName={organizationApplication.name}
+            canViewLogs={canViewLogs}
+            applicationStatus={organizationApplication.status}
+            metadata={`/api/applications/${organizationApplication.id}/proxy/metadata.json`}
         />
     );
 }

@@ -1,9 +1,13 @@
 from fastapi import Depends
+from longlink import Router
 from longlink import db, fs
 from src.envs import env
 from src.routes import router
 from src.types.user import UserModel
 from src.services.sample import sample
+
+
+router = Router()
 
 
 @router.get("/sample")

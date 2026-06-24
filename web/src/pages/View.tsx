@@ -1,15 +1,21 @@
 import { useApiQuery } from '@/hooks/use-api';
 import XML from '@/layout/XmlLayout';
-import { fetchApiText } from '@/lib/api';
+import { ApiError, fetchApiText } from '@/lib/api';
+import type { ApiOrganizationApplication } from '@/lib/types';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
 import { buttonVariants } from '@ui/button';
 import { Skeleton } from '@ui/skeleton';
+import { ScrollArea } from '@ui/scroll-area';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import NotFound from './NotFound';
 
 type ViewProps = {
+    applicationId?: string;
+    applicationName?: string;
+    applicationStatus?: ApiOrganizationApplication['status'];
+    canViewLogs?: boolean;
     metadata: string;
 };
 
@@ -26,6 +32,15 @@ type ErrorStateProps = {
     actionLabel?: string;
     message: string;
     title: string;
+};
+
+type LoadingStateProps = {
+    status: ApiOrganizationApplication['status'] | 'loading';
+};
+
+type LogsStateProps = {
+    applicationId: string;
+    applicationName: string;
 };
 
 /**
@@ -47,7 +62,13 @@ function resolveTemplate(template: string, params: Record<string, string | undef
 /**
  * Renders metadata-backed XML pages for control-plane and application routes.
  */
-export default function View({ metadata }: ViewProps) {
+export default function View({
+    applicationId,
+    applicationName,
+    applicationStatus,
+    canViewLogs = false,
+    metadata,
+}: ViewProps) {
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -55,15 +76,21 @@ export default function View({ metadata }: ViewProps) {
     const [pageContentPath, setPageContentPath] = useState<string | null>(null);
     const [pageError, setPageError] = useState<string | null>(null);
     const [pageErrorPath, setPageErrorPath] = useState<string | null>(null);
+    const [pageErrorStatus, setPageErrorStatus] = useState<number | null>(null);
     const [pageLoading, setPageLoading] = useState(false);
+    const [logsContent, setLogsContent] = useState('');
+    const [logsError, setLogsError] = useState<string | null>(null);
+    const [logsLoading, setLogsLoading] = useState(false);
     const routeParams = { organization, application } as Record<string, string | undefined>;
     const resolvedMetadata = resolveTemplate(metadata, routeParams);
     const resolvedMetadataBaseUrl = resolvedMetadata.replace(/metadata\.json(?:[?#].*)?$/i, '');
+    const applicationIsLoading = applicationStatus !== undefined && applicationStatus !== 'running';
     const {
         data: metadataDocument,
         isLoading,
         error,
     } = useApiQuery<MetadataResponse | null>(resolvedMetadata, {
+        enabled: !applicationIsLoading,
         notFound: null,
     });
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
@@ -76,6 +103,9 @@ export default function View({ metadata }: ViewProps) {
         ) ??
         metadataDocument?.pages?.[0];
     const isNotFound = metadataDocument === null;
+    const metadataLoading = error instanceof ApiError && error.status === 503;
+    const shouldShowLogs =
+        canViewLogs && applicationStatus === 'running' && (metadataLoading || pageErrorStatus === 503);
 
     // Make the first tab explicit in the URL when the page loads without a tab selection.
     useEffect(() => {
@@ -109,11 +139,32 @@ export default function View({ metadata }: ViewProps) {
 
     /* Load the active page XML from its path. */
     useEffect(() => {
+        if (shouldShowLogs) {
+            setPageContent(null);
+            setPageContentPath(null);
+            setPageError(null);
+            setPageErrorPath(null);
+            setPageErrorStatus(null);
+            setPageLoading(false);
+            return;
+        }
+
+        if (applicationIsLoading) {
+            setPageContent(null);
+            setPageContentPath(null);
+            setPageError(null);
+            setPageErrorPath(null);
+            setPageErrorStatus(null);
+            setPageLoading(false);
+            return;
+        }
+
         if (!activePage) {
             setPageContent(null);
             setPageContentPath(null);
             setPageError(null);
             setPageErrorPath(null);
+            setPageErrorStatus(null);
             setPageLoading(false);
             return;
         }
@@ -130,6 +181,7 @@ export default function View({ metadata }: ViewProps) {
         setPageContentPath(null);
         setPageError(null);
         setPageErrorPath(null);
+        setPageErrorStatus(null);
 
         void fetchApiText(pageUrl, {
             headers: { Accept: 'application/xml' },
@@ -149,11 +201,72 @@ export default function View({ metadata }: ViewProps) {
 
                 setPageError(fetchError instanceof Error ? fetchError.message : 'Failed to load page');
                 setPageErrorPath(activePage.path);
+                setPageErrorStatus(fetchError instanceof ApiError ? fetchError.status : null);
                 setPageLoading(false);
             });
 
         return () => controller.abort();
-    }, [activePage?.path, resolvedMetadataBaseUrl]);
+    }, [activePage?.path, applicationIsLoading, resolvedMetadataBaseUrl, shouldShowLogs]);
+
+    // Fetch logs only when the current user is allowed to inspect a running application.
+    useEffect(() => {
+        if (!shouldShowLogs || !applicationId) {
+            setLogsContent('');
+            setLogsError(null);
+            setLogsLoading(false);
+            return;
+        }
+
+        const controller = new AbortController();
+
+        setLogsLoading(true);
+        setLogsError(null);
+        setLogsContent('');
+
+        void fetchApiText(`/api/applications/${applicationId}/logs`, { signal: controller.signal })
+            .then((content) => {
+                if (!controller.signal.aborted) {
+                    setLogsContent(content);
+                    setLogsLoading(false);
+                }
+            })
+            .catch((fetchError: unknown) => {
+                if (controller.signal.aborted) {
+                    return;
+                }
+
+                setLogsError(fetchError instanceof Error ? fetchError.message : 'Failed to load logs');
+                setLogsLoading(false);
+            });
+
+        return () => controller.abort();
+    }, [applicationId, shouldShowLogs]);
+
+    if (applicationIsLoading || (metadataLoading && !shouldShowLogs)) {
+        return (
+            <XML tabs={tabs}>
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    <LoadingState status={applicationStatus ?? 'loading'} />
+                </section>
+            </XML>
+        );
+    }
+
+    if (shouldShowLogs) {
+        return (
+            <XML tabs={tabs}>
+                <section className="px-6 py-10">
+                    <LogsState
+                        applicationId={applicationId ?? ''}
+                        applicationName={applicationName ?? application ?? 'Application'}
+                        logsContent={logsContent}
+                        logsError={logsError}
+                        logsLoading={logsLoading}
+                    />
+                </section>
+            </XML>
+        );
+    }
 
     if (error) {
         return (
@@ -172,6 +285,16 @@ export default function View({ metadata }: ViewProps) {
 
     if (isNotFound) {
         return <NotFound />;
+    }
+
+    if (pageError && pageErrorPath === activePage?.path && pageErrorStatus === 503) {
+        return (
+            <XML tabs={tabs}>
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    <LoadingState status={applicationStatus ?? 'loading'} />
+                </section>
+            </XML>
+        );
     }
 
     if (pageError && pageErrorPath === activePage?.path) {
@@ -243,6 +366,47 @@ export default function View({ metadata }: ViewProps) {
                 <RenderXML ast={ast} baseUrl={resolvedMetadataBaseUrl} />
             </section>
         </XML>
+    );
+}
+
+/** Renders the in-shell loading page for an application that is not ready yet. */
+function LoadingState({ status }: LoadingStateProps) {
+    return (
+        <div className="w-full max-w-xl rounded-2xl border border-border bg-card/80 px-6 py-8 text-center shadow-sm">
+            <div className="space-y-3">
+                <h1 className="text-2xl font-semibold text-foreground">Application is {status}</h1>
+                <p className="text-sm leading-6 text-muted-foreground">Please try again in a moment.</p>
+            </div>
+        </div>
+    );
+}
+
+/** Renders the logs view for administrators while an application is unavailable. */
+function LogsState({
+    applicationName,
+    logsContent,
+    logsError,
+    logsLoading,
+}: LogsStateProps & { logsContent: string; logsError: string | null; logsLoading: boolean }) {
+    return (
+        <div className="space-y-4">
+            <div className="space-y-1">
+                <h1 className="text-2xl font-semibold text-foreground">Application logs</h1>
+                <p className="text-sm leading-6 text-muted-foreground">Recent logs for {applicationName}.</p>
+            </div>
+
+            {logsLoading ? (
+                <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">Loading logs...</div>
+            ) : logsError ? (
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                    {logsError}
+                </div>
+            ) : (
+                <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
+                    <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">{logsContent || 'No logs available.'}</pre>
+                </ScrollArea>
+            )}
+        </div>
     );
 }
 

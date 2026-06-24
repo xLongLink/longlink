@@ -263,7 +263,8 @@ async def test_delete_organization_removes_its_apps(
     response = client.delete(f"/api/organizations/{organization.id}")
 
     # Assert
-    assert response.status_code == 204
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
     assert await db.applications.get(organization.id, "dashboard") is None
 
 

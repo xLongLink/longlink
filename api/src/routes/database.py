@@ -2,13 +2,12 @@ from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import NotFoundError
-from src.models.database import (DatabaseUsageResponse, DatabaseRegistryCreate,
-                                 DatabaseSchemaResponse,
-                                 DatabaseDatabaseResponse,
-                                 DatabaseRegistryResponse)
+from src.models.common import SuccessResponse
+from src.models.database import DatabaseUsageResponse, DatabaseRegistryCreate, DatabaseSchemaResponse, DatabaseDatabaseResponse, DatabaseRegistryResponse
 from src.database.models.users import User
 from src.adapters.database.postgre import Postgre
 from src.database.services.database import database
+
 
 router = APIRouter()
 
@@ -21,7 +20,7 @@ async def list_database_registries(_user: User = Depends(authsupport)) -> list[D
 
 
 @router.get("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
-async def get_database_registry(registry_id: UUID, _user: User = Depends(authsupport)) -> DatabaseRegistryResponse:
+async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport)) -> DatabaseRegistryResponse:
     """Return one database backend registration."""
 
     registry = await database.get(registry_id)
@@ -32,10 +31,7 @@ async def get_database_registry(registry_id: UUID, _user: User = Depends(authsup
 
 
 @router.post("/api/databases", response_model=DatabaseRegistryResponse)
-async def create_database_registry(
-    payload: DatabaseRegistryCreate,
-    user: User = Depends(authadmin),
-) -> DatabaseRegistryResponse:
+async def create_database_registry(payload: DatabaseRegistryCreate, user: User = Depends(authadmin)) -> DatabaseRegistryResponse:
     """Create or update one database backend registration."""
 
     registry = await database.create(**payload.model_dump(), user=user)
@@ -44,7 +40,7 @@ async def create_database_registry(
 
 
 @router.get("/api/databases/{registry_id}/databases", response_model=list[DatabaseDatabaseResponse])
-async def list_database_databases(registry_id: UUID, _user: User = Depends(authsupport)) -> list[DatabaseDatabaseResponse]:
+async def list_database_databases(registry_id: UUID, _: User = Depends(authsupport)) -> list[DatabaseDatabaseResponse]:
     """List all databases on a database backend."""
 
     registry = await database.get(registry_id)
@@ -56,15 +52,8 @@ async def list_database_databases(registry_id: UUID, _user: User = Depends(auths
     return [DatabaseDatabaseResponse(name=n) for n in names]
 
 
-@router.get(
-    "/api/databases/{registry_id}/databases/{dbname}/schemas",
-    response_model=list[DatabaseSchemaResponse],
-)
-async def list_database_schemas(
-    registry_id: UUID,
-    dbname: str,
-    _user: User = Depends(authsupport),
-) -> list[DatabaseSchemaResponse]:
+@router.get("/api/databases/{registry_id}/databases/{dbname}/schemas", response_model=list[DatabaseSchemaResponse])
+async def list_database_schemas(registry_id: UUID,dbname: str,_: User = Depends(authsupport)) -> list[DatabaseSchemaResponse]:
     """List all schemas in a database on a database backend."""
 
     registry = await database.get(registry_id)
@@ -89,12 +78,12 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     return DatabaseUsageResponse(**data)
 
 
-@router.delete("/api/databases/{registry_id}", status_code=204)
-async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)) -> None:
+@router.delete("/api/databases/{registry_id}", response_model=SuccessResponse)
+async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
     """Mark one database backend registration as deleted."""
 
     registry = await database.delete(registry_id, user.id)
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    return
+    return SuccessResponse()

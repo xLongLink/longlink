@@ -4,7 +4,7 @@ from pathlib import Path
 from contextlib import suppress, asynccontextmanager
 from src.errors import register_error_handlers
 from src.logger import logger
-from src.routes import (auth, user, image, proxy, health, compute, storage,
+from src.routes import (auth, user, image, health, compute, storage,
                         database, locations)
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
@@ -78,7 +78,6 @@ app.include_router(image.router)
 app.include_router(locations.router)
 app.include_router(operations_route.router)
 app.include_router(organizations.router)
-app.include_router(proxy.router)
 app.include_router(storage.router)
 app.include_router(user.router)
 

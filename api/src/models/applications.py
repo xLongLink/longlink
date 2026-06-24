@@ -1,36 +1,16 @@
-from enum import Enum
 from uuid import UUID
-from typing import Annotated
 from datetime import datetime
-from pydantic import Field, BaseModel, ConfigDict, BeforeValidator
+from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles
 from src.models.users import UserSummary
-from src.models.organization_summary import OrganizationSummary
-
-
-def normalize_application_name(value: str) -> str:
-    """Lowercase application names."""
-
-    return value.lower()
-
-
-ApplicationName = Annotated[str, BeforeValidator(normalize_application_name)]
-
-
-class ApplicationStatus(str, Enum):
-    """Lifecycle states for installed applications."""
-
-    creating = "creating"
-    running = "running"
-    deleting = "deleting"
-    failed = "failed"
+from src.models.organizations import ApplicationStatus, OrganizationSummary
 
 
 class ApplicationCreate(BaseModel):
     """Validate application creation payloads."""
 
     # Metadata
-    name: ApplicationName
+    name: str
     icon: str | None = None
     image: str
     description: str | None = None

@@ -3,14 +3,15 @@ from fastapi import Depends, APIRouter
 from src.auth import authuser, authsupport
 from src.errors import ConflictError, NotFoundError
 from src.logger import logger
+from src.models.common import SuccessResponse
 from src.adapters.compute.k8s import K8s
 from src.models.applications import ApplicationResponse
-from src.models.organizations import (OrganizationCreate, OrganizationDetails,
-                                      OrganizationSummary)
+from src.models.organizations import OrganizationCreate, OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
 from src.database.services.compute import compute
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
+
 
 router = APIRouter()
 
@@ -79,8 +80,8 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     return organization
 
 
-@router.delete("/api/organizations/{organization_id}", status_code=204)
-async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> None:
+@router.delete("/api/organizations/{organization_id}", response_model=SuccessResponse)
+async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> SuccessResponse:
     """Delete one organization by id."""
 
     # Only members can delete their own organization.
@@ -98,4 +99,4 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
             logger.exception("Failed to delete namespace for organization '%s'", organization.slug)
 
     await organizations.delete(organization_id, user.id)
-    return
+    return SuccessResponse()

@@ -128,7 +128,8 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 204
+    assert delete_response.status_code == 200
+    assert delete_response.json() == {"ok": True}
 
     deleted_response = client.get(f"/api/databases/{registry_id}")
     assert deleted_response.status_code == 200
@@ -248,7 +249,8 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 204
+    assert delete_response.status_code == 200
+    assert delete_response.json() == {"ok": True}
 
     deleted_response = client.get(f"/api/storages/{registry_id}")
     assert deleted_response.status_code == 200
@@ -332,7 +334,8 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 204
+    assert delete_response.status_code == 200
+    assert delete_response.json() == {"ok": True}
     deleted_response = client.get(f"/api/computes/{registry_id}")
     assert deleted_response.status_code == 200
     assert deleted_response.json()["deleted_at"] is not None
