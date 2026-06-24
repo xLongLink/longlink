@@ -1,5 +1,6 @@
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
+import { useState } from 'react';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
+import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
@@ -108,6 +110,8 @@ export default function AdminCompute() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteCompute = useMutation({
         mutationFn: async (registryId: string) => {
@@ -151,6 +155,7 @@ export default function AdminCompute() {
         location: locationById.get(row.location_id),
         resources: resourcesById.get(row.id),
     }));
+    const deleteTarget = computeRows.find((compute) => compute.id === deleteTargetId) ?? null;
 
     const computeColumns = canManage
         ? ([
@@ -192,21 +197,9 @@ export default function AdminCompute() {
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
-                                          onClick={async () => {
-                                              // Confirm the destructive action before deleting the compute registry.
-                                              if (!window.confirm(`Delete compute ${compute.slug}?`)) {
-                                                  return;
-                                              }
-
-                                              try {
-                                                  await deleteCompute.mutateAsync(compute.id);
-                                              } catch (mutationError) {
-                                                  toast.error(
-                                                      mutationError instanceof Error
-                                                          ? mutationError.message
-                                                          : 'Failed to delete compute'
-                                                  );
-                                              }
+                                          onClick={() => {
+                                              setDeleteTargetId(compute.id);
+                                              setDeleteError(null);
                                           }}
                                       >
                                           Delete
@@ -240,6 +233,32 @@ export default function AdminCompute() {
                 data={computeRows}
                 error={computeQuery.error}
                 isLoading={computeQuery.isLoading}
+            />
+            <DeleteConfirmationDialog
+                open={deleteTargetId !== null}
+                title="Delete compute"
+                description={deleteTarget ? `Delete compute ${deleteTarget.slug}?` : 'Delete this compute registry?'}
+                error={deleteError}
+                isPending={deleteCompute.isPending}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    }
+                }}
+                onConfirm={async () => {
+                    if (deleteTargetId === null) {
+                        return;
+                    }
+
+                    try {
+                        await deleteCompute.mutateAsync(deleteTargetId);
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    } catch (mutationError) {
+                        setDeleteError(mutationError instanceof Error ? mutationError.message : 'Failed to delete compute');
+                    }
+                }}
             />
         </div>
     );

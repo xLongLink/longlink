@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
 from src.database.session import session_scope
-from src.models.applications import AppStatus
+from src.models.applications import ApplicationStatus, ApplicationResponse
 from src.database.models.users import User
 from src.database.models.association import UserApplication
 from src.database.models.applications import Application
@@ -28,6 +28,13 @@ class ApplicationsService:
             )
             result = await session.execute(statement)
             return list(result.scalars().all())
+
+
+    async def list_all_responses(self, user: User) -> list[ApplicationResponse]:
+        """Return all registered applications as API payloads."""
+
+        applications = await self.list_all()
+        return [_response_payload(application, None, user) for application in applications]
 
 
     async def list(
@@ -54,6 +61,13 @@ class ApplicationsService:
             )
         result = await session.execute(statement)
         return result.all()
+
+
+    async def list_responses(self, organization_id: UUID, user_id: UUID, user: User) -> list[ApplicationResponse]:
+        """Return organization applications as API payloads."""
+
+        application_rows = await self.list(organization_id, user_id)
+        return [_response_payload(application, role_name, user) for application, role_name in application_rows]
 
 
     async def list_by_organization(self, organization_id: UUID) -> list[Application]:
@@ -110,7 +124,7 @@ class ApplicationsService:
         slug: str,
         image: str,
         user: User,
-        status: AppStatus = AppStatus.creating,
+        status: ApplicationStatus = ApplicationStatus.creating,
         version: str | None = None,
         sdk_version: str | None = None,
         description: str | None = None,
@@ -128,7 +142,7 @@ class ApplicationsService:
             if slug_result.scalar_one_or_none() is not None:
                 raise ValueError('Application slug already exists')
 
-            app_kwargs: dict[str, object] = {
+            application_kwargs: dict[str, object] = {
                 'organization_id': organization_id,
                 'name': name,
                 'slug': slug,
@@ -140,7 +154,7 @@ class ApplicationsService:
                 'icon': icon,
             }
 
-            application = Application(**app_kwargs)
+            application = Application(**application_kwargs)
             application.created_id = user.id
             application.updated_id = user.id
             session.add(application)
@@ -152,7 +166,7 @@ class ApplicationsService:
             return result.scalar_one()
 
 
-    async def set_status(self, application_id: UUID, status: AppStatus) -> Application | None:
+    async def set_status(self, application_id: UUID, status: ApplicationStatus) -> Application | None:
         """Update one application status and return the refreshed row."""
 
         async with session_scope() as session:
@@ -199,6 +213,21 @@ def _app_relation_options() -> tuple:
         selectinload(Application.created_by),
         selectinload(Application.updated_by),
         selectinload(Application.deleted_by),
+    )
+
+
+def _response_payload(application: Application, role_name: ApplicationRoles | None, user: User) -> ApplicationResponse:
+    """Build one application API payload from a database row."""
+
+    return ApplicationResponse.model_validate(
+        {
+            **application.model_dump(),
+            "organization": application.organization,
+            "created_by": application.created_by or user,
+            "updated_by": application.updated_by or application.created_by or user,
+            "deleted_by": application.deleted_by,
+            "role": role_name,
+        }
     )
 
 

@@ -24,3 +24,5 @@ longlink/
 - Project is in MVP mode: prefer the current model over backward compatibility, remove obsolete code when replacing old flows
 - Always check at the end of the implementation, for potential simplifications.
 - Write simple, well designed and maintainable code. No strange hacks, use proper solutions
+- Pydantic models must group fields by commented sections, and fields inside each section must be ordered from shortest name to longest name.
+- Use long domain names in code and filenames (`organization`, `application`, `locations`) instead of abbreviations like `org` or `app`.

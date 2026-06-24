@@ -1,4 +1,5 @@
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectDatabaseDialog from '@/components/dialogs/ConnectDatabaseDialog';
+import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
@@ -104,6 +106,8 @@ export default function AdminDatabase() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteDatabase = useMutation({
         mutationFn: async (registryId: string) => {
@@ -127,6 +131,7 @@ export default function AdminDatabase() {
     });
 
     const databaseRows = databaseQuery.data ?? [];
+    const deleteTarget = databaseRows.find((database) => database.id === deleteTargetId) ?? null;
     const usageQueries = useQueries({
         queries: databaseRows.map((registry) => ({
             queryKey: apiQueryKey(`/api/databases/${registry.id}/usage`),
@@ -186,21 +191,9 @@ export default function AdminDatabase() {
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
-                                          onClick={async () => {
-                                              // Confirm the destructive action before deleting the database registry.
-                                              if (!window.confirm(`Delete database ${database.slug}?`)) {
-                                                  return;
-                                              }
-
-                                              try {
-                                                  await deleteDatabase.mutateAsync(database.id);
-                                              } catch (mutationError) {
-                                                  toast.error(
-                                                      mutationError instanceof Error
-                                                          ? mutationError.message
-                                                          : 'Failed to delete database'
-                                                  );
-                                              }
+                                          onClick={() => {
+                                              setDeleteTargetId(database.id);
+                                              setDeleteError(null);
                                           }}
                                       >
                                           Delete
@@ -232,6 +225,32 @@ export default function AdminDatabase() {
                 data={databaseTableRows}
                 error={databaseQuery.error}
                 isLoading={databaseQuery.isLoading}
+            />
+            <DeleteConfirmationDialog
+                open={deleteTargetId !== null}
+                title="Delete database"
+                description={deleteTarget ? `Delete database ${deleteTarget.slug}?` : 'Delete this database?'}
+                error={deleteError}
+                isPending={deleteDatabase.isPending}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    }
+                }}
+                onConfirm={async () => {
+                    if (deleteTargetId === null) {
+                        return;
+                    }
+
+                    try {
+                        await deleteDatabase.mutateAsync(deleteTargetId);
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    } catch (mutationError) {
+                        setDeleteError(mutationError instanceof Error ? mutationError.message : 'Failed to delete database');
+                    }
+                }}
             />
         </div>
     );

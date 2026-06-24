@@ -5,7 +5,7 @@ from src.database.session import session_scope
 from src.models.countries import Country
 from src.models.locations import LocationProvider
 from src.database.models.users import User
-from src.database.models.location import Location
+from src.database.models.locations import Location
 
 
 class LocationsService:

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
+import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiVoid } from '@/lib/api';
@@ -42,6 +44,8 @@ export default function AdminStorage() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteStorage = useMutation({
         mutationFn: async (registryId: string) => {
@@ -61,6 +65,7 @@ export default function AdminStorage() {
     });
 
     const storageRows = storageQuery.data ?? [];
+    const deleteTarget = storageRows.find((storage) => storage.id === deleteTargetId) ?? null;
     const storageColumns = canManage
         ? ([
               ...storageColumnsBase,
@@ -100,21 +105,9 @@ export default function AdminStorage() {
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
-                                          onClick={async () => {
-                                              // Confirm the destructive action before deleting the storage registry.
-                                              if (!window.confirm(`Delete storage ${storage.slug}?`)) {
-                                                  return;
-                                              }
-
-                                              try {
-                                                  await deleteStorage.mutateAsync(storage.id);
-                                              } catch (mutationError) {
-                                                  toast.error(
-                                                      mutationError instanceof Error
-                                                          ? mutationError.message
-                                                          : 'Failed to delete storage'
-                                                  );
-                                              }
+                                          onClick={() => {
+                                              setDeleteTargetId(storage.id);
+                                              setDeleteError(null);
                                           }}
                                       >
                                           Delete
@@ -146,6 +139,32 @@ export default function AdminStorage() {
                 data={storageRows}
                 error={storageQuery.error}
                 isLoading={storageQuery.isLoading}
+            />
+            <DeleteConfirmationDialog
+                open={deleteTargetId !== null}
+                title="Delete storage"
+                description={deleteTarget ? `Delete storage ${deleteTarget.slug}?` : 'Delete this storage registry?'}
+                error={deleteError}
+                isPending={deleteStorage.isPending}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    }
+                }}
+                onConfirm={async () => {
+                    if (deleteTargetId === null) {
+                        return;
+                    }
+
+                    try {
+                        await deleteStorage.mutateAsync(deleteTargetId);
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    } catch (mutationError) {
+                        setDeleteError(mutationError instanceof Error ? mutationError.message : 'Failed to delete storage');
+                    }
+                }}
             />
         </div>
     );

@@ -5,7 +5,7 @@ from src.logger import logger
 from src.utils.namespace import k8name
 from src.adapters.compute import K8s
 from kubernetes.client.rest import ApiException
-from src.models.applications import AppStatus
+from src.models.applications import ApplicationStatus
 from src.database.models.operation import Operation
 from src.database.services.compute import compute
 from src.database.services.operations import operations
@@ -13,7 +13,7 @@ from src.database.services.applications import applications
 from src.database.services.organizations import organizations
 
 
-class AppStartupState(str, Enum):
+class ApplicationStartupState(str, Enum):
     """Runtime startup states for one deployed app."""
 
     pending = "pending"
@@ -21,20 +21,20 @@ class AppStartupState(str, Enum):
     dead = "dead"
 
 
-async def inspect_app_startup(operation: Operation) -> AppStartupState:
-    """Inspect one app deployment startup state."""
+async def inspect_application_startup(operation: Operation) -> ApplicationStartupState:
+    """Inspect one application deployment startup state."""
 
     application_id = operation.application_id
     if application_id is None:
-        return AppStartupState.pending
+        return ApplicationStartupState.pending
 
     application = await applications.get_by_id(application_id)
     if application is None:
-        return AppStartupState.pending
+        return ApplicationStartupState.pending
 
     organization = await organizations.get(application.organization_id)
     if organization is None:
-        return AppStartupState.pending
+        return ApplicationStartupState.pending
 
     registries = await compute.list()
     registry = max(
@@ -43,7 +43,7 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
         default=None,
     )
     if registry is None:
-        return AppStartupState.pending
+        return ApplicationStartupState.pending
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
     namespace = k8name(organization.slug)
@@ -52,7 +52,7 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
     try:
         pods = k8s._core_api.list_namespaced_pod(namespace, label_selector=f"app={application.slug}").items
     except ApiException:
-        return AppStartupState.pending
+        return ApplicationStartupState.pending
 
     crashed_reasons = {
         "CrashLoopBackOff",
@@ -67,11 +67,11 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
             continue
 
         if pod.status.phase in {"Failed", "Unknown"}:
-            return AppStartupState.dead
+            return ApplicationStartupState.dead
 
         statuses = pod.status.container_statuses or []
         if pod.status.phase == "Running" and statuses and all(container.ready for container in statuses):
-            return AppStartupState.ready
+            return ApplicationStartupState.ready
 
         for container in pod.status.container_statuses or []:
             state = container.state
@@ -79,16 +79,16 @@ async def inspect_app_startup(operation: Operation) -> AppStartupState:
                 continue
 
             if state.waiting is not None and state.waiting.reason in crashed_reasons:
-                return AppStartupState.dead
+                return ApplicationStartupState.dead
 
             if state.terminated is not None and state.terminated.exit_code != 0:
-                return AppStartupState.dead
+                return ApplicationStartupState.dead
 
-    return AppStartupState.pending
+    return ApplicationStartupState.pending
 
 
-async def execute_app_create(operation: Operation) -> Operation:
-    """Run one app creation verification step."""
+async def execute_application_create(operation: Operation) -> Operation:
+    """Run one application creation verification step."""
 
     application_id = operation.application_id
     if application_id is None:
@@ -99,11 +99,11 @@ async def execute_app_create(operation: Operation) -> Operation:
         raise ValueError(f"Application '{application_id}' not found")
 
     if operation.step != "verify":
-        raise ValueError(f"Unsupported app.create step '{operation.step}'")
+        raise ValueError(f"Unsupported application.create step '{operation.step}'")
 
-    startup_state = await inspect_app_startup(operation)
-    if startup_state == AppStartupState.ready:
-        await applications.set_status(application.id, AppStatus.running)
+    startup_state = await inspect_application_startup(operation)
+    if startup_state == ApplicationStartupState.ready:
+        await applications.set_status(application.id, ApplicationStatus.running)
         completed = await operations.complete(operation.id)
         if completed is not None:
             logger.info("Completed app creation %s", operation.id)
@@ -111,8 +111,8 @@ async def execute_app_create(operation: Operation) -> Operation:
 
         return operation
 
-    if startup_state == AppStartupState.dead:
-        await applications.set_status(application.id, AppStatus.failed)
+    if startup_state == ApplicationStartupState.dead:
+        await applications.set_status(application.id, ApplicationStatus.failed)
         failed = await operations.fail(operation.id, "App crashed during startup")
         if failed is not None:
             logger.info("Failed app creation %s", operation.id)
@@ -124,8 +124,8 @@ async def execute_app_create(operation: Operation) -> Operation:
     return deferred or operation
 
 
-async def execute_app_delete(operation: Operation) -> Operation:
-    """Run one app deletion step."""
+async def execute_application_delete(operation: Operation) -> Operation:
+    """Run one application deletion step."""
 
     application_id = operation.application_id
     if application_id is None:
@@ -137,7 +137,7 @@ async def execute_app_delete(operation: Operation) -> Operation:
         return completed or operation
 
     if operation.step != "remove_runtime":
-        raise ValueError(f"Unsupported app.delete step '{operation.step}'")
+        raise ValueError(f"Unsupported application.delete step '{operation.step}'")
 
     organization = await organizations.get(application.organization_id)
     if organization is None:

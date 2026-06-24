@@ -7,7 +7,7 @@ from src.models.database import DatabaseKind
 
 if TYPE_CHECKING:
     from src.database.models.users import User
-    from src.database.models.location import Location
+    from src.database.models.locations import Location
 
 
 class DatabaseRegistry(SQLModel, table=True):

@@ -7,8 +7,8 @@ from src.constants import APP_SERVICE_PORT
 from src.utils.utils import slugify, metadata
 from src.adapters.database import Postgre
 from src.models.operations import OperationKind
-from src.models.applications import (AppStatus, ApplicationCreate,
-                                      ApplicationResponse)
+from src.models.applications import (ApplicationStatus, ApplicationCreate,
+                                       ApplicationResponse)
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
@@ -24,19 +24,7 @@ router = APIRouter()
 async def list_applications(user: User = Depends(authadmin)) -> list[ApplicationResponse]:
     """Return all applications for administrator views."""
 
-    application_rows = [(application, None) for application in await applications.list_all()]
-
-    return [
-        {
-            **application.model_dump(),
-            "organization": application.organization,
-            "created_by": application.created_by or user,
-            "updated_by": application.updated_by or application.created_by or user,
-            "deleted_by": application.deleted_by,
-            "role": role_name,
-        }
-        for application, role_name in application_rows
-    ]
+    return await applications.list_all_responses(user)
 
 
 @router.post("/api/applications", response_model=ApplicationResponse)
@@ -52,8 +40,8 @@ async def create_app(
     if organization is None:
         raise NotFoundError("Organization", organization_id)
 
-    app_slug = slugify(payload.name)
-    logger.info("Provisioning app %s/%s", organization.slug, app_slug)
+    application_slug = slugify(payload.name)
+    logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     # Resolve the organization location so provisioning uses the active registries.
     organization_record = await organizations.get(organization_id)
@@ -88,11 +76,11 @@ async def create_app(
         application = await applications.create(
             organization_id,
             payload.name,
-            app_slug,
+            application_slug,
             image=payload.image,
             version=image_metadata.version if image_metadata is not None else None,
             sdk_version=image_metadata.sdk if image_metadata is not None else None,
-            status=AppStatus.creating,
+            status=ApplicationStatus.creating,
             description=payload.description,
             icon=payload.icon,
             user=user,
@@ -111,19 +99,19 @@ async def create_app(
     # Provision the namespace, schema, and workload in order so failures can mark the app as failed.
     try:
         await k8s.namespace(organization_record.slug)
-        await db_client.schema(organization_record.slug, app_slug)
-        await k8s.application(organization_record.slug, app_slug, payload.image, APP_SERVICE_PORT, payload.envs)
+        await db_client.schema(organization_record.slug, application_slug)
+        await k8s.application(organization_record.slug, application_slug, payload.image, APP_SERVICE_PORT, payload.envs)
     except HTTPException:
-        await applications.set_status(application.id, AppStatus.failed)
+        await applications.set_status(application.id, ApplicationStatus.failed)
         raise
     except Exception as exc:
-        await applications.set_status(application.id, AppStatus.failed)
+        await applications.set_status(application.id, ApplicationStatus.failed)
         raise UnavailableError("Failed to initialize the application") from exc
 
     try:
-        operation = await operations.create(OperationKind.app_create, application_id=application.id, step="verify", user=user)
+        operation = await operations.create(OperationKind.application_create, application_id=application.id, step="verify", user=user)
     except Exception as exc:
-        await applications.set_status(application.id, AppStatus.failed)
+        await applications.set_status(application.id, ApplicationStatus.failed)
         logger.exception("Failed to queue application verification for %s/%s", organization.slug, payload.name)
         raise UnavailableError("Failed to queue app verification") from exc
 
@@ -144,9 +132,9 @@ async def delete_app(
     if application is None:
         raise NotFoundError("Application", application_id)
 
-    await applications.set_status(application.id, AppStatus.deleting)
+    await applications.set_status(application.id, ApplicationStatus.deleting)
     try:
-        await operations.create(OperationKind.app_delete, application_id=application.id, step="remove_runtime", user=_user)
+        await operations.create(OperationKind.application_delete, application_id=application.id, step="remove_runtime", user=_user)
     except Exception as exc:
         await applications.set_status(application.id, application.status)
         logger.exception("Failed to queue application deletion for %s", application.name)

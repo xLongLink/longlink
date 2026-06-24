@@ -4,7 +4,7 @@ from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.locations import LocationResponse
-from src.models.applications import AppStatus
+from src.models.applications import ApplicationStatus
 from src.models.organization_summary import OrganizationSummary
 
 
@@ -36,7 +36,7 @@ class OrganizationApplicationResponse(BaseModel):
     description: str | None = None
 
     # State
-    status: AppStatus
+    status: ApplicationStatus
 
     # Audit
     created_at: datetime

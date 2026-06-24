@@ -96,7 +96,7 @@ export default function Home() {
                             <span className="block whitespace-nowrap text-center">data, and validation</span>
                         </h1>
                         <p className="mx-auto max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                            turns XML page definitions into authenticated web apps, with routing, metadata, access
+                            Turns XML page definitions into authenticated web apps, with routing, metadata, access
                             control, and a shared React runtime handled by the platform.
                         </p>
                     </div>
@@ -114,7 +114,7 @@ export default function Home() {
                             to="/docs"
                             className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
-                            Read Documentation
+                            Read docs
                         </Link>
                     </div>
                 </section>

@@ -4,7 +4,7 @@ from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.compute import ComputeKind
-from src.models.applications import AppStatus
+from src.models.applications import ApplicationStatus
 from src.models.database import DatabaseKind
 from src.models.metadata import LongLinkMetadata
 from src.database.session import get_session
@@ -16,20 +16,20 @@ from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
-from src.database.models.association import UserApplication as UserApp
+from src.database.models.association import UserApplication
 from src.database.models.association import UserOrganization
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.applications import applications as apps
-from src.database.services.organizations import organizations as orgs
+from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 db = SimpleNamespace(
-    apps=apps,
+    applications=applications,
     compute=compute,
     database=database,
     locations=locations,
     operations=operations,
-    orgs=orgs,
+    organizations=organizations,
     storage=storage,
     users=users,
 )
@@ -39,14 +39,14 @@ async def test_list_organization_apps_returns_app_membership_role(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return the app-specific role instead of the organization role."""
+    """Return the application-specific role instead of the organization role."""
 
     # Arrange
     owner = users[0]
     user = users[1]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.orgs.create("acme", location.id, owner)
-    app = await db.apps.create(
+    organization = await db.organizations.create("acme", location.id, owner)
+    app = await db.applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -64,7 +64,7 @@ async def test_list_organization_apps_returns_app_membership_role(
             )
         )
         session.add(
-            UserApp(
+            UserApplication(
                 user_id=user.id,
                 organization_id=organization.id,
                 application_id=app.id,
@@ -97,13 +97,13 @@ async def test_list_organization_apps_returns_null_role_without_app_membership(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return no app role when the user has no app membership row."""
+    """Return no application role when the user has no application membership row."""
 
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.orgs.create("acme", location.id, user)
-    app = await db.apps.create(
+    organization = await db.organizations.create("acme", location.id, user)
+    app = await db.applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -134,21 +134,21 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return all apps when an admin does not filter by organization."""
+    """Return all applications when an admin does not filter by organization."""
 
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
-    acme = await db.orgs.create("acme", location.id, user)
-    globex = await db.orgs.create("globex", location.id, user)
-    dashboard = await db.apps.create(
+    acme = await db.organizations.create("acme", location.id, user)
+    globex = await db.organizations.create("globex", location.id, user)
+    dashboard = await db.applications.create(
         acme.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
-    console = await db.apps.create(
+    console = await db.applications.create(
         globex.id,
         "console",
         slug="console",
@@ -190,7 +190,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 async def test_list_apps_without_organization_requires_admin(
     clients: tuple[TestClient, TestClient, TestClient],
 ) -> None:
-    """Reject all-app listing for non-admin users."""
+    """Reject application listing for non-admin users."""
 
     # Arrange
     client = clients[1]
@@ -207,14 +207,14 @@ async def test_list_organization_apps_returns_404_for_non_member(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject app listing when the user does not belong to the organization."""
+    """Reject application listing when the user does not belong to the organization."""
 
     # Arrange
     owner = users[0]
     user = users[1]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.orgs.create("acme", location.id, owner)
-    await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=owner)
+    organization = await db.organizations.create("acme", location.id, owner)
+    await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=owner)
     client = clients[1]
 
     # Act
@@ -236,7 +236,7 @@ async def test_create_app_returns_app_response(
     user = users[0]
     local_location = await db.locations.create("local", "Local testing", user, Country.CH)
     remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
-    organization = await db.orgs.create("acme", remote_location.id, user)
+    organization = await db.organizations.create("acme", remote_location.id, user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
@@ -390,8 +390,8 @@ async def test_delete_app_removes_dependent_env_rows(
     user = users[0]
     local_location = await db.locations.create("local", "Local testing", user, Country.CH)
     remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
-    organization = await db.orgs.create("acme", local_location.id, user)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    organization = await db.organizations.create("acme", local_location.id, user)
+    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="primary",
@@ -453,11 +453,11 @@ async def test_delete_app_removes_dependent_env_rows(
 
     # Assert
     assert response.status_code == 204
-    refreshed_app = await db.apps.get(organization.id, "dashboard")
+    refreshed_app = await db.applications.get(organization.id, "dashboard")
     assert refreshed_app is not None
     assert refreshed_app.status == "deleting"
     recorded_operation = (await db.operations.list())[0]
-    assert recorded_operation.kind == OperationKind.app_delete
+    assert recorded_operation.kind == OperationKind.application_delete
     assert recorded_operation.application_id == app.id
     assert recorded_operation.step == "remove_runtime"
 
@@ -472,8 +472,8 @@ async def test_get_app_logs_returns_pod_logs(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.orgs.create("acme", location.id, user)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    organization = await db.organizations.create("acme", location.id, user)
+    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
@@ -542,9 +542,9 @@ async def test_proxy_app_forwards_request_to_internal_service(
     user = users[0]
     local_location = await db.locations.create("local", "Local testing", user, Country.CH)
     remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
-    organization = await db.orgs.create("acme", remote_location.id, user)
-    app = await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
-    await db.apps.set_status(app.id, AppStatus.running)
+    organization = await db.organizations.create("acme", remote_location.id, user)
+    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    await db.applications.set_status(app.id, ApplicationStatus.running)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
@@ -676,8 +676,8 @@ async def test_proxy_app_shows_loading_when_app_is_not_ready(
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.orgs.create("acme", location.id, owner)
-    app = await db.apps.create(
+    organization = await db.organizations.create("acme", location.id, owner)
+    app = await db.applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",

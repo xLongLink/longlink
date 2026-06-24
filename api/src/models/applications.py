@@ -17,7 +17,7 @@ def normalize_application_name(value: str) -> str:
 ApplicationName = Annotated[str, BeforeValidator(normalize_application_name)]
 
 
-class AppStatus(str, Enum):
+class ApplicationStatus(str, Enum):
     """Lifecycle states for installed applications."""
 
     creating = "creating"
@@ -60,7 +60,7 @@ class ApplicationResponse(BaseModel):
 
     # State
     role: ApplicationRoles | None = None
-    status: AppStatus
+    status: ApplicationStatus
 
     # Audit
     created_at: datetime

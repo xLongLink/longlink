@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 
-import { DOC_GROUPS, DocsSidebar, type DocItem } from '@/components/DocsSidebar';
-import { A } from '@/components/ui/a';
+import { DocsSidebar } from '@/components/DocsSidebar';
+import { DOC_GROUPS, type DocItem } from '@/pages/docs/catalog';
+import { A } from '@ui/a';
 import {
     BreadcrumbItem,
     BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbSeparator,
     Breadcrumb as UIBreadcrumb,
-} from '@/components/ui/breadcrumb';
-import { buttonVariants } from '@/components/ui/button';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+} from '@ui/breadcrumb';
+import { buttonVariants } from '@ui/button';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@ui/sidebar';
 import { cn } from '@/lib/utils';
 
 type DocMetadata = {

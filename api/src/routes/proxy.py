@@ -8,7 +8,7 @@ from src.utils.utils import knames
 from src.utils.namespace import k8name
 from src.adapters.compute import K8s
 from src.database.models.users import User
-from src.models.applications import AppStatus
+from src.models.applications import ApplicationStatus
 from src.database.services.compute import compute
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
@@ -76,7 +76,7 @@ async def proxy_app_request(
     if application is None:
         raise NotFoundError("Application", application_slug)
 
-    if application.status != AppStatus.running:
+    if application.status != ApplicationStatus.running:
         return _loading_response(application.status)
 
     registries = await compute.list()
@@ -140,7 +140,7 @@ async def proxy_app_request(
     )
 
 
-def _loading_response(status: AppStatus) -> Response:
+def _loading_response(status: ApplicationStatus) -> Response:
     """Return a lightweight loading page while the app is not ready."""
 
     return Response(

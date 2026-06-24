@@ -14,7 +14,7 @@ import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Menu, MenuSection } from '@ui/menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Bell, Building2, Code2, MoreVertical, Paintbrush, Settings2, UserRound } from 'lucide-react';
+import { Building2, MoreVertical, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -291,17 +291,6 @@ export default function Settings() {
                         </div>
                     </MenuSection>
 
-                    <MenuSection value="notifications" label="Notifications" icon={Bell}>
-                        <div className="space-y-4">
-                            <div>
-                                <h2 className="text-lg font-medium text-foreground">Notifications</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Choose which updates and alerts you want to receive.
-                                </p>
-                            </div>
-                        </div>
-                    </MenuSection>
-
                     <MenuSection value="organizations" label="Organizations" icon={Building2}>
                         <div className="space-y-4">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -324,16 +313,6 @@ export default function Settings() {
                         </div>
                     </MenuSection>
 
-                    <MenuSection value="developer-settings" label="Developer Settings" icon={Code2}>
-                        <div className="space-y-4">
-                            <div>
-                                <h2 className="text-lg font-medium text-foreground">Developer Settings</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Configure developer access, integrations, and API-related preferences.
-                                </p>
-                            </div>
-                        </div>
-                    </MenuSection>
                 </Menu>
 
                 <Dialog

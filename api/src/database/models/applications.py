@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, UniqueConstraint, and_
-from src.models.applications import AppStatus
+from src.models.applications import ApplicationStatus
 from src.database.models.association import UserApplication
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ class Application(SQLModel, table=True):
     description: str | None = Field(default=None, max_length=255)
 
     # State
-    status: AppStatus = Field(default=AppStatus.creating, sa_column=Column(SAEnum(AppStatus, name='app_status_enum', native_enum=False), nullable=False))
+    status: ApplicationStatus = Field(default=ApplicationStatus.creating, sa_column=Column(SAEnum(ApplicationStatus, name='application_status_enum', native_enum=False), nullable=False))
 
     # User
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

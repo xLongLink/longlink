@@ -11,7 +11,7 @@ from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 ADMIN_EMAIL = 'example@longlink.dev'
-ADMIN_ORG = 'test'
+ADMIN_ORGANIZATION = 'test'
 
 
 class UsersService:
@@ -42,7 +42,7 @@ class UsersService:
                 return None
 
             # Load organization memberships and their locations without lazy IO.
-            org_result = await session.execute(
+            organization_result = await session.execute(
                 select(Organization, UserOrganization.role_name)
                 .join(UserOrganization, Organization.id == UserOrganization.organization_id)
                 .options(
@@ -70,7 +70,7 @@ class UsersService:
                         location=LocationResponse.model_validate(organization.location),
                         role=role_name,
                     )
-                    for organization, role_name in org_result.all()
+                for organization, role_name in organization_result.all()
                 ],
             )
 
@@ -81,8 +81,8 @@ class UsersService:
         if user.email != ADMIN_EMAIL:
             return
 
-        # Skip the bootstrap membership if the demo org has not been created yet.
-        organization_result = await session.execute(select(Organization).where(Organization.name == ADMIN_ORG))
+        # Skip the bootstrap membership if the demo organization has not been created yet.
+        organization_result = await session.execute(select(Organization).where(Organization.name == ADMIN_ORGANIZATION))
         organization = organization_result.scalar_one_or_none()
         if organization is None:
             return

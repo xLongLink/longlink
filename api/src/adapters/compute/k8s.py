@@ -136,17 +136,17 @@ class K8s(Compute):
             },
         )
 
-        app_manifests = utils.readyml(
+        application_manifests = utils.readyml(
             TEMPLATES / "application.yml",
             image=image,
             name=name,
             namespace=namespace,
             port=port,
         )
-        app_manifests = app_manifests if isinstance(app_manifests, list) else [app_manifests]
+        application_manifests = application_manifests if isinstance(application_manifests, list) else [application_manifests]
 
         # Apply each manifest by kind so deployments and services use the right Kubernetes client.
-        for manifest in app_manifests:
+        for manifest in application_manifests:
             if manifest["kind"] == "Deployment":
                 self._upsert(
                     self._apps_api.create_namespaced_deployment,

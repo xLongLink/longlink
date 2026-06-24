@@ -41,7 +41,7 @@ async def test_operations_endpoint_returns_recorded_operations(
     location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
+    operation = await db.operations.create(OperationKind.application_create, step="verify", application_id=application.id, user=user)
 
     # Act
     response = client.get("/api/operations")

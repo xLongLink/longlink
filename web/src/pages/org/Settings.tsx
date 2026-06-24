@@ -3,6 +3,7 @@ import CreateAppDialog from '@/components/dialogs/CreateAppDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useDeleteApp } from '@/hooks/use-org';
+import { useUser } from '@/hooks/use-user';
 import type { ApiOrganizationApplication, ApiOrganizationDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
@@ -66,10 +67,17 @@ type SettingsProps = {
 
 /** Renders the organization settings page body. */
 export default function Settings({ org, orgDetails, applications, isLoading, error }: SettingsProps) {
+    const { role: platformRole, organizations: userOrganizations } = useUser();
     const deleteApp = useDeleteApp(org);
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
+
+    const organizationMembership = userOrganizations.find((organization) => organization.name === org);
+    const canViewLogs =
+        platformRole === 'administrator' ||
+        organizationMembership?.role === 'admin' ||
+        organizationMembership?.role === 'owner';
 
     const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
 
@@ -125,14 +133,16 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                             <MoreVertical className="size-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => {
-                                    setLogsTarget(row.original);
-                                }}
-                            >
-                                Logs
-                            </DropdownMenuItem>
+                            {canViewLogs ? (
+                                <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                        setLogsTarget(row.original);
+                                    }}
+                                >
+                                    Logs
+                                </DropdownMenuItem>
+                            ) : null}
                             <DropdownMenuItem
                                 className="cursor-pointer"
                                 variant="destructive"
@@ -311,7 +321,7 @@ export default function Settings({ org, orgDetails, applications, isLoading, err
                 </MenuSection>
             </Menu>
 
-            {logsTarget ? (
+            {canViewLogs && logsTarget ? (
                 <LogsDialog
                     org={org}
                     appId={logsTarget.id}

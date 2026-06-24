@@ -22,27 +22,11 @@ async def list_organizations(_user: User = Depends(authsupport)) -> list[Organiz
     return await organizations.list()
 
 
-@router.get("/api/organizations/{org_id}", response_model=OrganizationDetails)
-async def get_organization(org_id: UUID, user: User = Depends(authuser)) -> OrganizationDetails:
+@router.get("/api/organizations/{organization_id}", response_model=OrganizationDetails)
+async def get_organization(organization_id: UUID, user: User = Depends(authuser)) -> OrganizationDetails:
     """Return one organization and its metadata."""
 
-    # Deny access early when the org does not exist.
-    organization = await organizations.get(org_id)
-    if organization is None:
-        raise NotFoundError("Organization", org_id)
-
-    # Keep organization reads scoped to the caller's memberships.
-    if not any(organization.id == org_id for organization in user.organizations):
-        raise NotFoundError("Organization", org_id)
-
-    return organization
-
-
-@router.get("/api/organizations/{organization_id}/applications", response_model=list[ApplicationResponse])
-async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)) -> list[ApplicationResponse]:
-    """Return the applications for one organization."""
-
-    # Deny access early when the org does not exist.
+    # Deny access early when the organization does not exist.
     organization = await organizations.get(organization_id)
     if organization is None:
         raise NotFoundError("Organization", organization_id)
@@ -51,18 +35,23 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
     if not any(organization.id == organization_id for organization in user.organizations):
         raise NotFoundError("Organization", organization_id)
 
-    application_rows = await applications.list(organization_id, user.id)
-    return [
-        {
-            **application.model_dump(),
-            "organization": application.organization,
-            "created_by": application.created_by or user,
-            "updated_by": application.updated_by or application.created_by or user,
-            "deleted_by": application.deleted_by,
-            "role": role_name,
-        }
-        for application, role_name in application_rows
-    ]
+    return organization
+
+
+@router.get("/api/organizations/{organization_id}/applications", response_model=list[ApplicationResponse])
+async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)) -> list[ApplicationResponse]:
+    """Return the applications for one organization."""
+
+    # Deny access early when the organization does not exist.
+    organization = await organizations.get(organization_id)
+    if organization is None:
+        raise NotFoundError("Organization", organization_id)
+
+    # Keep organization reads scoped to the caller's memberships.
+    if not any(organization.id == organization_id for organization in user.organizations):
+        raise NotFoundError("Organization", organization_id)
+
+    return await applications.list_responses(organization_id, user.id, user)
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary)
@@ -90,14 +79,14 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     return organization
 
 
-@router.delete("/api/organizations/{org_id}", status_code=204)
-async def delete_organization(org_id: UUID, user: User = Depends(authuser)) -> None:
+@router.delete("/api/organizations/{organization_id}", status_code=204)
+async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> None:
     """Delete one organization by id."""
 
     # Only members can delete their own org.
-    organization = next((organization for organization in user.organizations if organization.id == org_id), None)
+    organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
     if organization is None:
-        raise NotFoundError("Organization", org_id)
+        raise NotFoundError("Organization", organization_id)
 
     registries = [registry for registry in await compute.list() if registry.location_id == organization.location_id]
     if registries:
@@ -108,5 +97,5 @@ async def delete_organization(org_id: UUID, user: User = Depends(authuser)) -> N
         except Exception:
             logger.exception("Failed to delete namespace for organization '%s'", organization.slug)
 
-    await organizations.delete(org_id, user.id)
+    await organizations.delete(organization_id, user.id)
     return

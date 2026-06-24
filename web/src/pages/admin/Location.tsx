@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import CreateLocationDialog from '@/components/dialogs/CreateLocationDialog';
+import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiVoid } from '@/lib/api';
@@ -41,6 +43,8 @@ export default function AdminLocation() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteLocation = useMutation({
         mutationFn: async (locationId: string) => {
@@ -60,6 +64,7 @@ export default function AdminLocation() {
     });
 
     const locationRows = locationQuery.data ?? [];
+    const deleteTarget = locationRows.find((location) => String(location.id) === deleteTargetId) ?? null;
     const locationColumns = canManage
         ? ([
               ...locationColumnsBase,
@@ -100,20 +105,9 @@ export default function AdminLocation() {
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
-                                          onClick={async () => {
-                                              if (!window.confirm(`Delete location ${location.name}?`)) {
-                                                  return;
-                                              }
-
-                                              try {
-                                                  await deleteLocation.mutateAsync(locationId);
-                                              } catch (mutationError) {
-                                                  toast.error(
-                                                      mutationError instanceof Error
-                                                          ? mutationError.message
-                                                          : 'Failed to delete location'
-                                                  );
-                                              }
+                                          onClick={() => {
+                                              setDeleteTargetId(locationId);
+                                              setDeleteError(null);
                                           }}
                                       >
                                           Delete
@@ -145,6 +139,32 @@ export default function AdminLocation() {
                 data={locationRows}
                 error={locationQuery.error}
                 isLoading={locationQuery.isLoading}
+            />
+            <DeleteConfirmationDialog
+                open={deleteTargetId !== null}
+                title="Delete location"
+                description={deleteTarget ? `Delete ${deleteTarget.name}?` : 'Delete this location?'}
+                error={deleteError}
+                isPending={deleteLocation.isPending}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    }
+                }}
+                onConfirm={async () => {
+                    if (deleteTargetId === null) {
+                        return;
+                    }
+
+                    try {
+                        await deleteLocation.mutateAsync(deleteTargetId);
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    } catch (mutationError) {
+                        setDeleteError(mutationError instanceof Error ? mutationError.message : 'Failed to delete location');
+                    }
+                }}
             />
         </div>
     );

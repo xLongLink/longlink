@@ -26,7 +26,7 @@ async def test_operations_service_tracks_successful_operation_lifecycle() -> Non
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
+    operation = await db.operations.create(OperationKind.application_create, step="verify", application_id=application.id, user=user)
     claimed = await db.operations.claim(operation.id)
     completed = await db.operations.complete(operation.id)
 
@@ -51,7 +51,7 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
+    operation = await db.operations.create(OperationKind.application_create, step="verify", application_id=application.id, user=user)
     claimed = await db.operations.claim(operation.id)
     failed = await db.operations.fail(operation.id, "boom")
 
@@ -75,7 +75,7 @@ async def test_operations_service_defers_active_operation() -> None:
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
+    operation = await db.operations.create(OperationKind.application_create, step="verify", application_id=application.id, user=user)
     claimed = await db.operations.claim(operation.id)
     deferred = await db.operations.defer(operation.id)
 
@@ -97,7 +97,7 @@ async def test_operations_service_resets_active_operations() -> None:
     location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
     application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=user)
+    operation = await db.operations.create(OperationKind.application_create, step="verify", application_id=application.id, user=user)
     await db.operations.claim(operation.id)
 
     # Act

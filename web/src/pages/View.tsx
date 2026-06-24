@@ -2,10 +2,11 @@ import { useApiQuery } from '@/hooks/use-api';
 import XML from '@/layout/XmlLayout';
 import { fetchApiText } from '@/lib/api';
 import { fromXml, RenderXML, resolveUrl } from '@/xml';
+import { buttonVariants } from '@ui/button';
 import { Skeleton } from '@ui/skeleton';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import NotFound from './NotFound';
 
 type ViewProps = {
@@ -18,6 +19,13 @@ type MetadataPage = {
 
 type MetadataResponse = {
     pages?: MetadataPage[];
+};
+
+type ErrorStateProps = {
+    actionHref?: string;
+    actionLabel?: string;
+    message: string;
+    title: string;
 };
 
 /**
@@ -149,7 +157,18 @@ export default function View({ metadata }: ViewProps) {
     }, [activePage?.path, resolvedMetadataBaseUrl]);
 
     if (error) {
-        return <div>{error.message}</div>;
+        return (
+            <XML tabs={tabs}>
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    <ErrorState
+                        actionHref={params.org ? `/orgs/${params.org}` : '/organizations'}
+                        actionLabel={params.org ? 'Back to organization' : 'Back to organizations'}
+                        message={error.message || 'The app definition could not be loaded.'}
+                        title="Unable to load this app"
+                    />
+                </section>
+            </XML>
+        );
     }
 
     if (isNotFound) {
@@ -157,7 +176,18 @@ export default function View({ metadata }: ViewProps) {
     }
 
     if (pageError && pageErrorPath === activePage?.path) {
-        return <div>{pageError}</div>;
+        return (
+            <XML tabs={tabs}>
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    <ErrorState
+                        actionHref={params.org ? `/orgs/${params.org}` : '/organizations'}
+                        actionLabel={params.org ? 'Back to organization' : 'Back to organizations'}
+                        message={pageError || 'This page could not be loaded.'}
+                        title="Unable to load this page"
+                    />
+                </section>
+            </XML>
+        );
     }
 
     if (isLoading || pageLoading || (activePage && pageContentPath !== activePage.path)) {
@@ -177,11 +207,33 @@ export default function View({ metadata }: ViewProps) {
     }
 
     if (!activePage) {
-        return <div>Unexpected response format</div>;
+        return (
+            <XML tabs={tabs}>
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    <ErrorState
+                        actionHref={params.org ? `/orgs/${params.org}` : '/organizations'}
+                        actionLabel={params.org ? 'Back to organization' : 'Back to organizations'}
+                        message="The application did not expose any pages to render."
+                        title="Unexpected app response"
+                    />
+                </section>
+            </XML>
+        );
     }
 
     if (!pageContent) {
-        return <div>Unexpected response format</div>;
+        return (
+            <XML tabs={tabs}>
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    <ErrorState
+                        actionHref={params.org ? `/orgs/${params.org}` : '/organizations'}
+                        actionLabel={params.org ? 'Back to organization' : 'Back to organizations'}
+                        message="The application returned an empty response."
+                        title="Unexpected app response"
+                    />
+                </section>
+            </XML>
+        );
     }
 
     const ast = fromXml(pageContent);
@@ -192,5 +244,25 @@ export default function View({ metadata }: ViewProps) {
                 <RenderXML ast={ast} baseUrl={resolvedMetadataBaseUrl} />
             </section>
         </XML>
+    );
+}
+
+/** Renders a centered in-shell error message for failed app loads. */
+function ErrorState({ actionHref, actionLabel, message, title }: ErrorStateProps) {
+    return (
+        <div className="w-full max-w-xl rounded-2xl border border-border bg-card/80 px-6 py-8 text-center shadow-sm">
+            <div className="space-y-3">
+                <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+                <p className="text-sm leading-6 text-muted-foreground">{message}</p>
+            </div>
+
+            {actionHref && actionLabel ? (
+                <div className="mt-6 flex items-center justify-center gap-3">
+                    <Link to={actionHref} className={buttonVariants()}>
+                        {actionLabel}
+                    </Link>
+                </div>
+            ) : null}
+        </div>
     );
 }

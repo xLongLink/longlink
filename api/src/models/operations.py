@@ -7,8 +7,8 @@ from pydantic import BaseModel, ConfigDict
 class OperationKind(str, Enum):
     """Supported long-running operation types."""
 
-    app_create = "app.create"
-    app_delete = "app.delete"
+    application_create = "application.create"
+    application_delete = "application.delete"
 
 
 class OperationResponse(BaseModel):

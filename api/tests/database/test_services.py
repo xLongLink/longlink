@@ -212,7 +212,7 @@ async def test_operations_service_tracks_claim_complete_and_reset(users: tuple) 
     )
 
     # Act
-    operation = await db.operations.create(OperationKind.app_create, step="verify", application_id=application.id, user=owner)
+    operation = await db.operations.create(OperationKind.application_create, step="verify", application_id=application.id, user=owner)
     claimed = await db.operations.claim(operation.id)
     completed = await db.operations.complete(operation.id)
     await db.operations.reset_active()

@@ -115,8 +115,8 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Organization
     # ------------------------------------------------------------------
-    orgs = client.get("/api/organizations").json()
-    organization = next((org for org in orgs if org["name"] == LOCAL_ORG), None)
+    organizations = client.get("/api/organizations").json()
+    organization = next((organization for organization in organizations if organization["name"] == LOCAL_ORG), None)
     if organization is None:
         r = client.post(
             "/api/organizations",
@@ -127,8 +127,8 @@ def main() -> None:
             },
         )
         if r.status_code == 409:
-            orgs = client.get("/api/organizations").json()
-            organization = next(org for org in orgs if org["name"] == LOCAL_ORG)
+            organizations = client.get("/api/organizations").json()
+            organization = next(organization for organization in organizations if organization["name"] == LOCAL_ORG)
         else:
             r.raise_for_status()
             organization = r.json()
@@ -136,8 +136,8 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Application
     # ------------------------------------------------------------------
-    apps = client.get(f"/api/organizations/{organization['id']}/applications").json()
-    if not any(a["name"] == LOCAL_APP["name"] for a in apps):
+    applications = client.get(f"/api/organizations/{organization['id']}/applications").json()
+    if not any(application["name"] == LOCAL_APP["name"] for application in applications):
         r = client.post(
             f"/api/applications?organization_id={organization['id']}",
             json=LOCAL_APP,

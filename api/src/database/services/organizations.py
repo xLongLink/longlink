@@ -13,13 +13,14 @@ from src.models.locations import LocationResponse
 from src.models.organizations import (OrganizationDetails,
                                       OrganizationMemberSummary,
                                       OrganizationApplicationResponse)
+from src.database.services.applications import applications
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-class OrgsService:
+class OrganizationsService:
     """Manage org records."""
 
     async def list(self) -> list[Organization]:
@@ -39,10 +40,6 @@ class OrgsService:
 
         async with session_scope() as session:
             statement = select(Organization).options(
-                selectinload(Organization.applications).selectinload(Application.organization),
-                selectinload(Organization.applications).selectinload(Application.created_by),
-                selectinload(Organization.applications).selectinload(Application.updated_by),
-                selectinload(Organization.applications).selectinload(Application.deleted_by),
                 selectinload(Organization.created_by),
                 selectinload(Organization.updated_by),
                 selectinload(Organization.deleted_by),
@@ -50,10 +47,10 @@ class OrgsService:
             ).where(Organization.id == organization_id, Organization.deleted_at.is_(None))
             result = await session.execute(statement)
             organization = result.scalar_one_or_none()
-            if organization is not None:
-                applications = [application for application in organization.applications if application.deleted_at is None]
             if organization is None:
                 return None
+
+            active_applications = await applications.list_by_organization(organization.id)
 
             memberships_result = await session.execute(
                 select(User, UserOrganization.role_name, UserOrganization.updated_at)
@@ -86,7 +83,7 @@ class OrgsService:
                 deleted_at=organization.deleted_at,
                 deleted_by=UserSummary.model_validate(organization.deleted_by) if organization.deleted_by is not None else None,
                 users=members,
-                applications=[OrganizationApplicationResponse.model_validate(application) for application in applications],
+                applications=[OrganizationApplicationResponse.model_validate(application) for application in active_applications],
             )
 
     async def create(self, name: str, location_id: UUID, user: User, avatar: str | None = None) -> Organization:
@@ -141,8 +138,8 @@ class OrgsService:
                 membership.deleted_id = deleted_id
                 membership.updated_id = deleted_id
 
-            app_memberships_result = await session.execute(select(UserApplication).where(UserApplication.organization_id == organization_id))
-            for membership in app_memberships_result.scalars().all():
+            application_memberships_result = await session.execute(select(UserApplication).where(UserApplication.organization_id == organization_id))
+            for membership in application_memberships_result.scalars().all():
                 membership.deleted_at = datetime.now(UTC)
                 membership.deleted_id = deleted_id
                 membership.updated_id = deleted_id
@@ -161,4 +158,4 @@ class OrgsService:
             return organization
 
 
-organizations = OrgsService()
+organizations = OrganizationsService()

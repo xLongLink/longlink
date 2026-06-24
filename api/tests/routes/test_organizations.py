@@ -15,16 +15,16 @@ from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.applications import applications as apps
-from src.database.services.organizations import organizations as orgs
+from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 db = SimpleNamespace(
-    apps=apps,
+    applications=applications,
     compute=compute,
     database=database,
     locations=locations,
     operations=operations,
-    orgs=orgs,
+    organizations=organizations,
     storage=storage,
     users=users,
 )
@@ -50,7 +50,7 @@ async def test_create_organization_returns_owner_role(
 
     # Assert
     assert response.status_code == 200
-    organization = await db.orgs.get(UUID(response.json()["id"]))
+    organization = await db.organizations.get(UUID(response.json()["id"]))
     assert organization is not None
     assert response.json() == OrgSummary.model_validate(
         {
@@ -78,8 +78,8 @@ async def test_get_organization_returns_member_payload(
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.orgs.create("acme", location.id, owner, avatar="https://example.com/organizations/acme.png")
-    app = await db.apps.create(
+    organization = await db.organizations.create("acme", location.id, owner, avatar="https://example.com/organizations/acme.png")
+    application = await db.applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -122,18 +122,18 @@ async def test_get_organization_returns_member_payload(
         ],
         applications=[
             {
-                "id": str(app.id),
-                "slug": app.slug,
+                "id": str(application.id),
+                "slug": application.slug,
                 "organization_id": organization.id,
                 "organization": organization.name,
                 "name": "dashboard",
-                "status": app.status,
+                "status": application.status,
                 "version": None,
                 "sdk_version": None,
                 "description": None,
                 "icon": None,
-                "created_at": app.created_at,
-                "updated_at": app.updated_at,
+                "created_at": application.created_at,
+                "updated_at": application.updated_at,
                 "created_by": UserSummary.model_validate(owner.model_dump()),
                 "updated_by": UserSummary.model_validate(owner.model_dump()),
                 "deleted_at": None,
@@ -156,16 +156,16 @@ async def test_get_organization_returns_member_payload(
     }
     assert response.json()["applications"] == [
         {
-            "id": str(app.id),
-            "slug": app.slug,
+            "id": str(application.id),
+            "slug": application.slug,
             "name": "dashboard",
             "status": "creating",
             "version": None,
             "sdk_version": None,
             "description": None,
             "icon": None,
-            "created_at": app.created_at.isoformat().replace("+00:00", "Z"),
-            "updated_at": app.updated_at.isoformat().replace("+00:00", "Z"),
+            "created_at": application.created_at.isoformat().replace("+00:00", "Z"),
+            "updated_at": application.updated_at.isoformat().replace("+00:00", "Z"),
             "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
             "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
             "deleted_at": None,
@@ -183,7 +183,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.orgs.create("acme", location.id, owner)
+    organization = await db.organizations.create("acme", location.id, owner)
     client = clients[0]
 
     # Act
@@ -219,7 +219,7 @@ async def test_get_organization_returns_404_for_non_member(
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.orgs.create("acme", location.id, owner)
+    organization = await db.organizations.create("acme", location.id, owner)
     client = clients[1]
 
     # Act
@@ -250,13 +250,13 @@ async def test_delete_organization_removes_its_apps(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Delete an org and remove all apps registered under it."""
+    """Delete an organization and remove all applications registered under it."""
 
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.orgs.create("acme", location.id, user)
-    await db.apps.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    organization = await db.organizations.create("acme", location.id, user)
+    await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
     client = clients[0]
 
     # Act
@@ -264,7 +264,7 @@ async def test_delete_organization_removes_its_apps(
 
     # Assert
     assert response.status_code == 204
-    assert await db.apps.get(organization.id, "dashboard") is None
+    assert await db.applications.get(organization.id, "dashboard") is None
 
 
 async def test_create_organization_returns_409_for_duplicate_name(
@@ -276,7 +276,7 @@ async def test_create_organization_returns_409_for_duplicate_name(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
-    await db.orgs.create("acme", location.id, user)
+    await db.organizations.create("acme", location.id, user)
     client = clients[0]
 
     # Act

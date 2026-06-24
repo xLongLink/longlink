@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from src.logger import logger
 from src.models.operations import OperationKind
-from src.operations.applications import execute_app_create, execute_app_delete
+from src.operations.applications import execute_application_create, execute_application_delete
 from src.database.models.operation import Operation
 from src.database.services.operations import operations
 
@@ -11,13 +11,13 @@ async def execute(operation: Operation) -> Operation:
 
     try:
         # Dispatch each operation kind to its dedicated executor.
-        if operation.kind == OperationKind.app_create:
-            logger.info("Running app startup verification %s", operation.id)
-            return await execute_app_create(operation)
+        if operation.kind == OperationKind.application_create:
+            logger.info("Running application startup verification %s", operation.id)
+            return await execute_application_create(operation)
 
-        if operation.kind == OperationKind.app_delete:
-            logger.info("Running app deletion %s", operation.id)
-            return await execute_app_delete(operation)
+        if operation.kind == OperationKind.application_delete:
+            logger.info("Running application deletion %s", operation.id)
+            return await execute_application_delete(operation)
 
         raise ValueError(f"Unsupported operation '{operation.kind}'")
     except Exception as exc:

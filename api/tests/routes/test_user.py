@@ -9,16 +9,16 @@ from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
-from src.database.services.applications import applications as apps
-from src.database.services.organizations import organizations as orgs
+from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 db = SimpleNamespace(
-    apps=apps,
+    applications=applications,
     compute=compute,
     database=database,
     locations=locations,
     operations=operations,
-    orgs=orgs,
+    organizations=organizations,
     storage=storage,
     users=users,
 )
@@ -33,7 +33,7 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
-    await db.orgs.create("acme", location.id, user, avatar="https://example.com/organizations/acme.png")
+    await db.organizations.create("acme", location.id, user, avatar="https://example.com/organizations/acme.png")
 
     client = clients[0]
 
@@ -59,7 +59,7 @@ async def test_list_users_returns_admin_user_summaries(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
-    await db.orgs.create("acme", location.id, user)
+    await db.organizations.create("acme", location.id, user)
 
     client = clients[0]
 

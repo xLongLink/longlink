@@ -7,7 +7,7 @@ from src.models.storage import StorageKind
 
 if TYPE_CHECKING:
     from src.database.models.users import User
-    from src.database.models.location import Location
+    from src.database.models.locations import Location
 
 
 class StorageRegistry(SQLModel, table=True):

@@ -2,6 +2,11 @@ import { Auth } from '@/components/Auth';
 import { useOrg } from '@/hooks/use-org';
 import DocsLayout from '@/layout/DocsLayout';
 import Layout from '@/layout/Layout';
+import { DOC_PAGES } from '@/pages/docs/catalog';
+import { LegalLayout } from '@/layout/LegalLayout';
+import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
+import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
+import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
 import { Skeleton } from '@ui/skeleton';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
@@ -20,36 +25,12 @@ import AdminStorage from './pages/admin/Storage';
 import AdminUsers from './pages/admin/Users';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
-import Person from './pages/org/Person';
 import Organization from './pages/Organization';
 import Organizations from './pages/Organizations';
+import Person from './pages/org/Person';
 import Playground from './pages/Playground';
 import Settings from './pages/Settings';
 import View from './pages/View';
-
-import { LegalLayout } from '@/layout/LegalLayout';
-import { content as docsApiContent, metadata as docsApiMetadata } from '@/pages/docs/api/index';
-import { content as docsSelfHostedContent, metadata as docsSelfHostedMetadata } from '@/pages/docs/api/self-hosted';
-import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
-import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
-import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
-import {
-    content as docsSdkEnvironmentsContent,
-    metadata as docsSdkEnvironmentsMetadata,
-} from '@/pages/docs/sdk/environments';
-import { content as docsSdkContent, metadata as docsSdkMetadata } from '@/pages/docs/sdk/index';
-import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
-import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
-import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
-import {
-    content as docsXmlComponentsContent,
-    metadata as docsXmlComponentsMetadata,
-} from '@/pages/docs/xml/components';
-import { content as docsXmlContent, metadata as docsXmlMetadata } from '@/pages/docs/xml/index';
-import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/pages/docs/xml/layout';
-import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
-import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
-import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
 
 /**
  * Builds the route tree for the current bundle mode.
@@ -63,46 +44,10 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        { path: 'docs', element: <DocsLayout content={docsIndexContent} metadata={docsIndexMetadata} /> },
-        { path: 'docs/api', element: <DocsLayout content={docsApiContent} metadata={docsApiMetadata} /> },
-        {
-            path: 'docs/api/self-hosted',
-            element: <DocsLayout content={docsSelfHostedContent} metadata={docsSelfHostedMetadata} />,
-        },
-        { path: 'docs/sdk', element: <DocsLayout content={docsSdkContent} metadata={docsSdkMetadata} /> },
-        {
-            path: 'docs/sdk/building',
-            element: <DocsLayout content={docsSdkBuildingContent} metadata={docsSdkBuildingMetadata} />,
-        },
-        {
-            path: 'docs/sdk/database',
-            element: <DocsLayout content={docsSdkDatabaseContent} metadata={docsSdkDatabaseMetadata} />,
-        },
-        {
-            path: 'docs/sdk/environments',
-            element: <DocsLayout content={docsSdkEnvironmentsContent} metadata={docsSdkEnvironmentsMetadata} />,
-        },
-        {
-            path: 'docs/sdk/routes',
-            element: <DocsLayout content={docsSdkRoutesContent} metadata={docsSdkRoutesMetadata} />,
-        },
-        {
-            path: 'docs/sdk/storage',
-            element: <DocsLayout content={docsSdkStorageContent} metadata={docsSdkStorageMetadata} />,
-        },
-        {
-            path: 'docs/sdk/testing',
-            element: <DocsLayout content={docsSdkTestingContent} metadata={docsSdkTestingMetadata} />,
-        },
-        { path: 'docs/xml', element: <DocsLayout content={docsXmlContent} metadata={docsXmlMetadata} /> },
-        {
-            path: 'docs/xml/components',
-            element: <DocsLayout content={docsXmlComponentsContent} metadata={docsXmlComponentsMetadata} />,
-        },
-        {
-            path: 'docs/xml/layout',
-            element: <DocsLayout content={docsXmlLayoutContent} metadata={docsXmlLayoutMetadata} />,
-        },
+        ...DOC_PAGES.map(({ path, content, metadata }) => ({
+            path: path.replace(/^\//, ''),
+            element: <DocsLayout content={content} metadata={metadata} />,
+        })),
         { path: 'playground', element: <Playground /> },
         {
             path: 'impressum',

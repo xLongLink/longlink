@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
@@ -10,6 +11,7 @@ import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
+import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiVoid } from '@/lib/api';
@@ -123,6 +125,8 @@ export default function AdminOrganization() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteOrganization = useMutation({
         mutationFn: async (orgId: string) => {
@@ -142,6 +146,7 @@ export default function AdminOrganization() {
     });
 
     const organizationRows = organizationsQuery.data ?? [];
+    const deleteTarget = organizationRows.find((organization) => organization.id === deleteTargetId) ?? null;
     const organizationColumns = canManage
         ? ([
               ...organizationColumnsBase,
@@ -181,21 +186,9 @@ export default function AdminOrganization() {
                                       <DropdownMenuItem
                                           className="cursor-pointer"
                                           variant="destructive"
-                                          onClick={async () => {
-                                              // Confirm the destructive action before deleting the organization.
-                                              if (!window.confirm(`Delete organization ${organization.name}?`)) {
-                                                  return;
-                                              }
-
-                                              try {
-                                                  await deleteOrganization.mutateAsync(organization.id);
-                                              } catch (mutationError) {
-                                                  toast.error(
-                                                      mutationError instanceof Error
-                                                          ? mutationError.message
-                                                          : 'Failed to delete organization'
-                                                  );
-                                              }
+                                          onClick={() => {
+                                              setDeleteTargetId(organization.id);
+                                              setDeleteError(null);
                                           }}
                                       >
                                           Delete
@@ -222,6 +215,34 @@ export default function AdminOrganization() {
                 data={organizationRows}
                 error={organizationsQuery.error}
                 isLoading={organizationsQuery.isLoading}
+            />
+            <DeleteConfirmationDialog
+                open={deleteTargetId !== null}
+                title="Delete organization"
+                description={deleteTarget ? `Delete organization ${deleteTarget.name}?` : 'Delete this organization?'}
+                error={deleteError}
+                isPending={deleteOrganization.isPending}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    }
+                }}
+                onConfirm={async () => {
+                    if (deleteTargetId === null) {
+                        return;
+                    }
+
+                    try {
+                        await deleteOrganization.mutateAsync(deleteTargetId);
+                        setDeleteTargetId(null);
+                        setDeleteError(null);
+                    } catch (mutationError) {
+                        setDeleteError(
+                            mutationError instanceof Error ? mutationError.message : 'Failed to delete organization'
+                        );
+                    }
+                }}
             />
         </div>
     );
