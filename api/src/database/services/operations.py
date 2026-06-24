@@ -6,7 +6,7 @@ from sqlalchemy import select, update
 from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.users import User
-from src.database.models.operation import Operation
+from src.database.models.operations import Operation
 
 
 class OperationsService:

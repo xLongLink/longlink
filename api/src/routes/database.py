@@ -3,7 +3,7 @@ from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import NotFoundError
 from src.models.common import SuccessResponse
-from src.models.database import DatabaseUsageResponse, DatabaseRegistryCreate, DatabaseSchemaResponse, DatabaseDatabaseResponse, DatabaseRegistryResponse
+from src.models.databases import DatabaseUsageResponse, DatabaseRegistryCreate, DatabaseSchemaResponse, DatabaseDatabaseResponse, DatabaseRegistryResponse
 from src.database.models.users import User
 from src.adapters.database.postgre import Postgre
 from src.database.services.database import database

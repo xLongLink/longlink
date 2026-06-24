@@ -6,7 +6,7 @@ from src.utils.namespace import k8name
 from src.adapters.compute import K8s
 from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
-from src.database.models.operation import Operation
+from src.database.models.operations import Operation
 from src.database.services.compute import compute
 from src.database.services.operations import operations
 from src.database.services.applications import applications

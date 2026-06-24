@@ -175,12 +175,8 @@ export function useDeleteApplication(organizationSlug: string) {
             await fetchApiVoid(`/api/applications/${applicationId}`, {
                 method: 'DELETE',
             });
-        },
-        onSuccess: (_data, applicationId) => {
-            queryClient.setQueryData<ApiOrganizationDetails>(apiQueryKey(organizationPath), (current) =>
-                current ? { ...current, applications: current.applications.filter((application) => application.id !== applicationId) } : current
-            );
-            queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
+
+            await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
         },
     });
 }

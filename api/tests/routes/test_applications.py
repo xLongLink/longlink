@@ -3,9 +3,9 @@ from types import SimpleNamespace
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
-from src.models.compute import ComputeKind
+from src.models.computes import ComputeKind
 from src.models.applications import ApplicationStatus
-from src.models.database import DatabaseKind
+from src.models.databases import DatabaseKind
 from src.models.metadata import LongLinkMetadata
 from src.database.session import get_session
 from src.models.countries import Country

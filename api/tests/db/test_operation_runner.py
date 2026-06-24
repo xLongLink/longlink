@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 from src.operations import execute
-from src.models.compute import ComputeKind
+from src.models.computes import ComputeKind
 from src.models.countries import Country
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus

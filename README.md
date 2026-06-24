@@ -57,6 +57,8 @@ The result is a faster, clearer, and more maintainable way to build internal app
 - LongLink vs [Retool](https://retool.com/)
 - LongLink vs [Appsmith](https://www.appsmith.com/)
 - LongLink vs [Budibase](https://budibase.com/)
+- LongLink vs [Budibase](https://budibase.com/)
+
 
 ---
 

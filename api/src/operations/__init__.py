@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from src.logger import logger
 from src.models.operations import OperationKind
 from src.operations.applications import execute_application_create, execute_application_delete
-from src.database.models.operation import Operation
+from src.database.models.operations import Operation
 from src.database.services.operations import operations
 
 

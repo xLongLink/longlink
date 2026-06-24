@@ -2,10 +2,10 @@ from types import SimpleNamespace
 from src.models.roles import PlatformRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
-from src.models.compute import ComputeKind, ComputeRegistryResponse
-from src.models.storage import StorageKind, StorageRegistryResponse
-from src.models.database import (DatabaseKind, DatabaseUsageResponse,
-                                 DatabaseRegistryResponse)
+from src.models.computes import ComputeKind, ComputeRegistryResponse
+from src.models.storages import StorageKind, StorageRegistryResponse
+from src.models.databases import (DatabaseKind, DatabaseUsageResponse,
+                                  DatabaseRegistryResponse)
 from src.models.countries import Country
 from src.models.operations import OperationKind, OperationResponse
 from src.database.services.users import users

@@ -3,7 +3,7 @@ from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import NotFoundError
 from src.models.common import SuccessResponse
-from src.models.storage import StorageRegistryCreate, StorageRegistryResponse
+from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.models.users import User
 from src.database.services.storage import storage
 

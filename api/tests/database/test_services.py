@@ -1,11 +1,11 @@
 from types import SimpleNamespace
 
-from src.models.compute import ComputeKind
+from src.models.computes import ComputeKind
 from src.models.countries import Country
-from src.models.database import DatabaseKind
+from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from src.models.roles import OrganizationRoles
-from src.models.storage import StorageKind
+from src.models.storages import StorageKind
 from src.database.services.applications import applications
 from src.database.services.compute import compute
 from src.database.services.database import database

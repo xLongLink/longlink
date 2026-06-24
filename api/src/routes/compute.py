@@ -3,7 +3,7 @@ from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import NotFoundError, UnavailableError
 from src.models.common import SuccessResponse
-from src.models.compute import PodResponse, NamespaceResponse, ComputeRegistryCreate, ComputeRegistryResponse, ComputeResourcesResponse
+from src.models.computes import PodResponse, NamespaceResponse, ComputeRegistryCreate, ComputeRegistryResponse, ComputeResourcesResponse
 from src.adapters.compute import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute

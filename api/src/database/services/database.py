@@ -3,10 +3,10 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.utils.utils import slugify
-from src.models.database import DatabaseKind
+from src.models.databases import DatabaseKind
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.database.models.database import DatabaseRegistry
+from src.database.models.databases import DatabaseRegistry
 
 
 class DatabaseService:

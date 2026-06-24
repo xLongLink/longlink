@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Text, Column
-from src.models.compute import ComputeKind
+from src.models.computes import ComputeKind
 
 if TYPE_CHECKING:
     from src.database.models.users import User
