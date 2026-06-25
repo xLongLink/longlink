@@ -30,7 +30,7 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
                         <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
                         <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                    <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
                         {name}
                     </Link>
                 </div>

@@ -3,8 +3,8 @@ import { useOrganization } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import DocsLayout from '@/layout/DocsLayout';
 import Layout from '@/layout/Layout';
-import { DOC_PAGES } from '@/pages/docs/catalog';
 import { LegalLayout } from '@/layout/LegalLayout';
+import { DOC_PAGES } from '@/pages/docs/catalog';
 import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
 import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
@@ -26,9 +26,9 @@ import AdminStorage from './pages/admin/Storage';
 import AdminUsers from './pages/admin/Users';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
+import Person from './pages/org/Person';
 import Organization from './pages/Organization';
 import Organizations from './pages/Organizations';
-import Person from './pages/org/Person';
 import Playground from './pages/Playground';
 import Settings from './pages/Settings';
 import View from './pages/View';
@@ -140,11 +140,7 @@ function getRoutes() {
         },
         {
             path: '*',
-            element: (
-                <Auth requiredRole="user">
-                    <NotFound />
-                </Auth>
-            ),
+            element: <NotFound />,
         },
     ];
 }
@@ -157,7 +153,9 @@ function OrganizationApplicationView() {
     const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
     const organizationMembership = userOrganizations.find((item) => item.name === organization);
     const canViewLogs =
-        platformRole === 'administrator' || organizationMembership?.role === 'admin' || organizationMembership?.role === 'owner';
+        platformRole === 'administrator' ||
+        organizationMembership?.role === 'admin' ||
+        organizationMembership?.role === 'owner';
 
     if (isLoading) {
         // Keep the app chrome visible while the org payload resolves.

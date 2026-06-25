@@ -1,5 +1,6 @@
 import { useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
+import NotFound from '@/pages/NotFound';
 import type { ReactElement } from 'react';
 import { useLocation } from 'react-router';
 
@@ -31,16 +32,7 @@ export function Auth({ children, requiredRole }: AuthProps) {
     }
 
     if (role !== requiredRole) {
-        return (
-            <div className="flex min-h-[40vh] items-center justify-center px-6 text-center">
-                <div className="space-y-2">
-                    <p className="text-sm font-medium text-foreground">Platform access required.</p>
-                    <p className="text-sm text-muted-foreground">
-                        Your account does not have permission to view this page.
-                    </p>
-                </div>
-            </div>
-        );
+        return <NotFound />;
     }
 
     return children;

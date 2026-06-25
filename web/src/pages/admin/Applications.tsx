@@ -32,7 +32,7 @@ const appColumns: Array<ColumnDef<AdminApplicationResponse>> = [
                     </div>
                     <div className="min-w-0 space-y-1">
                         <Link
-                            to={`/orgs/${app.organization.name}/apps/${app.slug}`}
+                            to={`/orgs/${app.organization.slug}/apps/${app.slug}`}
                             className="font-medium text-foreground hover:underline"
                         >
                             {getValue<string>()}
@@ -56,7 +56,7 @@ const appColumns: Array<ColumnDef<AdminApplicationResponse>> = [
                         <AvatarFallback>{organization.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                        <Link to={`/orgs/${organization.name}`} className="font-medium text-foreground hover:underline">
+                        <Link to={`/orgs/${organization.slug}`} className="font-medium text-foreground hover:underline">
                             {organization.name}
                         </Link>
                         <div className="truncate text-sm text-muted-foreground">

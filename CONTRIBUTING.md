@@ -43,3 +43,5 @@ make web    # Run the web app proxied to the api app
 make api    # Run the control plane
 make down   # Stop services and remove the cluster
 ```
+
+> Note: `make up` the keyclock instance takes a few seconds to boot, therefore is `make api` is called immediatbly after might fail.

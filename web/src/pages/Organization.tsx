@@ -20,7 +20,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const { organization: routeOrganization = '' } = useParams();
     const { pathname } = useLocation();
     const { organizations } = useUser();
-    const organization = routeOrganization || organizations[0]?.name || '';
+    const organization = routeOrganization || organizations[0]?.slug || '';
     const pathSection = pathname.split('/')[3] ?? '';
     const section =
         sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');

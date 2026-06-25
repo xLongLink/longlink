@@ -5,7 +5,7 @@ import { Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
 /**
- * Renders fallback 404 page for unknown routes.
+ * Renders the shared 404 page for unknown or unavailable routes.
  */
 export default function NotFound() {
     const location = useLocation();
@@ -21,7 +21,7 @@ export default function NotFound() {
                         <EmptyTitle>We can&apos;t find that page</EmptyTitle>
                         <EmptyDescription>
                             The page <span className="font-medium text-foreground">{location.pathname}</span>{' '}
-                            doesn&apos;t exist or has moved.
+                            doesn&apos;t exist or isn&apos;t available.
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent>

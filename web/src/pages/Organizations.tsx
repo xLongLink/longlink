@@ -23,7 +23,7 @@ const organizationColumns: Array<ColumnDef<ApiUserOrganizationMembership>> = [
                     <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                    <Link to={`/orgs/${row.original.name}`} className="font-medium text-foreground hover:underline">
+                    <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
                         {getValue<string>()}
                     </Link>
                     <div className="truncate text-sm text-muted-foreground">

@@ -26,6 +26,15 @@ import {
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
+const profileDropdownMenuItemClassName =
+    'cursor-pointer p-2 text-muted-foreground transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground';
+
+const profileDropdownMenuAvatarItemClassName =
+    'cursor-pointer items-center gap-3 p-2 text-muted-foreground transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:[&_p]:text-accent-foreground data-highlighted:[&_svg]:text-accent-foreground';
+
+const profileDropdownMenuDestructiveItemClassName =
+    'cursor-pointer p-2 text-destructive transition-colors data-highlighted:bg-destructive/10 data-highlighted:text-destructive';
+
 /** Renders a user profile dropdown with authentication actions. */
 export function UserProfile() {
     const { user, signOut, switchAccount } = useUser();
@@ -70,7 +79,7 @@ export function UserProfile() {
             <DropdownMenuContent align="end" className="w-64 p-2">
                 <DropdownMenuGroup>
                     <DropdownMenuItem
-                        className="cursor-pointer items-center gap-3 p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                        className={profileDropdownMenuAvatarItemClassName}
                         onClick={() => void handleSwitchAccount()}
                     >
                         <Avatar className="size-9">
@@ -88,14 +97,14 @@ export function UserProfile() {
                 <DropdownMenuGroup>
                     <DropdownMenuItem
                         render={<Link to="/organizations" className="flex w-full items-center gap-2 text-inherit" />}
-                        className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                        className={profileDropdownMenuItemClassName}
                     >
                         <Building2 className="h-4 w-4" />
                         Organizations
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         render={<Link to="/settings" className="flex w-full items-center gap-2 text-inherit" />}
-                        className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                        className={profileDropdownMenuItemClassName}
                     >
                         <Settings2 className="h-4 w-4" />
                         Settings
@@ -109,7 +118,7 @@ export function UserProfile() {
                                 className="flex w-full items-center gap-2 text-inherit"
                             />
                         }
-                        className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                        className={profileDropdownMenuItemClassName}
                     >
                         <BookOpen className="h-4 w-4" />
                         Documentation
@@ -124,7 +133,7 @@ export function UserProfile() {
                                 render={
                                     <Link to="/admin/users" className="flex w-full items-center gap-2 text-inherit" />
                                 }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                                className={profileDropdownMenuItemClassName}
                             >
                                 <Users className="h-4 w-4" />
                                 Users
@@ -136,7 +145,7 @@ export function UserProfile() {
                                         className="flex w-full items-center gap-2 text-inherit"
                                     />
                                 }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                                className={profileDropdownMenuItemClassName}
                             >
                                 <Boxes className="h-4 w-4" />
                                 Applications
@@ -148,7 +157,7 @@ export function UserProfile() {
                                         className="flex w-full items-center gap-2 text-inherit"
                                     />
                                 }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                                className={profileDropdownMenuItemClassName}
                             >
                                 <Building2 className="h-4 w-4" />
                                 Organizations
@@ -160,7 +169,7 @@ export function UserProfile() {
                                         className="flex w-full items-center gap-2 text-inherit"
                                     />
                                 }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                                className={profileDropdownMenuItemClassName}
                             >
                                 <MapPin className="h-4 w-4" />
                                 Locations
@@ -172,7 +181,7 @@ export function UserProfile() {
                                         className="flex w-full items-center gap-2 text-inherit"
                                     />
                                 }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                                className={profileDropdownMenuItemClassName}
                             >
                                 <Database className="h-4 w-4" />
                                 Database
@@ -181,7 +190,7 @@ export function UserProfile() {
                                 render={
                                     <Link to="/admin/storage" className="flex w-full items-center gap-2 text-inherit" />
                                 }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                                className={profileDropdownMenuItemClassName}
                             >
                                 <HardDrive className="h-4 w-4" />
                                 Storage
@@ -190,7 +199,7 @@ export function UserProfile() {
                                 render={
                                     <Link to="/admin/compute" className="flex w-full items-center gap-2 text-inherit" />
                                 }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                                className={profileDropdownMenuItemClassName}
                             >
                                 <Cpu className="h-4 w-4" />
                                 Compute
@@ -202,7 +211,7 @@ export function UserProfile() {
                                         className="flex w-full items-center gap-2 text-inherit"
                                     />
                                 }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                                className={profileDropdownMenuItemClassName}
                             >
                                 <Activity className="h-4 w-4" />
                                 Operations
@@ -211,7 +220,7 @@ export function UserProfile() {
                     </>
                 ) : null}
                 <DropdownMenuItem
-                    className="cursor-pointer p-2 text-destructive transition-colors hover:bg-destructive/10 focus:text-destructive"
+                    className={profileDropdownMenuDestructiveItemClassName}
                     onClick={handleSignOut}
                 >
                     <LogOut className="mr-2 h-4 w-4" />

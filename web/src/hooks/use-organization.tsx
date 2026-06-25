@@ -25,7 +25,7 @@ type UseOrganizationResult = {
 
 /** Resolves one route organization slug to its canonical UUID. */
 export function resolveOrganizationId(organizationSlug: string, organizations: ApiUserOrganizationMembership[]): string {
-    const organization = organizations.find((item) => item.name === organizationSlug);
+    const organization = organizations.find((item) => item.slug === organizationSlug);
     return organization?.id ?? '';
 }
 

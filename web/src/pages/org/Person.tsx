@@ -12,7 +12,7 @@ import NotFound from '../NotFound';
 export default function Person() {
     const { organization: routeOrganization = '', person: personId = '' } = useParams();
     const { organizations } = useUser();
-    const organization = routeOrganization || organizations[0]?.name || '';
+    const organization = routeOrganization || organizations[0]?.slug || '';
     const { organization: organizationDetails, people, isLoading, error } = useOrganization(organization);
     const person = people.find((item) => item.id === personId || item.name === personId);
 

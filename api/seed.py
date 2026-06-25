@@ -11,33 +11,16 @@ LOCAL_APP = {
     "icon": "Rocket",
 }
 
-# Credentials for the Keycloak user that owns the seeded resources.
-# These match the dev realm user defined in dev/keycloak-realm-dev.json.
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin"
 
-
-def _seed_login() -> TestClient:
-    """Authenticate against Keycloak via the API login endpoint.
-
-    Returns an authenticated TestClient whose session cookie is preserved
-    for all subsequent requests.
-    """
-
+def main() -> None:
+    """Seed the control plane database via the public HTTP API."""
     from main import app  # noqa: PLC0415  — late import avoids circular issues
 
     client = TestClient(app)
 
-    r = client.post("/auth/login/password", json={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD})
-    if r.status_code not in {200, 204}:
-        raise RuntimeError(f"Login failed (HTTP {r.status_code}): {r.text}")
-
-    return client
-
-
-def main() -> None:
-    """Seed the control plane database via the public HTTP API."""
-    client = _seed_login()
+    response = client.post("/auth/login/password", json={"username": "admin", "password": "admin"})
+    if response.status_code not in {200, 204}:
+        raise RuntimeError(f"Login failed (HTTP {response.status_code}): {response.text}")
 
     # ------------------------------------------------------------------
     # Location
