@@ -8,24 +8,15 @@ import { useCreateApplication } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import type { ApiImageMetadata } from '@/lib/types';
-import * as LucideIcons from 'lucide-react';
-import { DynamicIcon } from 'lucide-react/dynamic';
+import { DynamicIcon, iconNames } from 'lucide-react/dynamic';
 import { type SyntheticEvent, useState } from 'react';
 
-const ICON_OPTIONS = Object.keys(LucideIcons)
-    .filter((name) => /^[A-Z]/.test(name))
-    .filter((name) => name.endsWith('Icon'))
-    .map((name) =>
-        name
-            .replace(/Icon$/, '')
-            .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-            .toLowerCase()
-    )
-    .filter((name) => name.length > 0)
-    .sort((left, right) => left.localeCompare(right));
+const ICON_OPTIONS = [...iconNames].sort((left, right) => left.localeCompare(right));
 
 const ICON_OPTION_BATCH_SIZE = 80;
 const ICON_OPTION_SCROLL_THRESHOLD = 48;
+
+type IconName = (typeof ICON_OPTIONS)[number];
 
 type CreateApplicationDialogProps = {
     organization: string;
@@ -51,8 +42,8 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
         return null;
     }
 
-    if (icon.length > 0 && !visibleIconOptions.includes(icon)) {
-        visibleIconOptions.push(icon);
+    if (icon.length > 0 && !visibleIconOptions.includes(icon as IconName)) {
+        visibleIconOptions.push(icon as IconName);
     }
 
     /** Reset the dialog state when the flow closes or completes. */
@@ -238,12 +229,12 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                         onValueChange={(value) => setIcon(value === '__none__' ? '' : (value ?? ''))}
                                     >
                                         <SelectTrigger id="application-icon" className="w-full">
-                                            {icon ? (
-                                                <DynamicIcon
-                                                    name={icon as Parameters<typeof DynamicIcon>[0]['name']}
-                                                    className="size-4 text-muted-foreground"
-                                                    aria-hidden="true"
-                                                />
+                                        {icon ? (
+                                            <DynamicIcon
+                                                name={icon as Parameters<typeof DynamicIcon>[0]['name']}
+                                                className="size-4 text-muted-foreground"
+                                                aria-hidden="true"
+                                            />
                                             ) : null}
                                             <SelectValue placeholder="Choose an icon" />
                                         </SelectTrigger>

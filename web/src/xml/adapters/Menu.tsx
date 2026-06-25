@@ -4,7 +4,7 @@ import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { ASTNode, ExecutionContext, Props } from '@xml/types';
 import type { LucideIcon } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 
@@ -77,8 +77,13 @@ function resolveIconComponent(name: string) {
         .replace(/(?:^|[-_\s]+)([a-zA-Z0-9])/g, (_match, char: string) => char.toUpperCase())
         .replace(/[^a-zA-Z0-9]/g, '');
 
-    return (LucideIcons[name as keyof typeof LucideIcons] ??
-        LucideIcons[normalizedName as keyof typeof LucideIcons]) as LucideIcon | null;
+    if (!normalizedName) {
+        return null;
+    }
+
+    return function IconComponent({ className }: { className?: string }) {
+        return <DynamicIcon name={normalizedName as IconName} aria-hidden={true} className={className} />;
+    } as LucideIcon;
 }
 
 /** Renders top-level menu section markers for the UI menu parser. */

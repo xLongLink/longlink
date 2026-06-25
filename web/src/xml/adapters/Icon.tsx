@@ -1,25 +1,25 @@
 import { useXmlContext } from '@xml/core/context';
 import type { Props } from '@xml/types';
-import * as LucideIcons from 'lucide-react';
 import * as React from 'react';
+import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 import { resolveXmlString } from './props';
-
-type LucideIconComponent = React.ComponentType<{
-    'aria-hidden'?: boolean;
-    className?: string;
-}>;
 
 /** Props accepted by the XML Icon component. */
 
 /** Resolves a Lucide icon component from an XML icon name. */
-function resolveIconComponent(name: string): LucideIconComponent | null {
+function resolveIconComponent(name: string) {
     const normalizedName = name
         .trim()
         .replace(/(?:^|[-_\s]+)([a-zA-Z0-9])/g, (_match, char: string) => char.toUpperCase())
         .replace(/[^a-zA-Z0-9]/g, '');
 
-    return (LucideIcons[name as keyof typeof LucideIcons] ??
-        LucideIcons[normalizedName as keyof typeof LucideIcons]) as LucideIconComponent | null;
+    if (!normalizedName) {
+        return null;
+    }
+
+    return function IconComponent({ className }: { className?: string }) {
+        return <DynamicIcon name={normalizedName as IconName} aria-hidden={true} className={className} />;
+    };
 }
 
 /** Renders a Lucide icon by XML name. */

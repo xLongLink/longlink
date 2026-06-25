@@ -1,19 +1,6 @@
-import { type ReactNode } from 'react';
-import { Blocks, BookOpen, Database, FileCode2, FlaskConical, Globe, HardDrive, LayoutTemplate, Rocket, ServerCog, ShieldCheck, Waypoints } from 'lucide-react';
+import type { ReactNode } from 'react';
 
-import { content as docsApiContent, metadata as docsApiMetadata } from '@/pages/docs/api/index';
-import { content as docsSelfHostedContent, metadata as docsSelfHostedMetadata } from '@/pages/docs/api/self-hosted';
-import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
-import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
-import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
-import { content as docsSdkEnvironmentsContent, metadata as docsSdkEnvironmentsMetadata } from '@/pages/docs/sdk/environments';
-import { content as docsSdkContent, metadata as docsSdkMetadata } from '@/pages/docs/sdk/index';
-import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
-import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
-import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
-import { content as docsXmlComponentsContent, metadata as docsXmlComponentsMetadata } from '@/pages/docs/xml/components';
-import { content as docsXmlContent, metadata as docsXmlMetadata } from '@/pages/docs/xml/index';
-import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/pages/docs/xml/layout';
+import { Blocks, BookOpen, Database, FileCode2, FlaskConical, Globe, HardDrive, LayoutTemplate, Rocket, ServerCog, ShieldCheck, Waypoints } from 'lucide-react';
 
 type DocMetadata = {
     lastUpdated?: string;
@@ -27,27 +14,27 @@ export type DocItem = {
     icon: typeof BookOpen;
 };
 
-type DocGroupTitle = 'Overview' | 'Control Plane' | 'Application SDK' | 'XML Pages';
-
-type DocPage = {
-    group: DocGroupTitle;
-    title: string;
-    path: string;
-    id: string;
-    icon: typeof BookOpen;
-    content: ReactNode;
-    metadata: DocMetadata;
+export type DocPage = DocItem & {
+    loadContent: () => Promise<{
+        content: ReactNode;
+        metadata: DocMetadata;
+    }>;
 };
 
-export const DOC_PAGES: DocPage[] = [
+type DocGroupTitle = 'Overview' | 'Control Plane' | 'Application SDK' | 'XML Pages';
+
+export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
     {
         group: 'Overview',
         title: 'Introduction',
         path: '/docs',
         id: 'introduction',
         icon: BookOpen,
-        content: docsIndexContent,
-        metadata: docsIndexMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/index');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Control Plane',
@@ -55,8 +42,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/api',
         id: 'control-plane-overview',
         icon: ShieldCheck,
-        content: docsApiContent,
-        metadata: docsApiMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/api/index');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Control Plane',
@@ -64,8 +54,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/api/self-hosted',
         id: 'self-hosted',
         icon: ServerCog,
-        content: docsSelfHostedContent,
-        metadata: docsSelfHostedMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/api/self-hosted');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Application SDK',
@@ -73,8 +66,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/sdk',
         id: 'sdk-overview',
         icon: Blocks,
-        content: docsSdkContent,
-        metadata: docsSdkMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/sdk/index');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Application SDK',
@@ -82,8 +78,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/sdk/environments',
         id: 'environments',
         icon: Globe,
-        content: docsSdkEnvironmentsContent,
-        metadata: docsSdkEnvironmentsMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/sdk/environments');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Application SDK',
@@ -91,8 +90,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/sdk/routes',
         id: 'routes',
         icon: Waypoints,
-        content: docsSdkRoutesContent,
-        metadata: docsSdkRoutesMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/sdk/routes');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Application SDK',
@@ -100,8 +102,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/sdk/storage',
         id: 'storage',
         icon: HardDrive,
-        content: docsSdkStorageContent,
-        metadata: docsSdkStorageMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/sdk/storage');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Application SDK',
@@ -109,8 +114,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/sdk/database',
         id: 'database',
         icon: Database,
-        content: docsSdkDatabaseContent,
-        metadata: docsSdkDatabaseMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/sdk/database');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Application SDK',
@@ -118,8 +126,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/sdk/testing',
         id: 'testing',
         icon: FlaskConical,
-        content: docsSdkTestingContent,
-        metadata: docsSdkTestingMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/sdk/testing');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'Application SDK',
@@ -127,8 +138,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/sdk/building',
         id: 'building',
         icon: Rocket,
-        content: docsSdkBuildingContent,
-        metadata: docsSdkBuildingMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/sdk/building');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'XML Pages',
@@ -136,8 +150,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/xml',
         id: 'xml-overview',
         icon: FileCode2,
-        content: docsXmlContent,
-        metadata: docsXmlMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/xml/index');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'XML Pages',
@@ -145,8 +162,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/xml/layout',
         id: 'layout',
         icon: LayoutTemplate,
-        content: docsXmlLayoutContent,
-        metadata: docsXmlLayoutMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/xml/layout');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
     {
         group: 'XML Pages',
@@ -154,8 +174,11 @@ export const DOC_PAGES: DocPage[] = [
         path: '/docs/xml/components',
         id: 'components',
         icon: Blocks,
-        content: docsXmlComponentsContent,
-        metadata: docsXmlComponentsMetadata,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/xml/components');
+
+            return { content: module.content, metadata: module.metadata };
+        },
     },
 ];
 
@@ -163,5 +186,5 @@ const DOC_GROUP_ORDER: DocGroupTitle[] = ['Overview', 'Control Plane', 'Applicat
 
 export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: DocItem[] }> = DOC_GROUP_ORDER.map((title) => ({
     title,
-    items: DOC_PAGES.filter((page) => page.group === title).map(({ group: _group, content: _content, metadata: _metadata, ...item }) => item),
+    items: DOC_PAGES.filter((page) => page.group === title).map(({ group: _group, loadContent: _loadContent, ...item }) => item),
 }));

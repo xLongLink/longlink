@@ -1,5 +1,5 @@
-import * as LucideIcons from 'lucide-react';
 import * as React from 'react';
+import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 
 import { cn } from '@/lib/utils';
 
@@ -19,14 +19,10 @@ function Hero({ className, icon, children, ...props }: HeroProps) {
             .trim()
             .replace(/(?:^|[-_\s]+)([a-zA-Z0-9])/g, (_, char: string) => char.toUpperCase())
             .replace(/[^a-zA-Z0-9]/g, '');
-        const Icon = (LucideIcons[icon as keyof typeof LucideIcons] ??
-            LucideIcons[normalizedIcon as keyof typeof LucideIcons]) as React.ComponentType<{
-            'aria-hidden'?: boolean;
-            className?: string;
-            strokeWidth?: number;
-        }> | null;
 
-        iconNode = Icon ? <Icon aria-hidden={true} className="size-5" strokeWidth={2.5} /> : null;
+        iconNode = normalizedIcon ? (
+            <DynamicIcon name={normalizedIcon as IconName} aria-hidden={true} className="size-5" strokeWidth={2.5} />
+        ) : null;
     } else {
         iconNode = icon;
     }
