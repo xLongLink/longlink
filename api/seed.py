@@ -29,7 +29,7 @@ def _seed_login() -> TestClient:
     client = TestClient(app)
 
     r = client.post("/auth/login/password", json={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD})
-    if r.status_code != 200:
+    if r.status_code not in {200, 204}:
         raise RuntimeError(f"Login failed (HTTP {r.status_code}): {r.text}")
 
     return client

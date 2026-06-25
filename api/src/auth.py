@@ -19,10 +19,67 @@ oauth.register(
 )
 
 
+class SessionAccountsService:
+    """Manage saved session accounts for one request."""
+
+    def __init__(self, request: Request):
+        """Store the request that carries the session state."""
+
+        self.request = request
+
+    def active(self) -> str | None:
+        """Return the current active OIDC subject from the session."""
+
+        active_account = self.request.session.get("oidc")
+        if isinstance(active_account, str):
+            return active_account
+
+        return None
+
+    def list(self) -> list[str]:
+        """Return the saved OIDC accounts from the session."""
+
+        accounts = self.request.session.get("oidc_accounts", [])
+        return accounts if isinstance(accounts, list) else []
+
+
+    def activate(self, oidc: str) -> None:
+        """Store an OIDC subject and make it the active account."""
+
+        accounts = self.list()
+
+        # Keep one ordered list of saved accounts with the active account at the end.
+        if oidc in accounts:
+            accounts.remove(oidc)
+
+        accounts.append(oidc)
+        self.request.session["oidc_accounts"] = accounts
+        self.request.session["oidc"] = oidc
+
+
+    def remove(self) -> None:
+        """Remove the active account from the session and saved accounts."""
+
+        active_account = self.active()
+        accounts = self.list()
+
+        if active_account in accounts:
+            accounts.remove(active_account)
+            self.request.session["oidc_accounts"] = accounts
+
+        self.request.session.pop("oidc", None)
+
+
+    def deactivate(self) -> None:
+        """Clear the active account while keeping the saved account list."""
+
+        self.request.session.pop("oidc", None)
+
+
 async def authuser(request: Request) -> User:
     """Authenticate a user from session and return the User object."""
 
-    oidc = request.session.get("oidc")
+    oidc = SessionAccountsService(request).active()
     if oidc is None:
         raise UnauthorizedError("Not authenticated")
 

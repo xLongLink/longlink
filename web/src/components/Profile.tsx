@@ -5,7 +5,6 @@ import {
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@ui/dropdown-menu';
@@ -13,6 +12,7 @@ import {
     Activity,
     BookOpen,
     Boxes,
+    ArrowRightLeft,
     Building2,
     Cpu,
     Database,
@@ -23,12 +23,12 @@ import {
     Settings2,
     Users,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
+import { toast } from 'sonner';
 
 /** Renders a user profile dropdown with authentication actions. */
 export function UserProfile() {
-    const navigate = useNavigate();
-    const { user, signOut } = useUser();
+    const { user, signOut, switchAccount } = useUser();
 
     if (!user) {
         return null;
@@ -38,12 +38,25 @@ export function UserProfile() {
     const fullName = user.email;
     const avatarUrl = user.avatar;
     const isPrivileged = user.role !== 'user';
+
     /**
      * Signs the current user out and redirects to home.
      */
     const handleSignOut = async () => {
-        await signOut();
-        navigate('/');
+        try {
+            await signOut();
+        } catch {
+            toast.error('Failed to sign out');
+        }
+    };
+
+    /** Clears the active user so another account can be selected. */
+    const handleSwitchAccount = async () => {
+        try {
+            await switchAccount();
+        } catch {
+            toast.error('Failed to switch account');
+        }
     };
 
     return (
@@ -56,18 +69,20 @@ export function UserProfile() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 p-2">
                 <DropdownMenuGroup>
-                    <DropdownMenuLabel className="flex items-center gap-2">
+                    <DropdownMenuItem
+                        className="cursor-pointer items-center gap-3 p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:backdrop-blur-sm hover:text-accent-foreground dark:hover:text-white focus:bg-accent/10 focus:backdrop-blur-sm focus:text-accent-foreground dark:focus:text-white"
+                        onClick={() => void handleSwitchAccount()}
+                    >
                         <Avatar className="size-9">
                             <AvatarImage src={avatarUrl} alt={`${username} profile`} />
                             <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <p className="text-sm font-semibold text-foreground">{username}</p>
-                            </div>
-                            <p className="text-xs text-muted-foreground">{fullName}</p>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-foreground">{username}</p>
+                            <p className="truncate text-xs text-muted-foreground">{fullName}</p>
                         </div>
-                    </DropdownMenuLabel>
+                        <ArrowRightLeft className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+                    </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuGroup>
@@ -195,7 +210,6 @@ export function UserProfile() {
                         </DropdownMenuGroup>
                     </>
                 ) : null}
-                <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem
                     className="cursor-pointer p-2 text-destructive transition-colors hover:bg-destructive/10 focus:text-destructive"
                     onClick={handleSignOut}

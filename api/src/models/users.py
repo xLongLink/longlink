@@ -132,10 +132,13 @@ class UserListItem(UserSummary):
 class UserProfile(UserSummary):
     """Represent the authenticated user payload returned by the API."""
 
+    # Preferences
     theme: Theme
     accent: Accent
     radius: Radius
     language: Language
+
+    # Identity
     oidc: str
 
     # Relationships

@@ -10,8 +10,7 @@ import { fetchApiJson } from '@/lib/api';
 import type { ApiImageMetadata } from '@/lib/types';
 import * as LucideIcons from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
-import type { FormEvent, UIEvent } from 'react';
-import { useState } from 'react';
+import { type SyntheticEvent, useState } from 'react';
 
 const ICON_OPTIONS = Object.keys(LucideIcons)
     .filter((name) => /^[A-Z]/.test(name))
@@ -70,7 +69,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     }
 
     /** Load more icon choices as the icon select scroll reaches the bottom. */
-    function handleIconOptionsScroll(event: UIEvent<HTMLElement>) {
+    function handleIconOptionsScroll(event: React.UIEvent<HTMLElement>) {
         const target = event.currentTarget;
 
         if (target.scrollTop + target.clientHeight < target.scrollHeight - ICON_OPTION_SCROLL_THRESHOLD) {
@@ -81,7 +80,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     }
 
     /** Inspect the image and advance to the app details step. */
-    async function handleInspectImage(event: FormEvent<HTMLFormElement>) {
+    async function handleInspectImage(event: SyntheticEvent<HTMLFormElement>) {
         event.preventDefault();
         setError(null);
         setIsInspecting(true);
@@ -103,7 +102,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     }
 
     /** Create the app after the image metadata has been reviewed. */
-    async function handleCreateApp(event: FormEvent<HTMLFormElement>) {
+    async function handleCreateApp(event: SyntheticEvent<HTMLFormElement>) {
         event.preventDefault();
         setError(null);
 

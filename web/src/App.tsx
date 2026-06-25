@@ -66,7 +66,7 @@ function getRoutes() {
         {
             path: 'settings',
             element: (
-                <Auth>
+                <Auth requiredRole="user">
                     <Settings />
                 </Auth>
             ),
@@ -93,7 +93,7 @@ function getRoutes() {
         {
             path: 'orgs/:organization',
             element: (
-                <Auth>
+                <Auth requiredRole="user">
                     <Organization />
                 </Auth>
             ),
@@ -101,7 +101,7 @@ function getRoutes() {
         {
             path: 'orgs/:organization/applications',
             element: (
-                <Auth>
+                <Auth requiredRole="user">
                     <Organization sectionName="applications" />
                 </Auth>
             ),
@@ -109,7 +109,7 @@ function getRoutes() {
         {
             path: 'orgs/:organization/people',
             element: (
-                <Auth>
+                <Auth requiredRole="user">
                     <Organization sectionName="people" />
                 </Auth>
             ),
@@ -117,7 +117,7 @@ function getRoutes() {
         {
             path: 'orgs/:organization/people/:person',
             element: (
-                <Auth>
+                <Auth requiredRole="user">
                     <Person />
                 </Auth>
             ),
@@ -125,7 +125,7 @@ function getRoutes() {
         {
             path: 'orgs/:organization/settings',
             element: (
-                <Auth>
+                <Auth requiredRole="user">
                     <Organization sectionName="settings" />
                 </Auth>
             ),
@@ -133,7 +133,7 @@ function getRoutes() {
         {
             path: 'orgs/:organization/apps/:application/*',
             element: (
-                <Auth>
+                <Auth requiredRole="user">
                     <OrganizationApplicationView />
                 </Auth>
             ),
@@ -141,7 +141,7 @@ function getRoutes() {
         {
             path: '*',
             element: (
-                <Auth>
+                <Auth requiredRole="user">
                     <NotFound />
                 </Auth>
             ),

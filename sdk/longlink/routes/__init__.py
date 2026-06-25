@@ -1,5 +1,5 @@
-from longlink.router import Router
+from longlink.routes.metadata import router as metadata_router
 
-router = Router()
-
-import longlink.routes.metadata
+routes = [
+    metadata_router,
+]

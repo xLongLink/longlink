@@ -79,7 +79,7 @@ wheels = [
 
 [[package]]
 name = "fastapi"
-version = "0.136.3"
+version = "0.138.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
@@ -88,9 +88,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/81/2d/ff8d91d7b564d464629a0fd50a4489c97fcb836ac230bf3a7269232a9b1f/fastapi-0.136.3.tar.gz", hash = "sha256:e487fae93ad408e6f47641ee4dfe389864fd7bec92e547ea8498fc13f43e83ab", size = 396410, upload-time = "2026-05-23T18:53:15.192Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5b/58/ff455d9fe47c60abadb34b9e05a304b1f05f5ab8000ac01565156b6f5e43/fastapi-0.138.0.tar.gz", hash = "sha256:d445a4877636ad191e7053e08c9bf98cb921a6756776848400bb773d1740c061", size = 419240, upload-time = "2026-06-20T01:18:05.259Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e0/82/45359b62a067409bd929ae8a56b8ed13e5a8c8a61194b3c236920999ab83/fastapi-0.136.3-py3-none-any.whl", hash = "sha256:3d2a69bdf04b7e9f3afa292c3bc7a98816bbfafa10bc9b45f3f3700d2f761620", size = 117481, upload-time = "2026-05-23T18:53:16.924Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/ff/8496d9847a5fedae775eb49460722d3efaa80487854273e9647ae876218c/fastapi-0.138.0-py3-none-any.whl", hash = "sha256:b6f54fd1bd72c80b0f899f172c61a600f6f7af9b43d4d772a018f35624048cb0", size = 126779, upload-time = "2026-06-20T01:18:03.483Z" },
 ]
 
 [[package]]
@@ -195,8 +195,7 @@ wheels = [
 
 [[package]]
 name = "longlink"
-version = "0.1.30"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "../../../" }
 dependencies = [
     { name = "aiosqlite" },
     { name = "alembic" },
@@ -210,9 +209,37 @@ dependencies = [
     { name = "uvicorn" },
     { name = "xmltodict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/a0/3c90723a69297c9a31bca122a262aa36360631c80e2cfc3ba68274da9670/longlink-0.1.30.tar.gz", hash = "sha256:f6b46b8209980c7e606b46ddb1a1cd79ba730290b723b049dd1650edd6221630", size = 1163835, upload-time = "2026-06-10T09:47:17.334Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/8b/af1a6ec3a0ae673f689e23a1a42016d8e4a14a3286b9ae2bbf0767a7c65d/longlink-0.1.30-py3-none-any.whl", hash = "sha256:981cd20ea262b54e1b5812aac9c5c9e33503eece0a9284b5332aea40398195a0", size = 1162077, upload-time = "2026-06-10T09:47:18.719Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "aiosqlite" },
+    { name = "alembic" },
+    { name = "click" },
+    { name = "click", marker = "extra == 'cli'" },
+    { name = "fastapi", specifier = ">=0.138.0" },
+    { name = "fsspec" },
+    { name = "httpx2", marker = "extra == 'dev'" },
+    { name = "isort", marker = "extra == 'dev'" },
+    { name = "lxml" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "pytest", marker = "extra == 'dev'" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'" },
+    { name = "pytest-mock", marker = "extra == 'dev'" },
+    { name = "rich", marker = "extra == 'cli'" },
+    { name = "sqlmodel" },
+    { name = "uvicorn" },
+    { name = "xmltodict" },
+]
+provides-extras = ["cli", "dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "httpx2" },
+    { name = "isort" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-mock" },
 ]
 
 [[package]]
@@ -231,7 +258,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "longlink" }]
+requires-dist = [{ name = "longlink", editable = "../../../" }]
 
 [package.metadata.requires-dev]
 dev = [

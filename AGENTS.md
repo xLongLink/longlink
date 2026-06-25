@@ -27,3 +27,5 @@ longlink/
 - Pydantic models must group fields by commented sections, and fields inside each section must be ordered from shortest name to longest name.
 - Use long domain names in code and filenames (`organization`, `application`, `locations`) instead of abbreviations like `org` or `app`.
 - Keep related model module names plural and consistent across the API and database layers (for example `applications.py`, `databases.py`, `computes.py`, `storages.py`, `operations.py`).
+
+VERY IMPORTANT: MVP Mode. there is no need for backward compability, or legacy fallback. If you find any remove those

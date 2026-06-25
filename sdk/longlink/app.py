@@ -2,9 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic_settings import BaseSettings
 
-from longlink.constants import ROOT
 from longlink.database.audit import install_audit_middleware
-from longlink.routes import router
+from longlink.routes import routes
 from longlink.utils import Envs
 
 
@@ -17,12 +16,8 @@ class LongLink(FastAPI):
 
         environments = env if isinstance(env, Envs) else Envs()
 
-        self.include_router(router)
-
-        # Serve packaged frontend files after API routes so app paths still win.
-        static_dir = ROOT / ".static" / "web"
-        if static_dir.exists():
-            self.frontend("/", directory=str(static_dir))
+        for router in routes:
+            self.include_router(router)
 
         install_audit_middleware(self)
 

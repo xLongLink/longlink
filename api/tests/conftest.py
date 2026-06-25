@@ -53,10 +53,14 @@ async def reset_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncIter
         await engine.dispose()
 
 
-def session_cookie(oidc: str) -> dict[str, str]:
+def session_cookie(oidc: str, accounts: list[str] | None = None) -> dict[str, str]:
     """Build a signed session cookie for the given OIDC subject."""
 
-    payload = b64encode(json.dumps({"oidc": oidc}).encode("utf-8"))
+    saved_accounts = accounts[:] if accounts is not None else [oidc]
+    if oidc not in saved_accounts:
+        saved_accounts.append(oidc)
+
+    payload = b64encode(json.dumps({"oidc": oidc, "oidc_accounts": saved_accounts}).encode("utf-8"))
     signed = TimestampSigner(str(env.SESSION_KEY)).sign(payload).decode("utf-8")
     return {SESSION_COOKIE: signed}
 
