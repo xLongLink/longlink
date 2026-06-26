@@ -11,9 +11,11 @@ import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useApiQuery } from '@/hooks/use-api';
+import { useComputes } from '@/hooks/use-computes';
+import { useLocations } from '@/hooks/use-locations';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { computeResourcesQueryKey, computesQueryKey } from '@/lib/query-keys';
 import type { ApiComputeRegistry, ApiComputeResources, ApiLocation } from '@/lib/types';
 
 function formatBytes(bytes: number): string {
@@ -120,37 +122,29 @@ export default function AdminCompute() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/computes') });
+            await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
             toast.success('Compute deleted');
         },
     });
 
-    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/computes', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
-        retry: false,
-    });
-
-    const computeList = computeQuery.data ?? [];
+    const { items: computes, error: computesError, isLoading: computesIsLoading } = useComputes();
+    const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
     const resourcesQueries = useQueries({
-        queries: computeList.map((c) => ({
-            queryKey: apiQueryKey(`/api/computes/${c.id}/resources`),
+        queries: computes.map((c) => ({
+            queryKey: computeResourcesQueryKey(c.id),
             queryFn: async () => fetchApiJson<ApiComputeResources>(`/api/computes/${c.id}/resources`),
             retry: false,
         })),
     });
 
     const resourcesById = new Map<string, ApiComputeResources>();
-    computeList.forEach((c, i) => {
+    computes.forEach((c, i) => {
         const data = resourcesQueries[i]?.data;
         if (data) resourcesById.set(c.id, data);
     });
 
-    const locationById = new Map(locationsQuery.data?.map((l) => [l.id, l]));
-    const computeRows = computeList.map((row) => ({
+    const locationById = new Map(locations.map((l) => [l.id, l]));
+    const computeRows = computes.map((row) => ({
         ...row,
         location: locationById.get(row.location_id),
         resources: resourcesById.get(row.id),
@@ -231,8 +225,8 @@ export default function AdminCompute() {
             <DataTable
                 columns={computeColumns}
                 data={computeRows}
-                error={computeQuery.error}
-                isLoading={computeQuery.isLoading}
+                error={computesError ?? locationsError}
+                isLoading={computesIsLoading || locationsIsLoading}
             />
             <DeleteConfirmationDialog
                 open={deleteTargetId !== null}

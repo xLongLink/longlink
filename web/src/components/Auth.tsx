@@ -9,10 +9,10 @@ import type { PlatformRole } from '@/lib/roles';
 
 type AuthProps = {
     children: ReactElement;
-    requiredRole: PlatformRole;
+    requiredRole?: PlatformRole;
 };
 
-/** Protects routes and requires a platform role. */
+/** Protects routes and optionally requires a platform role. */
 export function Auth({ children, requiredRole }: AuthProps) {
     const { user, role, isLoading } = useUser();
     const location = useLocation();
@@ -31,7 +31,7 @@ export function Auth({ children, requiredRole }: AuthProps) {
         );
     }
 
-    if (role !== requiredRole) {
+    if (requiredRole && role !== requiredRole) {
         return <NotFound />;
     }
 

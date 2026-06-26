@@ -37,7 +37,7 @@ export function Navbar() {
                                 to="/docs"
                                 className="whitespace-nowrap text-card-foreground/70 transition-colors hover:text-card-foreground"
                             >
-                                Docs
+                                Documentation
                             </Link>
                         </li>
                         <li className="font-medium transition-colors hover:text-accent">

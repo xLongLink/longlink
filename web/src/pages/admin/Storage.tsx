@@ -11,9 +11,10 @@ import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useApiQuery } from '@/hooks/use-api';
+import { useStorages } from '@/hooks/use-storages';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiVoid } from '@/lib/api';
+import { fetchApiVoid } from '@/lib/api';
+import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
 
 const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry>> = [
@@ -54,17 +55,13 @@ export default function AdminStorage() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/storages') });
+            await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
             toast.success('Storage deleted');
         },
     });
 
-    const storageQuery = useApiQuery<Array<ApiStorageRegistry>>('/api/storages', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const storageRows = storageQuery.data ?? [];
+    const { items: storages, error, isLoading } = useStorages();
+    const storageRows = storages;
     const deleteTarget = storageRows.find((storage) => storage.id === deleteTargetId) ?? null;
     const storageColumns = canManage
         ? ([
@@ -137,8 +134,8 @@ export default function AdminStorage() {
             <DataTable
                 columns={storageColumns}
                 data={storageRows}
-                error={storageQuery.error}
-                isLoading={storageQuery.isLoading}
+                error={error}
+                isLoading={isLoading}
             />
             <DeleteConfirmationDialog
                 open={deleteTargetId !== null}

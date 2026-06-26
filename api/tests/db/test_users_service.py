@@ -93,6 +93,7 @@ async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None
         UserOrganizationMembership(
             id=organization.id,
             name="test",
+            slug=organization.slug,
             avatar="https://example.com/organizations/test.png",
             location=LocationResponse.model_validate(location),
             role=OrganizationRoles.owner,

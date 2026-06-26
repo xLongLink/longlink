@@ -1,12 +1,12 @@
 from uuid import UUID
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, Response
 from src.auth import authuser, authsupport, organization_access
 from src.errors import ConflictError, NotFoundError
 from src.logger import logger
 from src.models.common import SuccessResponse
 from src.adapters.compute.k8s import K8s
 from src.models.applications import ApplicationResponse
-from src.models.organizations import OrganizationCreate, OrganizationDetails, OrganizationSummary
+from src.models.organizations import OrganizationCreate, OrganizationDetails, OrganizationInvitationCreate, OrganizationSummary
 from src.database.models.users import User
 from src.database.services.compute import compute
 from src.database.services.applications import applications
@@ -36,6 +36,18 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
 
     await organization_access(organization_id, user)
     return await applications.list_responses(organization_id, user.id, user)
+
+
+@router.post("/api/organizations/{organization_id}/invitations", status_code=204)
+async def create_organization_invitation(
+    organization_id: UUID,
+    payload: OrganizationInvitationCreate,
+    user: User = Depends(authuser),
+) -> Response:
+    """Accept an organization invitation request."""
+
+    await organization_access(organization_id, user)
+    return Response(status_code=204)
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary)

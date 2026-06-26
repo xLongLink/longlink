@@ -4,20 +4,17 @@ import { Layers } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useApiQuery } from '@/hooks/use-api';
-import type { ApiComputeNamespace, ApiComputeRegistry } from '@/lib/types';
+import { useComputeNamespaces } from '@/hooks/use-compute-namespaces';
+import { useComputes } from '@/hooks/use-computes';
+import type { ApiComputeNamespace } from '@/lib/types';
 
 /** Renders namespaces for a compute backend. */
 export default function ComputeNamespaces() {
     const { compute = '' } = useParams();
 
-    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/computes', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
+    const { items: computes, error: computeError, isLoading: computesIsLoading } = useComputes();
 
-    const computeRegistry = computeQuery.data?.find((registry) => registry.slug === compute || registry.id === compute);
-    const namespacesPath = computeRegistry ? `/api/computes/${computeRegistry.id}/namespaces` : null;
+    const computeRegistry = computes.find((registry) => registry.slug === compute);
 
     const namespaceColumns: Array<ColumnDef<ApiComputeNamespace>> = [
         {
@@ -35,17 +32,14 @@ export default function ComputeNamespaces() {
         },
     ];
 
-    const namespacesQuery = useApiQuery<Array<ApiComputeNamespace>>(namespacesPath, {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const rows = namespacesQuery.data ?? [];
+    const { items: rows, error: namespacesError, isLoading: namespacesIsLoading } = useComputeNamespaces(
+        computeRegistry?.id ?? ''
+    );
     const error =
-        computeQuery.error ??
-        (!computeQuery.isLoading && !computeRegistry
+        computeError ??
+        (!computesIsLoading && !computeRegistry
             ? new Error(`Compute "${compute}" not found`)
-            : namespacesQuery.error);
+            : namespacesError);
 
     return (
         <div className="space-y-6">
@@ -63,7 +57,7 @@ export default function ComputeNamespaces() {
                 columns={namespaceColumns}
                 data={rows}
                 error={error}
-                isLoading={computeQuery.isLoading || namespacesQuery.isLoading}
+                isLoading={computesIsLoading || namespacesIsLoading}
                 loadingLabel="Loading namespaces..."
             />
         </div>

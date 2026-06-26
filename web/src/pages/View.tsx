@@ -1,4 +1,4 @@
-import { useApiQuery } from '@/hooks/use-api';
+import { useMetadata } from '@/hooks/use-metadata';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
 import type { ApiOrganizationApplication } from '@/lib/types';
@@ -17,14 +17,6 @@ type ViewProps = {
     applicationStatus?: ApiOrganizationApplication['status'];
     canViewLogs?: boolean;
     metadata: string;
-};
-
-type MetadataPage = {
-    path: string;
-};
-
-type MetadataResponse = {
-    pages?: MetadataPage[];
 };
 
 type ErrorStateProps = {
@@ -85,14 +77,7 @@ export default function View({
     const resolvedMetadata = resolveTemplate(metadata, routeParams);
     const resolvedMetadataBaseUrl = resolvedMetadata.replace(/metadata\.json(?:[?#].*)?$/i, '');
     const applicationIsLoading = applicationStatus !== undefined && applicationStatus !== 'running';
-    const {
-        data: metadataDocument,
-        isLoading,
-        error,
-    } = useApiQuery<MetadataResponse | null>(resolvedMetadata, {
-        enabled: !applicationIsLoading,
-        notFound: null,
-    });
+    const { data: metadataDocument, isLoading, error } = useMetadata(resolvedMetadata, !applicationIsLoading);
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
     const selectedTab = searchParams.get('tab');
     /* Resolve the active page from the selected tab path first, then the route path. */

@@ -4,22 +4,17 @@ import { Database } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useApiQuery } from '@/hooks/use-api';
-import type { ApiDatabaseDatabase, ApiDatabaseRegistry } from '@/lib/types';
+import { useDatabaseDatabases } from '@/hooks/use-database-databases';
+import { useDatabases } from '@/hooks/use-databases';
+import type { ApiDatabaseDatabase } from '@/lib/types';
 
 /** Renders databases for a database backend. */
 export default function DatabaseDatabases() {
     const { database = '' } = useParams();
 
-    const registriesQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/databases', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
+    const { items: registries, error: registriesError, isLoading: registriesIsLoading } = useDatabases();
 
-    const databaseRegistry = registriesQuery.data?.find(
-        (registry) => registry.slug === database || registry.id === database
-    );
-    const databasesPath = databaseRegistry ? `/api/databases/${databaseRegistry.id}/databases` : null;
+    const databaseRegistry = registries.find((registry) => registry.slug === database);
 
     const databaseColumns: Array<ColumnDef<ApiDatabaseDatabase>> = [
         {
@@ -46,17 +41,14 @@ export default function DatabaseDatabases() {
         },
     ];
 
-    const databasesQuery = useApiQuery<Array<ApiDatabaseDatabase>>(databasesPath, {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const rows = databasesQuery.data ?? [];
+    const { items: rows, error: databasesError, isLoading: databasesIsLoading } = useDatabaseDatabases(
+        databaseRegistry?.id ?? ''
+    );
     const error =
-        registriesQuery.error ??
-        (!registriesQuery.isLoading && !databaseRegistry
+        registriesError ??
+        (!registriesIsLoading && !databaseRegistry
             ? new Error(`Database "${database}" not found`)
-            : databasesQuery.error);
+            : databasesError);
 
     return (
         <div className="space-y-6">
@@ -74,7 +66,7 @@ export default function DatabaseDatabases() {
                 columns={databaseColumns}
                 data={rows}
                 error={error}
-                isLoading={registriesQuery.isLoading || databasesQuery.isLoading}
+                isLoading={registriesIsLoading || databasesIsLoading}
                 loadingLabel="Loading databases..."
             />
         </div>

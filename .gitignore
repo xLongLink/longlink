@@ -148,6 +148,7 @@ script.bat
 /api/src/.static/web/
 /api/openapi.yml
 /sdk/longlink/.static/web/
+/sdk/dev/
 
 /web/logs/
 /web/node_modules/

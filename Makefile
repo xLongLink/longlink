@@ -1,4 +1,4 @@
-.PHONY: up down format build api web install tests
+.PHONY: up down format build api web sdk install tests
 
 
 install:
@@ -37,12 +37,15 @@ up:
 	docker compose -f dev/compose.yml up -d
 	k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer"
 	k3d kubeconfig get compute > api/kubeconfig.yaml
+	cd sdk && uv run longlink init --folder dev
+	cd sdk && uv run python -c "from pathlib import Path; path = Path('dev/pyproject.toml'); text = path.read_text(); path.write_text(text.replace('longlink = { path = \"../../..\", editable = true }', 'longlink = { path = \"..\", editable = true }'))"
 
 
 down:
 	docker compose -f dev/compose.yml down
 	k3d cluster delete compute
 	rm -f api/dev.db
+	rm -rf sdk/dev
 
 
 api: 
@@ -55,3 +58,7 @@ api:
 web: 
 	bun i --cwd web --extra dev
 	bun run --cwd web dev --host 0.0.0.0 --port 5173
+
+
+sdk:
+	cd sdk/dev && uv run longlink dev

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useInviteOrganizationMember } from '@/hooks/use-organization';
+import { useOrganizationActions } from '@/hooks/use-organization';
 import { ROLE_NAMES } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -47,7 +47,7 @@ export default function People({ organization, people, invitations, isLoading, e
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<string>('write');
     const [inviteError, setInviteError] = useState<string | null>(null);
-    const inviteUser = useInviteOrganizationMember(organization);
+    const { inviteMember, isInviting } = useOrganizationActions(organization);
 
     const peopleColumns: Array<ColumnDef<ApiOrganizationMemberSummary>> = [
         {
@@ -195,7 +195,7 @@ export default function People({ organization, people, invitations, isLoading, e
                                 setInviteError(null);
 
                                 try {
-                                    await inviteUser.mutateAsync({
+                                    await inviteMember({
                                         email: inviteEmail.trim(),
                                         role: inviteRole,
                                     });
@@ -252,9 +252,9 @@ export default function People({ organization, people, invitations, isLoading, e
                                 </Button>
                                 <Button
                                     type="submit"
-                                    disabled={inviteUser.isPending || inviteEmail.trim().length === 0}
+                                    disabled={isInviting || inviteEmail.trim().length === 0}
                                 >
-                                    {inviteUser.isPending ? 'Inviting...' : 'Invite'}
+                                    {isInviting ? 'Inviting...' : 'Invite'}
                                 </Button>
                             </div>
                         </form>

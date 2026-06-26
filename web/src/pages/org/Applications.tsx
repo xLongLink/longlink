@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useDeleteApplication } from '@/hooks/use-organization';
+import { useOrganizationActions } from '@/hooks/use-organization';
 import type { ApiOrganizationApplication } from '@/lib/types';
 
 type ApplicationsProps = {
@@ -21,7 +21,7 @@ type ApplicationsProps = {
 
 /** Renders the organization applications table. */
 export default function Applications({ organization, applications, isLoading, error }: ApplicationsProps) {
-    const deleteApplication = useDeleteApplication(organization);
+    const { deleteApplication, isDeletingApplication } = useOrganizationActions(organization);
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -171,7 +171,7 @@ export default function Applications({ organization, applications, isLoading, er
                             <Button
                                 type="button"
                                 variant="destructive"
-                                disabled={deleteApplication.isPending || deleteTargetId === null}
+                                disabled={isDeletingApplication || deleteTargetId === null}
                                 onClick={async () => {
                                     if (deleteTargetId === null) {
                                         return;
@@ -180,7 +180,7 @@ export default function Applications({ organization, applications, isLoading, er
                                     const id = deleteTargetId;
 
                                     try {
-                                        await deleteApplication.mutateAsync(id);
+                                        await deleteApplication(id);
                                         setDeleteTargetId(null);
                                         setDeleteError(null);
                                     } catch (mutationError) {
@@ -192,7 +192,7 @@ export default function Applications({ organization, applications, isLoading, er
                                     }
                                 }}
                             >
-                                {deleteApplication.isPending ? 'Deleting...' : 'Delete'}
+                                {isDeletingApplication ? 'Deleting...' : 'Delete'}
                             </Button>
                         </div>
                     </div>

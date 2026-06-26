@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiJson } from '@/lib/api';
+import { fetchApiJson } from '@/lib/api';
+import { locationsQueryKey } from '@/lib/query-keys';
 import type { ApiLocation } from '@/lib/types';
 
 /** Renders the admin create location dialog. */
@@ -38,7 +39,7 @@ export default function CreateLocationDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/locations') });
+            await queryClient.invalidateQueries({ queryKey: locationsQueryKey() });
             setOpen(false);
             setName('');
             setSlug('');

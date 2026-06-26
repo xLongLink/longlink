@@ -1,5 +1,6 @@
 import { DataTable } from '@/components/DataTable';
-import { useApiQuery } from '@/hooks/use-api';
+import { useApplications } from '@/hooks/use-applications';
+import { useLocations } from '@/hooks/use-locations';
 import type { ApiApplicationResponse, ApiLocation } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
@@ -93,18 +94,12 @@ const appColumns: Array<ColumnDef<AdminApplicationResponse>> = [
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
-    const appsQuery = useApiQuery<Array<ApiApplicationResponse>>('/api/applications', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
-        retry: false,
-    });
+    const { items: applications, error: applicationsError, isLoading: applicationsIsLoading } = useApplications();
+    const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
 
     // Resolve each application's organization location so the table can show the full organization context.
-    const locationById = new Map(locationsQuery.data?.map((location) => [location.id, location]));
-    const appRows = (appsQuery.data ?? []).map((row) => ({
+    const locationById = new Map(locations.map((location) => [location.id, location]));
+    const appRows = applications.map((row) => ({
         ...row,
         organization: {
             ...row.organization,
@@ -125,8 +120,8 @@ export default function AdminApplications() {
             <DataTable
                 columns={appColumns}
                 data={appRows}
-                error={appsQuery.error ?? locationsQuery.error}
-                isLoading={appsQuery.isLoading || locationsQuery.isLoading}
+                error={applicationsError ?? locationsError}
+                isLoading={applicationsIsLoading || locationsIsLoading}
             />
         </div>
     );

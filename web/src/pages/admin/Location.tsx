@@ -11,9 +11,10 @@ import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import CreateLocationDialog from '@/components/dialogs/CreateLocationDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useApiQuery } from '@/hooks/use-api';
+import { useLocations } from '@/hooks/use-locations';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiVoid } from '@/lib/api';
+import { fetchApiVoid } from '@/lib/api';
+import { locationsQueryKey } from '@/lib/query-keys';
 import type { ApiLocation } from '@/lib/types';
 
 const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
@@ -53,17 +54,12 @@ export default function AdminLocation() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/locations') });
+            await queryClient.invalidateQueries({ queryKey: locationsQueryKey() });
             toast.success('Location deleted');
         },
     });
 
-    const locationQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const locationRows = locationQuery.data ?? [];
+    const { items: locationRows, error, isLoading } = useLocations();
     const deleteTarget = locationRows.find((location) => String(location.id) === deleteTargetId) ?? null;
     const locationColumns = canManage
         ? ([
@@ -137,8 +133,8 @@ export default function AdminLocation() {
             <DataTable
                 columns={locationColumns}
                 data={locationRows}
-                error={locationQuery.error}
-                isLoading={locationQuery.isLoading}
+                error={error}
+                isLoading={isLoading}
             />
             <DeleteConfirmationDialog
                 open={deleteTargetId !== null}

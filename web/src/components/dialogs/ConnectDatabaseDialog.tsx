@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiJson } from '@/lib/api';
+import { fetchApiJson } from '@/lib/api';
+import { databasesQueryKey } from '@/lib/query-keys';
 
 /** Renders the admin database connect dialog. */
 export default function ConnectDatabaseDialog() {
@@ -44,7 +45,7 @@ export default function ConnectDatabaseDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/databases') });
+            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
             setOpen(false);
             setKind('postgre');
             setName('');

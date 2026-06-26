@@ -31,7 +31,7 @@ const navigationLinks = [
         href: '/playground',
     },
     {
-        label: 'Docs',
+        label: 'Documentation',
         href: '/docs',
     },
 ];

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateApplication } from '@/hooks/use-organization';
+import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import type { ApiImageMetadata } from '@/lib/types';
@@ -25,7 +25,7 @@ type CreateApplicationDialogProps = {
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplicationDialog({ organization }: CreateApplicationDialogProps) {
     const { role } = useUser();
-    const createApplication = useCreateApplication(organization);
+    const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
     const [name, setName] = useState('');
@@ -113,7 +113,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
 
         // Submit the new app and close the dialog on success.
         try {
-            await createApplication.mutateAsync({
+            await createApplication({
                 name: name.trim(),
                 image: image.trim(),
                 description: description.trim().length > 0 ? description.trim() : null,
@@ -335,13 +335,9 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                         </Button>
                                         <Button
                                             type="submit"
-                                            disabled={
-                                                createApplication.isPending ||
-                                                name.trim().length === 0 ||
-                                                image.trim().length === 0
-                                            }
+                                        disabled={isCreatingApplication || name.trim().length === 0 || image.trim().length === 0}
                                         >
-                                            {createApplication.isPending ? 'Creating...' : 'Create'}
+                                            {isCreatingApplication ? 'Creating...' : 'Create'}
                                         </Button>
                                     </div>
                                 </div>

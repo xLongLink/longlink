@@ -4,7 +4,7 @@ import Layout from '@/layout/Layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { LayoutGrid, Settings2, Users } from 'lucide-react';
-import { Link, useParams } from 'react-router';
+import { Link, Navigate, useParams } from 'react-router';
 
 import NotFound from '../NotFound';
 
@@ -15,6 +15,10 @@ export default function Person() {
     const organization = routeOrganization || organizations[0]?.slug || '';
     const { organization: organizationDetails, people, isLoading, error } = useOrganization(organization);
     const person = people.find((item) => item.id === personId || item.name === personId);
+
+    if (organizationDetails && routeOrganization && organizationDetails.slug !== routeOrganization) {
+        return <Navigate replace to={`/orgs/${organizationDetails.slug}/people/${personId}`} />;
+    }
 
     // Hide missing or inaccessible orgs and people behind the shared 404 page.
     if (error?.status === 404 || (!isLoading && personId.length > 0 && !person)) {

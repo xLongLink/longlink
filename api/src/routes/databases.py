@@ -52,8 +52,12 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
     return [DatabaseDatabaseResponse(name=n) for n in names]
 
 
-@router.get("/api/databases/{registry_id}/databases/{dbname}/schemas", response_model=list[DatabaseSchemaResponse])
-async def list_database_schemas(registry_id: UUID,dbname: str,_: User = Depends(authsupport)) -> list[DatabaseSchemaResponse]:
+@router.get("/api/databases/{registry_id}/databases/{database_name}/schemas", response_model=list[DatabaseSchemaResponse])
+async def list_database_schemas(
+    registry_id: UUID,
+    database_name: str,
+    _: User = Depends(authsupport),
+) -> list[DatabaseSchemaResponse]:
     """List all schemas in a database on a database backend."""
 
     registry = await database.get(registry_id)
@@ -61,7 +65,7 @@ async def list_database_schemas(registry_id: UUID,dbname: str,_: User = Depends(
         raise NotFoundError("Database registry", registry_id)
 
     postgre = Postgre(registry.host, registry.port, registry.username, registry.password)
-    names = await postgre.schemas(dbname)
+    names = await postgre.schemas(database_name)
     return [DatabaseSchemaResponse(name=n) for n in names]
 
 

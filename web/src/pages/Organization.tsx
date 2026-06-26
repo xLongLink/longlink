@@ -3,7 +3,7 @@ import { useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { LayoutGrid, Settings2, Users } from 'lucide-react';
-import { useLocation, useParams } from 'react-router';
+import { Navigate, useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
 import People from './org/People';
@@ -27,6 +27,10 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const { organization: organizationDetails, people, invitations, applications, isLoading, error } = useOrganization(
         organization
     );
+
+    if (organizationDetails && routeOrganization && organizationDetails.slug !== routeOrganization) {
+        return <Navigate replace to={`/orgs/${organizationDetails.slug}${pathname.slice(`/orgs/${routeOrganization}`.length)}`} />;
+    }
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {

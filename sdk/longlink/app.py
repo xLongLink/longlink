@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic_settings import BaseSettings
 
 from longlink.database.audit import install_audit_middleware
+from longlink.constants import ROOT
 from longlink.routes import routes
 from longlink.utils import Envs
 
@@ -20,6 +23,22 @@ class LongLink(FastAPI):
             self.include_router(router)
 
         install_audit_middleware(self)
+
+        frontend_directory = ROOT / ".static" / "web"
+
+        if frontend_directory.exists():
+            assets_directory = frontend_directory / "assets"
+
+            # Serve the built SDK frontend entrypoint without shadowing app routes.
+            @self.get("/", include_in_schema=False)
+            def frontend_index() -> FileResponse:
+                """Return the packaged frontend entry document."""
+
+                return FileResponse(frontend_directory / "index.html")
+
+            # Serve frontend bundles from the generated assets directory.
+            if assets_directory.exists():
+                self.mount("/assets", StaticFiles(directory=assets_directory), name="assets")
 
         # Enable CORS in development for local frontend access to API routes
         if environments.ENV == "development":

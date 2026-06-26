@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useApiQuery } from '@/hooks/use-api';
+import { useLocations } from '@/hooks/use-locations';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiJson } from '@/lib/api';
-import type { ApiComputeRegistry, ApiLocation } from '@/lib/types';
+import { fetchApiJson } from '@/lib/api';
+import { computesQueryKey } from '@/lib/query-keys';
+import type { ApiComputeRegistry } from '@/lib/types';
 
 /** Renders the admin compute connect dialog. */
 export default function ConnectComputeDialog() {
@@ -33,11 +34,9 @@ export default function ConnectComputeDialog() {
         ingressHost.trim().length > 0 &&
         locationId.length > 0;
 
-    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
-        retry: false,
-    });
+    const { items: locations } = useLocations(open);
 
-    const selectedLocationName = locationsQuery.data?.find((location) => location.id === locationId)?.name;
+    const selectedLocationName = locations.find((location) => location.id === locationId)?.name;
 
     const connectCompute = useMutation({
         mutationFn: async () => {
@@ -55,7 +54,7 @@ export default function ConnectComputeDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/computes') });
+            await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
             setOpen(false);
             setKind('kubernetes');
             setKubeconfig('');
@@ -145,7 +144,7 @@ export default function ConnectComputeDialog() {
                                         {selectedLocationName ?? 'Choose a location'}
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {locationsQuery.data?.map((location) => (
+                                        {locations.map((location) => (
                                             <SelectItem key={location.id} value={String(location.id)}>
                                                 {location.name}
                                             </SelectItem>

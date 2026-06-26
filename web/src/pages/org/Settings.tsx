@@ -2,7 +2,7 @@ import { DataTable } from '@/components/DataTable';
 import CreateApplicationDialog from '@/components/dialogs/CreateApplicationDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useDeleteApplication } from '@/hooks/use-organization';
+import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import type { ApiOrganizationApplication, ApiOrganizationDetails } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -68,12 +68,12 @@ type SettingsProps = {
 /** Renders the organization settings page body. */
 export default function Settings({ organization, organizationDetails, applications, isLoading, error }: SettingsProps) {
     const { role: platformRole, organizations: userOrganizations } = useUser();
-    const deleteApplication = useDeleteApplication(organization);
+    const { deleteApplication, isDeletingApplication } = useOrganizationActions(organization);
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
 
-    const organizationMembership = userOrganizations.find((item) => item.name === organization);
+    const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const canViewLogs =
         platformRole === 'administrator' ||
         organizationMembership?.role === 'admin' ||
@@ -372,7 +372,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                             <Button
                                 type="button"
                                 variant="destructive"
-                                disabled={deleteApplication.isPending || deleteTargetId === null}
+                                disabled={isDeletingApplication || deleteTargetId === null}
                                 onClick={async () => {
                                     if (deleteTargetId === null) {
                                         return;
@@ -381,7 +381,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                                     const id = deleteTargetId;
 
                                     try {
-                                        await deleteApplication.mutateAsync(id);
+                                        await deleteApplication(id);
                                         setDeleteTargetId(null);
                                         setDeleteError(null);
                                     } catch (mutationError) {
@@ -393,7 +393,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                                     }
                                 }}
                             >
-                                {deleteApplication.isPending ? 'Deleting...' : 'Delete'}
+                                {isDeletingApplication ? 'Deleting...' : 'Delete'}
                             </Button>
                         </div>
                     </div>

@@ -85,8 +85,8 @@ async def list_compute_namespaces(registry_id: UUID,_: User = Depends(authsuppor
     return [NamespaceResponse(name=n) for n in names]
 
 
-@router.get("/api/computes/{registry_id}/namespaces/{namespace_name}/pods", response_model=list[PodResponse])
-async def list_namespace_pods(registry_id: UUID,namespace_name: str,_: User = Depends(authsupport)) -> list[PodResponse]:
+@router.get("/api/computes/{registry_id}/namespaces/{namespace}/pods", response_model=list[PodResponse])
+async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depends(authsupport)) -> list[PodResponse]:
     """List all pods in a namespace on a compute backend."""
 
     registry = await compute.get(registry_id)
@@ -94,5 +94,5 @@ async def list_namespace_pods(registry_id: UUID,namespace_name: str,_: User = De
         raise NotFoundError("Compute registry", registry_id)
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    pods = await k8s.pods(namespace_name)
+    pods = await k8s.pods(namespace)
     return [PodResponse(**p) for p in pods]

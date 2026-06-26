@@ -12,9 +12,11 @@ import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import ConnectDatabaseDialog from '@/components/dialogs/ConnectDatabaseDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useApiQuery } from '@/hooks/use-api';
+import { useDatabases } from '@/hooks/use-databases';
+import { useLocations } from '@/hooks/use-locations';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { databaseUsageQueryKey, databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry, ApiDatabaseUsage, ApiLocation } from '@/lib/types';
 
 /** Format one byte count for the admin usage table. */
@@ -116,38 +118,30 @@ export default function AdminDatabase() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/databases') });
+            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
             toast.success('Database deleted');
         },
     });
 
-    const databaseQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/databases', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
-        retry: false,
-    });
-
-    const databaseRows = databaseQuery.data ?? [];
-    const deleteTarget = databaseRows.find((database) => database.id === deleteTargetId) ?? null;
+    const { items: databases, error: databasesError, isLoading: databasesIsLoading } = useDatabases();
+    const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
+    const deleteTarget = databases.find((database) => database.id === deleteTargetId) ?? null;
     const usageQueries = useQueries({
-        queries: databaseRows.map((registry) => ({
-            queryKey: apiQueryKey(`/api/databases/${registry.id}/usage`),
+        queries: databases.map((registry) => ({
+            queryKey: databaseUsageQueryKey(registry.id),
             queryFn: async () => fetchApiJson<ApiDatabaseUsage>(`/api/databases/${registry.id}/usage`),
             retry: false,
         })),
     });
 
     const usageById = new Map<string, ApiDatabaseUsage>();
-    databaseRows.forEach((registry, index) => {
+    databases.forEach((registry, index) => {
         const data = usageQueries[index]?.data;
         if (data) usageById.set(registry.id, data);
     });
 
-    const locationById = new Map(locationsQuery.data?.map((location) => [location.id, location]));
-    const databaseTableRows = databaseRows.map((row) => ({
+    const locationById = new Map(locations.map((location) => [location.id, location]));
+    const databaseTableRows = databases.map((row) => ({
         ...row,
         location: locationById.get(row.location_id),
         usage: usageById.get(row.id),
@@ -223,8 +217,8 @@ export default function AdminDatabase() {
             <DataTable
                 columns={databaseColumns}
                 data={databaseTableRows}
-                error={databaseQuery.error}
-                isLoading={databaseQuery.isLoading}
+                error={databasesError ?? locationsError}
+                isLoading={databasesIsLoading || locationsIsLoading}
             />
             <DeleteConfirmationDialog
                 open={deleteTargetId !== null}

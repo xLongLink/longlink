@@ -106,7 +106,7 @@ function getRoutes() {
             path: 'settings',
             element: (
                 <Suspense fallback={routeFallback}>
-                    <Auth requiredRole="user">
+                    <Auth>
                         <Suspense fallback={routeFallback}>
                             <Settings />
                         </Suspense>
@@ -315,7 +315,7 @@ function OrganizationApplicationView() {
     const { organization: organizationDetails, isLoading, error } = useOrganization(organization);
     const { role: platformRole, organizations: userOrganizations } = useUser();
     const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
-    const organizationMembership = userOrganizations.find((item) => item.name === organization);
+    const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const canViewLogs =
         platformRole === 'administrator' ||
         organizationMembership?.role === 'admin' ||

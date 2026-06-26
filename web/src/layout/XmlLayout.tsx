@@ -43,7 +43,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
                         >
-                            Docs
+                            Documentation
                             <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
                         </a>
                     ) : (

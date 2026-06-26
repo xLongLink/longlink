@@ -42,7 +42,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                             <Breadcrumb />
                         )}
                     </div>
-                    {/* Show Docs when the profile dropdown is not available. */}
+                    {/* Show Documentation when the profile dropdown is not available. */}
                     {user ? (
                         <UserProfile />
                     ) : (
@@ -50,7 +50,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                             to="/docs"
                             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
-                            Docs
+                            Documentation
                         </Link>
                     )}
                 </div>

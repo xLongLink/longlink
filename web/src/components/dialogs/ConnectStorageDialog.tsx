@@ -6,10 +6,10 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useApiQuery } from '@/hooks/use-api';
+import { useLocations } from '@/hooks/use-locations';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiJson } from '@/lib/api';
-import type { ApiLocation } from '@/lib/types';
+import { fetchApiJson } from '@/lib/api';
+import { storagesQueryKey } from '@/lib/query-keys';
 
 /** Renders the admin storage connect dialog. */
 export default function ConnectStorageDialog() {
@@ -38,11 +38,9 @@ export default function ConnectStorageDialog() {
         secretAccessKey.length > 0 &&
         locationId.length > 0;
 
-    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
-        retry: false,
-    });
+    const { items: locations } = useLocations(open);
 
-    const selectedLocationName = locationsQuery.data?.find((location) => location.id === locationId)?.name;
+    const selectedLocationName = locations.find((location) => location.id === locationId)?.name;
 
     const connectStorage = useMutation({
         mutationFn: async () => {
@@ -63,7 +61,7 @@ export default function ConnectStorageDialog() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/storages') });
+            await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
             setOpen(false);
             setKind('s3');
             setName('');
@@ -189,7 +187,7 @@ export default function ConnectStorageDialog() {
                                         {selectedLocationName ?? 'Choose a location'}
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {locationsQuery.data?.map((location) => (
+                                        {locations.map((location) => (
                                             <SelectItem key={location.id} value={String(location.id)}>
                                                 {location.name}
                                             </SelectItem>

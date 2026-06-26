@@ -99,6 +99,7 @@ class UserOrganizationMembership(BaseModel):
 
     # Metadata
     name: str
+    slug: str
     avatar: Avatar = ""
     location: LocationResponse
 

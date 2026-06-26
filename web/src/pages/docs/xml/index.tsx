@@ -65,7 +65,7 @@ export const content = (
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">&lt;Query&gt;</code>{' '}
             does not accept children.
         </p>
-        <Window>{`<Query id="products" path="/api/products" />`}</Window>
+        <Window>{`<Query id="organizations" path="/api/organizations" />`}</Window>
         <Heading id="action" level="h2">
             Action
         </Heading>

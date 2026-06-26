@@ -4,24 +4,17 @@ import { Layers } from 'lucide-react';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useApiQuery } from '@/hooks/use-api';
-import type { ApiDatabaseRegistry, ApiDatabaseSchema } from '@/lib/types';
+import { useDatabaseSchemas } from '@/hooks/use-database-schemas';
+import { useDatabases } from '@/hooks/use-databases';
+import type { ApiDatabaseSchema } from '@/lib/types';
 
 /** Renders schemas (namespaces) in a database on a database backend. */
 export default function DatabaseSchemas() {
     const { database = '', dbname = '' } = useParams();
 
-    const registriesQuery = useApiQuery<Array<ApiDatabaseRegistry>>('/api/databases', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
+    const { items: registries, error: registriesError, isLoading: registriesIsLoading } = useDatabases();
 
-    const databaseRegistry = registriesQuery.data?.find(
-        (registry) => registry.slug === database || registry.id === database
-    );
-    const schemasPath = databaseRegistry
-        ? `/api/databases/${databaseRegistry.id}/databases/${encodeURIComponent(dbname)}/schemas`
-        : null;
+    const databaseRegistry = registries.find((registry) => registry.slug === database);
 
     const schemaColumns: Array<ColumnDef<ApiDatabaseSchema>> = [
         {
@@ -32,17 +25,15 @@ export default function DatabaseSchemas() {
         },
     ];
 
-    const schemasQuery = useApiQuery<Array<ApiDatabaseSchema>>(schemasPath, {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const rows = schemasQuery.data ?? [];
+    const { items: rows, error: schemasError, isLoading: schemasIsLoading } = useDatabaseSchemas(
+        databaseRegistry?.id ?? '',
+        dbname
+    );
     const error =
-        registriesQuery.error ??
-        (!registriesQuery.isLoading && !databaseRegistry
+        registriesError ??
+        (!registriesIsLoading && !databaseRegistry
             ? new Error(`Database "${database}" not found`)
-            : schemasQuery.error);
+            : schemasError);
 
     return (
         <div className="space-y-6">
@@ -61,7 +52,7 @@ export default function DatabaseSchemas() {
                 columns={schemaColumns}
                 data={rows}
                 error={error}
-                isLoading={registriesQuery.isLoading || schemasQuery.isLoading}
+                isLoading={registriesIsLoading || schemasIsLoading}
                 loadingLabel="Loading schemas..."
             />
         </div>

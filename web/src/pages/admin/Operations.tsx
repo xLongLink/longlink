@@ -3,7 +3,7 @@ import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Activity } from 'lucide-react';
 
 import { DataTable } from '@/components/DataTable';
-import { useApiQuery } from '@/hooks/use-api';
+import { useOperations } from '@/hooks/use-operations';
 import type { ApiOperation } from '@/lib/types';
 
 const OPERATION_STATUS_LABELS: Record<ApiOperation['status'], string> = {
@@ -70,12 +70,7 @@ const operationColumns: Array<ColumnDef<ApiOperation>> = [
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
-    const operationsQuery = useApiQuery<Array<ApiOperation>>('/api/operations', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const operationRows = operationsQuery.data ?? [];
+    const { items: operationRows, error, isLoading } = useOperations();
 
     return (
         <div className="space-y-6">
@@ -90,8 +85,8 @@ export default function AdminOperations() {
             <DataTable
                 columns={operationColumns}
                 data={operationRows}
-                error={operationsQuery.error}
-                isLoading={operationsQuery.isLoading}
+                error={error}
+                isLoading={isLoading}
             />
         </div>
     );

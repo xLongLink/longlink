@@ -50,6 +50,7 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
 
     expected_payload = UserProfile.model_validate(profile.model_dump()).model_dump(mode="json")
     assert response.json() == expected_payload
+    assert response.json()["organizations"][0]["slug"] == "acme"
 
 
 async def test_get_me_returns_the_active_account_profile(

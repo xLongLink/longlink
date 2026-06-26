@@ -5,10 +5,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { useApiQuery } from '@/hooks/use-api';
+import { useLocations } from '@/hooks/use-locations';
 import { useCreateOrganization } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
-import type { ApiLocation } from '@/lib/types';
 
 /** Renders the create-organization dialog. */
 export default function CreateOrganizationDialog() {
@@ -20,11 +19,9 @@ export default function CreateOrganizationDialog() {
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
-    const locationsQuery = useApiQuery<Array<ApiLocation>>('/api/locations', {
-        retry: false,
-    });
+    const { items: locations } = useLocations(open);
 
-    const selectedLocationName = locationsQuery.data?.find((location) => location.id === locationId)?.name;
+    const selectedLocationName = locations.find((location) => location.id === locationId)?.name;
 
     if (role === 'support') {
         return null;
@@ -107,7 +104,7 @@ export default function CreateOrganizationDialog() {
                                         {selectedLocationName ?? 'Choose a location'}
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {locationsQuery.data?.map((location) => (
+                                        {locations.map((location) => (
                                             <SelectItem key={location.id} value={String(location.id)}>
                                                 {location.name}
                                             </SelectItem>

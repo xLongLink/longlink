@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useApiQuery } from '@/hooks/use-api';
+import { useUsers } from '@/hooks/use-users';
 import type { ApiUserSummary } from '@/lib/types';
 
 const userColumns: Array<ColumnDef<ApiUserSummary>> = [
@@ -110,12 +110,7 @@ const userColumns: Array<ColumnDef<ApiUserSummary>> = [
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
-    const usersQuery = useApiQuery<Array<ApiUserSummary>>('/api/users', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const usersRows = usersQuery.data ?? [];
+    const { items: users, error, isLoading } = useUsers();
 
     return (
         <div className="space-y-6">
@@ -127,9 +122,9 @@ export default function AdminUsers() {
             </Hero>
             <DataTable
                 columns={userColumns}
-                data={usersRows}
-                error={usersQuery.error}
-                isLoading={usersQuery.isLoading}
+                data={users}
+                error={error}
+                isLoading={isLoading}
             />
         </div>
     );

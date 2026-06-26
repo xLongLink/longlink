@@ -18,6 +18,30 @@ class OrganizationCreate(BaseModel):
     location_id: UUID
 
 
+class OrganizationInvitationCreate(BaseModel):
+    """Validate organization invitation payloads."""
+
+    # Metadata
+    email: str = Field(min_length=1, max_length=320)
+    role: OrganizationRoles
+
+
+class OrganizationInvitationResponse(BaseModel):
+    """Represent one organization invitation in API responses."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    email: str
+    role: OrganizationRoles
+
+    # Audit
+    created_at: datetime
+
+
 class ApplicationStatus(str, Enum):
     """Lifecycle states for installed applications."""
 
@@ -25,6 +49,8 @@ class ApplicationStatus(str, Enum):
     running = "running"
     deleting = "deleting"
     failed = "failed"
+
+
 class OrganizationSummary(BaseModel):
     """Represent one organization in admin list responses."""
 
@@ -125,4 +151,5 @@ class OrganizationDetails(BaseModel):
 
     # Relationships
     users: list[OrganizationMemberSummary]
+    invitations: list[OrganizationInvitationResponse] = Field(default_factory=list)
     applications: list[OrganizationApplicationResponse] = Field(default_factory=list)

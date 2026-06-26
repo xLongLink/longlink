@@ -12,9 +12,10 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useApiQuery } from '@/hooks/use-api';
+import { useOrganizations } from '@/hooks/use-organizations';
 import { useUser } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiVoid } from '@/lib/api';
+import { fetchApiVoid } from '@/lib/api';
+import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
 
 const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
@@ -135,18 +136,13 @@ export default function AdminOrganization() {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/organizations') });
+            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
             toast.success('Organization deleted');
         },
     });
 
-    const organizationsQuery = useApiQuery<Array<ApiOrganizationSummary>>('/api/organizations', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const organizationRows = organizationsQuery.data ?? [];
-    const deleteTarget = organizationRows.find((organization) => organization.id === deleteTargetId) ?? null;
+    const { items: organizations, error, isLoading } = useOrganizations();
+    const deleteTarget = organizations.find((organization) => organization.id === deleteTargetId) ?? null;
     const organizationColumns = canManage
         ? ([
               ...organizationColumnsBase,
@@ -212,9 +208,9 @@ export default function AdminOrganization() {
             </Hero>
             <DataTable
                 columns={organizationColumns}
-                data={organizationRows}
-                error={organizationsQuery.error}
-                isLoading={organizationsQuery.isLoading}
+                data={organizations}
+                error={error}
+                isLoading={isLoading}
             />
             <DeleteConfirmationDialog
                 open={deleteTargetId !== null}

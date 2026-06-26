@@ -4,8 +4,9 @@ import { Container } from 'lucide-react';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useApiQuery } from '@/hooks/use-api';
-import type { ApiComputePod, ApiComputeRegistry } from '@/lib/types';
+import { useComputePods } from '@/hooks/use-compute-pods';
+import { useComputes } from '@/hooks/use-computes';
+import type { ApiComputePod } from '@/lib/types';
 
 function formatBytes(bytes: number): string {
     const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
@@ -75,25 +76,17 @@ const podColumns: Array<ColumnDef<ApiComputePod>> = [
 export default function ComputePods() {
     const { compute = '', namespace = '' } = useParams();
 
-    const computeQuery = useApiQuery<Array<ApiComputeRegistry>>('/api/computes', {
-        retry: false,
-        refetchOnMount: 'always',
-    });
+    const { items: computes, error: computeError, isLoading: computesIsLoading } = useComputes();
 
-    const computeRegistry = computeQuery.data?.find((registry) => registry.slug === compute || registry.id === compute);
-    const podsPath = computeRegistry
-        ? `/api/computes/${computeRegistry.id}/namespaces/${encodeURIComponent(namespace)}/pods`
-        : null;
+    const computeRegistry = computes.find((registry) => registry.slug === compute);
 
-    const podsQuery = useApiQuery<Array<ApiComputePod>>(podsPath, {
-        retry: false,
-        refetchOnMount: 'always',
-    });
-
-    const rows = podsQuery.data ?? [];
+    const { items: rows, error: podsError, isLoading: podsIsLoading } = useComputePods(
+        computeRegistry?.id ?? '',
+        namespace
+    );
     const error =
-        computeQuery.error ??
-        (!computeQuery.isLoading && !computeRegistry ? new Error(`Compute "${compute}" not found`) : podsQuery.error);
+        computeError ??
+        (!computesIsLoading && !computeRegistry ? new Error(`Compute "${compute}" not found`) : podsError);
 
     return (
         <div className="space-y-6">
@@ -112,7 +105,7 @@ export default function ComputePods() {
                 columns={podColumns}
                 data={rows}
                 error={error}
-                isLoading={computeQuery.isLoading || podsQuery.isLoading}
+                isLoading={computesIsLoading || podsIsLoading}
                 loadingLabel="Loading pods..."
             />
         </div>

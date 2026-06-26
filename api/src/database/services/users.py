@@ -41,6 +41,9 @@ class UsersService:
             if user is None:
                 return None
 
+            # Keep the seeded demo organization membership available as soon as the profile is read.
+            await self._ensure_admin_membership(session, user)
+
             # Load organization memberships and their locations without lazy IO.
             organization_result = await session.execute(
                 select(Organization, UserOrganization.role_name)
@@ -66,6 +69,7 @@ class UsersService:
                     UserOrganizationMembership(
                         id=organization.id,
                         name=organization.name,
+                        slug=organization.slug,
                         avatar=organization.avatar,
                         location=LocationResponse.model_validate(organization.location),
                         role=role_name,

@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useApiQuery } from '@/hooks/use-api';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { accountsQueryKey } from '@/lib/query-keys';
 import { applyTheme, THEME_PRESETS, type Accent, type Radius, type Theme, type ThemeConfig } from '@/lib/theme';
 import type { ApiUserProfile, ApiUserSummary } from '@/lib/types';
 
@@ -77,8 +79,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 export function useUser() {
     const context = useContext(UserContext);
     const queryClient = useQueryClient();
-    const accountsQuery = useApiQuery<ApiUserSummary[]>('/accounts', {
-        staleTime: 0,
+    const accountsQuery = useCollectionQuery<ApiUserSummary>('/accounts', {
         refetchOnMount: 'always',
         retry: false,
     });
@@ -89,7 +90,7 @@ export function useUser() {
 
     const { data: user, error, isFetching, isLoading } = context;
     const accounts: AccountsState = {
-        items: accountsQuery.data ?? [],
+        items: accountsQuery.items,
         isLoading: accountsQuery.isLoading || accountsQuery.isFetching,
         error: accountsQuery.error ?? null,
     };
@@ -113,7 +114,7 @@ export function useUser() {
         });
 
         await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
-        await queryClient.invalidateQueries({ queryKey: apiQueryKey('/accounts') });
+        await queryClient.invalidateQueries({ queryKey: accountsQueryKey() });
     };
 
     /** Activates one saved account and refreshes the current user session. */
@@ -123,7 +124,7 @@ export function useUser() {
         });
 
         await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
-        await queryClient.invalidateQueries({ queryKey: apiQueryKey('/accounts') });
+        await queryClient.invalidateQueries({ queryKey: accountsQueryKey() });
     };
 
     /** Clears the active user on the server so another account can be selected. */
@@ -132,8 +133,8 @@ export function useUser() {
             method: 'POST',
         });
 
-        await queryClient.cancelQueries({ queryKey: apiQueryKey('/accounts') });
-        queryClient.setQueryData(apiQueryKey('/accounts'), savedAccounts);
+        await queryClient.cancelQueries({ queryKey: accountsQueryKey() });
+        queryClient.setQueryData(accountsQueryKey(), savedAccounts);
         queryClient.setQueryData(apiQueryKey('/api/me'), null);
     };
 
