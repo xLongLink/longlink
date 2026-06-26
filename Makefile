@@ -42,6 +42,7 @@ up:
 down:
 	docker compose -f dev/compose.yml down
 	k3d cluster delete compute
+	rm -f api/dev.db
 
 
 api: 
