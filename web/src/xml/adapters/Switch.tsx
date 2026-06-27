@@ -1,8 +1,7 @@
 import { Switch as UISwitch } from '@/components/ui/switch';
 import { useXmlContext } from '@xml/core/context';
 import type { Props } from '@xml/types';
-import { useSnapshot } from 'valtio';
-import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Props accepted by the XML Switch component. */
 
@@ -14,16 +13,19 @@ export function Switch({ props, nodes }: Props) {
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);
     const size = resolveXmlString(props, 'size', ctx, 'default');
-    if (isXmlValueState(checked)) {
-        const snapshot = useSnapshot(checked);
+    const { state, snapshot } = useXmlValueSnapshot(checked);
+
+    if (state) {
+        const currentValue =
+            snapshot && typeof snapshot === 'object' && 'value' in snapshot ? snapshot.value : snapshot;
 
         return (
             <UISwitch
-                checked={Boolean('value' in snapshot ? snapshot.value : snapshot)}
+                checked={Boolean(currentValue)}
                 disabled={disabled}
                 id={id}
                 onCheckedChange={(nextChecked) => {
-                    if ('value' in checked) checked.value = nextChecked;
+                    if ('value' in state) state.value = nextChecked;
                 }}
                 size={size}
             />

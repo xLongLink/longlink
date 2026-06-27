@@ -1,15 +1,16 @@
 import pytest
 from types import SimpleNamespace
+from datetime import UTC, datetime
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
+from src.models.common import SuccessResponse
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind
-from src.models.databases import DatabaseKind
 from src.models.metadata import LongLinkMetadata
 from src.database.session import get_session
 from src.models.countries import Country
+from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
-from src.models.common import SuccessResponse
 from src.models.applications import ApplicationStatus
 from src.models.applications import ApplicationResponse as AppResponse
 from src.database.models.users import User
@@ -17,8 +18,7 @@ from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
-from src.database.models.association import UserApplication
-from src.database.models.association import UserOrganization
+from src.database.models.association import UserApplication, UserOrganization
 from src.database.services.locations import locations
 from src.database.services.operations import operations
 from src.database.services.applications import applications
@@ -275,10 +275,10 @@ async def test_create_app_returns_app_response(
         user=user,
     )
 
-    monkeypatch.setattr(
-        "src.routes.applications.metadata",
-        lambda image: LongLinkMetadata(version="20250623_120000", sdk="0.1.0"),
-    )
+    async def fake_metadata(image: str) -> LongLinkMetadata:
+        return LongLinkMetadata(version="20250623_120000", sdk="0.1.0")
+
+    monkeypatch.setattr("src.routes.applications.metadata", fake_metadata)
 
     captured: dict[str, object] = {}
 
@@ -644,7 +644,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
             captured["query_params"] = query_params
             captured["headers"] = headers
             captured["body"] = body
-            return b"proxied", 200, {"content-type": "text/plain"}
+            return b"proxied", 200, {"content-type": "text/plain", "set-cookie": "tenant=owned"}
 
     monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
 
@@ -660,6 +660,43 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert captured["method"] == "POST"
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
+    assert "cookie" not in {key.lower() for key in captured["headers"]}
+    assert "set-cookie" not in response.headers
+
+
+async def test_organization_access_rejects_soft_deleted_membership(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject organization access when only a soft-deleted membership remains."""
+
+    # Arrange
+    owner = users[0]
+    user = users[1]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=owner)
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=user.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.read,
+                deleted_at=datetime.now(UTC),
+            )
+        )
+        await session.commit()
+
+    client = clients[1]
+
+    # Act
+    response = client.get(f"/api/organizations/{organization.id}/applications")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
 
 
 async def test_proxy_app_shows_loading_when_app_is_not_ready(

@@ -1,7 +1,7 @@
-from src.database.models.operations import Operation
-from src.models.operations import OperationKind
 from src.operations import execute
-from src.operations.registry import get_operation_handler, operation_handler
+from src.models.operations import OperationKind
+from src.operations.registry import operation_handler, get_operation_handler
+from src.database.models.operations import Operation
 
 
 async def test_operation_handler_decorator_registers_and_dispatches_handler() -> None:

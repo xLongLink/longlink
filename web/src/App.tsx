@@ -1,9 +1,11 @@
 import { useOrganization } from '@/hooks/use-organization';
+import { useSdkUser } from '@/hooks/use-sdk-user';
 import { useUser } from '@/hooks/use-user';
 import { DOC_PAGES } from '@/pages/docs/catalog';
 import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
 import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
+import { createContext as createXmlContext } from '@/xml';
 import { Skeleton } from '@ui/skeleton';
 import { Toaster } from '@ui/sonner';
 import { Suspense, lazy } from 'react';
@@ -12,7 +14,6 @@ import DocsPageRoute from './pages/docs/DocsPageRoute';
 
 const Auth = lazy(() => import('@/components/Auth').then((module) => ({ default: module.Auth })));
 const Home = lazy(() => import('./pages/Home'));
-const Playground = lazy(() => import('./pages/Playground'));
 const View = lazy(() => import('./pages/View'));
 const Admin = lazy(() => import('./pages/Admin'));
 const AdminApplications = lazy(() => import('./pages/admin/Applications'));
@@ -31,6 +32,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const Person = lazy(() => import('./pages/org/Person'));
 const Organization = lazy(() => import('./pages/Organization'));
 const Organizations = lazy(() => import('./pages/Organizations'));
+const Pricing = lazy(() => import('./pages/Pricing'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Layout = lazy(() => import('@/layout/Layout'));
 const LegalLayout = lazy(() => import('@/layout/LegalLayout').then((module) => ({ default: module.LegalLayout })));
@@ -48,7 +50,7 @@ function getRoutes() {
                 path: '/',
                 element: (
                     <Suspense fallback={routeFallback}>
-                        <View metadata="/metadata.json" />
+                        <SdkApplicationView />
                     </Suspense>
                 ),
             },
@@ -63,18 +65,18 @@ function getRoutes() {
             element: <DocsPageRoute page={page} />,
         })),
         {
-            path: 'playground',
-            element: (
-                <Suspense fallback={routeFallback}>
-                    <Playground />
-                </Suspense>
-            ),
-        },
-        {
             path: 'impressum',
             element: (
                 <Suspense fallback={routeFallback}>
                     <LegalLayout title="Impressum" content={impressumContent} metadata={impressumMetadata} />
+                </Suspense>
+            ),
+        },
+        {
+            path: 'pricing',
+            element: (
+                <Suspense fallback={routeFallback}>
+                    <Pricing />
                 </Suspense>
             ),
         },
@@ -307,6 +309,16 @@ function getRoutes() {
             ),
         },
     ];
+}
+
+/** Renders the SDK application with the selected local user in XML runtime scope. */
+function SdkApplicationView() {
+    const { user } = useSdkUser();
+    const runtimeContext = createXmlContext();
+
+    runtimeContext.user = user;
+
+    return <View metadata="/metadata.json" runtimeContext={runtimeContext} runtimeKey={`sdk-user-${user.id}`} />;
 }
 
 /** Resolves an organization application slug to its proxy-backed XML view. */

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 from datetime import datetime
-from pydantic import EmailStr, Field, BaseModel, ConfigDict
+from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.locations import LocationResponse
@@ -151,4 +151,5 @@ class OrganizationDetails(BaseModel):
     applications: list[OrganizationApplicationResponse] = Field(default_factory=list)
 
 from src.models.applications import ApplicationStatus
+
 OrganizationApplicationResponse.model_rebuild()

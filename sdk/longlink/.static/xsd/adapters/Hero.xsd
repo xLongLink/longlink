@@ -17,8 +17,21 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="HeroTitleType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
-  <xsd:complexType name="HeroDescriptionType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="HeroTitleType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="HeroChildrenOnlyType">
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="HeroDescriptionType" mixed="true">
+    <xsd:complexContent>
+      <xsd:extension base="HeroChildrenOnlyType">
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
   <xsd:complexType name="HeroActionType" mixed="true"><xsd:complexContent><xsd:extension base="HeroChildrenOnlyType" /></xsd:complexContent></xsd:complexType>
 
   <xsd:element name="Hero" type="HeroType" />

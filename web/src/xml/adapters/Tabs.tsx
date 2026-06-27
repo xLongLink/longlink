@@ -5,6 +5,7 @@ import {
     TabsTrigger as UITabsTrigger,
 } from '@ui/tabs';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { ASTNode, Props } from '@xml/types';
@@ -88,7 +89,7 @@ function collectTabNodes(
 
         const params = node.params ?? {};
         const value = requireXmlString(params, 'value', ctx, 'Tab');
-        const label = requireXmlString(params, 'label', ctx, 'Tab');
+        const label = params.i18n ? resolveTranslation(params, ctx) : requireXmlString(params, 'label', ctx, 'Tab');
         const icon = resolveXmlString(params, 'icon', ctx);
 
         tabs.push({

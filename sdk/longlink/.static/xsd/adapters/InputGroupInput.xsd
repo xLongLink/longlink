@@ -16,6 +16,7 @@
         <xsd:attribute name="autoComplete" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
         <xsd:attribute name="label" type="xsd:string" use="optional" />
         <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
         <xsd:attribute name="type" type="xsd:string" use="optional" />

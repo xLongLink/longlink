@@ -3,15 +3,15 @@ from __future__ import annotations
 from enum import Enum
 from src.logger import logger
 from src.adapters.compute import K8s
-from kubernetes.client.rest import ApiException
 from src.models.operations import OperationKind
+from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
-from src.database.models.operations import Operation
+from src.operations.registry import operation_handler
 from src.database.services.compute import compute
+from src.database.models.operations import Operation
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
-from src.operations.registry import operation_handler
 
 
 class ApplicationStartupState(str, Enum):

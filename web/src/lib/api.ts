@@ -1,3 +1,5 @@
+import { getStoredSdkUserId } from '@/lib/sdk-users';
+
 const DEFAULT_API_URL = '';
 
 type ApiErrorPayload = {
@@ -38,9 +40,20 @@ async function readApiError(response: Response): Promise<string> {
     return payload?.detail ?? `API request failed (${response.status})`;
 }
 
+/** Builds request headers shared by API and SDK XML action requests. */
+export function createApiHeaders(initHeaders?: HeadersInit): Headers {
+    const headers = new Headers(initHeaders);
+
+    if (import.meta.env.MODE === 'sdk' && !headers.has('x-user-id')) {
+        headers.set('x-user-id', String(getStoredSdkUserId()));
+    }
+
+    return headers;
+}
+
 /** Sends one API request and normalizes non-OK errors. */
 async function requestApi(path: string, init?: RequestInit): Promise<Response> {
-    const headers = new Headers(init?.headers);
+    const headers = createApiHeaders(init?.headers);
 
     if (!headers.has('Accept')) {
         headers.set('Accept', 'application/json');

@@ -1,20 +1,26 @@
 import type { ReactNode } from 'react';
 
-import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
 import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/pages/docs/api/index';
 import {
     content as docsApiSelfHostedContent,
     metadata as docsApiSelfHostedMetadata,
 } from '@/pages/docs/api/self-hosted';
+import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
+import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
+import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
+import {
+    content as docsSdkEnvironmentsContent,
+    metadata as docsSdkEnvironmentsMetadata,
+} from '@/pages/docs/sdk/environments';
 import { content as docsSdkIndexContent, metadata as docsSdkIndexMetadata } from '@/pages/docs/sdk/index';
-import { content as docsSdkEnvironmentsContent, metadata as docsSdkEnvironmentsMetadata } from '@/pages/docs/sdk/environments';
+import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/pages/docs/sdk/pages';
 import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
 import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
-import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
 import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
-import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
-import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/pages/docs/sdk/pages';
-import { content as docsXmlComponentsContent, metadata as docsXmlComponentsMetadata } from '@/pages/docs/xml/components';
+import {
+    content as docsXmlComponentsContent,
+    metadata as docsXmlComponentsMetadata,
+} from '@/pages/docs/xml/components';
 import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/pages/docs/xml/layout';
 
 import {
@@ -49,7 +55,8 @@ export type DocPage = DocItem & {
     metadata: DocMetadata;
 };
 
-export type DocNavigationItem = DocItem & {
+export type DocNavigationItem = Omit<DocItem, 'icon'> & {
+    icon?: typeof BookOpen;
     children?: DocNavigationItem[];
 };
 
@@ -149,7 +156,7 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
     {
         group: 'Application SDK',
         title: 'Layout',
-        path: '/docs/xml/layout',
+        path: '/docs/sdk/pages/layout',
         id: 'layout',
         icon: LayoutTemplate,
         content: docsXmlLayoutContent,
@@ -158,7 +165,7 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
     {
         group: 'Application SDK',
         title: 'Components',
-        path: '/docs/xml/components',
+        path: '/docs/sdk/pages/components',
         id: 'components',
         icon: Blocks,
         content: docsXmlComponentsContent,
@@ -197,7 +204,10 @@ export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: DocNavigationItem[
             groupPages[6],
             {
                 ...groupPages[9],
-                children: [groupPages[7], groupPages[8]],
+                children: [
+                    groupPages[7],
+                    groupPages[8],
+                ],
             },
         ],
     };

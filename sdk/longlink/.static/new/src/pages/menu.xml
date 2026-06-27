@@ -1,0 +1,97 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink>
+    <Menu defaultValue="settings">
+        <MenuSection value="overview" i18n="examples.menu.overview.label">
+            <P i18n="examples.menu.overview.description" />
+        </MenuSection>
+
+        <MenuSection value="operations" i18n="examples.menu.operations.label">
+            <P i18n="examples.menu.operations.description" />
+
+            <MenuSubSection value="orders" i18n="examples.menu.orders.label">
+                <P i18n="examples.menu.orders.description" />
+            </MenuSubSection>
+            <MenuSubSection value="returns" i18n="examples.menu.returns.label">
+                <P i18n="examples.menu.returns.description" />
+            </MenuSubSection>
+        </MenuSection>
+
+        <MenuSection value="catalog" i18n="examples.menu.catalog.label">
+            <P i18n="examples.menu.catalog.description" />
+
+            <MenuSubSection value="products" i18n="examples.menu.products.label">
+                <P i18n="examples.menu.products.description" />
+            </MenuSubSection>
+            <MenuSubSection value="categories" i18n="examples.menu.categories.label">
+                <P i18n="examples.menu.categories.description" />
+            </MenuSubSection>
+            <MenuSubSection value="inventory" i18n="examples.menu.inventory.label">
+                <P i18n="examples.menu.inventory.description" />
+            </MenuSubSection>
+        </MenuSection>
+
+        <MenuSection value="settings" i18n="examples.menu.settings.label">
+            <Stack>
+                <H3 i18n="examples.menu.settings.title" />
+                <P i18n="examples.menu.settings.description" />
+
+                <Grid columns="2">
+                    <Field orientation="horizontal">
+                        <Checkbox id="email-digest" defaultChecked="true" />
+                        <FieldLabel htmlFor="email-digest" i18n="examples.menu.settings.emailDigest" />
+                    </Field>
+
+                    <Field orientation="horizontal">
+                        <Switch id="push-alerts" defaultChecked="true" size="sm" />
+                        <FieldLabel htmlFor="push-alerts" i18n="examples.menu.settings.pushAlerts" />
+                    </Field>
+                </Grid>
+
+                <Field>
+                    <FieldLabel i18n="examples.menu.settings.density.label" />
+                    <RadioGroup name="density" defaultValue="comfortable">
+                        <RadioGroupItem value="compact" i18n="examples.menu.settings.density.compact" />
+                        <RadioGroupItem value="comfortable" i18n="examples.menu.settings.density.comfortable" />
+                        <RadioGroupItem value="spacious" i18n="examples.menu.settings.density.spacious" />
+                    </RadioGroup>
+                </Field>
+
+                <Field>
+                    <FieldLabel htmlFor="refresh-rate" i18n="examples.menu.settings.refresh.label" />
+                    <Slider id="refresh-rate" min="5" max="60" step="5" defaultValue="15" />
+                    <FieldDescription i18n="examples.menu.settings.refresh.description" />
+                </Field>
+
+                <Field>
+                    <FieldLabel i18n="examples.menu.settings.theme.label" />
+                    <RadioGroup name="theme" defaultValue="system">
+                        <RadioGroupItem value="light" i18n="examples.menu.settings.theme.light" />
+                        <RadioGroupItem value="dark" i18n="examples.menu.settings.theme.dark" />
+                        <RadioGroupItem value="system" i18n="examples.menu.settings.theme.system" />
+                    </RadioGroup>
+                </Field>
+
+                <Field>
+                    <FieldLabel i18n="examples.menu.settings.actions.label" />
+                    <ButtonGroup>
+                        <Button variant="outline" i18n="examples.menu.settings.actions.cancel" />
+                        <Button variant="outline" i18n="examples.menu.settings.actions.reset" />
+                        <Button submit="true" i18n="examples.menu.settings.actions.save" />
+                    </ButtonGroup>
+                </Field>
+            </Stack>
+        </MenuSection>
+
+        <MenuSection value="profile" i18n="examples.menu.profile.label">
+            <P i18n="examples.menu.profile.description" />
+        </MenuSection>
+
+        <MenuSection value="team" i18n="examples.menu.team.label">
+            <P i18n="examples.menu.team.description" />
+        </MenuSection>
+
+        <MenuSection value="billing" i18n="examples.menu.billing.label">
+            <P i18n="examples.menu.billing.description" />
+        </MenuSection>
+    </Menu>
+</longlink>

@@ -19,14 +19,13 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 │       │   ├── database
 │       │   ├── environments
 │       │   ├── pages
+│       │   │   ├── components
+│       │   │   └── layout
 │       │   ├── routes
 │       │   ├── storage
 │       │   └── testing
-│       └── xml
-│           ├── components
-│           └── layout
-├── playground
 ├── impressum
+├── pricing
 ├── terms
 ├── privacy
 ├── organizations

@@ -65,8 +65,12 @@ class Postgres(Database):
 
         engine: AsyncEngine = create_async_engine(self._url(database), **engine_kwargs)
         try:
-            async with engine.connect() as conn:
-                yield conn
+            if autocommit:
+                async with engine.connect() as conn:
+                    yield conn
+            else:
+                async with engine.begin() as conn:
+                    yield conn
         finally:
             await engine.dispose()
 

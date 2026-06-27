@@ -8,6 +8,7 @@ import {
     TableRow as UITableRow,
 } from '@ui/table';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 
@@ -49,13 +50,15 @@ export function Tr({ props, nodes }: Props) {
 /** Renders a table header cell. */
 export function Th({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UITableHead>{renderNode(nodes, ctx)}</UITableHead>;
+    return <UITableHead>{text}</UITableHead>;
 }
 
 /** Renders a table body cell. */
 export function Td({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UITableCell>{renderNode(nodes, ctx)}</UITableCell>;
+    return <UITableCell>{text}</UITableCell>;
 }

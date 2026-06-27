@@ -3,12 +3,12 @@ from __future__ import annotations
 from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
+from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
-from src.models.roles import OrganizationRoles
 
 
 class InvitationsService:

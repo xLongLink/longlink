@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Request
+from fastapi import Request, APIRouter
 from src.auth import SessionAccountsService
-from src.errors import NotFoundError
-from src.models.common import SuccessResponse
+from src.errors import NotFoundError, ForbiddenError
 from src.models.users import UserListItem
+from src.models.common import SuccessResponse
 from src.database.services.users import users
-
 
 router = APIRouter()
 
@@ -13,10 +12,14 @@ router = APIRouter()
 async def activate_account(oidc: str, request: Request) -> SuccessResponse:
     """Switch the active account within the current browser session."""
 
+    session_accounts = SessionAccountsService(request)
+    if oidc not in session_accounts.list():
+        raise ForbiddenError("Account is not saved in this session")
+
     if await users.get(oidc) is None:
         raise NotFoundError("Account", oidc)
 
-    SessionAccountsService(request).activate(oidc)
+    session_accounts.activate(oidc)
     return SuccessResponse()
 
 

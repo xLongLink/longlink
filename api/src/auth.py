@@ -1,12 +1,15 @@
 from uuid import UUID
 from fastapi import Request
-from src.errors import ForbiddenError, NotFoundError, UnauthorizedError
+from sqlmodel import select
+from src.errors import NotFoundError, ForbiddenError, UnauthorizedError
 from src.environments import env
 from src.models.roles import PlatformRoles
-from src.database.models.users import User
+from src.database.session import session_scope
 from src.models.organizations import OrganizationDetails
-from src.database.services.organizations import organizations
+from src.database.models.users import User
 from src.database.services.users import users
+from src.database.models.association import UserOrganization
+from src.database.services.organizations import organizations
 from authlib.integrations.starlette_client import OAuth
 
 oauth = OAuth()
@@ -119,7 +122,17 @@ async def organization_access(organization_id: UUID, user: User) -> Organization
     if organization is None:
         raise NotFoundError("Organization", organization_id)
 
-    if not any(member.id == organization_id for member in user.organizations):
+    async with session_scope() as session:
+        membership_result = await session.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == user.id,
+                UserOrganization.organization_id == organization_id,
+                UserOrganization.deleted_at.is_(None),
+            )
+        )
+        membership = membership_result.scalar_one_or_none()
+
+    if membership is None:
         raise NotFoundError("Organization", organization_id)
 
     return organization

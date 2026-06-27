@@ -1,7 +1,7 @@
 from typing import Any, ClassVar
 from datetime import datetime, timezone
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Column, DateTime
+from sqlalchemy import Column, DateTime, select
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
                                     async_sessionmaker, create_async_engine)
@@ -26,6 +26,37 @@ class User(Base, table=True):
     name: str = Field(max_length=255)
     email: str = Field(max_length=254)
     avatar: str | None = Field(default=None, max_length=255)
+
+
+LOCAL_USERS = (
+    {"id": 1, "name": "Read User", "email": "read@local.longlink.dev", "avatar": None},
+    {"id": 2, "name": "Write User", "email": "write@local.longlink.dev", "avatar": None},
+    {"id": 3, "name": "Maintain User", "email": "maintain@local.longlink.dev", "avatar": None},
+    {"id": 4, "name": "Admin User", "email": "admin@local.longlink.dev", "avatar": None},
+    {"id": 5, "name": "Owner User", "email": "owner@local.longlink.dev", "avatar": None},
+)
+
+
+async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> None:
+    """Create deterministic local users for SDK development auditing."""
+
+    async with session_maker() as session:
+        result = await session.execute(select(User).where(User.id.in_([user["id"] for user in LOCAL_USERS])))
+        existing_users = {user.id: user for user in result.scalars().all()}
+
+        # Keep seeded users deterministic if the SDK scaffold is restarted with existing data.
+        for payload in LOCAL_USERS:
+            user = existing_users.get(payload["id"])
+
+            if user is None:
+                session.add(User(**payload))
+                continue
+
+            user.name = payload["name"]
+            user.email = payload["email"]
+            user.avatar = payload["avatar"]
+
+        await session.commit()
 
 
 class Table(Base):
@@ -139,5 +170,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if str(_engine.url).startswith("sqlite+"):
         async with _engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
+
+        await seed_local_users(Session)
 
     return Session

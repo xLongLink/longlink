@@ -1,15 +1,16 @@
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter
-from kubernetes.client.rest import ApiException
 from src.auth import authuser, authadmin, organization_access
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
-from src.utils.utils import slugify, metadata, knames
+from src.utils.utils import knames, slugify, metadata
+from src.models.common import SuccessResponse
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
-from src.models.common import SuccessResponse
-from src.models.applications import ApplicationStatus, ApplicationCreate, ApplicationResponse
+from kubernetes.client.rest import ApiException
+from src.models.applications import (ApplicationCreate, ApplicationStatus,
+                                     ApplicationResponse)
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
@@ -28,6 +29,8 @@ HOP_BY_HOP_HEADERS = {
     "transfer-encoding",
     "upgrade",
 }
+FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "cookie"}
+FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
 
 router = APIRouter()
 
@@ -49,7 +52,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     logger.info("Provisioning application %s/%s", organization_record.slug, application_slug)
 
     # Capture image build labels when the SDK image was built with them.
-    image_metadata = metadata(payload.image)
+    image_metadata = await metadata(payload.image)
 
     registries = await compute.list()
     if not registries:
@@ -217,7 +220,7 @@ async def proxy_application_request(
     forward_headers = {
         key: value
         for key, value in request.headers.items()
-        if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "authorization"
+        if key.lower() not in FORWARDED_REQUEST_BLOCKLIST
     }
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
@@ -244,6 +247,6 @@ async def proxy_application_request(
         headers={
             key: value
             for key, value in upstream_headers.items()
-            if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "content-length"
+            if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
         },
     )

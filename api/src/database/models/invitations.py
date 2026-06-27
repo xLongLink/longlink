@@ -1,8 +1,8 @@
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
 from datetime import UTC, datetime
-from sqlmodel import Field, Relationship, SQLModel
-from sqlalchemy import Column, Enum
+from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Enum, Column
 from src.models.roles import OrganizationRoles
 
 if TYPE_CHECKING:

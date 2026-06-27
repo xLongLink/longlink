@@ -1,0 +1,8 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink>
+    <Stack>
+        <H1 i18n="examples.text.title" />
+        <P i18n="examples.text.body" />
+        <P i18n="examples.text.apples" count="2" />
+    </Stack>
+</longlink>

@@ -1,5 +1,6 @@
 import { Hero as HeroShell, HeroDescription as HeroShellDescription, HeroTitle as HeroShellTitle } from '@ui/hero';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
@@ -25,15 +26,17 @@ export function Hero({ props, nodes }: Props) {
 /** Renders the hero title slot. */
 export function HeroTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <HeroShellTitle>{renderNode(nodes, ctx)}</HeroShellTitle>;
+    return <HeroShellTitle>{text}</HeroShellTitle>;
 }
 
 /** Renders the hero description slot. */
 export function HeroDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <HeroShellDescription>{renderNode(nodes, ctx)}</HeroShellDescription>;
+    return <HeroShellDescription>{text}</HeroShellDescription>;
 }
 
 /** Renders the hero action slot. */

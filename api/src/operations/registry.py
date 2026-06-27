@@ -1,7 +1,6 @@
-from collections.abc import Awaitable, Callable
-
-from src.database.models.operations import Operation
+from collections.abc import Callable, Awaitable
 from src.models.operations import OperationKind
+from src.database.models.operations import Operation
 
 OperationHandler = Callable[[Operation], Awaitable[Operation]]
 

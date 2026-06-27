@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.utils.utils import slugify
-from src.models.databases import DatabaseKind
 from src.database.session import session_scope
+from src.models.databases import DatabaseKind
 from src.database.models.users import User
 from src.database.models.databases import DatabaseRegistry
 

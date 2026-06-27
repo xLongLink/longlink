@@ -4,7 +4,6 @@ from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
 from src.database.services.users import users
 
-
 router = APIRouter()
 
 

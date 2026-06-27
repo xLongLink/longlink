@@ -10,9 +10,9 @@ from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.association import UserOrganization
-from src.database.services.invitations import invitations
 from src.database.services.locations import locations
 from src.database.services.operations import operations
+from src.database.services.invitations import invitations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
 

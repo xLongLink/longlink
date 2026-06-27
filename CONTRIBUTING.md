@@ -8,12 +8,6 @@ The SDK owns application-facing Python helpers, CLI commands, database helpers, 
 
 <br />
 
-## Architecture
-
-The combined repository architecture is maintained in `AGENTS.md`.
-
-<br />
-
 ## Development
 
 ```bash

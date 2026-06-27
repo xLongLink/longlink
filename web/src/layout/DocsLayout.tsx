@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 
 import { DocsSidebar } from '@/components/DocsSidebar';
+import { cn } from '@/lib/utils';
 import { DOC_GROUPS, DOC_PAGES, type DocItem, type DocNavigationItem } from '@/pages/docs/catalog';
 import { A } from '@ui/a';
 import {
@@ -13,7 +14,6 @@ import {
 } from '@ui/breadcrumb';
 import { buttonVariants } from '@ui/button';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@ui/sidebar';
-import { cn } from '@/lib/utils';
 
 type DocMetadata = {
     lastUpdated?: string;
@@ -109,7 +109,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
 
     return (
         <SidebarProvider defaultOpen>
-            <DocsSidebar currentItemId={currentItem?.id} />
+            <DocsSidebar currentItemId={currentItem?.id} currentPath={`${location.pathname}${location.hash}`} />
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">

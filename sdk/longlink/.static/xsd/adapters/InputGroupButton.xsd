@@ -13,6 +13,7 @@
     <xsd:complexContent>
       <xsd:extension base="InputGroupButtonChildrenOnlyType">
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
         <xsd:attribute name="size" use="optional" default="xs">
           <xsd:simpleType>
             <xsd:restriction base="xsd:string">

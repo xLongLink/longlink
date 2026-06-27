@@ -2,8 +2,7 @@ import { Toggle as UIToggle } from '@/components/ui/toggle';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { useSnapshot } from 'valtio';
-import { isXmlValueState, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Props accepted by the XML Toggle component. */
 
@@ -16,18 +15,20 @@ export function Toggle({ props, nodes }: Props) {
     const pressed = resolveXmlValue(props, 'pressed', ctx);
     const size = resolveXmlString(props, 'size', ctx, 'default');
     const variant = resolveXmlString(props, 'variant', ctx, 'default');
+    const { state, snapshot } = useXmlValueSnapshot(pressed);
 
-    if (isXmlValueState(pressed)) {
-        const snapshot = useSnapshot(pressed);
+    if (state) {
+        const currentValue =
+            snapshot && typeof snapshot === 'object' && 'value' in snapshot ? snapshot.value : snapshot;
 
         return (
             <UIToggle
                 disabled={disabled}
                 id={id}
                 onPressedChange={(nextPressed) => {
-                    if ('value' in pressed) pressed.value = nextPressed;
+                    if ('value' in state) state.value = nextPressed;
                 }}
-                pressed={Boolean('value' in snapshot ? snapshot.value : snapshot)}
+                pressed={Boolean(currentValue)}
                 size={size}
                 variant={variant}
             >

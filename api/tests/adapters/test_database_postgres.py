@@ -43,6 +43,10 @@ class _FakeEngine:
     def connect(self):
         return _FakeConnection(self.log, self)
 
+    def begin(self):
+        self.log.append(("begin", None))
+        return _FakeConnection(self.log, self)
+
     async def dispose(self) -> None:
         self.log.append(("dispose", None))
 
@@ -108,6 +112,7 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
     assert log[4][0] == "engine"
     assert log[4][1][0] == "postgresql+psycopg://longlink:***@db.longlink.internal:5432/longlink_acme?sslmode=disable"
     assert log[4][1][1] == {"pool_pre_ping": True}
+    assert ("begin", None) in log
     assert any(isinstance(entry[1], CreateSchema) for entry in log if entry[0] == "execute")
     assert any("CREATE TABLE IF NOT EXISTS public.users" in str(entry[1]) for entry in log if entry[0] == "execute")
 
@@ -136,6 +141,7 @@ async def test_remove_and_delete_use_managed_sqlalchemy_connections(monkeypatch)
     await adapter.delete("acme")
 
     # Assert
+    assert ("begin", None) in log
     assert any(isinstance(entry[1], DropSchema) for entry in log if entry[0] == "execute")
     assert any(entry == ("driver_sql", 'DROP DATABASE IF EXISTS "longlink_acme"') for entry in log)
 

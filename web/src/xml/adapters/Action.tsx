@@ -1,3 +1,4 @@
+import { createApiHeaders } from '@/lib/api';
 import { Button as UIButton } from '@ui/button';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
@@ -38,6 +39,7 @@ export async function executeAction(
     const invalidateRuntime = ctx.invalidate ?? (async () => {});
     const normalizedMethod = method.trim().toUpperCase();
     const actionUrl = String(resolveXmlString(props, 'action', ctx, '') ?? '');
+    const headers = createApiHeaders();
 
     // Resolve the compiled payload at click time so it sees the latest state.
     const jsonValue = json ? json(ctx) : undefined;
@@ -52,8 +54,10 @@ export async function executeAction(
 
     if (jsonValue !== undefined) {
         init.body = JSON.stringify(jsonValue);
-        init.headers = { 'content-type': 'application/json' };
+        headers.set('content-type', 'application/json');
     }
+
+    init.headers = headers;
 
     const response = await fetchImpl(requestUrl, init);
 

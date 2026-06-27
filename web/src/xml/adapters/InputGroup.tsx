@@ -46,12 +46,13 @@ export function InputGroupButton({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const size = resolveXmlString(props, 'size', ctx, 'xs');
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
     const type = resolveXmlString(props, 'type', ctx, 'button');
     const variant = resolveXmlString(props, 'variant', ctx, 'ghost');
 
     return (
         <UIInputGroupButton disabled={disabled} size={size} type={type} variant={variant}>
-            {renderNode(nodes, ctx)}
+            {text}
         </UIInputGroupButton>
     );
 }
@@ -72,7 +73,7 @@ export function InputGroupInput({ props, nodes }: Props) {
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);
     const label = resolveXmlString(props, 'label', ctx);
-    const placeholder = resolveXmlValue(props, 'placeholder', ctx);
+    const placeholder = props.i18n ? resolveTranslation(props, ctx) : resolveXmlValue(props, 'placeholder', ctx);
     const type = resolveXmlString(props, 'type', ctx, 'text');
     const placeholderText = String(placeholder ?? label ?? '');
     const binding = useBindableValue(props, 'value', ctx, type);
@@ -114,7 +115,7 @@ export function InputGroupTextarea({ props, nodes }: Props) {
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);
     const label = resolveXmlString(props, 'label', ctx);
-    const placeholder = resolveXmlValue(props, 'placeholder', ctx);
+    const placeholder = props.i18n ? resolveTranslation(props, ctx) : resolveXmlValue(props, 'placeholder', ctx);
     const rows = resolveXmlString(props, 'rows', ctx);
     const placeholderText = String(placeholder ?? label ?? '');
     // Normalize XML string attributes to the numeric textarea props expected by React.

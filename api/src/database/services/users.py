@@ -45,7 +45,11 @@ class UsersService:
                 .options(
                     selectinload(Organization.location),
                 )
-                .where(UserOrganization.user_id == user.id)
+                .where(
+                    UserOrganization.user_id == user.id,
+                    UserOrganization.deleted_at.is_(None),
+                    Organization.deleted_at.is_(None),
+                )
             )
 
             return UserProfile(

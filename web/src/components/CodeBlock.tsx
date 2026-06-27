@@ -4,7 +4,6 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { toast } from 'sonner';
 
-import { Window } from '@/components/Window';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -22,15 +21,6 @@ export function CodeBlock({ children, className, language = 'text' }: CodeBlockP
     // Trim shared JSX indentation without changing the actual code content.
     const code = children.trim();
     const isSingleLine = code.split('\n').length === 1;
-
-    // XML snippets are clearer when shown in the interactive window instead of plain syntax highlighting.
-    if (language === 'xml') {
-        return (
-            <div className={cn('w-full max-w-2xl', className)}>
-                <Window>{code}</Window>
-            </div>
-        );
-    }
 
     // Copy the visible snippet to the clipboard and briefly confirm success.
     const handleCopy = async () => {

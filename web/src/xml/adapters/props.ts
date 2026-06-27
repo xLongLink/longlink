@@ -1,6 +1,8 @@
-import { getVersion } from 'valtio';
+import { getVersion, proxy, useSnapshot } from 'valtio';
 import { compile, evaluate } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
+
+const emptyXmlValueState = proxy({ value: undefined as unknown });
 
 /** Reads a raw XML prop value without coercion. */
 export function readXmlProp(props: ASTProps, name: string): string | undefined {
@@ -122,4 +124,12 @@ export function resolveXmlExpression(props: ASTProps, name: string): any {
 /** Returns true when a raw XML value is backed by a Valtio proxy. */
 export function isXmlValueState(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === 'object' && getVersion(value as object) !== undefined;
+}
+
+/** Reads a Valtio-backed XML value without changing hook order for literal values. */
+export function useXmlValueSnapshot(value: unknown): { state: Record<string, unknown> | null; snapshot: unknown } {
+    const state = isXmlValueState(value) ? value : emptyXmlValueState;
+    const snapshot = useSnapshot(state);
+
+    return isXmlValueState(value) ? { state, snapshot } : { state: null, snapshot: undefined };
 }

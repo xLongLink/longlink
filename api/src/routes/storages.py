@@ -7,7 +7,6 @@ from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.models.users import User
 from src.database.services.storage import storage
 
-
 router = APIRouter()
 
 

@@ -1,7 +1,8 @@
+from main import app
 from types import SimpleNamespace
+from conftest import session_cookie
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
-from main import app
 from src.models.countries import Country
 from src.database.models.users import User
 from src.database.services.users import users
@@ -12,7 +13,6 @@ from src.database.services.locations import locations
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
-from conftest import session_cookie
 
 db = SimpleNamespace(
     applications=applications,

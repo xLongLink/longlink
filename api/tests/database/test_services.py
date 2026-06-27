@@ -1,21 +1,19 @@
-from types import SimpleNamespace
 import pytest
-
+from types import SimpleNamespace
+from src.models.roles import OrganizationRoles
 from src.models.computes import ComputeKind
+from src.models.storages import StorageKind
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
-from src.models.roles import OrganizationRoles
-from src.models.storages import StorageKind
-from src.database.services.applications import applications
+from src.database.services.users import users
 from src.database.services.compute import compute
+from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
+from src.database.services.applications import applications
 from src.database.services.organizations import organizations
-from src.database.services.storage import storage
-from src.database.services.users import users
-
 
 db = SimpleNamespace(
     applications=applications,

@@ -1,9 +1,9 @@
 import { RadioGroup as UIRadioGroup, RadioGroupItem as UIRadioGroupItem } from '@/components/ui/radio-group';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { getVersion, useSnapshot } from 'valtio';
-import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Props accepted by the XML RadioGroup component. */
 
@@ -19,32 +19,22 @@ export function RadioGroup({ props, nodes }: Props) {
     const readOnly = resolveXmlBoolean(props, 'readOnly', ctx);
     const required = resolveXmlBoolean(props, 'required', ctx);
     const value = resolveXmlValue(props, 'value', ctx);
+    const { state: defaultValueState, snapshot: defaultValueSnapshot } = useXmlValueSnapshot(defaultValue);
+    const { state: valueState, snapshot: valueSnapshot } = useXmlValueSnapshot(value);
 
     // Normalize literal values and reactive state slots into the Base UI value contract.
-    const resolvedDefaultValue =
-        defaultValue && typeof defaultValue === 'object' && getVersion(defaultValue) !== undefined
-            ? (() => {
-                  const state = defaultValue as Record<string, unknown> & { value?: unknown };
-                  const snapshot = useSnapshot(state);
-                  const currentValue = 'value' in snapshot ? snapshot.value : snapshot;
-
-                  return currentValue != null ? String(currentValue) : undefined;
-              })()
-            : defaultValue != null
-              ? String(defaultValue)
-              : undefined;
-    const resolvedValue =
-        value && typeof value === 'object' && getVersion(value) !== undefined
-            ? (() => {
-                  const state = value as Record<string, unknown> & { value?: unknown };
-                  const snapshot = useSnapshot(state);
-                  const currentValue = 'value' in snapshot ? snapshot.value : snapshot;
-
-                  return currentValue != null ? String(currentValue) : undefined;
-              })()
-            : value != null
-              ? String(value)
-              : undefined;
+    const defaultCurrentValue = defaultValueState
+        ? defaultValueSnapshot && typeof defaultValueSnapshot === 'object' && 'value' in defaultValueSnapshot
+            ? defaultValueSnapshot.value
+            : defaultValueSnapshot
+        : defaultValue;
+    const currentValue = valueState
+        ? valueSnapshot && typeof valueSnapshot === 'object' && 'value' in valueSnapshot
+            ? valueSnapshot.value
+            : valueSnapshot
+        : value;
+    const resolvedDefaultValue = defaultCurrentValue != null ? String(defaultCurrentValue) : undefined;
+    const resolvedValue = currentValue != null ? String(currentValue) : undefined;
 
     return (
         <UIRadioGroup
@@ -67,12 +57,13 @@ export function RadioGroupItem({ props, nodes }: Props) {
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const readOnly = resolveXmlBoolean(props, 'readOnly', ctx);
     const required = resolveXmlBoolean(props, 'required', ctx);
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
     const value = requireXmlString(props, 'value', ctx, 'RadioGroupItem');
 
     return (
         <label className="inline-flex items-center gap-2">
             <UIRadioGroupItem disabled={disabled} readOnly={readOnly} required={required} value={value} />
-            {renderNode(nodes, ctx)}
+            {text}
         </label>
     );
 }

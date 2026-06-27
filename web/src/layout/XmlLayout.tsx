@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
+import { SdkUserSelector } from '@/components/SdkUserSelector';
 import { Wordmark } from '@/components/Wordmark';
 import { cn } from '@/lib/utils';
 import { ExternalLink } from 'lucide-react';
@@ -28,7 +29,17 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
             <div className="mx-auto w-full px-6 pb-2 pt-4 text-foreground/80">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        {brandOnly ? (
+                        {isSdkMode ? (
+                            <a
+                                href="https://longlink.dev"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="LongLink home"
+                                className="inline-flex items-center"
+                            >
+                                <Wordmark />
+                            </a>
+                        ) : brandOnly ? (
                             <Link to={brandHref} aria-label="LongLink home" className="inline-flex items-center">
                                 <Wordmark />
                             </Link>
@@ -37,15 +48,18 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                         )}
                     </div>
                     {isSdkMode ? (
-                        <a
-                            href="https://longlink.dev/docs"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
-                        >
-                            Documentation
-                            <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-                        </a>
+                        <div className="flex items-center gap-2">
+                            <a
+                                href="https://www.longlink.dev/docs"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
+                            >
+                                Documentation
+                                <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                            </a>
+                            <SdkUserSelector />
+                        </div>
                     ) : (
                         <UserProfile />
                     )}
@@ -67,7 +81,8 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                     aria-current={isActive ? 'page' : undefined}
                                     className={cn(
                                         'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground',
-                                        isActive && 'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
+                                        isActive &&
+                                            'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
                                     )}
                                 >
                                     {label}
@@ -79,6 +94,14 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
             )}
         </>
     );
+
+    if (isSdkMode) {
+        return (
+            <TopLayout header={header}>
+                <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-1 flex-col">{children}</div>
+            </TopLayout>
+        );
+    }
 
     return <TopLayout header={header}>{children}</TopLayout>;
 }

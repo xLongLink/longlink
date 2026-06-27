@@ -7,8 +7,8 @@ from src.database.models.association import UserOrganization
 if TYPE_CHECKING:
     from src.database.models.users import User
     from src.database.models.locations import Location
-    from src.database.models.applications import Application
     from src.database.models.invitations import OrganizationInvitation
+    from src.database.models.applications import Application
 
 
 class Organization(SQLModel, table=True):

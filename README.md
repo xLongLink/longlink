@@ -2,7 +2,7 @@
 
 # LongLink
 
-An platform for workflows, data, and validation
+A platform for workflows, data, and validation
 
 [Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://docs.longlink.dev) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 
@@ -45,6 +45,20 @@ Modern AI tools make code generation faster, but speed alone does not create mai
 LongLink provides that structure. The platform defines the shared infrastructure. The SDK defines the development model. Technical teams define the business logic. Users interact with the final workflow through a consistent native interface.
 
 The result is a faster, clearer, and more maintainable way to build internal applications.
+
+<br />
+
+## Benefits
+
+- Faster delivery: teams build on a shared platform instead of starting from a blank stack.
+- Clearer requirements: business processes are modeled as data, validation, permissions, actions, and workflow states.
+- Consistent user experience: applications share the same web runtime, routing, authentication, and interface patterns.
+- Lower maintenance cost: common concerns such as auth, storage, deployment, and operations are handled once by the platform.
+- Better governance: users, organizations, memberships, infrastructure, and application status are managed centrally.
+- Local-first development: developers can build and test applications locally before adding them to the platform.
+- Portable applications: the same application model works across testing, development, and production environments.
+- Scalable operations: the control plane provisions compute, database, and storage resources through adapters.
+- Safer evolution: applications can change with the business process while keeping a stable runtime and deployment model.
 
 <br />
 <br />

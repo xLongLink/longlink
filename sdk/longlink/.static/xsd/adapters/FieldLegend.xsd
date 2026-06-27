@@ -12,6 +12,7 @@
   <xsd:complexType name="FieldLegendType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldLegendChildrenOnlyType">
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
         <xsd:attribute name="variant" use="optional" default="legend">
           <xsd:simpleType>
             <xsd:restriction base="xsd:string">

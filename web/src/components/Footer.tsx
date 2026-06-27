@@ -27,12 +27,12 @@ const navigationLinks = [
         href: '/',
     },
     {
-        label: 'Playground',
-        href: '/playground',
-    },
-    {
         label: 'Documentation',
         href: '/docs',
+    },
+    {
+        label: 'Pricing',
+        href: '/pricing',
     },
 ];
 

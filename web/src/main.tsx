@@ -1,3 +1,4 @@
+import { SdkUserProvider } from '@/hooks/use-sdk-user';
 import { UserProvider } from '@/hooks/use-user';
 import '@/index.css';
 import { queryClient } from '@/lib/react-query';
@@ -8,9 +9,13 @@ import App from './App';
 
 /** Renders the bundle-specific app shell. */
 function AppShell() {
-    // SDK mode does not need authenticated user state or the user-aware toaster.
+    // SDK mode uses deterministic local users instead of control-plane authentication.
     if (import.meta.env.MODE === 'sdk') {
-        return <App />;
+        return (
+            <SdkUserProvider>
+                <App />
+            </SdkUserProvider>
+        );
     }
 
     return (

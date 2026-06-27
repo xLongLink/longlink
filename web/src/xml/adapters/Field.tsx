@@ -7,6 +7,7 @@ import {
     FieldTitle as UIFieldTitle,
 } from '@/components/ui/field';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
@@ -14,9 +15,10 @@ import { resolveXmlString } from './props';
 /** Renders the field legend slot. */
 export function FieldLegend({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
     const variant = resolveXmlString(props, 'variant', ctx, 'legend');
 
-    return <UIFieldLegend variant={variant}>{renderNode(nodes, ctx)}</UIFieldLegend>;
+    return <UIFieldLegend variant={variant}>{text}</UIFieldLegend>;
 }
 
 /** Renders an individual field row. */
@@ -38,20 +40,23 @@ export function FieldContent({ props, nodes }: Props) {
 export function FieldLabel({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const htmlFor = resolveXmlString(props, 'htmlFor', ctx);
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIFieldLabel htmlFor={htmlFor}>{renderNode(nodes, ctx)}</UIFieldLabel>;
+    return <UIFieldLabel htmlFor={htmlFor}>{text}</UIFieldLabel>;
 }
 
 /** Renders the field title slot. */
 export function FieldTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIFieldTitle>{renderNode(nodes, ctx)}</UIFieldTitle>;
+    return <UIFieldTitle>{text}</UIFieldTitle>;
 }
 
 /** Renders the field description slot. */
 export function FieldDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIFieldDescription>{renderNode(nodes, ctx)}</UIFieldDescription>;
+    return <UIFieldDescription>{text}</UIFieldDescription>;
 }

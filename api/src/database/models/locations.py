@@ -2,7 +2,8 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Column, Enum as SAEnum, String, text
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import Column, String, text
 from src.models.countries import Country
 from src.models.locations import LocationProvider
 

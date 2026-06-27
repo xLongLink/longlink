@@ -2,10 +2,10 @@ import { useMetadata } from '@/hooks/use-metadata';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
 import type { ApiOrganizationApplication } from '@/lib/types';
-import { fromXml, RenderXML, resolveUrl } from '@/xml';
+import { fromXml, RenderXML, resolveUrl, type ExecutionContext } from '@/xml';
 import { buttonVariants } from '@ui/button';
-import { Skeleton } from '@ui/skeleton';
 import { ScrollArea } from '@ui/scroll-area';
+import { Skeleton } from '@ui/skeleton';
 import startCase from 'lodash/startCase';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
@@ -17,6 +17,8 @@ type ViewProps = {
     applicationStatus?: ApiOrganizationApplication['status'];
     canViewLogs?: boolean;
     metadata: string;
+    runtimeContext?: ExecutionContext;
+    runtimeKey?: string;
 };
 
 type ErrorStateProps = {
@@ -60,6 +62,8 @@ export default function View({
     applicationStatus,
     canViewLogs = false,
     metadata,
+    runtimeContext,
+    runtimeKey,
 }: ViewProps) {
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
@@ -348,7 +352,7 @@ export default function View({
     return (
         <XML tabs={tabs}>
             <section className="space-y-6">
-                <RenderXML ast={ast} baseUrl={resolvedMetadataBaseUrl} />
+                <RenderXML key={runtimeKey} ast={ast} ctx={runtimeContext} baseUrl={resolvedMetadataBaseUrl} />
             </section>
         </XML>
     );
@@ -388,7 +392,9 @@ function LogsState({
                 </div>
             ) : (
                 <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
-                    <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">{logsContent || 'No logs available.'}</pre>
+                    <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
+                        {logsContent || 'No logs available.'}
+                    </pre>
                 </ScrollArea>
             )}
         </div>

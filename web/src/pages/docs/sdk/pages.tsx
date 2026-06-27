@@ -15,12 +15,12 @@ function PagesContent() {
             </p>
             <ul className="ml-6 list-disc space-y-2">
                 <li>
-                    <Link className="text-foreground underline underline-offset-4" to="/docs/xml/layout">
+                    <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/layout">
                         XML Layout
                     </Link>
                 </li>
                 <li>
-                    <Link className="text-foreground underline underline-offset-4" to="/docs/xml/components">
+                    <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/components">
                         XML Components
                     </Link>
                 </li>

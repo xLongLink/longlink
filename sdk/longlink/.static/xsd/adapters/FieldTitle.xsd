@@ -12,6 +12,7 @@
   <xsd:complexType name="FieldTitleType" mixed="true">
     <xsd:complexContent>
       <xsd:extension base="FieldTitleChildrenOnlyType">
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

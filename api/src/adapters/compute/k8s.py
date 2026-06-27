@@ -4,8 +4,8 @@ import yaml
 from .base import Compute
 from datetime import UTC, datetime
 from src.utils import utils
-from src.logger import logger
 from kubernetes import client, config
+from src.logger import logger
 from src.constants import TEMPLATES
 from src.utils.namespace import k8name
 from kubernetes.client.rest import ApiException

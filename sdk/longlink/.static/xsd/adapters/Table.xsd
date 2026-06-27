@@ -41,21 +41,31 @@
 
   <xsd:complexType name="TableHeadType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="TableChildrenOnlyType" />
+      <xsd:extension base="TableChildrenOnlyType">
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+      </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
   <xsd:complexType name="TableCellType" mixed="true">
     <xsd:complexContent>
-      <xsd:extension base="TableChildrenOnlyType" />
+      <xsd:extension base="TableChildrenOnlyType">
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+      </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
   <xsd:element name="Table" type="TableType" />
+  <xsd:element name="Thead" type="TableHeaderType" />
   <xsd:element name="TableHeader" type="TableHeaderType" />
+  <xsd:element name="Tbody" type="TableBodyType" />
   <xsd:element name="TableBody" type="TableBodyType" />
+  <xsd:element name="Tfoot" type="TableFooterType" />
   <xsd:element name="TableFooter" type="TableFooterType" />
+  <xsd:element name="Tr" type="TableRowType" />
   <xsd:element name="TableRow" type="TableRowType" />
+  <xsd:element name="Th" type="TableHeadType" />
   <xsd:element name="TableHead" type="TableHeadType" />
+  <xsd:element name="Td" type="TableCellType" />
   <xsd:element name="TableCell" type="TableCellType" />
 </xsd:schema>

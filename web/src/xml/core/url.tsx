@@ -11,23 +11,22 @@ export function resolveUrl(baseUrl: string, path: string): string {
     const basePart = baseUrl.split(/[?#]/, 1)[0];
     const baseSegments = basePart.split('/').filter(Boolean);
     const pathSegments = pathPart.split('/');
-
-    if (!path.startsWith('/') && !basePart.endsWith('/')) {
-        baseSegments.pop();
-    }
+    const resolvedSegments = [...baseSegments];
 
     for (const segment of pathSegments) {
         if (!segment || segment === '.') continue;
 
         if (segment === '..') {
-            baseSegments.pop();
+            if (resolvedSegments.length > baseSegments.length) {
+                resolvedSegments.pop();
+            }
             continue;
         }
 
-        baseSegments.push(segment);
+        resolvedSegments.push(segment);
     }
 
-    return `/${baseSegments.join('/')}${suffix}`;
+    return `/${resolvedSegments.join('/')}${suffix}`;
 }
 
 /** Resolves a request URL against the active base URL. */

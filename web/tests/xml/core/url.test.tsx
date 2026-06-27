@@ -14,7 +14,8 @@ describe('resolveUrl', () => {
     });
 
     it('resolves dot segments', () => {
-        expect(resolveUrl('/api', '../items')).toBe('/items');
+        expect(resolveUrl('/api', '../items')).toBe('/api/items');
+        expect(resolveUrl('/api/applications/123/proxy/', '../../me')).toBe('/api/applications/123/proxy/me');
     });
 });
 

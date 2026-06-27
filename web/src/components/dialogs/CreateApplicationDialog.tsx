@@ -199,7 +199,15 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                 </div>
                             </form>
                         ) : step === 'metadata' ? (
-                            <form className="space-y-4" onSubmit={handleCreateApp}>
+                            <form
+                                className="space-y-4"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    if (name.trim().length > 0 && image.trim().length > 0) {
+                                        setStep('envs');
+                                    }
+                                }}
+                            >
                                 <div className="space-y-2">
                                     <Label htmlFor="application-name">Name</Label>
                                     <Input
@@ -229,12 +237,12 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                         onValueChange={(value) => setIcon(value === '__none__' ? '' : (value ?? ''))}
                                     >
                                         <SelectTrigger id="application-icon" className="w-full">
-                                        {icon ? (
-                                            <DynamicIcon
-                                                name={icon as Parameters<typeof DynamicIcon>[0]['name']}
-                                                className="size-4 text-muted-foreground"
-                                                aria-hidden="true"
-                                            />
+                                            {icon ? (
+                                                <DynamicIcon
+                                                    name={icon as Parameters<typeof DynamicIcon>[0]['name']}
+                                                    className="size-4 text-muted-foreground"
+                                                    aria-hidden="true"
+                                                />
                                             ) : null}
                                             <SelectValue placeholder="Choose an icon" />
                                         </SelectTrigger>
@@ -335,7 +343,11 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                         </Button>
                                         <Button
                                             type="submit"
-                                        disabled={isCreatingApplication || name.trim().length === 0 || image.trim().length === 0}
+                                            disabled={
+                                                isCreatingApplication ||
+                                                name.trim().length === 0 ||
+                                                image.trim().length === 0
+                                            }
                                         >
                                             {isCreatingApplication ? 'Creating...' : 'Create'}
                                         </Button>

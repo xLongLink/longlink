@@ -1,22 +1,27 @@
 import re
 import json
 import yaml
-import httpx2
+import httpx
+import socket
+import asyncio
+import ipaddress
 from yaml import safe_load_all
 from string import Template
 from pathlib import Path
 from src.logger import logger
+from urllib.parse import urlparse
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
-def metadata(image: str) -> LongLinkMetadata | None:
+async def metadata(image: str) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
     registry, repository, tag = _parse_image_ref(image)
 
-    with httpx2.Client(verify=False, follow_redirects=True) as client:
+    async with httpx.AsyncClient(verify=True, follow_redirects=False, timeout=5.0) as client:
         try:
-            manifest = _fetch_manifest(client, registry, repository, tag)
+            await _validate_public_host(_registry_hostname(registry))
+            manifest = await _fetch_manifest(client, registry, repository, tag)
             if manifest is None:
                 return None
 
@@ -24,7 +29,7 @@ def metadata(image: str) -> LongLinkMetadata | None:
             if config_digest is None:
                 return None
 
-            config = _fetch_blob(client, registry, repository, config_digest)
+            config = await _fetch_blob(client, registry, repository, config_digest)
             if config is None:
                 return None
 
@@ -51,7 +56,7 @@ def metadata(image: str) -> LongLinkMetadata | None:
                     return None
 
             return result
-        except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        except (httpx.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata for '%s': %s", image, exc)
             return None
 
@@ -60,12 +65,12 @@ def _parse_image_ref(image: str) -> tuple[str, str, str]:
     """Parse an image reference into (registry, repository, tag)."""
 
     tag = "latest"
+    tag_separator = image.rfind(":")
+    path_separator = image.rfind("/")
 
-    if ":" in image:
-        parts = image.rsplit(":", 1)
-        if not parts[1].isdigit():
-            tag = parts[1]
-            image = parts[0]
+    if tag_separator > path_separator:
+        tag = image[tag_separator + 1:]
+        image = image[:tag_separator]
 
     if "/" in image:
         parts = image.split("/", 1)
@@ -82,18 +87,49 @@ def _parse_image_ref(image: str) -> tuple[str, str, str]:
     return registry, repository, tag
 
 
-def _fetch_manifest(client: httpx2.Client, registry: str, repository: str, tag: str) -> dict | None:
+def _registry_hostname(registry: str) -> str:
+    """Return the hostname portion of a registry reference."""
+
+    hostname = urlparse(f"https://{registry}").hostname
+    if hostname is None:
+        raise ValueError("Image registry host is invalid")
+
+    return hostname
+
+
+async def _validate_public_host(hostname: str) -> None:
+    """Reject localhost, private, and otherwise non-public registry hosts."""
+
+    if hostname == "localhost" or hostname.endswith(".localhost"):
+        raise ValueError("Image registry host must be public")
+
+    try:
+        addresses = [ipaddress.ip_address(hostname)]
+    except ValueError:
+        loop = asyncio.get_running_loop()
+        try:
+            resolved = await loop.getaddrinfo(hostname, None, type=socket.SOCK_STREAM)
+        except OSError as exc:
+            raise ValueError("Image registry host could not be resolved") from exc
+
+        addresses = [ipaddress.ip_address(item[4][0]) for item in resolved]
+
+    if not addresses or any(not address.is_global for address in addresses):
+        raise ValueError("Image registry host must resolve to public addresses")
+
+
+async def _fetch_manifest(client: httpx.AsyncClient, registry: str, repository: str, tag: str) -> dict | None:
     """Fetch the image manifest from the OCI Distribution API, resolving manifest lists to a single platform manifest."""
 
     url = f"https://{registry}/v2/{repository}/manifests/{tag}"
     accept = "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json"
 
-    resp = client.get(url, headers={"Accept": accept})
+    resp = await client.get(url, headers={"Accept": accept})
     if not resp.is_success:
-        token = _resolve_bearer_token(client, registry, repository, resp)
+        token = await _resolve_bearer_token(client, repository, resp)
         if token is None:
             return None
-        resp = client.get(url, headers={"Accept": accept, "Authorization": f"Bearer {token}"})
+        resp = await client.get(url, headers={"Accept": accept, "Authorization": f"Bearer {token}"})
         if not resp.is_success:
             return None
 
@@ -106,7 +142,7 @@ def _fetch_manifest(client: httpx2.Client, registry: str, repository: str, tag: 
             data["manifests"][0],
         )
         manifest_digest = entry["digest"]
-        resp = client.get(
+        resp = await client.get(
             f"https://{registry}/v2/{repository}/manifests/{manifest_digest}",
             headers={"Accept": entry["mediaType"], **({"Authorization": f"Bearer {token}"} if token else {})},
         )
@@ -117,25 +153,25 @@ def _fetch_manifest(client: httpx2.Client, registry: str, repository: str, tag: 
     return data
 
 
-def _fetch_blob(client: httpx2.Client, registry: str, repository: str, digest: str) -> dict | None:
+async def _fetch_blob(client: httpx.AsyncClient, registry: str, repository: str, digest: str) -> dict | None:
     """Fetch an image config blob from the OCI Distribution API."""
 
     url = f"https://{registry}/v2/{repository}/blobs/{digest}"
 
-    resp = client.get(url)
+    resp = await client.get(url)
     if resp.is_success:
         return resp.json()
 
-    token = _resolve_bearer_token(client, registry, repository, resp)
+    token = await _resolve_bearer_token(client, repository, resp)
     if token is not None:
-        resp = client.get(url, headers={"Authorization": f"Bearer {token}"})
+        resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
         if resp.is_success:
             return resp.json()
 
     return None
 
 
-def _resolve_bearer_token(client: httpx2.Client, registry: str, repository: str, resp: httpx2.Response) -> str | None:
+async def _resolve_bearer_token(client: httpx.AsyncClient, repository: str, resp: httpx.Response) -> str | None:
     """Resolve a bearer token from a 401 Www-Authenticate response."""
 
     auth_header = resp.headers.get("www-authenticate", "")
@@ -151,17 +187,22 @@ def _resolve_bearer_token(client: httpx2.Client, registry: str, repository: str,
     if realm is None:
         return None
 
+    parsed_realm = urlparse(realm)
+    if parsed_realm.scheme != "https" or parsed_realm.hostname is None:
+        return None
+
     token_params: dict[str, str] = {}
     for key in ("service", "scope"):
         if key in params:
             token_params[key] = params[key]
 
     try:
-        token_resp = client.get(realm, params=token_params)
+        await _validate_public_host(parsed_realm.hostname)
+        token_resp = await client.get(realm, params=token_params)
         if token_resp.is_success:
             token = token_resp.json().get("token")
             return token if isinstance(token, str) else None
-    except (httpx2.HTTPError, ValueError) as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         logger.warning("Failed to resolve image registry bearer token: %s", exc)
 
     return None

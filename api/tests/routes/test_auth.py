@@ -1,10 +1,9 @@
-from fastapi.testclient import TestClient
-
-from conftest import session_cookie
 from main import app
+from conftest import session_cookie
+from src.models.users import UserProfile, UserListItem
+from fastapi.testclient import TestClient
 from src.database.models.users import User
 from src.database.services.users import users as users_service
-from src.models.users import UserListItem, UserProfile
 
 
 async def test_list_accounts_returns_current_active_account(
@@ -60,6 +59,26 @@ async def test_activate_account_switches_the_active_session_account(
     current_profile = await users_service.profile(user_two.id)
     assert current_profile is not None
     assert me_response.json() == UserProfile.model_validate(current_profile.model_dump()).model_dump(mode="json")
+
+
+async def test_activate_account_rejects_account_not_saved_in_session(
+    users: tuple[User, User, User],
+) -> None:
+    """Reject account switching when the target account was not saved by this browser session."""
+
+    # Arrange
+    user_one, user_two, _ = users
+    client = TestClient(
+        app,
+        cookies=session_cookie(str(user_one.oidc), [str(user_one.oidc)]),
+    )
+
+    # Act
+    response = client.post(f"/auth/accounts/{user_two.oidc}/activate")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Account is not saved in this session"}
 
 
 async def test_deactivate_account_clears_only_the_active_session_account(

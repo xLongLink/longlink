@@ -9,10 +9,10 @@ import {
     SelectValue as UISelectValue,
 } from '@/components/ui/select';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { getVersion, useSnapshot } from 'valtio';
-import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Renders a shadcn-backed select shell with optional reactive value binding. */
 export function Select({ props, nodes }: Props) {
@@ -21,12 +21,12 @@ export function Select({ props, nodes }: Props) {
     const defaultValue = resolveXmlString(props, 'defaultValue', ctx);
     const open = resolveXmlBoolean(props, 'open', ctx);
     const value = resolveXmlValue(props, 'value', ctx);
+    const { state, snapshot } = useXmlValueSnapshot(value);
 
     // Bind directly to Valtio-backed state slots so selects stay in sync with XML state.
-    if (value && typeof value === 'object' && getVersion(value) !== undefined) {
-        const state = value as Record<string, unknown> & { value?: unknown };
-        const snapshot = useSnapshot(state);
-        const currentValue = 'value' in snapshot ? snapshot.value : snapshot;
+    if (state) {
+        const currentValue =
+            snapshot && typeof snapshot === 'object' && 'value' in snapshot ? snapshot.value : snapshot;
 
         return (
             <UISelect
@@ -63,7 +63,7 @@ export function SelectTrigger({ props, nodes }: Props) {
 /** Renders the selected value placeholder or active choice. */
 export function SelectValue({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const placeholder = resolveXmlString(props, 'placeholder', ctx);
+    const placeholder = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'placeholder', ctx);
     return <UISelectValue placeholder={placeholder} />;
 }
 
@@ -84,16 +84,18 @@ export function SelectGroup({ props, nodes }: Props) {
 /** Renders the label for a grouped select section. */
 export function SelectLabel({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UISelectLabel>{renderNode(nodes, ctx)}</UISelectLabel>;
+    return <UISelectLabel>{text}</UISelectLabel>;
 }
 
 /** Renders a selectable option in the menu. */
 export function SelectItem({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const value = requireXmlString(props, 'value', ctx, 'SelectItem');
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UISelectItem value={value}>{renderNode(nodes, ctx)}</UISelectItem>;
+    return <UISelectItem value={value}>{text}</UISelectItem>;
 }
 
 /** Renders a visual separator between select groups. */

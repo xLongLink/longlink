@@ -1,11 +1,12 @@
+import { createLucideIconComponent } from '@/components/ui/icon';
 import { Menu as UIMenu, MenuSection as UIMenuSection, MenuSubSection as UIMenuSubSection } from '@ui/menu';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { ASTNode, ExecutionContext, Props } from '@xml/types';
 import type { LucideIcon } from 'lucide-react';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
-import { createLucideIconComponent } from '@/components/ui/icon';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Renders the sidebar-style menu shell. */
@@ -33,7 +34,7 @@ export function Menu({ props, nodes }: Props) {
 export function MenuSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const value = requireXmlString(props, 'value', ctx, 'MenuSection');
-    const label = resolveXmlString(props, 'label', ctx);
+    const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx);
     const icon = resolveXmlString(props, 'icon', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const iconName = icon.trim();
@@ -52,7 +53,7 @@ export function MenuSection({ props, nodes }: Props) {
 export function MenuSubSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const value = requireXmlString(props, 'value', ctx, 'MenuSubSection');
-    const label = resolveXmlString(props, 'label', ctx);
+    const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
 
     return (
@@ -87,7 +88,11 @@ function renderMenuNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
-        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+        const label = node.params?.i18n
+            ? resolveTranslation(node.params, ctx)
+            : node.params?.label
+              ? String(evaluate(node.params.label, ctx) ?? '')
+              : undefined;
         const icon = node.params?.icon ? String(evaluate(node.params.icon, ctx) ?? '') : '';
         const disabled = booleanAttribute(node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined);
         const IconComponent = icon.trim() ? resolveIconComponent(icon) : null;
@@ -118,7 +123,11 @@ function renderMenuSectionChildren(nodes: ASTNode[], ctx: ExecutionContext): Rea
         }
 
         const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
-        const label = node.params?.label ? String(evaluate(node.params.label, ctx) ?? '') : undefined;
+        const label = node.params?.i18n
+            ? resolveTranslation(node.params, ctx)
+            : node.params?.label
+              ? String(evaluate(node.params.label, ctx) ?? '')
+              : undefined;
         const disabled = booleanAttribute(node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined);
 
         return (

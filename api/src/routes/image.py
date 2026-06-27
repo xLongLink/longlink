@@ -5,7 +5,6 @@ from src.utils.utils import metadata
 from src.models.metadata import LongLinkMetadata
 from src.database.models.users import User
 
-
 router = APIRouter()
 
 
@@ -13,8 +12,8 @@ router = APIRouter()
 async def inspect_image(image: str, _: User = Depends(authuser)) -> LongLinkMetadata:
     """Inspect a container image and return its LongLink metadata."""
 
-    image_metadata = metadata(image)
-    
+    image_metadata = await metadata(image)
+
     # Fail fast when the image cannot be inspected or has no metadata labels.
     if image_metadata is None:
         raise NotFoundError("Image metadata", image)

@@ -1,3 +1,4 @@
+from src.utils.utils import metadata
 from src.models.metadata import LongLinkMetadata
 
 
@@ -5,9 +6,8 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     """Return name, description, and environment metadata for an image."""
 
     # Arrange
-    monkeypatch.setattr(
-        "src.routes.image.metadata",
-        lambda image: LongLinkMetadata(
+    async def fake_metadata(image: str) -> LongLinkMetadata:
+        return LongLinkMetadata(
             title="dashboard",
             description="Demo app",
             version="20250623_120000",
@@ -26,8 +26,9 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
                     "required": False,
                 },
             ],
-        ),
-    )
+        )
+
+    monkeypatch.setattr("src.routes.image.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -64,7 +65,10 @@ def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monke
     """Return an empty inspection payload when the image has no LongLink labels."""
 
     # Arrange
-    monkeypatch.setattr("src.routes.image.metadata", lambda image: LongLinkMetadata())
+    async def fake_metadata(image: str) -> LongLinkMetadata:
+        return LongLinkMetadata()
+
+    monkeypatch.setattr("src.routes.image.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -85,7 +89,10 @@ def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -
     """Return a not-found error when the image has no LongLink metadata."""
 
     # Arrange
-    monkeypatch.setattr("src.routes.image.metadata", lambda image: None)
+    async def fake_metadata(image: str) -> None:
+        return None
+
+    monkeypatch.setattr("src.routes.image.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -94,3 +101,15 @@ def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Image metadata 'ghcr.io/longlink/dashboard:latest' not found"}
+
+
+async def test_metadata_rejects_local_registry_hosts() -> None:
+    """Avoid inspecting image metadata through localhost registry references."""
+
+    # Arrange
+
+    # Act
+    image_metadata = await metadata("localhost:5000/longlink/dashboard:latest")
+
+    # Assert
+    assert image_metadata is None

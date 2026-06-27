@@ -46,7 +46,7 @@ describe('Action', () => {
 
         expect(requestUrl).toBe('/example/profile');
         expect(requestInit?.method).toBe('POST');
-        expect(requestInit?.headers).toEqual({ 'content-type': 'application/json' });
+        expect(Object.fromEntries(new Headers(requestInit?.headers))).toEqual({ 'content-type': 'application/json' });
         expect(requestInit?.body).toBe(
             JSON.stringify({
                 fullName: 'Ada Lovelace',

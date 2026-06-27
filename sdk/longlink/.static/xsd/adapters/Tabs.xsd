@@ -21,7 +21,8 @@
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
-        <xsd:attribute name="label" type="xsd:string" use="required" />
+        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="label" type="xsd:string" use="optional" />
         <xsd:attribute name="icon" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from src.logger import logger
+from src.operations.registry import get_operation_handler
 from src.database.models.operations import Operation
 from src.database.services.operations import operations
-from src.operations.registry import get_operation_handler
 
 
 async def execute(operation: Operation) -> Operation:

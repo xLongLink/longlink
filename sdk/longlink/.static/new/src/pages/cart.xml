@@ -1,0 +1,81 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink>
+    <State
+        id="cart"
+        value='[]'
+    />
+    <State id="search" value='""' />
+
+    <Hero icon="shopping-cart">
+        <HeroTitle i18n="examples.cart.title" />
+        <HeroDescription i18n="examples.cart.description" />
+    </Hero>
+
+    <Columns>
+        <Column width="75">
+            <InputGroup>
+                <InputGroupAddon>
+                    <Icon name="search" />
+                </InputGroupAddon>
+                <InputGroupInput value="$search.value" i18n="examples.cart.search" />
+            </InputGroup>
+
+            <Grid columns="2">
+                <Card if='${search.value in "Apples apples crisp and sweet orchard fruit"}'>
+                    <Stack>
+                        <P i18n="examples.cart.apples.name" />
+                        <P i18n="examples.cart.apples.subtitle" />
+                        <P i18n="examples.cart.apples.description" />
+                        <Badge variant="outline">$2.40</Badge>
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}' i18n="examples.cart.add" />
+                    </Stack>
+                </Card>
+
+                <Card if='${search.value in "Bananas bananas soft sweet and easy to pack"}'>
+                    <Stack>
+                        <P i18n="examples.cart.bananas.name" />
+                        <P i18n="examples.cart.bananas.subtitle" />
+                        <P i18n="examples.cart.bananas.description" />
+                        <Badge variant="outline">$1.10</Badge>
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}' i18n="examples.cart.add" />
+                    </Stack>
+                </Card>
+
+                <Card if='${search.value in "Strawberries strawberries small berries for fresh desserts"}'>
+                    <Stack>
+                        <P i18n="examples.cart.strawberries.name" />
+                        <P i18n="examples.cart.strawberries.subtitle" />
+                        <P i18n="examples.cart.strawberries.description" />
+                        <Badge variant="outline">$4.50</Badge>
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}' i18n="examples.cart.add" />
+                    </Stack>
+                </Card>
+
+                <Card if='${search.value in "Pears pears soft texture with a mellow finish"}'>
+                    <Stack>
+                        <P i18n="examples.cart.pears.name" />
+                        <P i18n="examples.cart.pears.subtitle" />
+                        <P i18n="examples.cart.pears.description" />
+                        <Badge variant="outline">$3.20</Badge>
+                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}' i18n="examples.cart.add" />
+                    </Stack>
+                </Card>
+            </Grid>
+        </Column>
+
+        <Column width="25">
+            <Stack>
+                <P i18n="examples.cart.summary.title" />
+                <Hr />
+                <P if="${cart.value.length in [0]}" i18n="examples.cart.summary.empty" />
+                <Ul if="${cart.value.length}">
+                    <For each="${cart.value}" as="item">
+                        <Li i18n="examples.cart.summary.item" name="${item.name}" quantity="${item.quantity}" price="${item.price}" />
+                    </For>
+                </Ul>
+                <Hr />
+                <Button i18n="examples.cart.summary.order" />
+            </Stack>
+        </Column>
+    </Columns>
+</longlink>

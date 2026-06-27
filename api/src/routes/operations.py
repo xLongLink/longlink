@@ -4,7 +4,6 @@ from src.models.operations import OperationResponse
 from src.database.models.users import User
 from src.database.services.operations import operations
 
-
 router = APIRouter()
 
 

@@ -1,5 +1,0 @@
-<Stack>
-    <H1 i18n="examples.text.title" />
-    <P i18n="examples.text.body" />
-    <P i18n="examples.text.apples" count="2" />
-</Stack>

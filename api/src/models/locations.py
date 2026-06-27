@@ -1,5 +1,5 @@
-from uuid import UUID
 from enum import Enum
+from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.countries import Country
 
