@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 
 import { DocsSidebar } from '@/components/DocsSidebar';
-import { DOC_GROUPS, type DocItem } from '@/pages/docs/catalog';
+import { DOC_GROUPS, DOC_PAGES, type DocItem, type DocNavigationItem } from '@/pages/docs/catalog';
 import { A } from '@ui/a';
 import {
     BreadcrumbItem,
@@ -30,6 +30,23 @@ type PageTocItem = {
     label: string;
 };
 
+/** Finds a docs navigation item by id in a nested item list. */
+function findDocNavigationItem(items: DocNavigationItem[], itemId?: string): DocNavigationItem | undefined {
+    for (const item of items) {
+        if (item.id === itemId) {
+            return item;
+        }
+
+        const childMatch = item.children ? findDocNavigationItem(item.children, itemId) : undefined;
+
+        if (childMatch) {
+            return childMatch;
+        }
+    }
+
+    return undefined;
+}
+
 /** Renders a docs page using the shared docs layout. */
 export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
     const location = useLocation();
@@ -37,7 +54,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
 
     // Prefer the longest matching path so nested pages do not resolve to their section overview.
-    const currentItem = DOC_GROUPS.flatMap((group) => group.items).reduce<DocItem | undefined>((match, item) => {
+    const currentItem = DOC_PAGES.reduce<DocItem | undefined>((match, item) => {
         const isPathMatch = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
 
         if (!isPathMatch) {
@@ -50,7 +67,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
 
         return match;
     }, undefined);
-    const currentGroup = DOC_GROUPS.find((group) => group.items.some((item) => item.id === currentItem?.id));
+    const currentGroup = DOC_GROUPS.find((group) => findDocNavigationItem(group.items, currentItem?.id));
     const pageLabel = currentItem?.title ?? 'Overview';
     const pagePath = currentItem?.path ?? '/docs';
     const isRootDocsPage = pagePath === '/docs';

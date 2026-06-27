@@ -31,8 +31,15 @@ export function Auth({ children, requiredRole }: AuthProps) {
         );
     }
 
-    if (requiredRole && role !== requiredRole) {
-        return <NotFound />;
+    if (requiredRole) {
+        // Treat required roles as a minimum access level so administrators can reach user and support routes.
+        const roleHierarchy: PlatformRole[] = ['user', 'support', 'administrator'];
+        const currentRoleIndex = roleHierarchy.indexOf(role);
+        const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
+
+        if (currentRoleIndex < requiredRoleIndex) {
+            return <NotFound />;
+        }
     }
 
     return children;

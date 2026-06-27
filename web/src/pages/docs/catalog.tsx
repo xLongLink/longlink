@@ -1,6 +1,19 @@
 import type { ReactNode } from 'react';
 
-import { Blocks, BookOpen, Database, FileCode2, FlaskConical, Globe, HardDrive, LayoutTemplate, Rocket, ServerCog, ShieldCheck, Waypoints } from 'lucide-react';
+import {
+    Blocks,
+    BookOpen,
+    Database,
+    FileCode2,
+    FlaskConical,
+    Globe,
+    HardDrive,
+    LayoutTemplate,
+    Rocket,
+    ServerCog,
+    ShieldCheck,
+    Waypoints,
+} from 'lucide-react';
 
 type DocMetadata = {
     lastUpdated?: string;
@@ -21,7 +34,11 @@ export type DocPage = DocItem & {
     }>;
 };
 
-type DocGroupTitle = 'Overview' | 'Control Plane' | 'Application SDK' | 'XML Pages';
+export type DocNavigationItem = DocItem & {
+    children?: DocNavigationItem[];
+};
+
+type DocGroupTitle = 'Overview' | 'Control Plane' | 'Application SDK';
 
 export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
     {
@@ -145,46 +162,67 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         },
     },
     {
-        group: 'XML Pages',
-        title: 'Overview',
-        path: '/docs/xml',
-        id: 'xml-overview',
-        icon: FileCode2,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/xml/index');
-
-            return { content: module.content, metadata: module.metadata };
-        },
-    },
-    {
-        group: 'XML Pages',
+        group: 'Application SDK',
         title: 'Layout',
-        path: '/docs/xml/layout',
+        path: '/docs/sdk/layout',
         id: 'layout',
         icon: LayoutTemplate,
         loadContent: async () => {
-            const module = await import('@/pages/docs/xml/layout');
+            const module = await import('@/pages/docs/sdk/layout');
 
             return { content: module.content, metadata: module.metadata };
         },
     },
     {
-        group: 'XML Pages',
+        group: 'Application SDK',
         title: 'Components',
-        path: '/docs/xml/components',
+        path: '/docs/sdk/components',
         id: 'components',
         icon: Blocks,
         loadContent: async () => {
-            const module = await import('@/pages/docs/xml/components');
+            const module = await import('@/pages/docs/sdk/components');
+
+            return { content: module.content, metadata: module.metadata };
+        },
+    },
+    {
+        group: 'Application SDK',
+        title: 'Pages',
+        path: '/docs/sdk/pages',
+        id: 'pages',
+        icon: FileCode2,
+        loadContent: async () => {
+            const module = await import('@/pages/docs/sdk/pages');
 
             return { content: module.content, metadata: module.metadata };
         },
     },
 ];
 
-const DOC_GROUP_ORDER: DocGroupTitle[] = ['Overview', 'Control Plane', 'Application SDK', 'XML Pages'];
+const DOC_GROUP_ORDER: DocGroupTitle[] = ['Overview', 'Control Plane', 'Application SDK'];
 
-export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: DocItem[] }> = DOC_GROUP_ORDER.map((title) => ({
-    title,
-    items: DOC_PAGES.filter((page) => page.group === title).map(({ group: _group, loadContent: _loadContent, ...item }) => item),
-}));
+/** Builds the nested docs navigation for the sidebar. */
+export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: DocNavigationItem[] }> = DOC_GROUP_ORDER.map((title) => {
+    const groupPages = DOC_PAGES.filter((page) => page.group === title).map(({ group: _group, loadContent: _loadContent, ...item }) => item);
+
+    if (title !== 'Application SDK') {
+        return { title, items: groupPages };
+    }
+
+    return {
+        title,
+        items: [
+            groupPages[0],
+            groupPages[1],
+            groupPages[2],
+            groupPages[3],
+            groupPages[4],
+            groupPages[5],
+            groupPages[6],
+            {
+                ...groupPages[9],
+                children: [groupPages[7], groupPages[8]],
+            },
+        ],
+    };
+});

@@ -12,14 +12,14 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 │       │   └── self-hosted
 │       ├── sdk
 │       │   ├── building
+│       │   ├── components
 │       │   ├── database
 │       │   ├── environments
+│       │   ├── pages
+│       │   ├── layout
 │       │   ├── routes
 │       │   ├── storage
 │       │   └── testing
-│       └── xml
-│           ├── components
-│           └── layout
 ├── playground
 ├── impressum
 ├── terms

@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 
-import { DOC_GROUPS } from '@/pages/docs/catalog';
+import { DOC_GROUPS, type DocNavigationItem } from '@/pages/docs/catalog';
 import {
     Sidebar,
     SidebarContent,
@@ -11,6 +11,9 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
     SidebarSeparator,
 } from '@ui/sidebar';
 
@@ -19,6 +22,46 @@ import { Wordmark } from '@/components/Wordmark';
 export type DocsSidebarProps = {
     currentItemId?: string;
 };
+
+/** Renders a nested docs navigation item. */
+function renderDocNavigationItem(item: DocNavigationItem, currentItemId?: string) {
+    const isActive = currentItemId === item.id || item.children?.some((child) => child.id === currentItemId) === true;
+
+    return (
+        <SidebarMenuItem key={item.id}>
+            <SidebarMenuButton
+                render={<Link to={item.path} />}
+                isActive={isActive}
+                variant={isActive ? 'outline' : 'default'}
+                className="text-sidebar-foreground/70 hover:bg-muted hover:text-foreground data-active:bg-muted data-active:text-foreground"
+            >
+                <item.icon className="size-4 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                {item.title}
+            </SidebarMenuButton>
+
+            {item.children?.length ? (
+                <SidebarMenuSub>
+                    {item.children.map((child) => {
+                        const isChildActive = currentItemId === child.id;
+
+                        return (
+                            <SidebarMenuSubItem key={child.id}>
+                                <SidebarMenuSubButton
+                                    render={<Link to={child.path} />}
+                                    isActive={isChildActive}
+                                    className="text-sidebar-foreground/70 hover:text-foreground"
+                                >
+                                    <child.icon className="size-4 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                                    {child.title}
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                        );
+                    })}
+                </SidebarMenuSub>
+            ) : null}
+        </SidebarMenuItem>
+    );
+}
 
 /** Renders the left navigation for the docs experience. */
 export function DocsSidebar({ currentItemId }: DocsSidebarProps) {
@@ -41,23 +84,7 @@ export function DocsSidebar({ currentItemId }: DocsSidebarProps) {
                         <SidebarGroupLabel className="font-normal text-muted-foreground">{group.title}</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu className="space-y-1">
-                                {group.items.map((item) => {
-                                    const isActive = currentItemId === item.id;
-
-                                    return (
-                                        <SidebarMenuItem key={item.id}>
-                                            <SidebarMenuButton
-                                                render={<Link to={item.path} />}
-                                                isActive={isActive}
-                                                variant={isActive ? 'outline' : 'default'}
-                                                className="text-sidebar-foreground/70 hover:bg-muted hover:text-foreground data-active:bg-muted data-active:text-foreground"
-                                            >
-                                                <item.icon className="size-4 shrink-0 text-muted-foreground/70" aria-hidden="true" />
-                                                {item.title}
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    );
-                                })}
+                                {group.items.map((item) => renderDocNavigationItem(item, currentItemId))}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
