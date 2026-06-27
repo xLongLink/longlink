@@ -7,7 +7,7 @@ from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from src.utils.utils import slugify, metadata, knames
 from src.utils.namespace import k8name
-from src.adapters.database import Postgre
+from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.common import SuccessResponse
 from src.models.applications import (ApplicationStatus, ApplicationCreate,
@@ -42,7 +42,7 @@ async def list_applications(user: User = Depends(authadmin)) -> list[Application
 
 
 @router.post("/api/applications", response_model=ApplicationResponse)
-async def create_app(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)) -> ApplicationResponse:
+async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)) -> ApplicationResponse:
     """Register a new application in the database and deploy it on the compute cluster."""
 
     organization_record = await organization_access(organization_id, user)
@@ -91,7 +91,7 @@ async def create_app(organization_id: UUID, payload: ApplicationCreate, user: Us
         raise ConflictError(str(exc)) from exc
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    db_client = Postgre(
+    db_client = Postgres(
         database_registry.host,
         database_registry.port,
         database_registry.username,
@@ -123,7 +123,7 @@ async def create_app(organization_id: UUID, payload: ApplicationCreate, user: Us
 
 
 @router.delete("/api/applications/{application_id}", response_model=SuccessResponse)
-async def delete_app(application_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
+async def delete_application(application_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
     """Queue application deletion and return immediately."""
 
     # Load the application first so missing rows fail before we delete it.

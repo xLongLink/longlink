@@ -6,6 +6,7 @@ COMMANDS = {
     "docs": "longlink.cli.docs:docs_command",
     "init": "longlink.cli.init:init_command",
     "migrate": "longlink.cli.migrate:migrate_command",
+    "translations": "longlink.cli.translations:translations_command",
 }
 
 

@@ -333,7 +333,7 @@ async def test_create_app_returns_app_response(
             return "postgresql://fake"
 
     monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
-    monkeypatch.setattr("src.routes.applications.Postgre", FakeDatabase)
+    monkeypatch.setattr("src.routes.applications.Postgres", FakeDatabase)
     client = clients[0]
 
     # Act

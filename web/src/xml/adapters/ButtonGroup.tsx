@@ -4,6 +4,7 @@ import {
     ButtonGroupText as UIButtonGroupText,
 } from '@/components/ui/button-group';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
@@ -19,8 +20,9 @@ export function ButtonGroup({ props, nodes }: Props) {
 /** Renders an inline text segment inside a button group. */
 export function ButtonGroupText({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIButtonGroupText>{renderNode(nodes, ctx)}</UIButtonGroupText>;
+    return <UIButtonGroupText>{text}</UIButtonGroupText>;
 }
 
 /** Renders a separator between grouped button segments. */

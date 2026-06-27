@@ -49,6 +49,32 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         runtimeCtx.values = {};
         setSetupError(null);
 
+        // Hydrate translations from the SDK route when the caller did not provide a catalog.
+        if (!runtimeCtx.translations) {
+            const locale = runtimeCtx.locale ?? 'en';
+
+            void fetch(`/i18n/${locale}.json`)
+                .then(async (response) => {
+                    if (!response.ok) {
+                        return {};
+                    }
+
+                    return (await response.json()) as Record<string, unknown>;
+                })
+                .then((translations) => {
+                    if (!active) return;
+
+                    runtimeCtx.translations = translations;
+                    setVersion((current) => current + 1);
+                })
+                .catch(() => {
+                    if (!active) return;
+
+                    runtimeCtx.translations = {};
+                    setVersion((current) => current + 1);
+                });
+        }
+
         /* Attach the renderer-owned invalidation hook before async setup runs. */
         runtimeCtx.invalidate = async (ids) => {
             const list = Array.isArray(ids) ? ids : [ids];

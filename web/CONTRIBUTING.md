@@ -75,6 +75,8 @@ Theme values are defined in `src/lib/theme.ts` and applied programmatically to t
 - The renderer in `src/xml/renderers.tsx` seeds runtime state and renders the AST through `src/xml/core/node.tsx`.
 - Component names must exist in `src/xml/core/node.tsx`; unknown tags fail at render time.
 - Child content is rendered recursively, so nested XML components stay under the same runtime context.
+- The localization boundary is the text-bearing component itself. Use `i18n="..."` on `P`, `H1`, `Button`, and similar tags, then keep translation strings in the app scaffold at `.static/new/src/i18n/en.json`.
+- Pluralized text uses `Intl.PluralRules` categories in the translation bundle, for example `{ "items": { "one": "1 item", "other": "{{count}} items" } }`.
 
 ## Keep changes aligned
 

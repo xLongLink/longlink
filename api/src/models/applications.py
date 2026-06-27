@@ -1,11 +1,21 @@
 from uuid import UUID
 from datetime import datetime
+from enum import Enum
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles
 from src.models.users import UserSummary
 
 # Import late to avoid a circular dependency with organizations.py.
-from src.models.organizations import ApplicationStatus, OrganizationSummary
+from src.models.organizations import OrganizationSummary
+
+
+class ApplicationStatus(str, Enum):
+    """Lifecycle states for installed applications."""
+
+    creating = "creating"
+    running = "running"
+    deleting = "deleting"
+    failed = "failed"
 
 
 class ApplicationCreate(BaseModel):

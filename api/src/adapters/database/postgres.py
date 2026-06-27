@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncConnection,
 from sqlalchemy.sql.elements import quoted_name
 
 
-class Postgre(Database):
+class Postgres(Database):
     """PostgreSQL database adapter."""
 
     def __init__(

@@ -6,20 +6,26 @@ import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('P', () => {
-    /* The compiler should preserve paragraph text without HTML params. */
+    /* The compiler should preserve the i18n attribute on paragraph tags. */
     it('compiles p xml into a paragraph ast node', () => {
-        expect(parseXML('<P>Paragraph text</P>')).toEqual([
+        expect(parseXML('<P i18n="copy.paragraph" />')).toEqual([
             {
                 name: 'P',
-                children: [{ name: 'Text', params: { value: 'Paragraph text' } }],
+                params: { i18n: 'copy.paragraph' },
+                children: [],
             },
         ]);
     });
 
-    /* The runtime should render paragraph XML into the expected HTML output. */
-    it('renders raw xml paragraph content end to end', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<P>Paragraph text</P>');
+    /* The runtime should resolve localized paragraph text from the bundle. */
+    it('renders localized paragraph content end to end', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            translations: { copy: { paragraph: 'Paragraph text' } },
+            values: {},
+        };
+        const ast = parseXML('<P i18n="copy.paragraph" />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(

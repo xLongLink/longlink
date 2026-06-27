@@ -13,13 +13,13 @@ async def test_create_location_accepts_iso_country_code(
     # Act
     response = client.post(
         "/api/locations",
-        json={"name": "Local testing", "slug": "local", "country": "DE", "provider": LocationProvider.infomaniak.value},
+        json={"name": "Local testing", "country": "DE", "provider": LocationProvider.infomaniak.value},
     )
 
     # Assert
     assert response.status_code == 200
     assert response.json()["name"] == "Local testing"
-    assert response.json()["slug"] == "local"
+    assert response.json()["slug"] == "local-testing"
     assert response.json()["country"] == "DE"
     assert "compute_registries" not in response.json()
     assert "database_registries" not in response.json()
@@ -35,7 +35,7 @@ async def test_get_locations_returns_pure_location_payload(
     client = clients[0]
     create_response = client.post(
         "/api/locations",
-        json={"name": "Local testing", "slug": "local", "country": "DE"},
+        json={"name": "Local testing", "country": "DE"},
     )
 
     # Act
@@ -45,7 +45,7 @@ async def test_get_locations_returns_pure_location_payload(
     assert create_response.status_code == 200
     assert response.status_code == 200
     assert response.json()[0]["name"] == "Local testing"
-    assert response.json()[0]["slug"] == "local"
+    assert response.json()[0]["slug"] == "local-testing"
     assert response.json()[0]["country"] == "DE"
     assert response.json()[0]["provider"] == LocationProvider.local.value
     assert "compute_registries" not in response.json()[0]
@@ -64,7 +64,7 @@ async def test_create_location_rejects_unknown_iso_country_code(
     # Act
     response = client.post(
         "/api/locations",
-        json={"name": "Local testing", "slug": "local", "country": "ZZ"},
+        json={"name": "Local testing", "country": "ZZ"},
     )
 
     # Assert
@@ -82,7 +82,7 @@ async def test_create_location_rejects_unknown_provider(
     # Act
     response = client.post(
         "/api/locations",
-        json={"name": "Local testing", "slug": "local", "country": "DE", "provider": "aws"},
+        json={"name": "Local testing", "country": "DE", "provider": "aws"},
     )
 
     # Assert

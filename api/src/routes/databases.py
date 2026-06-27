@@ -5,7 +5,7 @@ from src.errors import NotFoundError
 from src.models.common import SuccessResponse
 from src.models.databases import DatabaseUsageResponse, DatabaseRegistryCreate, DatabaseSchemaResponse, DatabaseDatabaseResponse, DatabaseRegistryResponse
 from src.database.models.users import User
-from src.adapters.database.postgre import Postgre
+from src.adapters.database import Postgres
 from src.database.services.database import database
 
 
@@ -47,8 +47,8 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    postgre = Postgre(registry.host, registry.port, registry.username, registry.password)
-    names = await postgre.databases()
+    postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
+    names = await postgres.databases()
     return [DatabaseDatabaseResponse(name=n) for n in names]
 
 
@@ -64,8 +64,8 @@ async def list_database_schemas(
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    postgre = Postgre(registry.host, registry.port, registry.username, registry.password)
-    names = await postgre.schemas(database_name)
+    postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
+    names = await postgres.schemas(database_name)
     return [DatabaseSchemaResponse(name=n) for n in names]
 
 
@@ -77,8 +77,8 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    postgre = Postgre(registry.host, registry.port, registry.username, registry.password)
-    data = await postgre.usage()
+    postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
+    data = await postgres.usage()
     return DatabaseUsageResponse(**data)
 
 

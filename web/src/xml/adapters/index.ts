@@ -59,7 +59,6 @@ export { Sup } from './Sup';
 export { Switch } from './Switch';
 export { Table, Tbody, Td, Tfoot, Th, Thead, Tr } from './Table';
 export { Tab, Tabs } from './Tabs';
-export { Text } from './Text';
 export { Textarea } from './Textarea';
 export { Toggle } from './Toggle';
 export { ToggleGroup, ToggleGroupItem } from './ToggleGroup';

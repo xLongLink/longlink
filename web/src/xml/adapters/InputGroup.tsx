@@ -7,6 +7,7 @@ import {
     InputGroupTextarea as UIInputGroupTextarea,
 } from '@/components/ui/input-group';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
@@ -58,8 +59,9 @@ export function InputGroupButton({ props, nodes }: Props) {
 /** Renders inline text inside an input group. */
 export function InputGroupText({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIInputGroupText data-slot="input-group-text">{renderNode(nodes, ctx)}</UIInputGroupText>;
+    return <UIInputGroupText data-slot="input-group-text">{text}</UIInputGroupText>;
 }
 
 /** Renders a reactive input control inside an input group. */

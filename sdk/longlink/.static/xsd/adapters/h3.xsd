@@ -7,6 +7,7 @@
       </xsd:choice>
     </xsd:sequence>
     <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attribute name="i18n" type="xsd:string" use="optional" />
   </xsd:complexType>
 
   <xsd:complexType name="H3Type" mixed="true">

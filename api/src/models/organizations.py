@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from uuid import UUID
 from datetime import datetime
-from enum import Enum
 from pydantic import EmailStr, Field, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import Avatar, UserSummary
@@ -46,15 +47,6 @@ class OrganizationInvitationResponse(BaseModel):
     created_at: datetime
 
 
-class ApplicationStatus(str, Enum):
-    """Lifecycle states for installed applications."""
-
-    creating = "creating"
-    running = "running"
-    deleting = "deleting"
-    failed = "failed"
-
-
 class OrganizationSummary(BaseModel):
     """Represent one organization in admin list responses."""
 
@@ -97,7 +89,7 @@ class OrganizationApplicationResponse(BaseModel):
     description: str | None = None
 
     # State
-    status: ApplicationStatus
+    status: 'ApplicationStatus'
 
     # Audit
     created_at: datetime
@@ -157,3 +149,7 @@ class OrganizationDetails(BaseModel):
     users: list[OrganizationMemberSummary]
     invitations: list[OrganizationInvitationResponse] = Field(default_factory=list)
     applications: list[OrganizationApplicationResponse] = Field(default_factory=list)
+
+
+from src.models.applications import ApplicationStatus  # noqa: E402, F811
+OrganizationApplicationResponse.model_rebuild()

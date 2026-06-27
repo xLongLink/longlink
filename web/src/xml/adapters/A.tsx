@@ -1,4 +1,5 @@
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
@@ -6,6 +7,7 @@ import { resolveXmlString } from './props';
 /** Renders a linked anchor with standard styling. */
 export function A({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
     const active = resolveXmlString(props, 'active', ctx);
     const href = resolveXmlString(props, 'href', ctx, '');
     const linkClassName =
@@ -15,7 +17,7 @@ export function A({ props, nodes }: Props) {
 
     return (
         <a className={linkClassName} {...(href ? { href } : {})}>
-            {renderNode(nodes, ctx)}
+            {text}
         </a>
     );
 }

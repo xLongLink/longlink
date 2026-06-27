@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { For, Text } from '../adapters';
+import { For } from '../adapters';
 import { evaluate } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
 import { xmlComponentRegistry } from './registry';
@@ -40,7 +40,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         if (node.name === 'Text') {
-            return <Text key={index} props={node.params ?? {}} nodes={node.children ?? []} />;
+            return <Fragment key={index}>{evaluate(node.params?.value ?? '', ctx) as ReactNode}</Fragment>;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

@@ -1,5 +1,5 @@
 from sqlalchemy.schema import DropSchema, CreateSchema
-from src.adapters.database.postgre import Postgre
+from src.adapters.database.postgres import Postgres
 
 
 class _FakeResult:
@@ -85,9 +85,9 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 
-    monkeypatch.setattr("src.adapters.database.postgre.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
 
-    adapter = Postgre(
+    adapter = Postgres(
         host="db.longlink.internal",
         port=5432,
         username="longlink",
@@ -122,9 +122,9 @@ async def test_remove_and_delete_use_managed_sqlalchemy_connections(monkeypatch)
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 
-    monkeypatch.setattr("src.adapters.database.postgre.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
 
-    adapter = Postgre(
+    adapter = Postgres(
         host="db.longlink.internal",
         port=5432,
         username="longlink",
@@ -150,9 +150,9 @@ async def test_usage_reads_server_disk_capacity_through_managed_connection(monke
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 
-    monkeypatch.setattr("src.adapters.database.postgre.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
 
-    adapter = Postgre(
+    adapter = Postgres(
         host="db.longlink.internal",
         port=5432,
         username="longlink",

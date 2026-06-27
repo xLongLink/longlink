@@ -1,0 +1,12 @@
+{
+    "examples": {
+        "text": {
+            "apples": {
+                "one": "1 apple",
+                "other": "{{count}} apples"
+            },
+            "body": "The paragraph component now resolves translations from en.json.",
+            "title": "Localized text elements"
+        }
+    }
+}

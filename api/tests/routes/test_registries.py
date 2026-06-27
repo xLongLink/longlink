@@ -162,7 +162,7 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     )
     registry_id = create_response.json()["id"]
 
-    class FakePostgre:
+    class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
             self.host = host
             self.port = port
@@ -172,7 +172,7 @@ async def test_database_usage_endpoint_returns_backend_capacity(
         async def usage(self) -> dict[str, int]:
             return {"space_used": 987654321}
 
-    monkeypatch.setattr("src.routes.databases.Postgre", FakePostgre)
+    monkeypatch.setattr("src.routes.databases.Postgres", FakePostgres)
 
     # Act
     response = client.get(f"/api/databases/{registry_id}/usage")

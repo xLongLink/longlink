@@ -8,6 +8,9 @@ export type ASTNode = {
 /** Raw XML attributes attached to an AST node. */
 export type ASTProps = Record<string, string>;
 
+/** Nested translation bundle used by the XML text component. */
+export type XmlTranslations = Record<string, unknown>;
+
 /** Adapter surface used by XML-backed React components. */
 export interface Props {
     props: ASTProps;
@@ -19,6 +22,8 @@ export type XmlBindableValue = string | number | boolean | Record<string, unknow
 
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
+    locale?: string;
+    translations?: XmlTranslations;
     parent?: ExecutionContext;
     setups: Record<string, () => Promise<void> | void>;
     invalidate: (ids: string | string[]) => Promise<void>;

@@ -4,7 +4,7 @@ from pathlib import Path
 from contextlib import suppress, asynccontextmanager
 from src.errors import register_error_handlers
 from src.logger import logger
-from src.routes import (auth, users, image, health, computes, storages,
+from src.routes import (auth, accounts, users, image, health, computes, storages,
                          databases, locations)
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
@@ -70,6 +70,7 @@ app.add_middleware(
 
 # Register API routes after importing the endpoint modules so their decorators run.
 app.include_router(auth.router)
+app.include_router(accounts.router)
 app.include_router(applications.router)
 app.include_router(computes.router)
 app.include_router(databases.router)

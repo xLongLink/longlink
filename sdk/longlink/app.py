@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from pydantic_settings import BaseSettings
 
 from longlink.database.audit import install_audit_middleware
@@ -25,6 +26,11 @@ class LongLink(FastAPI):
         install_audit_middleware(self)
 
         frontend_directory = ROOT / ".static" / "web"
+        translations_directory = Path.cwd() / "src" / "i18n"
+
+        # Serve the bundled translation catalog from the application itself.
+        if translations_directory.exists():
+            self.mount("/i18n", StaticFiles(directory=translations_directory), name="translations")
 
         if frontend_directory.exists():
             assets_directory = frontend_directory / "assets"

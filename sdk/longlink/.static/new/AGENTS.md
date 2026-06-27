@@ -20,6 +20,7 @@ You are working on a LongLink application.
 ```
 ├── src/
 │   ├── models/       # SQLAlchemy models
+│   ├── i18n/         # Translation catalogs
 │   ├── pages/        # Page definitions (LongLink XML format)
 │   ├── routes/       # Route registration
 │   ├── services/     # Database utilitiy Services

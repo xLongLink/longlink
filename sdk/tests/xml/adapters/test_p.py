@@ -32,6 +32,13 @@ def test_p_allows_if_attribute() -> None:
     element.validate()
 
 
+def test_p_allows_i18n_attribute() -> None:
+    """Allow localized text to resolve from the bundled catalog."""
+
+    element = Element.from_content('<P i18n="copy.paragraph" />', schema=SCHEMA)
+    element.validate()
+
+
 def test_p_rejects_lowercase_tag() -> None:
     """Reject lowercase `p` tags in HTML bridge XML."""
 
