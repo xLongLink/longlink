@@ -1,31 +1,17 @@
 import * as React from 'react';
-import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 
 import { cn } from '@/lib/utils';
+import { Icon as UIIcon } from './icon';
 
 type HeroProps = React.ComponentProps<'section'> & {
-    icon?: React.ReactNode | string;
+    icon?: string;
 };
 
 /**
  * Renders the hero shell with an optional icon and a simple horizontal layout.
  */
 function Hero({ className, icon, children, ...props }: HeroProps) {
-    let iconNode: React.ReactNode = null;
-
-    // Resolve string icon names so XML callers can use lowercase or kebab-case Lucide names.
-    if (typeof icon === 'string') {
-        const normalizedIcon = icon
-            .trim()
-            .replace(/(?:^|[-_\s]+)([a-zA-Z0-9])/g, (_, char: string) => char.toUpperCase())
-            .replace(/[^a-zA-Z0-9]/g, '');
-
-        iconNode = normalizedIcon ? (
-            <DynamicIcon name={normalizedIcon as IconName} aria-hidden={true} className="size-5" strokeWidth={2.5} />
-        ) : null;
-    } else {
-        iconNode = icon;
-    }
+    const iconNode = icon?.trim() ? <UIIcon name={icon} className="size-5" /> : null;
 
     return (
         <section data-slot="hero" className={cn('flex items-start gap-4', className)} {...props}>

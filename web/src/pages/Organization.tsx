@@ -38,7 +38,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
     }
 
     let content = (
-        <Hero icon={<LayoutGrid />} className="w-full">
+        <Hero icon="layout-grid" className="w-full">
             <div className="flex w-full items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <HeroTitle>Applications</HeroTitle>
@@ -51,7 +51,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
     // Swap the hero based on the active path segment.
     if (section === 'people') {
         content = (
-            <Hero icon={<Users />} className="w-full">
+            <Hero icon="users" className="w-full">
                 <div className="flex w-full items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
                         <HeroTitle>People</HeroTitle>
@@ -62,7 +62,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
         );
     } else if (section === 'settings') {
         content = (
-            <Hero icon={<Settings2 />} className="w-full">
+            <Hero icon="settings-2" className="w-full">
                 <div className="flex w-full items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
                         <HeroTitle>Settings</HeroTitle>

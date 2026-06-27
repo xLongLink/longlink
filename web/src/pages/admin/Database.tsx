@@ -5,7 +5,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Database, MoreVertical } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
@@ -204,7 +204,7 @@ export default function AdminDatabase() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon={<Database />}>
+                <Hero icon="database">
                     <div>
                         <HeroTitle>Database</HeroTitle>
                         <HeroDescription>

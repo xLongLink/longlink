@@ -91,7 +91,7 @@ export default function ComputePods() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon={<Container />}>
+                <Hero icon="container">
                     <div>
                         <HeroTitle>Pods</HeroTitle>
                         <HeroDescription>

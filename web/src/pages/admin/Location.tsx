@@ -5,7 +5,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { MapPin, MoreVertical } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
@@ -120,7 +120,7 @@ export default function AdminLocation() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon={<MapPin />}>
+                <Hero icon="map-pin">
                     <div>
                         <HeroTitle>Locations</HeroTitle>
                         <HeroDescription>

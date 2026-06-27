@@ -2,7 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { MoreVertical, Users } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
@@ -114,7 +114,7 @@ export default function AdminUsers() {
 
     return (
         <div className="space-y-6">
-            <Hero icon={<Users />}>
+            <Hero icon="users">
                 <div>
                     <HeroTitle>Users</HeroTitle>
                     <HeroDescription>Review account access, elevated users, and admin onboarding.</HeroDescription>

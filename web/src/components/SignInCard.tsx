@@ -78,7 +78,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                 </div>
 
                 <div className={`grid gap-4 ${hasSavedAccounts ? 'lg:grid-cols-[24rem_24rem] lg:items-start lg:justify-center' : ''}`}>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {showEmailForm ? (
                             <form className="space-y-4" onSubmit={handleSubmit}>
                                 <div className="space-y-2">
@@ -113,17 +113,23 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                 </Button>
                             </form>
                         ) : (
-                            <>
-                                <Button type="button" variant="outline" className="w-full" onClick={() => setShowEmailForm(true)}>
-                                    Continue with Email
-                                </Button>
-                                <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('github')}>
-                                    Continue with GitHub
-                                </Button>
-                                <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('google')}>
-                                    Continue with Google
-                                </Button>
-                            </>
+                            <div className="space-y-3">
+                                <Separator className="my-1 bg-border/80" />
+
+                                <div className="space-y-2 py-1">
+                                    <Button type="button" variant="outline" className="w-full" onClick={() => setShowEmailForm(true)}>
+                                        Continue with Email
+                                    </Button>
+                                    <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('github')}>
+                                        Continue with GitHub
+                                    </Button>
+                                    <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('google')}>
+                                        Continue with Google
+                                    </Button>
+                                </div>
+
+                                <Separator className="my-1 bg-border/80" />
+                            </div>
                         )}
                     </div>
 

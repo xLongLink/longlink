@@ -26,7 +26,6 @@ describe('A', () => {
         );
         expect(output).toContain('href="/icons"');
         expect(output).toContain('Open icons');
-        expect(output).toContain('<svg');
     });
 
     /* The runtime should omit href when the anchor is used as a triggerless label. */

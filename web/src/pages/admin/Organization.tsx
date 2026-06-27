@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Building2, MoreVertical } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
@@ -200,7 +200,7 @@ export default function AdminOrganization() {
 
     return (
         <div className="space-y-6">
-            <Hero icon={<Building2 />}>
+            <Hero icon="building-2">
                 <div>
                     <HeroTitle>Organizations</HeroTitle>
                     <HeroDescription>Review organization lifecycle, ownership, and access boundaries.</HeroDescription>

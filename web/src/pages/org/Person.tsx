@@ -34,7 +34,7 @@ export default function Person() {
             }}
         >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
-                <Hero icon={<Users />} className="w-full">
+                <Hero icon="users" className="w-full">
                     <div className="flex w-full items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                             <HeroTitle>{person?.name ?? 'Person'}</HeroTitle>

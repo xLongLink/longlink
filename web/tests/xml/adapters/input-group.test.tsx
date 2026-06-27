@@ -57,7 +57,6 @@ describe('InputGroup', () => {
         expect(output).toContain('Search');
         expect(output).toContain('Public');
         expect(output).toContain('ada');
-        expect(output).toContain('<svg');
     });
 
     /* Dotted state bindings should resolve and render the current field value. */

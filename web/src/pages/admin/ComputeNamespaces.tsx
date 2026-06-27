@@ -1,6 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Layers } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
@@ -44,7 +43,7 @@ export default function ComputeNamespaces() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon={<Layers />}>
+                <Hero icon="layers">
                     <div>
                         <HeroTitle>Namespaces</HeroTitle>
                         <HeroDescription>

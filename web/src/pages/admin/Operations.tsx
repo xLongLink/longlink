@@ -1,6 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Activity } from 'lucide-react';
 
 import { DataTable } from '@/components/DataTable';
 import { useOperations } from '@/hooks/use-operations';
@@ -74,7 +73,7 @@ export default function AdminOperations() {
 
     return (
         <div className="space-y-6">
-            <Hero icon={<Activity />}>
+            <Hero icon="activity">
                 <div>
                     <HeroTitle>Operations</HeroTitle>
                     <HeroDescription>

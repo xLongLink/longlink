@@ -121,7 +121,7 @@ export default function Settings() {
             }}
         >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
-                <Hero icon={<Settings2 />}>
+                <Hero icon="settings-2">
                     <div>
                         <HeroTitle>Settings</HeroTitle>
                         <HeroDescription>Manage your account, preferences, and workspace access.</HeroDescription>

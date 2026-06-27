@@ -109,7 +109,7 @@ export default function AdminApplications() {
 
     return (
         <div className="space-y-6">
-            <Hero icon={<Boxes />}>
+            <Hero icon="boxes">
                 <div>
                     <HeroTitle>Applications</HeroTitle>
                     <HeroDescription>

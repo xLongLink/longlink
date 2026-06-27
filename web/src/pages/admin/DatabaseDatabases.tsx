@@ -1,6 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Database } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
@@ -53,7 +52,7 @@ export default function DatabaseDatabases() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon={<Database />}>
+                <Hero icon="database">
                     <div>
                         <HeroTitle>Databases</HeroTitle>
                         <HeroDescription>

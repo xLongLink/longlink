@@ -8,9 +8,6 @@ dependencies = [
   "longlink",
 ]
 
-[tool.uv.sources]
-longlink = { path = "../../..", editable = true }
-
 [dependency-groups]
 dev = [
   "pytest",

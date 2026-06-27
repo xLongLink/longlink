@@ -4,8 +4,8 @@ import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { ASTNode, ExecutionContext, Props } from '@xml/types';
 import type { LucideIcon } from 'lucide-react';
-import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
+import { createLucideIconComponent } from '@/components/ui/icon';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Renders the sidebar-style menu shell. */
@@ -72,18 +72,7 @@ function booleanAttribute(value: unknown): boolean | undefined {
 
 /** Resolves a Lucide icon component from an XML icon name. */
 function resolveIconComponent(name: string) {
-    const normalizedName = name
-        .trim()
-        .replace(/(?:^|[-_\s]+)([a-zA-Z0-9])/g, (_match, char: string) => char.toUpperCase())
-        .replace(/[^a-zA-Z0-9]/g, '');
-
-    if (!normalizedName) {
-        return null;
-    }
-
-    return function IconComponent({ className }: { className?: string }) {
-        return <DynamicIcon name={normalizedName as IconName} aria-hidden={true} className={className} />;
-    } as LucideIcon;
+    return createLucideIconComponent(name) as LucideIcon;
 }
 
 /** Renders top-level menu section markers for the UI menu parser. */
