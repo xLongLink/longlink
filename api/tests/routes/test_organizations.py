@@ -1,14 +1,18 @@
 from uuid import UUID
 from types import SimpleNamespace
+from src.database.session import get_session
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.countries import Country
 from src.models.locations import LocationResponse
 from src.models.organizations import OrganizationDetails as OrgDetails
+from src.models.organizations import OrganizationInvitationResponse
 from src.models.organizations import OrganizationSummary as OrgSummary
 from src.models.organizations import OrganizationMemberSummary
+from src.database.models.association import UserOrganization
 from src.database.models.users import User
+from src.database.services.invitations import invitations
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
@@ -22,6 +26,7 @@ db = SimpleNamespace(
     applications=applications,
     compute=compute,
     database=database,
+    invitations=invitations,
     locations=locations,
     operations=operations,
     organizations=organizations,
@@ -174,6 +179,36 @@ async def test_get_organization_returns_member_payload(
     ]
 
 
+async def test_get_organization_returns_invitations(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return pending invitations with the organization payload."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    invitation = await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
+    client = clients[0]
+
+    # Act
+    response = client.get(f"/api/organizations/{organization.id}")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["invitations"] == [
+        OrganizationInvitationResponse.model_validate(
+            {
+                "id": invitation.id,
+                "email": invitee.email,
+                "role_name": OrganizationRoles.write,
+                "created_at": invitation.created_at,
+            }
+        ).model_dump(mode="json")
+    ]
+
+
 async def test_list_organizations_returns_null_deleted_by_for_active_org(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
@@ -228,6 +263,148 @@ async def test_get_organization_returns_404_for_non_member(
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
+
+
+async def test_create_organization_invitation_returns_204(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Create a pending invitation for an organization member."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    client = clients[0]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/invitations",
+        json={"email": invitee.email, "role": "write"},
+    )
+
+    # Assert
+    assert response.status_code == 204
+    invitations_list = await db.invitations.list_by_organization(organization.id)
+    assert [item.email for item in invitations_list] == [invitee.email]
+
+
+async def test_create_organization_invitation_returns_204_for_maintainer(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Allow a maintainer to create invitations."""
+
+    # Arrange
+    owner, maintainer, invitee = users[0], users[1], users[2]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=maintainer.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.maintain,
+            )
+        )
+        await session.commit()
+
+    client = clients[1]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/invitations",
+        json={"email": invitee.email, "role": "write"},
+    )
+
+    # Assert
+    assert response.status_code == 204
+    invitations_list = await db.invitations.list_by_organization(organization.id)
+    assert [item.email for item in invitations_list] == [invitee.email]
+
+
+async def test_create_organization_invitation_returns_409_for_duplicate_email(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject duplicate invitation requests for the same email."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
+    client = clients[0]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/invitations",
+        json={"email": invitee.email, "role": "admin"},
+    )
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Invitation already exists"}
+
+
+async def test_create_organization_invitation_returns_404_for_non_member(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject invitation creation when the caller is not an organization member."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    client = clients[1]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/invitations",
+        json={"email": invitee.email, "role": "write"},
+    )
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
+
+
+async def test_create_organization_invitation_returns_403_for_regular_member(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject invitation creation when the member lacks invite permissions."""
+
+    # Arrange
+    owner, regular_member, invitee = users[0], users[1], users[2]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=regular_member.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.write,
+            )
+        )
+        await session.commit()
+
+    client = clients[1]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/invitations",
+        json={"email": invitee.email, "role": "write"},
+    )
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Invitation permissions required"}
 
 
 async def test_get_organization_rejects_invalid_uuid(

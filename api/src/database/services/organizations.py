@@ -11,9 +11,11 @@ from src.models.users import UserSummary
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
 from src.models.organizations import (OrganizationDetails,
+                                      OrganizationInvitationResponse,
                                       OrganizationMemberSummary,
                                       OrganizationApplicationResponse)
 from src.database.services.applications import applications
+from src.database.services.invitations import invitations
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
@@ -51,6 +53,7 @@ class OrganizationsService:
                 return None
 
             active_applications = await applications.list_by_organization(organization.id)
+            active_invitations = await invitations.list_by_organization(organization.id)
 
             memberships_result = await session.execute(
                 select(User, UserOrganization.role_name, UserOrganization.updated_at)
@@ -83,8 +86,21 @@ class OrganizationsService:
                 deleted_at=organization.deleted_at,
                 deleted_by=UserSummary.model_validate(organization.deleted_by) if organization.deleted_by is not None else None,
                 users=members,
+                invitations=[OrganizationInvitationResponse.model_validate(invitation) for invitation in active_invitations],
                 applications=[OrganizationApplicationResponse.model_validate(application) for application in active_applications],
             )
+
+    async def membership_role(self, organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:
+        """Return one member role for an organization."""
+
+        async with session_scope() as session:
+            statement = select(UserOrganization.role_name).where(
+                UserOrganization.organization_id == organization_id,
+                UserOrganization.user_id == user_id,
+                UserOrganization.deleted_at.is_(None),
+            )
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
 
     async def create(self, name: str, location_id: UUID, user: User, avatar: str | None = None) -> Organization:
         """Create an organization."""

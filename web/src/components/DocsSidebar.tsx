@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 
+import { cn } from '@/lib/utils';
 import { DOC_GROUPS, type DocNavigationItem } from '@/pages/docs/catalog';
 import {
     Sidebar,
@@ -24,8 +25,11 @@ export type DocsSidebarProps = {
 };
 
 /** Renders a nested docs navigation item. */
-function renderDocNavigationItem(item: DocNavigationItem, currentItemId?: string) {
-    const isActive = currentItemId === item.id || item.children?.some((child) => child.id === currentItemId) === true;
+function renderDocNavigationItem(
+    item: DocNavigationItem,
+    currentItemId?: string
+) {
+    const isActive = currentItemId === item.id;
 
     return (
         <SidebarMenuItem key={item.id}>
@@ -33,7 +37,11 @@ function renderDocNavigationItem(item: DocNavigationItem, currentItemId?: string
                 render={<Link to={item.path} />}
                 isActive={isActive}
                 variant={isActive ? 'outline' : 'default'}
-                className="text-sidebar-foreground/70 hover:bg-muted hover:text-foreground data-active:bg-muted data-active:text-foreground"
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                    'text-sidebar-foreground/70 hover:bg-muted hover:text-foreground data-active:bg-muted data-active:text-foreground',
+                    isActive && 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                )}
             >
                 <item.icon className="size-4 shrink-0 text-muted-foreground/70" aria-hidden="true" />
                 {item.title}
@@ -49,7 +57,11 @@ function renderDocNavigationItem(item: DocNavigationItem, currentItemId?: string
                                 <SidebarMenuSubButton
                                     render={<Link to={child.path} />}
                                     isActive={isChildActive}
-                                    className="text-sidebar-foreground/70 hover:text-foreground"
+                                    aria-current={isChildActive ? 'page' : undefined}
+                                    className={cn(
+                                        'text-sidebar-foreground/70 hover:text-foreground',
+                                        isChildActive && 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                                    )}
                                 >
                                     <child.icon className="size-4 shrink-0 text-muted-foreground/70" aria-hidden="true" />
                                     {child.title}

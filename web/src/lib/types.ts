@@ -4,7 +4,7 @@ import type { Accent, Radius, Theme } from '@/lib/theme';
 export type ApiInvitation = {
     id: string;
     email: string;
-    role: string;
+    role: Role;
     created_at: string;
 };
 

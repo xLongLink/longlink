@@ -1,15 +1,17 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, Response
 from src.auth import authuser, authsupport, organization_access
-from src.errors import ConflictError, NotFoundError
+from src.errors import ConflictError, ForbiddenError, NotFoundError
 from src.logger import logger
 from src.models.common import SuccessResponse
 from src.adapters.compute.k8s import K8s
 from src.models.applications import ApplicationResponse
+from src.models.roles import OrganizationRoles
 from src.models.organizations import OrganizationCreate, OrganizationDetails, OrganizationInvitationCreate, OrganizationSummary
 from src.database.models.users import User
 from src.database.services.compute import compute
 from src.database.services.applications import applications
+from src.database.services.invitations import invitations
 from src.database.services.organizations import organizations
 
 
@@ -44,9 +46,18 @@ async def create_organization_invitation(
     payload: OrganizationInvitationCreate,
     user: User = Depends(authuser),
 ) -> Response:
-    """Accept an organization invitation request."""
+    """Create one invitation for an organization member."""
 
     await organization_access(organization_id, user)
+    membership_role = await organizations.membership_role(organization_id, user.id)
+    if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+        raise ForbiddenError("Invitation permissions required")
+
+    try:
+        await invitations.create(organization_id, payload.email, payload.role, user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
     return Response(status_code=204)
 
 

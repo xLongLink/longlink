@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from enum import Enum
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import EmailStr, Field, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.locations import LocationResponse
@@ -22,7 +22,9 @@ class OrganizationInvitationCreate(BaseModel):
     """Validate organization invitation payloads."""
 
     # Metadata
-    email: str = Field(min_length=1, max_length=320)
+    email: EmailStr
+
+    # State
     role: OrganizationRoles
 
 
@@ -36,7 +38,9 @@ class OrganizationInvitationResponse(BaseModel):
 
     # Metadata
     email: str
-    role: OrganizationRoles
+
+    # State
+    role: OrganizationRoles = Field(validation_alias="role_name")
 
     # Audit
     created_at: datetime

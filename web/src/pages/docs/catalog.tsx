@@ -1,5 +1,22 @@
 import type { ReactNode } from 'react';
 
+import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
+import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/pages/docs/api/index';
+import {
+    content as docsApiSelfHostedContent,
+    metadata as docsApiSelfHostedMetadata,
+} from '@/pages/docs/api/self-hosted';
+import { content as docsSdkIndexContent, metadata as docsSdkIndexMetadata } from '@/pages/docs/sdk/index';
+import { content as docsSdkEnvironmentsContent, metadata as docsSdkEnvironmentsMetadata } from '@/pages/docs/sdk/environments';
+import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
+import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
+import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
+import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
+import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
+import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/pages/docs/sdk/pages';
+import { content as docsXmlComponentsContent, metadata as docsXmlComponentsMetadata } from '@/pages/docs/xml/components';
+import { content as docsXmlLayoutContent, metadata as docsXmlLayoutMetadata } from '@/pages/docs/xml/layout';
+
 import {
     Blocks,
     BookOpen,
@@ -28,10 +45,8 @@ export type DocItem = {
 };
 
 export type DocPage = DocItem & {
-    loadContent: () => Promise<{
-        content: ReactNode;
-        metadata: DocMetadata;
-    }>;
+    content: ReactNode;
+    metadata: DocMetadata;
 };
 
 export type DocNavigationItem = DocItem & {
@@ -47,11 +62,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs',
         id: 'introduction',
         icon: BookOpen,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/index');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsIndexContent,
+        metadata: docsIndexMetadata,
     },
     {
         group: 'Control Plane',
@@ -59,11 +71,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/api',
         id: 'control-plane-overview',
         icon: ShieldCheck,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/api/index');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsApiIndexContent,
+        metadata: docsApiIndexMetadata,
     },
     {
         group: 'Control Plane',
@@ -71,11 +80,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/api/self-hosted',
         id: 'self-hosted',
         icon: ServerCog,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/api/self-hosted');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsApiSelfHostedContent,
+        metadata: docsApiSelfHostedMetadata,
     },
     {
         group: 'Application SDK',
@@ -83,11 +89,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/sdk',
         id: 'sdk-overview',
         icon: Blocks,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/index');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsSdkIndexContent,
+        metadata: docsSdkIndexMetadata,
     },
     {
         group: 'Application SDK',
@@ -95,11 +98,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/sdk/environments',
         id: 'environments',
         icon: Globe,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/environments');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsSdkEnvironmentsContent,
+        metadata: docsSdkEnvironmentsMetadata,
     },
     {
         group: 'Application SDK',
@@ -107,11 +107,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/sdk/routes',
         id: 'routes',
         icon: Waypoints,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/routes');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsSdkRoutesContent,
+        metadata: docsSdkRoutesMetadata,
     },
     {
         group: 'Application SDK',
@@ -119,11 +116,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/sdk/storage',
         id: 'storage',
         icon: HardDrive,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/storage');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsSdkStorageContent,
+        metadata: docsSdkStorageMetadata,
     },
     {
         group: 'Application SDK',
@@ -131,11 +125,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/sdk/database',
         id: 'database',
         icon: Database,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/database');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsSdkDatabaseContent,
+        metadata: docsSdkDatabaseMetadata,
     },
     {
         group: 'Application SDK',
@@ -143,11 +134,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/sdk/testing',
         id: 'testing',
         icon: FlaskConical,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/testing');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsSdkTestingContent,
+        metadata: docsSdkTestingMetadata,
     },
     {
         group: 'Application SDK',
@@ -155,35 +143,26 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/sdk/building',
         id: 'building',
         icon: Rocket,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/building');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsSdkBuildingContent,
+        metadata: docsSdkBuildingMetadata,
     },
     {
         group: 'Application SDK',
         title: 'Layout',
-        path: '/docs/sdk/layout',
+        path: '/docs/xml/layout',
         id: 'layout',
         icon: LayoutTemplate,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/layout');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsXmlLayoutContent,
+        metadata: docsXmlLayoutMetadata,
     },
     {
         group: 'Application SDK',
         title: 'Components',
-        path: '/docs/sdk/components',
+        path: '/docs/xml/components',
         id: 'components',
         icon: Blocks,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/components');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsXmlComponentsContent,
+        metadata: docsXmlComponentsMetadata,
     },
     {
         group: 'Application SDK',
@@ -191,11 +170,8 @@ export const DOC_PAGES: Array<DocPage & { group: DocGroupTitle }> = [
         path: '/docs/sdk/pages',
         id: 'pages',
         icon: FileCode2,
-        loadContent: async () => {
-            const module = await import('@/pages/docs/sdk/pages');
-
-            return { content: module.content, metadata: module.metadata };
-        },
+        content: docsSdkPagesContent,
+        metadata: docsSdkPagesMetadata,
     },
 ];
 
@@ -203,7 +179,7 @@ const DOC_GROUP_ORDER: DocGroupTitle[] = ['Overview', 'Control Plane', 'Applicat
 
 /** Builds the nested docs navigation for the sidebar. */
 export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: DocNavigationItem[] }> = DOC_GROUP_ORDER.map((title) => {
-    const groupPages = DOC_PAGES.filter((page) => page.group === title).map(({ group: _group, loadContent: _loadContent, ...item }) => item);
+    const groupPages = DOC_PAGES.filter((page) => page.group === title).map(({ group: _group, ...item }) => item);
 
     if (title !== 'Application SDK') {
         return { title, items: groupPages };

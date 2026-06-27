@@ -9,6 +9,7 @@ import {
     fetchApiVoid,
 } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey } from '@/lib/query-keys';
+import type { Role } from '@/lib/roles';
 import type {
     ApiApplicationResponse,
     ApiInvitation,
@@ -29,8 +30,9 @@ type UseOrganizationResult = {
 };
 
 type UseOrganizationActionsResult = {
-    inviteMember: (payload: { email: string; role: string }) => Promise<void>;
+    inviteMember: (payload: { email: string; role: Role }) => Promise<void>;
     isInviting: boolean;
+    canInviteMembers: boolean;
     createApplication: (payload: {
         name: string;
         image: string;
@@ -83,11 +85,17 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
     const { organizations } = useUser();
     const organizationId = useMemo(() => resolveOrganizationId(organizationSlug, organizations), [organizationSlug, organizations]);
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+    const organizationMembership = organizations.find((item) => item.slug === organizationSlug);
+    const canInviteMembers = organizationMembership?.role ? ['admin', 'maintain', 'owner'].includes(organizationMembership.role) : false;
 
     const inviteMemberMutation = useMutation({
-        mutationFn: async ({ email, role }: { email: string; role: string }) => {
+        mutationFn: async ({ email, role }: { email: string; role: Role }) => {
             if (organizationPath === null) {
                 throw new Error('Organization not found');
+            }
+
+            if (!canInviteMembers) {
+                throw new Error('Invitation permissions required');
             }
 
             return fetchApiVoid(`/api/organizations/${organizationId}/invitations`, {
@@ -158,6 +166,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
     return {
         inviteMember: inviteMemberMutation.mutateAsync,
         isInviting: inviteMemberMutation.isPending,
+        canInviteMembers,
         createApplication: createApplicationMutation.mutateAsync,
         isCreatingApplication: createApplicationMutation.isPending,
         deleteApplication: deleteApplicationMutation.mutateAsync,

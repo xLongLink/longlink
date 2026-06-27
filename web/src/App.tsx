@@ -1,6 +1,6 @@
 import { useOrganization } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
-import { DOC_PAGES, type DocPage } from '@/pages/docs/catalog';
+import { DOC_PAGES } from '@/pages/docs/catalog';
 import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
 import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
@@ -58,7 +58,7 @@ function getRoutes() {
     // Default bundle serves the full app with control-plane routes.
     return [
         { path: '/', element: <Home /> },
-        ...DOC_PAGES.map((page: DocPage) => ({
+        ...DOC_PAGES.map((page) => ({
             path: page.path.replace(/^\//, ''),
             element: <DocsPageRoute page={page} />,
         })),

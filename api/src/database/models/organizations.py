@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from src.database.models.users import User
     from src.database.models.locations import Location
     from src.database.models.applications import Application
+    from src.database.models.invitations import OrganizationInvitation
 
 
 class Organization(SQLModel, table=True):
@@ -40,4 +41,5 @@ class Organization(SQLModel, table=True):
 
     # Relationships
     users: list['User'] = Relationship(back_populates='organizations', sa_relationship_kwargs={'secondary': UserOrganization.__table__, 'primaryjoin': 'Organization.id == UserOrganization.organization_id', 'secondaryjoin': 'UserOrganization.user_id == User.id'})
+    invitations: list['OrganizationInvitation'] = Relationship(back_populates='organization')
     applications: list['Application'] = Relationship(back_populates='organization')

@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { useOrganizationActions } from '@/hooks/use-organization';
+import type { Role } from '@/lib/roles';
 import { ROLE_NAMES } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -45,9 +47,9 @@ export default function People({ organization, people, invitations, isLoading, e
     const [peopleSection, setPeopleSection] = useState<'members' | 'invitations'>('members');
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
-    const [inviteRole, setInviteRole] = useState<string>('write');
+    const [inviteRole, setInviteRole] = useState<Role>('write');
     const [inviteError, setInviteError] = useState<string | null>(null);
-    const { inviteMember, isInviting } = useOrganizationActions(organization);
+    const { inviteMember, isInviting, canInviteMembers } = useOrganizationActions(organization);
 
     const peopleColumns: Array<ColumnDef<ApiOrganizationMemberSummary>> = [
         {
@@ -116,61 +118,74 @@ export default function People({ organization, people, invitations, isLoading, e
     ];
 
     return (
-        <Menu
-            value={peopleSection}
-            onValueChange={(value) => setPeopleSection(value as 'members' | 'invitations')}
-            defaultValue="members"
-            className="items-start"
-            ariaLabel="People menu"
-        >
-            <MenuSection value="members" label="Members" icon={Users}>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-medium text-foreground">Members</h2>
-                        <p className="text-sm text-muted-foreground">Users who have access to this organization.</p>
-                    </div>
-                    <hr className="border-border" />
-                    {isLoading ? (
-                        <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading people...</div>
-                    ) : error ? (
-                        <div className="rounded-md border p-4 text-sm text-destructive">Failed to load people.</div>
-                    ) : people.length ? (
-                        <DataTable columns={peopleColumns} data={people} />
-                    ) : (
-                        <div className="rounded-md border p-4 text-sm text-muted-foreground">No people found.</div>
-                    )}
-                </div>
-            </MenuSection>
-
-            <MenuSection value="invitations" label="Invitations" icon={Mail}>
-                <div className="space-y-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <>
+            <Menu
+                value={peopleSection}
+                onValueChange={(value) => setPeopleSection(value as 'members' | 'invitations')}
+                defaultValue="members"
+                className="items-start"
+                ariaLabel="People menu"
+            >
+                <MenuSection value="members" label="Members" icon={Users}>
+                    <div className="space-y-4">
                         <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Invitations</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Pending invitations to join this organization.
-                            </p>
+                            <h2 className="text-lg font-medium text-foreground">Members</h2>
+                            <p className="text-sm text-muted-foreground">Users who have access to this organization.</p>
                         </div>
-                        <Button type="button" onClick={() => setInviteOpen(true)} disabled={organization.length === 0}>
-                            Invite
-                        </Button>
+                        <hr className="border-border" />
+                        {isLoading ? (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading people...</div>
+                        ) : error ? (
+                            <div className="rounded-md border p-4 text-sm text-destructive">Failed to load people.</div>
+                        ) : people.length ? (
+                            <DataTable columns={peopleColumns} data={people} />
+                        ) : (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">No people found.</div>
+                        )}
                     </div>
-                    <hr className="border-border" />
-                    {isLoading ? (
-                        <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                            Loading invitations...
+                </MenuSection>
+
+                <MenuSection value="invitations" label="Invitations" icon={Mail}>
+                    <div className="space-y-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="space-y-1">
+                                <h2 className="text-lg font-medium text-foreground">Invitations</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Pending invitations to join this organization.
+                                </p>
+                                {canInviteMembers ? null : (
+                                    <p className="text-sm text-muted-foreground">
+                                        Only maintainers, admins, and owners can send invitations.
+                                    </p>
+                                )}
+                            </div>
+                            <Button
+                                type="button"
+                                onClick={() => setInviteOpen(true)}
+                                disabled={organization.length === 0}
+                            >
+                                Invite
+                            </Button>
                         </div>
-                    ) : error ? (
-                        <div className="rounded-md border p-4 text-sm text-destructive">
-                            Failed to load invitations.
-                        </div>
-                    ) : invitations.length ? (
-                        <DataTable columns={invitationColumns} data={invitations} />
-                    ) : (
-                        <div className="rounded-md border p-4 text-sm text-muted-foreground">No invitations yet.</div>
-                    )}
-                </div>
-            </MenuSection>
+                        <hr className="border-border" />
+                        {isLoading ? (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                Loading invitations...
+                            </div>
+                        ) : error ? (
+                            <div className="rounded-md border p-4 text-sm text-destructive">
+                                Failed to load invitations.
+                            </div>
+                        ) : invitations.length ? (
+                            <DataTable columns={invitationColumns} data={invitations} />
+                        ) : (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                No invitations yet.
+                            </div>
+                        )}
+                    </div>
+                </MenuSection>
+            </Menu>
 
             <Dialog
                 open={inviteOpen}
@@ -186,6 +201,11 @@ export default function People({ organization, people, invitations, isLoading, e
                         <div className="space-y-1">
                             <DialogTitle>Invite user</DialogTitle>
                             <DialogDescription>Send an invitation to join this organization.</DialogDescription>
+                            {canInviteMembers ? null : (
+                                <p className="text-sm text-muted-foreground">
+                                    You need maintainer, admin, or owner access to invite members.
+                                </p>
+                            )}
                         </div>
 
                         <form
@@ -223,18 +243,18 @@ export default function People({ organization, people, invitations, isLoading, e
 
                             <div className="space-y-2">
                                 <Label htmlFor="invite-role">Role</Label>
-                                <select
-                                    id="invite-role"
-                                    value={inviteRole}
-                                    onChange={(event) => setInviteRole(event.target.value)}
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    {ROLE_NAMES.map((role) => (
-                                        <option key={role} value={role}>
-                                            {role}
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as Role)}>
+                                    <SelectTrigger id="invite-role" className="w-full">
+                                        {inviteRole}
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {ROLE_NAMES.map((role) => (
+                                            <SelectItem key={role} value={role}>
+                                                {role}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {inviteError ? <p className="text-sm text-destructive">{inviteError}</p> : null}
@@ -252,7 +272,7 @@ export default function People({ organization, people, invitations, isLoading, e
                                 </Button>
                                 <Button
                                     type="submit"
-                                    disabled={isInviting || inviteEmail.trim().length === 0}
+                                    disabled={isInviting || inviteEmail.trim().length === 0 || !canInviteMembers}
                                 >
                                     {isInviting ? 'Inviting...' : 'Invite'}
                                 </Button>
@@ -261,6 +281,6 @@ export default function People({ organization, people, invitations, isLoading, e
                     </div>
                 </DialogContent>
             </Dialog>
-        </Menu>
+        </>
     );
 }
