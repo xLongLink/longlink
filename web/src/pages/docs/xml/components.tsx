@@ -49,8 +49,9 @@ export const content = (
                 <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">default</code>,{' '}
                 <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">outline</code>,{' '}
                 <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">ghost</code>,{' '}
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">destructive</code>,
-                and <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">link</code>.
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">destructive</code>
+                {', and '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">link</code>.
             </li>
         </ul>
         <CodeBlock language="xml">{`<Flex space="around">
@@ -295,7 +296,7 @@ export const content = (
         <CodeBlock language="xml">{`<P>
   <A href="/settings">Open settings</A>
   <B>Important</B>
-  <Code>@radix-ui/react-alert-dialog</Code>
+  <Code>inline-code</Code>
   <S>Deprecated</S>
   <Sub>n</Sub>
   <Sup>2</Sup>

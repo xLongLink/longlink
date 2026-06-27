@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
-from src.errors import NotFoundError
+from src.errors import ConflictError, NotFoundError
 from src.models.common import SuccessResponse
 from src.models.databases import DatabaseUsageResponse, DatabaseRegistryCreate, DatabaseSchemaResponse, DatabaseDatabaseResponse, DatabaseRegistryResponse
 from src.database.models.users import User
@@ -34,7 +34,10 @@ async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport
 async def create_database_registry(payload: DatabaseRegistryCreate, user: User = Depends(authadmin)) -> DatabaseRegistryResponse:
     """Create or update one database backend registration."""
 
-    registry = await database.create(**payload.model_dump(), user=user)
+    try:
+        registry = await database.create(**payload.model_dump(), user=user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
 
     return registry
 

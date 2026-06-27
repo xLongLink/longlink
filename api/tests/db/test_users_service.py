@@ -65,26 +65,19 @@ async def test_upsert_marks_first_created_user_as_admin() -> None:
     assert user.role == PlatformRoles.administrator
 
 
-async def test_upsert_grants_the_seeded_admin_org_when_it_exists_later() -> None:
-    """Grant the admin org membership after the org is seeded later."""
+async def test_profile_returns_created_organization_membership() -> None:
+    """Return organization memberships created through the organization service."""
 
     # Arrange
     user = await db.users.upsert(
         oidc="oidc-subject-admin",
-        email="example@longlink.dev",
+        email="admin@example.com",
         name="First User",
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("test", location.id, user, avatar="https://example.com/organizations/test.png")
 
-    # Act
-    await db.users.upsert(
-        oidc="oidc-subject-admin",
-        email="example@longlink.dev",
-        name="First User",
-        avatar=None,
-    )
     profile = await db.users.profile(user.id)
 
     # Assert

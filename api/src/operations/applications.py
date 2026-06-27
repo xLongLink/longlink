@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from enum import Enum
 from src.logger import logger
-from src.utils.namespace import k8name
 from src.adapters.compute import K8s
 from kubernetes.client.rest import ApiException
-from src.models.applications import ApplicationStatus
 from src.models.operations import OperationKind
+from src.models.applications import ApplicationStatus
 from src.database.models.operations import Operation
 from src.database.services.compute import compute
 from src.database.services.operations import operations
@@ -48,11 +47,10 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
         return ApplicationStartupState.pending
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    namespace = k8name(organization.slug)
 
     # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
-        pods = k8s._core_api.list_namespaced_pod(namespace, label_selector=f"app={application.slug}").items
+        pods = k8s.application_pods(organization.slug, application.slug)
     except ApiException:
         return ApplicationStartupState.pending
 

@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
-from src.errors import NotFoundError
+from src.errors import ConflictError, NotFoundError
 from src.models.common import SuccessResponse
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.models.users import User
@@ -33,7 +33,10 @@ async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)
 async def create_storage_registry(payload: StorageRegistryCreate, user: User = Depends(authadmin)) -> StorageRegistryResponse:
     """Create or update one storage backend registration."""
 
-    registry = await storage.create(**payload.model_dump(), user=user)
+    try:
+        registry = await storage.create(**payload.model_dump(), user=user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
 
     return registry
 

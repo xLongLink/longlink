@@ -17,7 +17,7 @@ export function usersQueryKey() {
 
 /** Builds the saved accounts query key. */
 export function accountsQueryKey() {
-    return apiQueryKey('/accounts');
+    return apiQueryKey('/auth/accounts');
 }
 
 /** Builds the organizations list query key. */
@@ -55,8 +55,8 @@ export function storagesQueryKey() {
     return apiQueryKey('/api/storages');
 }
 
-/** Builds the database databases query key. */
-export function databaseDatabasesQueryKey(databaseId: string) {
+/** Builds the database instances query key. */
+export function databaseInstancesQueryKey(databaseId: string) {
     return apiQueryKey(`/api/databases/${databaseId}/databases`);
 }
 

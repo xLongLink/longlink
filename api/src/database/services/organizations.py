@@ -23,7 +23,7 @@ from src.database.models.organizations import Organization
 
 
 class OrganizationsService:
-    """Manage org records."""
+    """Manage organization records."""
 
     async def list(self) -> list[Organization]:
         """Return all organizations in the database."""
@@ -126,7 +126,7 @@ class OrganizationsService:
             except IntegrityError as exc:
                 # Keep name collisions at the service boundary as a simple value error.
                 await session.rollback()
-                raise ValueError("Org already exists") from exc
+                raise ValueError("Organization already exists") from exc
 
             await session.refresh(organization)
             statement = select(Organization).options(

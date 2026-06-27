@@ -89,7 +89,7 @@ class OrganizationApplicationResponse(BaseModel):
     description: str | None = None
 
     # State
-    status: 'ApplicationStatus'
+    status: ApplicationStatus
 
     # Audit
     created_at: datetime
@@ -150,6 +150,5 @@ class OrganizationDetails(BaseModel):
     invitations: list[OrganizationInvitationResponse] = Field(default_factory=list)
     applications: list[OrganizationApplicationResponse] = Field(default_factory=list)
 
-
-from src.models.applications import ApplicationStatus  # noqa: E402, F811
+from src.models.applications import ApplicationStatus
 OrganizationApplicationResponse.model_rebuild()

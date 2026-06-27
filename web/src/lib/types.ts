@@ -114,7 +114,7 @@ export type ApiLocation = {
     country: string;
 };
 
-export type ApiDatabaseDatabase = {
+export type ApiDatabaseInstance = {
     name: string;
 };
 

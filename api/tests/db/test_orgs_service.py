@@ -124,7 +124,7 @@ async def test_create_raises_value_error_when_org_already_exists(users: tuple[Us
         await db.organizations.create("acme", location.id, owner)
 
     # Assert
-    assert str(exc.value) == "Org already exists"
+    assert str(exc.value) == "Organization already exists"
 
 
 async def test_create_invitation_persists_pending_invitation(users: tuple[User, User, User]) -> None:

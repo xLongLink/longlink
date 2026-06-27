@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
-from src.errors import NotFoundError, UnavailableError
+from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.common import SuccessResponse
 from src.models.computes import PodResponse, NamespaceResponse, ComputeRegistryCreate, ComputeRegistryResponse, ComputeResourcesResponse
 from src.adapters.compute import K8s
@@ -31,10 +31,14 @@ async def get_compute_registry(registry_id: UUID,_: User = Depends(authsupport))
 
 
 @router.post("/api/computes", response_model=ComputeRegistryResponse)
-async def create_compute_registry(payload: ComputeRegistryCreate,user: User = Depends(authsupport)) -> ComputeRegistryResponse:
+async def create_compute_registry(payload: ComputeRegistryCreate, user: User = Depends(authadmin)) -> ComputeRegistryResponse:
     """Create one compute backend registration."""
 
-    registry = await compute.create(**payload.model_dump(), user=user)
+    try:
+        registry = await compute.create(**payload.model_dump(), user=user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
     # Initialize the cluster immediately so failed registrations can be rolled back.

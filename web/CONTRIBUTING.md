@@ -12,14 +12,15 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 │       │   └── self-hosted
 │       ├── sdk
 │       │   ├── building
-│       │   ├── components
 │       │   ├── database
 │       │   ├── environments
 │       │   ├── pages
-│       │   ├── layout
 │       │   ├── routes
 │       │   ├── storage
 │       │   └── testing
+│       └── xml
+│           ├── components
+│           └── layout
 ├── playground
 ├── impressum
 ├── terms
@@ -28,13 +29,21 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 ├── settings
 ├── admin
 │   ├── users
+│   ├── applications
 │   ├── organizations
+│   ├── locations
 │   ├── database
+│   │   ├── :database
+│   │   └── :database/databases/:databaseName
 │   ├── storage
-│   └── compute
+│   ├── compute
+│   │   ├── :compute
+│   │   └── :compute/namespace/:namespace
+│   └── operations
 ├── orgs/:organization
 ├── orgs/:organization/applications
 ├── orgs/:organization/people
+├── orgs/:organization/people/:person
 ├── orgs/:organization/settings
 └── orgs/:organization/apps/:application/*
 ```
@@ -81,7 +90,8 @@ Theme values are defined in `src/lib/theme.ts` and applied programmatically to t
 ## Keep changes aligned
 
 - Keep control-plane concerns in the API mode path.
-- Use shadcn/ui and the existing `src/ui/` primitives for reusable UI.
+- Use shadcn/ui and the existing `src/components/ui/` primitives for reusable UI.
+- Keep the current shadcn/ui primitive set and related dependencies unless a component is proven obsolete by a product decision.
 - Keep XML runtime and compiler changes inside `src/xml/`.
 - Prefer `src/lib/api.ts` helpers over raw `fetch`.
 - Remove obsolete flows when replacing them end to end.
@@ -96,5 +106,4 @@ Theme values are defined in `src/lib/theme.ts` and applied programmatically to t
 5. Register the tag in `web/src/xml/core/registry.tsx`.
 6. Update parser, context, or helper code only when the component needs new runtime behavior.
 7. Add focused tests under `web/tests/xml/`.
-8. Update SDK XSD assets when the schema changes.
-9. Update docs/examples so the new XML shape is discoverable.
+8. Update docs/examples so the new XML shape is discoverable.

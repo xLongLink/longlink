@@ -6,10 +6,21 @@ Follow repository guidance, preserving current architecture direction, implement
 
 ```bash
 longlink/
-├── api/           # Control plane
-├── sdk/           # Python SDK
-└── web/           # Frontend and documentation
+├── api/           # Control plane: auth, organizations, applications, registries, orchestration, API-mode web assets
+├── sdk/           # Python SDK: app runtime, CLI, scaffolding, SDK-mode web assets
+├── web/           # Vite/React frontend, docs, XML runtime, shared UI, API and SDK bundle modes
+└── dev/           # Local development services and reference material
 ```
+
+## Runtime model
+
+- `api/` owns the LongLink control plane. It serves authentication, users, organizations, applications, infrastructure registries, operations, and the built control-plane web bundle from `api/src/.static/web`.
+- `sdk/` owns the Python application developer experience. It provides the FastAPI app runtime, CLI commands such as init/build/dev, application scaffolding, and the built SDK web bundle from `sdk/longlink/.static/web`.
+- `web/` owns the React UI and XML renderer. It has two required Vite modes: `api` builds the control-plane/docs bundle into `api/src/.static/web`, and `sdk` builds the embedded application runtime bundle into `sdk/longlink/.static/web`.
+- API mode includes authenticated control-plane routes, docs, admin pages, organization pages, and application proxy rendering.
+- SDK mode is intentionally smaller: it renders a local application from `/metadata.json` without control-plane user state.
+- Keep both web build modes working. Do not remove mode checks, output directories, or SDK/API-specific shell behavior unless the product model changes explicitly.
+- The shadcn/ui primitive set in `web/src/components/ui/` is intentionally kept for now, even when some primitives look unused. Do not remove those primitives or their direct dependencies solely as dead-code cleanup.
 
 ## Contributing model
 

@@ -89,7 +89,7 @@ async def test_logout_clears_the_active_account(
     # Assert
     assert response.status_code == 200
 
-    accounts_response = client.get("/accounts")
+    accounts_response = client.get("/auth/accounts")
     assert accounts_response.status_code == 200
     assert accounts_response.json() == []
 

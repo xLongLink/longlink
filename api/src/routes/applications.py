@@ -1,17 +1,15 @@
 from uuid import UUID
-from fastapi import Depends, Request, Response, APIRouter, HTTPException
+from fastapi import Depends, Request, Response, APIRouter
 from kubernetes.client.rest import ApiException
 from src.auth import authuser, authadmin, organization_access
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from src.utils.utils import slugify, metadata, knames
-from src.utils.namespace import k8name
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.common import SuccessResponse
-from src.models.applications import (ApplicationStatus, ApplicationCreate,
-                                         ApplicationResponse)
+from src.models.applications import ApplicationStatus, ApplicationCreate, ApplicationResponse
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from src.database.services.compute import compute
@@ -41,7 +39,7 @@ async def list_applications(user: User = Depends(authadmin)) -> list[Application
     return await applications.list_all_responses(user)
 
 
-@router.post("/api/applications", response_model=ApplicationResponse)
+@router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse)
 async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)) -> ApplicationResponse:
     """Register a new application in the database and deploy it on the compute cluster."""
 
@@ -103,9 +101,6 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         await k8s.namespace(organization_record.slug)
         await db_client.schema(organization_record.slug, application_slug)
         await k8s.application(organization_record.slug, application_slug, payload.image, APP_SERVICE_PORT, payload.envs)
-    except HTTPException:
-        await applications.set_status(application.id, ApplicationStatus.failed)
-        raise
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
         raise UnavailableError("Failed to initialize the application") from exc
@@ -216,8 +211,8 @@ async def proxy_application_request(
     if upstream_path == "":
         raise NotFoundError("Proxy root path", "/")
 
-    namespace = k8name(knames(organization.slug, "Organization"))
-    name = knames(application.slug, "Application name")
+    knames(organization.slug, "Organization")
+    knames(application.slug, "Application name")
     # Strip hop-by-hop headers before forwarding the request upstream.
     forward_headers = {
         key: value
@@ -225,32 +220,26 @@ async def proxy_application_request(
         if key.lower() not in HOP_BY_HOP_HEADERS and key.lower() != "authorization"
     }
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    resource_path = f"/api/v1/namespaces/{namespace}/services/{name}/proxy"
-    if upstream_path != "":
-        resource_path = f"{resource_path}/{upstream_path}"
 
     # Forward the request body and response stream directly through the Kubernetes API client.
     try:
-        upstream_response = k8s._api_client.call_api(
-            resource_path,
+        body, status_code, upstream_headers = k8s.proxy(
+            organization.slug,
+            application.slug,
+            upstream_path,
             request.method,
             query_params=list(request.query_params.multi_items()),
-            header_params=forward_headers,
+            headers=forward_headers,
             body=await request.body(),
-            auth_settings=["BearerToken"],
-            _preload_content=False,
-            _return_http_data_only=False,
         )
     except ApiException as exc:
         if exc.status == 503:
             return Response(status_code=503, headers={"cache-control": "no-store"})
         raise
 
-    body, status_code, upstream_headers = upstream_response
-
     # Filter hop-by-hop response headers so FastAPI can return a clean proxied response.
     return Response(
-        content=body.data,
+        content=body,
         status_code=status_code,
         headers={
             key: value

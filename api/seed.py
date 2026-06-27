@@ -122,7 +122,7 @@ def main() -> None:
     applications = client.get(f"/api/organizations/{organization['id']}/applications").json()
     if not any(application["name"] == LOCAL_APP["name"] for application in applications):
         r = client.post(
-            f"/api/applications?organization_id={organization['id']}",
+            f"/api/organizations/{organization['id']}/applications",
             json=LOCAL_APP,
         )
         if r.status_code == 409:

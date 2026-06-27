@@ -1,7 +1,7 @@
 from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
-from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.roles import PlatformRoles
 from src.models.users import (Theme, Accent, Radius, Language, UserProfile,
                               UserOrganizationMembership)
 from src.database.session import session_scope
@@ -9,9 +9,6 @@ from src.models.locations import LocationResponse
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
-
-ADMIN_EMAIL = 'example@longlink.dev'
-ADMIN_ORGANIZATION = 'test'
 
 
 class UsersService:
@@ -40,9 +37,6 @@ class UsersService:
             user = user_result.scalars().first()
             if user is None:
                 return None
-
-            # Keep the seeded demo organization membership available as soon as the profile is read.
-            await self._ensure_admin_membership(session, user)
 
             # Load organization memberships and their locations without lazy IO.
             organization_result = await session.execute(
@@ -77,40 +71,6 @@ class UsersService:
                 for organization, role_name in organization_result.all()
                 ],
             )
-
-    async def _ensure_admin_membership(self, session, user: User) -> None:
-        """Attach the seeded admin account to the demo org when it exists."""
-
-        # Only the seeded admin email should get the demo org membership.
-        if user.email != ADMIN_EMAIL:
-            return
-
-        # Skip the bootstrap membership if the demo organization has not been created yet.
-        organization_result = await session.execute(select(Organization).where(Organization.name == ADMIN_ORGANIZATION))
-        organization = organization_result.scalar_one_or_none()
-        if organization is None:
-            return
-
-        # Avoid duplicating the owner row when the user already belongs to the org.
-        membership_result = await session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == user.id,
-                UserOrganization.organization_id == organization.id,
-            )
-        )
-        if membership_result.scalar_one_or_none() is not None:
-            return
-
-        session.add(
-            UserOrganization(
-                user_id=user.id,
-                organization_id=organization.id,
-                role_name=OrganizationRoles.owner,
-                created_id=user.id,
-                updated_id=user.id,
-            )
-        )
-        await session.commit()
 
     async def upsert(
         self,
@@ -155,8 +115,6 @@ class UsersService:
                 await session.commit()
                 await session.refresh(existing_user)
 
-                await self._ensure_admin_membership(session, existing_user)
-
             return existing_user
 
         async with session_scope() as session:
@@ -191,9 +149,6 @@ class UsersService:
             session.add(user)
             await session.commit()
             await session.refresh(user)
-
-            # Attach the admin membership after the user row exists and has an id.
-            await self._ensure_admin_membership(session, user)
 
             return user
 

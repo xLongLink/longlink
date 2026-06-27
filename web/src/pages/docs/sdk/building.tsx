@@ -27,10 +27,12 @@ export const content = (
             <Heading id="docker-labels" level="h2">
                 Docker Labels
             </Heading>
-            <p className="leading-7">The build command writes these labels into the image metadata:</p>
+            <p className="leading-7">
+                The build command writes these labels into the image metadata when values are available:
+            </p>
             <CodeBlock language="text">
                 {
-                    'longlink.name=<app-name>\nlonglink.sdk=<installed-longlink-version>\nlonglink.version=<app-pyproject-version>\nlonglink.description=<app-description>'
+                    'longlink.name=<app-name>\nlonglink.sdk=<installed-longlink-version>\nlonglink.version=<app-pyproject-version>\nlonglink.description=<app-description>\nlonglink.environments=<json-environment-list>\nlonglink.title=<app-title>\nlonglink.summary=<app-summary>\nlonglink.terms_of_service=<terms-url>\nlonglink.contact=<contact-metadata>\nlonglink.license_info=<license-metadata>'
                 }
             </CodeBlock>
             <ul className="ml-6 list-disc space-y-2">
@@ -55,6 +57,22 @@ export const content = (
                         pyproject.toml
                     </code>
                     .
+                </li>
+                <li>
+                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                        longlink.description
+                    </code>{' '}
+                    is the optional application description.
+                </li>
+                <li>
+                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                        longlink.environments
+                    </code>{' '}
+                    lists the app environment variables when{' '}
+                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                        src/envs.py
+                    </code>{' '}
+                    exists.
                 </li>
                 <li>
                     <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
@@ -86,16 +104,6 @@ export const content = (
                     </code>{' '}
                     is the optional license metadata.
                 </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.environments
-                    </code>{' '}
-                    lists the app environment variables when{' '}
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        src/envs.py
-                    </code>{' '}
-                    exists.
-                </li>
             </ul>
         </div>
         <Tabs defaultValue="pip">
@@ -114,7 +122,9 @@ export const content = (
             <Heading id="ci-workflows" level="h2">
                 CI Workflows
             </Heading>
-            <p className="leading-7">Use the same flow in GitHub Actions or GitLab CI. Strip a leading `v` from release tags.</p>
+            <p className="leading-7">
+                Use the same flow in GitHub Actions or GitLab CI. Strip a leading `v` from release tags.
+            </p>
             <Tabs defaultValue="github">
                 <TabsList>
                     <TabsTrigger value="github">GitHub</TabsTrigger>

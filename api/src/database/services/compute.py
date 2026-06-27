@@ -3,6 +3,7 @@ from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
 from src.constants import INGRESS_NAME
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.utils.utils import slugify
 from src.models.computes import ComputeKind
@@ -51,7 +52,11 @@ class ComputeService:
         """Create one compute backend registration."""
 
         async with session_scope() as session:
-            # Compute registries are append-only once created.
+            result = await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.name == name))
+            if result.scalar_one_or_none() is not None:
+                raise ValueError("Compute registry already exists")
+
+            # Registries are append-only once created.
             proxy_secret_value = secrets.token_urlsafe(32)
             slug = slugify(name)
             compute = ComputeRegistry(
@@ -68,7 +73,12 @@ class ComputeService:
             compute.updated_id = user.id
             session.add(compute)
 
-            await session.commit()
+            try:
+                await session.commit()
+            except IntegrityError as exc:
+                await session.rollback()
+                raise ValueError("Compute registry already exists") from exc
+
             await session.refresh(compute)
             statement = (
                 select(ComputeRegistry)

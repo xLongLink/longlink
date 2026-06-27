@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.utils.utils import slugify
 from src.models.databases import DatabaseKind
@@ -48,41 +49,35 @@ class DatabaseService:
         location_id: UUID,
         user: User,
     ) -> DatabaseRegistry:
-        """Create or update one database backend registration."""
+        """Create one database backend registration."""
 
         async with session_scope() as session:
             result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.name == name))
             database = result.scalar_one_or_none()
+            if database is not None:
+                raise ValueError("Database registry already exists")
 
-            # Create a new registration or refresh the stored connection data.
-            if database is None:
-                slug = slugify(name)
-                database = DatabaseRegistry(
-                    kind=kind,
-                    name=name,
-                    slug=slug,
-                    host=host,
-                    port=port,
-                    username=username,
-                    password=password,
-                    location_id=location_id,
-                )
-                database.created_id = user.id
-                database.updated_id = user.id
-                session.add(database)
-            else:
-                database.kind = kind
-                database.host = host
-                database.port = port
-                database.username = username
-                database.password = password
-                database.location_id = location_id
-                database.slug = slugify(name)
-                database.updated_id = user.id
-                database.deleted_at = None
-                database.deleted_id = None
+            slug = slugify(name)
+            database = DatabaseRegistry(
+                kind=kind,
+                name=name,
+                slug=slug,
+                host=host,
+                port=port,
+                username=username,
+                password=password,
+                location_id=location_id,
+            )
+            database.created_id = user.id
+            database.updated_id = user.id
+            session.add(database)
 
-            await session.commit()
+            try:
+                await session.commit()
+            except IntegrityError as exc:
+                await session.rollback()
+                raise ValueError("Database registry already exists") from exc
+
             await session.refresh(database)
             statement = (
                 select(DatabaseRegistry)

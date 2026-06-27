@@ -4,7 +4,7 @@ from src.errors import ForbiddenError, NotFoundError, UnauthorizedError
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User
-from src.database.models.organizations import Organization
+from src.models.organizations import OrganizationDetails
 from src.database.services.organizations import organizations
 from src.database.services.users import users
 from authlib.integrations.starlette_client import OAuth
@@ -112,7 +112,7 @@ async def authsupport(request: Request) -> User:
     return user
 
 
-async def organization_access(organization_id: UUID, user: User) -> Organization:
+async def organization_access(organization_id: UUID, user: User) -> OrganizationDetails:
     """Return one organization after verifying the user belongs to it."""
 
     organization = await organizations.get(organization_id)

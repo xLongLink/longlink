@@ -4,8 +4,12 @@ import { describe, expect, it } from 'bun:test';
 
 describe('core/context', () => {
     it('creates a blank runtime context', () => {
-        expect(createContext()).toEqual({
-            invalidate: expect.any(Function),
+        const ctx = createContext();
+
+        expect(typeof ctx.invalidate).toBe('function');
+        expect(ctx).toEqual({
+            invalidate: ctx.invalidate,
+            locale: 'en',
             setups: {},
             values: {},
         });

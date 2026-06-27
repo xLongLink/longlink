@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.utils.utils import slugify
 from src.models.storages import StorageKind
@@ -48,41 +49,35 @@ class StorageService:
         location_id: UUID,
         user: User,
     ) -> StorageRegistry:
-        """Create or update one storage backend registration."""
+        """Create one storage backend registration."""
 
         async with session_scope() as session:
             result = await session.execute(select(StorageRegistry).where(StorageRegistry.name == name))
             storage = result.scalar_one_or_none()
+            if storage is not None:
+                raise ValueError("Storage registry already exists")
 
-            # Create a new registration or refresh the stored connection data.
-            if storage is None:
-                slug = slugify(name)
-                storage = StorageRegistry(
-                    kind=kind,
-                    name=name,
-                    slug=slug,
-                    protocol=protocol,
-                    endpoint_url=endpoint_url,
-                    access_key_id=access_key_id,
-                    secret_access_key=secret_access_key,
-                    location_id=location_id,
-                )
-                storage.created_id = user.id
-                storage.updated_id = user.id
-                session.add(storage)
-            else:
-                storage.kind = kind
-                storage.protocol = protocol
-                storage.endpoint_url = endpoint_url
-                storage.access_key_id = access_key_id
-                storage.secret_access_key = secret_access_key
-                storage.location_id = location_id
-                storage.slug = slugify(name)
-                storage.updated_id = user.id
-                storage.deleted_at = None
-                storage.deleted_id = None
+            slug = slugify(name)
+            storage = StorageRegistry(
+                kind=kind,
+                name=name,
+                slug=slug,
+                protocol=protocol,
+                endpoint_url=endpoint_url,
+                access_key_id=access_key_id,
+                secret_access_key=secret_access_key,
+                location_id=location_id,
+            )
+            storage.created_id = user.id
+            storage.updated_id = user.id
+            session.add(storage)
 
-            await session.commit()
+            try:
+                await session.commit()
+            except IntegrityError as exc:
+                await session.rollback()
+                raise ValueError("Storage registry already exists") from exc
+
             await session.refresh(storage)
             statement = select(StorageRegistry).options(
                 selectinload(StorageRegistry.created_by),

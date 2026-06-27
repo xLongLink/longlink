@@ -132,7 +132,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
                 throw new Error('Organization not found');
             }
 
-            return fetchApiJson<ApiApplicationResponse>(`/api/applications?organization_id=${organizationId}`, {
+            return fetchApiJson<ApiApplicationResponse>(`/api/organizations/${organizationId}/applications`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, image, description, icon, envs }),

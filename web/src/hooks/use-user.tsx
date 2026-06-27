@@ -79,7 +79,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 export function useUser() {
     const context = useContext(UserContext);
     const queryClient = useQueryClient();
-    const accountsQuery = useCollectionQuery<ApiUserSummary>('/accounts', {
+    const accountsQuery = useCollectionQuery<ApiUserSummary>('/auth/accounts', {
         refetchOnMount: 'always',
         retry: false,
     });

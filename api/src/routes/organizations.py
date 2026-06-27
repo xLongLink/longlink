@@ -6,7 +6,7 @@ from src.logger import logger
 from src.models.common import SuccessResponse
 from src.adapters.compute.k8s import K8s
 from src.models.applications import ApplicationResponse
-from src.models.roles import OrganizationRoles
+from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.organizations import OrganizationCreate, OrganizationDetails, OrganizationInvitationCreate, OrganizationSummary
 from src.database.models.users import User
 from src.database.services.compute import compute
@@ -90,8 +90,14 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> SuccessResponse:
     """Delete one organization by id."""
 
-    # Only members can delete their own organization.
-    organization = next((organization for organization in user.organizations if organization.id == organization_id), None)
+    if user.role == PlatformRoles.administrator:
+        organization = await organizations.get(organization_id)
+    else:
+        organization = await organization_access(organization_id, user)
+        membership_role = await organizations.membership_role(organization_id, user.id)
+        if membership_role != OrganizationRoles.owner:
+            raise ForbiddenError("Organization owner permissions required")
+
     if organization is None:
         raise NotFoundError("Organization", organization_id)
 

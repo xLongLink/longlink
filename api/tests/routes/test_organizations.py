@@ -462,7 +462,7 @@ async def test_create_organization_returns_409_for_duplicate_name(
 
     # Assert
     assert response.status_code == 409
-    assert response.json() == {"detail": "Org already exists"}
+    assert response.json() == {"detail": "Organization already exists"}
 
 
 async def test_create_organization_uses_default_validation_error(

@@ -5,6 +5,7 @@ import httpx2
 from yaml import safe_load_all
 from string import Template
 from pathlib import Path
+from src.logger import logger
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
@@ -13,8 +14,8 @@ def metadata(image: str) -> LongLinkMetadata | None:
 
     registry, repository, tag = _parse_image_ref(image)
 
-    try:
-        with httpx2.Client(verify=False, follow_redirects=True) as client:
+    with httpx2.Client(verify=False, follow_redirects=True) as client:
+        try:
             manifest = _fetch_manifest(client, registry, repository, tag)
             if manifest is None:
                 return None
@@ -50,8 +51,9 @@ def metadata(image: str) -> LongLinkMetadata | None:
                     return None
 
             return result
-    except Exception:
-        return None
+        except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            logger.warning("Failed to inspect image metadata for '%s': %s", image, exc)
+            return None
 
 
 def _parse_image_ref(image: str) -> tuple[str, str, str]:
@@ -157,9 +159,10 @@ def _resolve_bearer_token(client: httpx2.Client, registry: str, repository: str,
     try:
         token_resp = client.get(realm, params=token_params)
         if token_resp.is_success:
-            return token_resp.json().get("token")
-    except Exception:
-        pass
+            token = token_resp.json().get("token")
+            return token if isinstance(token, str) else None
+    except (httpx2.HTTPError, ValueError) as exc:
+        logger.warning("Failed to resolve image registry bearer token: %s", exc)
 
     return None
 

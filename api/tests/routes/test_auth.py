@@ -20,7 +20,7 @@ async def test_list_accounts_returns_current_active_account(
     )
 
     # Act
-    response = client.get("/accounts")
+    response = client.get("/auth/accounts")
 
     # Assert
     assert response.status_code == 200
@@ -48,7 +48,7 @@ async def test_activate_account_switches_the_active_session_account(
     # Assert
     assert response.status_code == 200
 
-    accounts_response = client.get("/accounts")
+    accounts_response = client.get("/auth/accounts")
     assert accounts_response.status_code == 200
     assert accounts_response.json() == [
         UserListItem.model_validate(user_one).model_dump(mode="json"),
@@ -84,7 +84,7 @@ async def test_deactivate_account_clears_only_the_active_session_account(
         UserListItem.model_validate(user_two).model_dump(mode="json"),
     ]
 
-    accounts_response = client.get("/accounts")
+    accounts_response = client.get("/auth/accounts")
     assert accounts_response.status_code == 200
     assert accounts_response.json() == [
         UserListItem.model_validate(user_one).model_dump(mode="json"),

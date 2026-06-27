@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+import pytest
 
 from src.models.computes import ComputeKind
 from src.models.countries import Country
@@ -120,13 +121,12 @@ async def test_compute_service_generates_proxy_secret_and_deletes_registry(users
     assert await db.compute.list() == []
 
 
-async def test_database_service_updates_existing_registry(users: tuple) -> None:
-    """Update a database registry in place when the name already exists."""
+async def test_database_service_rejects_duplicate_registry_names(users: tuple) -> None:
+    """Reject duplicate database registry names."""
 
     # Arrange
     owner = users[0]
     local_location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", owner, Country.CH)
 
     # Act
     first_registry = await db.database.create(
@@ -139,32 +139,31 @@ async def test_database_service_updates_existing_registry(users: tuple) -> None:
         location_id=local_location.id,
         user=owner,
     )
-    second_registry = await db.database.create(
-        kind=DatabaseKind.postgresql,
-        name="primary",
-        host="db.remote.longlink.internal",
-        port=5433,
-        username="longlink",
-        password="updated-secret",
-        location_id=remote_location.id,
-        user=owner,
-    )
+
+    with pytest.raises(ValueError) as exc:
+        await db.database.create(
+            kind=DatabaseKind.postgresql,
+            name="primary",
+            host="db.remote.longlink.internal",
+            port=5433,
+            username="longlink",
+            password="updated-secret",
+            location_id=local_location.id,
+            user=owner,
+        )
 
     # Assert
-    assert second_registry.id == first_registry.id
-    assert second_registry.host == "db.remote.longlink.internal"
-    assert second_registry.port == 5433
-    assert second_registry.location_id == remote_location.id
+    assert str(exc.value) == "Database registry already exists"
+    assert first_registry.host == "db.local.longlink.internal"
     assert len(await db.database.list()) == 1
 
 
-async def test_storage_service_updates_existing_registry(users: tuple) -> None:
-    """Update a storage registry in place when the name already exists."""
+async def test_storage_service_rejects_duplicate_registry_names(users: tuple) -> None:
+    """Reject duplicate storage registry names."""
 
     # Arrange
     owner = users[0]
     local_location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", owner, Country.CH)
 
     # Act
     first_registry = await db.storage.create(
@@ -177,22 +176,22 @@ async def test_storage_service_updates_existing_registry(users: tuple) -> None:
         location_id=local_location.id,
         user=owner,
     )
-    second_registry = await db.storage.create(
-        kind=StorageKind.s3,
-        name="object-store",
-        protocol="http",
-        endpoint_url="http://storage.remote.longlink.internal",
-        access_key_id="new-access-key",
-        secret_access_key="new-secret-key",
-        location_id=remote_location.id,
-        user=owner,
-    )
+
+    with pytest.raises(ValueError) as exc:
+        await db.storage.create(
+            kind=StorageKind.s3,
+            name="object-store",
+            protocol="http",
+            endpoint_url="http://storage.remote.longlink.internal",
+            access_key_id="new-access-key",
+            secret_access_key="new-secret-key",
+            location_id=local_location.id,
+            user=owner,
+        )
 
     # Assert
-    assert second_registry.id == first_registry.id
-    assert second_registry.protocol == "http"
-    assert second_registry.endpoint_url == "http://storage.remote.longlink.internal"
-    assert second_registry.location_id == remote_location.id
+    assert str(exc.value) == "Storage registry already exists"
+    assert first_registry.protocol == "https"
     assert len(await db.storage.list()) == 1
 
 

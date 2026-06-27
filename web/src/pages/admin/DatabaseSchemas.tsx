@@ -9,7 +9,7 @@ import type { ApiDatabaseSchema } from '@/lib/types';
 
 /** Renders schemas (namespaces) in a database on a database backend. */
 export default function DatabaseSchemas() {
-    const { database = '', dbname = '' } = useParams();
+    const { database = '', databaseName = '' } = useParams();
 
     const { items: registries, error: registriesError, isLoading: registriesIsLoading } = useDatabases();
 
@@ -24,15 +24,14 @@ export default function DatabaseSchemas() {
         },
     ];
 
-    const { items: rows, error: schemasError, isLoading: schemasIsLoading } = useDatabaseSchemas(
-        databaseRegistry?.id ?? '',
-        dbname
-    );
+    const {
+        items: rows,
+        error: schemasError,
+        isLoading: schemasIsLoading,
+    } = useDatabaseSchemas(databaseRegistry?.id ?? '', databaseName);
     const error =
         registriesError ??
-        (!registriesIsLoading && !databaseRegistry
-            ? new Error(`Database "${database}" not found`)
-            : schemasError);
+        (!registriesIsLoading && !databaseRegistry ? new Error(`Database "${database}" not found`) : schemasError);
 
     return (
         <div className="space-y-6">
@@ -41,7 +40,7 @@ export default function DatabaseSchemas() {
                     <div>
                         <HeroTitle>Schemas</HeroTitle>
                         <HeroDescription>
-                            Schemas in database <span className="font-medium text-foreground">{dbname}</span> on
+                            Schemas in database <span className="font-medium text-foreground">{databaseName}</span> on
                             database backend "{databaseRegistry?.name || database}".
                         </HeroDescription>
                     </div>

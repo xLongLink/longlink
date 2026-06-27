@@ -3,25 +3,25 @@ import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useDatabaseDatabases } from '@/hooks/use-database-databases';
+import { useDatabaseInstances } from '@/hooks/use-database-instances';
 import { useDatabases } from '@/hooks/use-databases';
-import type { ApiDatabaseDatabase } from '@/lib/types';
+import type { ApiDatabaseInstance } from '@/lib/types';
 
 /** Renders databases for a database backend. */
-export default function DatabaseDatabases() {
+export default function DatabaseInstances() {
     const { database = '' } = useParams();
 
     const { items: registries, error: registriesError, isLoading: registriesIsLoading } = useDatabases();
 
     const databaseRegistry = registries.find((registry) => registry.slug === database);
 
-    const databaseColumns: Array<ColumnDef<ApiDatabaseDatabase>> = [
+    const databaseColumns: Array<ColumnDef<ApiDatabaseInstance>> = [
         {
             accessorKey: 'name',
             header: 'Database',
             cell: ({ row }) => (
                 <Link
-                    to={`/admin/database/${encodeURIComponent(database)}/database/${encodeURIComponent(row.original.name)}`}
+                    to={`/admin/database/${encodeURIComponent(database)}/databases/${encodeURIComponent(row.original.name)}`}
                     className="flex items-center gap-3"
                 >
                     <img
@@ -40,14 +40,14 @@ export default function DatabaseDatabases() {
         },
     ];
 
-    const { items: rows, error: databasesError, isLoading: databasesIsLoading } = useDatabaseDatabases(
-        databaseRegistry?.id ?? ''
-    );
+    const {
+        items: rows,
+        error: databasesError,
+        isLoading: databasesIsLoading,
+    } = useDatabaseInstances(databaseRegistry?.id ?? '');
     const error =
         registriesError ??
-        (!registriesIsLoading && !databaseRegistry
-            ? new Error(`Database "${database}" not found`)
-            : databasesError);
+        (!registriesIsLoading && !databaseRegistry ? new Error(`Database "${database}" not found`) : databasesError);
 
     return (
         <div className="space-y-6">

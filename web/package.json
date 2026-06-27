@@ -25,7 +25,6 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
-        "dev": "^0.1.5",
         "embla-carousel-react": "^8.6.0",
         "fast-xml-parser": "^5.5.12",
         "input-otp": "^1.4.2",

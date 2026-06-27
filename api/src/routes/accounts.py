@@ -28,7 +28,7 @@ async def deactivate_account(request: Request) -> list[UserListItem]:
     return await list_accounts(request)
 
 
-@router.get("/accounts", response_model=list[UserListItem], include_in_schema=False)
+@router.get("/auth/accounts", response_model=list[UserListItem], include_in_schema=False)
 async def list_accounts(request: Request) -> list[UserListItem]:
     """Return the saved session accounts for the login screen."""
 

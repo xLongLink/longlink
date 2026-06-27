@@ -6,8 +6,8 @@ import { content as privacyContent, metadata as privacyMetadata } from '@/pages/
 import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
 import { Skeleton } from '@ui/skeleton';
 import { Toaster } from '@ui/sonner';
-import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import { Suspense, lazy } from 'react';
+import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 import DocsPageRoute from './pages/docs/DocsPageRoute';
 
 const Auth = lazy(() => import('@/components/Auth').then((module) => ({ default: module.Auth })));
@@ -20,7 +20,7 @@ const AdminCompute = lazy(() => import('./pages/admin/Compute'));
 const ComputeNamespaces = lazy(() => import('./pages/admin/ComputeNamespaces'));
 const ComputePods = lazy(() => import('./pages/admin/ComputePods'));
 const AdminDatabase = lazy(() => import('./pages/admin/Database'));
-const DatabaseDatabases = lazy(() => import('./pages/admin/DatabaseDatabases'));
+const DatabaseInstances = lazy(() => import('./pages/admin/DatabaseInstances'));
 const DatabaseSchemas = lazy(() => import('./pages/admin/DatabaseSchemas'));
 const AdminLocation = lazy(() => import('./pages/admin/Location'));
 const AdminOperations = lazy(() => import('./pages/admin/Operations'));
@@ -174,12 +174,12 @@ function getRoutes() {
                     path: 'database/:database',
                     element: (
                         <Suspense fallback={routeFallback}>
-                            <DatabaseDatabases />
+                            <DatabaseInstances />
                         </Suspense>
                     ),
                 },
                 {
-                    path: 'database/:database/database/:dbname',
+                    path: 'database/:database/databases/:databaseName',
                     element: (
                         <Suspense fallback={routeFallback}>
                             <DatabaseSchemas />

@@ -27,7 +27,7 @@ class OrganizationInvitation(SQLModel, table=True):
 
     # State
     role_name: OrganizationRoles = Field(
-        sa_column=Column(Enum(OrganizationRoles, name="role_name_enum", native_enum=False), nullable=False)
+        sa_column=Column(Enum(OrganizationRoles, name="organization_role_enum", native_enum=False), nullable=False)
     )
 
     # Audit
