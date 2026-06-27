@@ -10,12 +10,7 @@ The SDK owns application-facing Python helpers, CLI commands, database helpers, 
 
 ## Architecture
 
-```
-longlink/
-├── api/           # Control plane API and XML page sources
-├── sdk/           # Python SDK for application development
-└── web/           # Frontend runtime and shared XML renderer
-```
+The combined repository architecture is maintained in `AGENTS.md`.
 
 <br />
 
@@ -24,7 +19,8 @@ longlink/
 ```bash
 make install    # Install all the dependencies
 make format     # Format the code
-make build      # Build the web UI into the packaged .static/web assets
+make build      # Typecheck and build API and SDK web bundles
+make tests      # Run API, SDK, and web tests
 ```
 
 ### Hooks
@@ -39,9 +35,10 @@ Run formatting manually before commits.
 
 ```bash
 make up     # Start the services, initialize the cluster
-make web    # Run the web app proxied to the api app
+make web    # Run the Vite web app
 make api    # Run the control plane
+make sdk    # Run the generated SDK development application
 make down   # Stop services and remove the cluster
 ```
 
-> Note: `make up` the keyclock instance takes a few seconds to boot, therefore is `make api` is called immediatbly after might fail.
+> Note: after `make up`, the Keycloak instance takes a few seconds to boot. Running `make api` immediately after `make up` might fail.

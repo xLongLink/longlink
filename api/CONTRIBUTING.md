@@ -1,86 +1,30 @@
 # Contributing in `api/`
 
-This folder contains the LongLink control plane, it is responsible for authentication, permissions, governance, orchestration.
+This folder contains the LongLink control plane. It is responsible for authentication, permissions, governance, and orchestration.
 
 ```bash
-uv sync --extra dev     # Create enviroment
-uv run seed.py          # Seed the database
-uv run main.py          # Run the file (dev mode)
-python -m isort .       # Format the code
+uv sync --extra dev                # Create the development environment
+uv run alembic upgrade head        # Apply database migrations
+uv run python seed.py              # Seed the database
+DEV=True uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uv run isort .                     # Format imports
 ```
 
 ## Architecture
 
-```bash
-Control Plane
-├── Infrastructure Registry
-│   ├── Compute Pools
-│   ├── Database Pools
-│   ├── Storage Pools
-│   ├── Logging Pools
-│   ├── Metrics Pools
-│   ├── Tracing Pools
-│   ├── Secret Pools
-│   ├── Network Pools
-│   └── Registry Pools
-│
-├── Organizations
-│   └── Organization
-│       ├── Org Identity
-│       ├── Org Plan / Quota
-│       ├── Org Placement
-│       ├── Org Spaces
-│       ├── Org Policies
-│       ├── Org Usage
-│       └── Applications
-│
-└── Applications
-    └── Application
-        ├── App Metadata
-        ├── App Manifest
-        ├── App Deployments
-        ├── App Allocations
-        ├── App Policies
-        ├── App Releases
-        └── App Health
-```
-
-## Folder Structure
-
-```bash
-api/
-├── src/
-│   ├── .static/      # Static resources
-│   ├── adapters/     # Storage/Database/Compute adapters
-│   ├── db/           # Database session, models, services
-│   ├── models/       # FastAPI Domain models
-│   ├── routes/       # FastAPI API routes
-│   ├── templates/    # Kubernetes and infra templates
-│   ├── utils/        # Shared utilities
-│   ├── auth.py       # Auth helpers
-│   ├── constants.py  # Shared constants
-│   └── env.py        # Environment config
-│
-├── tests/
-│   ├── auth/         # Authentication related tests cases
-│   ├── db/           # Database related tests cases
-│   └── routes/       # Routes related tests cases
-│
-└── main.py           # Application entrypoint
-
-```
+The combined repository architecture is maintained in `../AGENTS.md`.
 
 ## Keep changes aligned
 
-- Define constrained values with shared Enums (for example `AppType`) instead of raw strings.
+- Define constrained values with shared Enums (for example `ApplicationStatus`) instead of raw strings.
 - For fixed access levels, keep the role names in an Enum and store the chosen role on the membership row instead of creating a standalone roles table.
 - Use a `permissions` table for fine-grained capabilities and a `role_permissions` association table when mapping fixed roles to permissions.
-- Use association tables for `user -> organization` and `user -> app` membership records, including the role column on those rows.
+- Use association tables for `user -> organization` and `user -> application` membership records, including the role column on those rows.
 - Use Pydantic models (`BaseModel`) to validate external JSON (for example `metadata.json`).
 - Use `model_validate()` (Pydantic v2) for parse + validation in one step.
-- Let FastAPI typing handle request/query validation automatically (for example `AppType | None`).
+- Let FastAPI typing handle request/query validation automatically (for example `ApplicationStatus | None`).
 - Centralize validation in schemas, not route handlers.
-- Provide defaults at schema level (for example `type: AppType = AppType.tool`).
+- Provide defaults at schema level when a model owns the default value.
 - Keep route handlers focused on orchestration.
 - Normalize external input once at boundaries.
 - Catch only meaningful exceptions and map to proper HTTP responses.
@@ -121,7 +65,7 @@ Test Design:
 - Validate error schemas, not only error codes
 - Test authentication separately from authorization
 
-Fixtures & Datav
+Fixtures & Data
 
 - Prefer fixtures/factories/builders over inline complex setup
 - Keep fixtures small, composable, and function-scoped by default

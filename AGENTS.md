@@ -6,10 +6,52 @@ Follow repository guidance, preserving current architecture direction, implement
 
 ```bash
 longlink/
-├── api/           # Control plane: auth, organizations, applications, registries, orchestration, API-mode web assets
-├── sdk/           # Python SDK: app runtime, CLI, scaffolding, SDK-mode web assets
-├── web/           # Vite/React frontend, docs, XML runtime, shared UI, API and SDK bundle modes
-└── dev/           # Local development services and reference material
+├── api/                         # Control plane: auth, organizations, applications, registries, orchestration
+│   ├── main.py                   # FastAPI entrypoint
+│   ├── seed.py                   # Local development seed data
+│   ├── alembic/                  # Database migrations
+│   ├── src/
+│   │   ├── .static/web/          # Built API-mode web bundle
+│   │   ├── adapters/             # Infrastructure adapters
+│   │   ├── database/             # Database session, models, services
+│   │   ├── models/               # FastAPI and domain schemas
+│   │   ├── operations/           # Operation orchestration
+│   │   ├── routes/               # FastAPI routes
+│   │   ├── templates/            # Kubernetes and infrastructure templates
+│   │   ├── utils/                # Shared utilities
+│   │   ├── auth.py               # Authentication helpers
+│   │   ├── constants.py          # Shared constants
+│   │   ├── environments.py       # Environment configuration
+│   │   ├── errors.py             # Error handling
+│   │   └── logger.py             # Logging setup
+│   └── tests/                    # API tests
+├── sdk/                         # Python SDK: application runtime, CLI, scaffolding
+│   ├── longlink/
+│   │   ├── .static/
+│   │   │   ├── web/              # Built SDK-mode web bundle
+│   │   │   └── xsd/              # XML schema definitions
+│   │   ├── cli/                  # CLI commands
+│   │   ├── database/             # Database helpers and migrations
+│   │   ├── routes/               # Runtime routes
+│   │   ├── storage/              # Storage abstraction
+│   │   ├── utils/                # Helpers and settings
+│   │   ├── app.py                # FastAPI application factory
+│   │   ├── pages.py              # Page metadata helpers
+│   │   └── router.py             # Route registration
+│   └── tests/                    # SDK tests
+├── web/                         # Vite/React frontend, docs, XML runtime, API and SDK bundle modes
+│   ├── src/
+│   │   ├── components/           # Shared UI and dialogs
+│   │   ├── hooks/                # React hooks
+│   │   ├── layout/               # Layout shells
+│   │   ├── lib/                  # API clients, theme, shared types
+│   │   ├── pages/                # Control-plane pages and docs
+│   │   └── xml/                  # XML parser, adapters, renderer, translations
+│   └── tests/                    # Web and XML tests
+└── dev/                         # Local services and reference material
+    ├── compose.yml              # Local service dependencies
+    ├── keycloak-realm-dev.json  # Local Keycloak realm
+    └── rfc/                     # Reference RFC material
 ```
 
 ## Runtime model
@@ -39,4 +81,4 @@ longlink/
 - Use long domain names in code and filenames (`organization`, `application`, `locations`) instead of abbreviations like `org` or `app`.
 - Keep related model module names plural and consistent across the API and database layers (for example `applications.py`, `databases.py`, `computes.py`, `storages.py`, `operations.py`).
 
-VERY IMPORTANT: MVP Mode. there is no need for backward compability, or legacy fallback. If you find any remove those
+VERY IMPORTANT: MVP Mode. there is no need for backward compatibility, or legacy fallback. If you find any remove those

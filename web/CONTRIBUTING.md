@@ -1,6 +1,10 @@
 # Contributing
 
-The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, and control-plane rendering path.
+The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, docs, and control-plane rendering path.
+
+## Architecture
+
+The combined repository architecture is maintained in `../AGENTS.md`.
 
 ## Pages
 
@@ -51,7 +55,7 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 ```bash
 bun run dev         # Starts the Vite dev server for live preview.
 bun run build:api   # Builds the control-plane web bundle
-bun run build:sdk   # Builds the sdk web bundle (for development)
+bun run build:sdk   # Builds the SDK embedded web bundle
 bun run format      # Format the code
 ```
 
