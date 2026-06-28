@@ -5,7 +5,7 @@ from sqlalchemy import select
 from src.constants import INGRESS_NAME
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.utils.utils import slugify
+from src.utils import names
 from src.models.computes import ComputeKind
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -35,7 +35,7 @@ class ComputeService:
                 selectinload(ComputeRegistry.created_by),
                 selectinload(ComputeRegistry.updated_by),
                 selectinload(ComputeRegistry.deleted_by),
-            ).where(ComputeRegistry.id == registry_id)
+            ).where(ComputeRegistry.id == registry_id, ComputeRegistry.deleted_at.is_(None))
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -58,7 +58,7 @@ class ComputeService:
 
             # Registries are append-only once created.
             proxy_secret_value = secrets.token_urlsafe(32)
-            slug = slugify(name)
+            slug = names.slugify(name)
             compute = ComputeRegistry(
                 kind=kind,
                 name=name,
@@ -100,7 +100,7 @@ class ComputeService:
                 selectinload(ComputeRegistry.created_by),
                 selectinload(ComputeRegistry.updated_by),
                 selectinload(ComputeRegistry.deleted_by),
-            ).where(ComputeRegistry.id == registry_id)
+            ).where(ComputeRegistry.id == registry_id, ComputeRegistry.deleted_at.is_(None))
             result = await session.execute(statement)
             compute = result.scalar_one_or_none()
             if compute is None:

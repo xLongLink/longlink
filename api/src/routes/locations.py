@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import ConflictError, NotFoundError
-from src.utils.utils import slugify
+from src.utils import names
 from src.models.common import SuccessResponse
 from src.models.locations import LocationCreate, LocationResponse
 from src.database.models.users import User
@@ -35,7 +35,7 @@ async def create_location(payload: LocationCreate,user: User = Depends(authadmin
 
     # Surface validation errors as a conflict so the API stays consistent with other create flows.
     try:
-        location = await locations.create(slugify(payload.name), payload.name, user, payload.country, payload.provider)
+        location = await locations.create(names.slugify(payload.name), payload.name, user, payload.country, payload.provider)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 

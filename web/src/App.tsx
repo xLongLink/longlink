@@ -1,58 +1,48 @@
+import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
 import { useSdkUser } from '@/hooks/use-sdk-user';
 import { useUser } from '@/hooks/use-user';
+import Layout from '@/layout/Layout';
+import { LegalLayout } from '@/layout/LegalLayout';
+import Admin from '@/pages/Admin';
+import AdminApplications from '@/pages/admin/Applications';
+import AdminCompute from '@/pages/admin/Compute';
+import ComputeNamespaces from '@/pages/admin/ComputeNamespaces';
+import ComputePods from '@/pages/admin/ComputePods';
+import AdminDatabase from '@/pages/admin/Database';
+import DatabaseInstances from '@/pages/admin/DatabaseInstances';
+import DatabaseSchemas from '@/pages/admin/DatabaseSchemas';
+import AdminLocation from '@/pages/admin/Location';
+import AdminOperations from '@/pages/admin/Operations';
+import AdminOrganization from '@/pages/admin/Organization';
+import AdminStorage from '@/pages/admin/Storage';
+import AdminUsers from '@/pages/admin/Users';
 import { DOC_PAGES } from '@/pages/docs/catalog';
+import DocsPageRoute from '@/pages/docs/DocsPageRoute';
+import Home from '@/pages/Home';
 import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
 import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
+import NotFound from '@/pages/NotFound';
+import Person from '@/pages/org/Person';
+import Organization from '@/pages/Organization';
+import Organizations from '@/pages/Organizations';
+import Pricing from '@/pages/Pricing';
+import Settings from '@/pages/Settings';
+import View from '@/pages/View';
 import { createContext as createXmlContext } from '@/xml';
 import { Skeleton } from '@ui/skeleton';
 import { Toaster } from '@ui/sonner';
-import { Suspense, lazy } from 'react';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
-import DocsPageRoute from './pages/docs/DocsPageRoute';
 
-const Auth = lazy(() => import('@/components/Auth').then((module) => ({ default: module.Auth })));
-const Home = lazy(() => import('./pages/Home'));
-const View = lazy(() => import('./pages/View'));
-const Admin = lazy(() => import('./pages/Admin'));
-const AdminApplications = lazy(() => import('./pages/admin/Applications'));
-const AdminCompute = lazy(() => import('./pages/admin/Compute'));
-const ComputeNamespaces = lazy(() => import('./pages/admin/ComputeNamespaces'));
-const ComputePods = lazy(() => import('./pages/admin/ComputePods'));
-const AdminDatabase = lazy(() => import('./pages/admin/Database'));
-const DatabaseInstances = lazy(() => import('./pages/admin/DatabaseInstances'));
-const DatabaseSchemas = lazy(() => import('./pages/admin/DatabaseSchemas'));
-const AdminLocation = lazy(() => import('./pages/admin/Location'));
-const AdminOperations = lazy(() => import('./pages/admin/Operations'));
-const AdminOrganization = lazy(() => import('./pages/admin/Organization'));
-const AdminStorage = lazy(() => import('./pages/admin/Storage'));
-const AdminUsers = lazy(() => import('./pages/admin/Users'));
-const NotFound = lazy(() => import('./pages/NotFound'));
-const Person = lazy(() => import('./pages/org/Person'));
-const Organization = lazy(() => import('./pages/Organization'));
-const Organizations = lazy(() => import('./pages/Organizations'));
-const Pricing = lazy(() => import('./pages/Pricing'));
-const Settings = lazy(() => import('./pages/Settings'));
-const Layout = lazy(() => import('@/layout/Layout'));
-const LegalLayout = lazy(() => import('@/layout/LegalLayout').then((module) => ({ default: module.LegalLayout })));
-
-const routeFallback = <div className="min-h-screen" />;
-
-/**
- * Builds the route tree for the current bundle mode.
- */
+/** Builds the route tree for the current bundle mode. */
 function getRoutes() {
     // SDK bundle serves the app runtime without control-plane routes.
     if (import.meta.env.MODE === 'sdk') {
         return [
             {
                 path: '/',
-                element: (
-                    <Suspense fallback={routeFallback}>
-                        <SdkApplicationView />
-                    </Suspense>
-                ),
+                element: <SdkApplicationView />,
             },
         ];
     }
@@ -66,247 +56,141 @@ function getRoutes() {
         })),
         {
             path: 'impressum',
-            element: (
-                <Suspense fallback={routeFallback}>
-                    <LegalLayout title="Impressum" content={impressumContent} metadata={impressumMetadata} />
-                </Suspense>
-            ),
+            element: <LegalLayout title="Impressum" content={impressumContent} metadata={impressumMetadata} />,
         },
         {
             path: 'pricing',
-            element: (
-                <Suspense fallback={routeFallback}>
-                    <Pricing />
-                </Suspense>
-            ),
+            element: <Pricing />,
         },
         {
             path: 'terms',
-            element: (
-                <Suspense fallback={routeFallback}>
-                    <LegalLayout title="Terms" content={termsContent} metadata={termsMetadata} />
-                </Suspense>
-            ),
+            element: <LegalLayout title="Terms" content={termsContent} metadata={termsMetadata} />,
         },
         {
             path: 'privacy',
-            element: (
-                <Suspense fallback={routeFallback}>
-                    <LegalLayout title="Privacy" content={privacyContent} metadata={privacyMetadata} />
-                </Suspense>
-            ),
+            element: <LegalLayout title="Privacy" content={privacyContent} metadata={privacyMetadata} />,
         },
         {
             path: 'organizations',
-            element: (
-                <Suspense fallback={routeFallback}>
-                    <Organizations />
-                </Suspense>
-            ),
+            element: <Organizations />,
         },
         {
             path: 'settings',
             element: (
-                <Suspense fallback={routeFallback}>
-                    <Auth>
-                        <Suspense fallback={routeFallback}>
-                            <Settings />
-                        </Suspense>
-                    </Auth>
-                </Suspense>
+                <Auth>
+                    <Settings />
+                </Auth>
             ),
         },
         {
             path: 'admin',
-            element: (
-                <Suspense fallback={routeFallback}>
-                    <Admin />
-                </Suspense>
-            ),
+            element: <Admin />,
             children: [
                 {
                     index: true,
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminUsers />
-                        </Suspense>
-                    ),
+                    element: <AdminUsers />,
                 },
                 {
                     path: 'users',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminUsers />
-                        </Suspense>
-                    ),
+                    element: <AdminUsers />,
                 },
                 {
                     path: 'applications',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminApplications />
-                        </Suspense>
-                    ),
+                    element: <AdminApplications />,
                 },
                 {
                     path: 'organizations',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminOrganization />
-                        </Suspense>
-                    ),
+                    element: <AdminOrganization />,
                 },
                 {
                     path: 'locations',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminLocation />
-                        </Suspense>
-                    ),
+                    element: <AdminLocation />,
                 },
                 {
                     path: 'database',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminDatabase />
-                        </Suspense>
-                    ),
+                    element: <AdminDatabase />,
                 },
                 {
                     path: 'database/:database',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <DatabaseInstances />
-                        </Suspense>
-                    ),
+                    element: <DatabaseInstances />,
                 },
                 {
                     path: 'database/:database/databases/:databaseName',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <DatabaseSchemas />
-                        </Suspense>
-                    ),
+                    element: <DatabaseSchemas />,
                 },
                 {
                     path: 'storage',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminStorage />
-                        </Suspense>
-                    ),
+                    element: <AdminStorage />,
                 },
                 {
                     path: 'compute',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminCompute />
-                        </Suspense>
-                    ),
+                    element: <AdminCompute />,
                 },
                 {
                     path: 'compute/:compute',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <ComputeNamespaces />
-                        </Suspense>
-                    ),
+                    element: <ComputeNamespaces />,
                 },
                 {
                     path: 'compute/:compute/namespace/:namespace',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <ComputePods />
-                        </Suspense>
-                    ),
+                    element: <ComputePods />,
                 },
                 {
                     path: 'operations',
-                    element: (
-                        <Suspense fallback={routeFallback}>
-                            <AdminOperations />
-                        </Suspense>
-                    ),
+                    element: <AdminOperations />,
                 },
             ],
         },
         {
             path: 'orgs/:organization',
             element: (
-                <Suspense fallback={routeFallback}>
-                    <Auth requiredRole="user">
-                        <Suspense fallback={routeFallback}>
-                            <Organization />
-                        </Suspense>
-                    </Auth>
-                </Suspense>
+                <Auth requiredRole="user">
+                    <Organization />
+                </Auth>
             ),
         },
         {
             path: 'orgs/:organization/applications',
             element: (
-                <Suspense fallback={routeFallback}>
-                    <Auth requiredRole="user">
-                        <Suspense fallback={routeFallback}>
-                            <Organization sectionName="applications" />
-                        </Suspense>
-                    </Auth>
-                </Suspense>
+                <Auth requiredRole="user">
+                    <Organization sectionName="applications" />
+                </Auth>
             ),
         },
         {
             path: 'orgs/:organization/people',
             element: (
-                <Suspense fallback={routeFallback}>
-                    <Auth requiredRole="user">
-                        <Suspense fallback={routeFallback}>
-                            <Organization sectionName="people" />
-                        </Suspense>
-                    </Auth>
-                </Suspense>
+                <Auth requiredRole="user">
+                    <Organization sectionName="people" />
+                </Auth>
             ),
         },
         {
             path: 'orgs/:organization/people/:person',
             element: (
-                <Suspense fallback={routeFallback}>
-                    <Auth requiredRole="user">
-                        <Suspense fallback={routeFallback}>
-                            <Person />
-                        </Suspense>
-                    </Auth>
-                </Suspense>
+                <Auth requiredRole="user">
+                    <Person />
+                </Auth>
             ),
         },
         {
             path: 'orgs/:organization/settings',
             element: (
-                <Suspense fallback={routeFallback}>
-                    <Auth requiredRole="user">
-                        <Suspense fallback={routeFallback}>
-                            <Organization sectionName="settings" />
-                        </Suspense>
-                    </Auth>
-                </Suspense>
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
             ),
         },
         {
             path: 'orgs/:organization/apps/:application/*',
             element: (
-                <Suspense fallback={routeFallback}>
-                    <Auth requiredRole="user">
-                        <OrganizationApplicationView />
-                    </Auth>
-                </Suspense>
+                <Auth requiredRole="user">
+                    <OrganizationApplicationView />
+                </Auth>
             ),
         },
         {
             path: '*',
-            element: (
-                <Suspense fallback={routeFallback}>
-                    <NotFound />
-                </Suspense>
-            ),
+            element: <NotFound />,
         },
     ];
 }
@@ -336,18 +220,16 @@ function OrganizationApplicationView() {
     if (isLoading) {
         // Keep the app chrome visible while the org payload resolves.
         return (
-            <Suspense fallback={routeFallback}>
-                <Layout brandOnly>
-                    <section className="mx-auto w-full max-w-[1000px] space-y-6 px-6 py-10">
-                        <Skeleton className="h-10 w-64" />
-                        <Skeleton className="h-5 w-[28rem] max-w-full" />
-                        <div className="grid gap-4 lg:grid-cols-2">
-                            <Skeleton className="h-48 w-full" />
-                            <Skeleton className="h-48 w-full" />
-                        </div>
-                    </section>
-                </Layout>
-            </Suspense>
+            <Layout brandOnly>
+                <section className="mx-auto w-full max-w-[1000px] space-y-6 px-6 py-10">
+                    <Skeleton className="h-10 w-64" />
+                    <Skeleton className="h-5 w-[28rem] max-w-full" />
+                    <div className="grid gap-4 lg:grid-cols-2">
+                        <Skeleton className="h-48 w-full" />
+                        <Skeleton className="h-48 w-full" />
+                    </div>
+                </section>
+            </Layout>
         );
     }
 
@@ -357,23 +239,19 @@ function OrganizationApplicationView() {
     }
 
     return (
-        <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-            <View
-                applicationId={organizationApplication.id}
-                applicationName={organizationApplication.name}
-                canViewLogs={canViewLogs}
-                applicationStatus={organizationApplication.status}
-                metadata={`/api/applications/${organizationApplication.id}/proxy/metadata.json`}
-            />
-        </Suspense>
+        <View
+            applicationId={organizationApplication.id}
+            applicationName={organizationApplication.name}
+            canViewLogs={canViewLogs}
+            applicationStatus={organizationApplication.status}
+            metadata={`/api/applications/${organizationApplication.id}/proxy/metadata.json`}
+        />
     );
 }
 
 const router = createBrowserRouter(getRoutes());
 
-/**
- * Renders the app shell, router, and global toaster.
- */
+/** Renders the app shell, router, and global toaster. */
 export default function App() {
     return (
         <>

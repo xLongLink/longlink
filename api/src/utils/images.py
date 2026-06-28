@@ -1,15 +1,12 @@
-import re
 import json
-import yaml
-import httpx
 import socket
 import asyncio
 import ipaddress
-from yaml import safe_load_all
-from string import Template
-from pathlib import Path
-from src.logger import logger
 from urllib.parse import urlparse
+
+import httpx2
+
+from src.logger import logger
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
@@ -18,7 +15,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
 
     registry, repository, tag = _parse_image_ref(image)
 
-    async with httpx.AsyncClient(verify=True, follow_redirects=False, timeout=5.0) as client:
+    async with httpx2.AsyncClient(verify=True, follow_redirects=False, timeout=5.0) as client:
         try:
             await _validate_public_host(_registry_hostname(registry))
             manifest = await _fetch_manifest(client, registry, repository, tag)
@@ -56,13 +53,13 @@ async def metadata(image: str) -> LongLinkMetadata | None:
                     return None
 
             return result
-        except (httpx.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata for '%s': %s", image, exc)
             return None
 
 
 def _parse_image_ref(image: str) -> tuple[str, str, str]:
-    """Parse an image reference into (registry, repository, tag)."""
+    """Parse an image reference into registry, repository, and tag."""
 
     tag = "latest"
     tag_separator = image.rfind(":")
@@ -118,8 +115,8 @@ async def _validate_public_host(hostname: str) -> None:
         raise ValueError("Image registry host must resolve to public addresses")
 
 
-async def _fetch_manifest(client: httpx.AsyncClient, registry: str, repository: str, tag: str) -> dict | None:
-    """Fetch the image manifest from the OCI Distribution API, resolving manifest lists to a single platform manifest."""
+async def _fetch_manifest(client: httpx2.AsyncClient, registry: str, repository: str, tag: str) -> dict | None:
+    """Fetch an image manifest, resolving manifest lists to a single platform manifest."""
 
     url = f"https://{registry}/v2/{repository}/manifests/{tag}"
     accept = "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json"
@@ -135,7 +132,7 @@ async def _fetch_manifest(client: httpx.AsyncClient, registry: str, repository: 
 
     data = resp.json()
 
-    # Resolve multi-arch manifest list to a single platform manifest (prefer linux/amd64).
+    # Resolve multi-arch manifest list to a single platform manifest.
     if "manifests" in data:
         entry = next(
             (m for m in data["manifests"] if m.get("platform", {}).get("architecture") == "amd64"),
@@ -153,7 +150,7 @@ async def _fetch_manifest(client: httpx.AsyncClient, registry: str, repository: 
     return data
 
 
-async def _fetch_blob(client: httpx.AsyncClient, registry: str, repository: str, digest: str) -> dict | None:
+async def _fetch_blob(client: httpx2.AsyncClient, registry: str, repository: str, digest: str) -> dict | None:
     """Fetch an image config blob from the OCI Distribution API."""
 
     url = f"https://{registry}/v2/{repository}/blobs/{digest}"
@@ -171,7 +168,7 @@ async def _fetch_blob(client: httpx.AsyncClient, registry: str, repository: str,
     return None
 
 
-async def _resolve_bearer_token(client: httpx.AsyncClient, repository: str, resp: httpx.Response) -> str | None:
+async def _resolve_bearer_token(client: httpx2.AsyncClient, repository: str, resp: httpx2.Response) -> str | None:
     """Resolve a bearer token from a 401 Www-Authenticate response."""
 
     auth_header = resp.headers.get("www-authenticate", "")
@@ -202,32 +199,7 @@ async def _resolve_bearer_token(client: httpx.AsyncClient, repository: str, resp
         if token_resp.is_success:
             token = token_resp.json().get("token")
             return token if isinstance(token, str) else None
-    except (httpx.HTTPError, ValueError) as exc:
+    except (httpx2.HTTPError, ValueError) as exc:
         logger.warning("Failed to resolve image registry bearer token: %s", exc)
 
     return None
-
-
-def slugify(value: str) -> str:
-    """Convert a string to a URL-safe and K8s-safe slug."""
-    value = value.strip().lower()
-    value = re.sub(r"[^a-z0-9]+", "-", value)
-    return value.strip("-")
-
-
-def knames(value: str, label: str = "Value") -> str:
-    """Validate one Kubernetes DNS label value and return it unchanged."""
-    if not re.match(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", value):
-        raise ValueError(
-            f"{label} must contain only lowercase letters, numbers, and hyphens"
-        )
-
-    return value
-
-
-def readyml(template_path: str | Path, **context: str) -> dict | list[dict]:
-    """Render one YAML template file into a manifest dictionary or list."""
-    source = Path(template_path)
-    rendered = Template(source.read_text(encoding="utf-8")).safe_substitute(**context)
-    docs = list(safe_load_all(rendered))
-    return docs if len(docs) > 1 else docs[0]

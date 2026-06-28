@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
@@ -11,13 +10,15 @@ import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
+import { useLocations } from '@/hooks/use-locations';
 import { useStorages } from '@/hooks/use-storages';
 import { useUser } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { storagesQueryKey } from '@/lib/query-keys';
-import type { ApiStorageRegistry } from '@/lib/types';
+import type { ApiLocation, ApiStorageRegistry } from '@/lib/types';
+import { useDeleteDialog } from '@/lib/utils';
 
-const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry>> = [
+const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry & { location?: ApiLocation }>> = [
     { accessorKey: 'kind', header: 'Kind', cell: ({ getValue }) => getValue(), meta: { className: 'w-32' } },
     { accessorKey: 'protocol', header: 'Protocol', cell: ({ getValue }) => getValue(), meta: { className: 'w-32' } },
     {
@@ -33,10 +34,29 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry>> = [
         meta: { className: 'w-64' },
     },
     {
-        accessorKey: 'location_id',
+        id: 'location',
         header: 'Location',
-        cell: ({ getValue }) => `#${getValue<number>()}`,
-        meta: { className: 'w-28' },
+        cell: ({ row }) => {
+            const location = row.original.location;
+            const country = location?.country;
+
+            return (
+                <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
+                        {country?.slice(0, 2).toUpperCase() || '--'}
+                    </div>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground">
+                            {location?.name || `#${row.original.location_id}`}
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">
+                            {location?.slug || location?.country || ''}
+                        </div>
+                    </div>
+                </div>
+            );
+        },
+        meta: { className: 'min-w-56' },
     },
 ];
 
@@ -45,8 +65,6 @@ export default function AdminStorage() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
-    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteStorage = useMutation({
         mutationFn: async (registryId: string) => {
@@ -60,9 +78,22 @@ export default function AdminStorage() {
         },
     });
 
-    const { items: storages, error, isLoading } = useStorages();
-    const storageRows = storages;
-    const deleteTarget = storageRows.find((storage) => storage.id === deleteTargetId) ?? null;
+    const { items: storages, error: storageError, isLoading: storageIsLoading } = useStorages();
+    const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
+    const locationById = new Map(locations.map((location) => [location.id, location]));
+    const storageRows: Array<ApiStorageRegistry & { location?: ApiLocation }> = storages.map((storage) => ({
+        ...storage,
+        location: locationById.get(storage.location_id),
+    }));
+    const deleteDialog = useDeleteDialog({
+        title: 'Delete storage',
+        mutation: deleteStorage,
+        items: storageRows,
+        getId: (storage) => storage.id,
+        description: (storage) => `Delete storage ${storage.slug}?`,
+        errorMessage: 'Failed to delete storage',
+        fallbackDescription: 'Delete this storage registry?',
+    });
     const storageColumns = canManage
         ? ([
               ...storageColumnsBase,
@@ -103,8 +134,7 @@ export default function AdminStorage() {
                                           className="cursor-pointer"
                                           variant="destructive"
                                           onClick={() => {
-                                              setDeleteTargetId(storage.id);
-                                              setDeleteError(null);
+                                              deleteDialog.openFor(storage);
                                           }}
                                       >
                                           Delete
@@ -134,35 +164,10 @@ export default function AdminStorage() {
             <DataTable
                 columns={storageColumns}
                 data={storageRows}
-                error={error}
-                isLoading={isLoading}
+                error={storageError ?? locationsError}
+                isLoading={storageIsLoading || locationsIsLoading}
             />
-            <DeleteConfirmationDialog
-                open={deleteTargetId !== null}
-                title="Delete storage"
-                description={deleteTarget ? `Delete storage ${deleteTarget.slug}?` : 'Delete this storage registry?'}
-                error={deleteError}
-                isPending={deleteStorage.isPending}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    }
-                }}
-                onConfirm={async () => {
-                    if (deleteTargetId === null) {
-                        return;
-                    }
-
-                    try {
-                        await deleteStorage.mutateAsync(deleteTargetId);
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    } catch (mutationError) {
-                        setDeleteError(mutationError instanceof Error ? mutationError.message : 'Failed to delete storage');
-                    }
-                }}
-            />
+            <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
         </div>
     );
 }

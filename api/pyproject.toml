@@ -15,7 +15,6 @@ dependencies = [
     'email-validator',
     'fastapi==0.138.0',
     'httpx2',
-    'httpx',
     'itsdangerous',
     'asyncmy',
     'pydantic',

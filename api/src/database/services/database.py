@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.utils.utils import slugify
+from src.utils import names
 from src.database.session import session_scope
 from src.models.databases import DatabaseKind
 from src.database.models.users import User
@@ -33,7 +33,7 @@ class DatabaseService:
                 selectinload(DatabaseRegistry.created_by),
                 selectinload(DatabaseRegistry.updated_by),
                 selectinload(DatabaseRegistry.deleted_by),
-            ).where(DatabaseRegistry.id == registry_id)
+            ).where(DatabaseRegistry.id == registry_id, DatabaseRegistry.deleted_at.is_(None))
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -57,7 +57,7 @@ class DatabaseService:
             if database is not None:
                 raise ValueError("Database registry already exists")
 
-            slug = slugify(name)
+            slug = names.slugify(name)
             database = DatabaseRegistry(
                 kind=kind,
                 name=name,
@@ -99,7 +99,7 @@ class DatabaseService:
                 selectinload(DatabaseRegistry.created_by),
                 selectinload(DatabaseRegistry.updated_by),
                 selectinload(DatabaseRegistry.deleted_by),
-            ).where(DatabaseRegistry.id == registry_id)
+            ).where(DatabaseRegistry.id == registry_id, DatabaseRegistry.deleted_at.is_(None))
             result = await session.execute(statement)
             database = result.scalar_one_or_none()
             if database is None:

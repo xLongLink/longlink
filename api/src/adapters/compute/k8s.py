@@ -1,7 +1,7 @@
 import yaml
 from .base import Compute
 from datetime import UTC, datetime
-from src.utils import utils
+from src.utils import names, templates
 from kubernetes import client, config
 from src.logger import logger
 from src.constants import TEMPLATES
@@ -86,8 +86,8 @@ class K8s(Compute):
     def _pods(self, organization: str, application: str) -> list[client.V1Pod]:
         """Return pods for one managed application."""
 
-        namespace = k8name(utils.knames(organization, "Organization"))
-        name = utils.knames(application, "Application name")
+        namespace = k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
         return self._core_api.list_namespaced_pod(namespace, label_selector=f"app={name}").items
 
 
@@ -109,8 +109,8 @@ class K8s(Compute):
     ) -> tuple[bytes, int, dict[str, str]]:
         """Proxy one request to an application service through the Kubernetes API."""
 
-        namespace = k8name(utils.knames(organization, "Organization"))
-        name = utils.knames(application, "Application name")
+        namespace = k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
         resource_path = f"/api/v1/namespaces/{namespace}/services/{name}/proxy/{path}"
         response_body, status_code, response_headers = self._api_client.call_api(
             resource_path,
@@ -129,7 +129,7 @@ class K8s(Compute):
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
 
-        namespace = k8name(utils.knames(organization, "Organization"))
+        namespace = k8name(names.knames(organization, "Organization"))
         # Reuse the namespace when it already exists so setup stays idempotent.
         try:
             self._core_api.read_namespace(namespace)
@@ -148,8 +148,8 @@ class K8s(Compute):
     async def application(self, organization: str, application: str, image: str, port: int, secrets: dict[str, str]) -> str:
         """Create or replace one internal application Deployment and Service."""
 
-        namespace = k8name(utils.knames(organization, "Organization"))
-        name = utils.knames(application, "Application name")
+        namespace = k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
 
         # Create or replace the application Secret.
         self._upsert(
@@ -170,7 +170,7 @@ class K8s(Compute):
             },
         )
 
-        application_manifests = utils.readyml(
+        application_manifests = templates.readyml(
             TEMPLATES / "application.yml",
             image=image,
             name=name,
@@ -206,8 +206,8 @@ class K8s(Compute):
     async def remove(self, organization: str, application: str) -> None:
         """Remove one managed application."""
 
-        namespace = k8name(utils.knames(organization, "Organization"))
-        name = utils.knames(application, "Application name")
+        namespace = k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
 
         # Delete the workload resources first so namespace cleanup is not blocked.
         for delete_call in (
@@ -225,7 +225,7 @@ class K8s(Compute):
     async def delete(self, organization: str) -> None:
         """Delete the organization namespace and all managed resources."""
 
-        namespace = k8name(utils.knames(organization, "Organization"))
+        namespace = k8name(names.knames(organization, "Organization"))
         try:
             self._core_api.delete_namespace(namespace)
         except ApiException as exc:
@@ -236,8 +236,8 @@ class K8s(Compute):
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
 
-        namespace = k8name(utils.knames(organization, "Organization"))
-        name = utils.knames(application, "Application name")
+        namespace = k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
         pods = self._pods(organization, application)
         if not pods:
             raise ValueError(f"No pods found for application '{namespace}/{name}'")

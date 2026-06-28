@@ -1,5 +1,4 @@
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
@@ -18,20 +17,7 @@ import { useUser } from '@/hooks/use-user';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { databaseUsageQueryKey, databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry, ApiDatabaseUsage, ApiLocation } from '@/lib/types';
-
-/** Format one byte count for the admin usage table. */
-function formatBytes(bytes: number): string {
-    const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
-    let value = bytes;
-    let unit = 0;
-
-    while (value >= 1024 && unit < units.length - 1) {
-        value /= 1024;
-        unit++;
-    }
-
-    return `${Math.round(value)} ${units[unit]}`;
-}
+import { formatBytes, useDeleteDialog } from '@/lib/utils';
 
 const databaseColumnsBase: Array<
     ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>
@@ -108,8 +94,6 @@ export default function AdminDatabase() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
-    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteDatabase = useMutation({
         mutationFn: async (registryId: string) => {
@@ -125,7 +109,6 @@ export default function AdminDatabase() {
 
     const { items: databases, error: databasesError, isLoading: databasesIsLoading } = useDatabases();
     const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
-    const deleteTarget = databases.find((database) => database.id === deleteTargetId) ?? null;
     const usageQueries = useQueries({
         queries: databases.map((registry) => ({
             queryKey: databaseUsageQueryKey(registry.id),
@@ -141,11 +124,21 @@ export default function AdminDatabase() {
     });
 
     const locationById = new Map(locations.map((location) => [location.id, location]));
-    const databaseTableRows = databases.map((row) => ({
-        ...row,
-        location: locationById.get(row.location_id),
-        usage: usageById.get(row.id),
-    }));
+    const databaseTableRows: Array<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }> =
+        databases.map((row) => ({
+            ...row,
+            location: locationById.get(row.location_id),
+            usage: usageById.get(row.id),
+        }));
+    const deleteDialog = useDeleteDialog({
+        title: 'Delete database',
+        mutation: deleteDatabase,
+        items: databaseTableRows,
+        getId: (database) => database.id,
+        description: (database) => `Delete database ${database.slug}?`,
+        errorMessage: 'Failed to delete database',
+        fallbackDescription: 'Delete this database?',
+    });
     const databaseColumns = canManage
         ? ([
               ...databaseColumnsBase,
@@ -186,8 +179,7 @@ export default function AdminDatabase() {
                                           className="cursor-pointer"
                                           variant="destructive"
                                           onClick={() => {
-                                              setDeleteTargetId(database.id);
-                                              setDeleteError(null);
+                                              deleteDialog.openFor(database);
                                           }}
                                       >
                                           Delete
@@ -220,32 +212,7 @@ export default function AdminDatabase() {
                 error={databasesError ?? locationsError}
                 isLoading={databasesIsLoading || locationsIsLoading}
             />
-            <DeleteConfirmationDialog
-                open={deleteTargetId !== null}
-                title="Delete database"
-                description={deleteTarget ? `Delete database ${deleteTarget.slug}?` : 'Delete this database?'}
-                error={deleteError}
-                isPending={deleteDatabase.isPending}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    }
-                }}
-                onConfirm={async () => {
-                    if (deleteTargetId === null) {
-                        return;
-                    }
-
-                    try {
-                        await deleteDatabase.mutateAsync(deleteTargetId);
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    } catch (mutationError) {
-                        setDeleteError(mutationError instanceof Error ? mutationError.message : 'Failed to delete database');
-                    }
-                }}
-            />
+            <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
         </div>
     );
 }

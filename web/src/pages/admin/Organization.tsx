@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
@@ -17,6 +16,7 @@ import { useUser } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
+import { useDeleteDialog } from '@/lib/utils';
 
 const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
     {
@@ -126,8 +126,6 @@ export default function AdminOrganization() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
-    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteOrganization = useMutation({
         mutationFn: async (organizationId: string) => {
@@ -142,7 +140,15 @@ export default function AdminOrganization() {
     });
 
     const { items: organizations, error, isLoading } = useOrganizations();
-    const deleteTarget = organizations.find((organization) => organization.id === deleteTargetId) ?? null;
+    const deleteDialog = useDeleteDialog({
+        title: 'Delete organization',
+        mutation: deleteOrganization,
+        items: organizations,
+        getId: (organization) => organization.id,
+        description: (organization) => `Delete organization ${organization.name}?`,
+        errorMessage: 'Failed to delete organization',
+        fallbackDescription: 'Delete this organization?',
+    });
     const organizationColumns = canManage
         ? ([
               ...organizationColumnsBase,
@@ -183,8 +189,7 @@ export default function AdminOrganization() {
                                           className="cursor-pointer"
                                           variant="destructive"
                                           onClick={() => {
-                                              setDeleteTargetId(organization.id);
-                                              setDeleteError(null);
+                                              deleteDialog.openFor(organization);
                                           }}
                                       >
                                           Delete
@@ -206,40 +211,8 @@ export default function AdminOrganization() {
                     <HeroDescription>Review organization lifecycle, ownership, and access boundaries.</HeroDescription>
                 </div>
             </Hero>
-            <DataTable
-                columns={organizationColumns}
-                data={organizations}
-                error={error}
-                isLoading={isLoading}
-            />
-            <DeleteConfirmationDialog
-                open={deleteTargetId !== null}
-                title="Delete organization"
-                description={deleteTarget ? `Delete organization ${deleteTarget.name}?` : 'Delete this organization?'}
-                error={deleteError}
-                isPending={deleteOrganization.isPending}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    }
-                }}
-                onConfirm={async () => {
-                    if (deleteTargetId === null) {
-                        return;
-                    }
-
-                    try {
-                        await deleteOrganization.mutateAsync(deleteTargetId);
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    } catch (mutationError) {
-                        setDeleteError(
-                            mutationError instanceof Error ? mutationError.message : 'Failed to delete organization'
-                        );
-                    }
-                }}
-            />
+            <DataTable columns={organizationColumns} data={organizations} error={error} isLoading={isLoading} />
+            <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
         </div>
     );
 }

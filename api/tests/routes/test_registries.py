@@ -132,9 +132,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     assert delete_response.json() == {"ok": True}
 
     deleted_response = client.get(f"/api/databases/{registry_id}")
-    assert deleted_response.status_code == 200
-    assert deleted_response.json()["deleted_at"] is not None
-    assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
+    assert deleted_response.status_code == 404
 
 
 async def test_database_usage_endpoint_returns_backend_capacity(
@@ -253,9 +251,7 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
     assert delete_response.json() == {"ok": True}
 
     deleted_response = client.get(f"/api/storages/{registry_id}")
-    assert deleted_response.status_code == 200
-    assert deleted_response.json()["deleted_at"] is not None
-    assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
+    assert deleted_response.status_code == 404
 
 
 async def test_compute_registry_endpoint_supports_create_list_and_delete(
@@ -337,9 +333,7 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     assert delete_response.status_code == 200
     assert delete_response.json() == {"ok": True}
     deleted_response = client.get(f"/api/computes/{registry_id}")
-    assert deleted_response.status_code == 200
-    assert deleted_response.json()["deleted_at"] is not None
-    assert deleted_response.json()["deleted_by"] == user_summary.model_dump(mode="json")
+    assert deleted_response.status_code == 404
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
     assert captured["cleanup_calls"] == 1

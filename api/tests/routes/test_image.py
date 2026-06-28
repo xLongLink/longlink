@@ -1,4 +1,4 @@
-from src.utils.utils import metadata
+from src.utils import images
 from src.models.metadata import LongLinkMetadata
 
 
@@ -28,7 +28,7 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
             ],
         )
 
-    monkeypatch.setattr("src.routes.image.metadata", fake_metadata)
+    monkeypatch.setattr("src.routes.image.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -68,7 +68,7 @@ def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monke
     async def fake_metadata(image: str) -> LongLinkMetadata:
         return LongLinkMetadata()
 
-    monkeypatch.setattr("src.routes.image.metadata", fake_metadata)
+    monkeypatch.setattr("src.routes.image.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -92,7 +92,7 @@ def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -
     async def fake_metadata(image: str) -> None:
         return None
 
-    monkeypatch.setattr("src.routes.image.metadata", fake_metadata)
+    monkeypatch.setattr("src.routes.image.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -109,7 +109,7 @@ async def test_metadata_rejects_local_registry_hosts() -> None:
     # Arrange
 
     # Act
-    image_metadata = await metadata("localhost:5000/longlink/dashboard:latest")
+    image_metadata = await images.metadata("localhost:5000/longlink/dashboard:latest")
 
     # Assert
     assert image_metadata is None

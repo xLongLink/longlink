@@ -4,7 +4,7 @@ from src.auth import authuser, authadmin, organization_access
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
-from src.utils.utils import knames, slugify, metadata
+from src.utils import names, images
 from src.models.common import SuccessResponse
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
@@ -48,11 +48,11 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
     organization_record = await organization_access(organization_id, user)
 
-    application_slug = slugify(payload.name)
+    application_slug = names.slugify(payload.name)
     logger.info("Provisioning application %s/%s", organization_record.slug, application_slug)
 
     # Capture image build labels when the SDK image was built with them.
-    image_metadata = await metadata(payload.image)
+    image_metadata = await images.metadata(payload.image)
 
     registries = await compute.list()
     if not registries:
@@ -214,8 +214,8 @@ async def proxy_application_request(
     if upstream_path == "":
         raise NotFoundError("Proxy root path", "/")
 
-    knames(organization.slug, "Organization")
-    knames(application.slug, "Application name")
+    names.knames(organization.slug, "Organization")
+    names.knames(application.slug, "Application name")
     # Strip hop-by-hop headers before forwarding the request upstream.
     forward_headers = {
         key: value

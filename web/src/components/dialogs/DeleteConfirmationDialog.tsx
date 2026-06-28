@@ -1,17 +1,6 @@
-import { type ReactNode } from 'react';
-
+import type { DeleteConfirmationDialogProps } from '@/lib/utils';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
-
-type DeleteConfirmationDialogProps = {
-    open: boolean;
-    title: string;
-    description: ReactNode;
-    error?: string | null;
-    isPending: boolean;
-    onConfirm: () => void;
-    onOpenChange: (open: boolean) => void;
-};
 
 /** Renders a shared destructive confirmation dialog. */
 export function DeleteConfirmationDialog({

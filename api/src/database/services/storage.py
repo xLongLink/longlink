@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.utils.utils import slugify
+from src.utils import names
 from src.models.storages import StorageKind
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -33,7 +33,7 @@ class StorageService:
                 selectinload(StorageRegistry.created_by),
                 selectinload(StorageRegistry.updated_by),
                 selectinload(StorageRegistry.deleted_by),
-            ).where(StorageRegistry.id == registry_id)
+            ).where(StorageRegistry.id == registry_id, StorageRegistry.deleted_at.is_(None))
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -57,7 +57,7 @@ class StorageService:
             if storage is not None:
                 raise ValueError("Storage registry already exists")
 
-            slug = slugify(name)
+            slug = names.slugify(name)
             storage = StorageRegistry(
                 kind=kind,
                 name=name,
@@ -96,7 +96,7 @@ class StorageService:
                     selectinload(StorageRegistry.created_by),
                     selectinload(StorageRegistry.updated_by),
                     selectinload(StorageRegistry.deleted_by),
-                ).where(StorageRegistry.id == registry_id)
+                ).where(StorageRegistry.id == registry_id, StorageRegistry.deleted_at.is_(None))
             )
             storage = result.scalar_one_or_none()
             # Return early when the registration does not exist.

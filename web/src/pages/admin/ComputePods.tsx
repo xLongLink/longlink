@@ -1,23 +1,12 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Container } from 'lucide-react';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
 import { useComputePods } from '@/hooks/use-compute-pods';
 import { useComputes } from '@/hooks/use-computes';
 import type { ApiComputePod } from '@/lib/types';
-
-function formatBytes(bytes: number): string {
-    const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
-    let value = bytes;
-    let unit = 0;
-    while (value >= 1024 && unit < units.length - 1) {
-        value /= 1024;
-        unit++;
-    }
-    return `${Math.round(value)} ${units[unit]}`;
-}
+import { formatBytes } from '@/lib/utils';
 
 const podColumns: Array<ColumnDef<ApiComputePod>> = [
     {
@@ -80,10 +69,11 @@ export default function ComputePods() {
 
     const computeRegistry = computes.find((registry) => registry.slug === compute);
 
-    const { items: rows, error: podsError, isLoading: podsIsLoading } = useComputePods(
-        computeRegistry?.id ?? '',
-        namespace
-    );
+    const {
+        items: rows,
+        error: podsError,
+        isLoading: podsIsLoading,
+    } = useComputePods(computeRegistry?.id ?? '', namespace);
     const error =
         computeError ??
         (!computesIsLoading && !computeRegistry ? new Error(`Compute "${compute}" not found`) : podsError);

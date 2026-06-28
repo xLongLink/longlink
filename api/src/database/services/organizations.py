@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.utils.utils import slugify
+from src.utils import names
 from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
 from src.database.session import session_scope
@@ -104,7 +104,7 @@ class OrganizationsService:
         """Create an organization."""
 
         async with session_scope() as session:
-            organization = Organization(name=name, slug=slugify(name), avatar=avatar or "", location_id=location_id)
+            organization = Organization(name=name, slug=names.slugify(name), avatar=avatar or "", location_id=location_id)
             # Attach the creator as the initial owner for every organization.
             organization.created_id = user.id
             organization.updated_id = user.id

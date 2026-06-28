@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@ui/button';
@@ -16,6 +15,7 @@ import { useUser } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { locationsQueryKey } from '@/lib/query-keys';
 import type { ApiLocation } from '@/lib/types';
+import { useDeleteDialog } from '@/lib/utils';
 
 const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
     {
@@ -44,8 +44,6 @@ export default function AdminLocation() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
-    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const deleteLocation = useMutation({
         mutationFn: async (locationId: string) => {
@@ -60,7 +58,15 @@ export default function AdminLocation() {
     });
 
     const { items: locationRows, error, isLoading } = useLocations();
-    const deleteTarget = locationRows.find((location) => String(location.id) === deleteTargetId) ?? null;
+    const deleteDialog = useDeleteDialog({
+        title: 'Delete location',
+        mutation: deleteLocation,
+        items: locationRows,
+        getId: (location) => String(location.id),
+        description: (location) => `Delete ${location.name}?`,
+        errorMessage: 'Failed to delete location',
+        fallbackDescription: 'Delete this location?',
+    });
     const locationColumns = canManage
         ? ([
               ...locationColumnsBase,
@@ -102,8 +108,7 @@ export default function AdminLocation() {
                                           className="cursor-pointer"
                                           variant="destructive"
                                           onClick={() => {
-                                              setDeleteTargetId(locationId);
-                                              setDeleteError(null);
+                                              deleteDialog.openFor(location);
                                           }}
                                       >
                                           Delete
@@ -130,38 +135,8 @@ export default function AdminLocation() {
                 </Hero>
                 {canManage ? <CreateLocationDialog /> : null}
             </div>
-            <DataTable
-                columns={locationColumns}
-                data={locationRows}
-                error={error}
-                isLoading={isLoading}
-            />
-            <DeleteConfirmationDialog
-                open={deleteTargetId !== null}
-                title="Delete location"
-                description={deleteTarget ? `Delete ${deleteTarget.name}?` : 'Delete this location?'}
-                error={deleteError}
-                isPending={deleteLocation.isPending}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    }
-                }}
-                onConfirm={async () => {
-                    if (deleteTargetId === null) {
-                        return;
-                    }
-
-                    try {
-                        await deleteLocation.mutateAsync(deleteTargetId);
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    } catch (mutationError) {
-                        setDeleteError(mutationError instanceof Error ? mutationError.message : 'Failed to delete location');
-                    }
-                }}
-            />
+            <DataTable columns={locationColumns} data={locationRows} error={error} isLoading={isLoading} />
+            <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
         </div>
     );
 }
