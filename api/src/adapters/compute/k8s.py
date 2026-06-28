@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import yaml
 from .base import Compute
 from datetime import UTC, datetime

@@ -10,54 +10,11 @@ describe('renderNode', () => {
         expect(renderNode([], { setups: {}, invalidate: async () => {}, values: {} })).toEqual([]);
     });
 
-    it('renders plain text nodes', () => {
+    it('rejects text nodes', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const node: ASTNode = { name: 'Text', params: { value: 'Hello' } };
 
-        expect(
-            renderToStaticMarkup(
-                createElement(
-                    'div',
-                    null,
-                    createElement(ContextProvider, { value: ctx, children: renderNode([node], ctx) })
-                )
-            )
-        ).toBe('<div>Hello</div>');
-    });
-
-    it('renders literal text values without evaluating them', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const node: ASTNode = { name: 'Text', params: { value: 'db' } };
-
-        expect(
-            renderToStaticMarkup(
-                createElement(
-                    'div',
-                    null,
-                    createElement(ContextProvider, { value: ctx, children: renderNode([node], ctx) })
-                )
-            )
-        ).toBe('<div>db</div>');
-    });
-
-    it('renders interpolated text values through the expression engine', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {},
-            user: { name: 'Ada' },
-        };
-        const node: ASTNode = { name: 'Text', params: { value: '${user.name}' } };
-
-        expect(
-            renderToStaticMarkup(
-                createElement(
-                    'div',
-                    null,
-                    createElement(ContextProvider, { value: ctx, children: renderNode([node], ctx) })
-                )
-            )
-        ).toBe('<div>Ada</div>');
+        expect(() => renderNode([node], ctx)).toThrow('Unknown component "Text"');
     });
 
     it('rejects className on xml nodes', () => {
@@ -72,7 +29,7 @@ describe('renderNode', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const nodes: ASTNode[] = [
             { name: 'State', params: { id: 'gridSearch', value: 'Revenue' } },
-            { name: 'Text', params: { if: "${gridSearch.value in 'Usage'}", value: 'Visible' } },
+            { name: 'P', params: { if: "${gridSearch.value in 'Usage'}", i18n: 'Visible' } },
         ];
 
         await setupContext(nodes, ctx, '');
@@ -89,6 +46,6 @@ describe('renderNode', () => {
                     createElement(ContextProvider, { value: ctx, children: renderNode(nodes, ctx) })
                 )
             )
-        ).toBe('<div>Visible</div>');
+        ).toBe('<div><p class="leading-7">Visible</p></div>');
     });
 });

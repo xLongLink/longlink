@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="DialogChildrenOnlyType" mixed="true">
+  <xsd:complexType name="DialogChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="DialogType" mixed="true">
+  <xsd:complexType name="DialogType">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType">
         <xsd:attribute name="open" type="xsd:string" use="optional" />
@@ -18,25 +18,25 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="DialogTriggerType" mixed="true">
+  <xsd:complexType name="DialogTriggerType">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="DialogContentType" mixed="true">
+  <xsd:complexType name="DialogContentType">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="DialogTitleType" mixed="true">
+  <xsd:complexType name="DialogTitleType">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="DialogDescriptionType" mixed="true">
+  <xsd:complexType name="DialogDescriptionType">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType" />
     </xsd:complexContent>

@@ -10,17 +10,23 @@ describe('renderNode', () => {
         expect(renderNode([], { setups: {}, invalidate: async () => {}, values: {} })).toEqual([]);
     });
 
-    it('resolves text nodes from full expressions', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, count: 7 };
+    it('resolves localized text through XML adapters', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            translations: { copy: { count: 'Count {{count}}' } },
+            values: {},
+            count: 7,
+        };
         expect(
             renderToStaticMarkup(
                 createElement(
                     'div',
                     null,
-                    createElement(RenderXML, { ast: [{ name: 'Text', params: { value: '${`Count ${count}`}' } }], ctx })
+                    createElement(RenderXML, { ast: [{ name: 'P', params: { count: '${count}', i18n: 'copy.count' } }], ctx })
                 )
             )
-        ).toBe('<div>Count 7</div>');
+        ).toBe('<div><p class="leading-7">Count 7</p></div>');
     });
 
     it('skips nodes when if condition is false', () => {

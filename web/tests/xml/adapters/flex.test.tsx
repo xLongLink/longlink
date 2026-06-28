@@ -4,10 +4,10 @@ import { renderXmlToMarkup } from '../helpers';
 
 describe('Flex', () => {
     it('renders flex spacing variants', () => {
-        const center = renderXmlToMarkup(parseXML('<Flex space="center"><P>One</P><P>Two</P></Flex>'));
-        const around = renderXmlToMarkup(parseXML('<Flex space="around"><P>One</P><P>Two</P></Flex>'));
-        const between = renderXmlToMarkup(parseXML('<Flex space="between"><P>One</P><P>Two</P></Flex>'));
-        const evenly = renderXmlToMarkup(parseXML('<Flex space="evenly"><P>One</P><P>Two</P></Flex>'));
+        const center = renderXmlToMarkup(parseXML('<Flex space="center"><P i18n="One" /><P i18n="Two" /></Flex>'));
+        const around = renderXmlToMarkup(parseXML('<Flex space="around"><P i18n="One" /><P i18n="Two" /></Flex>'));
+        const between = renderXmlToMarkup(parseXML('<Flex space="between"><P i18n="One" /><P i18n="Two" /></Flex>'));
+        const evenly = renderXmlToMarkup(parseXML('<Flex space="evenly"><P i18n="One" /><P i18n="Two" /></Flex>'));
 
         expect(center).toContain('data-slot="flex"');
         expect(center).toContain('justify-center');

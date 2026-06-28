@@ -1,10 +1,3 @@
-"""Create the current control-plane schema.
-
-Revision ID: 20260623_application_name_not_unique
-Revises:
-Create Date: 2026-06-24 00:00:00.000000
-"""
-
 import sqlalchemy as sa
 from alembic import op
 from sqlmodel.sql.sqltypes import AutoString

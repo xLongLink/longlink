@@ -10,11 +10,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('For', () => {
     /* The compiler should preserve loop attributes and nested content. */
     it('compiles for xml into a for ast node', () => {
-        expect(parseXML('<For each="items" as="item"><p>${item}</p></For>')).toEqual([
+        expect(parseXML('<For each="items" as="item"><P i18n="Item" /></For>')).toEqual([
             {
                 name: 'For',
                 params: { each: 'items', as: 'item' },
-                children: [{ name: 'p', children: [{ name: 'Text', params: { value: '${item}' } }] }],
+                children: [{ name: 'P', params: { i18n: 'Item' }, children: [] }],
             },
         ]);
     });
@@ -25,7 +25,7 @@ describe('For', () => {
         const node: ASTNode = {
             name: 'For',
             params: { each: 'items', as: 'item' },
-            children: [{ name: 'Text', params: { value: 'ignored' } }],
+            children: [{ name: 'P', params: { i18n: 'ignored' } }],
         };
 
         const output = renderToStaticMarkup(
@@ -39,7 +39,7 @@ describe('For', () => {
     it('renders children with the scoped item value', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML(
-            '<longlink><State id="items" value="[{&quot;name&quot;:&quot;Alpha&quot;}]" /><For each="${items.value}" as="item"><P>${item.name}</P></For></longlink>'
+            '<longlink><State id="items" value="[{&quot;name&quot;:&quot;Alpha&quot;}]" /><For each="${items.value}" as="item"><Input value="$item.name" /></For></longlink>'
         );
 
         await setupContext(ast, ctx, '');

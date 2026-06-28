@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="MenuChildrenOnlyType" mixed="true">
+  <xsd:complexType name="MenuChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="MenuType" mixed="true">
+  <xsd:complexType name="MenuType">
     <xsd:complexContent>
       <xsd:extension base="MenuChildrenOnlyType">
         <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
@@ -18,7 +18,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="MenuSectionType" mixed="true">
+  <xsd:complexType name="MenuSectionType">
     <xsd:complexContent>
       <xsd:extension base="MenuChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
@@ -30,7 +30,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="MenuSubSectionType" mixed="true">
+  <xsd:complexType name="MenuSubSectionType">
     <xsd:complexContent>
       <xsd:extension base="MenuChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />

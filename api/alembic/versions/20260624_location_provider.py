@@ -1,10 +1,3 @@
-"""Add datacenter provider to locations.
-
-Revision ID: 20260624_location_provider
-Revises: 20260623_application_name_not_unique
-Create Date: 2026-06-24 00:00:01.000000
-"""
-
 import sqlalchemy as sa
 from alembic import op
 

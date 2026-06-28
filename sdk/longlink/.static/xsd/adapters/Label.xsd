@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="LabelChildrenOnlyType" mixed="true">
+  <xsd:complexType name="LabelChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -10,7 +10,7 @@
     <xsd:attribute name="i18n" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="LabelType" mixed="true">
+  <xsd:complexType name="LabelType">
     <xsd:complexContent>
       <xsd:extension base="LabelChildrenOnlyType">
         <xsd:attribute name="htmlFor" type="xsd:string" use="optional" />

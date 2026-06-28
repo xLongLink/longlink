@@ -32,7 +32,7 @@ export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
 /** Renders a styled heading with an optional hover hash link. */
 export function Heading({ anchorClassName = '', children, className, id, level, source, ...props }: HeadingProps) {
     const Tag = level;
-    const resolvedId = id?.trim() || slugifyHeading(extractHeadingText(source ?? []));
+    const resolvedId = id?.trim() || slugifyHeading(extractHeadingText(source ?? [], children));
 
     return (
         <Tag className={cn(headingVariants({ level }), className)} id={resolvedId || undefined} {...props}>
@@ -53,18 +53,13 @@ export function Heading({ anchorClassName = '', children, className, id, level, 
     );
 }
 
-/** Extracts readable text from heading AST for slug generation. */
-function extractHeadingText(nodes: ASTNode[]): string {
-    return nodes
-        .flatMap((node) => {
-            if (node.name === 'Text') {
-                return String(node.params?.value ?? '');
-            }
+/** Extracts readable text from heading content for slug generation. */
+function extractHeadingText(nodes: ASTNode[], children: ReactNode): string {
+    if (typeof children === 'string') {
+        return children.trim();
+    }
 
-            return extractHeadingText(node.children ?? []);
-        })
-        .join(' ')
-        .trim();
+    return nodes.flatMap((node) => extractHeadingText(node.children ?? [], '')).join(' ').trim();
 }
 
 /** Converts heading text into a URL-safe slug. */

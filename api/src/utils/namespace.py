@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 
 def dbname(value: str) -> str:
     """Return the managed PostgreSQL database name for one value."""

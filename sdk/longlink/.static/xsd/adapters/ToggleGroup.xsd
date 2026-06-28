@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="ToggleGroupChildrenOnlyType" mixed="true">
+  <xsd:complexType name="ToggleGroupChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="ToggleGroupType" mixed="true">
+  <xsd:complexType name="ToggleGroupType">
     <xsd:complexContent>
       <xsd:extension base="ToggleGroupChildrenOnlyType">
         <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
@@ -54,7 +54,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="ToggleGroupItemType" mixed="true">
+  <xsd:complexType name="ToggleGroupItemType">
     <xsd:complexContent>
       <xsd:extension base="ToggleGroupChildrenOnlyType">
         <xsd:attribute name="size" use="optional" default="default">

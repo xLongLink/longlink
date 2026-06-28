@@ -1,7 +1,3 @@
-"""Tests for the `ToggleGroup` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -13,7 +9,7 @@ def test_toggle_group_validation() -> None:
     """Validate a minimal `ToggleGroup` fragment."""
 
     element = Element.from_content(
-        '<ToggleGroup type="single" orientation="horizontal" size="sm"><ToggleGroupItem value="a">A</ToggleGroupItem></ToggleGroup>',
+        '<ToggleGroup type="single" orientation="horizontal" size="sm"><ToggleGroupItem value="a"><P i18n="A" /></ToggleGroupItem></ToggleGroup>',
         schema=SCHEMA,
     )
     element.validate()

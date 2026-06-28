@@ -1,7 +1,3 @@
-"""Tests for the `Avatar` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -16,8 +12,8 @@ def test_avatar_validation() -> None:
         """
         <Avatar size="sm">
           <AvatarImage src="/ada.png" alt="Ada Lovelace" />
-          <AvatarFallback>AL</AvatarFallback>
-          <AvatarBadge>1</AvatarBadge>
+          <AvatarFallback><P i18n="AL" /></AvatarFallback>
+          <AvatarBadge><P i18n="1" /></AvatarBadge>
         </Avatar>
         """,
         schema=SCHEMA,

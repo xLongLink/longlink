@@ -7,7 +7,7 @@ describe('Table', () => {
     it('preserves the compound table structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Table><Thead><Tr><Th>Quarter</Th><Th>Revenue</Th><Th>Growth</Th><Th>Status</Th></Tr></Thead><Tbody><Tr><Td>Q1</Td><Td>$120k</Td><Td>12%</Td><Td>On track</Td></Tr><Tr><Td>Q2</Td><Td>$154k</Td><Td>28%</Td><Td>On track</Td></Tr></Tbody><Tfoot><Tr><Td>Total</Td><Td>$274k</Td><Td>20%</Td><Td>Projected</Td></Tr></Tfoot></Table>'
+                '<Table><Thead><Tr><Th i18n="Quarter" /><Th i18n="Revenue" /><Th i18n="Growth" /><Th i18n="Status" /></Tr></Thead><Tbody><Tr><Td i18n="Q1" /><Td i18n="$120k" /><Td i18n="12%" /><Td i18n="On track" /></Tr><Tr><Td i18n="Q2" /><Td i18n="$154k" /><Td i18n="28%" /><Td i18n="On track" /></Tr></Tbody><Tfoot><Tr><Td i18n="Total" /><Td i18n="$274k" /><Td i18n="20%" /><Td i18n="Projected" /></Tr></Tfoot></Table>'
             )
         ).toEqual([
             {
@@ -19,10 +19,10 @@ describe('Table', () => {
                             {
                                 name: 'Tr',
                                 children: [
-                                    { name: 'Th', children: [{ name: 'Text', params: { value: 'Quarter' } }] },
-                                    { name: 'Th', children: [{ name: 'Text', params: { value: 'Revenue' } }] },
-                                    { name: 'Th', children: [{ name: 'Text', params: { value: 'Growth' } }] },
-                                    { name: 'Th', children: [{ name: 'Text', params: { value: 'Status' } }] },
+                                    { name: 'Th', params: { i18n: 'Quarter' }, children: [] },
+                                    { name: 'Th', params: { i18n: 'Revenue' }, children: [] },
+                                    { name: 'Th', params: { i18n: 'Growth' }, children: [] },
+                                    { name: 'Th', params: { i18n: 'Status' }, children: [] },
                                 ],
                             },
                         ],
@@ -33,19 +33,19 @@ describe('Table', () => {
                             {
                                 name: 'Tr',
                                 children: [
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'Q1' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: '$120k' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: '12%' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'On track' } }] },
+                                    { name: 'Td', params: { i18n: 'Q1' }, children: [] },
+                                    { name: 'Td', params: { i18n: '$120k' }, children: [] },
+                                    { name: 'Td', params: { i18n: '12%' }, children: [] },
+                                    { name: 'Td', params: { i18n: 'On track' }, children: [] },
                                 ],
                             },
                             {
                                 name: 'Tr',
                                 children: [
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'Q2' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: '$154k' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: '28%' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'On track' } }] },
+                                    { name: 'Td', params: { i18n: 'Q2' }, children: [] },
+                                    { name: 'Td', params: { i18n: '$154k' }, children: [] },
+                                    { name: 'Td', params: { i18n: '28%' }, children: [] },
+                                    { name: 'Td', params: { i18n: 'On track' }, children: [] },
                                 ],
                             },
                         ],
@@ -56,10 +56,10 @@ describe('Table', () => {
                             {
                                 name: 'Tr',
                                 children: [
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'Total' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: '$274k' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: '20%' } }] },
-                                    { name: 'Td', children: [{ name: 'Text', params: { value: 'Projected' } }] },
+                                    { name: 'Td', params: { i18n: 'Total' }, children: [] },
+                                    { name: 'Td', params: { i18n: '$274k' }, children: [] },
+                                    { name: 'Td', params: { i18n: '20%' }, children: [] },
+                                    { name: 'Td', params: { i18n: 'Projected' }, children: [] },
                                 ],
                             },
                         ],
@@ -73,7 +73,7 @@ describe('Table', () => {
     it('renders the full table composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table><Thead><Tr><Th>Quarter</Th><Th>Revenue</Th><Th>Growth</Th><Th>Status</Th></Tr></Thead><Tbody><Tr><Td>Q1</Td><Td>$120k</Td><Td>12%</Td><Td>On track</Td></Tr><Tr><Td>Q2</Td><Td>$154k</Td><Td>28%</Td><Td>On track</Td></Tr></Tbody><Tfoot><Tr><Td>Total</Td><Td>$274k</Td><Td>20%</Td><Td>Projected</Td></Tr></Tfoot></Table>'
+                '<Table><Thead><Tr><Th i18n="Quarter" /><Th i18n="Revenue" /><Th i18n="Growth" /><Th i18n="Status" /></Tr></Thead><Tbody><Tr><Td i18n="Q1" /><Td i18n="$120k" /><Td i18n="12%" /><Td i18n="On track" /></Tr><Tr><Td i18n="Q2" /><Td i18n="$154k" /><Td i18n="28%" /><Td i18n="On track" /></Tr></Tbody><Tfoot><Tr><Td i18n="Total" /><Td i18n="$274k" /><Td i18n="20%" /><Td i18n="Projected" /></Tr></Tfoot></Table>'
             )
         );
 

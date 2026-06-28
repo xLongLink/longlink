@@ -7,8 +7,8 @@ import { resolveXmlString } from './props';
 /** Renders a linked anchor with standard styling. */
 export function A({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const iconNodes = props.i18n ? nodes.filter((node) => node.name !== 'Text') : [];
-    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
+    const childContent = renderNode(nodes, ctx);
+    const text = props.i18n ? resolveTranslation(props, ctx) : childContent;
     const active = resolveXmlString(props, 'active', ctx);
     const href = resolveXmlString(props, 'href', ctx, '');
     const linkClassName =
@@ -18,7 +18,7 @@ export function A({ props, nodes }: Props) {
 
     return (
         <a className={linkClassName} {...(href ? { href } : {})}>
-            {renderNode(iconNodes, ctx)}
+            {props.i18n ? childContent : null}
             {text}
         </a>
     );

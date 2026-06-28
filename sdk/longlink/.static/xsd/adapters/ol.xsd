@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="OlChildrenOnlyType" mixed="true">
+  <xsd:complexType name="OlChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="OlType" mixed="true">
+  <xsd:complexType name="OlType">
     <xsd:complexContent>
       <xsd:extension base="OlChildrenOnlyType">
       </xsd:extension>

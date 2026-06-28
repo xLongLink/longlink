@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="ButtonChildrenOnlyType" mixed="true">
+  <xsd:complexType name="ButtonChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -10,9 +10,9 @@
     <xsd:attribute name="i18n" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="ButtonType" mixed="true">
+  <xsd:complexType name="ButtonType">
     <xsd:annotation>
-      <xsd:documentation>Use nested XML children as the button label.</xsd:documentation>
+      <xsd:documentation>Use i18n for the button label and nested XML children for icons.</xsd:documentation>
     </xsd:annotation>
     <xsd:complexContent>
       <xsd:extension base="ButtonChildrenOnlyType">

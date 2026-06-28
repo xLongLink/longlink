@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select, update

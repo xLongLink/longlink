@@ -6,7 +6,7 @@
   <xsd:include schemaLocation="InputGroupInput.xsd" />
   <xsd:include schemaLocation="InputGroupTextarea.xsd" />
 
-  <xsd:complexType name="InputGroupChildrenOnlyType" mixed="true">
+  <xsd:complexType name="InputGroupChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:element ref="InputGroupAddon" />
@@ -19,7 +19,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="InputGroupType" mixed="true">
+  <xsd:complexType name="InputGroupType">
     <xsd:complexContent>
       <xsd:extension base="InputGroupChildrenOnlyType" />
     </xsd:complexContent>

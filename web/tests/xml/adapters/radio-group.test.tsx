@@ -7,7 +7,7 @@ describe('RadioGroup', () => {
     it('compiles radio group xml into the expected ast', () => {
         expect(
             parseXML(
-                '<RadioGroup name="priority" defaultValue="medium"><RadioGroupItem value="low">Low</RadioGroupItem></RadioGroup>'
+                '<RadioGroup name="priority" defaultValue="medium"><RadioGroupItem value="low" i18n="Low" /></RadioGroup>'
             )
         ).toEqual([
             {
@@ -16,8 +16,8 @@ describe('RadioGroup', () => {
                 children: [
                     {
                         name: 'RadioGroupItem',
-                        params: { value: 'low' },
-                        children: [{ name: 'Text', params: { value: 'Low' } }],
+                        params: { value: 'low', i18n: 'Low' },
+                        children: [],
                     },
                 ],
             },
@@ -28,7 +28,7 @@ describe('RadioGroup', () => {
     it('renders radio group item markup end to end', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<RadioGroup name="priority" defaultValue="medium"><RadioGroupItem value="low">Low</RadioGroupItem><RadioGroupItem value="medium">Medium</RadioGroupItem><RadioGroupItem value="high">High</RadioGroupItem></RadioGroup>'
+                '<RadioGroup name="priority" defaultValue="medium"><RadioGroupItem value="low" i18n="Low" /><RadioGroupItem value="medium" i18n="Medium" /><RadioGroupItem value="high" i18n="High" /></RadioGroup>'
             )
         );
 
@@ -43,7 +43,7 @@ describe('RadioGroup', () => {
     /* Missing item values should fail fast with a tag-specific error. */
     it('throws when a radio group item value is missing', () => {
         expect(() =>
-            renderXmlToMarkup(parseXML('<RadioGroup name="priority"><RadioGroupItem>Low</RadioGroupItem></RadioGroup>'))
+            renderXmlToMarkup(parseXML('<RadioGroup name="priority"><RadioGroupItem i18n="Low" /></RadioGroup>'))
         ).toThrow('RadioGroupItem requires a string value');
     });
 });

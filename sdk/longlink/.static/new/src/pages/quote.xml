@@ -26,29 +26,29 @@
                         <Tbody>
                             <Tr>
                                 <Td i18n="examples.quote.items.discovery" />
-                                <Td>1</Td>
-                                <Td>$1,200</Td>
-                                <Td>$1,200</Td>
+                                <Td i18n="1" />
+                                <Td i18n="$1,200" />
+                                <Td i18n="$1,200" />
                             </Tr>
                             <Tr>
                                 <Td i18n="examples.quote.items.implementation" />
-                                <Td>3</Td>
-                                <Td>$900</Td>
-                                <Td>$2,700</Td>
+                                <Td i18n="3" />
+                                <Td i18n="$900" />
+                                <Td i18n="$2,700" />
                             </Tr>
                             <Tr>
                                 <Td i18n="examples.quote.items.review" />
-                                <Td>2</Td>
-                                <Td>$450</Td>
-                                <Td>$900</Td>
+                                <Td i18n="2" />
+                                <Td i18n="$450" />
+                                <Td i18n="$900" />
                             </Tr>
                         </Tbody>
                         <Tfoot>
                             <Tr>
                                 <Td i18n="examples.quote.table.total" />
-                                <Td>6</Td>
+                                <Td i18n="6" />
                                 <Td />
-                                <Td>$4,800</Td>
+                                <Td i18n="$4,800" />
                             </Tr>
                         </Tfoot>
                     </Table>

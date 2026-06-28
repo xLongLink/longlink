@@ -9,12 +9,10 @@ import type { Props } from '@xml/types';
 /** Renders a tertiary heading with typographic defaults. */
 export function H3({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const localizedText = props.i18n ? resolveTranslation(props, ctx) : undefined;
-    const text = localizedText ?? renderNode(nodes, ctx);
-    const source = localizedText ? [{ name: 'Text', params: { value: localizedText } }] : nodes;
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
     return (
-        <Heading anchorClassName="-translate-x-5" level="h3" source={source}>
+        <Heading anchorClassName="-translate-x-5" level="h3" source={nodes}>
             {text}
         </Heading>
     );

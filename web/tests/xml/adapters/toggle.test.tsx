@@ -16,7 +16,7 @@ describe('Toggle', () => {
 
     /* The runtime should render the shadcn toggle shell. */
     it('renders toggle markup end to end', () => {
-        const output = renderXmlToMarkup(parseXML('<Toggle defaultPressed="true" size="sm">On</Toggle>'));
+        const output = renderXmlToMarkup(parseXML('<Toggle defaultPressed="true" size="sm"><P i18n="On" /></Toggle>'));
 
         expect(output).toContain('data-slot="toggle"');
         expect(output).toContain('aria-pressed="true"');

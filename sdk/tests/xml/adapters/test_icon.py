@@ -1,7 +1,3 @@
-"""Tests for the `Icon` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element

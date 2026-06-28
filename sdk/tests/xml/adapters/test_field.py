@@ -1,7 +1,3 @@
-"""Tests for the `Field` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -18,18 +14,18 @@ def test_field_validation() -> None:
         <Grid columns="2">
           <Field>
             <FieldContent>
-              <FieldTitle>Full name</FieldTitle>
+              <FieldTitle i18n="Full name" />
             </FieldContent>
-            <FieldLabel htmlFor="name">Full name</FieldLabel>
+            <FieldLabel htmlFor="name" i18n="Full name" />
             <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
           </Field>
           <Field>
-            <FieldLabel htmlFor="username">Username</FieldLabel>
+            <FieldLabel htmlFor="username" i18n="Username" />
             <Input id="username" autoComplete="off" aria-invalid="true" />
           </Field>
           <Field orientation="horizontal">
             <Switch id="newsletter" />
-            <FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel>
+            <FieldLabel htmlFor="newsletter" i18n="Subscribe to the newsletter" />
           </Field>
         </Grid>
         """,

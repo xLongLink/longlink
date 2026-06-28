@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .base import Database
 from contextlib import asynccontextmanager
 from sqlalchemy import text

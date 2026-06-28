@@ -25,10 +25,6 @@ export default function ConnectStorageDialog() {
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
-    if (role !== 'administrator') {
-        return null;
-    }
-
     const canSubmit =
         kind.trim().length > 0 &&
         name.trim().length > 0 &&
@@ -72,6 +68,10 @@ export default function ConnectStorageDialog() {
             setLocationId('');
         },
     });
+
+    if (role !== 'administrator') {
+        return null;
+    }
 
     return (
         <>

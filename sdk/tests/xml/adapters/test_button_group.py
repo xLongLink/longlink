@@ -1,7 +1,3 @@
-"""Tests for the `ButtonGroup` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -15,7 +11,7 @@ def test_button_group_validation() -> None:
     """Validate a compound `ButtonGroup` fragment."""
 
     element = Element.from_content(
-        '<ButtonGroup orientation="horizontal"><Button variant="outline">Cancel</Button><Input value="Search" /><ButtonGroupSeparator orientation="vertical" /><ButtonGroupText>Quick actions</ButtonGroupText></ButtonGroup>',
+        '<ButtonGroup orientation="horizontal"><Button variant="outline" i18n="Cancel" /><Input value="Search" /><ButtonGroupSeparator orientation="vertical" /><ButtonGroupText i18n="Quick actions" /></ButtonGroup>',
         schema=SCHEMA,
     )
     element.validate()
@@ -33,7 +29,7 @@ def test_button_group_rejects_unknown_attributes() -> None:
 def test_button_group_text_validation() -> None:
     """Validate a minimal `ButtonGroupText` fragment."""
 
-    element = Element.from_content('<ButtonGroupText>Quick actions</ButtonGroupText>', schema=TEXT_SCHEMA)
+    element = Element.from_content('<ButtonGroupText i18n="Quick actions" />', schema=TEXT_SCHEMA)
     element.validate()
 
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="TabsChildrenOnlyType" mixed="true">
+  <xsd:complexType name="TabsChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="TabsType" mixed="true">
+  <xsd:complexType name="TabsType">
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="default" type="xsd:string" use="optional" />
@@ -17,7 +17,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TabType" mixed="true">
+  <xsd:complexType name="TabType">
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />

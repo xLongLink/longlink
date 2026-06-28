@@ -22,7 +22,8 @@ describe('State', () => {
     /* State object fields should be visible to sibling nodes after initialization. */
     it('renders state values for sibling nodes', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<longlink><State id="filter" value="day" /><P>${filter.value}</P></longlink>');
+        ctx.translations = { state: { value: '{{value}}' } };
+        const ast = parseXML('<longlink><State id="filter" value="day" /><P i18n="state.value" value="${filter.value}" /></longlink>');
         await setupContext(ast, ctx, '');
         const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
 
@@ -34,8 +35,9 @@ describe('State', () => {
     /* Single value state declarations should expose array payloads on `.value`. */
     it('renders array state values through value', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        ctx.translations = { cart: { size: 'Cart size: {{size}}' } };
         const ast = parseXML(
-            '<longlink><State id="cart" value="[]" /><P>Cart size: ${cart.value.length}</P></longlink>'
+            '<longlink><State id="cart" value="[]" /><P i18n="cart.size" size="${cart.value.length}" /></longlink>'
         );
 
         await setupContext(ast, ctx, '');
@@ -49,8 +51,9 @@ describe('State', () => {
     /* Multiple state attributes should seed a proxied object slot. */
     it('renders multi-field state values', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        ctx.translations = { state: { summary: '{{value}} {{score}} {{size}}' } };
         const ast = parseXML(
-            '<longlink><State id="state1" value1="first value" score="10" list="[]" /><P>${state1.value1} ${state1.score} ${state1.list.length}</P></longlink>'
+            '<longlink><State id="state1" value1="first value" score="10" list="[]" /><P i18n="state.summary" value="${state1.value1}" score="${state1.score}" size="${state1.list.length}" /></longlink>'
         );
 
         await setupContext(ast, ctx, '');
@@ -64,7 +67,7 @@ describe('State', () => {
     /* State nodes must reject nested children so the runtime contract stays declarative. */
     it('throws when children are present', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<State id="filter" value="day"><P>Ready</P></State>');
+        const ast = parseXML('<State id="filter" value="day"><P i18n="Ready" /></State>');
 
         expect(() =>
             renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))

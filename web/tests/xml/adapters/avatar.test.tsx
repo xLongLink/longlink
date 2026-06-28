@@ -7,15 +7,15 @@ describe('Avatar', () => {
     it('compiles avatar xml into nested avatar ast nodes', () => {
         expect(
             parseXML(
-                '<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback>AL</AvatarFallback><AvatarBadge>1</AvatarBadge></Avatar>'
+                '<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback><P i18n="AL" /></AvatarFallback><AvatarBadge><P i18n="1" /></AvatarBadge></Avatar>'
             )
         ).toEqual([
             {
                 name: 'Avatar',
                 children: [
                     { name: 'AvatarImage', params: { src: '/ada.png', alt: 'Ada Lovelace' }, children: [] },
-                    { name: 'AvatarFallback', children: [{ name: 'Text', params: { value: 'AL' } }] },
-                    { name: 'AvatarBadge', children: [{ name: 'Text', params: { value: '1' } }] },
+                    { name: 'AvatarFallback', children: [{ name: 'P', params: { i18n: 'AL' }, children: [] }] },
+                    { name: 'AvatarBadge', children: [{ name: 'P', params: { i18n: '1' }, children: [] }] },
                 ],
             },
         ]);
@@ -25,7 +25,7 @@ describe('Avatar', () => {
     it('renders the avatar composition end to end', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback>AL</AvatarFallback><AvatarBadge>1</AvatarBadge></Avatar>'
+                '<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback><P i18n="AL" /></AvatarFallback><AvatarBadge><P i18n="1" /></AvatarBadge></Avatar>'
             )
         );
 

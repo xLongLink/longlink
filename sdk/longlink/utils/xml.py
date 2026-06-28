@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import xmltodict
 from lxml import etree
 from typing import Any

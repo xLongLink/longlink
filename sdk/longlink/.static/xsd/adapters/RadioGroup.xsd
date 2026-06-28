@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="RadioGroupChildrenOnlyType" mixed="true">
+  <xsd:complexType name="RadioGroupChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="RadioGroupType" mixed="true">
+  <xsd:complexType name="RadioGroupType">
     <xsd:complexContent>
       <xsd:extension base="RadioGroupChildrenOnlyType">
         <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
@@ -23,7 +23,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="RadioGroupItemType" mixed="true">
+  <xsd:complexType name="RadioGroupItemType">
     <xsd:complexContent>
       <xsd:extension base="RadioGroupChildrenOnlyType">
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />

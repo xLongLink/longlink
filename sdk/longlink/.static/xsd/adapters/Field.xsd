@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="FieldChildrenOnlyType" mixed="true">
+  <xsd:complexType name="FieldChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="FieldType" mixed="true">
+  <xsd:complexType name="FieldType">
     <xsd:complexContent>
       <xsd:extension base="FieldChildrenOnlyType">
         <xsd:attribute name="orientation" use="optional" default="vertical">

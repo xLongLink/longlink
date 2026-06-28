@@ -7,7 +7,7 @@ describe('Select', () => {
     it('preserves the compound select structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Select defaultValue="overview"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectLabel>Views</SelectLabel><SelectItem value="overview">Overview</SelectItem><SelectItem value="settings">Settings</SelectItem></SelectGroup><SelectSeparator /><SelectGroup><SelectLabel>Status</SelectLabel><SelectItem value="active">Active</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectGroup></SelectContent></Select>'
+                '<Select defaultValue="overview"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectLabel i18n="Views" /><SelectItem value="overview" i18n="Overview" /><SelectItem value="settings" i18n="Settings" /></SelectGroup><SelectSeparator /><SelectGroup><SelectLabel i18n="Status" /><SelectItem value="active" i18n="Active" /><SelectItem value="archived" i18n="Archived" /></SelectGroup></SelectContent></Select>'
             )
         ).toEqual([
             {
@@ -26,17 +26,18 @@ describe('Select', () => {
                                 children: [
                                     {
                                         name: 'SelectLabel',
-                                        children: [{ name: 'Text', params: { value: 'Views' } }],
+                                        params: { i18n: 'Views' },
+                                        children: [],
                                     },
                                     {
                                         name: 'SelectItem',
-                                        params: { value: 'overview' },
-                                        children: [{ name: 'Text', params: { value: 'Overview' } }],
+                                        params: { value: 'overview', i18n: 'Overview' },
+                                        children: [],
                                     },
                                     {
                                         name: 'SelectItem',
-                                        params: { value: 'settings' },
-                                        children: [{ name: 'Text', params: { value: 'Settings' } }],
+                                        params: { value: 'settings', i18n: 'Settings' },
+                                        children: [],
                                     },
                                 ],
                             },
@@ -49,17 +50,18 @@ describe('Select', () => {
                                 children: [
                                     {
                                         name: 'SelectLabel',
-                                        children: [{ name: 'Text', params: { value: 'Status' } }],
+                                        params: { i18n: 'Status' },
+                                        children: [],
                                     },
                                     {
                                         name: 'SelectItem',
-                                        params: { value: 'active' },
-                                        children: [{ name: 'Text', params: { value: 'Active' } }],
+                                        params: { value: 'active', i18n: 'Active' },
+                                        children: [],
                                     },
                                     {
                                         name: 'SelectItem',
-                                        params: { value: 'archived' },
-                                        children: [{ name: 'Text', params: { value: 'Archived' } }],
+                                        params: { value: 'archived', i18n: 'Archived' },
+                                        children: [],
                                     },
                                 ],
                             },
@@ -74,7 +76,7 @@ describe('Select', () => {
     it('renders the select shell in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Select defaultValue="overview"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectLabel>Views</SelectLabel><SelectItem value="overview">Overview</SelectItem><SelectItem value="settings">Settings</SelectItem></SelectGroup><SelectSeparator /><SelectGroup><SelectLabel>Status</SelectLabel><SelectItem value="active">Active</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectGroup></SelectContent></Select>'
+                '<Select defaultValue="overview"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectLabel i18n="Views" /><SelectItem value="overview" i18n="Overview" /><SelectItem value="settings" i18n="Settings" /></SelectGroup><SelectSeparator /><SelectGroup><SelectLabel i18n="Status" /><SelectItem value="active" i18n="Active" /><SelectItem value="archived" i18n="Archived" /></SelectGroup></SelectContent></Select>'
             )
         );
 

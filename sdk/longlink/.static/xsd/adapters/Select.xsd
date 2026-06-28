@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="SelectChildrenOnlyType" mixed="true">
+  <xsd:complexType name="SelectChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="SelectType" mixed="true">
+  <xsd:complexType name="SelectType">
     <xsd:complexContent>
       <xsd:extension base="SelectChildrenOnlyType">
         <xsd:attribute name="defaultOpen" type="xsd:string" use="optional" />
@@ -20,14 +20,14 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="SelectTriggerType" mixed="true">
+  <xsd:complexType name="SelectTriggerType">
     <xsd:complexContent>
       <xsd:extension base="SelectChildrenOnlyType">
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="SelectValueType" mixed="true">
+  <xsd:complexType name="SelectValueType">
     <xsd:complexContent>
       <xsd:extension base="SelectChildrenOnlyType">
         <xsd:attribute name="i18n" type="xsd:string" use="optional" />
@@ -36,21 +36,21 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="SelectContentType" mixed="true">
+  <xsd:complexType name="SelectContentType">
     <xsd:complexContent>
       <xsd:extension base="SelectChildrenOnlyType">
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="SelectGroupType" mixed="true">
+  <xsd:complexType name="SelectGroupType">
     <xsd:complexContent>
       <xsd:extension base="SelectChildrenOnlyType">
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="SelectLabelType" mixed="true">
+  <xsd:complexType name="SelectLabelType">
     <xsd:complexContent>
       <xsd:extension base="SelectChildrenOnlyType">
         <xsd:attribute name="i18n" type="xsd:string" use="optional" />
@@ -58,7 +58,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="SelectItemType" mixed="true">
+  <xsd:complexType name="SelectItemType">
     <xsd:complexContent>
       <xsd:extension base="SelectChildrenOnlyType">
         <xsd:attribute name="i18n" type="xsd:string" use="optional" />
@@ -67,7 +67,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="SelectSeparatorType" mixed="true">
+  <xsd:complexType name="SelectSeparatorType">
     <xsd:complexContent>
       <xsd:extension base="SelectChildrenOnlyType">
       </xsd:extension>

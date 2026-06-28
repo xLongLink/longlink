@@ -8,7 +8,7 @@ import { renderXmlToMarkup } from '../helpers';
 describe('Button', () => {
     /* Variant should flow into the shared button class recipe. */
     it('applies the requested variant', () => {
-        const ast = parseXML('<Button variant="destructive">Delete</Button>');
+        const ast = parseXML('<Button variant="destructive" i18n="Delete" />');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('bg-destructive/10');
@@ -17,7 +17,7 @@ describe('Button', () => {
 
     /* Size should flow into the shared button class recipe. */
     it('applies the requested size', () => {
-        const ast = parseXML('<Button size="lg">Save</Button>');
+        const ast = parseXML('<Button size="lg" i18n="Save" />');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('h-9');
@@ -26,7 +26,7 @@ describe('Button', () => {
 
     /* Submit mode should render a native submit control. */
     it('renders a submit button when submit is enabled', () => {
-        const ast = parseXML('<Button submit="true">Submit</Button>');
+        const ast = parseXML('<Button submit="true" i18n="Submit" />');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
@@ -36,7 +36,7 @@ describe('Button', () => {
 
     /* Disabled should mark the rendered button as inactive. */
     it('disables normal buttons when disabled is set', () => {
-        const ast = parseXML('<Button disabled="true">Submit</Button>');
+        const ast = parseXML('<Button disabled="true" i18n="Submit" />');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
@@ -70,7 +70,7 @@ describe('Button', () => {
 
     /* The runtime should honor conditional rendering on button nodes. */
     it('skips a button when if resolves false', () => {
-        const ast = parseXML('<Button if="${false}">Hidden</Button>');
+        const ast = parseXML('<Button if="${false}" i18n="Hidden" />');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toBe('<div></div>');
@@ -78,11 +78,11 @@ describe('Button', () => {
 
     /* The compiler should preserve the if parameter on button nodes. */
     it('preserves if in compiled xml', () => {
-        expect(parseXML('<Button if="${true}">Visible</Button>')).toEqual([
+        expect(parseXML('<Button if="${true}" i18n="Visible" />')).toEqual([
             {
                 name: 'Button',
-                params: { if: '${true}' },
-                children: [{ name: 'Text', params: { value: 'Visible' } }],
+                params: { if: '${true}', i18n: 'Visible' },
+                children: [],
             },
         ]);
     });

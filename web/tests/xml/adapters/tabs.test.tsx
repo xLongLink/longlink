@@ -7,7 +7,7 @@ describe('Tabs', () => {
     it('preserves the tab structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Tabs defaultValue="overview"><Tab value="overview" label="Overview" icon="layout-grid">Overview panel</Tab><Tab value="settings" label="Settings">Settings panel</Tab></Tabs>'
+                '<Tabs defaultValue="overview"><Tab value="overview" i18n="Overview" icon="layout-grid"><P i18n="Overview panel" /></Tab><Tab value="settings" i18n="Settings"><P i18n="Settings panel" /></Tab></Tabs>'
             )
         ).toEqual([
             {
@@ -16,13 +16,13 @@ describe('Tabs', () => {
                 children: [
                     {
                         name: 'Tab',
-                        params: { value: 'overview', label: 'Overview', icon: 'layout-grid' },
-                        children: [{ name: 'Text', params: { value: 'Overview panel' } }],
+                        params: { value: 'overview', i18n: 'Overview', icon: 'layout-grid' },
+                        children: [{ name: 'P', params: { i18n: 'Overview panel' }, children: [] }],
                     },
                     {
                         name: 'Tab',
-                        params: { value: 'settings', label: 'Settings' },
-                        children: [{ name: 'Text', params: { value: 'Settings panel' } }],
+                        params: { value: 'settings', i18n: 'Settings' },
+                        children: [{ name: 'P', params: { i18n: 'Settings panel' }, children: [] }],
                     },
                 ],
             },
@@ -33,7 +33,7 @@ describe('Tabs', () => {
     it('renders the tab composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Tabs defaultValue="overview"><Tab value="overview" label="Overview" icon="layout-grid">Overview panel</Tab><Tab value="settings" label="Settings">Settings panel</Tab></Tabs>'
+                '<Tabs defaultValue="overview"><Tab value="overview" i18n="Overview" icon="layout-grid"><P i18n="Overview panel" /></Tab><Tab value="settings" i18n="Settings"><P i18n="Settings panel" /></Tab></Tabs>'
             )
         );
 
@@ -50,7 +50,7 @@ describe('Tabs', () => {
 
     /* Missing tab values should fail fast with a tag-specific error. */
     it('throws when a tab value is missing', () => {
-        expect(() => renderXmlToMarkup(parseXML('<Tabs><Tab label="Overview">Overview</Tab></Tabs>'))).toThrow(
+        expect(() => renderXmlToMarkup(parseXML('<Tabs><Tab i18n="Overview" /></Tabs>'))).toThrow(
             'Tab requires a string value'
         );
     });

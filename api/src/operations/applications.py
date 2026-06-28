@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from enum import Enum
 from src.logger import logger
 from src.adapters.compute import K8s

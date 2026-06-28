@@ -1,7 +1,3 @@
-"""Tests for the `Hero` XML schema."""
-
-from __future__ import annotations
-
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
@@ -14,10 +10,10 @@ def test_hero_validation() -> None:
     element = Element.from_content(
         """
         <Hero icon="layout-grid">
-          <HeroTitle>Orgs</HeroTitle>
-          <HeroDescription>Browse the orgs you belong to.</HeroDescription>
+          <HeroTitle i18n="Orgs" />
+          <HeroDescription i18n="Browse the orgs you belong to." />
           <HeroContent>
-            <Button action="/orgs/new">Create org</Button>
+            <Button action="/orgs/new" i18n="Create org" />
           </HeroContent>
         </Hero>
         """,

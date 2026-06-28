@@ -1,7 +1,3 @@
-"""Tests for the `State` XML layout schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -26,7 +22,7 @@ def test_state_layout_allows_multiple_initial_fields() -> None:
 def test_state_layout_rejects_nested_content() -> None:
     """Reject nested XML content inside `State`."""
 
-    element = Element.from_content('<State id="filters" value="[]"><P>Filters</P></State>', schema=SCHEMA)
+    element = Element.from_content('<State id="filters" value="[]"><P i18n="Filters" /></State>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

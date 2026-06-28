@@ -1,7 +1,3 @@
-"""Tests for the `longlink` XML layout schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -12,7 +8,7 @@ SCHEMA = ROOT / ".static" / "xsd" / "adapters" / "Longlink.xsd"
 def test_longlink_layout_validation() -> None:
     """Validate a minimal `longlink` layout fragment."""
 
-    element = Element.from_content('<longlink><P>Dashboard</P></longlink>', schema=SCHEMA)
+    element = Element.from_content('<longlink><P i18n="Dashboard" /></longlink>', schema=SCHEMA)
     element.validate()
 
 
@@ -26,12 +22,12 @@ def test_longlink_layout_allows_nested_children() -> None:
 def test_longlink_layout_rejects_root_attributes() -> None:
     """Reject attributes that are not allowed on `longlink`."""
 
-    element = Element.from_content('<longlink name="dashboard"><P>Dashboard</P></longlink>', schema=SCHEMA)
+    element = Element.from_content('<longlink name="dashboard"><P i18n="Dashboard" /></longlink>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()
 
-    element = Element.from_content('<longlink icon="layout-grid"><P>Dashboard</P></longlink>', schema=SCHEMA)
+    element = Element.from_content('<longlink icon="layout-grid"><P i18n="Dashboard" /></longlink>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

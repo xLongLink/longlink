@@ -7,7 +7,7 @@ describe('ToggleGroup', () => {
     it('preserves the toggle group xml structure', () => {
         expect(
             parseXML(
-                '<ToggleGroup type="single"><ToggleGroupItem value="a">A</ToggleGroupItem><ToggleGroupItem value="b">B</ToggleGroupItem></ToggleGroup>'
+                '<ToggleGroup type="single"><ToggleGroupItem value="a"><P i18n="A" /></ToggleGroupItem><ToggleGroupItem value="b"><P i18n="B" /></ToggleGroupItem></ToggleGroup>'
             )
         ).toEqual([
             {
@@ -17,12 +17,12 @@ describe('ToggleGroup', () => {
                     {
                         name: 'ToggleGroupItem',
                         params: { value: 'a' },
-                        children: [{ name: 'Text', params: { value: 'A' } }],
+                        children: [{ name: 'P', params: { i18n: 'A' }, children: [] }],
                     },
                     {
                         name: 'ToggleGroupItem',
                         params: { value: 'b' },
-                        children: [{ name: 'Text', params: { value: 'B' } }],
+                        children: [{ name: 'P', params: { i18n: 'B' }, children: [] }],
                     },
                 ],
             },
@@ -33,7 +33,7 @@ describe('ToggleGroup', () => {
     it('renders toggle group markup end to end', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<ToggleGroup type="single"><ToggleGroupItem value="a">A</ToggleGroupItem><ToggleGroupItem value="b">B</ToggleGroupItem><ToggleGroupItem value="c">C</ToggleGroupItem></ToggleGroup>'
+                '<ToggleGroup type="single"><ToggleGroupItem value="a"><P i18n="A" /></ToggleGroupItem><ToggleGroupItem value="b"><P i18n="B" /></ToggleGroupItem><ToggleGroupItem value="c"><P i18n="C" /></ToggleGroupItem></ToggleGroup>'
             )
         );
 

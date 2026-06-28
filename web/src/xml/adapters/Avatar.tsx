@@ -5,6 +5,7 @@ import {
     AvatarImage as UIAvatarImage,
 } from '@ui/avatar';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 import { resolveXmlString } from './props';
@@ -36,13 +37,15 @@ export function AvatarImage({ props, nodes }: Props) {
 /** Renders the avatar fallback slot. */
 export function AvatarFallback({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIAvatarFallback>{renderNode(nodes, ctx)}</UIAvatarFallback>;
+    return <UIAvatarFallback>{text}</UIAvatarFallback>;
 }
 
 /** Renders the avatar badge overlay. */
 export function AvatarBadge({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIAvatarBadge>{renderNode(nodes, ctx)}</UIAvatarBadge>;
+    return <UIAvatarBadge>{text}</UIAvatarBadge>;
 }

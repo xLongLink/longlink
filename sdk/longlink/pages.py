@@ -1,7 +1,3 @@
-"""XML page registry and response helpers."""
-
-from __future__ import annotations
-
 from typing import Any, Callable
 from dataclasses import dataclass
 from fastapi.responses import Response

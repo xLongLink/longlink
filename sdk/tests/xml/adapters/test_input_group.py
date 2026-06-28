@@ -1,7 +1,3 @@
-"""Tests for the `InputGroup` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -19,9 +15,9 @@ def test_input_group_validation() -> None:
 
     element = Element.from_content(
         (
-            '<InputGroup><InputGroupAddon>@</InputGroupAddon><InputGroupInput label="Handle" '
-            'value="user.handle" /><InputGroupButton type="button">Search</InputGroupButton>'
-            '<InputGroupText>Public</InputGroupText></InputGroup>'
+            '<InputGroup><InputGroupAddon><P i18n="@" /></InputGroupAddon><InputGroupInput label="Handle" '
+            'value="user.handle" /><InputGroupButton type="button" i18n="Search" />'
+            '<InputGroupText i18n="Public" /></InputGroup>'
         ),
         schema=SCHEMA,
     )
@@ -40,7 +36,7 @@ def test_input_group_rejects_unknown_attributes() -> None:
 def test_input_group_addon_validation() -> None:
     """Validate a minimal `InputGroupAddon` fragment."""
 
-    element = Element.from_content('<InputGroupAddon align="inline-end">@</InputGroupAddon>', schema=ADDON_SCHEMA)
+    element = Element.from_content('<InputGroupAddon align="inline-end"><P i18n="@" /></InputGroupAddon>', schema=ADDON_SCHEMA)
     element.validate()
 
 
@@ -48,7 +44,7 @@ def test_input_group_button_validation() -> None:
     """Validate a minimal `InputGroupButton` fragment."""
 
     element = Element.from_content(
-        '<InputGroupButton size="xs" variant="ghost" type="submit">Save</InputGroupButton>',
+        '<InputGroupButton size="xs" variant="ghost" type="submit" i18n="Save" />',
         schema=BUTTON_SCHEMA,
     )
     element.validate()
@@ -57,7 +53,7 @@ def test_input_group_button_validation() -> None:
 def test_input_group_text_validation() -> None:
     """Validate a minimal `InputGroupText` fragment."""
 
-    element = Element.from_content('<InputGroupText>Public</InputGroupText>', schema=TEXT_SCHEMA)
+    element = Element.from_content('<InputGroupText i18n="Public" />', schema=TEXT_SCHEMA)
     element.validate()
 
 

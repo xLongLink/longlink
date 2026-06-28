@@ -6,7 +6,7 @@
   <xsd:include schemaLocation="ButtonGroupText.xsd" />
   <xsd:include schemaLocation="ButtonGroupSeparator.xsd" />
 
-  <xsd:complexType name="ButtonGroupChildrenOnlyType" mixed="true">
+  <xsd:complexType name="ButtonGroupChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:element ref="Button" />
@@ -19,7 +19,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="ButtonGroupType" mixed="true">
+  <xsd:complexType name="ButtonGroupType">
     <xsd:complexContent>
       <xsd:extension base="ButtonGroupChildrenOnlyType">
         <xsd:attribute name="orientation" use="optional" default="horizontal">

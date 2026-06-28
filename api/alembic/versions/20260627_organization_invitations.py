@@ -1,10 +1,3 @@
-"""Add organization invitations.
-
-Revision ID: 20260627_organization_invitations
-Revises: 20260624_location_provider
-Create Date: 2026-06-27 00:00:01.000000
-"""
-
 import sqlalchemy as sa
 from alembic import op
 

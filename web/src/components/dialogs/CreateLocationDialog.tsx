@@ -5,10 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUser } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { locationsQueryKey } from '@/lib/query-keys';
 import type { ApiLocation } from '@/lib/types';
+
+const COUNTRY_OPTIONS = [
+    { label: 'Switzerland', value: 'CH' },
+    { label: 'Germany', value: 'DE' },
+    { label: 'France', value: 'FR' },
+    { label: 'Italy', value: 'IT' },
+    { label: 'Netherlands', value: 'NL' },
+    { label: 'United Kingdom', value: 'GB' },
+    { label: 'United States', value: 'US' },
+];
 
 /** Renders the admin create location dialog. */
 export default function CreateLocationDialog() {
@@ -16,13 +27,8 @@ export default function CreateLocationDialog() {
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
-    const [slug, setSlug] = useState('');
-    const [country, setCountry] = useState('');
+    const [country, setCountry] = useState('CH');
     const [error, setError] = useState<string | null>(null);
-
-    if (role !== 'administrator') {
-        return null;
-    }
 
     const createLocation = useMutation({
         mutationFn: async () => {
@@ -33,8 +39,7 @@ export default function CreateLocationDialog() {
                 },
                 body: JSON.stringify({
                     name: name.trim(),
-                    slug: slug.trim(),
-                    country: country.trim(),
+                    country,
                 }),
             });
         },
@@ -42,10 +47,13 @@ export default function CreateLocationDialog() {
             await queryClient.invalidateQueries({ queryKey: locationsQueryKey() });
             setOpen(false);
             setName('');
-            setSlug('');
-            setCountry('');
+            setCountry('CH');
         },
     });
+
+    if (role !== 'administrator') {
+        return null;
+    }
 
     return (
         <>
@@ -98,25 +106,19 @@ export default function CreateLocationDialog() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="location-slug">Slug</Label>
-                                <Input
-                                    id="location-slug"
-                                    value={slug}
-                                    onChange={(event) => setSlug(event.target.value)}
-                                    placeholder="us-east-1"
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
                                 <Label htmlFor="location-country">Country</Label>
-                                <Input
-                                    id="location-country"
-                                    value={country}
-                                    onChange={(event) => setCountry(event.target.value)}
-                                    placeholder="United States"
-                                    autoComplete="off"
-                                />
+                                <Select value={country} onValueChange={(value) => setCountry(value ?? 'CH')}>
+                                    <SelectTrigger id="location-country" className="w-full">
+                                        <SelectValue placeholder="Choose a country" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {COUNTRY_OPTIONS.map((countryOption) => (
+                                            <SelectItem key={countryOption.value} value={countryOption.value}>
+                                                {countryOption.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -132,7 +134,7 @@ export default function CreateLocationDialog() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={createLocation.isPending}>
+                                <Button type="submit" disabled={createLocation.isPending || name.trim().length === 0}>
                                     {createLocation.isPending ? 'Creating...' : 'Create'}
                                 </Button>
                             </div>

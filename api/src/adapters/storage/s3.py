@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import boto3
 from .base import Storage
 from src.utils.namespace import s3name

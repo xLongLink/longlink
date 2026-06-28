@@ -10,7 +10,7 @@ from pathlib import Path
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 
-DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS builder
+DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS builder
 
 COPY . /workspace
 
@@ -20,7 +20,7 @@ ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 
 RUN uv sync
 
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 WORKDIR {workdir}
 

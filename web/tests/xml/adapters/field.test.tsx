@@ -7,7 +7,7 @@ describe('Field', () => {
     it('preserves the full field structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Grid columns="2"><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field></Grid>'
+                '<Grid columns="2"><Field><FieldContent><FieldTitle i18n="Full name" /></FieldContent><FieldLabel htmlFor="name" i18n="Full name" /><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription i18n="This appears on invoices and emails." /></Field><Field><FieldLabel htmlFor="username" i18n="Username" /><Input id="username" autoComplete="off" aria-invalid="true" /></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter" i18n="Subscribe to the newsletter" /></Field></Grid>'
             )
         ).toMatchObject([
             {
@@ -22,14 +22,15 @@ describe('Field', () => {
                                 children: [
                                     {
                                         name: 'FieldTitle',
-                                        children: [{ name: 'Text', params: { value: 'Full name' } }],
+                                        params: { i18n: 'Full name' },
+                                        children: [],
                                     },
                                 ],
                             },
                             {
                                 name: 'FieldLabel',
-                                params: { htmlFor: 'name' },
-                                children: [{ name: 'Text', params: { value: 'Full name' } }],
+                                params: { htmlFor: 'name', i18n: 'Full name' },
+                                children: [],
                             },
                             {
                                 name: 'Input',
@@ -37,7 +38,8 @@ describe('Field', () => {
                             },
                             {
                                 name: 'FieldDescription',
-                                children: [{ name: 'Text', params: { value: 'This appears on invoices and emails.' } }],
+                                params: { i18n: 'This appears on invoices and emails.' },
+                                children: [],
                             },
                         ],
                     },
@@ -46,8 +48,8 @@ describe('Field', () => {
                         children: [
                             {
                                 name: 'FieldLabel',
-                                params: { htmlFor: 'username' },
-                                children: [{ name: 'Text', params: { value: 'Username' } }],
+                                params: { htmlFor: 'username', i18n: 'Username' },
+                                children: [],
                             },
                             {
                                 name: 'Input',
@@ -65,8 +67,8 @@ describe('Field', () => {
                             },
                             {
                                 name: 'FieldLabel',
-                                params: { htmlFor: 'newsletter' },
-                                children: [{ name: 'Text', params: { value: 'Subscribe to the newsletter' } }],
+                                params: { htmlFor: 'newsletter', i18n: 'Subscribe to the newsletter' },
+                                children: [],
                             },
                         ],
                     },
@@ -79,7 +81,7 @@ describe('Field', () => {
     it('renders the full field composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Grid columns="2"><Field><FieldContent><FieldTitle>Full name</FieldTitle></FieldContent><FieldLabel htmlFor="name">Full name</FieldLabel><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription>This appears on invoices and emails.</FieldDescription></Field><Field><FieldLabel htmlFor="username">Username</FieldLabel><Input id="username" autoComplete="off" aria-invalid="true" /></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter">Subscribe to the newsletter</FieldLabel></Field></Grid>'
+                '<Grid columns="2"><Field><FieldContent><FieldTitle i18n="Full name" /></FieldContent><FieldLabel htmlFor="name" i18n="Full name" /><Input id="name" autoComplete="off" placeholder="Evil Rabbit" /><FieldDescription i18n="This appears on invoices and emails." /></Field><Field><FieldLabel htmlFor="username" i18n="Username" /><Input id="username" autoComplete="off" aria-invalid="true" /></Field><Field orientation="horizontal"><Switch id="newsletter" /><FieldLabel htmlFor="newsletter" i18n="Subscribe to the newsletter" /></Field></Grid>'
             )
         );
 

@@ -1,7 +1,3 @@
-"""Tests for the `Dialog` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -13,7 +9,7 @@ def test_dialog_validation() -> None:
     """Validate a compound `Dialog` fragment."""
 
     element = Element.from_content(
-        '<Dialog open="true"><DialogTrigger>Open dialog</DialogTrigger><DialogContent><DialogTitle>Delete issue</DialogTitle><DialogDescription>This cannot be undone.</DialogDescription><Button>Actions</Button></DialogContent></Dialog>',
+        '<Dialog open="true"><DialogTrigger><Button i18n="Open dialog" /></DialogTrigger><DialogContent><DialogTitle><P i18n="Delete issue" /></DialogTitle><DialogDescription><P i18n="This cannot be undone." /></DialogDescription><Button i18n="Actions" /></DialogContent></Dialog>',
         schema=SCHEMA,
     )
 

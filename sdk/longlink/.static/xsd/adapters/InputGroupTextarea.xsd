@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="InputGroupTextareaChildrenOnlyType" mixed="true">
+  <xsd:complexType name="InputGroupTextareaChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,7 +9,7 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="InputGroupTextareaType" mixed="true">
+  <xsd:complexType name="InputGroupTextareaType">
     <xsd:complexContent>
       <xsd:extension base="InputGroupTextareaChildrenOnlyType">
         <xsd:attribute name="cols" type="xsd:string" use="optional" />

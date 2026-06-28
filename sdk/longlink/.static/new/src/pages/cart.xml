@@ -26,7 +26,7 @@
                         <P i18n="examples.cart.apples.name" />
                         <P i18n="examples.cart.apples.subtitle" />
                         <P i18n="examples.cart.apples.description" />
-                        <Badge variant="outline">$2.40</Badge>
+                        <Badge variant="outline" i18n="$2.40" />
                         <Button variant="outline" size="xs" append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}' i18n="examples.cart.add" />
                     </Stack>
                 </Card>
@@ -36,7 +36,7 @@
                         <P i18n="examples.cart.bananas.name" />
                         <P i18n="examples.cart.bananas.subtitle" />
                         <P i18n="examples.cart.bananas.description" />
-                        <Badge variant="outline">$1.10</Badge>
+                        <Badge variant="outline" i18n="$1.10" />
                         <Button variant="outline" size="xs" append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}' i18n="examples.cart.add" />
                     </Stack>
                 </Card>
@@ -46,7 +46,7 @@
                         <P i18n="examples.cart.strawberries.name" />
                         <P i18n="examples.cart.strawberries.subtitle" />
                         <P i18n="examples.cart.strawberries.description" />
-                        <Badge variant="outline">$4.50</Badge>
+                        <Badge variant="outline" i18n="$4.50" />
                         <Button variant="outline" size="xs" append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}' i18n="examples.cart.add" />
                     </Stack>
                 </Card>
@@ -56,7 +56,7 @@
                         <P i18n="examples.cart.pears.name" />
                         <P i18n="examples.cart.pears.subtitle" />
                         <P i18n="examples.cart.pears.description" />
-                        <Badge variant="outline">$3.20</Badge>
+                        <Badge variant="outline" i18n="$3.20" />
                         <Button variant="outline" size="xs" append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}' i18n="examples.cart.add" />
                     </Stack>
                 </Card>

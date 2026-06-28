@@ -1,7 +1,3 @@
-"""Tests for the `Table` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -13,7 +9,7 @@ def test_table_validation() -> None:
     """Validate a compound `Table` fragment."""
 
     element = Element.from_content(
-        '<Table><TableCaption>Revenue by quarter</TableCaption><TableHeader><TableRow><TableHead>Quarter</TableHead><TableHead>Revenue</TableHead><TableHead>Growth</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Q1</TableCell><TableCell>$120k</TableCell><TableCell>12%</TableCell><TableCell>On track</TableCell></TableRow><TableRow><TableCell>Q2</TableCell><TableCell>$154k</TableCell><TableCell>28%</TableCell><TableCell>On track</TableCell></TableRow></TableBody><TableFooter><TableRow><TableCell>Total</TableCell><TableCell>$274k</TableCell><TableCell>20%</TableCell><TableCell>Projected</TableCell></TableRow></TableFooter></Table>',
+        '<Table><TableCaption><P i18n="Revenue by quarter" /></TableCaption><TableHeader><TableRow><TableHead i18n="Quarter" /><TableHead i18n="Revenue" /><TableHead i18n="Growth" /><TableHead i18n="Status" /></TableRow></TableHeader><TableBody><TableRow><TableCell i18n="Q1" /><TableCell i18n="$120k" /><TableCell i18n="12%" /><TableCell i18n="On track" /></TableRow><TableRow><TableCell i18n="Q2" /><TableCell i18n="$154k" /><TableCell i18n="28%" /><TableCell i18n="On track" /></TableRow></TableBody><TableFooter><TableRow><TableCell i18n="Total" /><TableCell i18n="$274k" /><TableCell i18n="20%" /><TableCell i18n="Projected" /></TableRow></TableFooter></Table>',
         schema=SCHEMA,
     )
 

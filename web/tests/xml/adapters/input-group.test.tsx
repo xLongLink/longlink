@@ -9,7 +9,7 @@ describe('InputGroup', () => {
     it('preserves the input group xml structure', () => {
         expect(
             parseXML(
-                '<InputGroup><InputGroupAddon><Icon name="search" /></InputGroupAddon><InputGroupInput label="Handle" value="user.handle" /><InputGroupButton>Search <Icon name="arrow-right" /></InputGroupButton><InputGroupText>Public</InputGroupText></InputGroup>'
+                '<InputGroup><InputGroupAddon><Icon name="search" /></InputGroupAddon><InputGroupInput label="Handle" value="user.handle" /><InputGroupButton i18n="Search"><Icon name="arrow-right" /></InputGroupButton><InputGroupText i18n="Public" /></InputGroup>'
             )
         ).toEqual([
             {
@@ -26,14 +26,13 @@ describe('InputGroup', () => {
                     },
                     {
                         name: 'InputGroupButton',
-                        children: [
-                            { name: 'Text', params: { value: 'Search ' } },
-                            { name: 'Icon', params: { name: 'arrow-right' }, children: [] },
-                        ],
+                        params: { i18n: 'Search' },
+                        children: [{ name: 'Icon', params: { name: 'arrow-right' }, children: [] }],
                     },
                     {
                         name: 'InputGroupText',
-                        children: [{ name: 'Text', params: { value: 'Public' } }],
+                        params: { i18n: 'Public' },
+                        children: [],
                     },
                 ],
             },
@@ -45,7 +44,7 @@ describe('InputGroup', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, user: { handle: 'ada' } };
         const output = renderXmlToMarkup(
             parseXML(
-                '<InputGroup><InputGroupAddon><Icon name="search" /></InputGroupAddon><InputGroupInput value="user.handle" placeholder="Handle" /><InputGroupButton>Search <Icon name="arrow-right" /></InputGroupButton><InputGroupText>Public</InputGroupText></InputGroup>'
+                '<InputGroup><InputGroupAddon><Icon name="search" /></InputGroupAddon><InputGroupInput value="user.handle" placeholder="Handle" /><InputGroupButton i18n="Search"><Icon name="arrow-right" /></InputGroupButton><InputGroupText i18n="Public" /></InputGroup>'
             ),
             ctx
         );

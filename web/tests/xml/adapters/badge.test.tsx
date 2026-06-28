@@ -8,10 +8,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('Badge', () => {
     /* The compiler should preserve badge attributes as raw strings. */
     it('compiles badge xml into a badge ast node', () => {
-        expect(parseXML('<Badge>New</Badge>')).toEqual([
+        expect(parseXML('<Badge i18n="New" />')).toEqual([
             {
                 name: 'Badge',
-                children: [{ name: 'Text', params: { value: 'New' } }],
+                params: { i18n: 'New' },
+                children: [],
             },
         ]);
     });
@@ -19,7 +20,7 @@ describe('Badge', () => {
     /* The runtime should render Badge XML into the shadcn badge output. */
     it('renders raw xml badge content end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<Badge>New</Badge>');
+        const ast = parseXML('<Badge i18n="New" />');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         const output = renderToStaticMarkup(createElement('div', null, renderedTree));

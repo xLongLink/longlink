@@ -7,7 +7,7 @@ describe('Menu', () => {
     it('preserves the nested menu structure in compiled xml', () => {
         expect(
             parseXML(
-                '<Menu defaultValue="overview"><MenuSection value="overview" label="Overview" icon="layout-grid"><P>Overview content</P></MenuSection><MenuSection value="settings" label="Settings" icon="shield"><P>Settings content</P><MenuSubSection value="profile" label="Profile"><P>Profile content</P></MenuSubSection><MenuSubSection value="billing" label="Billing"><P>Billing content</P></MenuSubSection></MenuSection></Menu>'
+                '<Menu defaultValue="overview"><MenuSection value="overview" i18n="Overview" icon="layout-grid"><P i18n="Overview content" /></MenuSection><MenuSection value="settings" i18n="Settings" icon="shield"><P i18n="Settings content" /><MenuSubSection value="profile" i18n="Profile"><P i18n="Profile content" /></MenuSubSection><MenuSubSection value="billing" i18n="Billing"><P i18n="Billing content" /></MenuSubSection></MenuSection></Menu>'
             )
         ).toEqual([
             {
@@ -16,39 +16,43 @@ describe('Menu', () => {
                 children: [
                     {
                         name: 'MenuSection',
-                        params: { value: 'overview', label: 'Overview', icon: 'layout-grid' },
+                        params: { value: 'overview', i18n: 'Overview', icon: 'layout-grid' },
                         children: [
                             {
                                 name: 'P',
-                                children: [{ name: 'Text', params: { value: 'Overview content' } }],
+                                params: { i18n: 'Overview content' },
+                                children: [],
                             },
                         ],
                     },
                     {
                         name: 'MenuSection',
-                        params: { value: 'settings', label: 'Settings', icon: 'shield' },
+                        params: { value: 'settings', i18n: 'Settings', icon: 'shield' },
                         children: [
                             {
                                 name: 'P',
-                                children: [{ name: 'Text', params: { value: 'Settings content' } }],
+                                params: { i18n: 'Settings content' },
+                                children: [],
                             },
                             {
                                 name: 'MenuSubSection',
-                                params: { value: 'profile', label: 'Profile' },
+                                params: { value: 'profile', i18n: 'Profile' },
                                 children: [
                                     {
                                         name: 'P',
-                                        children: [{ name: 'Text', params: { value: 'Profile content' } }],
+                                        params: { i18n: 'Profile content' },
+                                        children: [],
                                     },
                                 ],
                             },
                             {
                                 name: 'MenuSubSection',
-                                params: { value: 'billing', label: 'Billing' },
+                                params: { value: 'billing', i18n: 'Billing' },
                                 children: [
                                     {
                                         name: 'P',
-                                        children: [{ name: 'Text', params: { value: 'Billing content' } }],
+                                        params: { i18n: 'Billing content' },
+                                        children: [],
                                     },
                                 ],
                             },
@@ -63,7 +67,7 @@ describe('Menu', () => {
     it('renders the menu shell in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Menu defaultValue="overview"><MenuSection value="overview" label="Overview" icon="layout-grid"><P>Overview content</P></MenuSection><MenuSection value="settings" label="Settings" icon="shield"><P>Settings content</P><MenuSubSection value="profile" label="Profile"><P>Profile content</P></MenuSubSection><MenuSubSection value="billing" label="Billing"><P>Billing content</P></MenuSubSection></MenuSection></Menu>'
+                '<Menu defaultValue="overview"><MenuSection value="overview" i18n="Overview" icon="layout-grid"><P i18n="Overview content" /></MenuSection><MenuSection value="settings" i18n="Settings" icon="shield"><P i18n="Settings content" /><MenuSubSection value="profile" i18n="Profile"><P i18n="Profile content" /></MenuSubSection><MenuSubSection value="billing" i18n="Billing"><P i18n="Billing content" /></MenuSubSection></MenuSection></Menu>'
             )
         );
 

@@ -60,7 +60,7 @@ describe('Action', () => {
 
     /* The trigger content should come directly from the children. */
     it('renders the child label in static markup', () => {
-        const output = renderXmlToMarkup(parseXML('<Action action="/example/profile">Save profile</Action>'));
+        const output = renderXmlToMarkup(parseXML('<Action action="/example/profile"><P i18n="Save profile" /></Action>'));
 
         expect(output).toContain('<button');
         expect(output).toContain('Save profile');

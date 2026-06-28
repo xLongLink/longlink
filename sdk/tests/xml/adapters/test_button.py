@@ -1,7 +1,3 @@
-"""Tests for the `Button` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -13,7 +9,7 @@ def test_button_validation() -> None:
     """Validate a minimal `Button` fragment."""
 
     element = Element.from_content(
-        '<Button submit="true" variant="outline" size="sm" if="${canSave}">Save</Button>',
+        '<Button submit="true" variant="outline" size="sm" if="${canSave}" i18n="Save" />',
         schema=SCHEMA,
     )
     element.validate()
@@ -22,7 +18,7 @@ def test_button_validation() -> None:
 def test_button_rejects_unknown_attributes() -> None:
     """Reject attributes that are not allowed on `Button`."""
 
-    element = Element.from_content('<Button action="save" tone="accent">Save</Button>', schema=SCHEMA)
+    element = Element.from_content('<Button action="save" tone="accent" i18n="Save" />', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()
@@ -31,7 +27,7 @@ def test_button_rejects_unknown_attributes() -> None:
 def test_button_rejects_href() -> None:
     """Reject the removed `href` attribute on `Button`."""
 
-    element = Element.from_content('<Button href="/issues">Open</Button>', schema=SCHEMA)
+    element = Element.from_content('<Button href="/issues" i18n="Open" />', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()
@@ -40,7 +36,7 @@ def test_button_rejects_href() -> None:
 def test_button_rejects_class_name() -> None:
     """Reject the removed `className` attribute on `Button`."""
 
-    element = Element.from_content('<Button className="ghost">Open</Button>', schema=SCHEMA)
+    element = Element.from_content('<Button className="ghost" i18n="Open" />', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

@@ -7,7 +7,7 @@ describe('Hero', () => {
     it('renders hero action in a horizontal row', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Hero><HeroTitle>Title</HeroTitle><HeroDescription>Description</HeroDescription><HeroAction><Button>One</Button><Button>Two</Button></HeroAction></Hero>'
+                '<Hero><HeroTitle i18n="Title" /><HeroDescription i18n="Description" /><HeroAction><Button i18n="One" /><Button i18n="Two" /></HeroAction></Hero>'
             )
         );
 

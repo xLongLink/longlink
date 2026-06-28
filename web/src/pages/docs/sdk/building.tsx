@@ -152,7 +152,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
       - name: Install SDK dependencies
         working-directory: sdk
@@ -186,7 +186,7 @@ jobs:
                 </TabsContent>
                 <TabsContent value="gitlab">
                     <CodeBlock language="yaml">{`build-sample-image:
-  image: ghcr.io/astral-sh/uv:python3.12-bookworm
+  image: ghcr.io/astral-sh/uv:python3.14-bookworm
   stage: build
 
   script:

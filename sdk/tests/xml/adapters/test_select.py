@@ -1,7 +1,3 @@
-"""Tests for the `Select` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -13,7 +9,7 @@ def test_select_validation() -> None:
     """Validate a compound `Select` fragment."""
 
     element = Element.from_content(
-        '<Select defaultValue="overview"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectLabel>Views</SelectLabel><SelectItem value="overview">Overview</SelectItem><SelectItem value="settings">Settings</SelectItem></SelectGroup><SelectSeparator /><SelectGroup><SelectLabel>Status</SelectLabel><SelectItem value="active">Active</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectGroup></SelectContent></Select>',
+        '<Select defaultValue="overview"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectLabel i18n="Views" /><SelectItem value="overview" i18n="Overview" /><SelectItem value="settings" i18n="Settings" /></SelectGroup><SelectSeparator /><SelectGroup><SelectLabel i18n="Status" /><SelectItem value="active" i18n="Active" /><SelectItem value="archived" i18n="Archived" /></SelectGroup></SelectContent></Select>',
         schema=SCHEMA,
     )
 
@@ -32,7 +28,7 @@ def test_select_rejects_unknown_attributes() -> None:
 def test_select_item_requires_value() -> None:
     """Reject select items without a `value` attribute."""
 
-    element = Element.from_content('<Select><SelectItem>Overview</SelectItem></Select>', schema=SCHEMA)
+    element = Element.from_content('<Select><SelectItem i18n="Overview" /></Select>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

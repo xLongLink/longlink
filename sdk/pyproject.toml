@@ -18,7 +18,7 @@ dependencies = [
     "sqlmodel",
     "xmltodict",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 authors = [
     {name = "LongLink SAGL", email = "info@longlink.ch"}
 ]
@@ -80,7 +80,7 @@ exclude = ["sample*"]
 longlink = [".static/**"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["UP", "D300"]

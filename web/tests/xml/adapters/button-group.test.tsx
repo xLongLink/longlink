@@ -7,7 +7,7 @@ describe('ButtonGroup', () => {
     it('preserves the button group xml structure', () => {
         expect(
             parseXML(
-                '<ButtonGroup orientation="vertical"><Button>Save</Button><Input value="Search" /><ButtonGroupSeparator orientation="horizontal" /><ButtonGroupText>Quick actions</ButtonGroupText></ButtonGroup>'
+                '<ButtonGroup orientation="vertical"><Button i18n="Save" /><Input value="Search" /><ButtonGroupSeparator orientation="horizontal" /><ButtonGroupText i18n="Quick actions" /></ButtonGroup>'
             )
         ).toEqual([
             {
@@ -16,7 +16,8 @@ describe('ButtonGroup', () => {
                 children: [
                     {
                         name: 'Button',
-                        children: [{ name: 'Text', params: { value: 'Save' } }],
+                        params: { i18n: 'Save' },
+                        children: [],
                     },
                     {
                         name: 'Input',
@@ -30,7 +31,8 @@ describe('ButtonGroup', () => {
                     },
                     {
                         name: 'ButtonGroupText',
-                        children: [{ name: 'Text', params: { value: 'Quick actions' } }],
+                        params: { i18n: 'Quick actions' },
+                        children: [],
                     },
                 ],
             },
@@ -41,7 +43,7 @@ describe('ButtonGroup', () => {
     it('renders button group markup end to end', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<ButtonGroup><Button>Save</Button><Input value="Search" /><ButtonGroupSeparator /><ButtonGroupText>Quick actions</ButtonGroupText></ButtonGroup>'
+                '<ButtonGroup><Button i18n="Save" /><Input value="Search" /><ButtonGroupSeparator /><ButtonGroupText i18n="Quick actions" /></ButtonGroup>'
             )
         );
 

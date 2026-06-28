@@ -24,10 +24,6 @@ export default function ConnectComputeDialog() {
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
-    if (role !== 'administrator') {
-        return null;
-    }
-
     const canSubmit =
         kind.trim().length > 0 &&
         kubeconfig.trim().length > 0 &&
@@ -62,6 +58,10 @@ export default function ConnectComputeDialog() {
             setLocationId('');
         },
     });
+
+    if (role !== 'administrator') {
+        return null;
+    }
 
     return (
         <>

@@ -39,10 +39,6 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             return <For key={index} props={node.params} nodes={node.children ?? []} />;
         }
 
-        if (node.name === 'Text') {
-            return <Fragment key={index}>{evaluate(node.params?.value ?? '', ctx) as ReactNode}</Fragment>;
-        }
-
         throw new Error(`Unknown component "${node.name}"`);
     });
 }

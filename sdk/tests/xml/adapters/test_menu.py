@@ -1,7 +1,3 @@
-"""Tests for the `Menu` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -16,15 +12,15 @@ def test_menu_validation() -> None:
         """
         <Menu defaultValue="overview">
           <MenuSection value="overview" label="Overview" icon="layout-grid">
-            <P>Overview content</P>
+            <P i18n="Overview content" />
           </MenuSection>
           <MenuSection value="settings" label="Settings" icon="shield">
-            <P>Settings content</P>
+            <P i18n="Settings content" />
             <MenuSubSection value="profile" label="Profile">
-              <P>Profile content</P>
+              <P i18n="Profile content" />
             </MenuSubSection>
             <MenuSubSection value="billing" label="Billing">
-              <P>Billing content</P>
+              <P i18n="Billing content" />
             </MenuSubSection>
           </MenuSection>
         </Menu>
@@ -48,7 +44,7 @@ def test_menu_section_accepts_icon() -> None:
     """Allow Lucide icon names on `MenuSection`."""
 
     element = Element.from_content(
-        '<Menu><MenuSection value="overview" icon="layout-grid">Overview</MenuSection></Menu>',
+        '<Menu><MenuSection value="overview" icon="layout-grid" i18n="Overview" /></Menu>',
         schema=SCHEMA,
     )
 
@@ -58,7 +54,7 @@ def test_menu_section_accepts_icon() -> None:
 def test_menu_section_requires_value() -> None:
     """Reject menu sections without a `value` attribute."""
 
-    element = Element.from_content('<Menu><MenuSection>First</MenuSection></Menu>', schema=SCHEMA)
+    element = Element.from_content('<Menu><MenuSection i18n="First" /></Menu>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

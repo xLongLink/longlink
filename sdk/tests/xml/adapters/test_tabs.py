@@ -1,7 +1,3 @@
-"""Tests for the `Tabs` XML schema."""
-
-from __future__ import annotations
-
 import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
@@ -15,8 +11,12 @@ def test_tabs_validation() -> None:
     element = Element.from_content(
         """
         <Tabs default="overview">
-          <Tab value="overview" label="Overview" icon="layout-grid">Overview panel</Tab>
-          <Tab value="settings" label="Settings">Settings panel</Tab>
+          <Tab value="overview" label="Overview" icon="layout-grid">
+            <P i18n="Overview panel" />
+          </Tab>
+          <Tab value="settings" label="Settings">
+            <P i18n="Settings panel" />
+          </Tab>
         </Tabs>
         """,
         schema=SCHEMA,
@@ -37,7 +37,7 @@ def test_tabs_rejects_unknown_attributes() -> None:
 def test_tabs_trigger_requires_value() -> None:
     """Reject tabs without a tab `value` attribute."""
 
-    element = Element.from_content('<Tabs><Tab label="Overview">Overview</Tab></Tabs>', schema=SCHEMA)
+    element = Element.from_content('<Tabs><Tab label="Overview"><P i18n="Overview" /></Tab></Tabs>', schema=SCHEMA)
 
     with pytest.raises(ValueError):
         element.validate()

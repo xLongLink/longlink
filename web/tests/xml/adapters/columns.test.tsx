@@ -6,7 +6,9 @@ describe('Columns', () => {
     /* The compiler should preserve the full columns composition and widths. */
     it('preserves the compound columns structure in compiled xml', () => {
         expect(
-            parseXML('<Columns><Column width="70">Main content</Column><Column width="30">Sidebar</Column></Columns>')
+            parseXML(
+                '<Columns><Column width="70"><P i18n="Main content" /></Column><Column width="30"><P i18n="Sidebar" /></Column></Columns>'
+            )
         ).toEqual([
             {
                 name: 'Columns',
@@ -14,12 +16,12 @@ describe('Columns', () => {
                     {
                         name: 'Column',
                         params: { width: '70' },
-                        children: [{ name: 'Text', params: { value: 'Main content' } }],
+                        children: [{ name: 'P', params: { i18n: 'Main content' }, children: [] }],
                     },
                     {
                         name: 'Column',
                         params: { width: '30' },
-                        children: [{ name: 'Text', params: { value: 'Sidebar' } }],
+                        children: [{ name: 'P', params: { i18n: 'Sidebar' }, children: [] }],
                     },
                 ],
             },
@@ -29,7 +31,9 @@ describe('Columns', () => {
     /* The runtime should render the shadcn columns shell and width-managed columns. */
     it('renders the full columns composition', () => {
         const output = renderXmlToMarkup(
-            parseXML('<Columns><Column width="70">Main content</Column><Column width="30">Sidebar</Column></Columns>')
+            parseXML(
+                '<Columns><Column width="70"><P i18n="Main content" /></Column><Column width="30"><P i18n="Sidebar" /></Column></Columns>'
+            )
         );
 
         expect(output).toContain('data-slot="columns"');

@@ -7,7 +7,7 @@ describe('Typography', () => {
     it('renders styled heading and list markup end to end', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<H1>Page title</H1><H2>Section</H2><H3>Subsection</H3><H4>Detail</H4><P>Body text with <Code>snippet</Code> and <A href="/docs">docs</A>.</P><Ul><Li>First</Li><Li>Second</Li></Ul><Ol><Li>One</Li><Li>Two</Li></Ol>'
+                '<H1 i18n="Page title" /><H2 i18n="Section" /><H3 i18n="Subsection" /><H4 i18n="Detail" /><P i18n="Body text" /><Code i18n="snippet" /><A href="/docs" i18n="docs" /><Ul><Li i18n="First" /><Li i18n="Second" /></Ul><Ol><Li i18n="One" /><Li i18n="Two" /></Ol>'
             )
         );
 

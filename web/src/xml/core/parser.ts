@@ -15,20 +15,14 @@ const parser = new XMLParser({
  * Parses an XML string into a flat AST structure.
  *
  * Input:
- *   <longlink>Hello, ${user.name}<Button>Save</Button></longlink>
+ *   <longlink><Button i18n="actions.save" /></longlink>
  *
  * Output:
  *   [
  *     {
  *       name: 'longlink',
  *       children: [
- *         { name: 'Text', params: { value: 'Hello, ${user.name}' } },
- *         {
- *           name: 'Button',
- *           children: [
- *             { name: 'Text', params: { value: 'Save' } }
- *           ]
- *         }
+ *         { name: 'Button', params: { i18n: 'actions.save' }, children: [] }
  *       ]
  *     }
  *   ]
@@ -41,20 +35,14 @@ export function parseXML(xml: string): ASTNode[] {
  * Converts parser output into XML AST nodes.
  *
  * Input:
- *   toNodes({ longlink: { '#text': 'Hello, ${user.name}', Button: { '#text': 'Save' } } })
+ *   toNodes({ longlink: { Button: { ':@': { '@_i18n': 'actions.save' } } } })
  *
  * Output:
  *   [
  *     {
  *       name: 'longlink',
  *       children: [
- *         { name: 'Text', params: { value: 'Hello, ${user.name}' } },
- *         {
- *           name: 'Button',
- *           children: [
- *             { name: 'Text', params: { value: 'Save' } }
- *           ]
- *         }
+ *         { name: 'Button', params: { i18n: 'actions.save' }, children: [] }
  *       ]
  *     }
  *   ]
@@ -67,9 +55,13 @@ function toNodes(input: unknown): ASTNode[] {
 
     if (!input) return [];
 
-    /* Primitive parser values become text nodes when they contain visible content. */
+    /* Visible character data is not part of the XML surface; use i18n attributes instead. */
     if (typeof input === 'string') {
-        return input.trim() ? [{ name: 'Text', params: { value: input } }] : [];
+        if (input.trim()) {
+            throw new Error('Literal text is not supported in XML; use i18n attributes instead');
+        }
+
+        return [];
     }
 
     if (typeof input !== 'object') return [];

@@ -8,12 +8,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 describe('Ol', () => {
     /* The compiler should preserve titlecase ordered list bridges. */
     it('compiles ol xml into an ordered list ast node', () => {
-        expect(parseXML('<Ol><Li>First item</Li><Li>Second item</Li></Ol>')).toEqual([
+        expect(parseXML('<Ol><Li i18n="First item" /><Li i18n="Second item" /></Ol>')).toEqual([
             {
                 name: 'Ol',
                 children: [
-                    { name: 'Li', children: [{ name: 'Text', params: { value: 'First item' } }] },
-                    { name: 'Li', children: [{ name: 'Text', params: { value: 'Second item' } }] },
+                    { name: 'Li', params: { i18n: 'First item' }, children: [] },
+                    { name: 'Li', params: { i18n: 'Second item' }, children: [] },
                 ],
             },
         ]);
@@ -22,7 +22,7 @@ describe('Ol', () => {
     /* The runtime should render ordered list XML into the expected HTML output. */
     it('renders ordered list xml end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<Ol><Li>First item</Li><Li>Second item</Li></Ol>');
+        const ast = parseXML('<Ol><Li i18n="First item" /><Li i18n="Second item" /></Ol>');
         const renderedTree = createElement(RenderXML, { ast, ctx });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(

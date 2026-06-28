@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="TableChildrenOnlyType" mixed="true">
+  <xsd:complexType name="TableChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:any processContents="lax" />
@@ -9,37 +9,37 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
 
-  <xsd:complexType name="TableType" mixed="true">
+  <xsd:complexType name="TableType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TableHeaderType" mixed="true">
+  <xsd:complexType name="TableHeaderType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TableBodyType" mixed="true">
+  <xsd:complexType name="TableBodyType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TableFooterType" mixed="true">
+  <xsd:complexType name="TableFooterType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TableRowType" mixed="true">
+  <xsd:complexType name="TableRowType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType" />
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TableHeadType" mixed="true">
+  <xsd:complexType name="TableHeadType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType">
         <xsd:attribute name="i18n" type="xsd:string" use="optional" />
@@ -47,7 +47,7 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="TableCellType" mixed="true">
+  <xsd:complexType name="TableCellType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType">
         <xsd:attribute name="i18n" type="xsd:string" use="optional" />
