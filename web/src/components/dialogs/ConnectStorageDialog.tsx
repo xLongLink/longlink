@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { RegistryDialogShell, RegistryLocationField } from '@/components/dialogs/RegistryDialogElements';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,8 +34,6 @@ export default function ConnectStorageDialog() {
         locationId.length > 0;
 
     const { items: locations } = useLocations(open);
-
-    const selectedLocationName = locations.find((location) => location.id === locationId)?.name;
 
     const connectStorage = useMutation({
         mutationFn: async () => {
@@ -74,149 +71,100 @@ export default function ConnectStorageDialog() {
     }
 
     return (
-        <>
-            <Button type="button" onClick={() => setOpen(true)}>
-                Connect
-            </Button>
+        <RegistryDialogShell
+            title="Connect storage"
+            description="Register an object storage backend."
+            open={open}
+            error={error}
+            canSubmit={canSubmit}
+            isPending={connectStorage.isPending}
+            pendingLabel="Connecting..."
+            onOpenChange={(nextOpen) => {
+                setOpen(nextOpen);
+                if (!nextOpen) setError(null);
+            }}
+            onSubmit={async () => {
+                setError(null);
+                try {
+                    await connectStorage.mutateAsync();
+                } catch (mutationError) {
+                    setError(mutationError instanceof Error ? mutationError.message : 'Failed to connect storage');
+                }
+            }}
+        >
+            <div className="space-y-2">
+                <Label htmlFor="storage-kind">Kind</Label>
+                <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
+                    <SelectTrigger id="storage-kind" className="w-full">
+                        <SelectValue placeholder="Choose a storage kind" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="s3">S3</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
 
-            <Dialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    setOpen(nextOpen);
-                    if (!nextOpen) {
-                        setError(null);
-                    }
-                }}
-            >
-                <DialogContent>
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <DialogTitle>Connect storage</DialogTitle>
-                            <DialogDescription>Register an object storage backend.</DialogDescription>
-                        </div>
+            <div className="space-y-2">
+                <Label htmlFor="storage-name">Name</Label>
+                <Input
+                    id="storage-name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="assets"
+                    autoComplete="off"
+                />
+            </div>
 
-                        <form
-                            className="space-y-4"
-                            onSubmit={async (event) => {
-                                event.preventDefault();
-                                setError(null);
+            <div className="space-y-2">
+                <Label htmlFor="storage-protocol">Protocol</Label>
+                <Input
+                    id="storage-protocol"
+                    value={protocol}
+                    onChange={(event) => setProtocol(event.target.value)}
+                    placeholder="s3"
+                    autoComplete="off"
+                />
+            </div>
 
-                                // Submit the registry and close the dialog on success.
-                                try {
-                                    await connectStorage.mutateAsync();
-                                } catch (mutationError) {
-                                    setError(
-                                        mutationError instanceof Error
-                                            ? mutationError.message
-                                            : 'Failed to connect storage'
-                                    );
-                                }
-                            }}
-                        >
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-kind">Kind</Label>
-                                <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
-                                    <SelectTrigger id="storage-kind" className="w-full">
-                                        <SelectValue placeholder="Choose a storage kind" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="s3">S3</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+            <div className="space-y-2">
+                <Label htmlFor="storage-endpoint">Endpoint URL</Label>
+                <Input
+                    id="storage-endpoint"
+                    value={endpointUrl}
+                    onChange={(event) => setEndpointUrl(event.target.value)}
+                    placeholder="https://s3.example.com"
+                    autoComplete="off"
+                />
+            </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-name">Name</Label>
-                                <Input
-                                    id="storage-name"
-                                    value={name}
-                                    onChange={(event) => setName(event.target.value)}
-                                    placeholder="assets"
-                                    autoComplete="off"
-                                />
-                            </div>
+            <div className="space-y-2">
+                <Label htmlFor="storage-access-key">Access key ID</Label>
+                <Input
+                    id="storage-access-key"
+                    value={accessKeyId}
+                    onChange={(event) => setAccessKeyId(event.target.value)}
+                    placeholder="AKIA..."
+                    autoComplete="off"
+                />
+            </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-protocol">Protocol</Label>
-                                <Input
-                                    id="storage-protocol"
-                                    value={protocol}
-                                    onChange={(event) => setProtocol(event.target.value)}
-                                    placeholder="s3"
-                                    autoComplete="off"
-                                />
-                            </div>
+            <div className="space-y-2">
+                <Label htmlFor="storage-secret-key">Secret access key</Label>
+                <Input
+                    id="storage-secret-key"
+                    type="password"
+                    value={secretAccessKey}
+                    onChange={(event) => setSecretAccessKey(event.target.value)}
+                    autoComplete="off"
+                />
+            </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-endpoint">Endpoint URL</Label>
-                                <Input
-                                    id="storage-endpoint"
-                                    value={endpointUrl}
-                                    onChange={(event) => setEndpointUrl(event.target.value)}
-                                    placeholder="https://s3.example.com"
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-access-key">Access key ID</Label>
-                                <Input
-                                    id="storage-access-key"
-                                    value={accessKeyId}
-                                    onChange={(event) => setAccessKeyId(event.target.value)}
-                                    placeholder="AKIA..."
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-secret-key">Secret access key</Label>
-                                <Input
-                                    id="storage-secret-key"
-                                    type="password"
-                                    value={secretAccessKey}
-                                    onChange={(event) => setSecretAccessKey(event.target.value)}
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-location">Location</Label>
-                                <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
-                                    <SelectTrigger id="storage-location" className="w-full">
-                                        {selectedLocationName ?? 'Choose a location'}
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {locations.map((location) => (
-                                            <SelectItem key={location.id} value={String(location.id)}>
-                                                {location.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-                            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setOpen(false);
-                                        setError(null);
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={connectStorage.isPending || !canSubmit}>
-                                    {connectStorage.isPending ? 'Connecting...' : 'Connect'}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </>
+            <RegistryLocationField
+                id="storage-location"
+                value={locationId}
+                locations={locations}
+                onValueChange={setLocationId}
+            />
+        </RegistryDialogShell>
     );
 }

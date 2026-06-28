@@ -43,6 +43,19 @@ const conceptDocs: ConceptDoc[] = [
 </Field>`,
     },
     {
+        name: 'Text and styling',
+        id: 'text-and-styling',
+        description:
+            'XML pages intentionally reject literal text nodes and className attributes. Put copy in locale files and render it through i18n-capable elements so pages stay structured and translatable.',
+        parameters: [
+            'Use i18n on text-bearing elements such as H1, P, Button, Badge, Li, Th, and Td.',
+            'Use semantic XML elements for layout and state instead of className styling hooks.',
+        ],
+        example: `<H1 i18n="orders.title" />
+<P i18n="orders.summary" count="orders.items.length" />
+<Badge variant="outline" i18n="orders.pendingReview" />`,
+    },
+    {
         name: 'Query',
         id: 'query',
         description:

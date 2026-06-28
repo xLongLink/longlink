@@ -2,13 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
-import { Button } from '@ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { MoreVertical } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
+import { AdminActionMenu } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useOrganizations } from '@/hooks/use-organizations';
@@ -122,7 +120,7 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
 ];
 
 /** Renders the admin organizations page. */
-export default function AdminOrganization() {
+export default function AdminOrganizations() {
     const { role } = useUser();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
@@ -160,43 +158,12 @@ export default function AdminOrganization() {
                       const organization = row.original;
 
                       return (
-                          <div className="flex justify-end">
-                              <DropdownMenu>
-                                  <DropdownMenuTrigger
-                                      render={
-                                          <Button
-                                              type="button"
-                                              variant="ghost"
-                                              size="icon-sm"
-                                              className="cursor-pointer"
-                                              aria-label={`Open actions for ${organization.name}`}
-                                          />
-                                      }
-                                  >
-                                      <MoreVertical className="size-4" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-44">
-                                      <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          onClick={() => {
-                                              void navigator.clipboard.writeText(organization.name);
-                                              toast.success('Organization name copied');
-                                          }}
-                                      >
-                                          Copy name
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          variant="destructive"
-                                          onClick={() => {
-                                              deleteDialog.openFor(organization);
-                                          }}
-                                      >
-                                          Delete
-                                      </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                              </DropdownMenu>
-                          </div>
+                          <AdminActionMenu
+                              label={organization.name}
+                              copyLabel="Organization name"
+                              copyValue={organization.name}
+                              onDelete={() => deleteDialog.openFor(organization)}
+                          />
                       );
                   },
               },

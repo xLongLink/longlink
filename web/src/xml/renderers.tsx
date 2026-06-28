@@ -3,7 +3,7 @@ import { getVersion, subscribe } from 'valtio';
 import { ContextProvider, createContext, setupContext, validateSetupNodes } from './core/context';
 import { XmlErrorBoundary } from './core/errors';
 import { renderNode } from './core/node';
-import { BaseUrlContext } from './core/url';
+import { BaseUrlContext, resolveUrl } from './core/url';
 import type { ASTNode, ExecutionContext } from './types';
 
 type RenderXMLProps = {
@@ -53,7 +53,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         if (!runtimeCtx.translations) {
             const locale = runtimeCtx.locale ?? 'en';
 
-            void fetch(`/i18n/${locale}.json`)
+            void fetch(resolveUrl(baseUrl, `/i18n/${locale}.json`))
                 .then(async (response) => {
                     if (!response.ok) {
                         return {};

@@ -1,13 +1,11 @@
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
-import { Button } from '@ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { MoreVertical } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
+import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
 import ConnectDatabaseDialog from '@/components/dialogs/ConnectDatabaseDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
@@ -50,24 +48,7 @@ const databaseColumnsBase: Array<
         id: 'location',
         header: 'Location',
         cell: ({ row }) => {
-            const location = row.original.location;
-            const country = location?.country;
-
-            return (
-                <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
-                        {country?.slice(0, 2).toUpperCase() || '--'}
-                    </div>
-                    <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">
-                            {location?.name || `#${row.original.location_id}`}
-                        </div>
-                        <div className="truncate text-xs text-muted-foreground">
-                            {location?.slug || location?.country || ''}
-                        </div>
-                    </div>
-                </div>
-            );
+            return <AdminLocationBadge fallbackId={row.original.location_id} location={row.original.location} />;
         },
         meta: { className: 'min-w-56' },
     },
@@ -150,43 +131,12 @@ export default function AdminDatabase() {
                       const database = row.original;
 
                       return (
-                          <div className="flex justify-end">
-                              <DropdownMenu>
-                                  <DropdownMenuTrigger
-                                      render={
-                                          <Button
-                                              type="button"
-                                              variant="ghost"
-                                              size="icon-sm"
-                                              className="cursor-pointer"
-                                              aria-label={`Open actions for ${database.name}`}
-                                          />
-                                      }
-                                  >
-                                      <MoreVertical className="size-4" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-44">
-                                      <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          onClick={() => {
-                                              void navigator.clipboard.writeText(database.slug);
-                                              toast.success('Database slug copied');
-                                          }}
-                                      >
-                                          Copy slug
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          variant="destructive"
-                                          onClick={() => {
-                                              deleteDialog.openFor(database);
-                                          }}
-                                      >
-                                          Delete
-                                      </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                              </DropdownMenu>
-                          </div>
+                          <AdminActionMenu
+                              label={database.name}
+                              copyLabel="Database slug"
+                              copyValue={database.slug}
+                              onDelete={() => deleteDialog.openFor(database)}
+                          />
                       );
                   },
               },

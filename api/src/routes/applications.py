@@ -2,20 +2,14 @@ from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter
 from src.auth import authuser, authadmin, organization_access
 from src.errors import ConflictError, NotFoundError, UnavailableError
-from src.logger import logger
-from src.constants import APP_SERVICE_PORT
-from src.utils import names, images
+from src.utils import names
 from src.models.common import SuccessResponse
-from src.adapters.database import Postgres
-from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
 from src.models.applications import (ApplicationCreate, ApplicationStatus,
-                                     ApplicationResponse)
+                                      ApplicationResponse)
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
-from src.database.services.compute import compute
-from src.database.services.database import database
-from src.database.services.operations import operations
+from src.operations import provisioning
 from src.database.services.applications import applications
 
 HOP_BY_HOP_HEADERS = {
@@ -48,94 +42,25 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
     organization_record = await organization_access(organization_id, user)
 
-    application_slug = names.slugify(payload.name)
-    logger.info("Provisioning application %s/%s", organization_record.slug, application_slug)
-
-    # Capture image build labels when the SDK image was built with them.
-    image_metadata = await images.metadata(payload.image)
-
-    registries = await compute.list()
-    if not registries:
-        raise UnavailableError("No compute cluster configured")
-
-    database_registries = await database.list()
-    if not database_registries:
-        raise UnavailableError("No database configured")
-
-    registry = max(
-        (registry for registry in registries if registry.location_id == organization_record.location_id),
-        key=lambda item: item.created_at,
-        default=None,
-    )
-    if registry is None:
-        raise UnavailableError(f"No compute cluster configured for location '{organization_record.location_id}'")
-
-    database_registry = next((registry for registry in database_registries if registry.location_id == organization_record.location_id), None)
-    if database_registry is None:
-        raise UnavailableError(f"No database configured for location '{organization_record.location_id}'")
-
-    # Create the application row before provisioning external resources.
     try:
-        application = await applications.create(
-            organization_id,
-            payload.name,
-            application_slug,
-            image=payload.image,
-            version=image_metadata.version if image_metadata is not None else None,
-            sdk_version=image_metadata.sdk if image_metadata is not None else None,
-            status=ApplicationStatus.creating,
-            description=payload.description,
-            icon=payload.icon,
-            user=user,
-        )
+        return await provisioning.create_application_runtime(organization_record, payload, user)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
-
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    db_client = Postgres(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-    )
-
-    # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
-    try:
-        await k8s.namespace(organization_record.slug)
-        await db_client.schema(organization_record.slug, application_slug)
-        await k8s.application(organization_record.slug, application_slug, payload.image, APP_SERVICE_PORT, payload.envs)
-    except Exception as exc:
-        await applications.set_status(application.id, ApplicationStatus.failed)
-        raise UnavailableError("Failed to initialize the application") from exc
-
-    try:
-        operation = await operations.create(OperationKind.application_create, application_id=application.id, step="verify", user=user)
-    except Exception as exc:
-        await applications.set_status(application.id, ApplicationStatus.failed)
-        logger.exception("Failed to queue application verification for %s/%s", organization_record.slug, payload.name)
-        raise UnavailableError("Failed to queue application verification") from exc
-
-    logger.info("Queued application creation verification %s for %s/%s", operation.id, organization_record.slug, payload.name)
-
-    return application
+    except RuntimeError as exc:
+        raise UnavailableError(str(exc)) from exc
 
 
 @router.delete("/api/applications/{application_id}", response_model=SuccessResponse)
 async def delete_application(application_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
     """Queue application deletion and return immediately."""
 
-    # Load the application first so missing rows fail before we delete it.
-    application = await applications.get_by_id(application_id)
+    try:
+        application = await provisioning.queue_application_delete(application_id, user)
+    except RuntimeError as exc:
+        raise UnavailableError(str(exc)) from exc
+
     if application is None:
         raise NotFoundError("Application", application_id)
-
-    await applications.set_status(application.id, ApplicationStatus.deleting)
-    try:
-        await operations.create(OperationKind.application_delete, application_id=application.id, step="remove_runtime", user=user)
-    except Exception as exc:
-        await applications.set_status(application.id, application.status)
-        logger.exception("Failed to queue application deletion for %s", application.name)
-        raise UnavailableError("Failed to queue application deletion") from exc
 
     return SuccessResponse()
 
@@ -151,16 +76,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     organization_record = await organization_access(application.organization_id, user)
 
-    registries = await compute.list()
-    if not registries:
-        raise UnavailableError("No compute cluster configured")
-
-    # Prefer the newest registry for the location so logs come from the active cluster.
-    registry = max(
-        (registry for registry in registries if registry.location_id == organization_record.location_id),
-        key=lambda item: item.created_at,
-        default=None,
-    )
+    registry = await provisioning.latest_compute_registry(organization_record.location_id)
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{organization_record.location_id}'")
 
@@ -197,16 +113,7 @@ async def proxy_application_request(
     if application.status != ApplicationStatus.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
-    registries = await compute.list()
-    if not registries:
-        raise UnavailableError("No compute cluster configured")
-
-    # Prefer the newest registry for the location so the live cluster stays in sync.
-    registry = max(
-        (registry for registry in registries if registry.location_id == organization.location_id),
-        key=lambda item: item.created_at,
-        default=None,
-    )
+    registry = await provisioning.latest_compute_registry(organization.location_id)
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{organization.location_id}'")
 

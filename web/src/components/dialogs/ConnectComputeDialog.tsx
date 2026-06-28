@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { RegistryDialogShell, RegistryLocationField } from '@/components/dialogs/RegistryDialogElements';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,8 +30,6 @@ export default function ConnectComputeDialog() {
         locationId.length > 0;
 
     const { items: locations } = useLocations(open);
-
-    const selectedLocationName = locations.find((location) => location.id === locationId)?.name;
 
     const connectCompute = useMutation({
         mutationFn: async () => {
@@ -64,116 +61,67 @@ export default function ConnectComputeDialog() {
     }
 
     return (
-        <>
-            <Button type="button" onClick={() => setOpen(true)}>
-                Connect
-            </Button>
+        <RegistryDialogShell
+            title="Connect compute"
+            description="Register a compute backend for orchestration."
+            open={open}
+            error={error}
+            canSubmit={canSubmit}
+            isPending={connectCompute.isPending}
+            pendingLabel="Connecting..."
+            onOpenChange={(nextOpen) => {
+                setOpen(nextOpen);
+                if (!nextOpen) setError(null);
+            }}
+            onSubmit={async () => {
+                setError(null);
+                try {
+                    await connectCompute.mutateAsync();
+                } catch (mutationError) {
+                    setError(mutationError instanceof Error ? mutationError.message : 'Failed to connect compute');
+                }
+            }}
+        >
+            <div className="space-y-2">
+                <Label htmlFor="compute-kind">Kind</Label>
+                <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
+                    <SelectTrigger id="compute-kind" className="w-full">
+                        <SelectValue placeholder="Choose a compute kind" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="kubernetes">Kubernetes</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
 
-            <Dialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    setOpen(nextOpen);
-                    if (!nextOpen) {
-                        setError(null);
-                    }
-                }}
-            >
-                <DialogContent>
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <DialogTitle>Connect compute</DialogTitle>
-                            <DialogDescription>Register a compute backend for orchestration.</DialogDescription>
-                        </div>
+            <div className="space-y-2">
+                <Label htmlFor="compute-kubeconfig">Kubeconfig</Label>
+                <Textarea
+                    id="compute-kubeconfig"
+                    value={kubeconfig}
+                    onChange={(event) => setKubeconfig(event.target.value)}
+                    placeholder="Paste the kubeconfig file contents"
+                    className="min-h-40 max-w-full overflow-auto resize-y [field-sizing:fixed]"
+                />
+            </div>
 
-                        <form
-                            className="space-y-4"
-                            onSubmit={async (event) => {
-                                event.preventDefault();
-                                setError(null);
+            <div className="space-y-2">
+                <Label htmlFor="compute-ingress-host">Ingress host</Label>
+                <Input
+                    id="compute-ingress-host"
+                    value={ingressHost}
+                    onChange={(event) => setIngressHost(event.target.value)}
+                    placeholder="apps.example.com"
+                    autoComplete="off"
+                />
+            </div>
 
-                                // Submit the registry and close the dialog on success.
-                                try {
-                                    await connectCompute.mutateAsync();
-                                } catch (mutationError) {
-                                    setError(
-                                        mutationError instanceof Error
-                                            ? mutationError.message
-                                            : 'Failed to connect compute'
-                                    );
-                                }
-                            }}
-                        >
-                            <div className="space-y-2">
-                                <Label htmlFor="compute-kind">Kind</Label>
-                                <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
-                                    <SelectTrigger id="compute-kind" className="w-full">
-                                        <SelectValue placeholder="Choose a compute kind" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="kubernetes">Kubernetes</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="compute-kubeconfig">Kubeconfig</Label>
-                                <Textarea
-                                    id="compute-kubeconfig"
-                                    value={kubeconfig}
-                                    onChange={(event) => setKubeconfig(event.target.value)}
-                                    placeholder="Paste the kubeconfig file contents"
-                                    className="min-h-40 max-w-full overflow-auto resize-y [field-sizing:fixed]"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="compute-ingress-host">Ingress host</Label>
-                                <Input
-                                    id="compute-ingress-host"
-                                    value={ingressHost}
-                                    onChange={(event) => setIngressHost(event.target.value)}
-                                    placeholder="apps.example.com"
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="compute-location">Location</Label>
-                                <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
-                                    <SelectTrigger id="compute-location" className="w-full">
-                                        {selectedLocationName ?? 'Choose a location'}
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {locations.map((location) => (
-                                            <SelectItem key={location.id} value={String(location.id)}>
-                                                {location.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-                            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setOpen(false);
-                                        setError(null);
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={connectCompute.isPending || !canSubmit}>
-                                    {connectCompute.isPending ? 'Connecting...' : 'Connect'}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </>
+            <RegistryLocationField
+                id="compute-location"
+                value={locationId}
+                locations={locations}
+                onValueChange={setLocationId}
+            />
+        </RegistryDialogShell>
     );
 }

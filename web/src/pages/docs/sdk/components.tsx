@@ -22,7 +22,7 @@ const componentDocs: ElementDoc[] = [
             'invalidate: optional expression resolving to setup ids to refresh.',
         ],
         example: `<Action action="/api/orders/${'${order.id}'}/complete" invalidate="['orders']">
-  Complete
+  <P i18n="orders.complete" />
 </Action>`,
     },
     {
@@ -40,7 +40,7 @@ const componentDocs: ElementDoc[] = [
             'variant: optional default, outline, ghost, destructive, or link.',
             'i18n: optional translation key for badge text.',
         ],
-        example: `<Badge variant="outline">Pending review</Badge>`,
+        example: `<Badge variant="outline" i18n="orders.pendingReview" />`,
     },
     {
         name: 'Avatar',
@@ -49,8 +49,8 @@ const componentDocs: ElementDoc[] = [
         parameters: ['size: optional avatar size. Defaults to default.'],
         example: `<Avatar size="lg">
   <AvatarImage src="/avatars/sam.png" alt="Sam" />
-  <AvatarFallback>SA</AvatarFallback>
-  <AvatarBadge>3</AvatarBadge>
+  <AvatarFallback i18n="users.samInitials" />
+  <AvatarBadge i18n="users.onlineCount" count="3" />
 </Avatar>`,
     },
     {
@@ -65,7 +65,7 @@ const componentDocs: ElementDoc[] = [
         id: 'avatarfallback',
         description: 'Fallback text shown when the avatar image is unavailable.',
         parameters: ['i18n: optional translation key for fallback text.'],
-        example: `<AvatarFallback>LL</AvatarFallback>`,
+        example: `<AvatarFallback i18n="users.fallbackInitials" />`,
     },
     {
         name: 'AvatarBadge',
@@ -86,9 +86,7 @@ const componentDocs: ElementDoc[] = [
             'i18n: optional translation key.',
             'append and item: optional helper that appends an item into a target array state path.',
         ],
-        example: `<Button variant="outline" disabled="form.saving">
-  Save draft
-</Button>`,
+        example: `<Button variant="outline" disabled="form.saving" i18n="actions.saveDraft" />`,
     },
     {
         name: 'ButtonGroup',
@@ -96,8 +94,8 @@ const componentDocs: ElementDoc[] = [
         description: 'Groups related buttons or inputs into one joined control.',
         parameters: ['orientation: optional horizontal or vertical. Defaults to horizontal.'],
         example: `<ButtonGroup>
-  <Button variant="outline">Back</Button>
-  <Button>Next</Button>
+  <Button variant="outline" i18n="actions.back" />
+  <Button i18n="actions.next" />
 </ButtonGroup>`,
     },
     {
@@ -105,7 +103,7 @@ const componentDocs: ElementDoc[] = [
         id: 'buttongrouptext',
         description: 'Text segment inside ButtonGroup.',
         parameters: ['i18n: optional translation key.'],
-        example: `<ButtonGroupText>Page 1</ButtonGroupText>`,
+        example: `<ButtonGroupText i18n="pagination.page" page="1" />`,
     },
     {
         name: 'ButtonGroupSeparator',
@@ -120,7 +118,7 @@ const componentDocs: ElementDoc[] = [
         description: 'Form field container that groups label, description, and control content.',
         parameters: ['orientation: optional vertical or horizontal. Defaults to vertical.'],
         example: `<Field>
-  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <FieldLabel htmlFor="email" i18n="users.email" />
   <FieldContent>
     <Input id="email" value="$form.email" />
   </FieldContent>
@@ -132,8 +130,8 @@ const componentDocs: ElementDoc[] = [
         description: 'Legend slot for grouped fields such as radio groups and toggle groups.',
         parameters: ['variant: optional legend variant. Defaults to legend.', 'i18n: optional translation key.'],
         example: `<FieldLegend>
-  <FieldTitle>Priority</FieldTitle>
-  <FieldDescription>Choose how urgent this is.</FieldDescription>
+  <FieldTitle i18n="orders.priority" />
+  <FieldDescription i18n="orders.priorityHelp" />
 </FieldLegend>`,
     },
     {
@@ -150,7 +148,7 @@ const componentDocs: ElementDoc[] = [
         id: 'fieldlabel',
         description: 'Label slot for a Field.',
         parameters: ['htmlFor: optional id of the associated control.', 'i18n: optional translation key.'],
-        example: `<FieldLabel htmlFor="name">Name</FieldLabel>`,
+        example: `<FieldLabel htmlFor="name" i18n="users.name" />`,
     },
     {
         name: 'FieldTitle',
@@ -164,14 +162,14 @@ const componentDocs: ElementDoc[] = [
         id: 'fielddescription',
         description: 'Secondary helper text for a Field.',
         parameters: ['i18n: optional translation key.'],
-        example: `<FieldDescription>Visible to dispatchers.</FieldDescription>`,
+        example: `<FieldDescription i18n="orders.visibleToDispatchers" />`,
     },
     {
         name: 'Label',
         id: 'label',
         description: 'Standalone form label when a full Field wrapper is unnecessary.',
         parameters: ['htmlFor: optional id of the associated control.', 'i18n: optional translation key.'],
-        example: `<Label htmlFor="search">Search</Label>`,
+        example: `<Label htmlFor="search" i18n="actions.search" />`,
     },
     {
         name: 'Input',
@@ -209,9 +207,9 @@ const componentDocs: ElementDoc[] = [
         description: 'Composes inputs with addons, inline text, and buttons.',
         parameters: ['No parameters.'],
         example: `<InputGroup>
-  <InputGroupAddon>$</InputGroupAddon>
+  <InputGroupAddon><Icon name="badge-dollar-sign" /></InputGroupAddon>
   <InputGroupInput value="$form.price" />
-  <InputGroupButton>Apply</InputGroupButton>
+  <InputGroupButton i18n="actions.apply" />
 </InputGroup>`,
     },
     {
@@ -234,14 +232,14 @@ const componentDocs: ElementDoc[] = [
             'disabled: optional boolean.',
             'i18n: optional translation key.',
         ],
-        example: `<InputGroupButton variant="ghost">Search</InputGroupButton>`,
+        example: `<InputGroupButton variant="ghost" i18n="actions.search" />`,
     },
     {
         name: 'InputGroupText',
         id: 'inputgrouptext',
         description: 'Static text segment inside InputGroup.',
         parameters: ['i18n: optional translation key.'],
-        example: `<InputGroupText>USD</InputGroupText>`,
+        example: `<InputGroupText i18n="currency.usd" />`,
     },
     {
         name: 'InputGroupInput',
@@ -251,7 +249,7 @@ const componentDocs: ElementDoc[] = [
             'id, label, placeholder, value, type, disabled, autoComplete, and aria-invalid match Input.',
             'i18n: optional translation key used as placeholder text.',
         ],
-        example: `<InputGroupInput placeholder="Search orders" value="$filters.query" />`,
+        example: `<InputGroupInput i18n="orders.searchPlaceholder" value="$filters.query" />`,
     },
     {
         name: 'InputGroupTextarea',
@@ -319,7 +317,7 @@ const componentDocs: ElementDoc[] = [
             'size and variant are optional.',
         ],
         example: `<State id="enabled" value="false" />
-<Toggle pressed="$enabled" variant="outline">Enabled</Toggle>`,
+<Toggle pressed="$enabled" variant="outline" i18n="settings.enabled" />`,
     },
     {
         name: 'ToggleGroup',
@@ -332,8 +330,8 @@ const componentDocs: ElementDoc[] = [
             'disabled, loopFocus, orientation, size, spacing, and variant are optional.',
         ],
         example: `<ToggleGroup type="single" defaultValue="center">
-  <ToggleGroupItem value="left">Left</ToggleGroupItem>
-  <ToggleGroupItem value="center">Center</ToggleGroupItem>
+  <ToggleGroupItem value="left"><Icon name="align-left" /></ToggleGroupItem>
+  <ToggleGroupItem value="center"><Icon name="align-center" /></ToggleGroupItem>
 </ToggleGroup>`,
     },
     {
@@ -341,7 +339,7 @@ const componentDocs: ElementDoc[] = [
         id: 'togglegroupitem',
         description: 'Selectable item inside ToggleGroup.',
         parameters: ['value: required item value.', 'size and variant are optional overrides.'],
-        example: `<ToggleGroupItem value="right">Right</ToggleGroupItem>`,
+        example: `<ToggleGroupItem value="right"><Icon name="align-right" /></ToggleGroupItem>`,
     },
     {
         name: 'RadioGroup',
@@ -353,8 +351,8 @@ const componentDocs: ElementDoc[] = [
             'disabled, form, name, readOnly, and required are optional.',
         ],
         example: `<RadioGroup name="priority" defaultValue="medium">
-  <RadioGroupItem value="low">Low</RadioGroupItem>
-  <RadioGroupItem value="medium">Medium</RadioGroupItem>
+  <RadioGroupItem value="low" i18n="orders.priority.low" />
+  <RadioGroupItem value="medium" i18n="orders.priority.medium" />
 </RadioGroup>`,
     },
     {
@@ -379,9 +377,9 @@ const componentDocs: ElementDoc[] = [
         ],
         example: `<State id="department" value="sales" />
 <Select value="$department">
-  <SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger>
+  <SelectTrigger><SelectValue i18n="departments.placeholder" /></SelectTrigger>
   <SelectContent>
-    <SelectItem value="sales">Sales</SelectItem>
+    <SelectItem value="sales" i18n="departments.sales" />
   </SelectContent>
 </Select>`,
     },
@@ -391,7 +389,7 @@ const componentDocs: ElementDoc[] = [
         description: 'Clickable trigger slot for Select.',
         parameters: ['No parameters.'],
         example: `<SelectTrigger>
-  <SelectValue placeholder="Choose status" />
+  <SelectValue i18n="orders.chooseStatus" />
 </SelectTrigger>`,
     },
     {
@@ -399,7 +397,7 @@ const componentDocs: ElementDoc[] = [
         id: 'selectvalue',
         description: 'Displays selected value or placeholder text inside SelectTrigger.',
         parameters: ['placeholder: optional fallback text.', 'i18n: optional translation key used as placeholder.'],
-        example: `<SelectValue placeholder="Choose status" />`,
+        example: `<SelectValue i18n="orders.chooseStatus" />`,
     },
     {
         name: 'SelectContent',
@@ -407,7 +405,7 @@ const componentDocs: ElementDoc[] = [
         description: 'Popup content slot for Select options.',
         parameters: ['No parameters.'],
         example: `<SelectContent>
-  <SelectItem value="open">Open</SelectItem>
+  <SelectItem value="open" i18n="orders.open" />
 </SelectContent>`,
     },
     {
@@ -416,8 +414,8 @@ const componentDocs: ElementDoc[] = [
         description: 'Groups related SelectItem options.',
         parameters: ['No parameters.'],
         example: `<SelectGroup>
-  <SelectLabel>Status</SelectLabel>
-  <SelectItem value="open">Open</SelectItem>
+  <SelectLabel i18n="orders.status" />
+  <SelectItem value="open" i18n="orders.open" />
 </SelectGroup>`,
     },
     {
@@ -432,7 +430,7 @@ const componentDocs: ElementDoc[] = [
         id: 'selectitem',
         description: 'Selectable option inside SelectContent.',
         parameters: ['value: required option value.', 'i18n: optional translation key.'],
-        example: `<SelectItem value="closed">Closed</SelectItem>`,
+        example: `<SelectItem value="closed" i18n="orders.closed" />`,
     },
     {
         name: 'SelectSeparator',
@@ -446,35 +444,35 @@ const componentDocs: ElementDoc[] = [
         id: 'h1',
         description: 'Top-level page heading.',
         parameters: ['i18n: optional translation key.'],
-        example: `<H1>Orders</H1>`,
+        example: `<H1 i18n="orders.title" />`,
     },
     {
         name: 'H2',
         id: 'h2',
         description: 'Second-level section heading.',
         parameters: ['i18n: optional translation key.'],
-        example: `<H2>Open work</H2>`,
+        example: `<H2 i18n="orders.openWork" />`,
     },
     {
         name: 'H3',
         id: 'h3',
         description: 'Third-level subsection heading.',
         parameters: ['i18n: optional translation key.'],
-        example: `<H3>Warehouse</H3>`,
+        example: `<H3 i18n="warehouse.title" />`,
     },
     {
         name: 'H4',
         id: 'h4',
         description: 'Fourth-level minor heading.',
         parameters: ['i18n: optional translation key.'],
-        example: `<H4>Notes</H4>`,
+        example: `<H4 i18n="orders.notes" />`,
     },
     {
         name: 'P',
         id: 'p',
         description: 'Paragraph text block.',
         parameters: ['i18n: optional translation key.'],
-        example: `<P>Use this page to manage incoming work.</P>`,
+        example: `<P i18n="orders.pageDescription" />`,
     },
     {
         name: 'A',
@@ -485,49 +483,49 @@ const componentDocs: ElementDoc[] = [
             'active: optional always value for active styling.',
             'i18n: optional translation key.',
         ],
-        example: `<A href="/settings">Open settings</A>`,
+        example: `<A href="/settings" i18n="settings.open" />`,
     },
     {
         name: 'B',
         id: 'b',
         description: 'Inline bold text.',
         parameters: ['i18n: optional translation key.'],
-        example: `<B>Important</B>`,
+        example: `<B i18n="labels.important" />`,
     },
     {
         name: 'U',
         id: 'u',
         description: 'Inline underlined text.',
         parameters: ['i18n: optional translation key.'],
-        example: `<U>Underlined</U>`,
+        example: `<U i18n="labels.underlined" />`,
     },
     {
         name: 'S',
         id: 's',
         description: 'Inline struck-through text for obsolete or removed values.',
         parameters: ['i18n: optional translation key.'],
-        example: `<S>Deprecated</S>`,
+        example: `<S i18n="labels.deprecated" />`,
     },
     {
         name: 'Sup',
         id: 'sup',
         description: 'Inline superscript text.',
         parameters: ['i18n: optional translation key.'],
-        example: `<P>m<Sup>2</Sup></P>`,
+        example: `<Sup i18n="units.squareMetersSuffix" />`,
     },
     {
         name: 'Sub',
         id: 'sub',
         description: 'Inline subscript text.',
         parameters: ['i18n: optional translation key.'],
-        example: `<P>H<Sub>2</Sub>O</P>`,
+        example: `<Sub i18n="units.waterSuffix" />`,
     },
     {
         name: 'Code',
         id: 'code',
         description: 'Inline monospace code text.',
         parameters: ['i18n: optional translation key.'],
-        example: `<Code>order.status</Code>`,
+        example: `<Code i18n="examples.orderStatusPath" />`,
     },
     {
         name: 'Pre',
@@ -559,8 +557,8 @@ const componentDocs: ElementDoc[] = [
         description: 'Unordered list container.',
         parameters: ['No parameters.'],
         example: `<Ul>
-  <Li>Pack order</Li>
-  <Li>Print label</Li>
+  <Li i18n="orders.steps.pack" />
+  <Li i18n="orders.steps.printLabel" />
 </Ul>`,
     },
     {
@@ -569,8 +567,8 @@ const componentDocs: ElementDoc[] = [
         description: 'Ordered list container.',
         parameters: ['No parameters.'],
         example: `<Ol>
-  <Li>Validate</Li>
-  <Li>Submit</Li>
+  <Li i18n="orders.steps.validate" />
+  <Li i18n="orders.steps.submit" />
 </Ol>`,
     },
     {
@@ -586,8 +584,8 @@ const componentDocs: ElementDoc[] = [
         description: 'Table shell for structured rows and columns.',
         parameters: ['No parameters.'],
         example: `<Table>
-  <Thead><Tr><Th>Order</Th><Th>Status</Th></Tr></Thead>
-  <Tbody><Tr><Td>#1248</Td><Td>Open</Td></Tr></Tbody>
+  <Thead><Tr><Th i18n="orders.columns.order" /><Th i18n="orders.columns.status" /></Tr></Thead>
+  <Tbody><Tr><Td i18n="orders.number" number="order.number" /><Td i18n="orders.open" /></Tr></Tbody>
 </Table>`,
     },
     {
@@ -596,7 +594,7 @@ const componentDocs: ElementDoc[] = [
         description: 'Table header section.',
         parameters: ['No parameters.'],
         example: `<Thead>
-  <Tr><Th>Name</Th><Th>Status</Th></Tr>
+  <Tr><Th i18n="orders.columns.name" /><Th i18n="orders.columns.status" /></Tr>
 </Thead>`,
     },
     {
@@ -605,7 +603,7 @@ const componentDocs: ElementDoc[] = [
         description: 'Table body section.',
         parameters: ['No parameters.'],
         example: `<Tbody>
-  <Tr><Td>Alpha</Td><Td>Open</Td></Tr>
+  <Tr><Td i18n="orders.alpha" /><Td i18n="orders.open" /></Tr>
 </Tbody>`,
     },
     {
@@ -614,7 +612,7 @@ const componentDocs: ElementDoc[] = [
         description: 'Table footer section.',
         parameters: ['No parameters.'],
         example: `<Tfoot>
-  <Tr><Td>Total</Td><Td>12</Td></Tr>
+  <Tr><Td i18n="orders.total" /><Td i18n="orders.count" count="12" /></Tr>
 </Tfoot>`,
     },
     {
@@ -623,8 +621,8 @@ const componentDocs: ElementDoc[] = [
         description: 'Table row.',
         parameters: ['No parameters.'],
         example: `<Tr>
-  <Td>#1248</Td>
-  <Td>Open</Td>
+  <Td i18n="orders.number" number="order.number" />
+  <Td i18n="orders.open" />
 </Tr>`,
     },
     {
@@ -639,7 +637,7 @@ const componentDocs: ElementDoc[] = [
         id: 'td',
         description: 'Table data cell.',
         parameters: ['i18n: optional translation key.'],
-        example: `<Td>${'${order.status}'}</Td>`,
+        example: `<Td i18n="orders.statusValue" status="order.status" />`,
     },
 ];
 

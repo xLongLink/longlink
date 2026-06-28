@@ -3,9 +3,9 @@ from src.logger import logger
 from src.adapters.compute import K8s
 from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
-from src.models.applications import ApplicationStatus
+from src.models.statuses import ApplicationStatus
+from src.operations import provisioning
 from src.operations.registry import operation_handler
-from src.database.services.compute import compute
 from src.database.models.operations import Operation
 from src.database.services.operations import operations
 from src.database.services.applications import applications
@@ -35,12 +35,7 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     if organization is None:
         return ApplicationStartupState.pending
 
-    registries = await compute.list()
-    registry = max(
-        (registry for registry in registries if registry.location_id == organization.location_id),
-        key=lambda item: item.created_at,
-        default=None,
-    )
+    registry = await provisioning.latest_compute_registry(organization.location_id)
     if registry is None:
         return ApplicationStartupState.pending
 
@@ -143,12 +138,7 @@ async def execute_application_delete(operation: Operation) -> Operation:
     if organization is None:
         raise ValueError(f"Organization '{application.organization_id}' not found")
 
-    registries = await compute.list()
-    registry = max(
-        (registry for registry in registries if registry.location_id == organization.location_id),
-        key=lambda item: item.created_at,
-        default=None,
-    )
+    registry = await provisioning.latest_compute_registry(organization.location_id)
     if registry is None:
         raise ValueError(f"No compute cluster configured for location '{organization.location_id}'")
 

@@ -16,8 +16,8 @@ const layoutDocs: ElementDoc[] = [
         description: 'Creates a responsive horizontal layout from immediate Column children.',
         parameters: ['No parameters. Use Column width values to control the layout.'],
         example: `<Columns>
-  <Column width="70">Main content</Column>
-  <Column width="30">Sidebar</Column>
+  <Column width="70"><P i18n="layout.main" /></Column>
+  <Column width="30"><P i18n="layout.sidebar" /></Column>
 </Columns>`,
     },
     {
@@ -27,7 +27,9 @@ const layoutDocs: ElementDoc[] = [
             'Defines one section inside Columns. Widths are relative, so sibling widths should usually add up to 100.',
         parameters: ['width: optional relative width. Defaults to 100 when omitted.'],
         example: `<Column width="40">
-  <Card>Details</Card>
+  <Card>
+    <P i18n="orders.details" />
+  </Card>
 </Column>`,
     },
     {
@@ -36,9 +38,9 @@ const layoutDocs: ElementDoc[] = [
         description: 'Arranges children in equal columns or a custom CSS grid template.',
         parameters: ['columns: optional number of equal columns or a CSS grid-template-columns value.'],
         example: `<Grid columns="3">
-  <Card>Open</Card>
-  <Card>Blocked</Card>
-  <Card>Done</Card>
+  <Card><Badge i18n="orders.open" /></Card>
+  <Card><Badge i18n="orders.blocked" /></Card>
+  <Card><Badge i18n="orders.done" /></Card>
 </Grid>`,
     },
     {
@@ -47,8 +49,8 @@ const layoutDocs: ElementDoc[] = [
         description: 'Stacks child elements vertically with consistent spacing.',
         parameters: ['No parameters.'],
         example: `<Stack>
-  <H2>Customer</H2>
-  <P>Account details and contacts.</P>
+  <H2 i18n="customers.title" />
+  <P i18n="customers.description" />
 </Stack>`,
     },
     {
@@ -57,8 +59,8 @@ const layoutDocs: ElementDoc[] = [
         description: 'Places children in a row and controls horizontal distribution.',
         parameters: ['space: optional center, around, evenly, or between.'],
         example: `<Flex space="between">
-  <Button variant="outline">Cancel</Button>
-  <Button>Save</Button>
+  <Button variant="outline" i18n="actions.cancel" />
+  <Button i18n="actions.save" />
 </Flex>`,
     },
     {
@@ -67,8 +69,8 @@ const layoutDocs: ElementDoc[] = [
         description: 'Groups related content in a bordered card surface.',
         parameters: ['size: optional card spacing size. Defaults to default.'],
         example: `<Card size="sm">
-  <H3>Order #1248</H3>
-  <P>Waiting for warehouse confirmation.</P>
+  <H3 i18n="orders.cardTitle" number="order.number" />
+  <P i18n="orders.waitingForWarehouse" />
 </Card>`,
     },
     {
@@ -77,10 +79,10 @@ const layoutDocs: ElementDoc[] = [
         description: 'Creates a prominent page introduction with optional icon, description, and action slot.',
         parameters: ['icon: optional Lucide icon name rendered near the title.'],
         example: `<Hero icon="layout-grid">
-  <HeroTitle>Operations</HeroTitle>
-  <HeroDescription>Track the live work queue.</HeroDescription>
+  <HeroTitle i18n="operations.title" />
+  <HeroDescription i18n="operations.description" />
   <HeroAction>
-    <Button>New order</Button>
+    <Button i18n="orders.new" />
   </HeroAction>
 </Hero>`,
     },
@@ -104,7 +106,7 @@ const layoutDocs: ElementDoc[] = [
         description: 'Action slot aligned with the Hero content.',
         parameters: ['No parameters. Place buttons or links inside it.'],
         example: `<HeroAction>
-  <Button>Create</Button>
+  <Button i18n="actions.create" />
 </HeroAction>`,
     },
     {
@@ -116,11 +118,11 @@ const layoutDocs: ElementDoc[] = [
             'orientation: optional horizontal or vertical. Defaults to horizontal.',
         ],
         example: `<Tabs defaultValue="overview">
-  <Tab value="overview" label="Overview">
-    <P>Summary content</P>
+  <Tab value="overview" i18n="tabs.overview">
+    <P i18n="orders.summary" />
   </Tab>
-  <Tab value="activity" label="Activity" icon="list">
-    <P>Recent updates</P>
+  <Tab value="activity" i18n="tabs.activity" icon="list">
+    <P i18n="orders.activity" />
   </Tab>
 </Tabs>`,
     },
@@ -134,8 +136,8 @@ const layoutDocs: ElementDoc[] = [
             'icon: optional Lucide icon name.',
             'if: optional condition to hide the tab.',
         ],
-        example: `<Tab value="billing" label="Billing" if="user.canManageBilling">
-  <P>Invoice settings</P>
+        example: `<Tab value="billing" i18n="tabs.billing" if="user.canManageBilling">
+  <P i18n="billing.settings" />
 </Tab>`,
     },
     {
@@ -145,11 +147,11 @@ const layoutDocs: ElementDoc[] = [
         parameters: ['open: optional controlled open state expression. Omit it for trigger-managed dialogs.'],
         example: `<Dialog>
   <DialogTrigger>
-    <Button variant="outline">Delete</Button>
+    <Button variant="outline" i18n="actions.delete" />
   </DialogTrigger>
   <DialogContent>
-    <DialogTitle>Delete order</DialogTitle>
-    <DialogDescription>This cannot be undone.</DialogDescription>
+    <DialogTitle><P i18n="orders.deleteTitle" /></DialogTitle>
+    <DialogDescription><P i18n="orders.deleteDescription" /></DialogDescription>
   </DialogContent>
 </Dialog>`,
     },
@@ -159,7 +161,7 @@ const layoutDocs: ElementDoc[] = [
         description: 'Trigger slot that opens a Dialog. Single Button or A children are wired as the trigger element.',
         parameters: ['No parameters.'],
         example: `<DialogTrigger>
-  <Button>Open details</Button>
+  <Button i18n="actions.openDetails" />
 </DialogTrigger>`,
     },
     {
@@ -168,8 +170,8 @@ const layoutDocs: ElementDoc[] = [
         description: 'Content panel displayed inside a Dialog overlay.',
         parameters: ['No parameters.'],
         example: `<DialogContent>
-  <DialogTitle>Confirm change</DialogTitle>
-  <P>Review the change before saving.</P>
+  <DialogTitle><P i18n="actions.confirmChange" /></DialogTitle>
+  <P i18n="actions.reviewBeforeSaving" />
 </DialogContent>`,
     },
     {
@@ -177,14 +179,14 @@ const layoutDocs: ElementDoc[] = [
         id: 'dialogtitle',
         description: 'Accessible title for DialogContent.',
         parameters: ['No parameters.'],
-        example: `<DialogTitle>Confirm change</DialogTitle>`,
+        example: `<DialogTitle><P i18n="actions.confirmChange" /></DialogTitle>`,
     },
     {
         name: 'DialogDescription',
         id: 'dialogdescription',
         description: 'Accessible supporting description for DialogContent.',
         parameters: ['No parameters.'],
-        example: `<DialogDescription>This action updates the customer record.</DialogDescription>`,
+        example: `<DialogDescription><P i18n="customers.updateDescription" /></DialogDescription>`,
     },
     {
         name: 'Menu',
@@ -196,10 +198,10 @@ const layoutDocs: ElementDoc[] = [
         ],
         example: `<Menu defaultValue="overview">
   <MenuSection value="overview" label="Overview" icon="layout-grid">
-    <P>Today\'s snapshot.</P>
+    <P i18n="dashboard.snapshot" />
   </MenuSection>
   <MenuSection value="settings" label="Settings" icon="settings">
-    <P>Workspace configuration.</P>
+    <P i18n="settings.description" />
   </MenuSection>
 </Menu>`,
     },
@@ -214,7 +216,7 @@ const layoutDocs: ElementDoc[] = [
             'disabled: optional boolean.',
         ],
         example: `<MenuSection value="reports" label="Reports" icon="bar-chart">
-  <P>Monthly reporting.</P>
+  <P i18n="reports.monthly" />
 </MenuSection>`,
     },
     {
@@ -227,7 +229,7 @@ const layoutDocs: ElementDoc[] = [
             'disabled: optional boolean.',
         ],
         example: `<MenuSubSection value="open" label="Open orders">
-  <P>Orders still in progress.</P>
+  <P i18n="orders.openDescription" />
 </MenuSubSection>`,
     },
 ];

@@ -46,6 +46,8 @@ down:
 	k3d cluster delete compute
 	rm -f api/dev.db
 	rm -rf sdk/dev
+	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+	find . -type f -name '*.py[co]' -delete
 
 
 api: 

@@ -37,6 +37,34 @@ type LogsStateProps = {
     applicationName: string;
 };
 
+type PageState = {
+    path: string | null;
+    content: string | null;
+    error: string | null;
+    status: number | null;
+    loading: boolean;
+};
+
+type LogsState = {
+    content: string;
+    error: string | null;
+    loading: boolean;
+};
+
+const emptyPageState: PageState = {
+    path: null,
+    content: null,
+    error: null,
+    status: null,
+    loading: false,
+};
+
+const emptyLogsState: LogsState = {
+    content: '',
+    error: null,
+    loading: false,
+};
+
 /**
  * Removes leading and trailing slashes from a route path.
  */
@@ -68,15 +96,8 @@ export default function View({
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const [pageContent, setPageContent] = useState<string | null>(null);
-    const [pageContentPath, setPageContentPath] = useState<string | null>(null);
-    const [pageError, setPageError] = useState<string | null>(null);
-    const [pageErrorPath, setPageErrorPath] = useState<string | null>(null);
-    const [pageErrorStatus, setPageErrorStatus] = useState<number | null>(null);
-    const [pageLoading, setPageLoading] = useState(false);
-    const [logsContent, setLogsContent] = useState('');
-    const [logsError, setLogsError] = useState<string | null>(null);
-    const [logsLoading, setLogsLoading] = useState(false);
+    const [pageState, setPageState] = useState<PageState>(emptyPageState);
+    const [logsState, setLogsState] = useState<LogsState>(emptyLogsState);
     const routeParams = { organization, application } as Record<string, string | undefined>;
     const resolvedMetadata = resolveTemplate(metadata, routeParams);
     const resolvedMetadataBaseUrl = resolvedMetadata.replace(/metadata\.json(?:[?#].*)?$/i, '');
@@ -94,7 +115,7 @@ export default function View({
     const isNotFound = metadataDocument === null;
     const metadataLoading = error instanceof ApiError && error.status === 503;
     const shouldShowLogs =
-        canViewLogs && applicationStatus === 'running' && (metadataLoading || pageErrorStatus === 503);
+        canViewLogs && applicationStatus === 'running' && (metadataLoading || pageState.status === 503);
 
     // Make the first tab explicit in the URL when the page loads without a tab selection.
     useEffect(() => {
@@ -128,33 +149,8 @@ export default function View({
 
     /* Load the active page XML from its path. */
     useEffect(() => {
-        if (shouldShowLogs) {
-            setPageContent(null);
-            setPageContentPath(null);
-            setPageError(null);
-            setPageErrorPath(null);
-            setPageErrorStatus(null);
-            setPageLoading(false);
-            return;
-        }
-
-        if (applicationIsLoading) {
-            setPageContent(null);
-            setPageContentPath(null);
-            setPageError(null);
-            setPageErrorPath(null);
-            setPageErrorStatus(null);
-            setPageLoading(false);
-            return;
-        }
-
-        if (!activePage) {
-            setPageContent(null);
-            setPageContentPath(null);
-            setPageError(null);
-            setPageErrorPath(null);
-            setPageErrorStatus(null);
-            setPageLoading(false);
+        if (shouldShowLogs || applicationIsLoading || !activePage) {
+            setPageState(emptyPageState);
             return;
         }
 
@@ -165,12 +161,7 @@ export default function View({
                 ? activePage.path
                 : resolveUrl(resolvedMetadataBaseUrl, pagePath);
 
-        setPageLoading(true);
-        setPageContent(null);
-        setPageContentPath(null);
-        setPageError(null);
-        setPageErrorPath(null);
-        setPageErrorStatus(null);
+        setPageState({ ...emptyPageState, path: activePage.path, loading: true });
 
         void fetchApiText(pageUrl, {
             headers: { Accept: 'application/xml' },
@@ -178,9 +169,7 @@ export default function View({
         })
             .then((content) => {
                 if (!controller.signal.aborted) {
-                    setPageContent(content);
-                    setPageContentPath(activePage.path);
-                    setPageLoading(false);
+                    setPageState({ ...emptyPageState, path: activePage.path, content });
                 }
             })
             .catch((fetchError: unknown) => {
@@ -188,10 +177,12 @@ export default function View({
                     return;
                 }
 
-                setPageError(fetchError instanceof Error ? fetchError.message : 'Failed to load page');
-                setPageErrorPath(activePage.path);
-                setPageErrorStatus(fetchError instanceof ApiError ? fetchError.status : null);
-                setPageLoading(false);
+                setPageState({
+                    ...emptyPageState,
+                    path: activePage.path,
+                    error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
+                    status: fetchError instanceof ApiError ? fetchError.status : null,
+                });
             });
 
         return () => controller.abort();
@@ -200,23 +191,18 @@ export default function View({
     // Fetch logs only when the current user is allowed to inspect a running application.
     useEffect(() => {
         if (!shouldShowLogs || !applicationId) {
-            setLogsContent('');
-            setLogsError(null);
-            setLogsLoading(false);
+            setLogsState(emptyLogsState);
             return;
         }
 
         const controller = new AbortController();
 
-        setLogsLoading(true);
-        setLogsError(null);
-        setLogsContent('');
+        setLogsState({ ...emptyLogsState, loading: true });
 
         void fetchApiText(`/api/applications/${applicationId}/logs`, { signal: controller.signal })
             .then((content) => {
                 if (!controller.signal.aborted) {
-                    setLogsContent(content);
-                    setLogsLoading(false);
+                    setLogsState({ ...emptyLogsState, content });
                 }
             })
             .catch((fetchError: unknown) => {
@@ -224,8 +210,10 @@ export default function View({
                     return;
                 }
 
-                setLogsError(fetchError instanceof Error ? fetchError.message : 'Failed to load logs');
-                setLogsLoading(false);
+                setLogsState({
+                    ...emptyLogsState,
+                    error: fetchError instanceof Error ? fetchError.message : 'Failed to load logs',
+                });
             });
 
         return () => controller.abort();
@@ -248,9 +236,9 @@ export default function View({
                     <LogsState
                         applicationId={applicationId ?? ''}
                         applicationName={applicationName ?? application ?? 'Application'}
-                        logsContent={logsContent}
-                        logsError={logsError}
-                        logsLoading={logsLoading}
+                        logsContent={logsState.content}
+                        logsError={logsState.error}
+                        logsLoading={logsState.loading}
                     />
                 </section>
             </XML>
@@ -276,7 +264,7 @@ export default function View({
         return <NotFound />;
     }
 
-    if (pageError && pageErrorPath === activePage?.path && pageErrorStatus === 503) {
+    if (pageState.error && pageState.path === activePage?.path && pageState.status === 503) {
         return (
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
@@ -286,14 +274,14 @@ export default function View({
         );
     }
 
-    if (pageError && pageErrorPath === activePage?.path) {
+    if (pageState.error && pageState.path === activePage?.path) {
         return (
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
                     <ErrorState
                         actionHref={organization ? `/orgs/${organization}` : '/organizations'}
                         actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                        message={pageError || 'This page could not be loaded.'}
+                        message={pageState.error || 'This page could not be loaded.'}
                         title="Unable to load this page"
                     />
                 </section>
@@ -301,7 +289,7 @@ export default function View({
         );
     }
 
-    if (isLoading || pageLoading || (activePage && pageContentPath !== activePage.path)) {
+    if (isLoading || pageState.loading || (activePage && pageState.path !== activePage.path)) {
         // Keep the XML shell mounted while metadata or page content is still loading.
         return (
             <XML tabs={tabs}>
@@ -332,7 +320,7 @@ export default function View({
         );
     }
 
-    if (!pageContent) {
+    if (!pageState.content) {
         return (
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
@@ -347,7 +335,7 @@ export default function View({
         );
     }
 
-    const ast = fromXml(pageContent);
+    const ast = fromXml(pageState.content);
 
     return (
         <XML tabs={tabs}>

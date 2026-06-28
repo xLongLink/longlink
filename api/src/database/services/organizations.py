@@ -15,9 +15,8 @@ from src.models.organizations import (OrganizationDetails,
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
+from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
-from src.database.services.invitations import invitations
-from src.database.services.applications import applications
 
 
 class OrganizationsService:
@@ -50,8 +49,27 @@ class OrganizationsService:
             if organization is None:
                 return None
 
-            active_applications = await applications.list_by_organization(organization.id)
-            active_invitations = await invitations.list_by_organization(organization.id)
+            applications_result = await session.execute(
+                select(Application)
+                .options(
+                    selectinload(Application.created_by),
+                    selectinload(Application.updated_by),
+                    selectinload(Application.deleted_by),
+                )
+                .where(Application.organization_id == organization.id, Application.deleted_at.is_(None))
+                .order_by(Application.name)
+            )
+            active_applications = list(applications_result.scalars().all())
+
+            invitations_result = await session.execute(
+                select(OrganizationInvitation)
+                .where(
+                    OrganizationInvitation.organization_id == organization.id,
+                    OrganizationInvitation.deleted_at.is_(None),
+                )
+                .order_by(OrganizationInvitation.created_at.desc())
+            )
+            active_invitations = list(invitations_result.scalars().all())
 
             memberships_result = await session.execute(
                 select(User, UserOrganization.role_name, UserOrganization.updated_at)

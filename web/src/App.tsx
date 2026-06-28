@@ -14,7 +14,7 @@ import DatabaseInstances from '@/pages/admin/DatabaseInstances';
 import DatabaseSchemas from '@/pages/admin/DatabaseSchemas';
 import AdminLocation from '@/pages/admin/Location';
 import AdminOperations from '@/pages/admin/Operations';
-import AdminOrganization from '@/pages/admin/Organization';
+import AdminOrganizations from '@/pages/admin/Organizations';
 import AdminStorage from '@/pages/admin/Storage';
 import AdminUsers from '@/pages/admin/Users';
 import { DOC_PAGES } from '@/pages/docs/catalog';
@@ -41,7 +41,7 @@ function getRoutes() {
     if (import.meta.env.MODE === 'sdk') {
         return [
             {
-                path: '/',
+                path: '*',
                 element: <SdkApplicationView />,
             },
         ];
@@ -100,7 +100,7 @@ function getRoutes() {
                 },
                 {
                     path: 'organizations',
-                    element: <AdminOrganization />,
+                    element: <AdminOrganizations />,
                 },
                 {
                     path: 'locations',

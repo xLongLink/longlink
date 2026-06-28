@@ -172,11 +172,18 @@ export default function Settings({ organization, organizationDetails, applicatio
                         </div>
                         <div className="flex items-center gap-3">
                             <Avatar shape="squircle" className="size-8 shrink-0">
-                                <AvatarImage src={organizationDetails?.avatar ?? ''} alt={organizationDetails?.name ?? organization} />
-                                <AvatarFallback>{(organizationDetails?.name ?? organization).slice(0, 2).toUpperCase()}</AvatarFallback>
+                                <AvatarImage
+                                    src={organizationDetails?.avatar ?? ''}
+                                    alt={organizationDetails?.name ?? organization}
+                                />
+                                <AvatarFallback>
+                                    {(organizationDetails?.name ?? organization).slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                                <div className="truncate font-medium text-foreground">{organizationDetails?.name ?? organization}</div>
+                                <div className="truncate font-medium text-foreground">
+                                    {organizationDetails?.name ?? organization}
+                                </div>
                                 <div className="truncate text-sm text-muted-foreground">
                                     {organizationDetails?.location.country} · {organizationDetails?.location.name}
                                 </div>
@@ -323,7 +330,6 @@ export default function Settings({ organization, organizationDetails, applicatio
 
             {canViewLogs && logsTarget ? (
                 <LogsDialog
-                    organization={organization}
                     applicationId={logsTarget.id}
                     applicationName={logsTarget.name}
                     open={logsTarget !== null}

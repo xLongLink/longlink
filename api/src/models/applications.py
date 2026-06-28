@@ -1,21 +1,9 @@
-from enum import Enum
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles
 from src.models.users import UserSummary
-
-
-class ApplicationStatus(str, Enum):
-    """Lifecycle states for installed applications."""
-
-    creating = "creating"
-    running = "running"
-    deleting = "deleting"
-    failed = "failed"
-
-
-# Import after ApplicationStatus so organizations.py can resolve the enum during model rebuilds.
+from src.models.statuses import ApplicationStatus
 from src.models.organizations import OrganizationSummary
 
 
@@ -39,7 +27,7 @@ class ApplicationResponse(BaseModel):
     id: UUID
 
     # Relationships
-    organization: 'OrganizationSummary'
+    organization: OrganizationSummary
     organization_id: UUID
 
     # Metadata
@@ -62,6 +50,3 @@ class ApplicationResponse(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
-
-
-ApplicationResponse.model_rebuild()

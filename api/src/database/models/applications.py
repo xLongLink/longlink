@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, UniqueConstraint, and_
-from src.models.applications import ApplicationStatus
+from src.models.statuses import ApplicationStatus
 from src.database.models.association import UserApplication
 
 if TYPE_CHECKING:

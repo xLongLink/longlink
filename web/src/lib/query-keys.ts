@@ -1,18 +1,8 @@
 import { apiQueryKey } from '@/lib/api';
 
-/** Builds the operations list query key. */
-export function operationsQueryKey() {
-    return apiQueryKey('/api/operations');
-}
-
 /** Builds the locations list query key. */
 export function locationsQueryKey() {
     return apiQueryKey('/api/locations');
-}
-
-/** Builds the users list query key. */
-export function usersQueryKey() {
-    return apiQueryKey('/api/users');
 }
 
 /** Builds the saved accounts query key. */
@@ -53,24 +43,4 @@ export function computeResourcesQueryKey(computeId: string) {
 /** Builds the storages list query key. */
 export function storagesQueryKey() {
     return apiQueryKey('/api/storages');
-}
-
-/** Builds the database instances query key. */
-export function databaseInstancesQueryKey(databaseId: string) {
-    return apiQueryKey(`/api/databases/${databaseId}/databases`);
-}
-
-/** Builds the database schemas query key. */
-export function databaseSchemasQueryKey(databaseId: string, databaseName: string) {
-    return apiQueryKey(`/api/databases/${databaseId}/databases/${encodeURIComponent(databaseName)}/schemas`);
-}
-
-/** Builds the compute namespaces query key. */
-export function computeNamespacesQueryKey(computeId: string) {
-    return apiQueryKey(`/api/computes/${computeId}/namespaces`);
-}
-
-/** Builds the compute pods query key. */
-export function computePodsQueryKey(computeId: string, namespace: string) {
-    return apiQueryKey(`/api/computes/${computeId}/namespaces/${encodeURIComponent(namespace)}/pods`);
 }

@@ -1,12 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
-import { Button } from '@ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
 import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
@@ -37,24 +35,7 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry & { location?: ApiL
         id: 'location',
         header: 'Location',
         cell: ({ row }) => {
-            const location = row.original.location;
-            const country = location?.country;
-
-            return (
-                <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
-                        {country?.slice(0, 2).toUpperCase() || '--'}
-                    </div>
-                    <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">
-                            {location?.name || `#${row.original.location_id}`}
-                        </div>
-                        <div className="truncate text-xs text-muted-foreground">
-                            {location?.slug || location?.country || ''}
-                        </div>
-                    </div>
-                </div>
-            );
+            return <AdminLocationBadge fallbackId={row.original.location_id} location={row.original.location} />;
         },
         meta: { className: 'min-w-56' },
     },
@@ -105,43 +86,12 @@ export default function AdminStorage() {
                       const storage = row.original;
 
                       return (
-                          <div className="flex justify-end">
-                              <DropdownMenu>
-                                  <DropdownMenuTrigger
-                                      render={
-                                          <Button
-                                              type="button"
-                                              variant="ghost"
-                                              size="icon-sm"
-                                              className="cursor-pointer"
-                                              aria-label={`Open actions for ${storage.name}`}
-                                          />
-                                      }
-                                  >
-                                      <MoreVertical className="size-4" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-44">
-                                      <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          onClick={() => {
-                                              void navigator.clipboard.writeText(storage.slug);
-                                              toast.success('Storage slug copied');
-                                          }}
-                                      >
-                                          Copy slug
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          variant="destructive"
-                                          onClick={() => {
-                                              deleteDialog.openFor(storage);
-                                          }}
-                                      >
-                                          Delete
-                                      </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                              </DropdownMenu>
-                          </div>
+                          <AdminActionMenu
+                              label={storage.name}
+                              copyLabel="Storage slug"
+                              copyValue={storage.slug}
+                              onDelete={() => deleteDialog.openFor(storage)}
+                          />
                       );
                   },
               },

@@ -4,6 +4,7 @@ from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.locations import LocationResponse
+from src.models.statuses import ApplicationStatus
 
 
 class OrganizationCreate(BaseModel):
@@ -147,7 +148,3 @@ class OrganizationDetails(BaseModel):
     users: list[OrganizationMemberSummary]
     invitations: list[OrganizationInvitationResponse] = Field(default_factory=list)
     applications: list[OrganizationApplicationResponse] = Field(default_factory=list)
-
-from src.models.applications import ApplicationStatus
-
-OrganizationApplicationResponse.model_rebuild()

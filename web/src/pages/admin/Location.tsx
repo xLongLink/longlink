@@ -1,12 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
-import { Button } from '@ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
 import CreateLocationDialog from '@/components/dialogs/CreateLocationDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
@@ -22,18 +20,7 @@ const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
         id: 'location',
         header: 'Location',
         cell: ({ row }) => {
-            const country = row.original.country;
-            return (
-                <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
-                        {country?.slice(0, 2).toUpperCase() || '--'}
-                    </div>
-                    <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{row.original.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">{row.original.slug}</div>
-                    </div>
-                </div>
-            );
+            return <AdminLocationBadge location={row.original} />;
         },
         meta: { className: 'min-w-56' },
     },
@@ -79,43 +66,12 @@ export default function AdminLocation() {
                       const locationId = String(location.id);
 
                       return (
-                          <div className="flex justify-end">
-                              <DropdownMenu>
-                                  <DropdownMenuTrigger
-                                      render={
-                                          <Button
-                                              type="button"
-                                              variant="ghost"
-                                              size="icon-sm"
-                                              className="cursor-pointer"
-                                              aria-label={`Open actions for location ${location.name}`}
-                                          />
-                                      }
-                                  >
-                                      <MoreVertical className="size-4" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-44">
-                                      <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          onClick={() => {
-                                              void navigator.clipboard.writeText(locationId);
-                                              toast.success('Location ID copied');
-                                          }}
-                                      >
-                                          Copy ID
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                          className="cursor-pointer"
-                                          variant="destructive"
-                                          onClick={() => {
-                                              deleteDialog.openFor(location);
-                                          }}
-                                      >
-                                          Delete
-                                      </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                              </DropdownMenu>
-                          </div>
+                          <AdminActionMenu
+                              label={`location ${location.name}`}
+                              copyLabel="Location ID"
+                              copyValue={locationId}
+                              onDelete={() => deleteDialog.openFor(location)}
+                          />
                       );
                   },
               },

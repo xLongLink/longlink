@@ -2,16 +2,14 @@ from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authuser, authsupport, organization_access
 from src.errors import ConflictError, NotFoundError, ForbiddenError
-from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.common import SuccessResponse
 from src.models.applications import ApplicationResponse
-from src.adapters.compute.k8s import K8s
 from src.models.organizations import (OrganizationCreate, OrganizationDetails,
-                                      OrganizationSummary,
-                                      OrganizationInvitationCreate)
+                                       OrganizationSummary,
+                                       OrganizationInvitationCreate)
 from src.database.models.users import User
-from src.database.services.compute import compute
+from src.operations import provisioning
 from src.database.services.invitations import invitations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
@@ -72,17 +70,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
-    # Create the Kubernetes namespace for the organization when a compute cluster is
-    # available at the same location. This is best-effort: if no compute registry exists
-    # yet the namespace will be created lazily when the first application is deployed.
-    registries = [r for r in await compute.list() if r.location_id == payload.location_id]
-    if registries:
-        registry = max(registries, key=lambda r: r.created_at)
-        k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-        try:
-            await k8s.namespace(organization.slug)
-        except Exception:
-            logger.exception("Failed to create namespace for organization '%s'", organization.slug)
+    await provisioning.create_organization_namespace(organization)
 
     return organization
 
@@ -102,14 +90,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     if organization is None:
         raise NotFoundError("Organization", organization_id)
 
-    registries = [registry for registry in await compute.list() if registry.location_id == organization.location_id]
-    if registries:
-        registry = max(registries, key=lambda item: item.created_at)
-        k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-        try:
-            await k8s.delete(organization.slug)
-        except Exception:
-            logger.exception("Failed to delete namespace for organization '%s'", organization.slug)
+    await provisioning.delete_organization_namespace(organization)
 
     await organizations.delete(organization_id, user.id)
     return SuccessResponse()

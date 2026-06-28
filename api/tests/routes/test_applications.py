@@ -278,7 +278,7 @@ async def test_create_app_returns_app_response(
     async def fake_metadata(image: str) -> LongLinkMetadata:
         return LongLinkMetadata(version="20250623_120000", sdk="0.1.0")
 
-    monkeypatch.setattr("src.routes.applications.metadata", fake_metadata)
+    monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
 
     captured: dict[str, object] = {}
 
@@ -332,8 +332,8 @@ async def test_create_app_returns_app_response(
             }
             return "postgresql://fake"
 
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
-    monkeypatch.setattr("src.routes.applications.Postgres", FakeDatabase)
+    monkeypatch.setattr("src.operations.provisioning.K8s", FakeCompute)
+    monkeypatch.setattr("src.operations.provisioning.Postgres", FakeDatabase)
     client = clients[0]
 
     # Act
