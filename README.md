@@ -60,6 +60,9 @@ The result is a faster, clearer, and more maintainable way to build internal app
 - Scalable operations: the control plane provisions compute, database, and storage resources through adapters.
 - Safer evolution: applications can change with the business process while keeping a stable runtime and deployment model.
 
+## Features
+
+
 <br />
 <br />
 

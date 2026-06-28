@@ -1,3 +1,5 @@
+import sys
+import httpx2
 from uuid import UUID
 from fastapi import Request
 from sqlmodel import select
@@ -10,6 +12,9 @@ from src.database.models.users import User
 from src.database.services.users import users
 from src.database.models.association import UserOrganization
 from src.database.services.organizations import organizations
+
+# Authlib imports the HTTP client as `httpx`; use the configured `httpx2` package instead.
+sys.modules.setdefault("httpx", httpx2)
 from authlib.integrations.starlette_client import OAuth
 
 oauth = OAuth()
