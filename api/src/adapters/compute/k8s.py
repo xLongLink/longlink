@@ -18,8 +18,10 @@ class K8s(Compute):
 
         self._kubeconfig = kubeconfig
         self._proxy_secret = proxy_secret
-        configuration = client.Configuration()
-        loader = config.kube_config.KubeConfigLoader(yaml.safe_load(self._kubeconfig))
+        kubernetes_client = cast(Any, client)
+        kubernetes_config = cast(Any, config)
+        configuration = kubernetes_client.Configuration()
+        loader = kubernetes_config.kube_config.KubeConfigLoader(yaml.safe_load(self._kubeconfig))
         loader.load_and_set(configuration)
         self._api_client = client.ApiClient(configuration)
         self._core_api = client.CoreV1Api(self._api_client)
