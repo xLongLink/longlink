@@ -12,3 +12,13 @@ def test_li_validation_allows_translation_values() -> None:
         schema=SCHEMA,
     )
     element.validate()
+
+
+def test_li_validation_allows_direct_values() -> None:
+    """Validate a list item with a direct runtime value."""
+
+    element = Element.from_content(
+        '<Li value="${item.name}" />',
+        schema=SCHEMA,
+    )
+    element.validate()

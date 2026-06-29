@@ -6,6 +6,7 @@ import tomllib
 import shutil
 import subprocess
 import tempfile
+from typing import Any, cast
 from pathlib import Path
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
@@ -182,13 +183,18 @@ def resolve_docker_paths(root: Path) -> tuple[Path, str]:
 
     # Read local uv source paths so Docker context includes editable dependencies.
     pyproject = root / "pyproject.toml"
-    pyproject_data = tomllib.loads(pyproject.read_text())
-    uv_sources = pyproject_data.get("tool", {}).get("uv", {}).get("sources", {})
+    pyproject_data: dict[str, Any] = tomllib.loads(pyproject.read_text())
+    tool_data = cast(dict[str, Any], pyproject_data.get("tool", {}))
+    uv_data = cast(dict[str, Any], tool_data.get("uv", {}))
+    uv_sources = cast(dict[str, Any], uv_data.get("sources", {}))
 
     source_paths: list[Path] = [root]
     for source_config in uv_sources.values():
-        if isinstance(source_config, dict) and "path" in source_config:
-            source_paths.append((root / source_config["path"]).resolve())
+        if isinstance(source_config, dict):
+            source_mapping = cast(dict[str, object], source_config)
+            source_path = source_mapping.get("path")
+            if isinstance(source_path, str):
+                source_paths.append((root / source_path).resolve())
 
     # Use a shared build context so relative source paths remain valid in container.
     common_root = Path(os.path.commonpath(source_paths))
@@ -217,10 +223,11 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     source_root, workdir = resolve_docker_paths(root)
     repo_root = next((parent for parent in root.parents if (parent / ".git").exists()), None)
     env_spec = read_env_spec(root)
-    pyproject_data = tomllib.loads((root / "pyproject.toml").read_text())
-    project_data = pyproject_data.get("project", {})
-    tool_data = pyproject_data.get("tool", {}).get("longlink", {})
-    metadata = {
+    pyproject_data: dict[str, Any] = tomllib.loads((root / "pyproject.toml").read_text())
+    project_data = cast(dict[str, Any], pyproject_data.get("project", {}))
+    pyproject_tool_data = cast(dict[str, Any], pyproject_data.get("tool", {}))
+    tool_data = cast(dict[str, Any], pyproject_tool_data.get("longlink", {}))
+    metadata: dict[str, object] = {
         "name": tool_data.get("name") or project_data.get("name") or "longlink-app",
         "title": tool_data.get("title"),
         "summary": tool_data.get("summary"),
@@ -231,7 +238,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         "contact": tool_data.get("contact"),
         "license_info": tool_data.get("license_info"),
     }
-    version = tag or metadata["version"]
+    version = tag or str(metadata["version"])
     labels = render_longlink_labels(metadata, env_spec)
 
     # Copy the source tree into a throwaway Docker build context.
@@ -257,9 +264,9 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         shutil.copytree(repo_root / ".git", build_context / ".git", dirs_exist_ok=True)
 
     dockerfile_path = build_context / "Dockerfile"
-    dockerfile_path.write_text(render_dockerfile(workdir, labels, metadata["sdk"]))
+    dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])))
 
-    return dockerfile_path, version, metadata["name"]
+    return dockerfile_path, version, str(metadata["name"])
 
 
 def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: str, image_id_path: Path) -> None:

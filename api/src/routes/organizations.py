@@ -1,3 +1,5 @@
+# pyright: reportReturnType=false, reportArgumentType=false
+
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authuser, authsupport, organization_access

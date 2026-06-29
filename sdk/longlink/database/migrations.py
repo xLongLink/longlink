@@ -1,6 +1,7 @@
 import sys
 import importlib.util
 from alembic import command
+from typing import Any
 from pathlib import Path
 from alembic.config import Config
 
@@ -39,7 +40,7 @@ def make_migrations() -> bool:
     migration_created = True
 
     def _skip_empty_revision(
-        _context: object, _revision: object, directives: list[object]
+        _context: object, _revision: object, directives: list[Any]
     ) -> None:
         """Skip writing a migration script when autogenerate finds no changes."""
         nonlocal migration_created

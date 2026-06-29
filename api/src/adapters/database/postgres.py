@@ -1,4 +1,7 @@
+# pyright: reportDeprecated=false
+
 from .base import Database
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 from src.environments import env
@@ -51,7 +54,7 @@ class Postgres(Database):
 
 
     @asynccontextmanager
-    async def _connection(self, database: str, *, autocommit: bool = False) -> AsyncConnection:
+    async def _connection(self, database: str, *, autocommit: bool = False) -> AsyncIterator[AsyncConnection]:
         """Open one managed SQLAlchemy connection for a database.
 
         The adapter owns the engine lifecycle and disposes it after every operation.

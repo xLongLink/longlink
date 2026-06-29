@@ -1,16 +1,18 @@
-from fsspec.spec import AbstractFileSystem
+from typing import Any
+
+from fsspec.spec import AbstractFileSystem  # pyright: ignore[reportMissingTypeStubs]
 from longlink.utils.settings import Envs
 
 
 class Storage(AbstractFileSystem):
     """Small wrapper for fsspec filesystem instances."""
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
 
 
 
-def create_fs(env: Envs):
+def create_fs(env: Envs) -> Storage:
     """Create a filesystem for the active environment."""
 
     if env.ENV == "testing":

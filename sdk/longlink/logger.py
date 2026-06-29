@@ -35,7 +35,7 @@ class ApiAccessFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         """Return True when the request should remain visible in access logs."""
 
-        if len(record.args) < 3:
+        if not isinstance(record.args, tuple) or len(record.args) < 3:
             return True
 
         method = str(record.args[1]).upper()

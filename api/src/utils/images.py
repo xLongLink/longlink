@@ -2,6 +2,7 @@ import json
 import socket
 import asyncio
 import ipaddress
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import httpx2
@@ -22,17 +23,31 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             if manifest is None:
                 return None
 
-            config_digest = manifest.get("config", {}).get("digest")
+            manifest_config = manifest.get("config", {})
+            if not isinstance(manifest_config, dict):
+                return None
+
+            manifest_config = cast(dict[str, Any], manifest_config)
+
+            config_digest = manifest_config.get("digest")
             if config_digest is None:
                 return None
 
-            config = await _fetch_blob(client, registry, repository, config_digest)
+            config = await _fetch_blob(client, registry, repository, str(config_digest))
             if config is None:
                 return None
 
-            labels = config.get("config", {}).get("Labels") or {}
-            if not isinstance(labels, dict):
+            image_config = config.get("config", {})
+            if not isinstance(image_config, dict):
                 return None
+
+            image_config = cast(dict[str, Any], image_config)
+
+            raw_labels: Any = image_config.get("Labels") or {}
+            if not isinstance(raw_labels, dict):
+                return None
+
+            labels = cast(dict[str, Any], raw_labels)
 
             result = LongLinkMetadata(
                 sdk=labels.get("longlink.sdk"),
@@ -48,7 +63,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
                     if not isinstance(parsed_environments, list):
                         return None
 
-                    result.environments = [EnvironmentMetadata.model_validate(env) for env in parsed_environments]
+                    result.environments = [EnvironmentMetadata.model_validate(item) for item in cast(list[Any], parsed_environments)]
                 except (json.JSONDecodeError, TypeError, ValueError):
                     return None
 
@@ -115,13 +130,14 @@ async def _validate_public_host(hostname: str) -> None:
         raise ValueError("Image registry host must resolve to public addresses")
 
 
-async def _fetch_manifest(client: httpx2.AsyncClient, registry: str, repository: str, tag: str) -> dict | None:
+async def _fetch_manifest(client: httpx2.AsyncClient, registry: str, repository: str, tag: str) -> dict[str, Any] | None:
     """Fetch an image manifest, resolving manifest lists to a single platform manifest."""
 
     url = f"https://{registry}/v2/{repository}/manifests/{tag}"
     accept = "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json"
 
     resp = await client.get(url, headers={"Accept": accept})
+    token: str | None = None
     if not resp.is_success:
         token = await _resolve_bearer_token(client, repository, resp)
         if token is None:
@@ -130,40 +146,46 @@ async def _fetch_manifest(client: httpx2.AsyncClient, registry: str, repository:
         if not resp.is_success:
             return None
 
-    data = resp.json()
+    data = cast(dict[str, Any], resp.json())
 
     # Resolve multi-arch manifest list to a single platform manifest.
-    if "manifests" in data:
+    manifests = data.get("manifests")
+    if isinstance(manifests, list) and manifests:
+        manifest_entries = [cast(dict[str, Any], item) for item in cast(list[Any], manifests) if isinstance(item, dict)]
+        if not manifest_entries:
+            return None
+
         entry = next(
-            (m for m in data["manifests"] if m.get("platform", {}).get("architecture") == "amd64"),
-            data["manifests"][0],
+            (item for item in manifest_entries if cast(dict[str, Any], item.get("platform", {})).get("architecture") == "amd64"),
+            manifest_entries[0],
         )
-        manifest_digest = entry["digest"]
+
+        manifest_digest = str(entry["digest"])
         resp = await client.get(
             f"https://{registry}/v2/{repository}/manifests/{manifest_digest}",
-            headers={"Accept": entry["mediaType"], **({"Authorization": f"Bearer {token}"} if token else {})},
+            headers={"Accept": str(entry["mediaType"]), **({"Authorization": f"Bearer {token}"} if token else {})},
         )
         if not resp.is_success:
             return None
-        data = resp.json()
+        data = cast(dict[str, Any], resp.json())
 
     return data
 
 
-async def _fetch_blob(client: httpx2.AsyncClient, registry: str, repository: str, digest: str) -> dict | None:
+async def _fetch_blob(client: httpx2.AsyncClient, registry: str, repository: str, digest: str) -> dict[str, Any] | None:
     """Fetch an image config blob from the OCI Distribution API."""
 
     url = f"https://{registry}/v2/{repository}/blobs/{digest}"
 
     resp = await client.get(url)
     if resp.is_success:
-        return resp.json()
+        return cast(dict[str, Any], resp.json())
 
     token = await _resolve_bearer_token(client, repository, resp)
     if token is not None:
         resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
         if resp.is_success:
-            return resp.json()
+            return cast(dict[str, Any], resp.json())
 
     return None
 

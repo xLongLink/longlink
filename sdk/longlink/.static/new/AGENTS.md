@@ -20,10 +20,10 @@ You are working on a LongLink application.
 ```
 ├── src/
 │   ├── database/     # SQLModel application tables
-│   ├── i18n/         # Translation catalogs
-│   ├── pages/        # Page definitions (LongLink XML format)
-│   ├── routes/       # Route registration
-│   ├── services/     # Database utilitiy Services
+│   ├── i18n/         # Translation catalogs registered automatically under /i18n
+│   ├── pages/        # XML pages registered automatically under /pages
+│   ├── routes/       # API route registration
+│   ├── services/     # Database utility services
 │   ├── types/        # Pydantic types the responses
 │   ├── envs.py       # Environment and settings helpers
 │   └── router.py     # Application router definition

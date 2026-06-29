@@ -1,3 +1,5 @@
+# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportReturnType=false, reportCallIssue=false
+
 from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload

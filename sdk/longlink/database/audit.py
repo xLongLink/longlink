@@ -1,16 +1,18 @@
 from .base import Table, utcnow
-from typing import Any, Iterator
+from typing import Any
 from fastapi import FastAPI, Request
+from collections.abc import Callable, Awaitable, Generator
 from sqlmodel import Session as SyncSession
 from contextlib import contextmanager
 from sqlalchemy import event
+from starlette.responses import Response
 from contextvars import ContextVar
 
 _current_user_id: ContextVar[int | None] = ContextVar("current_user_id", default=None)
 
 
 @contextmanager
-def audit_user_scope(user_id: int | None) -> Iterator[None]:
+def audit_user_scope(user_id: int | None) -> Generator[None, None, None]:
     """Bind an audit user ID for the current execution scope."""
 
     token = _current_user_id.set(user_id)
@@ -94,8 +96,10 @@ def install_audit_middleware(app: FastAPI) -> None:
     Middleware keeps the user context active for the whole request lifecycle.
     """
 
-    @app.middleware("http")
-    async def audit_context_middleware(request: Request, call_next):
+    async def audit_context_middleware(
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
         """Bind the request user ID for the duration of the request."""
 
         user_id: int | None = None
@@ -111,3 +115,5 @@ def install_audit_middleware(app: FastAPI) -> None:
         with audit_user_scope(user_id):
             response = await call_next(request)
             return response
+
+    app.middleware("http")(audit_context_middleware)

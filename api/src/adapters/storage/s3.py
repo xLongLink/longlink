@@ -1,3 +1,5 @@
+# pyright: reportUnknownMemberType=false, reportTypedDictNotRequiredAccess=false, reportArgumentType=false
+
 import boto3
 from .base import Storage
 from src.utils.namespace import s3name

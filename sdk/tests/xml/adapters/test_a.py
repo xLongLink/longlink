@@ -1,4 +1,3 @@
-import pytest
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 

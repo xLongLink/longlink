@@ -73,6 +73,13 @@ function normalizePath(path: string): string {
 }
 
 /**
+ * Returns a readable label path for SDK-managed page routes.
+ */
+function pageLabelPath(path: string): string {
+    return normalizePath(path).replace(/^pages\//, '');
+}
+
+/**
  * Resolves route params inside a URL template.
  */
 function resolveTemplate(template: string, params: Record<string, string | undefined>): string {
@@ -143,7 +150,7 @@ export default function View({
                   ? `/orgs/${organization}?${nextSearchParams.toString()}`
                   : `?${nextSearchParams.toString()}`;
 
-            return [startCase(tabValue), href] as const;
+            return [startCase(pageLabelPath(tabValue)), href] as const;
         }) ?? []
     );
 

@@ -27,7 +27,7 @@
                         <P i18n="examples.cart.apples.subtitle" />
                         <P i18n="examples.cart.apples.description" />
                         <Badge variant="outline" i18n="$2.40" />
-                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}' i18n="examples.cart.add" />
+                        <Button append="cart" item='${{ name: "Apples", quantity: 1, price: "$2.40" }}' i18n="examples.cart.add" />
                     </Stack>
                 </Card>
 
@@ -37,7 +37,7 @@
                         <P i18n="examples.cart.bananas.subtitle" />
                         <P i18n="examples.cart.bananas.description" />
                         <Badge variant="outline" i18n="$1.10" />
-                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}' i18n="examples.cart.add" />
+                        <Button append="cart" item='${{ name: "Bananas", quantity: 1, price: "$1.10" }}' i18n="examples.cart.add" />
                     </Stack>
                 </Card>
 
@@ -47,7 +47,7 @@
                         <P i18n="examples.cart.strawberries.subtitle" />
                         <P i18n="examples.cart.strawberries.description" />
                         <Badge variant="outline" i18n="$4.50" />
-                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}' i18n="examples.cart.add" />
+                        <Button append="cart" item='${{ name: "Strawberries", quantity: 1, price: "$4.50" }}' i18n="examples.cart.add" />
                     </Stack>
                 </Card>
 
@@ -57,7 +57,7 @@
                         <P i18n="examples.cart.pears.subtitle" />
                         <P i18n="examples.cart.pears.description" />
                         <Badge variant="outline" i18n="$3.20" />
-                        <Button variant="outline" size="xs" append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}' i18n="examples.cart.add" />
+                        <Button append="cart" item='${{ name: "Pears", quantity: 1, price: "$3.20" }}' i18n="examples.cart.add" />
                     </Stack>
                 </Card>
             </Grid>
@@ -70,7 +70,7 @@
                 <P if="${cart.value.length in [0]}" i18n="examples.cart.summary.empty" />
                 <Ul if="${cart.value.length}">
                     <For each="${cart.value}" as="item">
-                        <Li i18n="examples.cart.summary.item" name="${item.name}" quantity="${item.quantity}" price="${item.price}" />
+                        <Li value="${`${item.name} - Qty: ${item.quantity} - ${item.price}`}" />
                     </For>
                 </Ul>
                 <Hr />

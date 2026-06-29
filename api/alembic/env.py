@@ -4,7 +4,7 @@ from sqlmodel import SQLModel
 from sqlalchemy import pool, engine_from_config
 from logging.config import fileConfig
 from src.environments import env
-from sqlalchemy.engine import make_url
+from sqlalchemy.engine import Connection, make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 
 # this is the Alembic Config object, which provides
@@ -60,7 +60,11 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    url = make_url(config.get_main_option('sqlalchemy.url'))
+    configured_url = config.get_main_option('sqlalchemy.url')
+    if configured_url is None:
+        raise RuntimeError('Alembic sqlalchemy.url is not configured')
+
+    url = make_url(configured_url)
 
     # MySQL needs an async DBAPI for Alembic's async engine path.
     if (
@@ -78,7 +82,7 @@ def run_migrations_online() -> None:
 
             connectable = create_async_engine(url, poolclass=pool.NullPool)
 
-            def do_run_migrations(sync_connection) -> None:
+            def do_run_migrations(sync_connection: Connection) -> None:
                 """Configure Alembic against the synchronous bridge connection."""
 
                 context.configure(connection=sync_connection, target_metadata=target_metadata)

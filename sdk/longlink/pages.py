@@ -20,7 +20,18 @@ class PageDefinition:
 page_registry: list[PageDefinition] = []
 
 
-def _normalize_page_path(path: str) -> str:
+def register_page(path: str, handler: Callable[..., Any]) -> str:
+    """Register one XML page for metadata and return its normalized path."""
+
+    normalized_path = normalize_page_path(path)
+
+    # Keep the latest handler for a path when tests or reloads create multiple app instances.
+    page_registry[:] = [page for page in page_registry if page.path != normalized_path]
+    page_registry.append(PageDefinition(path=normalized_path, handler=handler))
+    return normalized_path
+
+
+def normalize_page_path(path: str) -> str:
     """Validate and normalize a page path."""
 
     normalized_path = path.strip()

@@ -1,6 +1,6 @@
 import xmltodict
 from lxml import etree
-from typing import Any
+from typing import Any, cast
 from pathlib import Path
 from longlink.constants import ROOT
 
@@ -12,7 +12,7 @@ class Element:
         """Store file paths and defer parsing until needed."""
 
         self.path = Path(path)
-        self.schema_path = Path(schema) if schema is not None else ROOT / ".static" / "xsd" / "schema.xsd"
+        self.schema_path: Path | None = Path(schema) if schema is not None else ROOT / ".static" / "xsd" / "schema.xsd"
         self._content: str | None = None
 
     @classmethod
@@ -23,7 +23,6 @@ class Element:
         instance.path = Path("<memory>")
         instance.schema_path = Path(schema) if schema is not None else None
         instance._content = content
-        instance._metadata = None
         return instance
 
     @property
@@ -42,7 +41,8 @@ class Element:
         schema = etree.XMLSchema(schema_doc)
         xml_doc = etree.XML(self.content.encode("utf-8"))
         if not schema.validate(xml_doc):
-            messages = [f"Line {error.line}: {error.message}" for error in schema.error_log]
+            error_log = cast(Any, schema.error_log)
+            messages = [f"Line {error.line}: {error.message}" for error in error_log]
             raise ValueError("XML is invalid: " + "; ".join(messages))
 
     def _schema_file_path(self) -> Path:

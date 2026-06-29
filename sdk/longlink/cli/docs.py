@@ -1,9 +1,36 @@
 import click
 from lxml import etree
+from typing import Any, TypedDict
 from pathlib import Path
 from longlink.constants import ROOT
 
 XSD_NAMESPACE = {"xsd": "http://www.w3.org/2001/XMLSchema"}
+
+
+class ComponentProp(TypedDict):
+    """Describe one XML component attribute."""
+
+    name: str
+    type: str
+    values: list[str]
+    default: str | None
+    required: bool
+
+
+class ComponentTypeInfo(TypedDict):
+    """Describe XML component type metadata collected from XSD."""
+
+    props: list[ComponentProp]
+    any_attribute: bool
+    children_supported: bool
+
+
+class ComponentDetails(ComponentTypeInfo):
+    """Describe rendered XML component documentation data."""
+
+    name: str
+    description: str
+    children_description: str
 
 
 def resolve_component_schema(component: str) -> Path:
@@ -25,7 +52,7 @@ def resolve_component_schema(component: str) -> Path:
     raise click.ClickException(f"Unknown component: {component}")
 
 
-def summarize_component_schema(schema_path: Path, component: str) -> dict[str, object]:
+def summarize_component_schema(schema_path: Path, component: str) -> ComponentDetails:
     """Extract props, children support, and descriptions from a component schema."""
 
     schema = etree.parse(str(schema_path))
@@ -50,7 +77,7 @@ def summarize_component_schema(schema_path: Path, component: str) -> dict[str, o
     if complex_type is None:
         raise click.ClickException(f"Schema does not define type {complex_type_name}")
 
-    def collect_type_info(type_node: etree._Element, seen: set[str] | None = None) -> dict[str, object]:
+    def collect_type_info(type_node: Any, seen: set[str] | None = None) -> ComponentTypeInfo:
         """Collect inherited attributes and child support from a complex type."""
 
         seen = seen or set()
@@ -61,7 +88,7 @@ def summarize_component_schema(schema_path: Path, component: str) -> dict[str, o
         if type_name:
             seen.add(type_name)
 
-        props: list[dict[str, object]] = []
+        props: list[ComponentProp] = []
         any_attribute = type_node.find("xsd:anyAttribute", namespaces=XSD_NAMESPACE) is not None
         children_supported = type_node.find(".//xsd:any", namespaces=XSD_NAMESPACE) is not None
 
@@ -78,9 +105,13 @@ def summarize_component_schema(schema_path: Path, component: str) -> dict[str, o
 
         for attribute in type_node.findall(".//xsd:attribute", namespaces=XSD_NAMESPACE):
             restriction = attribute.find("xsd:simpleType/xsd:restriction", namespaces=XSD_NAMESPACE)
-            values = []
+            values: list[str] = []
             if restriction is not None:
-                values = [entry.get("value") for entry in restriction.findall("xsd:enumeration", namespaces=XSD_NAMESPACE)]
+                values = [
+                    value
+                    for entry in restriction.findall("xsd:enumeration", namespaces=XSD_NAMESPACE)
+                    if isinstance((value := entry.get("value")), str)
+                ]
 
             name = attribute.get("name", "")
             type_name = attribute.get("type", "xsd:string").replace("xsd:", "")
@@ -90,7 +121,7 @@ def summarize_component_schema(schema_path: Path, component: str) -> dict[str, o
                     "name": name,
                     "required": attribute.get("use") == "required",
                     "default": attribute.get("default"),
-                    "values": [value for value in values if value],
+                    "values": values,
                     "type": type_name,
                 }
             )

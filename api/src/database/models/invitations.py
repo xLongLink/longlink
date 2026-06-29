@@ -1,3 +1,5 @@
+# pyright: reportAssignmentType=false
+
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
 from datetime import UTC, datetime

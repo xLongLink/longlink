@@ -1,3 +1,5 @@
+# pyright: reportUnusedImport=false
+
 from fastapi import HTTPException
 from src.logger import logger
 from src.operations.registry import get_operation_handler

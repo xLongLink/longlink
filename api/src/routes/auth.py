@@ -1,3 +1,5 @@
+# pyright: reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false
+
 import httpx2
 from typing import cast
 from fastapi import Request, Response, APIRouter

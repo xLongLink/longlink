@@ -1,6 +1,9 @@
+# pyright: reportDeprecated=false
+
 import asyncio
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pathlib import Path
+from collections.abc import AsyncIterator
 from contextlib import suppress, asynccontextmanager
 from src.errors import register_error_handlers
 from src.logger import logger
@@ -37,7 +40,7 @@ async def run_operation_scheduler() -> None:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start the API and background operation worker."""
 
     await operations.reset_active()

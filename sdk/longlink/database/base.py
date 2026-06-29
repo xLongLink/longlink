@@ -1,7 +1,8 @@
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypedDict, cast
 from datetime import datetime, timezone
+from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel, select
-from sqlalchemy import DateTime
+from sqlalchemy import Column, DateTime
 from sqlalchemy.orm import relationship, declared_attr
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)
@@ -17,20 +18,30 @@ def utcnow() -> datetime:
 
 class Base(SQLModel):
     """Base SQLModel for DB tables."""
-    pass
+
+    model_config = ConfigDict(ignored_types=(declared_attr,))  # pyright: ignore[reportAssignmentType]
 
 
 class User(Base, table=True):
     """Shared organization user table (read-only, public schema)."""
 
-    __tablename__ = "users"
+    __tablename__: ClassVar[Any] = "users"
 
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(max_length=255)
     email: str = Field(max_length=254)
 
 
-LOCAL_USERS = (
+
+class LocalUser(TypedDict):
+    """Describe a deterministic local development user."""
+
+    id: int
+    name: str
+    email: str
+
+
+LOCAL_USERS: tuple[LocalUser, ...] = (
     {"id": 1, "name": "Read User", "email": "read@local.longlink.dev"},
     {"id": 2, "name": "Write User", "email": "write@local.longlink.dev"},
     {"id": 3, "name": "Maintain User", "email": "maintain@local.longlink.dev"},
@@ -39,11 +50,29 @@ LOCAL_USERS = (
 )
 
 
+def created_by_relationship(cls: Any):
+    """Return the creator relationship for mapped subclasses."""
+
+    return relationship(User, foreign_keys=[cls.created_id], lazy="selectin")
+
+
+def updated_by_relationship(cls: Any):
+    """Return the updater relationship for mapped subclasses."""
+
+    return relationship(User, foreign_keys=[cls.updated_id], lazy="selectin")
+
+
+def deleted_by_relationship(cls: Any):
+    """Return the deleter relationship for mapped subclasses."""
+
+    return relationship(User, foreign_keys=[cls.deleted_id], lazy="selectin")
+
+
 async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> None:
     """Create deterministic local users for SDK development auditing."""
 
     async with session_maker() as session:
-        result = await session.exec(select(User).where(User.id.in_([user["id"] for user in LOCAL_USERS])))
+        result = await session.exec(select(User).where(cast(Any, User.id).in_([user["id"] for user in LOCAL_USERS])))
         existing_users = {user.id: user for user in result.all()}
 
         # Keep seeded users deterministic if the SDK scaffold is restarted with existing data.
@@ -63,20 +92,25 @@ async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> N
 class Table(Base):
     """Base SQLModel for DB tables with common timestamp and audit fields."""
 
+    __allow_unmapped__: ClassVar[bool] = True
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Allow inherited SDK relationship annotations on mapped subclasses."""
+
+        cls.__allow_unmapped__ = True
+        super().__init_subclass__(**kwargs)
+
     created_at: datetime | None = Field(
         default_factory=utcnow,
-        sa_type=DateTime(timezone=True),
-        nullable=True,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
     )
     updated_at: datetime | None = Field(
         default_factory=utcnow,
-        sa_type=DateTime(timezone=True),
-        nullable=True,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
     )
     deleted_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
-        nullable=True,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
     )
     created_id: int | None = Field(
         default=None,
@@ -94,29 +128,9 @@ class Table(Base):
         nullable=True,
     )
 
-    created_by: ClassVar[Any] = declared_attr(
-        lambda cls: relationship(
-            User,
-            foreign_keys=lambda: [cls.created_id],
-            lazy="selectin",
-        )
-    )
-
-    updated_by: ClassVar[Any] = declared_attr(
-        lambda cls: relationship(
-            User,
-            foreign_keys=lambda: [cls.updated_id],
-            lazy="selectin",
-        )
-    )
-
-    deleted_by: ClassVar[Any] = declared_attr(
-        lambda cls: relationship(
-            User,
-            foreign_keys=lambda: [cls.deleted_id],
-            lazy="selectin",
-        )
-    )
+    created_by = declared_attr(created_by_relationship)
+    updated_by = declared_attr(updated_by_relationship)
+    deleted_by = declared_attr(deleted_by_relationship)
 
 
 _engine: AsyncEngine | None = None
@@ -137,7 +151,7 @@ def create_engine(env: Envs) -> AsyncEngine:
     else:
         dburl = env.DATABASE_URL
 
-    engine_kwargs = {
+    engine_kwargs: dict[str, Any] = {
         "pool_pre_ping": True,
         "pool_recycle": 20,
     }

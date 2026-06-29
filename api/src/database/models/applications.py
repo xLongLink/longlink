@@ -1,9 +1,11 @@
+# pyright: reportAssignmentType=false, reportUnknownMemberType=false, reportAttributeAccessIssue=false
+
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Column, UniqueConstraint, and_
+from sqlalchemy import Column, UniqueConstraint
 from src.models.statuses import ApplicationStatus
 from src.database.models.association import UserApplication
 

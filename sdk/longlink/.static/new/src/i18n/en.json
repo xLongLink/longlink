@@ -26,7 +26,6 @@
             },
             "summary": {
                 "empty": "Cart is empty",
-                "item": "{{name}} - Qty: {{quantity}} - {{price}}",
                 "order": "Order",
                 "title": "Cart"
             },
@@ -106,13 +105,7 @@
                 "quantity": "Qty",
                 "sku": "SKU"
             },
-            "title": "Inventory",
-            "values": {
-                "createdBy": "{{user}}",
-                "name": "{{name}}",
-                "quantity": "{{quantity}}",
-                "sku": "{{sku}}"
-            }
+            "title": "Inventory"
         },
         "menu": {
             "billing": {

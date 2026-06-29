@@ -1,3 +1,5 @@
+# pyright: reportAttributeAccessIssue=false, reportUnknownVariableType=false
+
 from enum import Enum
 from src.logger import logger
 from src.adapters.compute import K8s

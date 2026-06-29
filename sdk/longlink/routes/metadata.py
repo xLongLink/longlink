@@ -1,5 +1,5 @@
 from inspect import isawaitable
-from fastapi import APIRouter
+from fastapi import Request, APIRouter
 from fastapi.responses import Response
 from longlink.pages import page_registry
 from longlink.utils.metadata import load_metadata
@@ -9,14 +9,15 @@ router = APIRouter()
 
 
 @router.get("/metadata.json")
-async def get_metadata() -> dict[str, object]:
+async def get_metadata(request: Request) -> dict[str, object]:
     """Return basic application metadata for the current SDK project."""
 
     metadata = load_metadata()
     pages: list[dict[str, object]] = []
+    registered_pages = getattr(request.app.state, "page_registry", page_registry)
 
-    # Page handlers are registered through the router.page decorator.
-    for page in page_registry:
+    # Page handlers are registered through the router.page decorator or auto discovery.
+    for page in registered_pages:
         content = page.handler()
         if isawaitable(content):
             content = await content

@@ -1,7 +1,7 @@
 import tomllib
 from typing import Any
 from pathlib import Path
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
 
 class Metadata(BaseModel):
@@ -15,25 +15,6 @@ class Metadata(BaseModel):
     description: str | None = None
     license_info: dict[str, Any] | None = None
     terms_of_service: str | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def load_and_merge(cls, data: Any) -> dict[str, Any]:
-        """Merge defaults, pyproject metadata, and explicit overrides into one payload."""
-
-        data = data or {}
-
-        # Start from model defaults so missing fields stay predictable.
-        defaults = {field: cls.model_fields[field].default for field in cls.model_fields}
-        result = dict(defaults)
-
-        pyproject_data = data.pop("_pyproject_data", None)
-        if isinstance(pyproject_data, dict):
-            result.update(cls.metadata_from_pyproject(pyproject_data, result))
-
-        # Let explicit constructor values win over file-derived values.
-        result.update(data)
-        return result
 
     @staticmethod
     def metadata_from_pyproject(
@@ -63,11 +44,16 @@ def load_metadata(pyproject_path: Path | None = None, **overrides: Any) -> Metad
     """Load metadata from pyproject location with optional explicit override values."""
 
     resolved_pyproject = (pyproject_path or Path("pyproject.toml")).resolve()
-    parsed_pyproject: dict[str, Any] | None = None
+    metadata_data: dict[str, Any] = {}
 
     # Resolve a file path once and parse TOML from that location without changing cwd.
     if resolved_pyproject.exists():
         with resolved_pyproject.open("rb") as file_handle:
-            parsed_pyproject = tomllib.load(file_handle)
+            parsed_pyproject: dict[str, Any] = tomllib.load(file_handle)
 
-    return Metadata(_pyproject_data=parsed_pyproject, **overrides)
+        defaults = {field: Metadata.model_fields[field].default for field in Metadata.model_fields}
+        metadata_data.update(Metadata.metadata_from_pyproject(parsed_pyproject, defaults))
+
+    # Let explicit constructor values win over file-derived values.
+    metadata_data.update(overrides)
+    return Metadata(**metadata_data)

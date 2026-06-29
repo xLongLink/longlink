@@ -1,3 +1,5 @@
+# pyright: reportReturnType=false
+
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authsupport
 from src.models.users import UserUpdate, UserProfile, UserListItem

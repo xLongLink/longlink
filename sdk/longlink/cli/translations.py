@@ -1,4 +1,5 @@
 import json
+from typing import cast
 from pathlib import Path
 
 import click
@@ -95,13 +96,15 @@ def flatten_translation_catalog(value: object, prefix: str = "") -> dict[str, ob
     if not isinstance(value, dict):
         return {prefix: value} if prefix else {}
 
+    catalog = cast(dict[str, object], value)
+
     # Leave plural leaves intact so their category objects survive normalization.
-    if is_plural_catalog(value):
-        return {prefix: value} if prefix else {}
+    if is_plural_catalog(catalog):
+        return {prefix: catalog} if prefix else {}
 
     flattened: dict[str, object] = {}
 
-    for key, entry in value.items():
+    for key, entry in catalog.items():
         next_prefix = f"{prefix}.{key}" if prefix else key
         flattened.update(flatten_translation_catalog(entry, next_prefix))
 
@@ -133,15 +136,15 @@ def assign_translation_value(target: dict[str, object], segments: list[str], val
         if entry is None:
             entry = {}
             current[segment] = entry
-        elif not isinstance(entry, dict) or is_plural_catalog(entry):
+        elif not isinstance(entry, dict) or is_plural_catalog(cast(dict[str, object], entry)):
             raise click.ClickException(f"Translation key collision at {segment}")
 
-        current = entry
+        current = cast(dict[str, object], entry)
 
     leaf = segments[-1]
     entry = current.get(leaf)
 
-    if isinstance(entry, dict) and not is_plural_catalog(entry):
+    if isinstance(entry, dict) and not is_plural_catalog(cast(dict[str, object], entry)):
         raise click.ClickException(f"Translation key collision at {'.'.join(segments)}")
 
     current[leaf] = value

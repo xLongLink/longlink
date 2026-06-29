@@ -45,9 +45,9 @@ class Compute(ABC):
         """List all managed namespaces."""
 
     @abstractmethod
-    async def pods(self, namespace: str) -> list[dict]:
+    async def pods(self, namespace: str) -> list[dict[str, object]]:
         """List all pods in a namespace."""
 
     @abstractmethod
-    async def resources(self) -> dict:
+    async def resources(self) -> dict[str, int | float]:
         """Return total and allocatable cluster resources."""

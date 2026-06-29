@@ -24,4 +24,4 @@ class Env(BaseSettings):
     )
 
 
-env = Env()
+env = Env()  # pyright: ignore[reportCallIssue]

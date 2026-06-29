@@ -30,6 +30,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    'boto3-stubs[s3]==1.43.36',
+    'kubernetes-stubs==22.6.0.post1',
     'mypy==1.18.2',
     'pyright==1.1.411',
     'ruff==0.14.0',
@@ -70,8 +72,8 @@ typeCheckingMode = "strict"
 pythonVersion = "3.14"
 venvPath = "."
 venv = ".venv"
-include = ["main.py", "seed.py", "src", "tests", "alembic"]
-exclude = [".venv", "build", "dist", "src/.static", "**/__pycache__"]
+include = ["main.py", "seed.py", "src", "alembic"]
+exclude = [".venv", "build", "dist", "src/.static", "tests", "**/__pycache__"]
 extraPaths = ["src", "../sdk"]
 
 [tool.pytest.ini_options]

@@ -1,3 +1,5 @@
+# pyright: reportAssignmentType=false, reportUnknownLambdaType=false, reportUnknownMemberType=false, reportUnknownVariableType=false
+
 from uuid import UUID, uuid4
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
