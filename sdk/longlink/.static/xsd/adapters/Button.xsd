@@ -16,6 +16,8 @@
     </xsd:annotation>
     <xsd:complexContent>
       <xsd:extension base="ButtonChildrenOnlyType">
+        <xsd:attribute name="append" type="xsd:string" use="optional" />
+        <xsd:attribute name="item" type="xsd:string" use="optional" />
         <xsd:attribute name="submit" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="size" use="optional" default="default">

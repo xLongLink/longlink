@@ -1,5 +1,16 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink>
+    <State
+        id="form"
+        name="Evil Rabbit"
+        username="evil.rabbit"
+        email="ada@longlink.dev"
+        password=""
+        team="ops"
+        role="operator"
+        notes="Draft notes for the account review."
+    />
+
     <Stack>
         <H3 i18n="examples.form.title" />
         <P i18n="examples.form.description" />
@@ -7,7 +18,7 @@
         <Grid columns="2">
             <Field>
                 <FieldLabel htmlFor="name" i18n="examples.form.name.label" />
-                <Input id="name" autoComplete="name" value="Evil Rabbit" placeholder="Evil Rabbit" />
+                <Input id="name" autoComplete="name" value="$form.name" placeholder="Evil Rabbit" />
                 <FieldDescription i18n="examples.form.name.description" />
             </Field>
 
@@ -21,7 +32,7 @@
                         id="username"
                         autoComplete="username"
                         placeholder="evil.rabbit"
-                        value="evil.rabbit"
+                        value="$form.username"
                     />
                     <InputGroupButton i18n="examples.form.username.check" />
                 </InputGroup>
@@ -39,7 +50,7 @@
                         id="email"
                         autoComplete="email"
                         placeholder="ada@longlink.dev"
-                        value="ada@longlink.dev"
+                        value="$form.email"
                     />
                     <InputGroupButton i18n="examples.form.email.invite" />
                 </InputGroup>
@@ -47,7 +58,7 @@
 
             <Field>
                 <FieldLabel htmlFor="team" i18n="examples.form.team.label" />
-                <Select defaultValue="ops">
+                <Select value="$form.team">
                     <SelectTrigger>
                         <SelectValue i18n="examples.form.team.placeholder" />
                     </SelectTrigger>
@@ -66,12 +77,12 @@
         <Grid columns="2">
             <Field>
                 <FieldLabel htmlFor="password" i18n="examples.form.password.label" />
-                <Input id="password" type="password" autoComplete="new-password" placeholder="password" value="" />
+                <Input id="password" type="password" autoComplete="new-password" placeholder="password" value="$form.password" />
             </Field>
 
             <Field>
                 <FieldLabel htmlFor="role" i18n="examples.form.role.label" />
-                <Select defaultValue="operator">
+                <Select value="$form.role">
                     <SelectTrigger>
                         <SelectValue i18n="examples.form.role.placeholder" />
                     </SelectTrigger>
@@ -89,14 +100,20 @@
 
         <Field>
             <FieldLabel htmlFor="notes" i18n="examples.form.notes.label" />
-            <Textarea id="notes" label="Notes" rows="4" value="Draft notes for the account review." />
+            <Textarea id="notes" label="Notes" rows="4" value="$form.notes" />
             <FieldDescription i18n="examples.form.notes.description" />
         </Field>
 
         <Field orientation="horizontal">
             <FieldLabel></FieldLabel>
             <Button variant="destructive" i18n="examples.form.actions.cancel" />
-            <Button submit="true" i18n="examples.form.actions.submit" />
+            <Action
+                action="/form"
+                method="POST"
+                json="${{ name: form.name, username: form.username, email: form.email, password: form.password, team: form.team, role: form.role, notes: form.notes }}"
+            >
+                <Button i18n="examples.form.actions.submit" />
+            </Action>
         </Field>
     </Stack>
 </longlink>

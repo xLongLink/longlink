@@ -12,6 +12,7 @@ class ApiAccessFilter(logging.Filter):
     """Allow access logs for application requests while hiding frontend noise."""
 
     _allowed_prefixes = ("/api/", "/auth/")
+    _allowed_methods = ("POST", "PUT", "PATCH", "DELETE")
 
     def filter(self, record: logging.LogRecord) -> bool:
         """Return True when the request should remain visible in access logs."""
@@ -19,7 +20,11 @@ class ApiAccessFilter(logging.Filter):
         if len(record.args) < 3:
             return True
 
+        method = str(record.args[1]).upper()
         path = str(record.args[2]).split("?", 1)[0]
+
+        if method in self._allowed_methods:
+            return True
 
         if not path.startswith(self._allowed_prefixes):
             return False

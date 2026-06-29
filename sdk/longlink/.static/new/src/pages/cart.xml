@@ -74,7 +74,9 @@
                     </For>
                 </Ul>
                 <Hr />
-                <Button i18n="examples.cart.summary.order" />
+                <Action action="/order" method="POST" json="${{ items: cart.value }}">
+                    <Button disabled="${cart.value.length in [0]}" i18n="examples.cart.summary.order" />
+                </Action>
             </Stack>
         </Column>
     </Columns>

@@ -28,3 +28,17 @@ async def sample_post_endpoint(session_maker=Depends(db.get_session)) -> UserMod
     """Create a sample record and return a typed payload."""
 
     return await sample.create_project(session_maker)
+
+
+@router.post("/form")
+async def form_post_endpoint(payload: dict[str, object] | None = None) -> dict[str, object]:
+    """Receive the account form example submission."""
+
+    return {"message": "Form submission received", "payload": payload or {}}
+
+
+@router.post("/order")
+async def order_post_endpoint(payload: dict[str, object] | None = None) -> dict[str, object]:
+    """Receive the fruit cart order example submission."""
+
+    return {"message": "Order received", "payload": payload or {}}

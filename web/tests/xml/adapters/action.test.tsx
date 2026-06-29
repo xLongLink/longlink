@@ -58,12 +58,26 @@ describe('Action', () => {
         expect(invalidateCalls).toBe(1);
     });
 
-    /* The trigger content should come directly from the children. */
-    it('renders the child label in static markup', () => {
-        const output = renderXmlToMarkup(parseXML('<Action action="/example/profile"><P i18n="Save profile" /></Action>'));
+    /* Button children should become the clickable action trigger. */
+    it('renders a wrapped button trigger in static markup', () => {
+        const output = renderXmlToMarkup(
+            parseXML('<Action action="/example/profile"><Button i18n="Save profile" /></Action>')
+        );
 
         expect(output).toContain('<button');
+        expect(output).toContain('type="button"');
         expect(output).toContain('Save profile');
+    });
+
+    /* Icon children should become clickable when wrapped by Action. */
+    it('renders a wrapped icon trigger in static markup', () => {
+        const output = renderXmlToMarkup(
+            parseXML('<Action action="/example/profile"><Icon name="layout-grid" /></Action>')
+        );
+
+        expect(output).toContain('<button');
+        expect(output).toContain('type="button"');
+        expect(output).toContain('aria-label="layout-grid"');
     });
 
     /* The action shell should still invalidate without an endpoint. */

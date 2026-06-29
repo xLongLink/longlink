@@ -1,10 +1,10 @@
 from .base import Table, utcnow
 from typing import Any, Iterator
 from fastapi import FastAPI, Request
+from sqlmodel import Session as SyncSession
 from contextlib import contextmanager
 from sqlalchemy import event
 from contextvars import ContextVar
-from sqlalchemy.orm import Session as SyncSession
 
 _current_user_id: ContextVar[int | None] = ContextVar("current_user_id", default=None)
 
@@ -21,7 +21,7 @@ def audit_user_scope(user_id: int | None) -> Iterator[None]:
 
 
 # ---------------------------------------------------------------------
-# SQLAlchemy audit hook
+# SQLModel audit hook
 # ---------------------------------------------------------------------
 
 
@@ -32,7 +32,7 @@ def apply_audit_fields(
     instances: Any,
 ) -> None:
     """
-    Automatically apply audit fields before SQLAlchemy flushes changes.
+    Automatically apply audit fields before SQLModel flushes changes.
 
     Works for AsyncSession because AsyncSession uses an internal sync Session.
     """

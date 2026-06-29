@@ -1,23 +1,5 @@
-from typing import Any
+from longlink.utils.xml import Element, Longlink
+from longlink.utils.settings import Envs
+from longlink.utils.environments import Environments
 
-
-def __getattr__(name: str) -> Any:
-    """Lazily load utility exports when they are first accessed."""
-
-    if name in {"Element", "Longlink"}:
-        from .xml import Element, Longlink
-
-        exports = {"Element": Element, "Longlink": Longlink}
-    elif name == "Envs":
-        from .settings import Envs
-
-        exports = {"Envs": Envs}
-    elif name == "Environments":
-        from .environments import Environments
-
-        exports = {"Environments": Environments}
-    else:
-        raise AttributeError(f"module 'longlink.utils' has no attribute {name!r}")
-
-    globals().update(exports)
-    return exports[name]
+__all__ = ["Element", "Environments", "Envs", "Longlink"]

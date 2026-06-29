@@ -1,11 +1,18 @@
 import { createApiHeaders } from '@/lib/api';
-import { Button as UIButton } from '@ui/button';
+import { createContext, useContext } from 'react';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
 import { useUrl } from '@xml/core/url';
 import type { Props } from '@xml/types';
 import { toast } from 'sonner';
 import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
+
+const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
+
+/** Returns the action handler provided by the nearest XML Action wrapper. */
+export function useActionHandler() {
+    return useContext(ActionHandlerContext);
+}
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
@@ -14,14 +21,12 @@ export function Action({ props, nodes }: Props) {
     const requestUrl = useUrl(String(action ?? ''));
 
     /** Sends the configured request and shows a minimal toast result. */
-    async function handleClick() {
+    async function handleAction() {
         await executeAction(props, ctx, requestUrl, fetch, toast);
     }
 
     return (
-        <UIButton type="button" onClick={handleClick}>
-            {renderNode(nodes, ctx)}
-        </UIButton>
+        <ActionHandlerContext.Provider value={handleAction}>{renderNode(nodes, ctx)}</ActionHandlerContext.Provider>
     );
 }
 

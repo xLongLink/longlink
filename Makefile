@@ -37,15 +37,12 @@ up:
 	docker compose -f dev/compose.yml up -d
 	k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer"
 	k3d kubeconfig get compute > api/kubeconfig.yaml
-	cd sdk && uv run longlink init --folder dev
-	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
 
 
 down:
 	docker compose -f dev/compose.yml down
 	k3d cluster delete compute
 	rm -f api/dev.db
-	rm -rf sdk/dev
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -delete
 
@@ -63,4 +60,7 @@ web:
 
 
 sdk:
+	rm -rf sdk/dev
+	cd sdk && uv run longlink init --folder dev
+	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
 	cd sdk/dev && uv run longlink dev

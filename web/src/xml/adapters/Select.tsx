@@ -12,7 +12,8 @@ import { useXmlContext } from '@xml/core/context';
 import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
+import { useBindableValue } from './binding';
+import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Renders a shadcn-backed select shell with optional reactive value binding. */
 export function Select({ props, nodes }: Props) {
@@ -20,23 +21,16 @@ export function Select({ props, nodes }: Props) {
     const defaultOpen = resolveXmlBoolean(props, 'defaultOpen', ctx);
     const defaultValue = resolveXmlString(props, 'defaultValue', ctx);
     const open = resolveXmlBoolean(props, 'open', ctx);
-    const value = resolveXmlValue(props, 'value', ctx);
-    const { state, snapshot } = useXmlValueSnapshot(value);
+    const binding = useBindableValue(props, 'value', ctx);
 
-    // Bind directly to Valtio-backed state slots so selects stay in sync with XML state.
-    if (state) {
-        const currentValue =
-            snapshot && typeof snapshot === 'object' && 'value' in snapshot ? snapshot.value : snapshot;
-
+    if (binding.bound) {
         return (
             <UISelect
                 defaultOpen={defaultOpen}
                 open={open}
-                value={currentValue == null ? undefined : String(currentValue)}
+                value={binding.currentValue || undefined}
                 onValueChange={(nextValue) => {
-                    if ('value' in state) {
-                        state.value = nextValue;
-                    }
+                    binding.setValue(nextValue ?? '');
                 }}
             >
                 {renderNode(nodes, ctx)}
@@ -44,7 +38,7 @@ export function Select({ props, nodes }: Props) {
         );
     }
 
-    const initialValue = value != null ? String(value) : defaultValue;
+    const initialValue = binding.initialValue || defaultValue;
 
     return (
         <UISelect defaultOpen={defaultOpen} defaultValue={initialValue} open={open}>

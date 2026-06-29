@@ -29,10 +29,11 @@ export const content = (
             Usage
         </Heading>
         <CodeBlock language="python">{`from longlink import db
-from pydantic import Field
+from sqlmodel import Field
 
 
-class Project(db.Table):
+class Project(db.Table, table=True):
+    id: int | None = Field(default=None, primary_key=True)
     name: str = Field(description="Project name")
     owner: str = Field(description="Project owner")
 

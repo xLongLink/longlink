@@ -1,14 +1,17 @@
 from typing import Any, ClassVar
 from datetime import datetime, timezone
-from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Column, DateTime, select
-from sqlalchemy.orm import declared_attr
-from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
-                                    async_sessionmaker, create_async_engine)
+from sqlmodel import Field, SQLModel, select
+from sqlalchemy import DateTime
+from sqlalchemy.orm import relationship, declared_attr
+from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
+                                    create_async_engine)
 from longlink.utils.settings import Envs
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 def utcnow() -> datetime:
+    """Return the current UTC timestamp."""
+
     return datetime.now(timezone.utc)
 
 
@@ -41,8 +44,8 @@ async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> N
     """Create deterministic local users for SDK development auditing."""
 
     async with session_maker() as session:
-        result = await session.execute(select(User).where(User.id.in_([user["id"] for user in LOCAL_USERS])))
-        existing_users = {user.id: user for user in result.scalars().all()}
+        result = await session.exec(select(User).where(User.id.in_([user["id"] for user in LOCAL_USERS])))
+        existing_users = {user.id: user for user in result.all()}
 
         # Keep seeded users deterministic if the SDK scaffold is restarted with existing data.
         for payload in LOCAL_USERS:
@@ -64,15 +67,18 @@ class Table(Base):
 
     created_at: datetime | None = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        sa_type=DateTime(timezone=True),
+        nullable=True,
     )
     updated_at: datetime | None = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        sa_type=DateTime(timezone=True),
+        nullable=True,
     )
     deleted_at: datetime | None = Field(
         default=None,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        sa_type=DateTime(timezone=True),
+        nullable=True,
     )
     created_id: int | None = Field(
         default=None,
@@ -91,33 +97,28 @@ class Table(Base):
     )
 
     created_by: ClassVar[Any] = declared_attr(
-        lambda cls: Relationship(
-            sa_relationship_kwargs={
-                "foreign_keys": f"[{cls.__name__}.created_id]",
-                "lazy": "selectin",
-            }
+        lambda cls: relationship(
+            User,
+            foreign_keys=lambda: [cls.created_id],
+            lazy="selectin",
         )
     )
 
     updated_by: ClassVar[Any] = declared_attr(
-        lambda cls: Relationship(
-            sa_relationship_kwargs={
-                "foreign_keys": f"[{cls.__name__}.updated_id]",
-                "lazy": "selectin",
-            }
+        lambda cls: relationship(
+            User,
+            foreign_keys=lambda: [cls.updated_id],
+            lazy="selectin",
         )
     )
 
     deleted_by: ClassVar[Any] = declared_attr(
-        lambda cls: Relationship(
-            sa_relationship_kwargs={
-                "foreign_keys": f"[{cls.__name__}.deleted_id]",
-                "lazy": "selectin",
-            }
+        lambda cls: relationship(
+            User,
+            foreign_keys=lambda: [cls.deleted_id],
+            lazy="selectin",
         )
     )
-
-
 
 
 _engine: AsyncEngine | None = None
@@ -125,7 +126,7 @@ Session: async_sessionmaker[AsyncSession] | None = None
 
 
 def create_engine(env: Envs) -> AsyncEngine:
-    """Create and cache the async SQLAlchemy engine for the current environment."""
+    """Create and cache the async SQLModel engine for the current environment."""
     global _engine
 
     if _engine is not None:
@@ -151,7 +152,7 @@ def create_engine(env: Envs) -> AsyncEngine:
 
 
 async def get_session() -> async_sessionmaker[AsyncSession]:
-    """Return a SQLAlchemy sessionmaker instance."""
+    """Return a SQLModel async sessionmaker instance."""
     global Session, _engine
 
     if Session is not None:
@@ -164,7 +165,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     async with _engine.connect():
         pass
 
-    Session = async_sessionmaker(_engine, expire_on_commit=False)
+    Session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
     # Auto-create tables for SQLite only.
     if str(_engine.url).startswith("sqlite+"):

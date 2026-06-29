@@ -4,6 +4,7 @@ import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import { resolvePath } from '@xml/expressions';
 import type { Props } from '@xml/types';
+import { useActionHandler } from './Action';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** XML button adapter that renders a styled trigger shell. */
@@ -16,9 +17,14 @@ export function Button({ props, nodes }: Props) {
     const submit = resolveXmlBoolean(props, 'submit', ctx, false);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx, false);
     const appendTarget = resolveXmlString(props, 'append', ctx);
+    const actionHandler = useActionHandler();
 
     function handleClick() {
         appendButtonItem(props, ctx, appendTarget);
+
+        if (actionHandler) {
+            void actionHandler();
+        }
     }
 
     if (submit) {

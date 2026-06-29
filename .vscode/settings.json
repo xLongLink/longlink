@@ -2,6 +2,9 @@
   "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/api/src",
-    "${workspaceFolder}/sdk"
+    "${workspaceFolder}/sdk",
+    "${workspaceFolder}/api/.venv/lib/python3.14/site-packages",
+    "${workspaceFolder}/sdk/.venv/lib/python3.14/site-packages",
+    "${workspaceFolder}/sdk/dev/.venv/lib/python3.14/site-packages"
   ]
 }

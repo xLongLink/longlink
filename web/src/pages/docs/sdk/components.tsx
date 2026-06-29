@@ -14,7 +14,7 @@ const componentDocs: ElementDoc[] = [
         name: 'Action',
         id: 'action',
         description:
-            'Renders an action button that can send a mutation request and refresh State or Query declarations after success.',
+            'Wraps a clickable trigger such as Button or Icon and sends a mutation request when it is activated.',
         parameters: [
             'action: optional request path or URL.',
             'method: optional HTTP method. Defaults to POST.',
@@ -22,7 +22,7 @@ const componentDocs: ElementDoc[] = [
             'invalidate: optional expression resolving to setup ids to refresh.',
         ],
         example: `<Action action="/api/orders/${'${order.id}'}/complete" invalidate="['orders']">
-  <P i18n="orders.complete" />
+  <Button i18n="orders.complete" />
 </Action>`,
     },
     {
