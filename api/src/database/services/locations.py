@@ -1,8 +1,9 @@
-# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportReturnType=false, reportCallIssue=false
+# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false
 
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from src.database.session import session_scope
 from src.models.countries import Country
 from src.models.locations import LocationProvider
@@ -44,7 +45,13 @@ class LocationsService:
             location.created_id = user.id
             location.updated_id = user.id
             session.add(location)
-            await session.commit()
+
+            try:
+                await session.commit()
+            except IntegrityError as exc:
+                await session.rollback()
+                raise ValueError("Location already exists") from exc
+
             await session.refresh(location)
             return location
 

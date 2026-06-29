@@ -1,5 +1,3 @@
-# pyright: reportReturnType=false
-
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
@@ -17,7 +15,7 @@ router = APIRouter()
 async def list_locations(_: User = Depends(authsupport)) -> list[LocationResponse]:
     """Return all registered locations."""
 
-    return await locations.list()
+    return await locations.list()  # pyright: ignore[reportReturnType]
 
 
 @router.get("/api/locations/{location_id}", response_model=LocationResponse)
@@ -28,7 +26,7 @@ async def get_location(location_id: UUID, _: User = Depends(authsupport)) -> Loc
     if location is None:
         raise NotFoundError("Location", location_id)
 
-    return location
+    return location  # pyright: ignore[reportReturnType]
 
 
 @router.post("/api/locations", response_model=LocationResponse)
@@ -41,7 +39,7 @@ async def create_location(payload: LocationCreate,user: User = Depends(authadmin
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
-    return location
+    return location  # pyright: ignore[reportReturnType]
 
 
 @router.delete("/api/locations/{location_id}", response_model=SuccessResponse)

@@ -1,10 +1,8 @@
-# pyright: reportAttributeAccessIssue=false, reportUnknownVariableType=false
-
 from enum import Enum
 from src.logger import logger
 from src.adapters.compute import K8s
 from src.models.operations import OperationKind
-from kubernetes.client.rest import ApiException
+from kubernetes.client.rest import ApiException  # pyright: ignore[reportAttributeAccessIssue, reportUnknownVariableType]
 from src.models.statuses import ApplicationStatus
 from src.operations import provisioning
 from src.operations.registry import operation_handler
@@ -46,7 +44,7 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
         pods = k8s.application_pods(organization.slug, application.slug)
-    except ApiException:
+    except ApiException:  # pyright: ignore[reportUnknownVariableType]
         return ApplicationStartupState.pending
 
     crashed_reasons = {
@@ -140,12 +138,7 @@ async def execute_application_delete(operation: Operation) -> Operation:
     if organization is None:
         raise ValueError(f"Organization '{application.organization_id}' not found")
 
-    registry = await provisioning.latest_compute_registry(organization.location_id)
-    if registry is None:
-        raise ValueError(f"No compute cluster configured for location '{organization.location_id}'")
-
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    await k8s.remove(organization.slug, application.slug)
+    await provisioning.delete_application_runtime(application, organization)
     try:
         await applications.delete(application.organization_id, application.id, deleted_id=operation.created_id)
     except ValueError as exc:

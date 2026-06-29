@@ -1,7 +1,5 @@
-# pyright: reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false
-
 import httpx2
-from typing import cast
+from typing import Any, cast
 from fastapi import Request, Response, APIRouter
 from pydantic import Field, BaseModel, ValidationError
 from src.auth import SessionAccountsService, oauth
@@ -11,7 +9,6 @@ from src.environments import env
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
 from src.database.services.users import users
-from authlib.integrations.starlette_client.apps import StarletteOAuth2App
 
 router = APIRouter()
 
@@ -23,14 +20,39 @@ class PasswordLoginRequest(BaseModel):
     password: str = Field(min_length=1)
 
 
+async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
+    """Normalize provider profile claims into the local user record."""
+
+    email = userinfo.email
+    if not email:
+        raise UnavailableError("Authentication provider returned no email")
+
+    name = userinfo.name or userinfo.preferred_username
+    if not name:
+        given_name = userinfo.given_name
+        family_name = userinfo.family_name
+        if not given_name or not family_name:
+            raise UnavailableError("Authentication provider returned no display name")
+
+        name = f"{given_name} {family_name}"
+
+    await users.upsert(
+        oidc=userinfo.sub,
+        email=str(email),
+        name=name,
+        avatar=userinfo.picture,
+    )
+    return userinfo.sub
+
+
 @router.get("/auth/login/oidc", include_in_schema=False)
-async def login_oidc(request: Request):
+async def login_oidc(request: Request) -> Response:
     """Initiate OIDC login flow by redirecting to the identity provider."""
 
-    oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
+    oidc = cast(Any, oauth).create_client("oidc")
 
     try:
-        return await oidc.authorize_redirect(request, redirect_uri=env.OIDC_REDIRECT_URI)
+        return cast(Response, await oidc.authorize_redirect(request, redirect_uri=env.OIDC_REDIRECT_URI))
     except httpx2.HTTPStatusError as exc:
         raise UnavailableError(
             "OIDC provider metadata is unavailable. Check OIDC_ISSUER and provider realm configuration."
@@ -98,72 +120,37 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Res
     except ValidationError as exc:
         raise UnavailableError("Authentication provider returned an invalid user profile") from exc
 
-    # Normalize the provider payload into the local user record shape.
-    email = userinfo.email
-    if not email:
-        raise UnavailableError("Authentication provider returned no email")
-
-    name = userinfo.name or userinfo.preferred_username
-    if not name:
-        given_name = userinfo.given_name
-        family_name = userinfo.family_name
-        if not given_name or not family_name:
-            raise UnavailableError("Authentication provider returned no display name")
-
-        name = f"{given_name} {family_name}"
-
-    await users.upsert(
-        oidc=userinfo.sub,
-        email=str(email),
-        name=name,
-        avatar=userinfo.picture,
-    )
-
-    SessionAccountsService(request).activate(userinfo.sub)
+    subject = await upsert_oidc_user(userinfo)
+    SessionAccountsService(request).activate(subject)
     return Response(status_code=204)
 
 
 @router.get("/auth/oidc", include_in_schema=False)
-async def auth_oidc(request: Request):
+async def auth_oidc(request: Request) -> RedirectResponse:
     """Handle OIDC callback, exchange code for token, and create/update user."""
 
-    oidc = cast(StarletteOAuth2App, oauth.create_client("oidc"))
+    oidc = cast(Any, oauth).create_client("oidc")
 
     try:
-        token = await oidc.authorize_access_token(request)
+        token: Any = await oidc.authorize_access_token(request)
     except httpx2.HTTPStatusError as exc:
         raise UnavailableError("OIDC token exchange failed. Verify provider URL and client credentials.") from exc
 
-    userinfo = getattr(token, "userinfo", None)
+    raw_userinfo: Any = getattr(token, "userinfo", None)
     # Fall back to the userinfo endpoint when the token payload does not include profile claims.
-    if userinfo is None:
+    if raw_userinfo is None:
         try:
-            userinfo = OidcUserInfo.model_validate(await oidc.userinfo(token=token.model_dump(mode="python")))
+            raw_userinfo = await oidc.userinfo(token=token.model_dump(mode="python"))
         except ValidationError as exc:
             raise UnavailableError("Authentication provider returned an invalid user profile") from exc
 
-    # Normalize the provider payload into the local user record shape.
-    email = userinfo.email
-    if not email:
-        raise UnavailableError("Authentication provider returned no email")
+    try:
+        userinfo = OidcUserInfo.model_validate(raw_userinfo)
+    except ValidationError as exc:
+        raise UnavailableError("Authentication provider returned an invalid user profile") from exc
 
-    name = userinfo.name or userinfo.preferred_username
-    if not name:
-        given_name = userinfo.given_name
-        family_name = userinfo.family_name
-        if not given_name or not family_name:
-            raise UnavailableError("Authentication provider returned no display name")
-
-        name = f"{given_name} {family_name}"
-
-    await users.upsert(
-        oidc=userinfo.sub,
-        email=str(email),
-        name=name,
-        avatar=userinfo.picture,
-    )
-
-    SessionAccountsService(request).activate(userinfo.sub)
+    subject = await upsert_oidc_user(userinfo)
+    SessionAccountsService(request).activate(subject)
     return RedirectResponse("/organizations")
 
 

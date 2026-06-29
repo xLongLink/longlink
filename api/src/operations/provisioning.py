@@ -5,6 +5,7 @@ from src.constants import APP_SERVICE_PORT
 from src.utils import images, names
 from src.adapters.compute.k8s import K8s
 from src.adapters.database import Postgres
+from src.adapters.storage import S3
 from src.models.operations import OperationKind
 from src.models.statuses import ApplicationStatus
 from src.models.applications import ApplicationCreate
@@ -12,9 +13,11 @@ from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.storages import StorageRegistry
 from src.database.models.applications import Application
 from src.database.services.compute import compute
 from src.database.services.database import database
+from src.database.services.storage import storage
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 
@@ -34,6 +37,16 @@ async def latest_database_registry(location_id: UUID) -> DatabaseRegistry | None
 
     return max(
         (registry for registry in await database.list() if registry.location_id == location_id),
+        key=lambda item: item.created_at,
+        default=None,
+    )
+
+
+async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
+    """Return the newest storage registry for one location."""
+
+    return max(
+        (registry for registry in await storage.list() if registry.location_id == location_id),
         key=lambda item: item.created_at,
         default=None,
     )
@@ -97,6 +110,42 @@ async def create_application_runtime(
 
     logger.info("Queued application creation verification %s for %s/%s", operation.id, organization.slug, payload.name)
     return application
+
+
+async def delete_application_runtime(application: Application, organization: OrganizationDetails) -> None:
+    """Remove the runtime resources owned by one application."""
+
+    compute_registry = await latest_compute_registry(organization.location_id)
+    if compute_registry is None:
+        raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
+
+    database_registry = await latest_database_registry(organization.location_id)
+    if database_registry is None:
+        raise RuntimeError(f"No database configured for location '{organization.location_id}'")
+
+    storage_registry = await latest_storage_registry(organization.location_id)
+    k8s = K8s(compute_registry.kubeconfig, compute_registry.proxy_secret)
+    db_client = Postgres(
+        database_registry.host,
+        database_registry.port,
+        database_registry.username,
+        database_registry.password,
+    )
+
+    try:
+        await k8s.remove(organization.slug, application.slug)
+        await db_client.remove(organization.slug, application.slug)
+        if storage_registry is not None:
+            storage_client = S3(
+                storage_registry.protocol,
+                storage_registry.endpoint_url,
+                storage_registry.access_key_id,
+                storage_registry.secret_access_key,
+            )
+            await storage_client.remove(organization.slug, application.slug)
+    except Exception as exc:
+        logger.exception("Failed to remove runtime for %s/%s", organization.slug, application.slug)
+        raise RuntimeError("Failed to remove the application runtime") from exc
 
 
 async def queue_application_delete(application_id: UUID, user: User) -> Application | None:

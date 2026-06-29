@@ -1,13 +1,15 @@
-# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportUnknownParameterType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportReturnType=false, reportCallIssue=false, reportMissingTypeArgument=false
+# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportMissingTypeArgument=false
 
 from uuid import UUID
+from typing import Any, cast
 from datetime import UTC, datetime
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
+from src.models.statuses import ApplicationStatus
 from src.database.session import session_scope
-from src.models.applications import ApplicationStatus, ApplicationResponse
+from src.models.applications import ApplicationResponse
 from src.database.models.users import User
 from src.database.models.association import UserApplication
 from src.database.models.applications import Application
@@ -46,8 +48,9 @@ class ApplicationsService:
 
         async with session_scope() as session:
             # Join the membership row so the caller can render the app role in one query.
+            role_column = cast(Any, UserApplication.role_name)
             statement = (
-                select(Application, UserApplication.role_name)
+                select(Application, role_column)
                 .options(*_app_relation_options())
                 .outerjoin(
                     UserApplication,
@@ -60,7 +63,7 @@ class ApplicationsService:
                 .where(Application.organization_id == organization_id, Application.deleted_at.is_(None))
             )
             result = await session.execute(statement)
-            return result.all()
+            return cast(list[tuple[Application, ApplicationRoles | None]], result.all())
 
 
     async def list_responses(self, organization_id: UUID, user_id: UUID, user: User) -> list[ApplicationResponse]:
@@ -69,19 +72,6 @@ class ApplicationsService:
         application_rows = await self.list(organization_id, user_id)
         return [_response_payload(application, role_name, user) for application, role_name in application_rows]
 
-
-    async def list_by_organization(self, organization_id: UUID) -> list[Application]:
-        """Return all registered applications for one organization."""
-
-        async with session_scope() as session:
-            statement = (
-                select(Application)
-                .options(*_app_relation_options())
-                .where(Application.organization_id == organization_id, Application.deleted_at.is_(None))
-                .order_by(Application.name)
-            )
-            result = await session.execute(statement)
-            return list(result.scalars().all())
 
     async def get(self, organization_id: UUID, slug: str) -> Application | None:
         """Return a registered application by organization and slug."""
@@ -190,7 +180,7 @@ class ApplicationsService:
             return application
 
 
-def _app_relation_options() -> tuple:
+def _app_relation_options() -> tuple[Any, ...]:
     """Build the shared eager-loading options for application lookups."""
 
     return (

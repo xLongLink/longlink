@@ -1,5 +1,6 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
+  "python.analysis.typeCheckingMode": "basic",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/api/src",
     "${workspaceFolder}/sdk",

@@ -1,14 +1,13 @@
-# pyright: reportReturnType=false, reportUnknownVariableType=false, reportUnknownMemberType=false, reportAttributeAccessIssue=false
-
 from uuid import UUID
+from typing import Any, cast
 from fastapi import Depends, Request, Response, APIRouter
 from src.auth import authuser, authadmin, organization_access
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.utils import names
 from src.models.common import SuccessResponse
-from kubernetes.client.rest import ApiException
-from src.models.applications import (ApplicationCreate, ApplicationStatus,
-                                      ApplicationResponse)
+from src.models.statuses import ApplicationStatus
+from src.models.applications import ApplicationCreate, ApplicationResponse
+from kubernetes.client.rest import ApiException  # pyright: ignore[reportAttributeAccessIssue, reportUnknownVariableType]
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from src.operations import provisioning
@@ -45,11 +44,13 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     organization_record = await organization_access(organization_id, user)
 
     try:
-        return await provisioning.create_application_runtime(organization_record, payload, user)
+        application = await provisioning.create_application_runtime(organization_record, payload, user)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
     except RuntimeError as exc:
         raise UnavailableError(str(exc)) from exc
+
+    return ApplicationResponse.model_validate(application)
 
 
 @router.delete("/api/applications/{application_id}", response_model=SuccessResponse)
@@ -144,8 +145,8 @@ async def proxy_application_request(
             headers=forward_headers,
             body=await request.body(),
         )
-    except ApiException as exc:
-        if exc.status == 503:
+    except ApiException as exc:  # pyright: ignore[reportUnknownVariableType]
+        if getattr(cast(Any, exc), "status", None) == 503:
             return Response(status_code=503, headers={"cache-control": "no-store"})
         raise
 

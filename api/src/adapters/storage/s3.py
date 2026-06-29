@@ -1,6 +1,7 @@
 # pyright: reportUnknownMemberType=false, reportTypedDictNotRequiredAccess=false, reportArgumentType=false
 
 import boto3
+from botocore.exceptions import ClientError
 from .base import Storage
 from src.utils.namespace import s3name
 
@@ -51,7 +52,12 @@ class S3(Storage):
     async def remove(self, organization: str, application: str) -> None:
         """Delete the application bucket for one organization."""
 
-        self._client.delete_bucket(Bucket=s3name(f"{organization}-{application}"))
+        try:
+            self._client.delete_bucket(Bucket=s3name(f"{organization}-{application}"))
+        except ClientError as exc:
+            error_code = exc.response.get("Error", {}).get("Code")
+            if error_code not in {"NoSuchBucket", "404"}:
+                raise
 
 
     async def delete(self, organization: str) -> None:

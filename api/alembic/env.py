@@ -6,6 +6,20 @@ from logging.config import fileConfig
 from src.environments import env
 from sqlalchemy.engine import Connection, make_url
 from sqlalchemy.ext.asyncio import create_async_engine
+from src.database.models import (
+    users,
+    computes,
+    storages,
+    locations,
+    databases,
+    operations,
+    invitations,
+    applications,
+    association,
+    organizations,
+)
+
+_model_modules = (users, computes, storages, locations, databases, operations, invitations, applications, association, organizations)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
