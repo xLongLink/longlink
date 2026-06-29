@@ -345,6 +345,7 @@ async def test_create_app_returns_app_response(
             "description": "Dashboard app",
             "envs": {
                 "API_KEY": "secret-value",
+                "LONGLINK_ENV": "development",
                 "PORT": "8080",
             },
         },
@@ -376,6 +377,9 @@ async def test_create_app_returns_app_response(
         "port": 80,
         "secrets": {
             "API_KEY": "secret-value",
+            "LONGLINK_DATABASE_SCHEMA": "dashboard",
+            "LONGLINK_DATABASE_URL": "postgresql://fake",
+            "LONGLINK_ENV": "production",
             "PORT": "8080",
         },
     }

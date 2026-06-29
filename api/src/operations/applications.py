@@ -1,18 +1,15 @@
 from enum import Enum
-from typing import cast
-from importlib import import_module
 from src.logger import logger
 from src.operations import provisioning
 from src.models.statuses import ApplicationStatus
 from src.adapters.compute import K8s
 from src.models.operations import OperationKind
 from src.operations.registry import operation_handler
+from kubernetes.client.exceptions import ApiException as KubernetesApiException
 from src.database.models.operations import Operation
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
-
-KubernetesApiException = cast(type[Exception], getattr(import_module("kubernetes.client.rest"), "ApiException"))
 
 
 class ApplicationStartupState(str, Enum):
@@ -38,7 +35,7 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     if organization is None:
         return ApplicationStartupState.pending
 
-    registry = await provisioning.latest_compute_registry(organization.location_id)
+    registry = await provisioning.application_compute_registry(application, organization.location_id)
     if registry is None:
         return ApplicationStartupState.pending
 

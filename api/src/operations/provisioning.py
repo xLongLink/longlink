@@ -52,6 +52,65 @@ async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
     )
 
 
+async def application_compute_registry(application: Application, location_id: UUID) -> ComputeRegistry | None:
+    """Return the compute registry used by an application, falling back to the newest one."""
+
+    if application.compute_registry_id is not None:
+        return await compute.get(application.compute_registry_id)
+
+    return await latest_compute_registry(location_id)
+
+
+async def application_database_registry(application: Application, location_id: UUID) -> DatabaseRegistry | None:
+    """Return the database registry used by an application, falling back to the newest one."""
+
+    if application.database_registry_id is not None:
+        return await database.get(application.database_registry_id)
+
+    return await latest_database_registry(location_id)
+
+
+async def application_storage_registry(application: Application) -> StorageRegistry | None:
+    """Return the storage registry used by an application."""
+
+    if application.storage_registry_id is not None:
+        return await storage.get(application.storage_registry_id)
+
+    return None
+
+
+def runtime_database_url(database_url: str) -> str:
+    """Return a database URL compatible with the SDK runtime."""
+
+    return database_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+
+
+def runtime_environment(
+    application_slug: str,
+    database_url: str,
+    storage_registry: StorageRegistry | None,
+) -> dict[str, str]:
+    """Build platform-managed environment variables for an application runtime."""
+
+    environment = {
+        "LONGLINK_ENV": "production",
+        "LONGLINK_DATABASE_URL": runtime_database_url(database_url),
+        "LONGLINK_DATABASE_SCHEMA": application_slug,
+    }
+
+    if storage_registry is not None:
+        environment.update(
+            {
+                "LONGLINK_STORAGE_PROTOCOL": storage_registry.protocol,
+                "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.endpoint_url,
+                "LONGLINK_STORAGE_ACCESS_KEY_ID": storage_registry.access_key_id,
+                "LONGLINK_STORAGE_SECRET_ACCESS_KEY": storage_registry.secret_access_key,
+            }
+        )
+
+    return environment
+
+
 async def create_application_runtime(
     organization: OrganizationDetails,
     payload: ApplicationCreate,
@@ -71,11 +130,16 @@ async def create_application_runtime(
     if database_registry is None:
         raise RuntimeError(f"No database configured for location '{organization.location_id}'")
 
+    storage_registry = await latest_storage_registry(organization.location_id)
+
     application = await applications.create(
         organization.id,
         payload.name,
         application_slug,
         image=payload.image,
+        compute_registry_id=compute_registry.id,
+        database_registry_id=database_registry.id,
+        storage_registry_id=storage_registry.id if storage_registry is not None else None,
         version=image_metadata.version if image_metadata is not None else None,
         sdk_version=image_metadata.sdk if image_metadata is not None else None,
         status=ApplicationStatus.creating,
@@ -95,8 +159,15 @@ async def create_application_runtime(
     # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
     try:
         await k8s.namespace(organization.slug)
-        await db_client.schema(organization.slug, application_slug)
-        await k8s.application(organization.slug, application_slug, payload.image, APP_SERVICE_PORT, payload.envs)
+        database_url = await db_client.schema(organization.slug, application_slug)
+        runtime_envs = runtime_environment(application_slug, database_url, storage_registry)
+        await k8s.application(
+            organization.slug,
+            application_slug,
+            payload.image,
+            APP_SERVICE_PORT,
+            {**payload.envs, **runtime_envs},
+        )
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
         raise RuntimeError("Failed to initialize the application") from exc
@@ -115,15 +186,15 @@ async def create_application_runtime(
 async def delete_application_runtime(application: Application, organization: OrganizationDetails) -> None:
     """Remove the runtime resources owned by one application."""
 
-    compute_registry = await latest_compute_registry(organization.location_id)
+    compute_registry = await application_compute_registry(application, organization.location_id)
     if compute_registry is None:
         raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
 
-    database_registry = await latest_database_registry(organization.location_id)
+    database_registry = await application_database_registry(application, organization.location_id)
     if database_registry is None:
         raise RuntimeError(f"No database configured for location '{organization.location_id}'")
 
-    storage_registry = await latest_storage_registry(organization.location_id)
+    storage_registry = await application_storage_registry(application)
     k8s = K8s(compute_registry.kubeconfig, compute_registry.proxy_secret)
     db_client = Postgres(
         database_registry.host,

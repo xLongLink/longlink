@@ -23,7 +23,7 @@ export function apiQueryKey(path: string): [string, string] {
 }
 
 /** Resolves an API path against the configured API origin. */
-function apiUrl(path: string): string {
+export function apiUrl(path: string): string {
     const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
 
     if (!baseUrl) {
@@ -51,19 +51,28 @@ export function createApiHeaders(initHeaders?: HeadersInit): Headers {
     return headers;
 }
 
-/** Sends one API request and normalizes non-OK errors. */
-async function requestApi(path: string, init?: RequestInit): Promise<Response> {
+/** Sends one API request with shared URL, credential, and header handling. */
+export async function fetchApiResponse(
+    path: string,
+    init?: RequestInit,
+    fetchImpl: typeof fetch = fetch
+): Promise<Response> {
     const headers = createApiHeaders(init?.headers);
 
     if (!headers.has('Accept')) {
         headers.set('Accept', 'application/json');
     }
 
-    const response = await fetch(apiUrl(path), {
+    return fetchImpl(apiUrl(path), {
         credentials: 'include',
         ...init,
         headers,
     });
+}
+
+/** Sends one API request and normalizes non-OK errors. */
+async function requestApi(path: string, init?: RequestInit): Promise<Response> {
+    const response = await fetchApiResponse(path, init);
 
     if (!response.ok) {
         throw new ApiError(await readApiError(response), response.status);

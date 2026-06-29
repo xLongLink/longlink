@@ -46,7 +46,11 @@ describe('Action', () => {
 
         expect(requestUrl).toBe('/example/profile');
         expect(requestInit?.method).toBe('POST');
-        expect(Object.fromEntries(new Headers(requestInit?.headers))).toEqual({ 'content-type': 'application/json' });
+        expect(requestInit?.credentials).toBe('include');
+        expect(Object.fromEntries(new Headers(requestInit?.headers))).toEqual({
+            accept: 'application/json',
+            'content-type': 'application/json',
+        });
         expect(requestInit?.body).toBe(
             JSON.stringify({
                 fullName: 'Ada Lovelace',
@@ -129,5 +133,35 @@ describe('Action', () => {
                 ''
             )
         ).rejects.toThrow('invalidate must evaluate to an array');
+    });
+
+    /* The runtime only exposes the initial supported HTTP method set. */
+    it('rejects unsupported methods', async () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+        };
+        let fetchCalls = 0;
+        let errorMessage = '';
+        const fetchImpl = (async () => {
+            fetchCalls += 1;
+
+            return new Response('', { status: 204 });
+        }) as unknown as typeof fetch;
+
+        await executeAction(
+            {
+                action: '/example/profile',
+                method: 'PUT',
+            },
+            ctx,
+            '/example/profile',
+            fetchImpl,
+            { success: () => {}, error: (message) => (errorMessage = message) }
+        );
+
+        expect(fetchCalls).toBe(0);
+        expect(errorMessage).toBe('Unsupported action method PUT');
     });
 });

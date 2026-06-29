@@ -1,4 +1,4 @@
-import { createApiHeaders } from '@/lib/api';
+import { fetchApiResponse } from '@/lib/api';
 import { createContext, useContext } from 'react';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
+const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST']);
 
 /** Returns the action handler provided by the nearest XML Action wrapper. */
 export function useActionHandler() {
@@ -44,7 +45,7 @@ export async function executeAction(
     const invalidateRuntime = ctx.invalidate ?? (async () => {});
     const normalizedMethod = method.trim().toUpperCase();
     const actionUrl = String(resolveXmlString(props, 'action', ctx, '') ?? '');
-    const headers = createApiHeaders();
+    const headers = new Headers();
 
     // Resolve the compiled payload at click time so it sees the latest state.
     const jsonValue = json ? json(ctx) : undefined;
@@ -52,6 +53,11 @@ export async function executeAction(
     if (!actionUrl) {
         await invalidateRuntime(invalidate);
 
+        return;
+    }
+
+    if (!ALLOWED_ACTION_METHODS.has(normalizedMethod)) {
+        toastApi.error(`Unsupported action method ${normalizedMethod}`);
         return;
     }
 
@@ -64,7 +70,7 @@ export async function executeAction(
 
     init.headers = headers;
 
-    const response = await fetchImpl(requestUrl, init);
+    const response = await fetchApiResponse(requestUrl, init, fetchImpl);
 
     if (!response.ok) {
         toastApi.error(`Request failed with status ${response.status}`);

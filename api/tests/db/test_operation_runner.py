@@ -2,11 +2,13 @@ from types import SimpleNamespace
 from src.operations import execute
 from src.models.computes import ComputeKind
 from src.models.countries import Country
+from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
 from src.database.services.users import users
 from src.operations.applications import ApplicationStartupState
 from src.database.services.compute import compute
+from src.database.services.database import database
 from src.database.services.locations import locations
 from src.database.services.operations import operations
 from src.database.services.applications import applications
@@ -15,6 +17,7 @@ from src.database.services.organizations import organizations
 db = SimpleNamespace(
     applications=applications,
     compute=compute,
+    database=database,
     locations=locations,
     operations=operations,
     organizations=organizations,
@@ -161,6 +164,16 @@ async def test_execute_application_delete_operation_removes_runtime_and_deletes_
         location_id=location.id,
         user=user,
     )
+    await db.database.create(
+        kind=DatabaseKind.postgresql,
+        name="local",
+        host="localhost",
+        port=5432,
+        username="longlink",
+        password="secret",
+        location_id=location.id,
+        user=user,
+    )
     operation = await db.operations.create(OperationKind.application_delete, application_id=application.id, step="remove_runtime", user=user)
     calls: list[dict[str, str]] = []
 
@@ -173,7 +186,17 @@ async def test_execute_application_delete_operation_removes_runtime_and_deletes_
         async def remove(self, organization: str, application: str) -> None:
             calls.append({"organization": organization, "application": application})
 
-    monkeypatch.setattr("src.operations.applications.K8s", FakeCompute)
+    class FakeDatabase:
+        """Fake database adapter for application deletion."""
+
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            pass
+
+        async def remove(self, organization: str, application: str) -> None:
+            calls.append({"organization": organization, "application": application})
+
+    monkeypatch.setattr("src.operations.provisioning.K8s", FakeCompute)
+    monkeypatch.setattr("src.operations.provisioning.Postgres", FakeDatabase)
 
     # Act
     claimed = await db.operations.claim(operation.id)
@@ -181,7 +204,10 @@ async def test_execute_application_delete_operation_removes_runtime_and_deletes_
     await execute(claimed)
 
     # Assert
-    assert calls == [{"organization": "acme", "application": "dashboard"}]
+    assert calls == [
+        {"organization": "acme", "application": "dashboard"},
+        {"organization": "acme", "application": "dashboard"},
+    ]
     assert await db.applications.get(organization.id, "dashboard") is None
     refreshed = await db.operations.get(operation.id)
     assert refreshed is not None

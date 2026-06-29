@@ -2,7 +2,6 @@ from uuid import UUID
 from typing import Any, cast
 from fastapi import Depends, Request, Response, APIRouter
 from src.auth import authuser, authadmin, organization_access
-from importlib import import_module
 from src.utils import names
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.operations import provisioning
@@ -11,6 +10,7 @@ from src.models.statuses import ApplicationStatus
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
+from kubernetes.client.exceptions import ApiException as KubernetesApiException
 from src.database.services.applications import applications
 
 HOP_BY_HOP_HEADERS = {
@@ -26,7 +26,6 @@ HOP_BY_HOP_HEADERS = {
 }
 FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "cookie"}
 FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
-KubernetesApiException = cast(type[Exception], getattr(import_module("kubernetes.client.rest"), "ApiException"))
 
 router = APIRouter()
 
@@ -80,7 +79,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     organization_record = await organization_access(application.organization_id, user)
 
-    registry = await provisioning.latest_compute_registry(organization_record.location_id)
+    registry = await provisioning.application_compute_registry(application, organization_record.location_id)
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{organization_record.location_id}'")
 
@@ -117,7 +116,7 @@ async def proxy_application_request(
     if application.status != ApplicationStatus.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
-    registry = await provisioning.latest_compute_registry(organization.location_id)
+    registry = await provisioning.application_compute_registry(application, organization.location_id)
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{organization.location_id}'")
 

@@ -1,6 +1,4 @@
-from inspect import isawaitable
 from fastapi import Request, APIRouter
-from fastapi.responses import Response
 from longlink.pages import page_registry
 from longlink.utils.metadata import load_metadata
 
@@ -18,17 +16,7 @@ async def get_metadata(request: Request) -> dict[str, object]:
 
     # Page handlers are registered through the router.page decorator or auto discovery.
     for page in registered_pages:
-        content = page.handler()
-        if isawaitable(content):
-            content = await content
-
-        if isinstance(content, Response):
-            body = content.body
-            content = body.decode(content.charset or "utf-8") if isinstance(body, bytes) else str(body)
-        else:
-            content = str(content)
-
-        pages.append({"path": page.path.lstrip("/"), "content": content})
+        pages.append({"path": page.path.lstrip("/")})
 
     return {
         "name": metadata.name,

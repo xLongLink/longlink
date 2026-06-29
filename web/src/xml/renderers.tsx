@@ -1,3 +1,4 @@
+import { fetchApiJson } from '@/lib/api';
 import { useEffect, useState, type ReactNode } from 'react';
 import { getVersion, subscribe } from 'valtio';
 import { ContextProvider, createContext, setupContext, validateSetupNodes } from './core/context';
@@ -53,14 +54,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         if (!runtimeCtx.translations) {
             const locale = runtimeCtx.locale ?? 'en';
 
-            void fetch(resolveUrl(baseUrl, `/i18n/${locale}.json`))
-                .then(async (response) => {
-                    if (!response.ok) {
-                        return {};
-                    }
-
-                    return (await response.json()) as Record<string, unknown>;
-                })
+            void fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, `/i18n/${locale}.json`))
                 .then((translations) => {
                     if (!active) return;
 
