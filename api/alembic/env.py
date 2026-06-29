@@ -84,12 +84,12 @@ def run_migrations_online() -> None:
     if (
         url.drivername == 'mysql'
         or url.drivername.startswith('mysql+')
-        and not url.drivername.endswith(('asyncmy', 'aiomysql'))
+        and not url.drivername.endswith('aiomysql')
     ):
-        url = url.set(drivername='mysql+asyncmy')
+        url = url.set(drivername='mysql+aiomysql')
 
     # Async drivers need Alembic's async engine path, while sync drivers can use the classic runner.
-    if url.drivername.endswith(('aiosqlite', 'asyncmy', 'aiomysql', 'asyncpg')):
+    if url.drivername.endswith(('aiosqlite', 'aiomysql', 'asyncpg')):
 
         async def run_async_migrations() -> None:
             """Run Alembic migrations through an async SQLAlchemy engine."""

@@ -47,8 +47,8 @@ class _FakeEngine:
         self.log.append(("dispose", None))
 
 
-def test_alembic_normalizes_mysql_urls_to_asyncmy(monkeypatch) -> None:
-    """Load Alembic with a MySQL URL and keep it on asyncmy."""
+def test_alembic_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> None:
+    """Load Alembic with a MySQL URL and keep it on aiomysql."""
 
     # Arrange
     log: list[tuple[str, object]] = []
@@ -88,5 +88,5 @@ def test_alembic_normalizes_mysql_urls_to_asyncmy(monkeypatch) -> None:
     # Assert
     assert log[0] == ("sqlalchemy.url", "mysql://longlink:secret@db.longlink.internal:3306/longlink")
     assert log[1][0] == "engine"
-    assert log[1][1][0] == str(make_url("mysql+asyncmy://longlink:secret@db.longlink.internal:3306/longlink"))
+    assert log[1][1][0] == str(make_url("mysql+aiomysql://longlink:secret@db.longlink.internal:3306/longlink"))
     assert log[1][1][1] == {"poolclass": module.pool.NullPool}

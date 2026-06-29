@@ -16,9 +16,12 @@ LABEL org.opencontainers.image.description="LongLink backend API"
 LABEL org.opencontainers.image.source="https://github.com/xLongLink/longlink"
 
 WORKDIR /app
+ENV PATH="/app/.venv/bin:${PATH}"
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
 COPY api/ /app/
-RUN pip install --no-cache-dir .
+RUN uv sync --frozen --no-dev --no-editable --no-cache
 COPY --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 
 EXPOSE 8000

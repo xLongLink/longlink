@@ -16,7 +16,7 @@ dependencies = [
     'fastapi==0.138.0',
     'httpx2',
     'itsdangerous',
-    'asyncmy',
+    'aiomysql',
     'pydantic',
     'pydantic-settings',
     'psycopg[binary,pool]',

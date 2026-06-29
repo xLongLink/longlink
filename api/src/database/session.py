@@ -24,9 +24,9 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if (
         url.drivername == 'mysql'
         or url.drivername.startswith('mysql+')
-        and not url.drivername.endswith(('asyncmy', 'aiomysql'))
+        and not url.drivername.endswith('aiomysql')
     ):
-        url = url.set(drivername='mysql+asyncmy')
+        url = url.set(drivername='mysql+aiomysql')
 
     engine_kwargs = {
         'pool_pre_ping': True,

@@ -25,8 +25,8 @@ class _FakeEngine:
         return _FakeConnection()
 
 
-async def test_get_session_normalizes_mysql_urls_to_asyncmy(monkeypatch) -> None:
-    """Normalize MySQL database URLs to the asyncmy driver."""
+async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> None:
+    """Normalize MySQL database URLs to the aiomysql driver."""
 
     # Arrange
     log: list[tuple[str, object]] = []
@@ -47,5 +47,5 @@ async def test_get_session_normalizes_mysql_urls_to_asyncmy(monkeypatch) -> None
     # Assert
     assert session_value[1] == {"expire_on_commit": False}
     assert log[0][0] == "engine"
-    assert log[0][1][0] == str(make_url("mysql+asyncmy://longlink:secret@db.longlink.internal:3306/longlink"))
+    assert log[0][1][0] == str(make_url("mysql+aiomysql://longlink:secret@db.longlink.internal:3306/longlink"))
     assert log[0][1][1] == {"pool_pre_ping": True, "pool_recycle": 20, "pool_use_lifo": True}
