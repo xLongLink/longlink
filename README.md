@@ -23,6 +23,12 @@ LongLink does not replace technical teams. It gives them a structured way to bui
 
 By exposing users to defined entities, fields, actions, permissions, and workflow states, LongLink reduces the gap between business requirements and technical implementation. Requirements become clearer, processes become easier to model, and applications evolve on a more stable foundation.
 
+Modern AI tools make code generation faster, but speed alone does not create maintainable software. Without structure, generated applications can become fragmented and difficult to evolve.
+
+LongLink provides that structure. The platform defines the shared infrastructure. The SDK defines the development model. Technical teams define the business logic. Users interact with the final workflow through a consistent native interface.
+
+The result is a faster, clearer, and more maintainable way to build internal applications.
+
 <br />
 
 ## Mental model: GitHub and LongLink
@@ -35,16 +41,6 @@ By exposing users to defined entities, fields, actions, permissions, and workflo
 | Handles collaboration, permissions, and repository workflows | Handles authentication, permissions, organization management, and deployment |
 | Developers manage the structure of each repository           | The SDK defines the application structure: data layer, API, and UI           |
 | Repository is the unit of work                               | Application is the unit of work                                              |
-
-<br />
-
-## Why LongLink
-
-Modern AI tools make code generation faster, but speed alone does not create maintainable software. Without structure, generated applications can become fragmented and difficult to evolve.
-
-LongLink provides that structure. The platform defines the shared infrastructure. The SDK defines the development model. Technical teams define the business logic. Users interact with the final workflow through a consistent native interface.
-
-The result is a faster, clearer, and more maintainable way to build internal applications.
 
 <br />
 
@@ -61,7 +57,9 @@ The result is a faster, clearer, and more maintainable way to build internal app
 - Safer evolution: applications can change with the business process while keeping a stable runtime and deployment model.
 
 ## Features
-
+- User managements
+- Permissions
+- 
 
 <br />
 <br />

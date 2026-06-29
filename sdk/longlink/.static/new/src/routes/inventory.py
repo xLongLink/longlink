@@ -1,23 +1,24 @@
-from fastapi import Depends
-from longlink import Router, db
-from src.types.inventory import InventoryItemRead, InventoryItemCreate
-from src.services.inventory import inventory
+from fastapi import Body
+from longlink import Router
+from src.services import inventory
+from src.types.inventory import InventoryItemRead
 
 router = Router()
 
 
 @router.get("/inventory", response_model=list[InventoryItemRead])
-async def inventory_get_endpoint(session_maker=Depends(db.get_session)) -> list[InventoryItemRead]:
+async def inventory_get_endpoint():
     """Return inventory items with their platform-managed creators."""
 
-    return await inventory.list_items(session_maker)
+    return await inventory.items()
 
 
 @router.post("/inventory", response_model=InventoryItemRead)
 async def inventory_post_endpoint(
-    payload: InventoryItemCreate,
-    session_maker=Depends(db.get_session),
-) -> InventoryItemRead:
+    sku: str = Body(min_length=1, max_length=64),
+    name: str = Body(min_length=1, max_length=255),
+    quantity: int = Body(default=0, ge=0),
+):
     """Create an inventory item and return the platform user that created it."""
 
-    return await inventory.create_item(session_maker, payload)
+    return await inventory.create(sku=sku, name=name, quantity=quantity)
