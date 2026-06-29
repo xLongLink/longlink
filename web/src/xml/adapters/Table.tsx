@@ -11,6 +11,7 @@ import { useXmlContext } from '@xml/core/context';
 import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
+import { resolveXmlValue } from './props';
 
 /** Renders the shadcn-backed table shell. */
 export function Table({ props, nodes }: Props) {
@@ -50,7 +51,8 @@ export function Tr({ props, nodes }: Props) {
 /** Renders a table header cell. */
 export function Th({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
+    const value = resolveXmlValue(props, 'value', ctx);
+    const text = value != null ? String(value) : props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
     return <UITableHead>{text}</UITableHead>;
 }
@@ -58,7 +60,8 @@ export function Th({ props, nodes }: Props) {
 /** Renders a table body cell. */
 export function Td({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
+    const value = resolveXmlValue(props, 'value', ctx);
+    const text = value != null ? String(value) : props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
     return <UITableCell>{text}</UITableCell>;
 }

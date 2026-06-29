@@ -28,15 +28,14 @@ class User(Base, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(max_length=255)
     email: str = Field(max_length=254)
-    avatar: str | None = Field(default=None, max_length=255)
 
 
 LOCAL_USERS = (
-    {"id": 1, "name": "Read User", "email": "read@local.longlink.dev", "avatar": None},
-    {"id": 2, "name": "Write User", "email": "write@local.longlink.dev", "avatar": None},
-    {"id": 3, "name": "Maintain User", "email": "maintain@local.longlink.dev", "avatar": None},
-    {"id": 4, "name": "Admin User", "email": "admin@local.longlink.dev", "avatar": None},
-    {"id": 5, "name": "Owner User", "email": "owner@local.longlink.dev", "avatar": None},
+    {"id": 1, "name": "Read User", "email": "read@local.longlink.dev"},
+    {"id": 2, "name": "Write User", "email": "write@local.longlink.dev"},
+    {"id": 3, "name": "Maintain User", "email": "maintain@local.longlink.dev"},
+    {"id": 4, "name": "Admin User", "email": "admin@local.longlink.dev"},
+    {"id": 5, "name": "Owner User", "email": "owner@local.longlink.dev"},
 )
 
 
@@ -57,7 +56,6 @@ async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> N
 
             user.name = payload["name"]
             user.email = payload["email"]
-            user.avatar = payload["avatar"]
 
         await session.commit()
 
@@ -146,6 +144,15 @@ def create_engine(env: Envs) -> AsyncEngine:
 
     if not dburl.startswith("sqlite+"):
         engine_kwargs["pool_use_lifo"] = True
+
+    if env.DATABASE_SCHEMA and dburl.startswith("postgresql+asyncpg"):
+        # PostgreSQL production apps write unqualified tables to their app schema
+        # while still resolving the shared organization users table from public.
+        engine_kwargs["connect_args"] = {
+            "server_settings": {
+                "search_path": f"{env.DATABASE_SCHEMA},public",
+            },
+        }
 
     _engine = create_async_engine(dburl, **engine_kwargs)
     return _engine

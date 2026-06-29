@@ -60,6 +60,18 @@ describe('Dialog', () => {
         expect(output).not.toContain('<button><button');
     });
 
+    /* The runtime should render direct i18n labels on trigger buttons. */
+    it('renders a direct i18n button trigger label', () => {
+        const output = renderXmlToMarkup(
+            parseXML(
+                '<Dialog open="${true}"><DialogTrigger><Button i18n="Create item" /></DialogTrigger><DialogContent><DialogTitle i18n="Create inventory item" /><DialogDescription i18n="Create one item." /></DialogContent></Dialog>'
+            )
+        );
+
+        expect(output).toContain('data-slot="dialog-trigger"');
+        expect(output).toContain('Create item');
+    });
+
     /* The runtime should support anchor-style dialog triggers. */
     it('renders an anchor trigger in static markup', () => {
         const output = renderXmlToMarkup(

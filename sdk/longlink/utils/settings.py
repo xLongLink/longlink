@@ -10,6 +10,7 @@ class Envs(BaseSettings):
     ENV: Literal["development", "testing", "production"] = "development"
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./dev.db"
+    DATABASE_SCHEMA: str | None = None
 
     STORAGE_PROTOCOL: str = "file"
     STORAGE_ENDPOINT_URL: str | None = None

@@ -15,6 +15,7 @@ dependencies = [
     "fsspec",
     "fastapi>=0.138.0",
     "aiosqlite",
+    "asyncpg",
     "sqlmodel",
     "xmltodict",
 ]
@@ -42,6 +43,7 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-mock",
+    "pyright",
     "isort",
     "httpx2",
 ]
@@ -51,6 +53,7 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-mock",
+    "pyright",
     "isort",
     "httpx2",
 ]
@@ -90,3 +93,12 @@ from_first = false
 no_sections = true
 lines_between_types = 0
 length_sort = true
+
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.14"
+venvPath = "."
+venv = ".venv"
+include = ["longlink", "tests"]
+exclude = [".venv", "build", "dist", "dev", "longlink/.static", "**/__pycache__"]
+extraPaths = ["."]

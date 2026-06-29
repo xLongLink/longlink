@@ -1,4 +1,4 @@
-.PHONY: up down format build api web sdk install tests
+.PHONY: up down format build api web sdk install tests pyright
 
 
 install:
@@ -25,6 +25,11 @@ tests:
 	bun run --cwd web typecheck
 	bun run --cwd web build:api:bundle --logLevel warn
 	bun run --cwd web build:sdk:bundle --logLevel warn
+
+
+pyright:
+	cd api && uv run --extra dev pyright
+	cd sdk && uv run --group dev pyright
 
 
 build: 

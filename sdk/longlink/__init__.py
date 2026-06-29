@@ -1,7 +1,7 @@
 from longlink.app import LongLink
 from longlink.router import Router
 from longlink.storage import create_fs
-from longlink.database import create_db
+from longlink.database import User, create_db
 from longlink.utils.xml import Element, Longlink
 from longlink.utils.settings import Envs
 from longlink.utils.environments import Environments

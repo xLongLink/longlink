@@ -1,3 +1,4 @@
+import select
 import sys
 import threading
 import webbrowser
@@ -6,20 +7,17 @@ import click
 import uvicorn
 
 from longlink.constants import DEV_PORT
-from longlink.logger import log_config
+from longlink.logger import log_config, logger
 
 
 def _print_shortcuts(server_url: str) -> None:
     """Print the interactive shortcuts supported by the development server."""
 
-    click.echo("Shortcuts")
-    click.echo("  press r + enter to restart the server")
-    click.echo("  press u + enter to show server url")
-    click.echo("  press o + enter to open in browser")
-    click.echo("  press c + enter to clear console")
-    click.echo("  press q + enter to quit")
-    click.echo()
-    click.echo(f"Local: {server_url}")
+    logger.info("Press r + enter to restart the server")
+    logger.info("Press o + enter to open in browser")
+    logger.info("Press c + enter to clear console")
+    logger.info("Press q + enter to quit")
+    logger.info("Local: %s", server_url)
 
 
 @click.command(name="dev")
@@ -35,22 +33,31 @@ def dev_command():
         """Read shortcut commands from stdin until the server stops."""
 
         while not stop_event.is_set():
+            # Poll stdin so Ctrl+C shutdown is not blocked by input().
+            readable_streams, _, _ = select.select([sys.stdin], [], [], 0.2)
+            if not readable_streams:
+                continue
+
             try:
-                command = input().strip().lower()
-            except EOFError:
+                command = sys.stdin.readline()
+            except OSError:
                 stop_event.set()
                 if current_server is not None:
                     current_server.should_exit = True
                 return
 
+            if command == "":
+                stop_event.set()
+                if current_server is not None:
+                    current_server.should_exit = True
+                return
+
+            command = command.strip().lower()
+
             if command == "r":
                 restart_event.set()
                 if current_server is not None:
                     current_server.should_exit = True
-                continue
-
-            if command == "u":
-                click.echo(server_url)
                 continue
 
             if command == "o":
@@ -110,4 +117,3 @@ def dev_command():
         stop_event.set()
         if current_server is not None:
             current_server.should_exit = True
-        shortcut_thread.join(timeout=1)

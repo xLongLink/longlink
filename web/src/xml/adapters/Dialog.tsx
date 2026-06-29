@@ -7,6 +7,7 @@ import {
     DialogTrigger as UIDialogTrigger,
 } from '@/components/ui/dialog';
 import { useXmlContext } from '@xml/core/context';
+import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
 import type { Props } from '@xml/types';
@@ -30,6 +31,8 @@ export function DialogTrigger({ props, nodes }: Props) {
 
     if (buttonChild) {
         // Reuse the XML button's label as the trigger content while keeping the button shell.
+        const childContent = renderNode(buttonChild.children ?? [], ctx);
+        const text = buttonChild.params?.i18n ? resolveTranslation(buttonChild.params, ctx) : childContent;
         const variant = buttonChild.params?.variant
             ? String(evaluate(buttonChild.params.variant, ctx) ?? 'default')
             : 'default';
@@ -37,13 +40,16 @@ export function DialogTrigger({ props, nodes }: Props) {
 
         return (
             <UIDialogTrigger render={<UIButton type="button" variant={variant as never} size={size as never} />}>
-                {renderNode(buttonChild.children ?? [], ctx)}
+                {buttonChild.params?.i18n ? childContent : null}
+                {text}
             </UIDialogTrigger>
         );
     }
 
     if (anchorChild) {
         // Reuse the XML anchor's label and href for a link-style trigger.
+        const childContent = renderNode(anchorChild.children ?? [], ctx);
+        const text = anchorChild.params?.i18n ? resolveTranslation(anchorChild.params, ctx) : childContent;
         const active = resolveXmlString(anchorChild.params ?? {}, 'active', ctx);
         const href = anchorChild.params?.href ? String(evaluate(anchorChild.params.href, ctx) ?? '') : '';
         const linkClassName =
@@ -53,7 +59,8 @@ export function DialogTrigger({ props, nodes }: Props) {
 
         return (
             <UIDialogTrigger render={<a className={linkClassName} {...(href ? { href } : {})} />}>
-                {renderNode(anchorChild.children ?? [], ctx)}
+                {anchorChild.params?.i18n ? childContent : null}
+                {text}
             </UIDialogTrigger>
         );
     }
@@ -71,13 +78,15 @@ export function DialogContent({ props, nodes }: Props) {
 /** Renders the dialog title slot. */
 export function DialogTitle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIDialogTitle>{renderNode(nodes, ctx)}</UIDialogTitle>;
+    return <UIDialogTitle>{text}</UIDialogTitle>;
 }
 
 /** Renders the dialog description slot. */
 export function DialogDescription({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
+    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
-    return <UIDialogDescription>{renderNode(nodes, ctx)}</UIDialogDescription>;
+    return <UIDialogDescription>{text}</UIDialogDescription>;
 }

@@ -90,4 +90,14 @@ describe('Table', () => {
         expect(output).toContain('Projected');
         expect(output).toContain('text-sm');
     });
+
+    /* The runtime should render expression values without requiring translation keys. */
+    it('renders direct table cell values', () => {
+        const output = renderXmlToMarkup(
+            parseXML('<Table><Tbody><Tr><Td value="${\'SKU-001\'}" /><Td value="${10}" /></Tr></Tbody></Table>')
+        );
+
+        expect(output).toContain('SKU-001');
+        expect(output).toContain('10');
+    });
 });

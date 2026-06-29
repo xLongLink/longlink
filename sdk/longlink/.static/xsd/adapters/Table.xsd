@@ -43,6 +43,7 @@
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType">
         <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="value" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -51,6 +52,7 @@
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType">
         <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="value" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

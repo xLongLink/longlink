@@ -1,11 +1,29 @@
 import copy
 import logging
+
 from uvicorn.config import LOGGING_CONFIG
-from uvicorn.logging import DefaultFormatter
 
 logger = logging.getLogger("longlink")
 
 log_config = copy.deepcopy(LOGGING_CONFIG)
+
+
+class ColorFormatter(logging.Formatter):
+    """Format log records with ANSI colors for selected levels."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Render INFO logs with a green level label."""
+
+        original_levelname = record.levelname
+        # Temporarily rewrite the level name so the parent formatter can colorize INFO output.
+        if record.levelno == logging.INFO:
+            record.levelname = "\x1b[32mINFO\x1b[0m"
+
+        # Restore the original level label even if formatting raises.
+        try:
+            return super().format(record)
+        finally:
+            record.levelname = original_levelname
 
 
 class ApiAccessFilter(logging.Filter):
@@ -32,12 +50,20 @@ class ApiAccessFilter(logging.Filter):
         return True
 
 
+log_config["formatters"]["default"] = {
+    "()": ColorFormatter,
+    "fmt": "%(levelname)s:     %(message)s",
+}
+log_config["formatters"]["access"] = {
+    "()": ColorFormatter,
+    "fmt": "%(levelname)s:     %(message)s",
+}
 log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}
 log_config["handlers"]["access"]["filters"] = ["api_access"]
 
 if not logger.handlers:
     handler = logging.StreamHandler()
-    handler.setFormatter(DefaultFormatter(fmt="%(levelprefix)s %(message)s", use_colors=None))
+    handler.setFormatter(ColorFormatter("%(levelname)s:     %(message)s"))
     logger.addHandler(handler)
 
 logger.setLevel(logging.INFO)

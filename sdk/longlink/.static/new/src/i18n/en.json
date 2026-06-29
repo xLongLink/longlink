@@ -75,6 +75,45 @@
                 "label": "Username"
             }
         },
+        "inventory": {
+            "actions": {
+                "create": "Create item",
+                "save": "Save item"
+            },
+            "description": "Track inventory rows owned by this application schema while LongLink resolves platform users from the shared users table.",
+            "fields": {
+                "name": {
+                    "description": "Human-readable item name.",
+                    "label": "Name"
+                },
+                "quantity": {
+                    "description": "Current quantity available in inventory.",
+                    "label": "Quantity"
+                },
+                "sku": {
+                    "description": "Unique stock keeping unit for this item.",
+                    "label": "SKU"
+                }
+            },
+            "modal": {
+                "description": "Create an application-owned inventory item. The current LongLink user is recorded automatically.",
+                "title": "Create inventory item"
+            },
+            "table": {
+                "createdBy": "Created by",
+                "empty": "No inventory items yet.",
+                "name": "Name",
+                "quantity": "Qty",
+                "sku": "SKU"
+            },
+            "title": "Inventory",
+            "values": {
+                "createdBy": "{{user}}",
+                "name": "{{name}}",
+                "quantity": "{{quantity}}",
+                "sku": "{{sku}}"
+            }
+        },
         "menu": {
             "billing": {
                 "description": "Review subscription status, invoices, and payment methods.",

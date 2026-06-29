@@ -23,6 +23,14 @@ async def form() -> str:
     return (PAGES_DIRECTORY / "form.xml").read_text(encoding="utf-8")
 
 
+@router.page("/inventory.xml")
+async def inventory() -> str:
+    """Render the inventory item creation example page."""
+
+    # Load the XML page content from disk so the source stays editable.
+    return (PAGES_DIRECTORY / "inventory.xml").read_text(encoding="utf-8")
+
+
 @router.page("/quote.xml")
 async def quote() -> str:
     """Render the quote workflow example page."""
