@@ -1,7 +1,7 @@
-from longlink import db, User
+from longlink import User, db
 from sqlmodel import select
-from src.types.inventory import InventoryItemRead
-from src.database.inventory import InventoryItem
+from src.database.models.inventory import InventoryItem
+from src.schemas.inventory import InventoryItemRead
 
 
 async def items() -> list[InventoryItemRead]:

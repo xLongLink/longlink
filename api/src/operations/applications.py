@@ -1,15 +1,18 @@
 from enum import Enum
+from typing import cast
+from importlib import import_module
 from src.logger import logger
+from src.operations import provisioning
+from src.models.statuses import ApplicationStatus
 from src.adapters.compute import K8s
 from src.models.operations import OperationKind
-from kubernetes.client.rest import ApiException  # pyright: ignore[reportAttributeAccessIssue, reportUnknownVariableType]
-from src.models.statuses import ApplicationStatus
-from src.operations import provisioning
 from src.operations.registry import operation_handler
 from src.database.models.operations import Operation
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
+
+KubernetesApiException = cast(type[Exception], getattr(import_module("kubernetes.client.rest"), "ApiException"))
 
 
 class ApplicationStartupState(str, Enum):
@@ -44,7 +47,7 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
         pods = k8s.application_pods(organization.slug, application.slug)
-    except ApiException:  # pyright: ignore[reportUnknownVariableType]
+    except KubernetesApiException:
         return ApplicationStartupState.pending
 
     crashed_reasons = {

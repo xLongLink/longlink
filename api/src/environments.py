@@ -1,3 +1,4 @@
+from typing import Any, cast
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,4 +25,4 @@ class Env(BaseSettings):
     )
 
 
-env = Env()  # pyright: ignore[reportCallIssue]
+env: Env = cast(Any, Env)()

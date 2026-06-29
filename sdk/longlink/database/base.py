@@ -19,7 +19,7 @@ def utcnow() -> datetime:
 class Base(SQLModel):
     """Base SQLModel for DB tables."""
 
-    model_config = ConfigDict(ignored_types=(declared_attr,))  # pyright: ignore[reportAssignmentType]
+    model_config: ClassVar[ConfigDict] = ConfigDict(ignored_types=(declared_attr,))
 
 
 class User(Base, table=True):

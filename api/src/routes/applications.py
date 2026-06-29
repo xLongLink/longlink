@@ -2,15 +2,15 @@ from uuid import UUID
 from typing import Any, cast
 from fastapi import Depends, Request, Response, APIRouter
 from src.auth import authuser, authadmin, organization_access
-from src.errors import ConflictError, NotFoundError, UnavailableError
+from importlib import import_module
 from src.utils import names
+from src.errors import ConflictError, NotFoundError, UnavailableError
+from src.operations import provisioning
 from src.models.common import SuccessResponse
 from src.models.statuses import ApplicationStatus
 from src.models.applications import ApplicationCreate, ApplicationResponse
-from kubernetes.client.rest import ApiException  # pyright: ignore[reportAttributeAccessIssue, reportUnknownVariableType]
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
-from src.operations import provisioning
 from src.database.services.applications import applications
 
 HOP_BY_HOP_HEADERS = {
@@ -26,6 +26,7 @@ HOP_BY_HOP_HEADERS = {
 }
 FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "cookie"}
 FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
+KubernetesApiException = cast(type[Exception], getattr(import_module("kubernetes.client.rest"), "ApiException"))
 
 router = APIRouter()
 
@@ -145,7 +146,7 @@ async def proxy_application_request(
             headers=forward_headers,
             body=await request.body(),
         )
-    except ApiException as exc:  # pyright: ignore[reportUnknownVariableType]
+    except KubernetesApiException as exc:
         if getattr(cast(Any, exc), "status", None) == 503:
             return Response(status_code=503, headers={"cache-control": "no-store"})
         raise

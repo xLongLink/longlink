@@ -1,7 +1,7 @@
 from fastapi import Body
 from longlink import Router
-from src.services import inventory
-from src.types.inventory import InventoryItemRead
+from src.database.services import inventory
+from src.schemas.inventory import InventoryItemRead
 
 router = Router()
 

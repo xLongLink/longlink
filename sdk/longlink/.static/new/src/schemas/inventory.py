@@ -1,8 +1,8 @@
 from longlink import User
-from sqlmodel import SQLModel
+from pydantic import BaseModel
 
 
-class InventoryItemRead(SQLModel):
+class InventoryItemRead(BaseModel):
     """Typed response for an inventory item and its platform-managed creator."""
 
     id: int | None

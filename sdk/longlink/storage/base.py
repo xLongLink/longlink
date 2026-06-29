@@ -1,6 +1,5 @@
-from typing import Any
-
-from fsspec.spec import AbstractFileSystem  # pyright: ignore[reportMissingTypeStubs]
+from typing import Any, cast
+from fsspec.spec import AbstractFileSystem
 from longlink.utils.settings import Envs
 
 
@@ -8,7 +7,8 @@ class Storage(AbstractFileSystem):
     """Small wrapper for fsspec filesystem instances."""
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+        initializer = cast(Any, super().__init__)
+        initializer(**kwargs)
 
 
 
