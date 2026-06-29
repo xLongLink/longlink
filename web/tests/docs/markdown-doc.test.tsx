@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('XML Docs', () => {
     it('renders a heading with auto-generated anchor link', () => {
-        const ast = fromXml('<H1>Layout</H1>');
+        const ast = fromXml('<H1 i18n="Layout" />');
         const output = renderToStaticMarkup(createElement(RenderXML, { ast }));
 
         expect(output).toContain('href="#layout"');
