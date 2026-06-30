@@ -88,56 +88,9 @@ jobs:
             ghcr.io/xlonglink/longlink:latest
             ghcr.io/xlonglink/longlink:${{ github.ref_name }}
 
-  # The SDK sample is also published as a container image for one-command demos.
-  publish-sdk-sample-image:
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install SDK dependencies
-        working-directory: sdk
-        run: uv sync
-
-      - name: Generate sample app scaffold
-        working-directory: sdk
-        run: .venv/bin/longlink init --folder sample-app
-
-      - name: Build sample app image
-        working-directory: sdk/sample-app
-        run: |
-          image_version="${GITHUB_REF_NAME#v}"
-          ../.venv/bin/longlink build --tag "$image_version"
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Tag and push sample image
-        working-directory: sdk/sample-app
-        run: |
-          image_version="${GITHUB_REF_NAME#v}"
-          docker tag longlink-app:"$image_version" ghcr.io/xlonglink/sample:latest
-          docker tag longlink-app:"$image_version" ghcr.io/xlonglink/sample:"$image_version"
-          docker push ghcr.io/xlonglink/sample:latest
-          docker push ghcr.io/xlonglink/sample:"$image_version"
-
   publish-github-release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [publish-sdk, publish-api-image, publish-sdk-sample-image]
+    needs: [publish-sdk, publish-api-image]
     runs-on: ubuntu-latest
 
     permissions:
@@ -182,4 +135,3 @@ jobs:
           repo: xLongLink/sample
           ref: main
           token: ${{ secrets.SAMPLE_ACTION }}
-      

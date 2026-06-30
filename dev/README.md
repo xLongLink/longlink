@@ -46,7 +46,7 @@ k3d kubeconfig get compute > api/kubeconfig.yaml
 Build the generated SDK development application and push it to the local registry:
 
 ```bash
-make sdk:build
+make sdk:image
 ```
 
 The pushed image is `localhost:15000/longlink-app:dev` by default.

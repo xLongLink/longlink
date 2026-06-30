@@ -11,6 +11,7 @@ export { Card } from './Card';
 export { Checkbox } from './Checkbox';
 export { Code } from './Code';
 export { Column, Columns } from './Columns';
+export { DataCell, DataColumn, DataHeader, DataTable } from './DataTable';
 export { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from './Dialog';
 export { Field, FieldContent, FieldDescription, FieldLabel, FieldLegend, FieldTitle } from './Field';
 export { Flex } from './Flex';

@@ -1,15 +1,9 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
-import { Button } from '@ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
-import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useOrganizationActions } from '@/hooks/use-organization';
 import type { ApiOrganizationApplication } from '@/lib/types';
 
 type ApplicationsProps = {
@@ -21,11 +15,6 @@ type ApplicationsProps = {
 
 /** Renders the organization applications table. */
 export default function Applications({ organization, applications, isLoading, error }: ApplicationsProps) {
-    const { deleteApplication, isDeletingApplication } = useOrganizationActions(organization);
-    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
-
-    const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
     const appColumns: Array<ColumnDef<ApiOrganizationApplication>> = [
         {
             accessorKey: 'name',
@@ -85,119 +74,15 @@ export default function Applications({ organization, applications, isLoading, er
             },
             meta: { className: 'w-64' },
         },
-        {
-            id: 'action',
-            header: 'Action',
-            meta: { className: 'w-32 text-right' },
-            cell: ({ row }) => (
-                <div className="flex justify-end">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger
-                            render={
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    className="cursor-pointer"
-                                    aria-label={`Open actions for ${row.original.name}`}
-                                />
-                            }
-                        >
-                            <MoreVertical className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuItem
-                                className="cursor-pointer"
-                                variant="destructive"
-                                onClick={() => {
-                                    setDeleteTargetId(row.original.id);
-                                    setDeleteError(null);
-                                }}
-                            >
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            ),
-        },
     ] satisfies Array<ColumnDef<ApiOrganizationApplication>>;
 
     return (
-        <>
-            <div className="space-y-4">
-                {isLoading && applications.length === 0 ? (
-                    null
-                ) : error && applications.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-destructive">Failed to load applications.</div>
-                ) : (
-                    <DataTable columns={appColumns} data={applications} />
-                )}
-            </div>
-
-            <Dialog
-                open={deleteTargetId !== null}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDeleteTargetId(null);
-                        setDeleteError(null);
-                    }
-                }}
-            >
-                <DialogContent>
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <DialogTitle>Delete application</DialogTitle>
-                            <DialogDescription>
-                                {deleteTarget
-                                    ? `Delete ${deleteTarget.name} from this organization?`
-                                    : 'Delete this application?'}
-                            </DialogDescription>
-                        </div>
-
-                        {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
-
-                        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => {
-                                    setDeleteTargetId(null);
-                                    setDeleteError(null);
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                disabled={isDeletingApplication || deleteTargetId === null}
-                                onClick={async () => {
-                                    if (deleteTargetId === null) {
-                                        return;
-                                    }
-
-                                    const id = deleteTargetId;
-
-                                    try {
-                                        await deleteApplication(id);
-                                        setDeleteTargetId(null);
-                                        setDeleteError(null);
-                                    } catch (mutationError) {
-                                        setDeleteError(
-                                            mutationError instanceof Error
-                                                ? mutationError.message
-                                                : 'Failed to delete application'
-                                        );
-                                    }
-                                }}
-                            >
-                                {isDeletingApplication ? 'Deleting...' : 'Delete'}
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </>
+        <div className="space-y-4">
+            {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
+                <div className="rounded-md border p-4 text-sm text-destructive">Failed to load applications.</div>
+            ) : (
+                <DataTable columns={appColumns} data={applications} />
+            )}
+        </div>
     );
 }

@@ -23,3 +23,23 @@ def test_table_rejects_unknown_attributes() -> None:
 
     with pytest.raises(ValueError):
         element.validate()
+
+
+def test_data_table_validation() -> None:
+    """Validate a data-backed `DataTable` fragment."""
+
+    element = Element.from_content(
+        '<DataTable data="$items" as="item" empty="No items"><DataColumn field="sku" header="SKU" /><DataColumn><DataHeader><P i18n="Item" /><Badge i18n="SKU" /></DataHeader><DataCell><P value="$item.name" /><Badge value="$item.sku" /></DataCell></DataColumn></DataTable>',
+        schema=SCHEMA,
+    )
+
+    element.validate()
+
+
+def test_data_table_requires_data() -> None:
+    """Reject `DataTable` fragments without a data source."""
+
+    element = Element.from_content('<DataTable><DataColumn field="sku" header="SKU" /></DataTable>', schema=SCHEMA)
+
+    with pytest.raises(ValueError):
+        element.validate()

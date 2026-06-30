@@ -14,7 +14,7 @@ import NotFound from './NotFound';
 type ViewProps = {
     applicationId?: string;
     applicationName?: string;
-    applicationStatus?: ApiOrganizationApplication['status'];
+    applicationStatus?: ApiOrganizationApplication['status'] | 'loading';
     canViewLogs?: boolean;
     metadata: string;
     runtimeContext?: ExecutionContext;
@@ -288,7 +288,13 @@ export default function View({
     }
 
     if (isLoading || pageState.loading || (activePage && pageState.path !== activePage.path)) {
-        return null;
+        return (
+            <XML tabs={tabs}>
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    <LoadingState status="loading" />
+                </section>
+            </XML>
+        );
     }
 
     if (!activePage) {

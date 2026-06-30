@@ -216,7 +216,7 @@ function OrganizationApplicationView() {
         organizationMembership?.role === 'owner';
 
     if (isLoading) {
-        return null;
+        return <View applicationStatus="loading" metadata="" />;
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.

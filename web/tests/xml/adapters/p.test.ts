@@ -32,4 +32,15 @@ describe('P', () => {
             '<p class="leading-7">Paragraph text</p>'
         );
     });
+
+    /* Direct value props should render dynamic text without requiring a translation key. */
+    it('renders direct paragraph values', () => {
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: { item: { name: 'Widget' } } };
+        const ast = parseXML('<P value="$item.name" />');
+        const renderedTree = createElement(RenderXML, { ast, ctx });
+
+        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toBe(
+            '<p class="leading-7">Widget</p>'
+        );
+    });
 });

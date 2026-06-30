@@ -11,6 +11,7 @@ declare module '@tanstack/react-table' {
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    emptyMessage?: string;
     error?: Error | null;
     isLoading?: boolean;
 }
@@ -19,6 +20,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
     columns,
     data,
+    emptyMessage = 'No results.',
     error = null,
     isLoading = false,
 }: DataTableProps<TData, TValue>) {
@@ -69,7 +71,7 @@ export function DataTable<TData, TValue>({
                     ) : (
                         <TableRow>
                             <TableCell colSpan={columns.length} className="h-24 text-center">
-                                No results.
+                                {emptyMessage}
                             </TableCell>
                         </TableRow>
                     )}

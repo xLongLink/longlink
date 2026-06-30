@@ -64,32 +64,27 @@
         </HeroAction>
     </Hero>
 
-    <Card>
-        <Table>
-            <Thead>
-                <Tr>
-                    <Th i18n="SKU" />
-                    <Th i18n="Name" />
-                    <Th i18n="Qty" />
-                    <Th i18n="Created by" />
-                </Tr>
-            </Thead>
-            <Tbody>
-                <Tr if="${items.length in [0]}">
-                    <Td i18n="No inventory items yet." />
-                    <Td />
-                    <Td />
-                    <Td />
-                </Tr>
-                <For each="$items" as="item">
-                    <Tr>
-                        <Td value="${item.sku}" />
-                        <Td value="${item.name}" />
-                        <Td value="${item.quantity}" />
-                        <Td value="${item.created_by.name}" />
-                    </Tr>
-                </For>
-            </Tbody>
-        </Table>
-    </Card>
+    <DataTable data="$items" as="item" empty="No inventory items yet.">
+        <DataColumn>
+            <DataHeader>
+                <Flex>
+                    <P i18n="Item" />
+                    <Badge variant="outline" i18n="SKU" />
+                </Flex>
+            </DataHeader>
+            <DataCell>
+                <Flex>
+                    <P value="$item.name" />
+                    <Badge variant="outline" value="$item.sku" />
+                </Flex>
+            </DataCell>
+        </DataColumn>
+
+        <DataColumn field="quantity" header="Qty" />
+
+        <DataColumn>
+            <DataHeader i18n="Created by" />
+            <DataCell value="$item.created_by.name" />
+        </DataColumn>
+    </DataTable>
 </longlink>

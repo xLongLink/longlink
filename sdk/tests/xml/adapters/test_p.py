@@ -35,6 +35,13 @@ def test_p_allows_i18n_attribute() -> None:
     element.validate()
 
 
+def test_p_allows_value_attribute() -> None:
+    """Allow direct value rendering on `P`."""
+
+    element = Element.from_content('<P value="$item.name" />', schema=SCHEMA)
+    element.validate()
+
+
 def test_p_rejects_lowercase_tag() -> None:
     """Reject lowercase `p` tags in HTML bridge XML."""
 

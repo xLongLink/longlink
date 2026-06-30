@@ -11,16 +11,38 @@ The SDK owns application-facing Python helpers, CLI commands, database helpers, 
 ## Development
 
 ```bash
-make install    # Install all the dependencies
-make format     # Format the code
-make web:build  # Typecheck and build API and SDK web bundles
-make tests      # Run API, SDK, and web tests
-make up         # Start the services, initialize the cluster
-make web        # Run the Vite web app
-make api        # Run the control plane
-make sdk        # Run the generated SDK development application
-make sdk:build  # Build and push the generated SDK app to the local registry
-make down       # Stop services and remove the cluster
-```
+make install        # Install all the dependencies
+make api:install    # Install API dependencies
+make sdk:install    # Install SDK dependencies
+make web:install    # Install web dependencies
 
-> Note: after `make up`, the Keycloak instance takes a few seconds to boot. Running `make api` immediately after `make up` might fail.
+make build          # Typecheck and build API and SDK web bundles
+make api:build      # Build the API web bundle
+make sdk:build      # Build the embedded SDK web bundle
+make sdk:image      # Build and push the generated SDK app to the local registry
+
+make clean          # Remove generated build and test artifacts
+make api:clean      # Remove API generated artifacts and API web bundle
+make sdk:clean      # Remove SDK generated artifacts and SDK web bundle
+make web:clean      # Remove web generated artifacts
+
+make format         # Format the code
+make api:format     # Format API code
+make sdk:format     # Format SDK code
+make web:format     # Format web and docs code
+
+make pyright        # Run API and SDK type checks
+make api:pyright    # Run API type checks
+make sdk:pyright    # Run SDK type checks
+
+make tests          # Run API, SDK, and web tests
+make api:tests      # Run API tests
+make sdk:tests      # Run SDK tests
+make web:tests      # Run web tests, typecheck, and bundle builds
+
+make up             # Start the services, initialize the cluster
+make web            # Run the Vite web app
+make api            # Run the control plane
+make sdk            # Run the generated SDK development application
+make down           # Stop services and remove the cluster
+```

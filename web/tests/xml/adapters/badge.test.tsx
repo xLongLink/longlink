@@ -29,4 +29,16 @@ describe('Badge', () => {
         expect(output).toContain('bg-primary');
         expect(output).toContain('New');
     });
+
+    /* Direct value props should render dynamic badge text without requiring a translation key. */
+    it('renders direct badge values', () => {
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: { item: { status: 'Open' } } };
+        const ast = parseXML('<Badge variant="outline" value="$item.status" />');
+        const renderedTree = createElement(RenderXML, { ast, ctx });
+
+        const output = renderToStaticMarkup(createElement('div', null, renderedTree));
+
+        expect(output).toContain('Open');
+        expect(output).toContain('border-border');
+    });
 });

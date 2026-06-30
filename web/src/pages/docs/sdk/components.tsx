@@ -30,6 +30,10 @@ const elementFamilyRules: Array<[string, string]> = [
     ['toggle', 'Toggle'],
     ['radiogroup', 'RadioGroup'],
     ['select', 'Select'],
+    ['datatable', 'Table'],
+    ['datacolumn', 'Table'],
+    ['dataheader', 'Table'],
+    ['datacell', 'Table'],
     ['thead', 'Table'],
     ['tbody', 'Table'],
     ['tfoot', 'Table'],
@@ -122,8 +126,9 @@ const componentDocs: ElementDoc[] = [
         parameters: [
             'variant: optional default, outline, ghost, destructive, or link.',
             'i18n: optional translation key for badge text.',
+            'value: optional expression value used as badge text when i18n is omitted.',
         ],
-        example: `<Badge variant="outline" i18n="orders.pendingReview" />`,
+        example: `<Badge variant="outline" value="$order.status" />`,
     },
     {
         name: 'Avatar',
@@ -554,8 +559,11 @@ const componentDocs: ElementDoc[] = [
         name: 'P',
         id: 'p',
         description: 'Paragraph text block.',
-        parameters: ['i18n: optional translation key.'],
-        example: `<P i18n="orders.pageDescription" />`,
+        parameters: [
+            'i18n: optional translation key.',
+            'value: optional expression value used as text when i18n is omitted.',
+        ],
+        example: `<P value="$order.customer.name" />`,
     },
     {
         name: 'A',
@@ -660,6 +668,60 @@ const componentDocs: ElementDoc[] = [
         description: 'List item for Ul or Ol.',
         parameters: ['i18n: optional translation key.'],
         example: `<Li i18n="orders.steps.validate" />`,
+    },
+    {
+        name: 'DataTable',
+        id: 'datatable',
+        description:
+            'Query-backed data table that renders array rows through the shared LongLink table shell. Use DataColumn children for aligned columns.',
+        parameters: [
+            'data: required expression resolving to an array, usually a Query id such as $orders.',
+            'as: optional row variable name exposed to DataCell children. Defaults to row.',
+            'empty: optional empty-state message. Defaults to No results.',
+        ],
+        example: `<Query id="orders" path="/api/orders" />
+<DataTable data="$orders" as="order" empty="No orders found.">
+  <DataColumn field="number" header="Order" />
+  <DataColumn>
+    <DataHeader>
+      <Flex><P i18n="orders.columns.customer" /><Badge i18n="orders.columns.primary" /></Flex>
+    </DataHeader>
+    <DataCell>
+      <Flex><P value="$order.customer.name" /><Badge value="$order.status" /></Flex>
+    </DataCell>
+  </DataColumn>
+</DataTable>`,
+    },
+    {
+        name: 'DataColumn',
+        id: 'datacolumn',
+        description: 'Column definition consumed by DataTable.',
+        parameters: [
+            'field: optional dotted row field used for shorthand cells and column id.',
+            'header: optional shorthand header text.',
+            'i18n: optional shorthand translation key for the header.',
+            'id: optional stable column id.',
+        ],
+        example: `<DataColumn field="created_by.name" header="Created by" />`,
+    },
+    {
+        name: 'DataHeader',
+        id: 'dataheader',
+        description: 'Custom header slot for one DataColumn. Children can use normal XML layout components.',
+        parameters: ['i18n: optional translation key.', 'value: optional expression value.'],
+        example: `<DataHeader>
+  <Flex><P i18n="orders.columns.status" /><Badge i18n="orders.live" /></Flex>
+</DataHeader>`,
+    },
+    {
+        name: 'DataCell',
+        id: 'datacell',
+        description:
+            'Custom row cell slot for one DataColumn. Children can read the scoped row variable from DataTable as.',
+        parameters: ['i18n: optional translation key.', 'value: optional expression value.'],
+        example: `<DataCell>
+  <Flex><P value="$order.number" /><Badge value="$order.status" /></Flex>
+</DataCell>`,
     },
     {
         name: 'Table',
