@@ -37,6 +37,7 @@ dev = [
     'ruff==0.14.0',
     'pytest==8.2.2',
     'pytest-asyncio==1.2.0',
+    'pytest-cov',
     'isort==8.0.1',
     'testcontainers==4.13.2',
 ]
