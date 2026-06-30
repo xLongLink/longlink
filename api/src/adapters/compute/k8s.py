@@ -199,7 +199,15 @@ class K8s(Compute):
                 }
             )
 
-    async def application(self, organization: str, application: str, image: str, port: int, secrets: dict[str, str]) -> str:
+    async def application(
+        self,
+        organization: str,
+        application: str,
+        image: str,
+        port: int,
+        secrets: dict[str, str],
+        rollout_token: str = "",
+    ) -> str:
         """Create or replace one internal application Deployment and Service."""
 
         namespace = k8name(names.knames(organization, "Organization"))
@@ -230,6 +238,7 @@ class K8s(Compute):
             name=name,
             namespace=namespace,
             port=port,
+            rollout_token=rollout_token,
         )
         application_manifests = application_manifests if isinstance(application_manifests, list) else [application_manifests]
 

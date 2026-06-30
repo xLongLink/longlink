@@ -29,7 +29,15 @@ class Compute(ABC):
         """Create the namespace for an organization if it does not exist."""
 
     @abstractmethod
-    async def application(self, organization: str, application: str, image: str, port: int, secrets: dict[str, str]) -> str:
+    async def application(
+        self,
+        organization: str,
+        application: str,
+        image: str,
+        port: int,
+        secrets: dict[str, str],
+        rollout_token: str = "",
+    ) -> str:
         """Create or replace one internal application Deployment and Service."""
 
     @abstractmethod

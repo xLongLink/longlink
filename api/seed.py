@@ -1,15 +1,41 @@
+import asyncio
 from pathlib import Path
+from uuid import UUID
 from fastapi.testclient import TestClient
+from src.environments import env
+from src.operations import provisioning
+from src.models.applications import ApplicationCreate
+from src.database.services.users import users
+from src.database.services.applications import applications as application_service
+from src.database.services.organizations import organizations as organization_service
 
 LOCAL_ORG = "test"
 LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"
 
 LOCAL_APP = {
     "name": "sample",
-    "image": "ghcr.io/xlonglink/sample:latest",
-    "description": "Sample application",
+    "image": env.LOCAL_APPLICATION_IMAGE,
+    "description": "Local SDK development application",
     "icon": "Rocket",
+    "envs": {"REQUIRED": "local-development"},
 }
+
+
+async def sync_local_application(application_id: UUID, organization_id: UUID, user_id: UUID) -> None:
+    """Refresh the seeded local application runtime when it already exists."""
+
+    user = await users.get_by_id(user_id)
+    organization = await organization_service.get(organization_id)
+    application = await application_service.get_by_id(application_id)
+    if user is None or organization is None or application is None:
+        raise RuntimeError("Seeded application could not be loaded for runtime sync")
+
+    await provisioning.sync_application_runtime(
+        application,
+        organization,
+        ApplicationCreate.model_validate(LOCAL_APP),
+        user,
+    )
 
 
 def main() -> None:
@@ -21,6 +47,10 @@ def main() -> None:
     response = client.post("/auth/login/password", json={"username": "admin", "password": "admin"})
     if response.status_code not in {200, 204}:
         raise RuntimeError(f"Login failed (HTTP {response.status_code}): {response.text}")
+
+    profile_response = client.get("/api/me")
+    profile_response.raise_for_status()
+    user_id = UUID(profile_response.json()["id"])
 
     # ------------------------------------------------------------------
     # Location
@@ -122,15 +152,21 @@ def main() -> None:
     # Application
     # ------------------------------------------------------------------
     applications = client.get(f"/api/organizations/{organization['id']}/applications").json()
-    if not any(application["name"] == LOCAL_APP["name"] for application in applications):
+    application = next((application for application in applications if application["name"] == LOCAL_APP["name"]), None)
+    if application is None:
         r = client.post(
             f"/api/organizations/{organization['id']}/applications",
             json=LOCAL_APP,
         )
         if r.status_code == 409:
-            pass  # already exists
+            applications = client.get(f"/api/organizations/{organization['id']}/applications").json()
+            application = next(application for application in applications if application["name"] == LOCAL_APP["name"])
         else:
             r.raise_for_status()
+            application = None
+
+    if application is not None:
+        asyncio.run(sync_local_application(UUID(application["id"]), UUID(organization["id"]), user_id))
 
 
 if __name__ == "__main__":

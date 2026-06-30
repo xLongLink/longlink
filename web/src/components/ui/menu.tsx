@@ -4,11 +4,6 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-type MenuContextValue = {
-    activeValue?: string;
-    onValueChange: (value: string) => void;
-};
-
 type MenuProps = {
     value?: string;
     defaultValue?: string;
@@ -48,8 +43,6 @@ type ResolvedMenuSection = {
     content: React.ReactNode[];
     subSections: ResolvedMenuSubSection[];
 };
-
-const MenuContext = React.createContext<MenuContextValue | null>(null);
 
 const menuItemVariants = cva(
     'group/menu-item focus-visible:ring-ring/50 relative inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
@@ -323,97 +316,90 @@ export function Menu({
     }
 
     return (
-        <MenuContext.Provider
-            value={{
-                activeValue,
-                onValueChange: commitValue,
-            }}
-        >
-            <div className={cn('grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]', className)} aria-label={ariaLabel}>
-                <nav className="space-y-3" aria-label={ariaLabel} onKeyDown={onKeyDown}>
-                    <ul className="space-y-2" role="list">
-                        {sections.map((section) => {
-                            const hasSubSections = section.subSections.length > 0;
-                            const sectionIsActive = activeValue === section.value;
-                            const isExpanded = expandedSectionIds.has(section.value);
-                            const SectionIcon = section.icon;
+        <div className={cn('grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]', className)} aria-label={ariaLabel}>
+            <nav className="space-y-3" aria-label={ariaLabel} onKeyDown={onKeyDown}>
+                <ul className="space-y-2" role="list">
+                    {sections.map((section) => {
+                        const hasSubSections = section.subSections.length > 0;
+                        const sectionIsActive = activeValue === section.value;
+                        const isExpanded = expandedSectionIds.has(section.value);
+                        const SectionIcon = section.icon;
 
-                            return (
-                                <li key={section.value} className="space-y-1">
-                                    <button
-                                        type="button"
-                                        data-menu-item="true"
-                                        data-state={sectionIsActive ? 'active' : 'inactive'}
-                                        data-expanded={isExpanded}
-                                        aria-expanded={hasSubSections ? isExpanded : undefined}
-                                        aria-current={sectionIsActive ? 'page' : undefined}
-                                        disabled={section.disabled}
-                                        className={cn(menuItemVariants({ active: sectionIsActive }))}
-                                        onClick={() => {
-                                            commitValue(section.value);
+                        return (
+                            <li key={section.value} className="space-y-1">
+                                <button
+                                    type="button"
+                                    data-menu-item="true"
+                                    data-state={sectionIsActive ? 'active' : 'inactive'}
+                                    data-expanded={isExpanded}
+                                    aria-expanded={hasSubSections ? isExpanded : undefined}
+                                    aria-current={sectionIsActive ? 'page' : undefined}
+                                    disabled={section.disabled}
+                                    className={cn(menuItemVariants({ active: sectionIsActive }))}
+                                    onClick={() => {
+                                        commitValue(section.value);
 
-                                            if (hasSubSections) {
-                                                toggleExpanded(section.value, { preserveIfExpanded: !sectionIsActive });
-                                            }
-                                        }}
-                                    >
-                                        {SectionIcon ? (
-                                            <SectionIcon
-                                                className="size-4 text-muted-foreground group-data-[state=active]/menu-item:text-foreground"
-                                                aria-hidden="true"
-                                            />
-                                        ) : null}
-                                        <span className="truncate">{section.label}</span>
-                                        {hasSubSections ? (
-                                            <ChevronDownIcon
-                                                aria-hidden="true"
-                                                className="ml-auto size-4 transition-transform data-[expanded=true]:rotate-180"
-                                                data-expanded={isExpanded}
-                                            />
-                                        ) : null}
-                                    </button>
-
-                                    {hasSubSections && isExpanded ? (
-                                        <ul
-                                            className="ml-3 space-y-1 border-l border-border pl-2"
-                                            role="list"
-                                            aria-label={`${section.label} sub-sections`}
-                                        >
-                                            {section.subSections.map((subSection) => {
-                                                const subSectionIsActive = activeValue === subSection.value;
-
-                                                return (
-                                                    <li key={subSection.value} className="relative">
-                                                        <button
-                                                            type="button"
-                                                            data-menu-item="true"
-                                                            data-state={subSectionIsActive ? 'active' : 'inactive'}
-                                                            aria-current={subSectionIsActive ? 'page' : undefined}
-                                                            disabled={subSection.disabled}
-                                                            className={cn(
-                                                                menuItemVariants({
-                                                                    active: subSectionIsActive,
-                                                                    level: 'sub',
-                                                                })
-                                                            )}
-                                                            onClick={() => commitValue(subSection.value)}
-                                                        >
-                                                            <span className="truncate">{subSection.label}</span>
-                                                        </button>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
+                                        if (hasSubSections) {
+                                            toggleExpanded(section.value, { preserveIfExpanded: !sectionIsActive });
+                                        }
+                                    }}
+                                >
+                                    {SectionIcon ? (
+                                        <SectionIcon
+                                            className="size-4 text-muted-foreground group-data-[state=active]/menu-item:text-foreground"
+                                            aria-hidden="true"
+                                        />
                                     ) : null}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </nav>
+                                    <span className="truncate">{section.label}</span>
+                                    {hasSubSections ? (
+                                        <ChevronDownIcon
+                                            aria-hidden="true"
+                                            className="ml-auto size-4 transition-transform data-[expanded=true]:rotate-180"
+                                            data-expanded={isExpanded}
+                                        />
+                                    ) : null}
+                                </button>
 
-                <section className="min-w-0 space-y-4">{activeContent}</section>
-            </div>
-        </MenuContext.Provider>
+                                {hasSubSections && isExpanded ? (
+                                    <ul
+                                        className="ml-3 space-y-1 border-l border-border pl-2"
+                                        role="list"
+                                        aria-label={`${section.label} sub-sections`}
+                                    >
+                                        {section.subSections.map((subSection) => {
+                                            const subSectionIsActive = activeValue === subSection.value;
+
+                                            return (
+                                                <li key={subSection.value} className="relative">
+                                                    <button
+                                                        type="button"
+                                                        data-menu-item="true"
+                                                        data-state={subSectionIsActive ? 'active' : 'inactive'}
+                                                        aria-current={subSectionIsActive ? 'page' : undefined}
+                                                        disabled={subSection.disabled}
+                                                        className={cn(
+                                                            menuItemVariants({
+                                                                active: subSectionIsActive,
+                                                                level: 'sub',
+                                                            })
+                                                        )}
+                                                        onClick={() => commitValue(subSection.value)}
+                                                    >
+                                                        <span className="truncate">{subSection.label}</span>
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                ) : null}
+                            </li>
+                        );
+                    })}
+                </ul>
+            </nav>
+
+            <section className="min-w-0 space-y-4">{activeContent}</section>
+        </div>
     );
 }
 

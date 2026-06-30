@@ -1,13 +1,12 @@
 import json
+import httpx2
 import socket
 import asyncio
 import ipaddress
 from typing import Any, cast
-from urllib.parse import urlparse
-
-import httpx2
-
 from src.logger import logger
+from urllib.parse import urlparse
+from src.environments import env
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
@@ -15,11 +14,15 @@ async def metadata(image: str) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
     registry, repository, tag = _parse_image_ref(image)
+    registry_url = _registry_url(registry)
+    verify_tls = registry_url.startswith("https://")
 
-    async with httpx2.AsyncClient(verify=True, follow_redirects=False, timeout=5.0) as client:
+    async with httpx2.AsyncClient(verify=verify_tls, follow_redirects=False, timeout=5.0) as client:
         try:
-            await _validate_public_host(_registry_hostname(registry))
-            manifest = await _fetch_manifest(client, registry, repository, tag)
+            if verify_tls:
+                await _validate_public_host(_registry_hostname(registry))
+
+            manifest = await _fetch_manifest(client, registry_url, repository, tag)
             if manifest is None:
                 return None
 
@@ -33,7 +36,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             if config_digest is None:
                 return None
 
-            config = await _fetch_blob(client, registry, repository, str(config_digest))
+            config = await _fetch_blob(client, registry_url, repository, str(config_digest))
             if config is None:
                 return None
 
@@ -109,6 +112,37 @@ def _registry_hostname(registry: str) -> str:
     return hostname
 
 
+def _normalize_registry(registry: str) -> str:
+    """Return a comparable registry host without URL syntax."""
+
+    value = registry.strip().rstrip("/")
+    if value.startswith("http://"):
+        value = value.removeprefix("http://")
+    elif value.startswith("https://"):
+        value = value.removeprefix("https://")
+
+    return value.lower()
+
+
+def _development_local_registry(registry: str) -> bool:
+    """Return whether a registry is explicitly allowed for local development."""
+
+    configured_registry = env.LOCAL_CONTAINER_REGISTRY
+    if not env.DEVELOPMENT or configured_registry is None:
+        return False
+
+    return _normalize_registry(registry) == _normalize_registry(configured_registry)
+
+
+def _registry_url(registry: str) -> str:
+    """Return the OCI Distribution API base URL for a registry reference."""
+
+    if _development_local_registry(registry):
+        return f"http://{_normalize_registry(registry)}"
+
+    return f"https://{registry}"
+
+
 async def _validate_public_host(hostname: str) -> None:
     """Reject localhost, private, and otherwise non-public registry hosts."""
 
@@ -130,10 +164,10 @@ async def _validate_public_host(hostname: str) -> None:
         raise ValueError("Image registry host must resolve to public addresses")
 
 
-async def _fetch_manifest(client: httpx2.AsyncClient, registry: str, repository: str, tag: str) -> dict[str, Any] | None:
+async def _fetch_manifest(client: httpx2.AsyncClient, registry_url: str, repository: str, tag: str) -> dict[str, Any] | None:
     """Fetch an image manifest, resolving manifest lists to a single platform manifest."""
 
-    url = f"https://{registry}/v2/{repository}/manifests/{tag}"
+    url = f"{registry_url}/v2/{repository}/manifests/{tag}"
     accept = "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json"
 
     resp = await client.get(url, headers={"Accept": accept})
@@ -162,7 +196,7 @@ async def _fetch_manifest(client: httpx2.AsyncClient, registry: str, repository:
 
         manifest_digest = str(entry["digest"])
         resp = await client.get(
-            f"https://{registry}/v2/{repository}/manifests/{manifest_digest}",
+            f"{registry_url}/v2/{repository}/manifests/{manifest_digest}",
             headers={"Accept": str(entry["mediaType"]), **({"Authorization": f"Bearer {token}"} if token else {})},
         )
         if not resp.is_success:
@@ -172,10 +206,10 @@ async def _fetch_manifest(client: httpx2.AsyncClient, registry: str, repository:
     return data
 
 
-async def _fetch_blob(client: httpx2.AsyncClient, registry: str, repository: str, digest: str) -> dict[str, Any] | None:
+async def _fetch_blob(client: httpx2.AsyncClient, registry_url: str, repository: str, digest: str) -> dict[str, Any] | None:
     """Fetch an image config blob from the OCI Distribution API."""
 
-    url = f"https://{registry}/v2/{repository}/blobs/{digest}"
+    url = f"{registry_url}/v2/{repository}/blobs/{digest}"
 
     resp = await client.get(url)
     if resp.is_success:

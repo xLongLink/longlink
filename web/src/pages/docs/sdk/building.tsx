@@ -3,7 +3,7 @@ import { Heading } from '@/components/ui/heading';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const metadata = {
-    lastUpdated: '2026-06-24',
+    lastUpdated: '2026-06-30',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/building.tsx',
 };
 
@@ -21,6 +21,12 @@ export const content = (
                 builds the image from a temporary Docker context and leaves no build files in the app folder.
             </li>
             <li>Once containerized, applications can be pushed to any registry.</li>
+            <li>
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                    longlink build --registry localhost:15000 --push --tag dev
+                </code>{' '}
+                builds and pushes a reusable local development image tag.
+            </li>
             <li>Applications can be connected to the control plane and deployed.</li>
         </ul>
         <div className="flex flex-col gap-2">

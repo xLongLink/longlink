@@ -143,14 +143,6 @@ export function resolveTheme(theme: Theme): Exclude<Theme, 'system'> {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-/** Applies only the active light or dark class to the document root. */
-export function setThemeMode(root: HTMLElement, theme: Theme) {
-    const resolvedTheme = resolveTheme(theme);
-
-    root.classList.remove('light', 'dark');
-    root.classList.add(resolvedTheme);
-}
-
 /** Applies the resolved theme, palette, and radius to the document root. */
 export function applyTheme(root: HTMLElement, config: ThemeConfig) {
     const resolvedTheme = resolveTheme(config.theme);

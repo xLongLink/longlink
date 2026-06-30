@@ -1,54 +1,5 @@
 # LongLink Agent Guide
 
-LongLink is GitHub for business applications and workflows.
-
-| GitHub                                                       | LongLink                                                                     |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| Hosts repositories                                           | Hosts applications                                                           |
-| Repositories contain code                                    | Applications contain business logic                                          |
-| Provides a common environment for managing code              | Provides a common environment for running business applications              |
-| Handles collaboration, permissions, and repository workflows | Handles authentication, permissions, organization management, and deployment |
-| Developers manage the structure of each repository           | The SDK defines the application structure: data layer, API, and UI           |
-| Repository is the unit of work                               | Application is the unit of work                                              |
-
-- The applications are code first, allowing for a stable and long term maintabilability.
-- Each application is a python fastapi endpoint, with a database and a storage. 
-- A custom xml standardize the UI so that the development and the production share the same look
-
-
-Designed for real world usage:
-- Allows for a dedicated solution (low cost, faster iteration cycle)
-- Reduce the maintenence after the
-- AI development first, the most common libraries that are well defined in the dataset have been chosen to minimiza hallucinations.
-- AI usage first. Appliations are developed as REST API first app. Headless allows to integrate and expand 
-=> Allows to move even simple spreadsheets into professional solutions.
-
-
-Control plane
-- User authentication
-- User permissions
-- Application deployment and lifecicle
-- Audit logs
-- ...
-
-Applications: 
-
-|                 | Testing                  | Development               | Production                               |
-| --------------- | ------------------------ | ------------------------- | ---------------------------------------- |
-| User management | Fixtures, auth overrides | Seeded local users        | OIDC users                               |
-| Access model    | Isolated permissions     | Local role simulation     | Organization and application memberships |
-| Database        | In-memory SQLite         | SQLite                    | PostgreSQL database and schemas          |
-| File storage    | In-memory `fsspec`       | Local `fsspec` filesystem | S3-compatible buckets                    |
-| Web bundle      | Test runtime             | SDK bundle                | API bundle and app rendering             |
-| Environment     | Test settings            | Local settings            | Runtime secrets                          |
-| Build command   | `longlink tests`         | `longlink dev`            | `longlink build`                         |
-| Deployment      | None                     | Local process             | Platform deployment                      |
-| Operations      | Test assertions          | Local debugging           | Create, verify, delete, logs, status     |
-
-
-UI: 
-- Defined as XML pages, manage state and data fetching
-
 ```xml
 <longlink name="Tasks" icon="list-check">
   <State id="draft" title="" />
@@ -215,5 +166,4 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Pydantic models must group fields by commented sections, and fields inside each section must be ordered from shortest name to longest name.
 - Use long domain names in code and filenames instead of abbreviations.
 - Keep related model module names plural and consistent across the API and database layers.
-
-- Project is in MVP mode: prefer the current model over backward compatibility, remove obsolete code when replacing old flows
+- prefer single word naming for python filenames, and prefer not renaming imports

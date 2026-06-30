@@ -1,13 +1,22 @@
 from os import getenv
 from typing import Any, cast
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _development_enabled() -> bool:
+    """Return whether local development configuration should be enabled."""
+
+    development = getenv("DEVELOPMENT")
+    if development is not None:
+        return development.strip().lower() in {"1", "true", "yes", "on", "y"}
+
+    return getenv("ENVIRONMENT", "").strip().lower() == "development"
 
 
 def _environment_files() -> tuple[str, ...]:
     """Load sample values in development, so local `.env` values remain overridable."""
 
-    if getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}:
+    if _development_enabled():
         return (".env.sample", ".env")
 
     return (".env",)
@@ -16,7 +25,7 @@ def _environment_files() -> tuple[str, ...]:
 class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
-    DEVELOPMENT: bool = False
+    DEVELOPMENT: bool = _development_enabled()
 
     # Session cookies
     SESSION_KEY: str
@@ -52,6 +61,10 @@ class Env(BaseSettings):
         "http://localhost:5173",
         "http://localhost:8000",
     )
+
+    # Development image registry
+    LOCAL_CONTAINER_REGISTRY: str | None = None
+    LOCAL_APPLICATION_IMAGE: str = "localhost:15000/longlink-app:dev"
 
     # Operation leases
     OPERATION_LEASE_SECONDS: int = 120

@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import UTC, datetime
 
 from sqlalchemy.engine import make_url
 from src.logger import logger
@@ -10,6 +11,7 @@ from src.adapters.storage import S3
 from src.models.operations import OperationKind
 from src.models.statuses import ApplicationStatus
 from src.models.applications import ApplicationCreate
+from src.models.metadata import LongLinkMetadata
 from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -61,6 +63,27 @@ async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
         key=lambda item: item.created_at,
         default=None,
     )
+
+
+async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMetadata | None:
+    """Inspect image metadata and validate required environment values."""
+
+    image_metadata = await images.metadata(payload.image)
+    if image_metadata is None:
+        return None
+
+    # Reject images that require app-managed values the creation payload does not provide.
+    missing_envs = sorted(
+        environment.name
+        for environment in image_metadata.environments
+        if environment.required
+        and environment.name not in PLATFORM_ENVIRONMENT_NAMES
+        and not payload.envs.get(environment.name, "").strip()
+    )
+    if missing_envs:
+        raise ValueError(f"Missing required environment variables: {', '.join(missing_envs)}")
+
+    return image_metadata
 
 
 async def application_compute_registry(application: Application, location_id: UUID) -> ComputeRegistry | None:
@@ -143,17 +166,7 @@ async def create_application_runtime(
     application_slug = names.slugify(payload.name)
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
-    image_metadata = await images.metadata(payload.image)
-    if image_metadata is not None:
-        missing_envs = sorted(
-            environment.name
-            for environment in image_metadata.environments
-            if environment.required
-            and environment.name not in PLATFORM_ENVIRONMENT_NAMES
-            and not payload.envs.get(environment.name, "").strip()
-        )
-        if missing_envs:
-            raise ValueError(f"Missing required environment variables: {', '.join(missing_envs)}")
+    image_metadata = await application_image_metadata(payload)
 
     compute_registry = await latest_compute_registry(organization.location_id)
     if compute_registry is None:
@@ -239,6 +252,77 @@ async def create_application_runtime(
 
     logger.info("Queued application creation verification %s for %s/%s", operation.id, organization.slug, payload.name)
     return application
+
+
+async def sync_application_runtime(
+    application: Application,
+    organization: OrganizationDetails,
+    payload: ApplicationCreate,
+    user: User,
+) -> Application:
+    """Update an existing application row and refresh its runtime workload."""
+
+    logger.info("Syncing application %s/%s from image %s", organization.slug, application.slug, payload.image)
+    image_metadata = await application_image_metadata(payload)
+
+    compute_registry = await application_compute_registry(application, organization.location_id)
+    if compute_registry is None:
+        raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
+
+    database_registry = await application_database_registry(application, organization.location_id)
+    if database_registry is None:
+        raise RuntimeError(f"No database configured for location '{organization.location_id}'")
+
+    storage_registry = await application_storage_registry(application)
+    if storage_registry is None:
+        storage_registry = await latest_storage_registry(organization.location_id)
+
+    updated_application = await applications.update_runtime(
+        application.id,
+        image=payload.image,
+        compute_registry_id=compute_registry.id,
+        database_registry_id=database_registry.id,
+        storage_registry_id=storage_registry.id if storage_registry is not None else None,
+        version=image_metadata.version if image_metadata is not None else None,
+        sdk_version=image_metadata.sdk if image_metadata is not None else None,
+        status=ApplicationStatus.creating,
+        description=payload.description,
+        icon=payload.icon,
+        user=user,
+    )
+    if updated_application is None:
+        raise RuntimeError("Application no longer exists")
+
+    k8s = K8s(compute_registry.kubeconfig, compute_registry.proxy_secret)
+    db_client = Postgres(
+        database_registry.host,
+        database_registry.port,
+        database_registry.username,
+        database_registry.password,
+        runtime_host=database_registry.runtime_host,
+        runtime_port=database_registry.runtime_port,
+    )
+
+    # Reapply the workload with a fresh rollout token so fixed development tags pull the newest image.
+    try:
+        await k8s.namespace(organization.slug)
+        database_url = await db_client.schema(organization.slug, application.slug)
+        runtime_envs = runtime_environment(application.slug, database_url, storage_registry)
+        await k8s.application(
+            organization.slug,
+            application.slug,
+            payload.image,
+            APP_SERVICE_PORT,
+            {**payload.envs, **runtime_envs},
+            rollout_token=datetime.now(UTC).isoformat(),
+        )
+    except Exception as exc:
+        await applications.set_status(application.id, ApplicationStatus.failed)
+        raise RuntimeError("Failed to refresh the application runtime") from exc
+
+    operation = await operations.create(OperationKind.application_create, application_id=application.id, step="verify", user=user)
+    logger.info("Queued application sync verification %s for %s/%s", operation.id, organization.slug, payload.name)
+    return updated_application
 
 
 async def delete_application_runtime(application: Application, organization: OrganizationDetails) -> None:

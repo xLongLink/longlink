@@ -171,6 +171,44 @@ class ApplicationsService:
             await session.refresh(application)
             return application
 
+
+    async def update_runtime(
+        self,
+        application_id: UUID,
+        image: str,
+        user: User,
+        status: ApplicationStatus = ApplicationStatus.creating,
+        compute_registry_id: UUID | None = None,
+        database_registry_id: UUID | None = None,
+        storage_registry_id: UUID | None = None,
+        version: str | None = None,
+        sdk_version: str | None = None,
+        description: str | None = None,
+        icon: str | None = None,
+    ) -> Application | None:
+        """Update one existing application's runtime metadata."""
+
+        async with session_scope() as session:
+            application = await session.get(Application, application_id)
+            if application is None or application.deleted_at is not None:
+                return None
+
+            # Keep the database metadata aligned with the workload that will be applied.
+            application.compute_registry_id = compute_registry_id
+            application.database_registry_id = database_registry_id
+            application.storage_registry_id = storage_registry_id
+            application.sdk_version = sdk_version
+            application.description = description
+            application.updated_id = user.id
+            application.version = version
+            application.status = status
+            application.image = image
+            application.icon = icon
+            await session.commit()
+            await session.refresh(application)
+            return application
+
+
     async def delete(self, organization_id: UUID, application_id: UUID, deleted_id: UUID | None = None) -> Application:
         """Delete an application by organization and id and return it."""
 

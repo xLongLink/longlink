@@ -18,12 +18,15 @@ spec:
       app: $name
   template:
     metadata:
+      annotations:
+        longlink.io/rollout-token: "$rollout_token"
       labels:
         app: $name
     spec:
       containers:
         - name: $name
           image: $image
+          imagePullPolicy: Always
           ports:
             - containerPort: $port
           envFrom:

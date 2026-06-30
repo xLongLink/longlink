@@ -1,4 +1,4 @@
-.PHONY: up down format build api web sdk install tests pyright
+.PHONY: up down format web\:build api web sdk sdk\:build install tests pyright
 
 
 install:
@@ -32,7 +32,7 @@ pyright:
 	cd sdk && uv run --group dev pyright
 
 
-build: 
+web\:build:
 	bun run --cwd web typecheck
 	bun run --cwd web build:api:bundle --logLevel warn
 	bun run --cwd web build:sdk:bundle --logLevel warn
@@ -40,7 +40,7 @@ build:
 
 up:
 	docker compose -f dev/compose.yml up -d
-	k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer"
+	k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer" --registry-config dev/registries.yml
 	k3d kubeconfig get compute > api/kubeconfig.yaml
 
 
@@ -53,11 +53,11 @@ down:
 	find . -type f -name '*.py[co]' -delete
 
 
-api: 
+api: sdk\:build
 	cd api && uv sync --extra dev
-	cd api && ENVIRONMENT=development uv run alembic upgrade head
-	cd api && ENVIRONMENT=development uv run python seed.py
-	cd api && ENVIRONMENT=development uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+	cd api && DEVELOPMENT=true uv run alembic upgrade head
+	cd api && DEVELOPMENT=true uv run python seed.py
+	cd api && DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 
 web: 
@@ -70,3 +70,10 @@ sdk:
 	cd sdk && uv run longlink init --folder dev
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
 	cd sdk/dev && uv run longlink dev
+
+
+sdk\:build:
+	docker compose -f dev/compose.yml up -d registry
+	if [ ! -d sdk/dev ]; then cd sdk && uv run longlink init --folder dev; fi
+	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
+	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev

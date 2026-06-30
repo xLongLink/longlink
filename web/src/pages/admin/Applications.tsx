@@ -6,7 +6,6 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Badge } from '@ui/badge';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Boxes } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { Link } from 'react-router';
 

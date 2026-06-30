@@ -17,4 +17,5 @@ uv run longlink migrate
 
 ```bash
 uv run longlink build
+uv run longlink build --registry localhost:15000 --push --tag dev
 ```

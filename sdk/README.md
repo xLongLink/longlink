@@ -36,4 +36,4 @@ uv run longlink dev
 | `longlink migrate`               | Run database migrations.                |
 | `longlink docs [component]`      | Show XML component docs.                |
 | `longlink translations generate` | Update translation files from XML keys. |
-| `longlink build [--tag <tag>]`   | Build the app Docker image.             |
+| `longlink build [--tag <tag>] [--registry <host>] [--push]` | Build the app Docker image. |

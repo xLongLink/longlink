@@ -15,24 +15,14 @@ make install    # Install all the dependencies
 make format     # Format the code
 make build      # Typecheck and build API and SDK web bundles
 make tests      # Run API, SDK, and web tests
-```
-
-### Hooks
-
-```bash
-make format    # Format the code before committing
-```
-
-Run formatting manually before commits.
-
-### Control plane
-
-```bash
-make up     # Start the services, initialize the cluster
-make web    # Run the Vite web app
-make api    # Run the control plane
-make sdk    # Run the generated SDK development application
-make down   # Stop services and remove the cluster
+make up         # Start the services, initialize the cluster
+make web        # Run the Vite web app
+make api        # Run the control plane
+make sdk        # Run the generated SDK development application
+make sdk:build  # Build and push the generated SDK app to the local registry
+make down       # Stop services and remove the cluster
+make format     # Format the code before committing
 ```
 
 > Note: after `make up`, the Keycloak instance takes a few seconds to boot. Running `make api` immediately after `make up` might fail.
+e

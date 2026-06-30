@@ -20,6 +20,12 @@ services:
       - "19000:9000"
       - "19001:9001"
 
+  registry:
+    image: registry:2
+    restart: unless-stopped
+    ports:
+      - "15000:5000"
+
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
     restart: unless-stopped

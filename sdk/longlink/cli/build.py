@@ -2,10 +2,10 @@ import os
 import ast
 import json
 import click
-import tomllib
 import shutil
-import subprocess
+import tomllib
 import tempfile
+import subprocess
 from typing import Any, cast
 from pathlib import Path
 from importlib.metadata import PackageNotFoundError
@@ -33,6 +33,8 @@ ENV PATH="{workdir}/.venv/bin:$PATH"
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--log-level", "debug"]
 """
+
+
 def resolve_sdk_version() -> str:
     """Return the installed LongLink SDK version."""
 
@@ -289,28 +291,67 @@ def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: st
     )
 
 
+def push_docker_image(image_tag: str) -> None:
+    """Push the Docker image tag to its configured registry."""
+
+    subprocess.run(
+        [
+            "docker",
+            "push",
+            image_tag,
+        ],
+        check=True,
+    )
+
+
+def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
+    """Return the Docker image tag for an app name, version, and optional registry."""
+
+    image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
+    registry_prefix = (registry or "").strip().rstrip("/")
+
+    if registry_prefix:
+        return f"{registry_prefix}/{image_name}:{version}"
+
+    return f"{image_name}:{version}"
+
+
 @click.command(name="build")
 @click.option(
     "--tag",
     default=None,
     help="Version tag to use instead of a timestamp, for example dev.",
 )
-def build_command(tag: str | None):
+@click.option(
+    "--registry",
+    default=None,
+    help="Docker registry prefix for the image tag, for example localhost:15000.",
+)
+@click.option(
+    "--push",
+    is_flag=True,
+    help="Push the built image tag after building.",
+)
+def build_command(tag: str | None, registry: str | None, push: bool):
     """Create temporary Docker build artifacts and build the image locally."""
 
     try:
         with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
             build_context = Path(temp_dir)
             dockerfile_path, version, app_name = build_app(build_context, tag=tag)
-            image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
-            image_tag = f"{image_name}:{version}"
+            image_tag = resolve_image_tag(app_name, version, registry)
             image_id_path = build_context / "image-id.txt"
 
             build_docker_image(dockerfile_path, build_context, image_tag, image_id_path)
             image_id = image_id_path.read_text().strip()
 
+            if push:
+                push_docker_image(image_tag)
+
         click.echo(f"Build completed for version {version}")
         click.echo(f"- Built image: {image_tag}")
+        if push:
+            click.echo(f"- Pushed image: {image_tag}")
         click.echo(f"- Image ID: {image_id}")
         click.echo(f"- View it with: docker image inspect {image_tag}")
         click.echo(f"- Run it with: docker run --rm -p 80:80 {image_tag}")

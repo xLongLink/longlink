@@ -6,7 +6,7 @@ This folder contains the LongLink control plane. It is responsible for authentic
 uv sync --extra dev                # Create the development environment
 uv run alembic upgrade head        # Apply database migrations
 uv run python seed.py              # Seed the database
-DEV=True uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 uv run isort .                     # Format imports
 ```
 
