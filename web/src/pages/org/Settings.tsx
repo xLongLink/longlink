@@ -1,12 +1,21 @@
 import { DataTable } from '@/components/DataTable';
 import CreateApplicationDialog from '@/components/dialogs/CreateApplicationDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
+import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
-import type { ApiOrganizationApplication, ApiOrganizationDetails } from '@/lib/types';
+import type {
+    ApiOrganizationApplication,
+    ApiOrganizationDatabaseResource,
+    ApiOrganizationDatabaseTable,
+    ApiOrganizationDetails,
+} from '@/lib/types';
+import { formatBytes } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { Badge } from '@ui/badge';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
@@ -69,9 +78,20 @@ type SettingsProps = {
 export default function Settings({ organization, organizationDetails, applications, isLoading, error }: SettingsProps) {
     const { role: platformRole, organizations: userOrganizations } = useUser();
     const { deleteApplication, isDeletingApplication } = useOrganizationActions(organization);
+    const {
+        items: databaseResources,
+        error: databaseResourcesError,
+        isLoading: databaseResourcesIsLoading,
+    } = useOrganizationDatabaseResources(organizationDetails?.id ?? '');
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
+    const [databaseResourceTarget, setDatabaseResourceTarget] = useState<ApiOrganizationDatabaseResource | null>(null);
+    const {
+        items: databaseResourceTables,
+        error: databaseResourceTablesError,
+        isLoading: databaseResourceTablesIsLoading,
+    } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseResourceTarget);
 
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const canViewLogs =
@@ -158,6 +178,99 @@ export default function Settings({ organization, organizationDetails, applicatio
                     </DropdownMenu>
                 </div>
             ),
+        },
+    ];
+
+    const databaseResourceColumns: Array<ColumnDef<ApiOrganizationDatabaseResource>> = [
+        {
+            id: 'resource',
+            header: 'Resource',
+            cell: ({ row }) => {
+                const isBrowsable = row.original.status === 'available' || row.original.status === 'orphaned';
+
+                return (
+                    <div className="min-w-0 space-y-1">
+                        <Button
+                            type="button"
+                            variant="link"
+                            className="h-auto max-w-full justify-start p-0 text-left font-medium"
+                            disabled={!isBrowsable}
+                            onClick={() => {
+                                if (isBrowsable) {
+                                    setDatabaseResourceTarget(row.original);
+                                }
+                            }}
+                        >
+                            <span className="truncate">{row.original.name}</span>
+                        </Button>
+                        <div className="truncate text-xs text-muted-foreground">{row.original.database_name}</div>
+                    </div>
+                );
+            },
+            meta: { className: 'min-w-44' },
+        },
+        {
+            id: 'application',
+            header: 'Application',
+            cell: ({ row }) => {
+                const application = row.original.application;
+                if (row.original.kind === 'shared_table') {
+                    return (
+                        <div className="min-w-0 space-y-1">
+                            <div className="font-medium text-foreground">All applications</div>
+                            <div className="text-xs text-muted-foreground">Shared organization users</div>
+                        </div>
+                    );
+                }
+
+                if (application === null) {
+                    return <span className="text-muted-foreground">No active app</span>;
+                }
+
+                return (
+                    <div className="min-w-0 space-y-1">
+                        <Link
+                            to={`/orgs/${organization}/apps/${application.slug}`}
+                            className="font-medium text-foreground underline-offset-4 hover:underline"
+                        >
+                            {application.name}
+                        </Link>
+                        <div className="text-xs text-muted-foreground">{application.status}</div>
+                    </div>
+                );
+            },
+            meta: { className: 'min-w-52' },
+        },
+        {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ getValue }) => {
+                const status = getValue<ApiOrganizationDatabaseResource['status']>();
+                const variant = status === 'available' ? 'default' : status === 'orphaned' ? 'outline' : 'destructive';
+
+                return <Badge variant={variant}>{status}</Badge>;
+            },
+            meta: { className: 'w-32' },
+        },
+        {
+            id: 'usage',
+            header: 'Usage',
+            cell: ({ row }) => {
+                const { row_estimate, space_used, table_count } = row.original;
+
+                return (
+                    <div className="min-w-0 space-y-1">
+                        <div className="font-medium text-foreground">
+                            {space_used === null ? 'Unknown' : formatBytes(space_used)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                            {table_count === null ? 'Unknown tables' : `${table_count.toLocaleString()} tables`} ·{' '}
+                            {row_estimate === null ? 'unknown rows' : `${row_estimate.toLocaleString()} rows`}
+                        </div>
+                    </div>
+                );
+            },
+            meta: { className: 'min-w-44' },
         },
     ];
 
@@ -266,21 +379,16 @@ export default function Settings({ organization, organizationDetails, applicatio
                         <div className="space-y-1">
                             <h2 className="text-lg font-medium text-foreground">Database</h2>
                             <p className="text-sm text-muted-foreground">
-                                Configure database-backed services and connections.
+                                Review application schemas and the shared organization users table.
                             </p>
                         </div>
-                        <div className="overflow-hidden rounded-md border">
-                            <Table>
-                                <TableHeader className="bg-muted/50">
-                                    <TableRow>
-                                        <TableHead className="bg-muted/50">Name</TableHead>
-                                        <TableHead className="bg-muted/50">Type</TableHead>
-                                        <TableHead className="bg-muted/50">Status</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody />
-                            </Table>
-                        </div>
+                        <DataTable
+                            columns={databaseResourceColumns}
+                            data={databaseResources}
+                            error={databaseResourcesError}
+                            isLoading={isLoading || databaseResourcesIsLoading}
+                            loadingLabel="Loading database resources..."
+                        />
                     </div>
                 </MenuSection>
 
@@ -341,6 +449,44 @@ export default function Settings({ organization, organizationDetails, applicatio
                     trigger={null}
                 />
             ) : null}
+
+            <Dialog
+                open={databaseResourceTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDatabaseResourceTarget(null);
+                    }
+                }}
+            >
+                <DialogContent className="max-h-[85vh] grid-rows-[auto_minmax(0,1fr)] sm:max-w-5xl">
+                    <div className="space-y-1 pr-8">
+                        <DialogTitle>{databaseResourceTarget?.name ?? 'Database resource'}</DialogTitle>
+                        <DialogDescription>
+                            Previewing columns and up to 100 rows per table from this database resource.
+                        </DialogDescription>
+                    </div>
+
+                    <div className="min-h-0 space-y-4 overflow-auto pr-1">
+                        {databaseResourceTablesIsLoading ? (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                Loading database rows...
+                            </div>
+                        ) : databaseResourceTablesError ? (
+                            <div className="rounded-md border p-4 text-sm text-destructive">
+                                {databaseResourceTablesError.message}
+                            </div>
+                        ) : databaseResourceTables.length ? (
+                            databaseResourceTables.map((table) => (
+                                <DatabasePreviewTable key={`${table.schema_name}.${table.name}`} table={table} />
+                            ))
+                        ) : (
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                No tables found in this database resource.
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <Dialog
                 open={deleteTargetId !== null}
@@ -406,5 +552,80 @@ export default function Settings({ organization, organizationDetails, applicatio
                 </DialogContent>
             </Dialog>
         </>
+    );
+}
+
+
+type DatabasePreviewTableProps = {
+    table: ApiOrganizationDatabaseTable;
+};
+
+
+/** Renders one database table preview with dynamic columns and rows. */
+function DatabasePreviewTable({ table }: DatabasePreviewTableProps) {
+    return (
+        <div className="space-y-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                    <h3 className="truncate font-medium text-foreground">
+                        {table.schema_name}.{table.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                        {table.columns.length.toLocaleString()} columns · {table.rows.length.toLocaleString()} preview rows
+                    </p>
+                </div>
+            </div>
+
+            <div className="overflow-auto rounded-md border">
+                <Table>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow>
+                            {table.columns.length ? (
+                                table.columns.map((column) => (
+                                    <TableHead key={column.name} className="min-w-40 bg-muted/50 align-top">
+                                        <div className="space-y-0.5">
+                                            <div className="font-medium text-foreground">{column.name}</div>
+                                            <div className="text-xs font-normal text-muted-foreground">
+                                                {column.type}
+                                                {column.nullable ? '' : ' · required'}
+                                            </div>
+                                        </div>
+                                    </TableHead>
+                                ))
+                            ) : (
+                                <TableHead className="bg-muted/50">No columns</TableHead>
+                            )}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {table.rows.length && table.columns.length ? (
+                            table.rows.map((row, rowIndex) => (
+                                <TableRow key={rowIndex}>
+                                    {table.columns.map((column) => {
+                                        const value = row[column.name];
+
+                                        return (
+                                            <TableCell key={column.name} className="max-w-72 truncate font-mono text-xs">
+                                                {value === null || value === undefined ? (
+                                                    <span className="text-muted-foreground">NULL</span>
+                                                ) : (
+                                                    String(value)
+                                                )}
+                                            </TableCell>
+                                        );
+                                    })}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={Math.max(table.columns.length, 1)} className="h-20 text-center">
+                                    No rows found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
     );
 }

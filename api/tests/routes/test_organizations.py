@@ -5,6 +5,7 @@ from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.database.session import get_session
 from src.models.countries import Country
+from src.models.databases import DatabaseKind
 from src.models.locations import LocationResponse
 from src.models.organizations import OrganizationDetails as OrgDetails
 from src.models.organizations import OrganizationSummary as OrgSummary
@@ -72,6 +73,44 @@ async def test_create_organization_returns_owner_role(
             "deleted_by": None,
         }
     ).model_dump(mode="json")
+
+
+async def test_create_organization_initializes_database(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Create the organization database and shared users table during organization creation."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    calls: list[str] = []
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
+
+    class FakePostgres:
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            self.host = host
+            self.port = port
+            self.username = username
+            self.password = password
+
+        async def database(self, organization: str) -> str:
+            calls.append(organization)
+            return f"postgresql://db/{organization}"
+
+    monkeypatch.setattr("src.operations.provisioning.Postgres", FakePostgres)
+
+    # Act
+    response = client.post(
+        "/api/organizations",
+        json={"name": "acme", "location_id": str(location.id)},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert calls == ["acme"]
 
 
 async def test_get_organization_returns_member_payload(
@@ -175,6 +214,218 @@ async def test_get_organization_returns_member_payload(
             "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
             "deleted_at": None,
             "deleted_by": None,
+        }
+    ]
+
+
+async def test_organization_database_endpoint_returns_schemas_and_shared_users(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Return application schema usage, missing schemas, orphan schemas, and shared users."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    registry = await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
+    dashboard = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        database_registry_id=registry.id,
+        user=owner,
+    )
+    reports = await db.applications.create(
+        organization.id,
+        "reports",
+        slug="reports",
+        image="ghcr.io/longlink/reports:latest",
+        database_registry_id=registry.id,
+        user=owner,
+    )
+
+    class FakePostgres:
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            self.host = host
+            self.port = port
+            self.username = username
+            self.password = password
+
+        async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
+            assert database_name == "longlink_acme"
+            return [
+                {"name": "dashboard", "space_used": 2048, "table_count": 2, "row_estimate": 42},
+                {"name": "stale", "space_used": 512, "table_count": 1, "row_estimate": 3},
+            ]
+
+        async def table_usage(self, database_name: str, schema_name: str, table_name: str) -> dict[str, int | str]:
+            assert database_name == "longlink_acme"
+            assert schema_name == "public"
+            assert table_name == "users"
+            return {"name": "users", "space_used": 1024, "row_estimate": 5}
+
+    monkeypatch.setattr("src.routes.organizations.Postgres", FakePostgres)
+
+    # Act
+    response = client.get(f"/api/organizations/{organization.id}/database")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "kind": "shared_table",
+            "name": "users",
+            "database_name": "longlink_acme",
+            "database_registry_id": str(registry.id),
+            "database_registry_name": "primary",
+            "application": None,
+            "status": "available",
+            "space_used": 1024,
+            "table_count": 1,
+            "row_estimate": 5,
+        },
+        {
+            "kind": "schema",
+            "name": "dashboard",
+            "database_name": "longlink_acme",
+            "database_registry_id": str(registry.id),
+            "database_registry_name": "primary",
+            "application": {
+                "id": str(dashboard.id),
+                "name": "dashboard",
+                "slug": "dashboard",
+                "status": "creating",
+            },
+            "status": "available",
+            "space_used": 2048,
+            "table_count": 2,
+            "row_estimate": 42,
+        },
+        {
+            "kind": "schema",
+            "name": "reports",
+            "database_name": "longlink_acme",
+            "database_registry_id": str(registry.id),
+            "database_registry_name": "primary",
+            "application": {
+                "id": str(reports.id),
+                "name": "reports",
+                "slug": "reports",
+                "status": "creating",
+            },
+            "status": "missing",
+            "space_used": None,
+            "table_count": None,
+            "row_estimate": None,
+        },
+        {
+            "kind": "schema",
+            "name": "stale",
+            "database_name": "longlink_acme",
+            "database_registry_id": str(registry.id),
+            "database_registry_name": "primary",
+            "application": None,
+            "status": "orphaned",
+            "space_used": 512,
+            "table_count": 1,
+            "row_estimate": 3,
+        },
+    ]
+
+
+async def test_organization_database_resource_tables_endpoint_returns_table_previews(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Return dynamic columns and rows for shared tables and app schemas."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    registry = await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
+    await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        database_registry_id=registry.id,
+        user=owner,
+    )
+
+    class FakePostgres:
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            self.host = host
+            self.port = port
+            self.username = username
+            self.password = password
+
+        async def table(self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100) -> dict[str, object]:
+            assert database_name == "longlink_acme"
+            assert schema_name == "public"
+            assert table_name == "users"
+            assert limit == 100
+            return {
+                "name": "users",
+                "schema_name": "public",
+                "columns": [
+                    {"name": "id", "type": "integer", "nullable": False, "position": 1},
+                    {"name": "email", "type": "character varying", "nullable": False, "position": 2},
+                ],
+                "rows": [{"id": 1, "email": "owner@example.com"}],
+            }
+
+        async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[dict[str, object]]:
+            assert database_name == "longlink_acme"
+            assert schema_name == "dashboard"
+            assert limit == 100
+            return [
+                {
+                    "name": "orders",
+                    "schema_name": "dashboard",
+                    "columns": [
+                        {"name": "id", "type": "integer", "nullable": False, "position": 1},
+                        {"name": "total", "type": "numeric", "nullable": True, "position": 2},
+                    ],
+                    "rows": [{"id": 100, "total": 42.5}],
+                }
+            ]
+
+    monkeypatch.setattr("src.routes.organizations.Postgres", FakePostgres)
+
+    # Act
+    users_response = client.get(f"/api/organizations/{organization.id}/database/resources/shared_table/users/tables")
+    schema_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
+
+    # Assert
+    assert users_response.status_code == 200
+    assert users_response.json() == [
+        {
+            "name": "users",
+            "schema_name": "public",
+            "columns": [
+                {"name": "id", "type": "integer", "nullable": False, "position": 1},
+                {"name": "email", "type": "character varying", "nullable": False, "position": 2},
+            ],
+            "rows": [{"id": 1, "email": "owner@example.com"}],
+        }
+    ]
+    assert schema_response.status_code == 200
+    assert schema_response.json() == [
+        {
+            "name": "orders",
+            "schema_name": "dashboard",
+            "columns": [
+                {"name": "id", "type": "integer", "nullable": False, "position": 1},
+                {"name": "total", "type": "numeric", "nullable": True, "position": 2},
+            ],
+            "rows": [{"id": 100, "total": 42.5}],
         }
     ]
 

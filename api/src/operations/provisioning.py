@@ -262,6 +262,19 @@ async def create_organization_namespace(organization: OrganizationSummary) -> No
         logger.exception("Failed to create namespace for organization '%s'", organization.slug)
 
 
+async def create_organization_database(organization: OrganizationSummary) -> None:
+    """Best-effort create the organization database on the active database registry."""
+
+    registry = await latest_database_registry(organization.location_id)
+    if registry is None:
+        return
+
+    try:
+        await Postgres(registry.host, registry.port, registry.username, registry.password).database(organization.slug)
+    except Exception:
+        logger.exception("Failed to create database for organization '%s'", organization.slug)
+
+
 async def delete_organization_namespace(organization: OrganizationDetails) -> None:
     """Best-effort delete the organization namespace on the active compute registry."""
 

@@ -1,4 +1,43 @@
 from abc import ABC, abstractmethod
+from typing import TypedDict
+
+
+class DatabaseSchemaUsage(TypedDict):
+    """Describe storage usage for one database schema."""
+
+    name: str
+    space_used: int
+    table_count: int
+    row_estimate: int
+
+
+class DatabaseTableUsage(TypedDict):
+    """Describe storage usage for one database table."""
+
+    name: str
+    space_used: int
+    row_estimate: int
+
+
+DatabaseCellValue = str | int | float | bool | None
+
+
+class DatabaseTableColumn(TypedDict):
+    """Describe one database table column."""
+
+    name: str
+    type: str
+    nullable: bool
+    position: int
+
+
+class DatabaseTableData(TypedDict):
+    """Describe one database table with preview rows."""
+
+    name: str
+    schema_name: str
+    columns: list[DatabaseTableColumn]
+    rows: list[dict[str, DatabaseCellValue]]
 
 
 class Database(ABC):
@@ -44,6 +83,27 @@ class Database(ABC):
     @abstractmethod
     async def schemas(self, database_name: str) -> list[str]:
         """List all schemas in a database."""
+
+
+    @abstractmethod
+    async def schema_usage(self, database_name: str) -> list[DatabaseSchemaUsage]:
+        """Return usage details for schemas in a database."""
+
+
+    @abstractmethod
+    async def table_usage(self, database_name: str, schema_name: str, table_name: str) -> DatabaseTableUsage | None:
+        """Return usage details for one table in a database."""
+
+
+    @abstractmethod
+    async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[DatabaseTableData]:
+        """Return tables, columns, and preview rows for one schema."""
+
+
+    @abstractmethod
+    async def table(self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100) -> DatabaseTableData | None:
+        """Return columns and preview rows for one table."""
+
 
     @abstractmethod
     async def usage(self) -> dict[str, int]:

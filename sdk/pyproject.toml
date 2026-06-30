@@ -24,7 +24,7 @@ authors = [
     {name = "LongLink SAGL", email = "info@longlink.ch"}
 ]
 maintainers = []
-description = "Lovely Spam! Wonderful Spam!"
+description = "Python SDK for building and packaging LongLink applications."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE*"]

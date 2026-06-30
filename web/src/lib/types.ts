@@ -122,6 +122,40 @@ export type ApiDatabaseSchema = {
     name: string;
 };
 
+export type ApiOrganizationDatabaseApplication = {
+    id: string;
+    name: string;
+    slug: string;
+    status: 'creating' | 'running' | 'deleting' | 'failed';
+};
+
+export type ApiOrganizationDatabaseResource = {
+    name: string;
+    kind: 'schema' | 'shared_table';
+    status: 'available' | 'missing' | 'orphaned' | 'unavailable';
+    database_name: string;
+    space_used: number | null;
+    table_count: number | null;
+    row_estimate: number | null;
+    application: ApiOrganizationDatabaseApplication | null;
+    database_registry_id: string;
+    database_registry_name: string;
+};
+
+export type ApiOrganizationDatabaseTableColumn = {
+    name: string;
+    type: string;
+    nullable: boolean;
+    position: number;
+};
+
+export type ApiOrganizationDatabaseTable = {
+    name: string;
+    schema_name: string;
+    columns: ApiOrganizationDatabaseTableColumn[];
+    rows: Array<Record<string, string | number | boolean | null>>;
+};
+
 export type ApiDatabaseUsage = {
     space_used: number;
 };
