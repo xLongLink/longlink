@@ -1,5 +1,5 @@
 import click
-from shutil import copytree
+from shutil import copytree, ignore_patterns
 from pathlib import Path
 from longlink.constants import ROOT
 
@@ -10,7 +10,12 @@ def setup(target: Path, ci_provider: str | None = None) -> None:
     # Copy the bundled blank project scaffold into the requested target directory.
     source = ROOT / ".static" / "new"
     target.parent.mkdir(parents=True, exist_ok=True)
-    copytree(source, target, dirs_exist_ok=True)
+    copytree(
+        source,
+        target,
+        dirs_exist_ok=True,
+        ignore=ignore_patterns(".pytest_cache", "__pycache__"),
+    )
 
     # Add provider-specific automation files only when explicitly requested.
     if ci_provider == "github":

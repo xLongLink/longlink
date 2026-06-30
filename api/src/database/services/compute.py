@@ -1,6 +1,4 @@
 import secrets
-# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportReturnType=false, reportCallIssue=false
-
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
@@ -12,6 +10,7 @@ from src.models.computes import ComputeKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
+from src.database.models.applications import Application
 
 
 class ComputeService:
@@ -29,15 +28,19 @@ class ComputeService:
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, registry_id: UUID) -> ComputeRegistry | None:
+    async def get(self, registry_id: UUID, include_deleted: bool = False) -> ComputeRegistry | None:
         """Return one compute backend by id."""
 
         async with session_scope() as session:
+            conditions = [ComputeRegistry.id == registry_id]
+            if not include_deleted:
+                conditions.append(ComputeRegistry.deleted_at.is_(None))
+
             statement = select(ComputeRegistry).options(
                 selectinload(ComputeRegistry.created_by),
                 selectinload(ComputeRegistry.updated_by),
                 selectinload(ComputeRegistry.deleted_by),
-            ).where(ComputeRegistry.id == registry_id, ComputeRegistry.deleted_at.is_(None))
+            ).where(*conditions)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -108,7 +111,14 @@ class ComputeService:
             if compute is None:
                 return None
 
-            # Keep the row until the background cleanup removes the resources.
+            used_statement = select(Application.id).where(
+                Application.compute_registry_id == registry_id,
+                Application.deleted_at.is_(None),
+            ).limit(1)
+            if (await session.execute(used_statement)).scalar_one_or_none() is not None:
+                raise ValueError("Compute registry is used by active applications")
+
+            # Keep the row for audit history and hide it from future selections.
             compute.deleted_at = datetime.now(UTC)
             compute.deleted_id = deleted_id
             compute.updated_id = deleted_id

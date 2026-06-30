@@ -1,20 +1,72 @@
 # LongLink Agent Guide
 
-LongLink is a platform for building structured internal business applications: operational software for companies whose workflows are too specific for off-the-shelf SaaS, but too important to manage through spreadsheets, scripts, or isolated custom tools.
+LongLink is GitHub for business applications and workflows.
 
-The core idea is to turn recurring business processes into maintainable application units. A LongLink application captures the process model: data, validation, permissions, actions, workflow states, API behavior, and user-facing screens. LongLink supplies the foundation around that model, including identity, organization context, routing, deployment, storage, infrastructure orchestration, and a consistent web experience.
+| GitHub                                                       | LongLink                                                                     |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Hosts repositories                                           | Hosts applications                                                           |
+| Repositories contain code                                    | Applications contain business logic                                          |
+| Provides a common environment for managing code              | Provides a common environment for running business applications              |
+| Handles collaboration, permissions, and repository workflows | Handles authentication, permissions, organization management, and deployment |
+| Developers manage the structure of each repository           | The SDK defines the application structure: data layer, API, and UI           |
+| Repository is the unit of work                               | Application is the unit of work                                              |
 
-A useful comparison is GitHub. GitHub gives software teams a common system for repositories without deciding what code they write. LongLink gives organizations a common system for internal applications without deciding how their business process works. In this model, the application is the unit of work in the same way a repository is the unit of work on GitHub.
+- The applications are code first, allowing for a stable and long term maintabilability.
+- Each application is a python fastapi endpoint, with a database and a storage. 
+- A custom xml standardize the UI so that the development and the production share the same look
 
-The lifecycle starts by modeling a real process: what data is captured, which rules make it valid, who can act on it, and how it moves from state to state. Developers implement that model with the SDK, run and test it locally, then package it with the metadata and interface required by the platform. After deployment, the control plane handles access, organization context, routing, infrastructure, and operations. As requirements change, the application evolves in place while keeping the same structure and runtime expectations.
 
-This approach creates leverage. Teams can deliver custom business software without starting from a blank stack each time, and shared concerns such as authentication, permissions, deployment, storage, UI rendering, and operational management are handled once by the platform. The result is faster delivery, clearer requirements, more consistent user experiences, easier maintenance, and applications that remain understandable as they grow.
+Designed for real world usage:
+- Allows for a dedicated solution (low cost, faster iteration cycle)
+- Reduce the maintenence after the
+- AI development first, the most common libraries that are well defined in the dataset have been chosen to minimiza hallucinations.
+- AI usage first. Appliations are developed as REST API first app. Headless allows to integrate and expand 
+=> Allows to move even simple spreadsheets into professional solutions.
 
-LongLink is composed of three main parts. The `api/` package is the hosted control plane for users, organizations, applications, infrastructure, operations, and authenticated access. The `sdk/` package is the developer runtime for creating applications locally with Python, FastAPI, SQLAlchemy, storage helpers, CLI commands, and packaged schema assets. The `web/` package is the React interface for the public site, documentation, control-plane UI, and runtime rendering.
 
-The frontend is delivered in two modes. API mode builds the authenticated control-plane and documentation experience into `api/src/.static/web`. SDK mode builds the smaller embedded runtime into `sdk/longlink/.static/web`, where local applications can be rendered without control-plane user state.
+Control plane
+- User authentication
+- User permissions
+- Application deployment and lifecicle
+- Audit logs
+- ...
 
-Follow the active architecture and MVP development model. Preserve the separation between the control plane, SDK runtime, and web build modes unless the product model explicitly changes.
+Applications: 
+
+|                 | Testing                  | Development               | Production                               |
+| --------------- | ------------------------ | ------------------------- | ---------------------------------------- |
+| User management | Fixtures, auth overrides | Seeded local users        | OIDC users                               |
+| Access model    | Isolated permissions     | Local role simulation     | Organization and application memberships |
+| Database        | In-memory SQLite         | SQLite                    | PostgreSQL database and schemas          |
+| File storage    | In-memory `fsspec`       | Local `fsspec` filesystem | S3-compatible buckets                    |
+| Web bundle      | Test runtime             | SDK bundle                | API bundle and app rendering             |
+| Environment     | Test settings            | Local settings            | Runtime secrets                          |
+| Build command   | `longlink tests`         | `longlink dev`            | `longlink build`                         |
+| Deployment      | None                     | Local process             | Platform deployment                      |
+| Operations      | Test assertions          | Local debugging           | Create, verify, delete, logs, status     |
+
+
+UI: 
+- Defined as XML pages, manage state and data fetching
+
+```xml
+<longlink name="Tasks" icon="list-check">
+  <State id="draft" title="" />
+  <Query id="tasks" path="/api/tasks" />
+
+  <H1 i18n="tasks.title" />
+  <P i18n="tasks.count" count="${tasks.length}" />
+
+  <Input value="$draft.title" placeholder="New task" />
+  <Action action="/api/tasks" json="${{ title: draft.title }}" invalidate="${['tasks']}">
+    <Button i18n="tasks.create" />
+  </Action>
+
+  <For each="$tasks" as="task">
+    <P if="${task.status in ['open', 'pending']}" i18n="tasks.row" title="$task.title" />
+  </For>
+</longlink>
+```
 
 ## Goals
 
@@ -83,7 +135,7 @@ longlink/
 
 ### Control plane
 
-The control plane is the hosted platform layer. It manages users, organizations, memberships, applications, locations, infrastructure registries, operations, routing, and deployment state. Users authenticate through OIDC and are stored in the control-plane database. Organizations define the tenant boundary, and memberships decide which users can access each organization and application.
+The control plane manages users, organizations, memberships, applications, locations, infrastructure registries, operations, routing, and deployment state. Users authenticate through OIDC and are stored in the control-plane database. Organizations define the tenant boundary, and memberships decide which users can access each organization and application.
 
 Applications are added to the control plane as packaged container images. When an image is registered, the platform inspects its LongLink labels, creates the application record, stores metadata, checks organization access, receives required environment values, and starts the deployment workflow.
 

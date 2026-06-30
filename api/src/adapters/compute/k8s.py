@@ -1,6 +1,5 @@
-# pyright: reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportArgumentType=false, reportMissingImports=false
-
 import yaml
+from decimal import Decimal, InvalidOperation
 from typing import Any, Callable, cast
 from .base import Compute
 from datetime import UTC, datetime
@@ -9,8 +8,47 @@ from kubernetes import client, config
 from src.logger import logger
 from src.constants import TEMPLATES
 from src.utils.namespace import k8name
-from kubernetes.client.rest import ApiException
-from kubernetes.utils.quantity import parse_quantity
+from kubernetes.client.exceptions import ApiException
+
+QUANTITY_SUFFIXES = {
+    "Ki": Decimal(1024),
+    "Mi": Decimal(1024) ** 2,
+    "Gi": Decimal(1024) ** 3,
+    "Ti": Decimal(1024) ** 4,
+    "Pi": Decimal(1024) ** 5,
+    "Ei": Decimal(1024) ** 6,
+    "n": Decimal("0.000000001"),
+    "u": Decimal("0.000001"),
+    "m": Decimal("0.001"),
+    "k": Decimal(1000),
+    "K": Decimal(1000),
+    "M": Decimal(1000) ** 2,
+    "G": Decimal(1000) ** 3,
+    "T": Decimal(1000) ** 4,
+    "P": Decimal(1000) ** 5,
+    "E": Decimal(1000) ** 6,
+}
+
+
+def parse_quantity(value: object) -> Decimal:
+    """Parse one Kubernetes resource quantity into base units."""
+
+    raw_value = str(value).strip()
+    if raw_value == "":
+        return Decimal(0)
+
+    for suffix, multiplier in sorted(QUANTITY_SUFFIXES.items(), key=lambda item: len(item[0]), reverse=True):
+        if raw_value.endswith(suffix):
+            number = raw_value[: -len(suffix)]
+            try:
+                return Decimal(number) * multiplier
+            except InvalidOperation:
+                return Decimal(0)
+
+    try:
+        return Decimal(raw_value)
+    except InvalidOperation:
+        return Decimal(0)
 
 
 class K8s(Compute):
@@ -62,11 +100,15 @@ class K8s(Compute):
 
         networking_api = client.NetworkingV1Api(self._api_client)
         for item in networking_api.list_ingress_for_all_namespaces(label_selector="managed-by=longlink").items:
+            metadata = item.metadata
+            if metadata is None or metadata.name is None or metadata.namespace is None:
+                continue
+
             try:
-                networking_api.delete_namespaced_ingress(item.metadata.name, item.metadata.namespace)
+                networking_api.delete_namespaced_ingress(metadata.name, metadata.namespace)
             except ApiException as exc:
                 if exc.status != 404:
-                    raise ValueError(f"Failed deleting Ingress '{item.metadata.namespace}/{item.metadata.name}'") from exc
+                    raise ValueError(f"Failed deleting Ingress '{metadata.namespace}/{metadata.name}'") from exc
 
         # Delete managed namespaces after their contents are gone.
         for item in self._core_api.list_namespace(label_selector="managed-by=longlink").items:
@@ -254,16 +296,29 @@ class K8s(Compute):
         if not pods:
             raise ValueError(f"No pods found for application '{namespace}/{name}'")
 
+        def pod_creation_time(item: client.V1Pod) -> datetime:
+            """Return a pod creation timestamp with a deterministic fallback."""
+
+            metadata = item.metadata
+            if metadata is None or metadata.creation_timestamp is None:
+                return datetime.min.replace(tzinfo=UTC)
+
+            return metadata.creation_timestamp
+
         # Pick the newest pod so logs stay aligned with the latest rollout.
         pod = sorted(
             pods,
-            key=lambda item: item.metadata.creation_timestamp or datetime.min.replace(tzinfo=UTC),
+            key=pod_creation_time,
             reverse=True,
         )[0]
+        pod_metadata = pod.metadata
+        if pod_metadata is None or pod_metadata.name is None:
+            raise ValueError(f"No named pods found for application '{namespace}/{name}'")
+
         # Convert Kubernetes API failures into a simple adapter error.
         try:
             return self._core_api.read_namespaced_pod_log(
-                pod.metadata.name,
+                pod_metadata.name,
                 namespace,
                 tail_lines=lines,
             )

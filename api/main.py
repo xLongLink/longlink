@@ -1,6 +1,5 @@
-# pyright: reportDeprecated=false
-
 import asyncio
+from uuid import UUID
 from fastapi import FastAPI
 from pathlib import Path
 from collections.abc import AsyncIterator
@@ -18,6 +17,17 @@ from starlette.middleware.sessions import SessionMiddleware
 from src.database.services.operations import operations
 
 
+async def renew_operation_lease(operation_id: UUID, lease_token: str) -> None:
+    """Keep one claimed operation leased while the current worker executes it."""
+
+    while True:
+        await asyncio.sleep(max(1, env.OPERATION_HEARTBEAT_SECONDS))
+        renewed = await operations.renew_lease(operation_id, lease_token)
+        if renewed is None:
+            logger.warning("Operation %s lease was lost", operation_id)
+            return
+
+
 async def run_operation_scheduler() -> None:
     """Continuously claim and execute scheduled operations."""
 
@@ -29,6 +39,11 @@ async def run_operation_scheduler() -> None:
             continue
 
         logger.info("Executing operation %s (%s)", operation.id, operation.kind)
+        if operation.lease_token is None:
+            logger.warning("Skipping operation %s without a lease token", operation.id)
+            continue
+
+        heartbeat = asyncio.create_task(renew_operation_lease(operation.id, operation.lease_token))
         # Execute one claimed operation without stopping the worker on failure.
         try:
             result = await execute(operation)
@@ -37,13 +52,15 @@ async def run_operation_scheduler() -> None:
         except Exception:
             # Keep draining so one failed operation does not block the queue.
             logger.exception("Operation scheduler failed for %s (%s)", operation.id, operation.kind)
+        finally:
+            heartbeat.cancel()
+            with suppress(asyncio.CancelledError):
+                await heartbeat
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start the API and background operation worker."""
-
-    await operations.reset_active()
 
     worker = asyncio.create_task(run_operation_scheduler())
     yield
@@ -68,8 +85,18 @@ app.add_middleware(
     secret_key=env.SESSION_KEY,
     session_cookie="longlink_session",
     same_site="lax",
-    https_only=False,
+    https_only=not env.DEVELOPMENT,
 )
+
+cors_origins = [origin for origin in env.CORS_ORIGINS if origin]
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Register API routes after importing the endpoint modules so their decorators run.
 app.include_router(auth.router)
@@ -93,17 +120,5 @@ if static_dir.exists():
 
 if __name__ == "__main__":
     import uvicorn
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://localhost:8000",
-        ],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000)

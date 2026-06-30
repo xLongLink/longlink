@@ -168,6 +168,8 @@ export type ApiDatabaseRegistry = {
     host: string;
     port: number;
     username: string;
+    runtime_host: string;
+    runtime_port: number;
     location_id: string;
     created_at: string;
     created_by: ApiUserSummary | null;

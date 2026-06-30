@@ -21,6 +21,8 @@ export default function ConnectDatabaseDialog() {
     const [port, setPort] = useState('5432');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [runtimeHost, setRuntimeHost] = useState('');
+    const [runtimePort, setRuntimePort] = useState('');
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
     const { items: locations } = useLocations(open);
@@ -48,6 +50,8 @@ export default function ConnectDatabaseDialog() {
                     port: Number(port),
                     username: username.trim(),
                     password,
+                    runtime_host: runtimeHost.trim() || undefined,
+                    runtime_port: runtimePort.length > 0 ? Number(runtimePort) : undefined,
                     location_id: locationId,
                 }),
             });
@@ -61,6 +65,8 @@ export default function ConnectDatabaseDialog() {
             setPort('5432');
             setUsername('');
             setPassword('');
+            setRuntimeHost('');
+            setRuntimePort('');
             setLocationId('');
         },
     });
@@ -157,6 +163,29 @@ export default function ConnectDatabaseDialog() {
                     onChange={(event) => setPassword(event.target.value)}
                     autoComplete="off"
                 />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                    <Label htmlFor="database-runtime-host">Runtime host</Label>
+                    <Input
+                        id="database-runtime-host"
+                        value={runtimeHost}
+                        onChange={(event) => setRuntimeHost(event.target.value)}
+                        placeholder="host.k3d.internal"
+                        autoComplete="off"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="database-runtime-port">Runtime port</Label>
+                    <Input
+                        id="database-runtime-port"
+                        type="number"
+                        value={runtimePort}
+                        onChange={(event) => setRuntimePort(event.target.value)}
+                        placeholder={port || '5432'}
+                    />
+                </div>
             </div>
 
             <RegistryLocationField

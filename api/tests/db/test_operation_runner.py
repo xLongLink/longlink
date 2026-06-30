@@ -189,7 +189,15 @@ async def test_execute_application_delete_operation_removes_runtime_and_deletes_
     class FakeDatabase:
         """Fake database adapter for application deletion."""
 
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+        def __init__(
+            self,
+            host: str,
+            port: int,
+            username: str,
+            password: str,
+            runtime_host: str | None = None,
+            runtime_port: int | None = None,
+        ) -> None:
             pass
 
         async def remove(self, organization: str, application: str) -> None:

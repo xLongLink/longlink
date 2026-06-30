@@ -7,5 +7,14 @@
     "${workspaceFolder}/api/.venv/lib/python3.14/site-packages",
     "${workspaceFolder}/sdk/.venv/lib/python3.14/site-packages",
     "${workspaceFolder}/sdk/dev/.venv/lib/python3.14/site-packages"
-  ]
+  ],
+  "terminal.integrated.env.linux": {
+    "DEVELOPMENT": "true"
+  },
+  "terminal.integrated.env.osx": {
+    "DEVELOPMENT": "true"
+  },
+  "terminal.integrated.env.windows": {
+    "DEVELOPMENT": "true"
+  }
 }

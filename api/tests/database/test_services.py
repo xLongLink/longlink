@@ -153,6 +153,8 @@ async def test_database_service_rejects_duplicate_registry_names(users: tuple) -
     # Assert
     assert str(exc.value) == "Database registry already exists"
     assert first_registry.host == "db.local.longlink.internal"
+    assert first_registry.runtime_host == "db.local.longlink.internal"
+    assert first_registry.runtime_port == 5432
     assert len(await db.database.list()) == 1
 
 
@@ -211,12 +213,13 @@ async def test_operations_service_tracks_claim_complete_and_reset(users: tuple) 
     # Act
     operation = await db.operations.create(OperationKind.application_create, step="verify", application_id=application.id, user=owner)
     claimed = await db.operations.claim(operation.id)
-    completed = await db.operations.complete(operation.id)
+    assert claimed is not None
+    assert claimed.lease_token is not None
+    completed = await db.operations.complete(operation.id, claimed.lease_token)
     await db.operations.reset_active()
 
     # Assert
     assert operation.status == "scheduled"
-    assert claimed is not None
     assert claimed.status == "active"
     assert completed is not None
     assert completed.status == "completed"

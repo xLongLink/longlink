@@ -96,11 +96,11 @@ async def test_list_organization_apps_returns_app_membership_role(
     assert response.json() == [expected_data]
 
 
-async def test_list_organization_apps_returns_null_role_without_app_membership(
+async def test_list_organization_apps_returns_creator_app_admin_role(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return no application role when the user has no application membership row."""
+    """Return the creator's automatically assigned application admin role."""
 
     # Arrange
     user = users[0]
@@ -124,7 +124,7 @@ async def test_list_organization_apps_returns_null_role_without_app_membership(
         {
             **app.model_dump(),
             "organization": app.organization,
-            "role": None,
+            "role": ApplicationRoles.admin,
             "created_by": UserSummary.model_validate(user.model_dump()),
             "updated_by": UserSummary.model_validate(user.model_dump()),
             "deleted_by": None,
@@ -273,6 +273,8 @@ async def test_create_app_returns_app_response(
         port=5432,
         username="longlink",
         password="secret",
+        runtime_host="db.runtime.longlink.internal",
+        runtime_port=15432,
         location_id=remote_location.id,
         user=user,
     )
@@ -319,12 +321,16 @@ async def test_create_app_returns_app_response(
             port: int,
             username: str,
             password: str,
+            runtime_host: str | None = None,
+            runtime_port: int | None = None,
         ) -> None:
             captured["database"] = {
                 "host": host,
                 "port": port,
                 "username": username,
                 "password": password,
+                "runtime_host": runtime_host,
+                "runtime_port": runtime_port,
             }
 
         async def schema(self, organization: str, application: str) -> str:
@@ -370,6 +376,8 @@ async def test_create_app_returns_app_response(
         "port": 5432,
         "username": "longlink",
         "password": "secret",
+        "runtime_host": "db.runtime.longlink.internal",
+        "runtime_port": 15432,
     }
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
     assert captured["application"] == {

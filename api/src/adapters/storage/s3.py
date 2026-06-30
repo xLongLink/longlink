@@ -1,5 +1,3 @@
-# pyright: reportUnknownMemberType=false, reportTypedDictNotRequiredAccess=false, reportArgumentType=false
-
 import boto3
 from botocore.exceptions import ClientError
 from .base import Storage

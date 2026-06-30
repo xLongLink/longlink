@@ -1,5 +1,3 @@
-# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportReturnType=false, reportCallIssue=false
-
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
@@ -10,6 +8,7 @@ from src.models.storages import StorageKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
+from src.database.models.applications import Application
 
 
 class StorageService:
@@ -27,15 +26,19 @@ class StorageService:
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, registry_id: UUID) -> StorageRegistry | None:
+    async def get(self, registry_id: UUID, include_deleted: bool = False) -> StorageRegistry | None:
         """Return one storage backend by id."""
 
         async with session_scope() as session:
+            conditions = [StorageRegistry.id == registry_id]
+            if not include_deleted:
+                conditions.append(StorageRegistry.deleted_at.is_(None))
+
             statement = select(StorageRegistry).options(
                 selectinload(StorageRegistry.created_by),
                 selectinload(StorageRegistry.updated_by),
                 selectinload(StorageRegistry.deleted_by),
-            ).where(StorageRegistry.id == registry_id, StorageRegistry.deleted_at.is_(None))
+            ).where(*conditions)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -105,6 +108,14 @@ class StorageService:
             if storage is None:
                 return None
 
+            used_statement = select(Application.id).where(
+                Application.storage_registry_id == registry_id,
+                Application.deleted_at.is_(None),
+            ).limit(1)
+            if (await session.execute(used_statement)).scalar_one_or_none() is not None:
+                raise ValueError("Storage registry is used by active applications")
+
+            # Keep the row for audit history and hide it from future selections.
             storage.deleted_at = datetime.now(UTC)
             storage.deleted_id = deleted_id
             storage.updated_id = deleted_id

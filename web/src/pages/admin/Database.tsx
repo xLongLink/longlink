@@ -26,6 +26,8 @@ const databaseColumnsBase: Array<
         meta: { className: 'min-w-64' },
         cell: ({ row }) => {
             const database = row.original;
+            const managementAddress = `${database.host}:${database.port}`;
+            const runtimeAddress = `${database.runtime_host}:${database.runtime_port}`;
 
             return (
                 <Link to={`/admin/database/${encodeURIComponent(database.slug)}`} className="flex items-center gap-3">
@@ -37,8 +39,11 @@ const databaseColumnsBase: Array<
                     <div className="min-w-0">
                         <div className="truncate font-medium text-foreground">{database.username}</div>
                         <div className="truncate text-xs text-muted-foreground">
-                            {database.host}:{database.port}
+                            {managementAddress}
                         </div>
+                        {runtimeAddress !== managementAddress ? (
+                            <div className="truncate text-xs text-muted-foreground">Runtime {runtimeAddress}</div>
+                        ) : null}
                     </div>
                 </Link>
             );

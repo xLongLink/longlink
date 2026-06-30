@@ -1,5 +1,3 @@
-# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportMissingTypeArgument=false
-
 from uuid import UUID
 from typing import Any, cast
 from datetime import UTC, datetime
@@ -58,6 +56,7 @@ class ApplicationsService:
                         Application.organization_id == UserApplication.organization_id,
                         Application.id == UserApplication.application_id,
                         UserApplication.user_id == user_id,
+                        UserApplication.deleted_at.is_(None),
                     ),
                 )
                 .where(Application.organization_id == organization_id, Application.deleted_at.is_(None))
@@ -141,6 +140,16 @@ class ApplicationsService:
             application.created_id = user.id
             application.updated_id = user.id
             session.add(application)
+            session.add(
+                UserApplication(
+                    application_id=application.id,
+                    user_id=user.id,
+                    organization_id=organization_id,
+                    role_name=ApplicationRoles.admin,
+                    created_id=user.id,
+                    updated_id=user.id,
+                )
+            )
             await session.commit()
 
             await session.refresh(application)
@@ -172,6 +181,18 @@ class ApplicationsService:
             application = result.scalar_one_or_none()
             if application is None:
                 raise ValueError('Application not found')
+
+            memberships_result = await session.execute(
+                select(UserApplication).where(
+                    UserApplication.organization_id == organization_id,
+                    UserApplication.application_id == application_id,
+                    UserApplication.deleted_at.is_(None),
+                )
+            )
+            for membership in memberships_result.scalars().all():
+                membership.deleted_at = datetime.now(UTC)
+                membership.deleted_id = deleted_id
+                membership.updated_id = deleted_id
 
             application.deleted_at = datetime.now(UTC)
             application.deleted_id = deleted_id

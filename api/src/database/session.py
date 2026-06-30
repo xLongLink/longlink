@@ -1,5 +1,3 @@
-# pyright: reportDeprecated=false
-
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from src.environments import env

@@ -1,5 +1,3 @@
-# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportReturnType=false, reportCallIssue=false
-
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
@@ -10,6 +8,7 @@ from src.database.session import session_scope
 from src.models.databases import DatabaseKind
 from src.database.models.users import User
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.applications import Application
 
 
 class DatabaseService:
@@ -27,15 +26,19 @@ class DatabaseService:
             result = await session.execute(statement)
             return result.scalars().all()
 
-    async def get(self, registry_id: UUID) -> DatabaseRegistry | None:
+    async def get(self, registry_id: UUID, include_deleted: bool = False) -> DatabaseRegistry | None:
         """Return one database backend by id."""
 
         async with session_scope() as session:
+            conditions = [DatabaseRegistry.id == registry_id]
+            if not include_deleted:
+                conditions.append(DatabaseRegistry.deleted_at.is_(None))
+
             statement = select(DatabaseRegistry).options(
                 selectinload(DatabaseRegistry.created_by),
                 selectinload(DatabaseRegistry.updated_by),
                 selectinload(DatabaseRegistry.deleted_by),
-            ).where(DatabaseRegistry.id == registry_id, DatabaseRegistry.deleted_at.is_(None))
+            ).where(*conditions)
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -50,6 +53,8 @@ class DatabaseService:
         password: str,
         location_id: UUID,
         user: User,
+        runtime_host: str | None = None,
+        runtime_port: int | None = None,
     ) -> DatabaseRegistry:
         """Create one database backend registration."""
 
@@ -66,8 +71,10 @@ class DatabaseService:
                 slug=slug,
                 host=host,
                 port=port,
-                username=username,
                 password=password,
+                username=username,
+                runtime_host=runtime_host or host,
+                runtime_port=runtime_port if runtime_port is not None else port,
                 location_id=location_id,
             )
             database.created_id = user.id
@@ -107,7 +114,14 @@ class DatabaseService:
             if database is None:
                 return None
 
-            # Keep the row until cleanup can remove the backing resources.
+            used_statement = select(Application.id).where(
+                Application.database_registry_id == registry_id,
+                Application.deleted_at.is_(None),
+            ).limit(1)
+            if (await session.execute(used_statement)).scalar_one_or_none() is not None:
+                raise ValueError("Database registry is used by active applications")
+
+            # Keep the row for audit history and hide it from future selections.
             database.deleted_at = datetime.now(UTC)
             database.deleted_id = deleted_id
             database.updated_id = deleted_id

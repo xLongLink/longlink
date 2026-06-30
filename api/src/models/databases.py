@@ -34,10 +34,14 @@ class DatabaseRegistryCreate(BaseModel):
     # Metadata
     kind: DatabaseKind
     name: str
+
+    # Connection
     host: str
     port: int
     password: str
     username: str
+    runtime_host: str | None = None
+    runtime_port: int | None = None
 
     # Relationships
     location_id: UUID
@@ -142,9 +146,13 @@ class DatabaseRegistryResponse(BaseModel):
     kind: DatabaseKind
     name: str
     slug: str
+
+    # Connection
     host: str
     port: int
     username: str
+    runtime_host: str
+    runtime_port: int
 
     # Relationships
     location_id: UUID

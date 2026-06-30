@@ -19,7 +19,7 @@ tests:
 	cd api && uv sync --extra dev
 	cd sdk && uv sync --extra dev
 	bun i --cwd web
-	cd api && uv run pytest --cov=src --cov-report=term-missing tests
+	cd api && ENVIRONMENT=testing uv run pytest --cov=src --cov-report=term-missing tests
 	cd sdk && uv run pytest --cov=longlink --cov-report=term-missing tests
 	bun test tests --cwd web
 	bun run --cwd web typecheck
@@ -49,14 +49,15 @@ down:
 	-docker compose -f dev/compose.yml down
 	-k3d cluster delete compute
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+	find . -type d -name .mypy_cache -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -delete
 
 
 api: 
 	cd api && uv sync --extra dev
-	cd api && uv run alembic upgrade head
-	cd api && uv run python seed.py
-	cd api && DEV=True uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+	cd api && ENVIRONMENT=development uv run alembic upgrade head
+	cd api && ENVIRONMENT=development uv run python seed.py
+	cd api && ENVIRONMENT=development uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 
 web: 

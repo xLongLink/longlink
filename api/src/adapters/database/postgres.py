@@ -1,5 +1,3 @@
-# pyright: reportDeprecated=false
-
 import secrets
 from datetime import date, datetime
 from decimal import Decimal
@@ -27,6 +25,8 @@ class Postgres(Database):
         port: int,
         username: str,
         password: str,
+        runtime_host: str | None = None,
+        runtime_port: int | None = None,
     ) -> None:
         """Initialize the PostgreSQL database adapter.
 
@@ -35,11 +35,15 @@ class Postgres(Database):
             port: PostgreSQL port.
             username: PostgreSQL username.
             password: PostgreSQL password.
+            runtime_host: PostgreSQL host reachable from application runtimes.
+            runtime_port: PostgreSQL port reachable from application runtimes.
         """
         self._host = host
         self._port = port
         self._username = username
         self._password = password
+        self._runtime_host = runtime_host or host
+        self._runtime_port = runtime_port if runtime_port is not None else port
         self._sslmode = env.DATABASE_SSLMODE
         self._maintenance_database = "postgres"
 
@@ -65,8 +69,8 @@ class Postgres(Database):
             "postgresql+psycopg",
             username=username,
             password=password,
-            host=self._host,
-            port=self._port,
+            host=self._runtime_host,
+            port=self._runtime_port,
             database=database,
         )
         return url.update_query_dict({"sslmode": self._sslmode})

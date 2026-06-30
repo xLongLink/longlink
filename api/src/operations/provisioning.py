@@ -22,6 +22,16 @@ from src.database.services.storage import storage
 from src.database.services.operations import operations
 from src.database.services.applications import applications
 
+PLATFORM_ENVIRONMENT_NAMES = {
+    "LONGLINK_DATABASE_SCHEMA",
+    "LONGLINK_DATABASE_URL",
+    "LONGLINK_ENV",
+    "LONGLINK_STORAGE_ACCESS_KEY_ID",
+    "LONGLINK_STORAGE_ENDPOINT_URL",
+    "LONGLINK_STORAGE_PROTOCOL",
+    "LONGLINK_STORAGE_SECRET_ACCESS_KEY",
+}
+
 
 async def latest_compute_registry(location_id: UUID) -> ComputeRegistry | None:
     """Return the newest compute registry for one location."""
@@ -57,7 +67,7 @@ async def application_compute_registry(application: Application, location_id: UU
     """Return the compute registry used by an application, falling back to the newest one."""
 
     if application.compute_registry_id is not None:
-        return await compute.get(application.compute_registry_id)
+        return await compute.get(application.compute_registry_id, include_deleted=True)
 
     return await latest_compute_registry(location_id)
 
@@ -66,7 +76,7 @@ async def application_database_registry(application: Application, location_id: U
     """Return the database registry used by an application, falling back to the newest one."""
 
     if application.database_registry_id is not None:
-        return await database.get(application.database_registry_id)
+        return await database.get(application.database_registry_id, include_deleted=True)
 
     return await latest_database_registry(location_id)
 
@@ -75,7 +85,7 @@ async def application_storage_registry(application: Application) -> StorageRegis
     """Return the storage registry used by an application."""
 
     if application.storage_registry_id is not None:
-        return await storage.get(application.storage_registry_id)
+        return await storage.get(application.storage_registry_id, include_deleted=True)
 
     return None
 
@@ -134,6 +144,17 @@ async def create_application_runtime(
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await images.metadata(payload.image)
+    if image_metadata is not None:
+        missing_envs = sorted(
+            environment.name
+            for environment in image_metadata.environments
+            if environment.required
+            and environment.name not in PLATFORM_ENVIRONMENT_NAMES
+            and not payload.envs.get(environment.name, "").strip()
+        )
+        if missing_envs:
+            raise ValueError(f"Missing required environment variables: {', '.join(missing_envs)}")
+
     compute_registry = await latest_compute_registry(organization.location_id)
     if compute_registry is None:
         raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
@@ -166,11 +187,15 @@ async def create_application_runtime(
         database_registry.port,
         database_registry.username,
         database_registry.password,
+        runtime_host=database_registry.runtime_host,
+        runtime_port=database_registry.runtime_port,
     )
 
+    database_schema_attempted = False
     # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
     try:
         await k8s.namespace(organization.slug)
+        database_schema_attempted = True
         database_url = await db_client.schema(organization.slug, application_slug)
         runtime_envs = runtime_environment(application_slug, database_url, storage_registry)
         await k8s.application(
@@ -181,12 +206,33 @@ async def create_application_runtime(
             {**payload.envs, **runtime_envs},
         )
     except Exception as exc:
+        try:
+            await k8s.remove(organization.slug, application_slug)
+        except Exception:
+            logger.exception("Failed to clean application workload after provisioning error for %s/%s", organization.slug, application_slug)
+
+        if database_schema_attempted:
+            try:
+                await db_client.remove(organization.slug, application_slug)
+            except Exception:
+                logger.exception("Failed to clean application database after provisioning error for %s/%s", organization.slug, application_slug)
+
         await applications.set_status(application.id, ApplicationStatus.failed)
         raise RuntimeError("Failed to initialize the application") from exc
 
     try:
         operation = await operations.create(OperationKind.application_create, application_id=application.id, step="verify", user=user)
     except Exception as exc:
+        try:
+            await k8s.remove(organization.slug, application_slug)
+        except Exception:
+            logger.exception("Failed to clean application workload after queueing error for %s/%s", organization.slug, application_slug)
+
+        try:
+            await db_client.remove(organization.slug, application_slug)
+        except Exception:
+            logger.exception("Failed to clean application database after queueing error for %s/%s", organization.slug, application_slug)
+
         await applications.set_status(application.id, ApplicationStatus.failed)
         logger.exception("Failed to queue application verification for %s/%s", organization.slug, payload.name)
         raise RuntimeError("Failed to queue application verification") from exc
@@ -237,6 +283,9 @@ async def queue_application_delete(application_id: UUID, user: User) -> Applicat
     application = await applications.get_by_id(application_id)
     if application is None:
         return None
+
+    if application.status == ApplicationStatus.deleting:
+        return application
 
     await applications.set_status(application.id, ApplicationStatus.deleting)
     try:

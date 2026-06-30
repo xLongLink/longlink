@@ -1,5 +1,3 @@
-# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false
-
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select

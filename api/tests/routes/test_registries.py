@@ -81,11 +81,13 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             "name": "primary",
             "host": "db.longlink.internal",
             "port": 5432,
-                "username": "longlink",
-                "password": "secret",
-                "location_id": str(location.id),
-            },
-        )
+            "username": "longlink",
+            "password": "secret",
+            "runtime_host": "db.runtime.longlink.internal",
+            "runtime_port": 15432,
+            "location_id": str(location.id),
+        },
+    )
     list_response = client.get("/api/databases")
     registry_id = create_response.json()["id"]
     delete_response = client.delete(f"/api/databases/{registry_id}")
@@ -101,6 +103,8 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
         host="db.longlink.internal",
         port=5432,
         username="longlink",
+        runtime_host="db.runtime.longlink.internal",
+        runtime_port=15432,
         location_id=location.id,
         created_at=create_payload["created_at"],
         created_by=user_summary,
@@ -113,12 +117,14 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     assert list_response.json() == [
         DatabaseRegistryResponse(
             id=registry_id,
-        kind=DatabaseKind.postgresql,
+            kind=DatabaseKind.postgresql,
             name="primary",
             slug="primary",
             host="db.longlink.internal",
             port=5432,
             username="longlink",
+            runtime_host="db.runtime.longlink.internal",
+            runtime_port=15432,
             location_id=location.id,
             created_at=create_payload["created_at"],
             created_by=user_summary,
@@ -336,5 +342,5 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     assert deleted_response.status_code == 404
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
-    assert captured["cleanup_calls"] == 1
+    assert captured.get("cleanup_calls", 0) == 0
     assert captured["setup_calls"] == 1

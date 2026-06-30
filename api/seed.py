@@ -52,6 +52,8 @@ def main() -> None:
                 "port": 15432,
                 "username": "admin",
                 "password": "admin",
+                "runtime_host": "host.k3d.internal",
+                "runtime_port": 15432,
                 "location_id": location_id,
             },
         )

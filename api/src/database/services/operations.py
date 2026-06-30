@@ -1,8 +1,8 @@
-# pyright: reportArgumentType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportReturnType=false, reportCallIssue=false
-
+import secrets
 from uuid import UUID
-from datetime import UTC, datetime
-from sqlalchemy import select, update
+from datetime import UTC, datetime, timedelta
+from sqlalchemy import or_, select, update
+from src.environments import env
 from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -31,14 +31,25 @@ class OperationsService:
 
 
     async def reset_active(self) -> None:
-        """Return interrupted active operations to the scheduled queue."""
+        """Return expired active operations to the scheduled queue."""
 
         async with session_scope() as session:
-            # Active only means claimed, so a restart can safely make those rows claimable again.
+            now = datetime.now(UTC)
+            # Only expired leases are reset so healthy workers keep ownership while the API scales out.
             statement = (
                 update(Operation)
-                .where(Operation.started_at.is_not(None), Operation.stopped_at.is_(None))
-                .values(started_at=None, error=None, updated_at=datetime.now(UTC))
+                .where(
+                    Operation.started_at.is_not(None),
+                    Operation.stopped_at.is_(None),
+                    or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at < now),
+                )
+                .values(
+                    started_at=None,
+                    error=None,
+                    lease_token=None,
+                    lease_expires_at=None,
+                    updated_at=now,
+                )
             )
             await session.execute(statement)
             await session.commit()
@@ -64,33 +75,57 @@ class OperationsService:
             return operation
 
     async def claim(self, operation_id: UUID) -> Operation | None:
-        """Mark one scheduled operation as active if it has not started yet."""
+        """Mark one scheduled or expired operation as active."""
 
         async with session_scope() as session:
-            # Claim the row atomically so concurrent workers cannot start it twice.
+            now = datetime.now(UTC)
             statement = (
-                update(Operation)
-                .where(Operation.id == operation_id, Operation.started_at.is_(None), Operation.stopped_at.is_(None))
-                .values(started_at=datetime.now(UTC), updated_at=datetime.now(UTC))
+                select(Operation)
+                .where(
+                    Operation.id == operation_id,
+                    Operation.stopped_at.is_(None),
+                    or_(
+                        Operation.started_at.is_(None),
+                        Operation.lease_expires_at.is_(None),
+                        Operation.lease_expires_at < now,
+                    ),
+                )
+                .with_for_update(skip_locked=True)
             )
-            result = await session.execute(statement)
-            if result.rowcount == 0:
+            operation = (await session.execute(statement)).scalars().first()
+            if operation is None:
                 return None
 
+            operation.started_at = operation.started_at or now
+            operation.lease_token = secrets.token_urlsafe(24)
+            operation.lease_expires_at = now + timedelta(seconds=env.OPERATION_LEASE_SECONDS)
+            operation.updated_at = now
             await session.commit()
-            refreshed = await session.execute(select(Operation).where(Operation.id == operation_id))
-            return refreshed.scalar_one_or_none()
+            await session.refresh(operation)
+            return operation
 
 
-    async def defer(self, operation_id: UUID) -> Operation | None:
+    async def defer(self, operation_id: UUID, lease_token: str) -> Operation | None:
         """Make one active operation claimable later without changing its step."""
 
         async with session_scope() as session:
             # A waiting step should be retried later without blocking the worker.
+            now = datetime.now(UTC)
             statement = (
                 update(Operation)
-                .where(Operation.id == operation_id, Operation.started_at.is_not(None), Operation.stopped_at.is_(None))
-                .values(started_at=None, error=None, updated_at=datetime.now(UTC))
+                .where(
+                    Operation.id == operation_id,
+                    Operation.lease_token == lease_token,
+                    Operation.started_at.is_not(None),
+                    Operation.stopped_at.is_(None),
+                )
+                .values(
+                    started_at=None,
+                    error=None,
+                    lease_token=None,
+                    lease_expires_at=None,
+                    updated_at=now,
+                )
             )
             result = await session.execute(statement)
             if result.rowcount == 0:
@@ -102,13 +137,21 @@ class OperationsService:
 
 
     async def claim_next(self) -> Operation | None:
-        """Claim the next scheduled operation in FIFO order."""
+        """Claim the next scheduled or expired operation in FIFO order."""
 
         async with session_scope() as session:
-            # Select the oldest scheduled row so work is processed in submission order.
+            now = datetime.now(UTC)
+            # Select the oldest claimable row so work is processed in submission order.
             statement = (
                 select(Operation)
-                .where(Operation.started_at.is_(None), Operation.stopped_at.is_(None))
+                .where(
+                    Operation.stopped_at.is_(None),
+                    or_(
+                        Operation.started_at.is_(None),
+                        Operation.lease_expires_at.is_(None),
+                        Operation.lease_expires_at < now,
+                    ),
+                )
                 .order_by(Operation.created_at.asc())
                 .limit(1)
                 .with_for_update(skip_locked=True)
@@ -118,25 +161,32 @@ class OperationsService:
             if operation is None:
                 return None
 
-            operation.started_at = datetime.now(UTC)
+            operation.started_at = operation.started_at or now
+            operation.lease_token = secrets.token_urlsafe(24)
+            operation.lease_expires_at = now + timedelta(seconds=env.OPERATION_LEASE_SECONDS)
+            operation.updated_at = now
             await session.commit()
             await session.refresh(operation)
             return operation
 
 
-    async def complete(self, operation_id: UUID) -> Operation | None:
-        """Mark one active operation as completed."""
+    async def renew_lease(self, operation_id: UUID, lease_token: str) -> Operation | None:
+        """Extend one active operation lease for the current worker."""
 
         async with session_scope() as session:
-            # Finalize the row once after successful execution.
+            now = datetime.now(UTC)
             statement = (
                 update(Operation)
                 .where(
                     Operation.id == operation_id,
+                    Operation.lease_token == lease_token,
                     Operation.started_at.is_not(None),
                     Operation.stopped_at.is_(None),
                 )
-                .values(stopped_at=datetime.now(UTC), error=None, updated_at=datetime.now(UTC))
+                .values(
+                    lease_expires_at=now + timedelta(seconds=env.OPERATION_LEASE_SECONDS),
+                    updated_at=now,
+                )
             )
             result = await session.execute(statement)
             if result.rowcount == 0:
@@ -147,19 +197,58 @@ class OperationsService:
             return refreshed.scalar_one_or_none()
 
 
-    async def fail(self, operation_id: UUID, error: str) -> Operation | None:
-        """Mark one active operation as failed and capture the error message."""
+    async def complete(self, operation_id: UUID, lease_token: str) -> Operation | None:
+        """Mark one active operation as completed."""
 
         async with session_scope() as session:
-            # Persist the failure exactly once so the row remains a reliable audit trail.
+            # Finalize the row once after successful execution.
+            now = datetime.now(UTC)
             statement = (
                 update(Operation)
                 .where(
                     Operation.id == operation_id,
+                    Operation.lease_token == lease_token,
                     Operation.started_at.is_not(None),
                     Operation.stopped_at.is_(None),
                 )
-                .values(stopped_at=datetime.now(UTC), error=error, updated_at=datetime.now(UTC))
+                .values(
+                    stopped_at=now,
+                    error=None,
+                    lease_token=None,
+                    lease_expires_at=None,
+                    updated_at=now,
+                )
+            )
+            result = await session.execute(statement)
+            if result.rowcount == 0:
+                return None
+
+            await session.commit()
+            refreshed = await session.execute(select(Operation).where(Operation.id == operation_id))
+            return refreshed.scalar_one_or_none()
+
+
+    async def fail(self, operation_id: UUID, error: str, lease_token: str) -> Operation | None:
+        """Mark one active operation as failed and capture the error message."""
+
+        async with session_scope() as session:
+            # Persist the failure exactly once so the row remains a reliable audit trail.
+            now = datetime.now(UTC)
+            statement = (
+                update(Operation)
+                .where(
+                    Operation.id == operation_id,
+                    Operation.lease_token == lease_token,
+                    Operation.started_at.is_not(None),
+                    Operation.stopped_at.is_(None),
+                )
+                .values(
+                    stopped_at=now,
+                    error=error,
+                    lease_token=None,
+                    lease_expires_at=None,
+                    updated_at=now,
+                )
             )
             result = await session.execute(statement)
             if result.rowcount == 0:

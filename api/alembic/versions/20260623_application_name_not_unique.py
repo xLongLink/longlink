@@ -1,5 +1,3 @@
-# pyright: reportUnknownArgumentType=false
-
 import sqlalchemy as sa
 from alembic import op
 from sqlmodel.sql.sqltypes import AutoString

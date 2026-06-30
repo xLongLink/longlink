@@ -1,5 +1,3 @@
-# pyright: reportAssignmentType=false, reportUnknownLambdaType=false, reportUnknownMemberType=false, reportUnknownVariableType=false
-
 from uuid import UUID, uuid4
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
@@ -24,6 +22,10 @@ class Operation(SQLModel, table=True):
     # Metadata
     step: str = Field(sa_column=Column(String(length=100), nullable=False))
     error: str | None = Field(default=None, sa_column=Column(String(length=2000), nullable=True))
+
+    # Lease
+    lease_token: str | None = Field(default=None, sa_column=Column(String(length=100), nullable=True))
+    lease_expires_at: datetime | None = None
 
     # Timestamps
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

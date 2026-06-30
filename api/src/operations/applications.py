@@ -84,6 +84,9 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
 async def execute_application_create(operation: Operation) -> Operation:
     """Run one application creation verification step."""
 
+    if operation.lease_token is None:
+        raise ValueError("Operation must be claimed before execution")
+
     application_id = operation.application_id
     if application_id is None:
         raise ValueError("Operation missing application reference")
@@ -98,7 +101,7 @@ async def execute_application_create(operation: Operation) -> Operation:
     startup_state = await inspect_application_startup(operation)
     if startup_state == ApplicationStartupState.ready:
         await applications.set_status(application.id, ApplicationStatus.running)
-        completed = await operations.complete(operation.id)
+        completed = await operations.complete(operation.id, operation.lease_token)
         if completed is not None:
             logger.info("Completed application creation %s", operation.id)
             return completed
@@ -107,14 +110,14 @@ async def execute_application_create(operation: Operation) -> Operation:
 
     if startup_state == ApplicationStartupState.dead:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        failed = await operations.fail(operation.id, "Application crashed during startup")
+        failed = await operations.fail(operation.id, "Application crashed during startup", operation.lease_token)
         if failed is not None:
             logger.info("Failed application creation %s", operation.id)
             return failed
 
         return operation
 
-    deferred = await operations.defer(operation.id)
+    deferred = await operations.defer(operation.id, operation.lease_token)
     return deferred or operation
 
 
@@ -122,13 +125,16 @@ async def execute_application_create(operation: Operation) -> Operation:
 async def execute_application_delete(operation: Operation) -> Operation:
     """Run one application deletion step."""
 
+    if operation.lease_token is None:
+        raise ValueError("Operation must be claimed before execution")
+
     application_id = operation.application_id
     if application_id is None:
         raise ValueError("Operation missing application reference")
 
     application = await applications.get_by_id(application_id)
     if application is None:
-        completed = await operations.complete(operation.id)
+        completed = await operations.complete(operation.id, operation.lease_token)
         return completed or operation
 
     if operation.step != "remove_runtime":
@@ -145,7 +151,7 @@ async def execute_application_delete(operation: Operation) -> Operation:
         if str(exc) != "Application not found":
             raise
 
-    completed = await operations.complete(operation.id)
+    completed = await operations.complete(operation.id, operation.lease_token)
     if completed is not None:
         logger.info("Completed application deletion %s", operation.id)
         return completed

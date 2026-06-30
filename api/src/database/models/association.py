@@ -1,5 +1,3 @@
-# pyright: reportAssignmentType=false
-
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel

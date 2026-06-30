@@ -98,6 +98,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 @router.api_route(
     "/api/applications/{application_id}/proxy/{path:path}",
     methods=["DELETE", "GET", "PATCH", "POST"],
+    description="Proxy supports DELETE, GET, PATCH, and POST for non-root application paths. The application root path is intentionally not proxied.",
 )
 async def proxy_application_request(
     application_id: UUID,
@@ -105,7 +106,7 @@ async def proxy_application_request(
     path: str = "",
     user: User = Depends(authuser),
 ) -> Response:
-    """Proxy one request into the deployed application service."""
+    """Proxy one supported non-root request into the deployed application service."""
 
     # Load the application and organization from the path-scoped identifier.
     application = await applications.get_by_id(application_id)

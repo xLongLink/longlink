@@ -1,5 +1,3 @@
-# pyright: reportReturnType=false
-
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
@@ -46,7 +44,11 @@ async def create_storage_registry(payload: StorageRegistryCreate, user: User = D
 async def delete_storage_registry(registry_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
     """Delete one storage backend registration."""
 
-    registry = await storage.delete(registry_id, user.id)
+    try:
+        registry = await storage.delete(registry_id, user.id)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
     if registry is None:
         raise NotFoundError("Storage registry", registry_id)
 

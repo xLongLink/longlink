@@ -1,5 +1,3 @@
-# pyright: reportAssignmentType=false
-
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Optional
 from datetime import UTC, datetime
@@ -39,8 +37,10 @@ class DatabaseRegistry(SQLModel, table=True):
     # Connection
     host: str = Field(max_length=255)
     port: int
-    username: str = Field(max_length=255)
     password: str = Field(max_length=255)
+    username: str = Field(max_length=255)
+    runtime_host: str = Field(max_length=255)
+    runtime_port: int
 
     # Location
     location_id: UUID = Field(foreign_key='locations.id')

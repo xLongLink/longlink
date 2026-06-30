@@ -1,5 +1,3 @@
-# pyright: reportUnusedImport=false
-
 from fastapi import HTTPException
 from src.logger import logger
 from src.operations.registry import get_operation_handler
@@ -9,6 +7,9 @@ from src.database.services.operations import operations
 
 async def execute(operation: Operation) -> Operation:
     """Execute one claimed operation step and persist the next state."""
+
+    if operation.lease_token is None:
+        raise ValueError("Operation must be claimed before execution")
 
     try:
         # Import the built-in handlers lazily so package imports stay free of cycles.
@@ -28,7 +29,7 @@ async def execute(operation: Operation) -> Operation:
         else:
             logger.exception("Operation %s failed", operation.id)
 
-        failed = await operations.fail(operation.id, detail)
+        failed = await operations.fail(operation.id, detail, operation.lease_token)
         if failed is not None:
             return failed
 

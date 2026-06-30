@@ -136,13 +136,15 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
         port=5432,
         username="longlink",
         password="secret",
+        runtime_host="postgres.runtime.internal",
+        runtime_port=15432,
     )
 
     # Act
     connection = await adapter.schema("acme", "dashboard")
 
     # Assert
-    assert connection == "postgresql+psycopg://longlink_acme_dashboard:runtime-secret@db.longlink.internal:5432/longlink_acme?sslmode=disable"
+    assert connection == "postgresql+psycopg://longlink_acme_dashboard:runtime-secret@postgres.runtime.internal:15432/longlink_acme?sslmode=disable"
     assert log[0][0] == "engine"
     assert log[0][1][0] == "postgresql+psycopg://longlink:***@db.longlink.internal:5432/postgres?sslmode=disable"
     assert log[0][1][1] == {"pool_pre_ping": True, "isolation_level": "AUTOCOMMIT"}

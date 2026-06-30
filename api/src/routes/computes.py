@@ -1,5 +1,3 @@
-# pyright: reportReturnType=false, reportArgumentType=false
-
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
@@ -43,11 +41,9 @@ async def create_compute_registry(payload: ComputeRegistryCreate, user: User = D
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-
     # Initialize the cluster immediately so failed registrations can be rolled back.
     try:
-        await k8s.cleanup()
+        k8s = K8s(registry.kubeconfig, registry.proxy_secret)
         await k8s.setup()
     except Exception as exc:
         await compute.purge(registry.id)
@@ -60,7 +56,11 @@ async def create_compute_registry(payload: ComputeRegistryCreate, user: User = D
 async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
     """Mark one compute backend registration as deleted."""
 
-    registry = await compute.delete(registry_id, user.id)
+    try:
+        registry = await compute.delete(registry_id, user.id)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 

@@ -17,19 +17,27 @@ import type { ApiLocation, ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 
 const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry & { location?: ApiLocation }>> = [
-    { accessorKey: 'kind', header: 'Kind', cell: ({ getValue }) => getValue(), meta: { className: 'w-32' } },
-    { accessorKey: 'protocol', header: 'Protocol', cell: ({ getValue }) => getValue(), meta: { className: 'w-32' } },
     {
-        accessorKey: 'endpoint_url',
-        header: 'Endpoint',
-        cell: ({ getValue }) => getValue(),
-        meta: { className: 'w-72' },
-    },
-    {
-        accessorKey: 'access_key_id',
-        header: 'Access key',
-        cell: ({ getValue }) => getValue(),
-        meta: { className: 'w-64' },
+        id: 'storage',
+        header: 'Storage',
+        cell: ({ row }) => {
+            const storage = row.original;
+
+            return (
+                <div className="flex items-center gap-3">
+                    <img
+                        src="/images/S3.webp"
+                        alt="S3 object storage"
+                        className="size-10 rounded-md border border-border bg-background object-contain p-1"
+                    />
+                    <div className="min-w-0">
+                        <div className="truncate font-medium text-foreground">{storage.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">{storage.endpoint_url}</div>
+                    </div>
+                </div>
+            );
+        },
+        meta: { className: 'min-w-64' },
     },
     {
         id: 'location',
@@ -38,6 +46,21 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry & { location?: ApiL
             return <AdminLocationBadge fallbackId={row.original.location_id} location={row.original.location} />;
         },
         meta: { className: 'min-w-56' },
+    },
+    {
+        id: 'access_key',
+        header: 'Access key',
+        cell: ({ row }) => {
+            const storage = row.original;
+
+            return (
+                <div className="min-w-0">
+                    <div className="truncate font-medium text-foreground">{storage.access_key_id}</div>
+                    <div className="truncate text-xs text-muted-foreground">{storage.protocol.toUpperCase()}</div>
+                </div>
+            );
+        },
+        meta: { className: 'w-48' },
     },
 ];
 
@@ -95,7 +118,7 @@ export default function AdminStorage() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiStorageRegistry>>)
+          ] satisfies Array<ColumnDef<ApiStorageRegistry & { location?: ApiLocation }>>)
         : storageColumnsBase;
 
     return (

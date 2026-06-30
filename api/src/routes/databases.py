@@ -1,5 +1,3 @@
-# pyright: reportReturnType=false
-
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
@@ -94,7 +92,11 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
 async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
     """Mark one database backend registration as deleted."""
 
-    registry = await database.delete(registry_id, user.id)
+    try:
+        registry = await database.delete(registry_id, user.id)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 

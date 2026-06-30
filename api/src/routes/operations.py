@@ -1,5 +1,3 @@
-# pyright: reportReturnType=false
-
 from fastapi import Depends, APIRouter
 from src.auth import authsupport
 from src.models.operations import OperationResponse

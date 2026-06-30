@@ -17,7 +17,7 @@ async def test_operation_handler_decorator_registers_and_dispatches_handler() ->
 
         return operation
 
-    operation = Operation(kind=kind, step=step)
+    operation = Operation(kind=kind, step=step, lease_token="test-lease")
 
     # Act
     handler = get_operation_handler(kind, step)

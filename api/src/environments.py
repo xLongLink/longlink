@@ -1,10 +1,24 @@
+from os import getenv
 from typing import Any, cast
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _environment_files() -> tuple[str, ...]:
+    """Load sample values in development, so local `.env` values remain overridable."""
+
+    if getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}:
+        return (".env.sample", ".env")
+
+    return (".env",)
 
 
 class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
+    DEVELOPMENT: bool = False
+
+    # Session cookies
     SESSION_KEY: str
 
     # Control plane database URL
@@ -32,8 +46,19 @@ class Env(BaseSettings):
     EMAIL_SMTP_USE_SSL: bool | None = None
     EMAIL_SMTP_USE_TLS: bool | None = None
 
+    # Development CORS
+    CORS_ORIGINS: tuple[str, ...] = (
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8000",
+    )
+
+    # Operation leases
+    OPERATION_LEASE_SECONDS: int = 120
+    OPERATION_HEARTBEAT_SECONDS: int = 30
+
     model_config = SettingsConfigDict(
-        env_file=(".env", ".env.sample"),
+        env_file=_environment_files(),
         env_file_encoding="utf-8",
     )
 

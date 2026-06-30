@@ -1,5 +1,3 @@
-# pyright: reportAssignmentType=false, reportUnknownMemberType=false, reportAttributeAccessIssue=false
-
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING
 from datetime import UTC, datetime
