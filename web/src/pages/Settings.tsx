@@ -308,7 +308,6 @@ export default function Settings() {
                                 columns={organizationColumns}
                                 data={organizations}
                                 isLoading={isLoading}
-                                loadingLabel="Loading organizations..."
                             />
                         </div>
                     </MenuSection>

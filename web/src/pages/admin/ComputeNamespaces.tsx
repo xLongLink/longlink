@@ -57,7 +57,6 @@ export default function ComputeNamespaces() {
                 data={rows}
                 error={error}
                 isLoading={computesIsLoading || namespacesIsLoading}
-                loadingLabel="Loading namespaces..."
             />
         </div>
     );

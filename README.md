@@ -31,19 +31,6 @@ The result is a faster, clearer, and more maintainable way to build internal app
 
 <br />
 
-## Mental model: GitHub and LongLink
-
-| GitHub                                                       | LongLink                                                                     |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| Hosts repositories                                           | Hosts applications                                                           |
-| Repositories contain code                                    | Applications contain business logic                                          |
-| Provides a common environment for managing code              | Provides a common environment for running business applications              |
-| Handles collaboration, permissions, and repository workflows | Handles authentication, permissions, organization management, and deployment |
-| Developers manage the structure of each repository           | The SDK defines the application structure: data layer, API, and UI           |
-| Repository is the unit of work                               | Application is the unit of work                                              |
-
-<br />
-
 ## Benefits
 
 - Faster delivery: teams build on a shared platform instead of starting from a blank stack.

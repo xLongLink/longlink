@@ -357,9 +357,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                             <CreateApplicationDialog organization={organization} />
                         </div>
                         {isLoading ? (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                Loading applications...
-                            </div>
+                            null
                         ) : error ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">
                                 Failed to load applications.
@@ -387,7 +385,6 @@ export default function Settings({ organization, organizationDetails, applicatio
                             data={databaseResources}
                             error={databaseResourcesError}
                             isLoading={isLoading || databaseResourcesIsLoading}
-                            loadingLabel="Loading database resources..."
                         />
                     </div>
                 </MenuSection>
@@ -468,9 +465,7 @@ export default function Settings({ organization, organizationDetails, applicatio
 
                     <div className="min-h-0 space-y-4 overflow-auto pr-1">
                         {databaseResourceTablesIsLoading ? (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                Loading database rows...
-                            </div>
+                            null
                         ) : databaseResourceTablesError ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">
                                 {databaseResourceTablesError.message}

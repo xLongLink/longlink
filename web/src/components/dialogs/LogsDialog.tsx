@@ -90,9 +90,7 @@ export default function LogsDialog({ applicationId, applicationName, open, onOpe
                         </div>
 
                         {logsLoading ? (
-                            <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">
-                                Loading logs...
-                            </div>
+                            null
                         ) : logsError ? (
                             <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
                                 {logsError}

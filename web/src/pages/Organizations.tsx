@@ -6,7 +6,6 @@ import Layout from '@/layout/Layout';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
-import { Skeleton } from '@ui/skeleton';
 import { Building2, Settings2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
@@ -48,11 +47,7 @@ export default function Organizations() {
     const redirectTo = nextPath?.startsWith('/') ? nextPath : '/organizations';
 
     if (isLoading && !user) {
-        return (
-            <Layout brandOnly brandHref="/">
-                <OrganizationsSkeleton />
-            </Layout>
-        );
+        return null;
     }
 
     if (!user) {
@@ -89,7 +84,7 @@ export default function Organizations() {
                 </Hero>
 
                 {isLoading && organizations.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading organizations...</div>
+                    null
                 ) : error && organizations.length === 0 ? (
                     <div className="rounded-md border p-4 text-sm text-destructive">Failed to load organizations.</div>
                 ) : (
@@ -97,34 +92,5 @@ export default function Organizations() {
                 )}
             </section>
         </Layout>
-    );
-}
-
-/** Renders the organizations page skeleton while the session is resolving. */
-function OrganizationsSkeleton() {
-    return (
-        <section className="mx-auto w-full max-w-[1000px] space-y-8">
-            <div className="space-y-3 rounded-lg border border-border bg-card/80 p-6 shadow-sm">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-4 w-[28rem] max-w-full" />
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-                <div className="space-y-3 rounded-lg border border-border bg-card/80 p-4 shadow-sm">
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-32" />
-                </div>
-
-                <div className="space-y-3 rounded-lg border border-border bg-card/80 p-4 shadow-sm">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-10 w-full" />
-                </div>
-            </div>
-        </section>
     );
 }

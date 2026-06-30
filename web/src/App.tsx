@@ -2,7 +2,6 @@ import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
 import { useSdkUser } from '@/hooks/use-sdk-user';
 import { useUser } from '@/hooks/use-user';
-import Layout from '@/layout/Layout';
 import { LegalLayout } from '@/layout/LegalLayout';
 import Admin from '@/pages/Admin';
 import AdminApplications from '@/pages/admin/Applications';
@@ -31,7 +30,6 @@ import Pricing from '@/pages/Pricing';
 import Settings from '@/pages/Settings';
 import View from '@/pages/View';
 import { createContext as createXmlContext } from '@/xml';
-import { Skeleton } from '@ui/skeleton';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 
@@ -218,19 +216,7 @@ function OrganizationApplicationView() {
         organizationMembership?.role === 'owner';
 
     if (isLoading) {
-        // Keep the app chrome visible while the org payload resolves.
-        return (
-            <Layout brandOnly>
-                <section className="mx-auto w-full max-w-[1000px] space-y-6 px-6 py-10">
-                    <Skeleton className="h-10 w-64" />
-                    <Skeleton className="h-5 w-[28rem] max-w-full" />
-                    <div className="grid gap-4 lg:grid-cols-2">
-                        <Skeleton className="h-48 w-full" />
-                        <Skeleton className="h-48 w-full" />
-                    </div>
-                </section>
-            </Layout>
-        );
+        return null;
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.

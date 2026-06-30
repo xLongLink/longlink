@@ -10,6 +10,7 @@ from typing import Any, cast
 from pathlib import Path
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
+from longlink.utils.metadata import load_metadata
 
 DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS builder
 
@@ -19,13 +20,13 @@ WORKDIR {workdir}
 
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 
-RUN uv sync
+RUN uv sync && rm -rf /workspace/.git
 
 FROM python:3.14-slim-bookworm
 
 WORKDIR {workdir}
 
-COPY --from=builder {workdir} {workdir}
+COPY --from=builder /workspace /workspace
 
 {labels}
 
@@ -225,22 +226,10 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     source_root, workdir = resolve_docker_paths(root)
     repo_root = next((parent for parent in root.parents if (parent / ".git").exists()), None)
     env_spec = read_env_spec(root)
-    pyproject_data: dict[str, Any] = tomllib.loads((root / "pyproject.toml").read_text())
-    project_data = cast(dict[str, Any], pyproject_data.get("project", {}))
-    pyproject_tool_data = cast(dict[str, Any], pyproject_data.get("tool", {}))
-    tool_data = cast(dict[str, Any], pyproject_tool_data.get("longlink", {}))
-    metadata: dict[str, object] = {
-        "name": tool_data.get("name") or project_data.get("name") or "longlink-app",
-        "title": tool_data.get("title"),
-        "summary": tool_data.get("summary"),
-        "description": tool_data.get("description") or project_data.get("description"),
-        "sdk": resolve_sdk_version(),
-        "version": tool_data.get("version") or project_data.get("version") or "0.0.0",
-        "terms_of_service": tool_data.get("terms_of_service"),
-        "contact": tool_data.get("contact"),
-        "license_info": tool_data.get("license_info"),
-    }
-    version = tag or str(metadata["version"])
+    project_metadata = load_metadata(root / "pyproject.toml")
+    metadata: dict[str, object] = project_metadata.model_dump()
+    metadata["sdk"] = resolve_sdk_version()
+    version = tag or project_metadata.version
     labels = render_longlink_labels(metadata, env_spec)
 
     # Copy the source tree into a throwaway Docker build context.
@@ -268,7 +257,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     dockerfile_path = build_context / "Dockerfile"
     dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])))
 
-    return dockerfile_path, version, str(metadata["name"])
+    return dockerfile_path, version, project_metadata.name
 
 
 def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: str, image_id_path: Path) -> None:

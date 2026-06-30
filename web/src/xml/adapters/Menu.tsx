@@ -4,10 +4,29 @@ import { useXmlContext } from '@xml/core/context';
 import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import { evaluate } from '@xml/expressions';
-import type { ASTNode, ExecutionContext, Props } from '@xml/types';
+import type { ASTNode, ASTProps, ExecutionContext, Props } from '@xml/types';
 import type { LucideIcon } from 'lucide-react';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
+
+type MenuSectionAttributes = {
+    value: string;
+    label?: string;
+    icon?: LucideIcon;
+    disabled?: boolean;
+};
+
+type MenuSubSectionAttributes = {
+    value: string;
+    label?: string;
+    disabled?: boolean;
+};
+
+type MenuAttributeOptions = {
+    requireValue?: boolean;
+    emptyLabelFallback?: boolean;
+    astBoolean?: boolean;
+};
 
 /** Renders the sidebar-style menu shell. */
 export function Menu({ props, nodes }: Props) {
@@ -33,17 +52,18 @@ export function Menu({ props, nodes }: Props) {
 /** Renders a root menu section. */
 export function MenuSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const value = requireXmlString(props, 'value', ctx, 'MenuSection');
-    const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx);
-    const icon = resolveXmlString(props, 'icon', ctx);
-    const disabled = resolveXmlBoolean(props, 'disabled', ctx);
-    const iconName = icon.trim();
-
-    // Resolve the optional icon lazily so menu sections can showcase Lucide icons by XML name.
-    const IconComponent = iconName ? resolveIconComponent(iconName) : null;
+    const attributes = resolveMenuSectionAttributes(props, ctx, {
+        requireValue: true,
+        emptyLabelFallback: true,
+    });
 
     return (
-        <UIMenuSection disabled={disabled} icon={IconComponent ?? undefined} label={label} value={value}>
+        <UIMenuSection
+            disabled={attributes.disabled}
+            icon={attributes.icon}
+            label={attributes.label}
+            value={attributes.value}
+        >
             {renderNode(nodes, ctx)}
         </UIMenuSection>
     );
@@ -52,15 +72,78 @@ export function MenuSection({ props, nodes }: Props) {
 /** Renders a nested menu subsection. */
 export function MenuSubSection({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const value = requireXmlString(props, 'value', ctx, 'MenuSubSection');
-    const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx);
-    const disabled = resolveXmlBoolean(props, 'disabled', ctx);
+    const attributes = resolveMenuSubSectionAttributes(props, ctx, {
+        requireValue: true,
+        emptyLabelFallback: true,
+    });
 
     return (
-        <UIMenuSubSection disabled={disabled} label={label} value={value}>
+        <UIMenuSubSection disabled={attributes.disabled} label={attributes.label} value={attributes.value}>
             {renderNode(nodes, ctx)}
         </UIMenuSubSection>
     );
+}
+
+
+/** Resolves common root section attributes from XML props. */
+function resolveMenuSectionAttributes(
+    props: ASTProps,
+    ctx: ExecutionContext,
+    options: MenuAttributeOptions = {}
+): MenuSectionAttributes {
+    const value = options.requireValue
+        ? requireXmlString(props, 'value', ctx, 'MenuSection')
+        : resolveXmlString(props, 'value', ctx);
+    const iconName = resolveXmlString(props, 'icon', ctx).trim();
+
+    return {
+        value,
+        label: resolveMenuLabel(props, ctx, options.emptyLabelFallback ? '' : undefined),
+        disabled: resolveMenuDisabled(props, ctx, options.astBoolean),
+        icon: iconName ? resolveIconComponent(iconName) : undefined,
+    };
+}
+
+
+/** Resolves common nested subsection attributes from XML props. */
+function resolveMenuSubSectionAttributes(
+    props: ASTProps,
+    ctx: ExecutionContext,
+    options: MenuAttributeOptions = {}
+): MenuSubSectionAttributes {
+    const value = options.requireValue
+        ? requireXmlString(props, 'value', ctx, 'MenuSubSection')
+        : resolveXmlString(props, 'value', ctx);
+
+    return {
+        value,
+        label: resolveMenuLabel(props, ctx, options.emptyLabelFallback ? '' : undefined),
+        disabled: resolveMenuDisabled(props, ctx, options.astBoolean),
+    };
+}
+
+
+/** Resolves a menu label while preserving direct component fallback behavior. */
+function resolveMenuLabel(props: ASTProps, ctx: ExecutionContext, defaultValue?: string): string | undefined {
+    if (props.i18n) {
+        return resolveTranslation(props, ctx);
+    }
+
+    if (props.label == null) {
+        return defaultValue;
+    }
+
+    return String(evaluate(props.label, ctx) ?? defaultValue ?? '');
+}
+
+
+/** Resolves disabled state with the same boolean rules as each rendering path. */
+function resolveMenuDisabled(props: ASTProps, ctx: ExecutionContext, astBoolean?: boolean): boolean | undefined {
+    if (astBoolean) {
+        return booleanAttribute(props.disabled ? evaluate(props.disabled, ctx) : undefined);
+    }
+
+    return resolveXmlBoolean(props, 'disabled', ctx);
 }
 
 /** Coerces XML boolean-like attributes into React boolean props. */
@@ -87,23 +170,15 @@ function renderMenuNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             return <Fragment key={index}>{renderNode([node], ctx)}</Fragment>;
         }
 
-        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
-        const label = node.params?.i18n
-            ? resolveTranslation(node.params, ctx)
-            : node.params?.label
-              ? String(evaluate(node.params.label, ctx) ?? '')
-              : undefined;
-        const icon = node.params?.icon ? String(evaluate(node.params.icon, ctx) ?? '') : '';
-        const disabled = booleanAttribute(node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined);
-        const IconComponent = icon.trim() ? resolveIconComponent(icon) : null;
+        const attributes = resolveMenuSectionAttributes(node.params ?? {}, ctx, { astBoolean: true });
 
         return (
             <UIMenuSection
                 key={index}
-                disabled={disabled}
-                icon={IconComponent ?? undefined}
-                label={label}
-                value={value}
+                disabled={attributes.disabled}
+                icon={attributes.icon}
+                label={attributes.label}
+                value={attributes.value}
             >
                 {renderMenuSectionChildren(node.children ?? [], ctx)}
             </UIMenuSection>
@@ -122,16 +197,15 @@ function renderMenuSectionChildren(nodes: ASTNode[], ctx: ExecutionContext): Rea
             return <Fragment key={index}>{renderNode([node], ctx)}</Fragment>;
         }
 
-        const value = node.params?.value ? String(evaluate(node.params.value, ctx) ?? '') : '';
-        const label = node.params?.i18n
-            ? resolveTranslation(node.params, ctx)
-            : node.params?.label
-              ? String(evaluate(node.params.label, ctx) ?? '')
-              : undefined;
-        const disabled = booleanAttribute(node.params?.disabled ? evaluate(node.params.disabled, ctx) : undefined);
+        const attributes = resolveMenuSubSectionAttributes(node.params ?? {}, ctx, { astBoolean: true });
 
         return (
-            <UIMenuSubSection key={index} disabled={disabled} label={label} value={value}>
+            <UIMenuSubSection
+                key={index}
+                disabled={attributes.disabled}
+                label={attributes.label}
+                value={attributes.value}
+            >
                 {renderNode(node.children ?? [], ctx)}
             </UIMenuSubSection>
         );

@@ -6,7 +6,6 @@ import type { ApiOrganizationApplication } from '@/lib/types';
 import { fromXml, RenderXML, resolveUrl, type ExecutionContext } from '@/xml';
 import { buttonVariants } from '@ui/button';
 import { ScrollArea } from '@ui/scroll-area';
-import { Skeleton } from '@ui/skeleton';
 import startCase from 'lodash/startCase';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
@@ -289,19 +288,7 @@ export default function View({
     }
 
     if (isLoading || pageState.loading || (activePage && pageState.path !== activePage.path)) {
-        // Keep the XML shell mounted while metadata or page content is still loading.
-        return (
-            <XML tabs={tabs}>
-                <section className="space-y-6">
-                    <Skeleton className="h-10 w-64" />
-                    <Skeleton className="h-5 w-[28rem] max-w-full" />
-                    <div className="grid gap-4 lg:grid-cols-2">
-                        <Skeleton className="h-48 w-full" />
-                        <Skeleton className="h-48 w-full" />
-                    </div>
-                </section>
-            </XML>
-        );
+        return null;
     }
 
     if (!activePage) {
@@ -370,7 +357,7 @@ function LogsState({
             </div>
 
             {logsLoading ? (
-                <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">Loading logs...</div>
+                null
             ) : logsError ? (
                 <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
                     {logsError}

@@ -335,7 +335,7 @@ export function Menu({
                                     aria-expanded={hasSubSections ? isExpanded : undefined}
                                     aria-current={sectionIsActive ? 'page' : undefined}
                                     disabled={section.disabled}
-                                    className={cn(menuItemVariants({ active: sectionIsActive }))}
+                                    className={menuItemVariants({ active: sectionIsActive })}
                                     onClick={() => {
                                         commitValue(section.value);
 
@@ -377,12 +377,10 @@ export function Menu({
                                                         data-state={subSectionIsActive ? 'active' : 'inactive'}
                                                         aria-current={subSectionIsActive ? 'page' : undefined}
                                                         disabled={subSection.disabled}
-                                                        className={cn(
-                                                            menuItemVariants({
-                                                                active: subSectionIsActive,
-                                                                level: 'sub',
-                                                            })
-                                                        )}
+                                                        className={menuItemVariants({
+                                                            active: subSectionIsActive,
+                                                            level: 'sub',
+                                                        })}
                                                         onClick={() => commitValue(subSection.value)}
                                                     >
                                                         <span className="truncate">{subSection.label}</span>

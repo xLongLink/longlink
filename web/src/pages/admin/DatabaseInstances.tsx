@@ -66,7 +66,6 @@ export default function DatabaseInstances() {
                 data={rows}
                 error={error}
                 isLoading={registriesIsLoading || databasesIsLoading}
-                loadingLabel="Loading databases..."
             />
         </div>
     );

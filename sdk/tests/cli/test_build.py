@@ -1,4 +1,16 @@
-from longlink.cli.build import resolve_image_tag
+from longlink.cli.build import render_dockerfile, resolve_image_tag
+
+
+def test_render_dockerfile_copies_full_workspace_for_editable_sources() -> None:
+    """Keep editable path dependencies available in the runtime image."""
+
+    # Arrange
+
+    # Act
+    dockerfile = render_dockerfile("/workspace/dev", "LABEL longlink.name=\"test\"", "0.1.0")
+
+    # Assert
+    assert "COPY --from=builder /workspace /workspace" in dockerfile
 
 
 def test_resolve_image_tag_keeps_existing_local_tag_format() -> None:

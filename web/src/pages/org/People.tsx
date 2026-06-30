@@ -134,7 +134,7 @@ export default function People({ organization, people, invitations, isLoading, e
                         </div>
                         <hr className="border-border" />
                         {isLoading ? (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading people...</div>
+                            null
                         ) : error ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">Failed to load people.</div>
                         ) : people.length ? (
@@ -169,9 +169,7 @@ export default function People({ organization, people, invitations, isLoading, e
                         </div>
                         <hr className="border-border" />
                         {isLoading ? (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                Loading invitations...
-                            </div>
+                            null
                         ) : error ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">
                                 Failed to load invitations.

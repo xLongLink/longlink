@@ -51,7 +51,6 @@ export default function DatabaseSchemas() {
                 data={rows}
                 error={error}
                 isLoading={registriesIsLoading || schemasIsLoading}
-                loadingLabel="Loading schemas..."
             />
         </div>
     );

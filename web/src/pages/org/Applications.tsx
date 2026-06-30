@@ -127,7 +127,7 @@ export default function Applications({ organization, applications, isLoading, er
         <>
             <div className="space-y-4">
                 {isLoading && applications.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading applications...</div>
+                    null
                 ) : error && applications.length === 0 ? (
                     <div className="rounded-md border p-4 text-sm text-destructive">Failed to load applications.</div>
                 ) : (

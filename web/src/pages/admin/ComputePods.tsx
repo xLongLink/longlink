@@ -96,7 +96,6 @@ export default function ComputePods() {
                 data={rows}
                 error={error}
                 isLoading={computesIsLoading || podsIsLoading}
-                loadingLabel="Loading pods..."
             />
         </div>
     );
