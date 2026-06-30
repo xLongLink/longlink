@@ -19,6 +19,8 @@ type RenderXMLProps = {
 export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
     const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
     const requiresSetup = hasSetupNodes(ast);
+    const requiresTranslations = hasTranslationNodes(ast);
+    const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
     const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
     const [setupError, setSetupError] = useState<unknown>(null);
     const [version, setVersion] = useState(0);
@@ -50,8 +52,8 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         runtimeCtx.values = {};
         setSetupError(null);
 
-        // Hydrate translations from the SDK route when the caller did not provide a catalog.
-        if (!runtimeCtx.translations) {
+        // Hydrate translations from the SDK route before i18n nodes can render their fallback keys.
+        if (waitsForTranslations && runtimeCtx.translations === undefined) {
             const locale = runtimeCtx.locale ?? 'en';
 
             void fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, `/i18n/${locale}.json`))
@@ -105,7 +107,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
                 unsubscribe();
             }
         };
-    }, [ast, runtimeCtx, baseUrl]);
+    }, [ast, runtimeCtx, baseUrl, waitsForTranslations]);
 
     validateSetupNodes(ast);
 
@@ -120,6 +122,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
     }
 
     if (requiresSetup && initializedAst !== ast) return null;
+    if (waitsForTranslations && runtimeCtx.translations === undefined) return null;
 
     return (
         <XmlErrorBoundary resetKey={`${version}`}>
@@ -129,6 +132,17 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         </XmlErrorBoundary>
     );
 }
+
+/** Returns whether the AST contains localized copy. */
+function hasTranslationNodes(nodes: ASTNode[]): boolean {
+    for (const node of nodes) {
+        if (node.params?.i18n) return true;
+        if (hasTranslationNodes(node.children ?? [])) return true;
+    }
+
+    return false;
+}
+
 
 /** Returns whether the AST contains setup-only runtime declarations. */
 function hasSetupNodes(nodes: ASTNode[]): boolean {

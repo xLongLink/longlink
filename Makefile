@@ -25,19 +25,17 @@ format: api\:format sdk\:format web\:format
 
 
 # Format API imports.
-api\:format:
-	cd api && uv sync --extra dev
+api\:format: api\:install
 	cd api && uv run isort .
 
 
 # Format SDK imports.
-sdk\:format:
-	cd sdk && uv sync --extra dev
+sdk\:format: sdk\:install
 	cd sdk && uv run isort .
 
 
 # Format web code and repository docs.
-web\:format:
+web\:format: web\:install
 	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
 
 
@@ -46,20 +44,17 @@ tests: api\:tests sdk\:tests web\:tests
 
 
 # Run API tests with coverage.
-api\:tests:
-	cd api && uv sync --extra dev
+api\:tests: api\:install
 	cd api && ENVIRONMENT=testing uv run pytest --cov=src --cov-report=term-missing tests
 
 
 # Run SDK tests with coverage.
-sdk\:tests:
-	cd sdk && uv sync --extra dev
+sdk\:tests: sdk\:install
 	cd sdk && uv run pytest --cov=longlink --cov-report=term-missing tests
 
 
 # Run web tests, typecheck, and bundle builds.
-web\:tests:
-	bun i --cwd web
+web\:tests: web\:install
 	bun test tests --cwd web
 	bun run --cwd web typecheck
 	bun run --cwd web vite build --mode api --logLevel warn

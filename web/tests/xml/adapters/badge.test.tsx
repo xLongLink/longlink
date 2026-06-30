@@ -1,9 +1,7 @@
 import { parseXML } from '@xml/core/parser';
-import { RenderXML } from '@xml/renderers.tsx';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderXmlToMarkup } from '../helpers';
 
 describe('Badge', () => {
     /* The compiler should preserve badge attributes as raw strings. */
@@ -19,11 +17,7 @@ describe('Badge', () => {
 
     /* The runtime should render Badge XML into the shadcn badge output. */
     it('renders raw xml badge content end to end', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<Badge i18n="New" />');
-        const renderedTree = createElement(RenderXML, { ast, ctx });
-
-        const output = renderToStaticMarkup(createElement('div', null, renderedTree));
+        const output = renderXmlToMarkup(parseXML('<Badge i18n="New" />'));
 
         expect(output).toContain('<span');
         expect(output).toContain('bg-primary');
@@ -33,10 +27,7 @@ describe('Badge', () => {
     /* Direct value props should render dynamic badge text without requiring a translation key. */
     it('renders direct badge values', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: { item: { status: 'Open' } } };
-        const ast = parseXML('<Badge variant="outline" value="$item.status" />');
-        const renderedTree = createElement(RenderXML, { ast, ctx });
-
-        const output = renderToStaticMarkup(createElement('div', null, renderedTree));
+        const output = renderXmlToMarkup(parseXML('<Badge variant="outline" value="$item.status" />'), ctx);
 
         expect(output).toContain('Open');
         expect(output).toContain('border-border');

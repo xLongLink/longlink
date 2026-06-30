@@ -59,14 +59,15 @@ function buildDataColumn(
     baseUrl: string
 ): ColumnDef<DataTableRow, unknown> {
     const columnProps = node.params ?? {};
+    const children = node.children ?? [];
     const field = readXmlProp(columnProps, 'field') ?? '';
     const id = (readXmlProp(columnProps, 'id') ?? field) || `column-${index}`;
 
     return {
         id,
         ...(field ? { accessorFn: (row) => resolveFieldValue(row, field) } : {}),
-        header: () => renderDataHeader(columnProps, node.children ?? [], ctx, baseUrl, field),
-        cell: (cellContext) => renderDataCell(node.children ?? [], cellContext, ctx, as, baseUrl),
+        header: () => renderDataHeader(columnProps, children, ctx, baseUrl, field),
+        cell: (cellContext) => renderDataCell(children, cellContext, ctx, as, baseUrl),
     };
 }
 

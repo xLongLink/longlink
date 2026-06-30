@@ -338,6 +338,8 @@ export default function View({
 
 /** Renders the in-shell loading page for an application that is not ready yet. */
 function LoadingState({ status }: LoadingStateProps) {
+    if (status === 'loading') return null;
+
     return (
         <div className="w-full max-w-xl rounded-2xl border border-border bg-card/80 px-6 py-8 text-center shadow-sm">
             <div className="space-y-3">

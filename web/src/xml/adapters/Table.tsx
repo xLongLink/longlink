@@ -14,35 +14,35 @@ import type { Props } from '@xml/types';
 import { resolveXmlValue } from './props';
 
 /** Renders the shadcn-backed table shell. */
-export function Table({ props, nodes }: Props) {
+export function Table({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UITable>{renderNode(nodes, ctx)}</UITable>;
 }
 
 /** Renders the table header slot. */
-export function Thead({ props, nodes }: Props) {
+export function Thead({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UITableHeader>{renderNode(nodes, ctx)}</UITableHeader>;
 }
 
 /** Renders the table body slot. */
-export function Tbody({ props, nodes }: Props) {
+export function Tbody({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UITableBody>{renderNode(nodes, ctx)}</UITableBody>;
 }
 
 /** Renders the table footer slot. */
-export function Tfoot({ props, nodes }: Props) {
+export function Tfoot({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UITableFooter>{renderNode(nodes, ctx)}</UITableFooter>;
 }
 
 /** Renders a single table row. */
-export function Tr({ props, nodes }: Props) {
+export function Tr({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UITableRow>{renderNode(nodes, ctx)}</UITableRow>;

@@ -121,7 +121,7 @@ jobs:
       - name: Trigger update workflow_dispatch linklong repo
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: apply.yml
+          workflow: update.yml
           repo: xLongLink/linklong
           inputs: >-
             { "version": "${{ github.ref_name }}" }

@@ -29,6 +29,31 @@ describe('renderNode', () => {
         ).toBe('<div><p class="leading-7">Count 7</p></div>');
     });
 
+    it('suppresses i18n fallback keys in browser renders until translations load', () => {
+        const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'document');
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+
+        Object.defineProperty(globalThis, 'document', { configurable: true, value: {} });
+
+        try {
+            expect(
+                renderToStaticMarkup(
+                    createElement(
+                        'div',
+                        null,
+                        createElement(RenderXML, { ast: [{ name: 'P', params: { i18n: 'copy.loading' } }], ctx })
+                    )
+                )
+            ).toBe('<div></div>');
+        } finally {
+            if (descriptor) {
+                Object.defineProperty(globalThis, 'document', descriptor);
+            } else {
+                delete (globalThis as { document?: unknown }).document;
+            }
+        }
+    });
+
     it('skips nodes when if condition is false', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const node: ASTNode = { name: 'Button', params: { if: '${false}' } };

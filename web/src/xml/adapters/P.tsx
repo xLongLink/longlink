@@ -4,8 +4,6 @@ import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
 import { resolveXmlValue } from './props';
 
-/** Props accepted by the XML paragraph bridge component. */
-
 /** Renders a paragraph with standard styling. */
 export function P({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
