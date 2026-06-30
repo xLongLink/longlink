@@ -1,6 +1,51 @@
+import sys
 from urllib.parse import parse_qsl, urlsplit
 
+from sqlmodel import SQLModel
+
 from longlink.database.base import normalize_database_url
+from longlink.database.migrations import include_object, load_application_models
+
+
+def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch) -> None:
+    """Load nested application model modules for Alembic metadata."""
+
+    # Arrange
+    table_name = "nested_inventory_items"
+    module_name = "src.database.models.inventory"
+    model_path = tmp_path / "src" / "database" / "models" / "inventory.py"
+    model_path.parent.mkdir(parents=True)
+    model_path.write_text(
+        "from longlink import db\n"
+        "from sqlmodel import Field\n"
+        "\n\n"
+        "class NestedInventoryItem(db.Table, table=True):\n"
+        "    \"\"\"Nested inventory table.\"\"\"\n"
+        "\n"
+        f"    __tablename__ = \"{table_name}\"\n"
+        "\n"
+        "    id: int | None = Field(default=None, primary_key=True)\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    try:
+        # Act
+        load_application_models()
+
+        # Assert
+        assert table_name in SQLModel.metadata.tables
+    finally:
+        table = SQLModel.metadata.tables.get(table_name)
+        if table is not None:
+            SQLModel.metadata.remove(table)
+        sys.modules.pop(module_name, None)
+
+
+def test_database_migrations_exclude_shared_users_table() -> None:
+    """Keep the platform-owned users table out of app migrations."""
+
+    assert include_object(object(), "users", "table", False, None) is False
 
 
 def test_database_url_keeps_non_postgresql_urls_unchanged() -> None:

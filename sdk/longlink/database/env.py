@@ -3,6 +3,7 @@ from alembic import context
 from sqlmodel import SQLModel
 from sqlalchemy.engine import Connection
 from longlink.database.base import create_engine
+from longlink.database.migrations import include_object
 from longlink.utils.settings import Envs
 
 settings = Envs()
@@ -15,6 +16,7 @@ def run_migrations_offline() -> None:
     context.configure(
         url=str(engine.url),
         target_metadata=target_metadata,
+        include_object=include_object,
         literal_binds=True,
         compare_type=True,
         render_as_batch=True,
@@ -29,6 +31,7 @@ def do_run_migrations(connection: Connection) -> None:
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
+        include_object=include_object,
         compare_type=True,
         render_as_batch=True,
     )

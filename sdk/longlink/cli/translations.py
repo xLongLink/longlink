@@ -1,14 +1,13 @@
 import json
-from typing import cast
-from pathlib import Path
-
 import click
 from lxml import etree
-
+from typing import cast
+from pathlib import Path
 from longlink.constants import ROOT
 
 PLURAL_KEYS = {"zero", "one", "two", "few", "many", "other"}
 TRANSLATION_FILE = ROOT / ".static" / "new" / "src" / "i18n" / "en.json"
+SCAFFOLD_PAGES_DIRECTORY = ROOT / ".static" / "new" / "src" / "pages"
 
 
 @click.group(name="translations")
@@ -44,11 +43,15 @@ def discover_xml_files(repo_root: Path) -> list[Path]:
     """Return XML source files that can contribute translation keys."""
 
     # Skip generated assets and local development directories.
-    ignored_parts = {".git", ".venv", "build", "coverage", "dist", "node_modules", ".static"}
+    ignored_parts = {".git", ".venv", "build", "coverage", "dist", "node_modules"}
     files: list[Path] = []
 
     for path in repo_root.rglob("*.xml"):
         if ignored_parts.intersection(path.parts):
+            continue
+
+        # Keep bundled scaffold pages discoverable while ignoring generated static assets.
+        if ".static" in path.parts and not path.is_relative_to(SCAFFOLD_PAGES_DIRECTORY):
             continue
 
         files.append(path)

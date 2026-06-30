@@ -68,17 +68,6 @@ bun run --cwd web typecheck
 <br />
 <br />
 
-## TODO:
-
-- LongLink vs [Airtable](https://www.airtable.com/)
-- LongLink vs [Baserow](https://baserow.io/)
-- LongLink vs [SmartSuite](https://www.smartsuite.com/)
-- LongLink vs [Retool](https://retool.com/)
-- LongLink vs [Appsmith](https://www.appsmith.com/)
-- LongLink vs [Budibase](https://budibase.com/)
-- LongLink vs [Budibase](https://budibase.com/)
-
-
 ---
 
 <div align="center">

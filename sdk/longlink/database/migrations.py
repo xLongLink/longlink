@@ -6,19 +6,66 @@ from pathlib import Path
 from alembic.config import Config
 
 CURRENT_FILE = Path(__file__).resolve()
-MODEL_PATHS = (
-    Path.cwd() / "src" / "database",
-    Path.cwd() / "src" / "models",
-)
+MIGRATIONS_DIRECTORY = "migrations"
 
 
-# Load application model modules so metadata includes table definitions.
-for model_path in MODEL_PATHS:
-    for py_file in model_path.glob("*.py"):
-        if py_file.name.startswith("__"):
+def include_object(
+    _object: object,
+    name: str | None,
+    type_: str,
+    _reflected: bool,
+    _compare_to: object | None,
+) -> bool:
+    """Return whether Alembic should manage one metadata object."""
+
+    # The platform owns the shared users table; app migrations manage app-owned tables only.
+    if type_ == "table" and name == "users":
+        return False
+
+    return True
+
+
+def iter_application_model_files() -> list[Path]:
+    """Return application model files that should be loaded for metadata."""
+
+    root = Path.cwd()
+    model_files: list[Path] = []
+    nested_model_paths = (
+        root / "src" / "database" / "models",
+        root / "src" / "models",
+    )
+
+    for model_path in nested_model_paths:
+        if not model_path.exists():
             continue
 
-        module_name = f"src.{model_path.name}.{py_file.stem}"
+        model_files.extend(
+            py_file
+            for py_file in sorted(model_path.rglob("*.py"))
+            if not py_file.name.startswith("__")
+        )
+
+    legacy_model_path = root / "src" / "database"
+    if legacy_model_path.exists():
+        model_files.extend(
+            py_file
+            for py_file in sorted(legacy_model_path.glob("*.py"))
+            if not py_file.name.startswith("__")
+        )
+
+    return model_files
+
+
+def load_application_models() -> None:
+    """Load application model modules so metadata includes table definitions."""
+
+    root = Path.cwd()
+    for py_file in iter_application_model_files():
+        module_name = ".".join(py_file.with_suffix("").relative_to(root).parts)
+        if module_name in sys.modules:
+            continue
+
+        # Import from file paths so migrations work even without package __init__.py files.
         spec = importlib.util.spec_from_file_location(module_name, py_file)
         if spec is None or spec.loader is None:
             continue
@@ -34,9 +81,14 @@ def make_migrations() -> bool:
     Returns:
         bool: True when a new migration file is created, otherwise False.
     """
+    load_application_models()
+
+    migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
+    migrations_path.mkdir(exist_ok=True)
+
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
-    cfg.set_main_option("version_locations", "migrations")
+    cfg.set_main_option("version_locations", str(migrations_path))
     migration_created = True
 
     def _skip_empty_revision(
@@ -65,14 +117,23 @@ def make_migrations() -> bool:
     return migration_created
 
 
-def migrate() -> None:
+def apply_migrations() -> None:
     """Apply all pending Alembic migrations."""
+
+    migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
+    migrations_path.mkdir(exist_ok=True)
+
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
-    cfg.set_main_option("version_locations", "migrations")
+    cfg.set_main_option("version_locations", str(migrations_path))
     command.upgrade(cfg, "head")
 
 
+def migrate() -> None:
+    """Apply all pending Alembic migrations."""
+
+    apply_migrations()
+
+
 if __name__ == "__main__":
-    make_migrations()
-    migrate()
+    apply_migrations()

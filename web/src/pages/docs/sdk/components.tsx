@@ -774,15 +774,15 @@ const componentDocs: ElementDoc[] = [
         name: 'Th',
         id: 'th',
         description: 'Table header cell.',
-        parameters: ['i18n: optional translation key.'],
-        example: `<Th i18n="orders.columns.status" />`,
+        parameters: ['i18n: optional translation key.', 'value: optional expression value used when i18n is omitted.'],
+        example: `<Th value="$column.label" />`,
     },
     {
         name: 'Td',
         id: 'td',
         description: 'Table data cell.',
-        parameters: ['i18n: optional translation key.'],
-        example: `<Td i18n="orders.statusValue" status="order.status" />`,
+        parameters: ['i18n: optional translation key.', 'value: optional expression value used when i18n is omitted.'],
+        example: `<Td value="$order.status" />`,
     },
 ];
 

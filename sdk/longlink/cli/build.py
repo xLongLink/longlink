@@ -32,7 +32,7 @@ COPY --from=builder /workspace /workspace
 
 ENV PATH="{workdir}/.venv/bin:$PATH"
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--log-level", "debug"]
+CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:app --host 0.0.0.0 --port 80 --log-level debug"]
 """
 
 

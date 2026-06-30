@@ -11,6 +11,17 @@ def test_render_dockerfile_copies_full_workspace_for_editable_sources() -> None:
     assert "COPY --from=builder /workspace /workspace" in dockerfile
 
 
+def test_render_dockerfile_runs_migrations_before_serving() -> None:
+    """Apply app migrations before the runtime starts accepting requests."""
+
+    # Act
+    dockerfile = render_dockerfile("/workspace/dev", "LABEL longlink.name=\"test\"", "0.1.0")
+
+    # Assert
+    assert "python -m longlink.database.migrations && exec uvicorn main:app" in dockerfile
+    assert "printf" not in dockerfile
+
+
 def test_resolve_image_tag_keeps_existing_local_tag_format() -> None:
     """Build the default local image tag without a registry prefix."""
 

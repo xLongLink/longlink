@@ -5,6 +5,7 @@ Create Date: ${create_date}
 """
 from alembic import op
 import sqlalchemy as sa
+import sqlmodel
 
 revision = "${up_revision}"
 down_revision = ${repr(down_revision)}
@@ -13,8 +14,12 @@ depends_on = None
 
 
 def upgrade():
+    """Apply this migration."""
+
     ${upgrades if upgrades else "pass"}
 
 
 def downgrade():
+    """Revert this migration."""
+
     ${downgrades if downgrades else "pass"}
