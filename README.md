@@ -43,6 +43,23 @@ The result is a faster, clearer, and more maintainable way to build internal app
 - Scalable operations: the control plane provisions compute, database, and storage resources through adapters.
 - Safer evolution: applications can change with the business process while keeping a stable runtime and deployment model.
 
+## Testing
+
+Run the full project verification from the repository root:
+
+```bash
+make tests
+```
+
+Run narrower checks while working in one area:
+
+```bash
+cd api && ENVIRONMENT=testing uv run pytest tests
+cd sdk && uv run pytest tests
+bun test tests --cwd web
+bun run --cwd web typecheck
+```
+
 ## Features
 - User managements
 - Permissions

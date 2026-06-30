@@ -89,19 +89,18 @@ export default function LogsDialog({ applicationId, applicationName, open, onOpe
                             <DialogDescription>Recent logs for {applicationName}</DialogDescription>
                         </div>
 
-                        {logsLoading ? (
-                            null
-                        ) : logsError ? (
-                            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-                                {logsError}
-                            </div>
-                        ) : (
-                            <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
-                                <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
-                                    {logsContent || 'No logs available.'}
-                                </pre>
-                            </ScrollArea>
-                        )}
+                        {!logsLoading &&
+                            (logsError ? (
+                                <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                                    {logsError}
+                                </div>
+                            ) : (
+                                <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
+                                    <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
+                                        {logsContent || 'No logs available.'}
+                                    </pre>
+                                </ScrollArea>
+                            ))}
                     </div>
                 </DialogContent>
             </Dialog>
