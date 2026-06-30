@@ -25,6 +25,7 @@ HOP_BY_HOP_HEADERS = {
     "upgrade",
 }
 FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "cookie"}
+FORWARDED_REQUEST_BLOCKLIST |= {"if-modified-since", "if-none-match"}
 FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
 
 router = APIRouter()
@@ -146,9 +147,39 @@ async def proxy_application_request(
             body=await request.body(),
         )
     except KubernetesApiException as exc:
-        if getattr(cast(Any, exc), "status", None) == 503:
+        status = cast(Any, exc).status
+        if str(status) == "503":
             return Response(status_code=503, headers={"cache-control": "no-store"})
-        raise
+
+        if str(status) == "304":
+            headers = cast(Any, exc).headers or {}
+            if hasattr(headers, "items"):
+                upstream_headers = dict(headers.items())
+            else:
+                upstream_headers = {}
+
+            return Response(
+                status_code=304,
+                headers={
+                    key: value
+                    for key, value in upstream_headers.items()
+                    if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
+                },
+            )
+
+        status_code = int(status) if status is not None else 500
+        body = cast(Any, exc).body
+        response_headers = cast(Any, exc).headers or {}
+
+        return Response(
+            content=body,
+            status_code=status_code,
+            headers={
+                key: value
+                for key, value in response_headers.items()
+                if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
+            },
+        )
 
     # Filter hop-by-hop response headers so FastAPI can return a clean proxied response.
     return Response(

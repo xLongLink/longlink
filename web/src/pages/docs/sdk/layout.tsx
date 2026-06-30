@@ -9,6 +9,58 @@ type ElementDoc = {
     example: string;
 };
 
+type ElementDocGroup = {
+    id: string;
+    title: string;
+    elements: ElementDoc[];
+};
+
+const elementFamilyRules: Array<[string, string]> = [
+    ['column', 'Columns'],
+    ['columns', 'Columns'],
+    ['dialog', 'Dialog'],
+    ['hero', 'Hero'],
+    ['menu', 'Menu'],
+    ['tabs', 'Tabs'],
+    ['tab', 'Tabs'],
+];
+
+/**
+ * Groups element IDs into readable families for the docs so related nodes stay together.
+ */
+function inferElementFamily(elementId: string): string {
+    for (const [prefix, familyName] of elementFamilyRules) {
+        if (elementId === prefix || elementId.startsWith(prefix)) {
+            return familyName;
+        }
+    }
+
+    return elementId.charAt(0).toUpperCase() + elementId.slice(1);
+}
+
+function toKebabCase(value: string): string {
+    return value.replace(/\s+/g, '-').toLowerCase();
+}
+
+/**
+ * Returns the layout docs grouped by element family, keeping first-seen order.
+ */
+function buildElementGroups(elements: ElementDoc[]): ElementDocGroup[] {
+    return elements.reduce<ElementDocGroup[]>((groups, element) => {
+        const familyName = inferElementFamily(element.id);
+        const familyId = toKebabCase(familyName);
+        const existingGroup = groups.find((group) => group.id === familyId);
+
+        if (!existingGroup) {
+            groups.push({ id: familyId, title: familyName, elements: [element] });
+            return groups;
+        }
+
+        existingGroup.elements.push(element);
+        return groups;
+    }, []);
+}
+
 const layoutDocs: ElementDoc[] = [
     {
         name: 'Columns',
@@ -234,11 +286,13 @@ const layoutDocs: ElementDoc[] = [
     },
 ];
 
+const groupedLayoutDocs = buildElementGroups(layoutDocs);
+
 /** Renders one XML element reference entry. */
-function ElementSection({ element }: { element: ElementDoc }) {
+function ElementSection({ element, headingLevel }: { element: ElementDoc; headingLevel: 'h2' | 'h3' }) {
     return (
         <section className="space-y-3">
-            <Heading id={element.id} level="h2">
+            <Heading id={element.id} level={headingLevel}>
                 {element.name}
             </Heading>
             <p className="leading-7">{element.description}</p>
@@ -255,6 +309,26 @@ function ElementSection({ element }: { element: ElementDoc }) {
     );
 }
 
+/** Renders one grouped family of related layout elements. */
+function LayoutGroupSection({ group }: { group: ElementDocGroup }) {
+    if (group.elements.length === 1) {
+        return <ElementSection element={group.elements[0]} headingLevel="h2" />;
+    }
+
+    return (
+        <section className="space-y-4">
+            <Heading id={`${group.id}-elements`} level="h2">
+                {group.title}
+            </Heading>
+            <div className="space-y-4">
+                {group.elements.map((element) => (
+                    <ElementSection key={element.id} element={element} headingLevel="h3" />
+                ))}
+            </div>
+        </section>
+    );
+}
+
 /** Renders the XML layout element reference. */
 function LayoutContent() {
     return (
@@ -265,8 +339,8 @@ function LayoutContent() {
             <p className="leading-7">
                 Layout elements organize XML page content into responsive sections, cards, dialogs, tabs, and menus.
             </p>
-            {layoutDocs.map((element) => (
-                <ElementSection key={element.id} element={element} />
+            {groupedLayoutDocs.map((group) => (
+                <LayoutGroupSection key={group.id} group={group} />
             ))}
         </div>
     );

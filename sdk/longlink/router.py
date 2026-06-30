@@ -1,5 +1,4 @@
 from typing import Any, Callable
-
 from fastapi import APIRouter
 
 
@@ -16,7 +15,13 @@ class Router(APIRouter):
 
         return super().include_router(router, **kwargs)
 
-    def page(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def page(
+        self,
+        path: str,
+        *,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a GET route that serves an XML page."""
 
         from longlink.pages import XMLResponse, register_page
@@ -27,7 +32,7 @@ class Router(APIRouter):
             """Attach the endpoint to the router and page registry."""
 
             # Keep page metadata available for `metadata.json`.
-            registered_path = register_page(normalized_path, endpoint)
+            registered_path = register_page(normalized_path, endpoint, name=name, icon=icon)
 
             # Register the XML page endpoint on this router.
             self.add_api_route(registered_path, endpoint, methods=["GET"], response_class=XMLResponse)

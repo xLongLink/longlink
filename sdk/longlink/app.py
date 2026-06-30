@@ -1,16 +1,16 @@
 from typing import Any
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-from pydantic_settings import BaseSettings
-
-from longlink.database.audit import install_audit_middleware
-from longlink.constants import ROOT
-from longlink.pages import XMLResponse, PageDefinition, page_registry, normalize_page_path
-from longlink.routes import routes
+from longlink.pages import (XMLResponse, PageDefinition, page_registry,
+                            normalize_page_path, extract_longlink_metadata)
 from longlink.utils import Envs
+from longlink.routes import routes
+from fastapi.responses import FileResponse
+from pydantic_settings import BaseSettings
+from longlink.constants import ROOT
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from longlink.database.audit import install_audit_middleware
 
 
 def normalize_mount_path(path: str) -> str:
@@ -112,6 +112,8 @@ class LongLink(FastAPI):
         for page_file in sorted(pages_directory.rglob("*.xml")):
             relative_path = page_file.relative_to(pages_directory).as_posix()
             route_path = f"{normalized_prefix}/{relative_path}"
+            page_content = page_file.read_text(encoding="utf-8")
+            page_name, page_icon = extract_longlink_metadata(page_content)
 
             async def page_endpoint(page_path: Path = page_file) -> str:
                 """Return XML page content from disk."""
@@ -119,7 +121,14 @@ class LongLink(FastAPI):
                 return page_path.read_text(encoding="utf-8")
 
             registered_path = normalize_page_path(route_path)
-            registered_pages.append(PageDefinition(path=registered_path, handler=page_endpoint))
+            registered_pages.append(
+                PageDefinition(
+                    path=registered_path,
+                    handler=page_endpoint,
+                    name=page_name,
+                    icon=page_icon,
+                )
+            )
             self.add_api_route(
                 registered_path,
                 page_endpoint,

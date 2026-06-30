@@ -1,6 +1,8 @@
 import pytest
 from types import SimpleNamespace
 from datetime import UTC, datetime
+from typing import cast
+from kubernetes.client.rest import ApiException
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from src.models.common import SuccessResponse
@@ -378,7 +380,7 @@ async def test_create_app_returns_app_response(
         "secrets": {
             "API_KEY": "secret-value",
             "LONGLINK_DATABASE_SCHEMA": "dashboard",
-            "LONGLINK_DATABASE_URL": "postgresql://fake",
+            "LONGLINK_DATABASE_URL": "postgresql+asyncpg://fake",
             "LONGLINK_ENV": "production",
             "PORT": "8080",
         },
@@ -665,6 +667,218 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert captured["query_params"] == [("answer", "42")]
     assert captured["body"] == b"hello"
     assert "cookie" not in {key.lower() for key in captured["headers"]}
+    assert "set-cookie" not in response.headers
+
+
+async def test_proxy_app_strips_conditional_headers_before_forwarding(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Drop conditional request headers before forwarding through Kubernetes."""
+
+    # Arrange
+    user = users[0]
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
+    organization = await db.organizations.create("acme", remote_location.id, user)
+    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    await db.applications.set_status(app.id, ApplicationStatus.running)
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        name="local",
+        kubeconfig=(
+            "apiVersion: v1\n"
+            "clusters:\n"
+            "- name: k3d-compute\n"
+            "  cluster:\n"
+            "    server: https://0.0.0.0:8001\n"
+            "contexts:\n"
+            "- name: k3d-compute\n"
+            "  context:\n"
+            "    cluster: k3d-compute\n"
+            "    user: admin@k3d-compute\n"
+            "current-context: k3d-compute\n"
+            "kind: Config\n"
+            "preferences: {}\n"
+            "users:\n"
+            "- name: admin@k3d-compute\n"
+            "  user:\n"
+            "    client-certificate-data: Y2VydA==\n"
+            "    client-key-data: a2V5\n"
+        ),
+        ingress_host="localhost:9443",
+        location_id=remote_location.id,
+        user=user,
+    )
+    client = clients[0]
+    captured: dict[str, object] = {}
+
+    class FakeCompute:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            captured["proxy_secret"] = proxy_secret
+
+        def proxy(
+            self,
+            organization: str,
+            application: str,
+            path: str,
+            method: str,
+            query_params,
+            headers,
+            body,
+        ) -> tuple[bytes, int, dict[str, str]]:
+            captured["headers"] = headers
+            return b"proxied", 200, {"content-type": "text/plain"}
+
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+
+    # Act
+    response = client.get(
+        f"/api/applications/{app.id}/proxy/i18n/en.json",
+        headers={
+            "If-None-Match": '"abc"',
+            "If-Modified-Since": "Tue, 01 Jun 2020 00:00:00 GMT",
+            "X-Test": "present",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 200
+    forwarded_headers = {key.lower() for key in cast(dict[str, str], captured["headers"]).keys()}
+    forwarded_values = cast(dict[str, str], captured["headers"])
+    assert "if-none-match" not in forwarded_headers
+    assert "if-modified-since" not in forwarded_headers
+    assert "x-test" in forwarded_headers
+    assert forwarded_values.get("x-test") == "present"
+    assert forwarded_values.get("accept") == "*/*"
+
+
+async def test_proxy_app_returns_not_modified_from_upstream(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Return a cached-response status code when the app replies not modified."""
+
+    # Arrange
+    user = users[0]
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
+    organization = await db.organizations.create("acme", remote_location.id, user)
+    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    await db.applications.set_status(app.id, ApplicationStatus.running)
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        name="local",
+        kubeconfig=(
+            "apiVersion: v1\n"
+            "clusters:\n"
+            "- name: k3d-compute\n"
+            "  cluster:\n"
+            "    server: https://0.0.0.0:8001\n"
+            "contexts:\n"
+            "- name: k3d-compute\n"
+            "  context:\n"
+            "    cluster: k3d-compute\n"
+            "    user: admin@k3d-compute\n"
+            "current-context: k3d-compute\n"
+            "kind: Config\n"
+            "preferences: {}\n"
+            "users:\n"
+            "- name: admin@k3d-compute\n"
+            "  user:\n"
+            "    client-certificate-data: Y2VydA==\n"
+            "    client-key-data: a2V5\n"
+        ),
+        ingress_host="localhost:9443",
+        location_id=remote_location.id,
+        user=user,
+    )
+    client = clients[0]
+
+    class FakeCompute:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            pass
+
+        def proxy(self, organization: str, application: str, path: str, method: str, query_params, headers, body):
+            exception = ApiException(status=304, reason="Not Modified")
+            exception.headers = {"Etag": '"etag-123"', "set-cookie": "tenant=owned"}
+            raise exception
+
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+
+    # Act
+    response = client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
+
+    # Assert
+    assert response.status_code == 304
+    assert response.text == ""
+    assert response.headers["etag"] == '"etag-123"'
+    assert "set-cookie" not in response.headers
+
+
+async def test_proxy_app_returns_upstream_error_body(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Propagate non-cache-related upstream exceptions to the caller."""
+
+    # Arrange
+    user = users[0]
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
+    organization = await db.organizations.create("acme", location.id, user)
+    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    await db.applications.set_status(app.id, ApplicationStatus.running)
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        name="local",
+        kubeconfig=(
+            "apiVersion: v1\n"
+            "clusters:\n"
+            "- name: k3d-compute\n"
+            "  cluster:\n"
+            "    server: https://0.0.0.0:8001\n"
+            "contexts:\n"
+            "- name: k3d-compute\n"
+            "  context:\n"
+            "    cluster: k3d-compute\n"
+            "    user: admin@k3d-compute\n"
+            "current-context: k3d-compute\n"
+            "kind: Config\n"
+            "preferences: {}\n"
+            "users:\n"
+            "- name: admin@k3d-compute\n"
+            "  user:\n"
+            "    client-certificate-data: Y2VydA==\n"
+            "    client-key-data: a2V5\n"
+        ),
+        ingress_host="localhost:9443",
+        location_id=location.id,
+        user=user,
+    )
+    client = clients[0]
+
+    class FakeCompute:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            pass
+
+        def proxy(self, organization: str, application: str, path: str, method: str, query_params, headers, body):
+            exception = ApiException(status=500, reason="Internal Server Error")
+            exception.body = "backend-failed"
+            exception.headers = {"Etag": '"etag-500"', "set-cookie": "tenant=owned"}
+            raise exception
+
+    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+
+    # Act
+    response = client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
+
+    # Assert
+    assert response.status_code == 500
+    assert response.text == "backend-failed"
+    assert response.headers["etag"] == '"etag-500"'
     assert "set-cookie" not in response.headers
 
 

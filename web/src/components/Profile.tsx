@@ -219,6 +219,7 @@ export function UserProfile() {
                         </DropdownMenuGroup>
                     </>
                 ) : null}
+                {isPrivileged ? <DropdownMenuSeparator className="my-2" /> : null}
                 <DropdownMenuItem
                     className={profileDropdownMenuDestructiveItemClassName}
                     onClick={handleSignOut}

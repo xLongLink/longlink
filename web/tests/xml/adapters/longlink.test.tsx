@@ -11,4 +11,18 @@ describe('Longlink', () => {
         expect(output).toContain('One');
         expect(output).toContain('Two');
     });
+
+    it('allows name and icon metadata props on longlink', () => {
+        const output = renderXmlToMarkup(
+            parseXML('<longlink name="Dashboard" icon="layout-dashboard"><P i18n="One" /></longlink>')
+        );
+
+        expect(output).toContain('One');
+    });
+
+    it('rejects unknown longlink attributes at runtime', () => {
+        expect(() => renderXmlToMarkup(parseXML('<longlink hidden="true"><P i18n="One" /></longlink>'))).toThrow(
+            'Unsupported longlink attributes: hidden'
+        );
+    });
 });

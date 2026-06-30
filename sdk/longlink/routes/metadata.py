@@ -16,7 +16,15 @@ async def get_metadata(request: Request) -> dict[str, object]:
 
     # Page handlers are registered through the router.page decorator or auto discovery.
     for page in registered_pages:
-        pages.append({"path": page.path.lstrip("/")})
+        entry = {"path": page.path.lstrip("/")}
+
+        if page.name:
+            entry["name"] = page.name
+
+        if page.icon:
+            entry["icon"] = page.icon
+
+        pages.append(entry)
 
     return {
         "name": metadata.name,

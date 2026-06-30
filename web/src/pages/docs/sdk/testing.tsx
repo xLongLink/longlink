@@ -31,7 +31,7 @@ export const content = (
                 <CodeBlock language="bash">pip install .[dev]</CodeBlock>
             </TabsContent>
             <TabsContent value="uv">
-                <CodeBlock language="bash">uv add .[dev]</CodeBlock>
+                <CodeBlock language="bash">uv sync --extra dev</CodeBlock>
             </TabsContent>
         </Tabs>
         <Heading id="usage" level="h2">
@@ -42,7 +42,8 @@ export const content = (
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">sdk/tests</code> for
             SDK test files and keep file paths aligned with the repository layout:
         </p>
-        <CodeBlock language="bash">pytest pytest sdk/tests/cli/test_init.py</CodeBlock>
+        <CodeBlock language="bash">pytest
+pytest sdk/tests/cli/test_init.py</CodeBlock>
         <Heading id="example" level="h2">
             Example
         </Heading>

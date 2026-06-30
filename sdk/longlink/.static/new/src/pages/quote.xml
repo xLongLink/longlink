@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink>
+<longlink name="Quote" icon="file-text">
     <Hero icon="file-text">
         <HeroTitle i18n="examples.quote.title" />
         <HeroDescription i18n="examples.quote.description" />

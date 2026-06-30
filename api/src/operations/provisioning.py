@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy.engine import make_url
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from src.utils import images, names
@@ -82,7 +83,18 @@ async def application_storage_registry(application: Application) -> StorageRegis
 def runtime_database_url(database_url: str) -> str:
     """Return a database URL compatible with the SDK runtime."""
 
-    return database_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+    url = make_url(database_url)
+
+    # Runtime applications use the SDK async engine, so PostgreSQL connections use asyncpg.
+    if url.drivername != "postgresql+asyncpg":
+        url = url.set(drivername="postgresql+asyncpg")
+
+    # sslmode is a libpq/psycopg option; asyncpg receives it as an invalid kwarg through SQLAlchemy.
+    sslmode_query_keys = [key for key in url.query if key.lower() == "sslmode"]
+    if sslmode_query_keys:
+        url = url.difference_update_query(sslmode_query_keys)
+
+    return url.render_as_string(hide_password=False)
 
 
 def runtime_environment(

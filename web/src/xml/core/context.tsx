@@ -111,10 +111,13 @@ export function validateSetupNodes(nodes: ASTNode[]): void {
 
 /** Validates a single setup-only runtime declaration. */
 function validateSetupNode(node: ASTNode): void {
-    // The root shell is attribute-free by design.
+    // Longlink accepts optional metadata-only root attributes.
     if (node.name === 'longlink') {
-        if (node.params && Object.keys(node.params).length > 0) {
-            throw new Error('longlink does not accept attributes');
+        const params = node.params ?? {};
+        const unsupported = Object.keys(params).filter((name) => name !== 'name' && name !== 'icon');
+
+        if (unsupported.length) {
+            throw new Error(`Unsupported longlink attributes: ${unsupported.join(', ')}`);
         }
     }
 

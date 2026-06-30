@@ -16,9 +16,12 @@ const conceptDocs: ConceptDoc[] = [
         name: 'longlink',
         id: 'longlink',
         description:
-            'Root XML page element. It accepts no attributes, renders its children in the runtime shell, and should wrap the page body returned by an SDK page handler.',
-        parameters: ['No parameters. Attributes are rejected so page roots stay predictable.'],
-        example: `<longlink>
+            'Root XML page element. Use this as the top-level page wrapper to render page body and expose optional metadata for page tabs.',
+        parameters: [
+            'name: optional readable tab label override.',
+            'icon: optional Lucide icon name for the tab in the XML shell.',
+        ],
+        example: `<longlink name="Dashboard" icon="layout-dashboard">
   <H1 i18n="orders.title" />
   <P i18n="orders.description" />
 </longlink>`,

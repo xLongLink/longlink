@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink>
+<longlink name="Form" icon="clipboard-list">
     <State
         id="form"
         name="Evil Rabbit"

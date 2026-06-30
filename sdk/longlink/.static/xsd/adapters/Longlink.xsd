@@ -6,6 +6,8 @@
         <xsd:any processContents="lax" />
       </xsd:choice>
     </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="optional" />
+    <xsd:attribute name="icon" type="xsd:string" use="optional" />
   </xsd:complexType>
 
   <xsd:complexType name="LonglinkChildrenType">

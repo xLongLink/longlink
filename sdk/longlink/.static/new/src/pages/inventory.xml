@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink>
+<longlink name="Inventory" icon="package-plus">
     <Query id="items" path="/inventory" />
     <State
         id="inventory"

@@ -1,6 +1,6 @@
 import httpx2
-from typing import Any, cast
-from fastapi import Request, Response, APIRouter
+from typing import Any, Final, Literal, cast
+from fastapi import Query, Request, Response, APIRouter
 from pydantic import Field, BaseModel, ValidationError
 from src.auth import SessionAccountsService, oauth
 from src.errors import UnavailableError, UnauthorizedError
@@ -11,6 +11,20 @@ from src.models.common import SuccessResponse
 from src.database.services.users import users
 
 router = APIRouter()
+DEFAULT_POST_LOGIN_REDIRECT: Final[str] = "/organizations"
+OIDC_NEXT_SESSION_KEY: Final[str] = "oidc_next"
+
+
+def _sanitize_next_path(next_path: str | None) -> str:
+    """Keep only safe relative post-login paths."""
+
+    if next_path is None:
+        return DEFAULT_POST_LOGIN_REDIRECT
+
+    if not next_path.startswith("/") or next_path.startswith("//"):
+        return DEFAULT_POST_LOGIN_REDIRECT
+
+    return next_path
 
 
 class PasswordLoginRequest(BaseModel):
@@ -46,13 +60,30 @@ async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
 
 
 @router.get("/auth/login/oidc", include_in_schema=False)
-async def login_oidc(request: Request) -> Response:
+async def login_oidc(
+    request: Request,
+    provider: Literal["github", "google"] | None = None,
+    next_path: str | None = Query(default=None, alias="next"),
+) -> Response:
     """Initiate OIDC login flow by redirecting to the identity provider."""
 
     oidc = cast(Any, oauth).create_client("oidc")
 
+    request.session[OIDC_NEXT_SESSION_KEY] = _sanitize_next_path(next_path)
+    authorize_kwargs: dict[str, Any] = {}
+
+    if provider is not None:
+        authorize_kwargs["kc_idp_hint"] = provider
+
     try:
-        return cast(Response, await oidc.authorize_redirect(request, redirect_uri=env.OIDC_REDIRECT_URI))
+        return cast(
+            Response,
+            await oidc.authorize_redirect(
+                request,
+                redirect_uri=env.OIDC_REDIRECT_URI,
+                **authorize_kwargs,
+            ),
+        )
     except httpx2.HTTPStatusError as exc:
         raise UnavailableError(
             "OIDC provider metadata is unavailable. Check OIDC_ISSUER and provider realm configuration."
@@ -151,7 +182,8 @@ async def auth_oidc(request: Request) -> RedirectResponse:
 
     subject = await upsert_oidc_user(userinfo)
     SessionAccountsService(request).activate(subject)
-    return RedirectResponse("/organizations")
+    next_path = request.session.pop(OIDC_NEXT_SESSION_KEY, DEFAULT_POST_LOGIN_REDIRECT)
+    return RedirectResponse(_sanitize_next_path(next_path))
 
 
 @router.get("/auth/logout", response_model=SuccessResponse, include_in_schema=False)

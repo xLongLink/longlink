@@ -1,0 +1,32 @@
+<mjml>
+  <mj-body background-color="#f5f7fb" width="600px">
+    <mj-section background-color="#0f172a" padding="20px 0">
+      <mj-column>
+        <mj-text color="#f8fafc" font-size="24px" font-family="Arial, sans-serif" font-weight="700">
+          You were invited to ${organization_name}
+        </mj-text>
+        <mj-text color="#cbd5e1" font-size="13px" font-family="Arial, sans-serif">
+          LongLink Organization Access
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" padding="32px">
+      <mj-column>
+        <mj-text color="#0f172a" font-size="18px" font-family="Arial, sans-serif" font-weight="700">
+          Hi, ${recipient_email}!
+        </mj-text>
+        <mj-text color="#334155" font-size="16px" font-family="Arial, sans-serif">
+          ${inviter_name} invited you to join the <strong>${organization_name}</strong> organization with the role <strong>${invitation_role}</strong>.
+        </mj-text>
+        <mj-text color="#334155" font-size="16px" font-family="Arial, sans-serif">
+          Organization ID: ${organization_id}
+        </mj-text>
+        <mj-divider border-color="#dbeafe" border-width="1px"></mj-divider>
+        <mj-text color="#64748b" font-size="13px" font-family="Arial, sans-serif">
+          This message is sent from the LongLink control plane.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

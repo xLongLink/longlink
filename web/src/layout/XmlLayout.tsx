@@ -5,13 +5,18 @@ import { UserProfile } from '@/components/Profile';
 import { SdkUserSelector } from '@/components/SdkUserSelector';
 import { Wordmark } from '@/components/Wordmark';
 import { cn } from '@/lib/utils';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, type LucideIcon } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
 import TopLayout from './TopLayout';
 
+type LayoutTab = {
+    href: string;
+    icon?: LucideIcon;
+};
+
 type LayoutProps = {
-    tabs?: Record<string, string>;
+    tabs?: Record<string, string | LayoutTab>;
     brandOnly?: boolean;
     brandHref?: string;
     children: ReactNode;
@@ -69,7 +74,9 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
             {brandOnly || !tabEntries.length ? null : (
                 <div className="mx-auto w-full px-6 pb-0 pt-0">
                     <div className="flex w-full items-center gap-2 border-b border-white/10">
-                        {tabEntries.map(([label, href]) => {
+                        {tabEntries.map(([label, tab]) => {
+                            const href = typeof tab === 'string' ? tab : tab.href;
+                            const Icon = typeof tab === 'string' ? undefined : tab.icon;
                             const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
                             const isActive = `${targetUrl.pathname}${targetUrl.search}` === currentPath;
 
@@ -85,6 +92,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                             'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
                                     )}
                                 >
+                                    {Icon ? <Icon className="size-4 shrink-0" aria-hidden={true} /> : null}
                                     {label}
                                 </Link>
                             );
@@ -103,5 +111,9 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         );
     }
 
-    return <TopLayout header={header}>{children}</TopLayout>;
+    return (
+        <TopLayout header={header}>
+            <div className="mx-auto flex w-full max-w-[1000px] flex-1 flex-col">{children}</div>
+        </TopLayout>
+    );
 }

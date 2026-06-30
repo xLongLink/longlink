@@ -1,3 +1,4 @@
+import { createLucideIconComponent } from '@/components/ui/icon';
 import { useMetadata } from '@/hooks/use-metadata';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
@@ -7,7 +8,7 @@ import { buttonVariants } from '@ui/button';
 import { ScrollArea } from '@ui/scroll-area';
 import { Skeleton } from '@ui/skeleton';
 import startCase from 'lodash/startCase';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import NotFound from './NotFound';
 
@@ -123,6 +124,7 @@ export default function View({
     const metadataLoading = error instanceof ApiError && error.status === 503;
     const shouldShowLogs =
         canViewLogs && applicationStatus === 'running' && (metadataLoading || pageState.status === 503);
+    const ast = useMemo(() => (pageState.content ? fromXml(pageState.content) : null), [pageState.content]);
 
     // Make the first tab explicit in the URL when the page loads without a tab selection.
     useEffect(() => {
@@ -150,7 +152,11 @@ export default function View({
                   ? `/orgs/${organization}?${nextSearchParams.toString()}`
                   : `?${nextSearchParams.toString()}`;
 
-            return [startCase(pageLabelPath(tabValue)), href] as const;
+            const label = page.name?.trim() || startCase(pageLabelPath(tabValue));
+            const iconName = page.icon?.trim();
+            const icon = iconName ? createLucideIconComponent(iconName) : undefined;
+
+            return [label, icon ? { href, icon } : href] as const;
         }) ?? []
     );
 
@@ -327,7 +333,7 @@ export default function View({
         );
     }
 
-    if (!pageState.content) {
+    if (!ast) {
         return (
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
@@ -341,8 +347,6 @@ export default function View({
             </XML>
         );
     }
-
-    const ast = fromXml(pageState.content);
 
     return (
         <XML tabs={tabs}>

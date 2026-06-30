@@ -2,6 +2,8 @@ import { useApiQuery } from '@/hooks/use-api';
 
 type MetadataPage = {
     path: string;
+    name?: string;
+    icon?: string;
 };
 
 type MetadataResponse = {

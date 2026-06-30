@@ -9,10 +9,13 @@ import { toast } from 'sonner';
 
 import { Wordmark } from '@/components/Wordmark';
 import { useUser } from '@/hooks/use-user';
+import { apiUrl } from '@/lib/api';
 
 type SignInCardProps = {
     redirectTo: string;
 };
+
+type SocialLoginProvider = 'github' | 'google';
 
 /** Renders the shared username and password sign-in card. */
 export function SignInCard({ redirectTo }: SignInCardProps) {
@@ -38,6 +41,11 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
         }
     }
 
+    /** Shows a lightweight helper message for password recovery. */
+    function handleForgotPasswordClick() {
+        toast.info('Password reset is handled through your identity provider.');
+    }
+
     /** Activates one saved account and returns to the requested page. */
     async function handleAccountSelect(oidc: string) {
         try {
@@ -48,129 +56,137 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
         }
     }
 
-    /** Redirects the browser to the OIDC login endpoint. */
-    function handleProviderSignIn(provider: 'github' | 'google') {
-        window.location.assign(`/auth/login/oidc?provider=${provider}`);
+    /** Redirects the browser to the OIDC login endpoint with the provider hint and target path. */
+    function handleProviderSignIn(provider: SocialLoginProvider) {
+        const redirectParameters = new URLSearchParams({ provider, next: redirectTo });
+
+        window.location.assign(apiUrl(`/auth/login/oidc?${redirectParameters.toString()}`));
     }
 
     const hasSavedAccounts = accounts.items.length > 0;
 
     return (
-        <div className={`mx-auto w-full space-y-6 ${hasSavedAccounts ? 'max-w-5xl' : 'max-w-sm'}`}>
-            <div className="space-y-6">
-                <div className="space-y-4 text-center">
-                    <div className="space-y-2">
-                        <h1 className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-2xl font-medium">
-                            <span>Welcome to</span>
-                            <Wordmark className="text-2xl align-baseline" />
-                        </h1>
+        <div className="mx-auto w-full max-w-sm">
+            <div className="space-y-0">
+                <div className="space-y-3">
+                    <div className="space-y-2 text-center">
+                        <div className="space-y-2">
+                            <h1 className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-2xl font-medium">
+                                <span>Welcome to</span>
+                                <Wordmark className="text-2xl align-baseline" />
+                            </h1>
+                        </div>
                     </div>
+
+                    <Separator className="my-2 h-px w-full border-t border-border/60" />
 
                     {showEmailForm ? (
-                        <button
-                            type="button"
-                            className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-                            onClick={() => setShowEmailForm(false)}
-                        >
-                            Back
-                        </button>
-                    ) : null}
-                </div>
-
-                <div className={`grid gap-4 ${hasSavedAccounts ? 'lg:grid-cols-[24rem_24rem] lg:items-start lg:justify-center' : ''}`}>
-                    <div className="space-y-3">
-                        {showEmailForm ? (
-                            <form className="space-y-4" onSubmit={handleSubmit}>
-                                <div className="space-y-2">
-                                    <Label htmlFor="signin-email">Email</Label>
-                                    <Input
-                                        id="signin-email"
-                                        value={username}
-                                        onChange={(event) => setUsername(event.target.value)}
-                                        autoComplete="email"
-                                        disabled={isSubmitting}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="signin-password">Password</Label>
-                                    <Input
-                                        id="signin-password"
-                                        type="password"
-                                        value={password}
-                                        onChange={(event) => setPassword(event.target.value)}
-                                        autoComplete="current-password"
-                                        disabled={isSubmitting}
-                                    />
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    className="w-full"
-                                    disabled={isSubmitting || username.length === 0 || password.length === 0}
-                                >
-                                    {isSubmitting ? 'Signing in...' : 'Continue with Email'}
-                                </Button>
-                            </form>
-                        ) : (
-                            <div className="space-y-3">
-                                <Separator className="my-1 bg-border/80" />
-
-                                <div className="space-y-2 py-1">
-                                    <Button type="button" variant="outline" className="w-full" onClick={() => setShowEmailForm(true)}>
-                                        Continue with Email
-                                    </Button>
-                                    <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('github')}>
-                                        Continue with GitHub
-                                    </Button>
-                                    <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('google')}>
-                                        Continue with Google
-                                    </Button>
-                                </div>
-
-                                <Separator className="my-1 bg-border/80" />
+                        <form className="space-y-4" onSubmit={handleSubmit}>
+                            <div className="space-y-2">
+                                <Label htmlFor="signin-email">Email</Label>
+                                <Input
+                                    id="signin-email"
+                                    value={username}
+                                    onChange={(event) => setUsername(event.target.value)}
+                                    autoComplete="email"
+                                    disabled={isSubmitting}
+                                />
                             </div>
-                        )}
-                    </div>
 
-                    {hasSavedAccounts ? (
-                        <div className="space-y-2">
-                            {accounts.items.map((account) => (
+                            <div className="space-y-2">
+                                <Label htmlFor="signin-password">Password</Label>
+                                <Input
+                                    id="signin-password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    autoComplete="current-password"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isSubmitting || username.length === 0 || password.length === 0}
+                            >
+                                {isSubmitting ? 'Signing in...' : 'Continue with Email'}
+                            </Button>
+
+                            <div className="flex items-center justify-between text-sm">
                                 <button
-                                    key={account.oidc}
                                     type="button"
-                                    className="flex w-full cursor-pointer items-center gap-3 rounded-md border border-border/70 px-3 py-2 text-left transition-colors hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                                    onClick={() => void handleAccountSelect(account.oidc)}
+                                    className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+                                    onClick={() => setShowEmailForm(false)}
                                 >
-                                    <Avatar className="size-9">
-                                        <AvatarImage src={account.avatar} alt={`${account.name} profile`} />
-                                        <AvatarFallback>{account.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-medium text-foreground">{account.name}</p>
-                                        <p className="truncate text-xs text-muted-foreground">{account.email}</p>
-                                    </div>
+                                    Back
                                 </button>
-                            ))}
+
+                                <button
+                                    type="button"
+                                    className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+                                    onClick={handleForgotPasswordClick}
+                                >
+                                    Forgot Password
+                                </button>
+                            </div>
+                        </form>
+                    ) : (
+                        <div className="space-y-2">
+                            <Button type="button" variant="outline" className="w-full" onClick={() => setShowEmailForm(true)}>
+                                Continue with Email
+                            </Button>
+                            <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('github')}>
+                                Continue with GitHub
+                            </Button>
+                            <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('google')}>
+                                Continue with Google
+                            </Button>
                         </div>
+                    )}
+
+                    <Separator className="my-2 h-px w-full border-t border-border/60" />
+
+                    {hasSavedAccounts && !showEmailForm ? (
+                        <>
+                            <div className="space-y-2">
+                                {accounts.items.map((account) => (
+                                    <button
+                                        key={account.oidc}
+                                        type="button"
+                                        className="flex w-full cursor-pointer items-center gap-3 rounded-md border border-border/70 px-3 py-2 text-left transition-colors hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                                        onClick={() => void handleAccountSelect(account.oidc)}
+                                    >
+                                        <Avatar className="size-9">
+                                            <AvatarImage src={account.avatar} alt={`${account.name} profile`} />
+                                            <AvatarFallback>{account.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-medium text-foreground">{account.name}</p>
+                                            <p className="truncate text-xs text-muted-foreground">{account.email}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <Separator className="my-2 h-px w-full border-t border-border/60" />
+                        </>
                     ) : null}
                 </div>
-
-                <Separator />
-
-                <p className="mx-auto max-w-sm text-center text-xs text-muted-foreground">
-                    <span>By continuing, you agree to our</span>
-                    <br />
-                    <Link className="underline underline-offset-4 hover:text-foreground" to="/terms">
-                        Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link className="underline underline-offset-4 hover:text-foreground" to="/privacy">
-                        Privacy Policy
-                    </Link>
-                    .
-                </p>
             </div>
+
+            <p className="mx-auto max-w-sm text-center text-xs text-muted-foreground">
+                <span>By continuing, you agree to our</span>
+                <br />
+                <Link className="underline underline-offset-4 hover:text-foreground" to="/terms">
+                    Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link className="underline underline-offset-4 hover:text-foreground" to="/privacy">
+                    Privacy Policy
+                </Link>
+                .
+            </p>
         </div>
     );
 }

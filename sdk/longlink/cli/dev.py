@@ -2,6 +2,7 @@ import select
 import sys
 import threading
 import webbrowser
+from pathlib import Path
 
 import click
 import uvicorn
@@ -23,6 +24,12 @@ def _print_shortcuts(server_url: str) -> None:
 @click.command(name="dev")
 def dev_command():
     """Run LongLink application locally with auto-reload enabled."""
+
+    app_directory = str(Path.cwd())
+
+    # Match uvicorn's CLI app-dir behavior when launched through the longlink console script.
+    if app_directory not in sys.path:
+        sys.path.insert(0, app_directory)
 
     server_url = f"http://127.0.0.1:{DEV_PORT}"
     stop_event = threading.Event()

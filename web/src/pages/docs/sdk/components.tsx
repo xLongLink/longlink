@@ -9,6 +9,89 @@ type ElementDoc = {
     example: string;
 };
 
+type ElementDocGroup = {
+    id: string;
+    title: string;
+    elements: ElementDoc[];
+};
+
+const elementFamilyRules: Array<[string, string]> = [
+    ['avatar', 'Avatar'],
+    ['buttongroup', 'ButtonGroup'],
+    ['button', 'Button'],
+    ['field', 'Field'],
+    ['inputgroup', 'InputGroup'],
+    ['input', 'Input'],
+    ['textarea', 'Textarea'],
+    ['checkbox', 'Checkbox'],
+    ['switch', 'Switch'],
+    ['slider', 'Slider'],
+    ['togglegroup', 'ToggleGroup'],
+    ['toggle', 'Toggle'],
+    ['radiogroup', 'RadioGroup'],
+    ['select', 'Select'],
+    ['thead', 'Table'],
+    ['tbody', 'Table'],
+    ['tfoot', 'Table'],
+    ['tr', 'Table'],
+    ['th', 'Table'],
+    ['td', 'Table'],
+    ['table', 'Table'],
+    ['h1', 'Headings'],
+    ['h2', 'Headings'],
+    ['h3', 'Headings'],
+    ['h4', 'Headings'],
+    ['a', 'Text'],
+    ['b', 'Text'],
+    ['u', 'Text'],
+    ['s', 'Text'],
+    ['sup', 'Text'],
+    ['sub', 'Text'],
+    ['code', 'Text'],
+    ['pre', 'Text'],
+    ['ol', 'List'],
+    ['ul', 'List'],
+    ['li', 'List'],
+    ['br', 'Spacing'],
+    ['hr', 'Spacing'],
+];
+
+/**
+ * Groups component IDs into readable families so related nodes stay together in docs.
+ */
+function inferElementFamily(elementId: string): string {
+    for (const [prefix, familyName] of elementFamilyRules) {
+        if (elementId === prefix || elementId.startsWith(prefix)) {
+            return familyName;
+        }
+    }
+
+    return elementId.charAt(0).toUpperCase() + elementId.slice(1);
+}
+
+function toKebabCase(value: string): string {
+    return value.replace(/\s+/g, '-').toLowerCase();
+}
+
+/**
+ * Returns the component docs grouped by element family, preserving source order.
+ */
+function buildElementGroups(elements: ElementDoc[]): ElementDocGroup[] {
+    return elements.reduce<ElementDocGroup[]>((groups, element) => {
+        const familyName = inferElementFamily(element.id);
+        const familyId = toKebabCase(familyName);
+        const existingGroup = groups.find((group) => group.id === familyId);
+
+        if (!existingGroup) {
+            groups.push({ id: familyId, title: familyName, elements: [element] });
+            return groups;
+        }
+
+        existingGroup.elements.push(element);
+        return groups;
+    }, []);
+}
+
 const componentDocs: ElementDoc[] = [
     {
         name: 'Action',
@@ -641,11 +724,13 @@ const componentDocs: ElementDoc[] = [
     },
 ];
 
+const groupedComponentDocs = buildElementGroups(componentDocs);
+
 /** Renders one XML component reference entry. */
-function ElementSection({ element }: { element: ElementDoc }) {
+function ElementSection({ element, headingLevel }: { element: ElementDoc; headingLevel: 'h2' | 'h3' }) {
     return (
         <section className="space-y-3">
-            <Heading id={element.id} level="h2">
+            <Heading id={element.id} level={headingLevel}>
                 {element.name}
             </Heading>
             <p className="leading-7">{element.description}</p>
@@ -662,6 +747,26 @@ function ElementSection({ element }: { element: ElementDoc }) {
     );
 }
 
+/** Renders one grouped set of component docs. */
+function ComponentGroupSection({ group }: { group: ElementDocGroup }) {
+    if (group.elements.length === 1) {
+        return <ElementSection element={group.elements[0]} headingLevel="h2" />;
+    }
+
+    return (
+        <section className="space-y-4">
+            <Heading id={`${group.id}-elements`} level="h2">
+                {group.title}
+            </Heading>
+            <div className="space-y-4">
+                {group.elements.map((element) => (
+                    <ElementSection key={element.id} element={element} headingLevel="h3" />
+                ))}
+            </div>
+        </section>
+    );
+}
+
 /** Renders the XML component element reference. */
 function ComponentsContent() {
     return (
@@ -673,8 +778,8 @@ function ComponentsContent() {
                 Component elements cover actions, form controls, text, lists, tables, and small visual building blocks
                 used inside SDK XML pages.
             </p>
-            {componentDocs.map((element) => (
-                <ElementSection key={element.id} element={element} />
+            {groupedComponentDocs.map((group) => (
+                <ComponentGroupSection key={group.id} group={group} />
             ))}
         </div>
     );

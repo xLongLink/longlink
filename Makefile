@@ -45,9 +45,9 @@ up:
 
 
 down:
-	docker compose -f dev/compose.yml down
-	k3d cluster delete compute
 	rm -f api/dev.db
+	-docker compose -f dev/compose.yml down
+	-k3d cluster delete compute
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -delete
 

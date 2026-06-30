@@ -18,7 +18,7 @@ Follow the active architecture and MVP development model. Preserve the separatio
 
 ## Goals
 
-- Deliver custom internal applications faster by building on a shared platform foundation.
+- Deliver faster custom applications by building on a shared foundation.
 - Model business processes explicitly through data, validation, permissions, actions, workflow states, API behavior, and screens.
 - Keep application development local-first while making production deployment platform-managed.
 - Centralize identity, organization access, infrastructure, routing, operations, and application status.

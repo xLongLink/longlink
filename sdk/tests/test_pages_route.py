@@ -1,9 +1,7 @@
-from pathlib import Path
-
 from pytest import MonkeyPatch
-from fastapi.testclient import TestClient
-
+from pathlib import Path
 from longlink.app import LongLink
+from fastapi.testclient import TestClient
 
 
 def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
@@ -11,7 +9,10 @@ def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: Monk
 
     page_path = tmp_path / "src" / "pages" / "dashboard.xml"
     page_path.parent.mkdir(parents=True, exist_ok=True)
-    page_path.write_text("<longlink><P i18n=\"Dashboard\" /></longlink>", encoding="utf-8")
+    page_path.write_text(
+        '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="Dashboard" /></longlink>',
+        encoding="utf-8",
+    )
     monkeypatch.chdir(tmp_path)
 
     client = TestClient(LongLink())
@@ -20,8 +21,13 @@ def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: Monk
     metadata_response = client.get("/metadata.json")
 
     assert response.status_code == 200
-    assert response.text == "<longlink><P i18n=\"Dashboard\" /></longlink>"
-    assert {page["path"] for page in metadata_response.json()["pages"]} >= {"pages/dashboard.xml"}
+    assert response.text == (
+        '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="Dashboard" /></longlink>'
+    )
+    assert any(
+        page["path"] == "pages/dashboard.xml" and page["name"] == "Dashboard" and page["icon"] == "layout-dashboard"
+        for page in metadata_response.json()["pages"]
+    )
     assert all("content" not in page for page in metadata_response.json()["pages"])
 
 

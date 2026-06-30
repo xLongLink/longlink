@@ -15,19 +15,30 @@ def test_longlink_layout_validation() -> None:
 def test_longlink_layout_allows_nested_children() -> None:
     """Allow nested XML children inside `longlink`."""
 
-    element = Element.from_content('<longlink><State id="filters" value="[]" /><Query id="projects" path="/projects" /></longlink>', schema=SCHEMA)
+    element = Element.from_content(
+        '<longlink><State id="filters" value="[]" /><Query id="projects" path="/projects" /></longlink>',
+        schema=SCHEMA,
+    )
     element.validate()
 
 
-def test_longlink_layout_rejects_root_attributes() -> None:
-    """Reject attributes that are not allowed on `longlink`."""
+def test_longlink_layout_allows_metadata_attributes() -> None:
+    """Allow `name` and `icon` attributes on `longlink`."""
 
-    element = Element.from_content('<longlink name="dashboard"><P i18n="Dashboard" /></longlink>', schema=SCHEMA)
+    element = Element.from_content(
+        '<longlink name="dashboard" icon="layout-dashboard"><P i18n="Dashboard" /></longlink>',
+        schema=SCHEMA,
+    )
+    element.validate()
 
-    with pytest.raises(ValueError):
-        element.validate()
 
-    element = Element.from_content('<longlink icon="layout-grid"><P i18n="Dashboard" /></longlink>', schema=SCHEMA)
+def test_longlink_layout_rejects_unknown_root_attributes() -> None:
+    """Reject unsupported attributes on `longlink`."""
+
+    element = Element.from_content(
+        '<longlink hidden="true"><P i18n="Dashboard" /></longlink>',
+        schema=SCHEMA,
+    )
 
     with pytest.raises(ValueError):
         element.validate()

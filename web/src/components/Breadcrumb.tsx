@@ -18,7 +18,6 @@ export function Breadcrumb() {
     const { pathname } = useLocation();
     const segments = pathname.split('/').filter(Boolean);
     const hiddenSegments = new Set(['orgs', 'apps']);
-    const isOrgRoute = segments[0] === 'orgs';
 
     // Build one breadcrumb item per visible path segment while preserving the full route target.
     const crumbs = segments.flatMap((segment, index) => {
@@ -28,7 +27,7 @@ export function Breadcrumb() {
 
         return [
             {
-                label: isOrgRoute ? segment : startCase(segment),
+                label: startCase(segment),
                 href: `/${segments.slice(0, index + 1).join('/')}`,
             },
         ];
