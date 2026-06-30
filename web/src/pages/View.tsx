@@ -73,16 +73,7 @@ function normalizePath(path: string): string {
     return path.replace(/^\/+|\/+$/g, '');
 }
 
-/**
- * Returns a readable label path for SDK-managed page routes.
- */
-function pageLabelPath(path: string): string {
-    return normalizePath(path).replace(/^pages\//, '');
-}
-
-/**
- * Resolves route params inside a URL template.
- */
+/** Resolves route params inside a URL template. */
 function resolveTemplate(template: string, params: Record<string, string | undefined>): string {
     return template
         .replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => params[key] ?? `:${key}`)
@@ -115,7 +106,7 @@ export default function View({
     const selectedTab = searchParams.get('tab');
     /* Resolve the active page from the selected tab path first, then the route path. */
     const activePage =
-        metadataDocument?.pages?.find((page) => normalizePath(page.path.replace(/\.xml$/i, '')) === selectedTab) ??
+        metadataDocument?.pages?.find((page) => page.tab === selectedTab) ??
         metadataDocument?.pages?.find(
             (page) => normalizePath(page.path.replace(/\.xml$/i, '')) === normalizedRoutePath
         ) ??
@@ -132,32 +123,27 @@ export default function View({
             return;
         }
 
-        const firstTab = normalizePath(metadataDocument.pages[0].path.replace(/\.xml$/i, ''));
-        const nextSearchParams = new URLSearchParams(searchParams);
-        nextSearchParams.set('tab', firstTab);
+        navigate(`?tab=${encodeURIComponent(metadataDocument.pages[0].tab)}`, { replace: true });
+    }, [metadataDocument?.pages, navigate, normalizedRoutePath, selectedTab]);
 
-        navigate(`?${nextSearchParams.toString()}`, { replace: true });
-    }, [metadataDocument?.pages, navigate, normalizedRoutePath, searchParams, selectedTab]);
+    const tabs = useMemo(
+        () =>
+            Object.fromEntries(
+                metadataDocument?.pages?.map((page) => {
+                    const href = application
+                        ? `/orgs/${organization}/apps/${application}?tab=${encodeURIComponent(page.tab)}`
+                        : organization
+                          ? `/orgs/${organization}?tab=${encodeURIComponent(page.tab)}`
+                          : `?tab=${encodeURIComponent(page.tab)}`;
 
-    /* Build tab links from metadata page names. */
-    const tabs = Object.fromEntries(
-        metadataDocument?.pages?.map((page) => {
-            const tabValue = normalizePath(page.path.replace(/\.xml$/i, ''));
-            const nextSearchParams = new URLSearchParams(searchParams);
-            nextSearchParams.set('tab', tabValue);
+                    const label = page.name?.trim() || startCase(page.tab);
+                    const iconName = page.icon?.trim();
+                    const icon = iconName ? createLucideIconComponent(iconName) : undefined;
 
-            const href = application
-                ? `/orgs/${organization}/apps/${application}?${nextSearchParams.toString()}`
-                : organization
-                  ? `/orgs/${organization}?${nextSearchParams.toString()}`
-                  : `?${nextSearchParams.toString()}`;
-
-            const label = page.name?.trim() || startCase(pageLabelPath(tabValue));
-            const iconName = page.icon?.trim();
-            const icon = iconName ? createLucideIconComponent(iconName) : undefined;
-
-            return [label, icon ? { href, icon } : href] as const;
-        }) ?? []
+                    return [label, icon ? { href, icon } : href] as const;
+                }) ?? []
+            ),
+        [application, metadataDocument?.pages, organization]
     );
 
     /* Load the active page XML from its path. */

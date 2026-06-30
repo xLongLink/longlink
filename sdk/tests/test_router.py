@@ -54,6 +54,9 @@ def test_router_keeps_page_routes_outside_api_prefix() -> None:
     assert response.text == "<longlink />"
     assert prefixed_response.status_code == 404
     assert any(
-        page["path"] == "pages/sample.xml" and page["name"] == "Sample" and page["icon"] == "file-code"
+        page["tab"] == "sample"
+        and page["path"] == "pages/sample.xml"
+        and page["name"] == "Sample"
+        and page["icon"] == "file-code"
         for page in metadata_response.json()["pages"]
     )

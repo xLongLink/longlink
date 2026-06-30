@@ -25,7 +25,10 @@ def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: Monk
         '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="Dashboard" /></longlink>'
     )
     assert any(
-        page["path"] == "pages/dashboard.xml" and page["name"] == "Dashboard" and page["icon"] == "layout-dashboard"
+        page["tab"] == "dashboard"
+        and page["path"] == "pages/dashboard.xml"
+        and page["name"] == "Dashboard"
+        and page["icon"] == "layout-dashboard"
         for page in metadata_response.json()["pages"]
     )
     assert all("content" not in page for page in metadata_response.json()["pages"])
@@ -47,4 +50,5 @@ def test_nested_xml_pages_are_registered_from_default_pages_directory(monkeypatc
     assert response.status_code == 200
     assert response.text == "<longlink><P i18n=\"Users\" /></longlink>"
     assert {page["path"] for page in metadata_response.json()["pages"]} >= {"pages/admin/users.xml"}
+    assert {page["tab"] for page in metadata_response.json()["pages"]} >= {"admin/users"}
     assert all("content" not in page for page in metadata_response.json()["pages"])
