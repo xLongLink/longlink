@@ -133,9 +133,7 @@ export default function People({ organization, people, invitations, isLoading, e
                             <p className="text-sm text-muted-foreground">Users who have access to this organization.</p>
                         </div>
                         <hr className="border-border" />
-                        {isLoading ? (
-                            null
-                        ) : error ? (
+                        {isLoading ? null : error ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">Failed to load people.</div>
                         ) : people.length ? (
                             <DataTable columns={peopleColumns} data={people} />
@@ -168,9 +166,7 @@ export default function People({ organization, people, invitations, isLoading, e
                             </Button>
                         </div>
                         <hr className="border-border" />
-                        {isLoading ? (
-                            null
-                        ) : error ? (
+                        {isLoading ? null : error ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">
                                 Failed to load invitations.
                             </div>

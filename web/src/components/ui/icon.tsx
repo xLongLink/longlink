@@ -1,6 +1,5 @@
-import * as React from 'react';
-import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 import type { LucideIcon } from 'lucide-react';
+import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 
 import { cn } from '@/lib/utils';
 
@@ -40,5 +39,11 @@ export function Icon({ className, name }: IconProps) {
         throw new Error(`Unknown icon "${name}"`);
     }
 
-    return <DynamicIcon name={normalizedName as IconName} aria-hidden={true} className={cn('size-4 shrink-0', className)} />;
+    return (
+        <DynamicIcon
+            name={normalizedName as IconName}
+            aria-hidden={true}
+            className={cn('size-4 shrink-0', className)}
+        />
+    );
 }

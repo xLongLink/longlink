@@ -5,19 +5,10 @@ from sqlalchemy import pool, engine_from_config
 from logging.config import fileConfig
 from src.environments import env
 from sqlalchemy.engine import Connection, make_url
+from src.database.models import (users, computes, storages, databases,
+                                 locations, operations, association,
+                                 invitations, applications, organizations)
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.database.models import (
-    users,
-    computes,
-    storages,
-    locations,
-    databases,
-    operations,
-    invitations,
-    applications,
-    association,
-    organizations,
-)
 
 _model_modules = (users, computes, storages, locations, databases, operations, invitations, applications, association, organizations)
 

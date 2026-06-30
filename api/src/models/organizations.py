@@ -3,8 +3,8 @@ from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import Avatar, UserSummary
-from src.models.locations import LocationResponse
 from src.models.statuses import ApplicationStatus
+from src.models.locations import LocationResponse
 
 
 class OrganizationCreate(BaseModel):

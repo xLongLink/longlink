@@ -1,7 +1,6 @@
 import sqlalchemy as sa
 from alembic import op
 
-
 revision = "20260624_location_provider"
 down_revision = "20260623_application_name_not_unique"
 branch_labels = None

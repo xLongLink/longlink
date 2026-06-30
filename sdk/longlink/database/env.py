@@ -3,8 +3,8 @@ from alembic import context
 from sqlmodel import SQLModel
 from sqlalchemy.engine import Connection
 from longlink.database.base import create_engine
-from longlink.database.migrations import include_object
 from longlink.utils.settings import Envs
+from longlink.database.migrations import include_object
 
 settings = Envs()
 engine = create_engine(settings)

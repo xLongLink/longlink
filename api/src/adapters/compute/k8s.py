@@ -1,7 +1,7 @@
 import yaml
-from decimal import Decimal, InvalidOperation
-from typing import Any, Callable, cast
 from .base import Compute
+from typing import Any, Callable, cast
+from decimal import Decimal, InvalidOperation
 from datetime import UTC, datetime
 from src.utils import names, templates
 from kubernetes import client, config

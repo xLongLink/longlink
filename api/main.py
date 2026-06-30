@@ -2,15 +2,15 @@ import asyncio
 from uuid import UUID
 from fastapi import FastAPI
 from pathlib import Path
-from collections.abc import AsyncIterator
 from contextlib import suppress, asynccontextmanager
 from src.errors import register_error_handlers
 from src.logger import logger
-from src.routes import (auth, accounts, users, image, health, computes, storages,
-                         databases, locations)
+from src.routes import (auth, image, users, health, accounts, computes,
+                        storages, databases, locations)
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations import execute
+from collections.abc import AsyncIterator
 from src.environments import env
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware

@@ -38,9 +38,7 @@ const databaseColumnsBase: Array<
                     />
                     <div className="min-w-0">
                         <div className="truncate font-medium text-foreground">{database.username}</div>
-                        <div className="truncate text-xs text-muted-foreground">
-                            {managementAddress}
-                        </div>
+                        <div className="truncate text-xs text-muted-foreground">{managementAddress}</div>
                         {runtimeAddress !== managementAddress ? (
                             <div className="truncate text-xs text-muted-foreground">Runtime {runtimeAddress}</div>
                         ) : null}

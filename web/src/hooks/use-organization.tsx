@@ -3,11 +3,7 @@ import { useMemo } from 'react';
 
 import { useApiQuery } from '@/hooks/use-api';
 import { useUser } from '@/hooks/use-user';
-import {
-    apiQueryKey,
-    fetchApiJson,
-    fetchApiVoid,
-} from '@/lib/api';
+import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey } from '@/lib/query-keys';
 import type { Role } from '@/lib/roles';
 import type {
@@ -46,7 +42,10 @@ type UseOrganizationActionsResult = {
 };
 
 /** Resolves one route organization slug to its canonical UUID. */
-export function resolveOrganizationId(organizationSlug: string, organizations: ApiUserOrganizationMembership[]): string {
+export function resolveOrganizationId(
+    organizationSlug: string,
+    organizations: ApiUserOrganizationMembership[]
+): string {
     const organization = organizations.find((item) => item.slug === organizationSlug);
     return organization?.id ?? '';
 }
@@ -54,7 +53,10 @@ export function resolveOrganizationId(organizationSlug: string, organizations: A
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string): UseOrganizationResult {
     const { organizations, isLoading: isUserLoading } = useUser();
-    const organizationId = useMemo(() => resolveOrganizationId(organizationSlug, organizations), [organizationSlug, organizations]);
+    const organizationId = useMemo(
+        () => resolveOrganizationId(organizationSlug, organizations),
+        [organizationSlug, organizations]
+    );
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
 
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
@@ -83,10 +85,15 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
 export function useOrganizationActions(organizationSlug: string): UseOrganizationActionsResult {
     const queryClient = useQueryClient();
     const { organizations } = useUser();
-    const organizationId = useMemo(() => resolveOrganizationId(organizationSlug, organizations), [organizationSlug, organizations]);
+    const organizationId = useMemo(
+        () => resolveOrganizationId(organizationSlug, organizations),
+        [organizationSlug, organizations]
+    );
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
     const organizationMembership = organizations.find((item) => item.slug === organizationSlug);
-    const canInviteMembers = organizationMembership?.role ? ['admin', 'maintain', 'owner'].includes(organizationMembership.role) : false;
+    const canInviteMembers = organizationMembership?.role
+        ? ['admin', 'maintain', 'owner'].includes(organizationMembership.role)
+        : false;
 
     const inviteMemberMutation = useMutation({
         mutationFn: async ({ email, role }: { email: string; role: Role }) => {

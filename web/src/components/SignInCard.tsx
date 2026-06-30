@@ -133,13 +133,28 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                         </form>
                     ) : (
                         <div className="space-y-2">
-                            <Button type="button" variant="outline" className="w-full" onClick={() => setShowEmailForm(true)}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setShowEmailForm(true)}
+                            >
                                 Continue with Email
                             </Button>
-                            <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('github')}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => handleProviderSignIn('github')}
+                            >
                                 Continue with GitHub
                             </Button>
-                            <Button type="button" variant="outline" className="w-full" onClick={() => handleProviderSignIn('google')}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => handleProviderSignIn('google')}
+                            >
                                 Continue with Google
                             </Button>
                         </div>
@@ -162,7 +177,9 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                             <AvatarFallback>{account.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-medium text-foreground">{account.name}</p>
+                                            <p className="truncate text-sm font-medium text-foreground">
+                                                {account.name}
+                                            </p>
                                             <p className="truncate text-xs text-muted-foreground">{account.email}</p>
                                         </div>
                                     </button>

@@ -24,12 +24,22 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const pathSection = pathname.split('/')[3] ?? '';
     const section =
         sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
-    const { organization: organizationDetails, people, invitations, applications, isLoading, error } = useOrganization(
-        organization
-    );
+    const {
+        organization: organizationDetails,
+        people,
+        invitations,
+        applications,
+        isLoading,
+        error,
+    } = useOrganization(organization);
 
     if (organizationDetails && routeOrganization && organizationDetails.slug !== routeOrganization) {
-        return <Navigate replace to={`/orgs/${organizationDetails.slug}${pathname.slice(`/orgs/${routeOrganization}`.length)}`} />;
+        return (
+            <Navigate
+                replace
+                to={`/orgs/${organizationDetails.slug}${pathname.slice(`/orgs/${routeOrganization}`.length)}`}
+            />
+        );
     }
 
     // Hide missing or inaccessible orgs behind the shared 404 page.

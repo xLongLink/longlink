@@ -1,7 +1,6 @@
 import sqlalchemy as sa
 from alembic import op
 
-
 revision = "20260630_database_runtime_connection"
 down_revision = "20260630_operation_leases"
 branch_labels = None

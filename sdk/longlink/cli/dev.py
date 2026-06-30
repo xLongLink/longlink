@@ -1,14 +1,12 @@
-import select
 import sys
+import click
+import select
+import uvicorn
 import threading
 import webbrowser
 from pathlib import Path
-
-import click
-import uvicorn
-
+from longlink.logger import logger, log_config
 from longlink.constants import DEV_PORT
-from longlink.logger import log_config, logger
 
 
 def _print_shortcuts(server_url: str) -> None:

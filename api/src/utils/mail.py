@@ -7,18 +7,17 @@ from __future__ import annotations
 
 import asyncio
 import subprocess
-from email.message import EmailMessage
-from email.utils import formataddr
-from pathlib import Path
-from string import Template
-from smtplib import SMTP, SMTP_SSL
 from ssl import create_default_context
+from string import Template
 from typing import Any
-from collections.abc import Mapping
-
-from src.constants import MAIL_TEMPLATES
-from src.environments import env
+from pathlib import Path
+from smtplib import SMTP, SMTP_SSL
 from src.logger import logger
+from email.utils import formataddr
+from email.message import EmailMessage
+from src.constants import MAIL_TEMPLATES
+from collections.abc import Mapping
+from src.environments import env
 
 
 class MailTemplateError(RuntimeError):

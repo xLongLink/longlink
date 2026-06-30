@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useApiQuery } from '@/hooks/use-api';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { accountsQueryKey } from '@/lib/query-keys';
 import { applyTheme, THEME_PRESETS, type Accent, type Radius, type Theme, type ThemeConfig } from '@/lib/theme';

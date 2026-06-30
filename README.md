@@ -61,9 +61,10 @@ bun run --cwd web typecheck
 ```
 
 ## Features
+
 - User managements
 - Permissions
-- 
+-
 
 <br />
 <br />

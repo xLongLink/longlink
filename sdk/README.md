@@ -29,11 +29,11 @@ uv run longlink dev
 
 ## Commands
 
-| Command                          | Description                             |
-| -------------------------------- | --------------------------------------- |
-| `longlink init --folder <name>`  | Create a new app.                       |
-| `longlink dev`                   | Run the app locally.                    | > |
-| `longlink migrate`               | Run database migrations.                |
-| `longlink docs [component]`      | Show XML component docs.                |
-| `longlink translations generate` | Update translation files from XML keys. |
-| `longlink build [--tag <tag>] [--registry <host>] [--push]` | Build the app Docker image. |
+| Command                                                     | Description                             |
+| ----------------------------------------------------------- | --------------------------------------- | --- |
+| `longlink init --folder <name>`                             | Create a new app.                       |
+| `longlink dev`                                              | Run the app locally.                    | >   |
+| `longlink migrate`                                          | Run database migrations.                |
+| `longlink docs [component]`                                 | Show XML component docs.                |
+| `longlink translations generate`                            | Update translation files from XML keys. |
+| `longlink build [--tag <tag>] [--registry <host>] [--push]` | Build the app Docker image.             |

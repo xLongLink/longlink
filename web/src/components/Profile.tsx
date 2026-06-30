@@ -10,9 +10,9 @@ import {
 } from '@ui/dropdown-menu';
 import {
     Activity,
+    ArrowRightLeft,
     BookOpen,
     Boxes,
-    ArrowRightLeft,
     Building2,
     Cpu,
     Database,
@@ -220,10 +220,7 @@ export function UserProfile() {
                     </>
                 ) : null}
                 {isPrivileged ? <DropdownMenuSeparator className="my-2" /> : null}
-                <DropdownMenuItem
-                    className={profileDropdownMenuDestructiveItemClassName}
-                    onClick={handleSignOut}
-                >
+                <DropdownMenuItem className={profileDropdownMenuDestructiveItemClassName} onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out
                 </DropdownMenuItem>

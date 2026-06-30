@@ -8,10 +8,10 @@ from src.models.statuses import ApplicationStatus
 from src.database.models.association import UserApplication
 
 if TYPE_CHECKING:
-    from src.database.models.computes import ComputeRegistry
-    from src.database.models.databases import DatabaseRegistry
-    from src.database.models.storages import StorageRegistry
     from src.database.models.users import User
+    from src.database.models.computes import ComputeRegistry
+    from src.database.models.storages import StorageRegistry
+    from src.database.models.databases import DatabaseRegistry
     from src.database.models.organizations import Organization
 
 

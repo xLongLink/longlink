@@ -1,10 +1,10 @@
 import { DataTable } from '@/components/DataTable';
 import CreateApplicationDialog from '@/components/dialogs/CreateApplicationDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
-import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
 import { useOrganizationActions } from '@/hooks/use-organization';
+import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
+import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
 import { useUser } from '@/hooks/use-user';
 import type {
     ApiOrganizationApplication,
@@ -356,9 +356,7 @@ export default function Settings({ organization, organizationDetails, applicatio
 
                             <CreateApplicationDialog organization={organization} />
                         </div>
-                        {isLoading ? (
-                            null
-                        ) : error ? (
+                        {isLoading ? null : error ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">
                                 Failed to load applications.
                             </div>
@@ -464,9 +462,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                     </div>
 
                     <div className="min-h-0 space-y-4 overflow-auto pr-1">
-                        {databaseResourceTablesIsLoading ? (
-                            null
-                        ) : databaseResourceTablesError ? (
+                        {databaseResourceTablesIsLoading ? null : databaseResourceTablesError ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">
                                 {databaseResourceTablesError.message}
                             </div>
@@ -550,11 +546,9 @@ export default function Settings({ organization, organizationDetails, applicatio
     );
 }
 
-
 type DatabasePreviewTableProps = {
     table: ApiOrganizationDatabaseTable;
 };
-
 
 /** Renders one database table preview with dynamic columns and rows. */
 function DatabasePreviewTable({ table }: DatabasePreviewTableProps) {
@@ -566,7 +560,8 @@ function DatabasePreviewTable({ table }: DatabasePreviewTableProps) {
                         {table.schema_name}.{table.name}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                        {table.columns.length.toLocaleString()} columns · {table.rows.length.toLocaleString()} preview rows
+                        {table.columns.length.toLocaleString()} columns · {table.rows.length.toLocaleString()} preview
+                        rows
                     </p>
                 </div>
             </div>
@@ -600,7 +595,10 @@ function DatabasePreviewTable({ table }: DatabasePreviewTableProps) {
                                         const value = row[column.name];
 
                                         return (
-                                            <TableCell key={column.name} className="max-w-72 truncate font-mono text-xs">
+                                            <TableCell
+                                                key={column.name}
+                                                className="max-w-72 truncate font-mono text-xs"
+                                            >
                                                 {value === null || value === undefined ? (
                                                     <span className="text-muted-foreground">NULL</span>
                                                 ) : (

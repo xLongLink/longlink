@@ -1,6 +1,5 @@
-from typing import cast
-
 import click
+from typing import cast
 
 COMMANDS = {
     "build": "longlink.cli.build:build_command",

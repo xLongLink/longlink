@@ -1,3 +1,3 @@
-from . import images, names, templates
+from . import names, images, templates
 
 __all__ = ["images", "names", "templates"]

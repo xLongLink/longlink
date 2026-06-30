@@ -304,14 +304,9 @@ export default function Settings() {
                                 <CreateOrganizationDialog />
                             </div>
 
-                            <DataTable
-                                columns={organizationColumns}
-                                data={organizations}
-                                isLoading={isLoading}
-                            />
+                            <DataTable columns={organizationColumns} data={organizations} isLoading={isLoading} />
                         </div>
                     </MenuSection>
-
                 </Menu>
 
                 <Dialog
@@ -370,7 +365,7 @@ export default function Settings() {
                                         }
                                     }}
                                 >
-                                        {deleteOrganization.isPending ? 'Deleting...' : 'Delete'}
+                                    {deleteOrganization.isPending ? 'Deleting...' : 'Delete'}
                                 </Button>
                             </div>
                         </div>

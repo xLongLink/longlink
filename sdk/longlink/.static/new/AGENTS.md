@@ -15,7 +15,6 @@ You are working on a LongLink application.
 - Make sure that the repository is self-contained and portable
 - Let fastapi manage the validation, use `response_model`
 
-
 ## Code structure
 
 ```

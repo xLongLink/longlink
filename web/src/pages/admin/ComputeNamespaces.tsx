@@ -31,14 +31,14 @@ export default function ComputeNamespaces() {
         },
     ];
 
-    const { items: rows, error: namespacesError, isLoading: namespacesIsLoading } = useComputeNamespaces(
-        computeRegistry?.id ?? ''
-    );
+    const {
+        items: rows,
+        error: namespacesError,
+        isLoading: namespacesIsLoading,
+    } = useComputeNamespaces(computeRegistry?.id ?? '');
     const error =
         computeError ??
-        (!computesIsLoading && !computeRegistry
-            ? new Error(`Compute "${compute}" not found`)
-            : namespacesError);
+        (!computesIsLoading && !computeRegistry ? new Error(`Compute "${compute}" not found`) : namespacesError);
 
     return (
         <div className="space-y-6">

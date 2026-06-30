@@ -21,7 +21,6 @@ Use this skill to continuously improve LongLink. The agent should inspect the re
 
 Use judgment. Prefer changes that remove dead code, simplify branching or abstractions, fix bugs or inconsistencies, align behavior across layers, improve validation or error handling, add focused missing tests, or remove stale documentation.
 
-
 ## Fixing
 
 - Preserve unrelated user changes in the worktree.

@@ -84,7 +84,6 @@ export function MenuSubSection({ props, nodes }: Props) {
     );
 }
 
-
 /** Resolves common root section attributes from XML props. */
 function resolveMenuSectionAttributes(
     props: ASTProps,
@@ -104,7 +103,6 @@ function resolveMenuSectionAttributes(
     };
 }
 
-
 /** Resolves common nested subsection attributes from XML props. */
 function resolveMenuSubSectionAttributes(
     props: ASTProps,
@@ -122,7 +120,6 @@ function resolveMenuSubSectionAttributes(
     };
 }
 
-
 /** Resolves a menu label while preserving direct component fallback behavior. */
 function resolveMenuLabel(props: ASTProps, ctx: ExecutionContext, defaultValue?: string): string | undefined {
     if (props.i18n) {
@@ -135,7 +132,6 @@ function resolveMenuLabel(props: ASTProps, ctx: ExecutionContext, defaultValue?:
 
     return String(evaluate(props.label, ctx) ?? defaultValue ?? '');
 }
-
 
 /** Resolves disabled state with the same boolean rules as each rendering path. */
 function resolveMenuDisabled(props: ASTProps, ctx: ExecutionContext, astBoolean?: boolean): boolean | undefined {

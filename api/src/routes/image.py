@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser
-from src.errors import NotFoundError
 from src.utils import images
+from src.errors import NotFoundError
 from src.models.metadata import LongLinkMetadata
 from src.database.models.users import User
 

@@ -1,13 +1,15 @@
 import asyncio
-from pathlib import Path
 from uuid import UUID
-from fastapi.testclient import TestClient
-from src.environments import env
+from pathlib import Path
 from src.operations import provisioning
+from src.environments import env
+from fastapi.testclient import TestClient
 from src.models.applications import ApplicationCreate
 from src.database.services.users import users
-from src.database.services.applications import applications as application_service
-from src.database.services.organizations import organizations as organization_service
+from src.database.services.applications import \
+    applications as application_service
+from src.database.services.organizations import \
+    organizations as organization_service
 
 LOCAL_ORG = "test"
 LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"

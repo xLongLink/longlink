@@ -1,8 +1,7 @@
 import pytest
 from types import SimpleNamespace
-from datetime import UTC, datetime
 from typing import cast
-from kubernetes.client.rest import ApiException
+from datetime import UTC, datetime
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from src.models.common import SuccessResponse
@@ -13,6 +12,7 @@ from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
+from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
 from src.models.applications import ApplicationResponse as AppResponse
 from src.database.models.users import User

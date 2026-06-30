@@ -44,7 +44,6 @@ export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): stri
     return interpolate(template, props, ctx, count);
 }
 
-
 /** Resolves the active numeric count used for plural selection. */
 function resolveCount(props: ASTProps, ctx: ExecutionContext): number | null {
     // Count stays optional so plain localized strings do not need plural data.
@@ -57,7 +56,6 @@ function resolveCount(props: ASTProps, ctx: ExecutionContext): number | null {
 
     return Number.isNaN(numberValue) ? null : numberValue;
 }
-
 
 /** Returns a locale-aware plural rule resolver, cached by locale. */
 function getPluralRules(locale: string): Intl.PluralRules {
@@ -72,7 +70,6 @@ function getPluralRules(locale: string): Intl.PluralRules {
     return rules;
 }
 
-
 /** Finds a nested translation entry by dotted path. */
 function findTranslationEntry(translations: XmlTranslations, key: string): unknown {
     // Walk the dotted path through nested locale objects.
@@ -84,7 +81,6 @@ function findTranslationEntry(translations: XmlTranslations, key: string): unkno
         return (current as Record<string, unknown>)[segment];
     }, translations);
 }
-
 
 /** Returns the first usable plural template when the exact category is missing. */
 function firstPluralTemplate(entry: Record<string, unknown>): string | undefined {
@@ -99,7 +95,6 @@ function firstPluralTemplate(entry: Record<string, unknown>): string | undefined
 
     return undefined;
 }
-
 
 /** Interpolates simple `{{name}}` placeholders inside a translation string. */
 function interpolate(template: string, props: ASTProps, ctx: ExecutionContext, count?: number): string {

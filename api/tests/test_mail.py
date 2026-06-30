@@ -1,8 +1,7 @@
-from unittest.mock import AsyncMock, Mock
-
-from src.constants import MAIL_TEMPLATES
-from src.environments import env
 import src.utils.mail as mail
+from src.constants import MAIL_TEMPLATES
+from unittest.mock import Mock, AsyncMock
+from src.environments import env
 
 
 def test_is_email_enabled_requires_switch_host_and_address(monkeypatch) -> None:

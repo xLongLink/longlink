@@ -1,11 +1,11 @@
 import secrets
 from uuid import UUID
 from datetime import UTC, datetime
+from src.utils import names
 from sqlalchemy import select
 from src.constants import INGRESS_NAME
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.utils import names
 from src.models.computes import ComputeKind
 from src.database.session import session_scope
 from src.database.models.users import User

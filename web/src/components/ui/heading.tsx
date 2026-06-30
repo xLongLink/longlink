@@ -59,7 +59,10 @@ function extractHeadingText(nodes: ASTNode[], children: ReactNode): string {
         return children.trim();
     }
 
-    return nodes.flatMap((node) => extractHeadingText(node.children ?? [], '')).join(' ').trim();
+    return nodes
+        .flatMap((node) => extractHeadingText(node.children ?? [], ''))
+        .join(' ')
+        .trim();
 }
 
 /** Converts heading text into a URL-safe slug. */

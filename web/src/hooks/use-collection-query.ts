@@ -14,7 +14,10 @@ type UseCollectionQueryResult<TData> = UseQueryResult<Array<TData>, Error> & {
 };
 
 /** Fetches a collection resource and exposes a stable empty array fallback. */
-export function useCollectionQuery<TData>(path: string | null, options: UseCollectionQueryOptions<TData> = {}): UseCollectionQueryResult<TData> {
+export function useCollectionQuery<TData>(
+    path: string | null,
+    options: UseCollectionQueryOptions<TData> = {}
+): UseCollectionQueryResult<TData> {
     const query = useApiQuery<Array<TData>>(path, {
         retry: options.retry ?? false,
         refetchOnMount: options.refetchOnMount ?? 'always',

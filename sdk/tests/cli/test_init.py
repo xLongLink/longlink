@@ -1,7 +1,5 @@
 from pathlib import Path
-
 from click.testing import CliRunner
-
 from longlink.cli.init import init_command
 
 

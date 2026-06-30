@@ -91,12 +91,7 @@ export default function ComputePods() {
                     </div>
                 </Hero>
             </div>
-            <DataTable
-                columns={podColumns}
-                data={rows}
-                error={error}
-                isLoading={computesIsLoading || podsIsLoading}
-            />
+            <DataTable columns={podColumns} data={rows} error={error} isLoading={computesIsLoading || podsIsLoading} />
         </div>
     );
 }

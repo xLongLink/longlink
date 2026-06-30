@@ -1,7 +1,7 @@
 import sys
 import importlib.util
-from alembic import command
 from typing import Any
+from alembic import command
 from pathlib import Path
 from alembic.config import Config
 

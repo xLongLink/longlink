@@ -1,10 +1,8 @@
 import json
-from pathlib import Path
-
 from pytest import MonkeyPatch
-from fastapi.testclient import TestClient
-
+from pathlib import Path
 from longlink.app import LongLink
+from fastapi.testclient import TestClient
 
 
 def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:

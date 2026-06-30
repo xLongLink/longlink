@@ -1,9 +1,9 @@
 from uuid import UUID
 from datetime import UTC, datetime
+from src.utils import names
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.utils import names
 from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
 from src.database.session import session_scope
@@ -14,8 +14,8 @@ from src.models.organizations import (OrganizationDetails,
                                       OrganizationApplicationResponse)
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
-from src.database.models.applications import Application
 from src.database.models.invitations import OrganizationInvitation
+from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 

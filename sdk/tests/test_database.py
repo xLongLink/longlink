@@ -1,10 +1,9 @@
 import sys
-from urllib.parse import parse_qsl, urlsplit
-
 from sqlmodel import SQLModel
-
+from urllib.parse import urlsplit, parse_qsl
 from longlink.database.base import normalize_database_url
-from longlink.database.migrations import include_object, load_application_models
+from longlink.database.migrations import (include_object,
+                                          load_application_models)
 
 
 def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch) -> None:

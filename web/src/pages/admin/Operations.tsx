@@ -81,12 +81,7 @@ export default function AdminOperations() {
                     </HeroDescription>
                 </div>
             </Hero>
-            <DataTable
-                columns={operationColumns}
-                data={operationRows}
-                error={error}
-                isLoading={isLoading}
-            />
+            <DataTable columns={operationColumns} data={operationRows} error={error} isLoading={isLoading} />
         </div>
     );
 }

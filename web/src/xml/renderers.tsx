@@ -143,7 +143,6 @@ function hasTranslationNodes(nodes: ASTNode[]): boolean {
     return false;
 }
 
-
 /** Returns whether the AST contains setup-only runtime declarations. */
 function hasSetupNodes(nodes: ASTNode[]): boolean {
     for (const node of nodes) {

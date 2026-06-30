@@ -1,5 +1,4 @@
-from urllib.parse import parse_qsl, urlsplit
-
+from urllib.parse import urlsplit, parse_qsl
 from src.operations.provisioning import runtime_database_url
 
 

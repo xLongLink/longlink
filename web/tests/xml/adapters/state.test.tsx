@@ -23,7 +23,9 @@ describe('State', () => {
     it('renders state values for sibling nodes', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         ctx.translations = { state: { value: '{{value}}' } };
-        const ast = parseXML('<longlink><State id="filter" value="day" /><P i18n="state.value" value="${filter.value}" /></longlink>');
+        const ast = parseXML(
+            '<longlink><State id="filter" value="day" /><P i18n="state.value" value="${filter.value}" /></longlink>'
+        );
         await setupContext(ast, ctx, '');
         const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
 

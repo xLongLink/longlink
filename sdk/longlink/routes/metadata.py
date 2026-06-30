@@ -2,7 +2,6 @@ from fastapi import Request, APIRouter
 from longlink.pages import page_registry
 from longlink.utils.metadata import load_metadata
 
-
 router = APIRouter()
 
 

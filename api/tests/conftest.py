@@ -19,9 +19,9 @@ os.environ.setdefault("OIDC_CLIENT_SECRET", "longlink-secret")
 os.environ.setdefault("OIDC_ISSUER", "http://localhost:18080/realms/dev")
 os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
 
-from src.database import session
 from main import app
 from sqlmodel import SQLModel
+from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User

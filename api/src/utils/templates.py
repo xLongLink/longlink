@@ -1,8 +1,7 @@
-from typing import Any, cast
-from string import Template
-from pathlib import Path
-
 from yaml import safe_load_all
+from string import Template
+from typing import Any, cast
+from pathlib import Path
 
 
 def readyml(template_path: str | Path, **context: object) -> dict[str, Any] | list[dict[str, Any]]:

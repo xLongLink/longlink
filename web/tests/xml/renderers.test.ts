@@ -23,7 +23,10 @@ describe('renderNode', () => {
                 createElement(
                     'div',
                     null,
-                    createElement(RenderXML, { ast: [{ name: 'P', params: { count: '${count}', i18n: 'copy.count' } }], ctx })
+                    createElement(RenderXML, {
+                        ast: [{ name: 'P', params: { count: '${count}', i18n: 'copy.count' } }],
+                        ctx,
+                    })
                 )
             )
         ).toBe('<div><p class="leading-7">Count 7</p></div>');

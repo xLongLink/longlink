@@ -1,12 +1,12 @@
 from .base import Table, utcnow
 from typing import Any
 from fastapi import FastAPI, Request
-from collections.abc import Callable, Awaitable, Generator
 from sqlmodel import Session as SyncSession
 from contextlib import contextmanager
 from sqlalchemy import event
-from starlette.responses import Response
 from contextvars import ContextVar
+from collections.abc import Callable, Awaitable, Generator
+from starlette.responses import Response
 
 _current_user_id: ContextVar[int | None] = ContextVar("current_user_id", default=None)
 

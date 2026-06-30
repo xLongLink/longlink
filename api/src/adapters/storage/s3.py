@@ -1,6 +1,6 @@
 import boto3
-from botocore.exceptions import ClientError
 from .base import Storage
+from botocore.exceptions import ClientError
 from src.utils.namespace import s3name
 
 

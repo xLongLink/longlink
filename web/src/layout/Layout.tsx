@@ -73,7 +73,8 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                     aria-current={isActive ? 'page' : undefined}
                                     className={cn(
                                         'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground',
-                                        isActive && 'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
+                                        isActive &&
+                                            'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
                                     )}
                                 >
                                     {Icon ? <Icon className="size-4 shrink-0" aria-hidden="true" /> : null}

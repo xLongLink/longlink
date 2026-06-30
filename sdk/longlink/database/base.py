@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel, select
 from sqlalchemy import Column, DateTime
-from sqlalchemy.engine import make_url
 from sqlalchemy.orm import relationship, declared_attr
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)
 from longlink.utils.settings import Envs

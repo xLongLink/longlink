@@ -69,7 +69,9 @@ export default function CreateOrganizationDialog() {
                                     setLocationId('');
                                 } catch (mutationError) {
                                     setError(
-                                        mutationError instanceof Error ? mutationError.message : 'Failed to create organization'
+                                        mutationError instanceof Error
+                                            ? mutationError.message
+                                            : 'Failed to create organization'
                                     );
                                 }
                             }}

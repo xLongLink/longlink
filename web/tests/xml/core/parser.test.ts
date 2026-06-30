@@ -77,7 +77,9 @@ describe('parseXML', () => {
 
     /* Compiler output should only include page elements, not XML declarations or comments. */
     it('ignores declarations and comments', () => {
-        expect(parseXML('<?xml version="1.0"?><longlink><!-- hidden --><Button i18n="actions.save" /></longlink>')).toEqual([
+        expect(
+            parseXML('<?xml version="1.0"?><longlink><!-- hidden --><Button i18n="actions.save" /></longlink>')
+        ).toEqual([
             {
                 name: 'longlink',
                 children: [{ name: 'Button', params: { i18n: 'actions.save' }, children: [] }],

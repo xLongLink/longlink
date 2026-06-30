@@ -83,9 +83,7 @@ export default function Organizations() {
                     </div>
                 </Hero>
 
-                {isLoading && organizations.length === 0 ? (
-                    null
-                ) : error && organizations.length === 0 ? (
+                {isLoading && organizations.length === 0 ? null : error && organizations.length === 0 ? (
                     <div className="rounded-md border p-4 text-sm text-destructive">Failed to load organizations.</div>
                 ) : (
                     <DataTable columns={organizationColumns} data={organizations} />

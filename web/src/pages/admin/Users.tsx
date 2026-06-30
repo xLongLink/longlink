@@ -120,12 +120,7 @@ export default function AdminUsers() {
                     <HeroDescription>Review account access, elevated users, and admin onboarding.</HeroDescription>
                 </div>
             </Hero>
-            <DataTable
-                columns={userColumns}
-                data={users}
-                error={error}
-                isLoading={isLoading}
-            />
+            <DataTable columns={userColumns} data={users} error={error} isLoading={isLoading} />
         </div>
     );
 }
