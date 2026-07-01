@@ -22,6 +22,7 @@ make sdk:build      # Build the embedded SDK web bundle
 
 make sdl            # 
 make sdk:image      # Build and push the generated SDK app to the local registry
+make seed           # Run API migrations and refresh local seed data
 
 make clean          # Remove generated build and test artifacts
 make api:clean      # Remove API generated artifacts and API web bundle
@@ -45,6 +46,7 @@ make web:tests      # Run web tests, typecheck, and bundle builds
 make up             # Start the services, initialize the cluster
 make web            # Run the Vite web app
 make api            # Run the control plane
+make seed           # Refresh local seed data without starting the API server
 
 make down           # Stop services and remove the cluster
 ```
@@ -63,4 +65,11 @@ make up             # Start local services, registry, and the k3d compute cluste
 make sdk:image      # Build and push localhost:15000/longlink-app:dev
 make api            # Run migrations, seed data, and start the control plane API
 make web            # Start the Vite control-plane frontend
+```
+
+After `make api` and `make web` are running, SDK image changes can be refreshed without restarting them:
+
+```bash
+make sdk:image      # Rebuild and push localhost:15000/longlink-app:dev
+make seed           # Reapply the seeded local app runtime
 ```

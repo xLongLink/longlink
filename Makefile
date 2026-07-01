@@ -1,4 +1,4 @@
-.PHONY: up down build api\:build sdk\:build sdk\:image clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests api\:tests sdk\:tests web\:tests pyright api\:pyright sdk\:pyright
+.PHONY: up down build api\:build sdk\:build sdk\:image seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests api\:tests sdk\:tests web\:tests pyright api\:pyright sdk\:pyright
 
 
 # Install all API, SDK, and web dependencies.
@@ -150,6 +150,13 @@ api: sdk\:image
 	cd api && DEVELOPMENT=true uv run alembic upgrade head
 	cd api && DEVELOPMENT=true uv run python seed.py
 	cd api && DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+
+# Run local control-plane migrations and seed data.
+seed:
+	cd api && uv sync --extra dev
+	cd api && DEVELOPMENT=true uv run alembic upgrade head
+	cd api && DEVELOPMENT=true uv run python seed.py
 
 
 # Run the Vite web app.
