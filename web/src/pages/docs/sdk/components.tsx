@@ -108,7 +108,7 @@ const componentDocs: ElementDoc[] = [
             'json: optional expression payload sent as JSON.',
             'invalidate: optional expression resolving to setup ids to refresh.',
         ],
-        example: `<Action action="/api/orders/${'${order.id}'}/complete" invalidate="['orders']">
+        example: `<Action action="/api/orders/${'${order.id}'}/complete" invalidate="\${['orders']}">
   <Button i18n="orders.complete" />
 </Action>`,
     },

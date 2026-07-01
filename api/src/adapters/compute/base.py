@@ -17,14 +17,6 @@ class Compute(ABC):
         """Bootstrap the cluster resources managed by the control plane."""
 
     @abstractmethod
-    async def cleanup(self) -> None:
-        """Delete all Kubernetes resources managed by the control plane."""
-
-    @abstractmethod
-    async def delete(self, organization: str) -> None:
-        """Delete the organization namespace and all managed compute resources."""
-
-    @abstractmethod
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
 
@@ -39,10 +31,6 @@ class Compute(ABC):
         rollout_token: str = "",
     ) -> str:
         """Create or replace one internal application Deployment and Service."""
-
-    @abstractmethod
-    async def remove(self, organization: str, application: str) -> None:
-        """Remove one managed application."""
 
     @abstractmethod
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:

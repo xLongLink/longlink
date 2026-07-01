@@ -75,6 +75,10 @@ describe('parseXML', () => {
         );
     });
 
+    it('rejects malformed XML', () => {
+        expect(() => parseXML('<longlink><Button></longlink>')).toThrow('XML is invalid');
+    });
+
     /* Compiler output should only include page elements, not XML declarations or comments. */
     it('ignores declarations and comments', () => {
         expect(

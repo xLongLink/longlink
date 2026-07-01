@@ -1,5 +1,4 @@
 from uuid import UUID
-from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +7,6 @@ from src.database.session import session_scope
 from src.models.databases import DatabaseKind
 from src.database.models.users import User
 from src.database.models.databases import DatabaseRegistry
-from src.database.models.applications import Application
 
 
 class DatabaseService:
@@ -99,34 +97,5 @@ class DatabaseService:
             )
             result = await session.execute(statement)
             return result.scalar_one()
-
-    async def delete(self, registry_id: UUID, deleted_id: UUID | None = None) -> DatabaseRegistry | None:
-        """Mark one database backend registration as deleted."""
-
-        async with session_scope() as session:
-            statement = select(DatabaseRegistry).options(
-                selectinload(DatabaseRegistry.created_by),
-                selectinload(DatabaseRegistry.updated_by),
-                selectinload(DatabaseRegistry.deleted_by),
-            ).where(DatabaseRegistry.id == registry_id, DatabaseRegistry.deleted_at.is_(None))
-            result = await session.execute(statement)
-            database = result.scalar_one_or_none()
-            if database is None:
-                return None
-
-            used_statement = select(Application.id).where(
-                Application.database_registry_id == registry_id,
-                Application.deleted_at.is_(None),
-            ).limit(1)
-            if (await session.execute(used_statement)).scalar_one_or_none() is not None:
-                raise ValueError("Database registry is used by active applications")
-
-            # Keep the row for audit history and hide it from future selections.
-            database.deleted_at = datetime.now(UTC)
-            database.deleted_id = deleted_id
-            database.updated_id = deleted_id
-            await session.commit()
-            await session.refresh(database)
-            return database
 
 database = DatabaseService()

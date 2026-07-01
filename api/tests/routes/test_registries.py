@@ -1,5 +1,4 @@
 from types import SimpleNamespace
-from src.models.roles import PlatformRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind, ComputeRegistryResponse
@@ -61,11 +60,11 @@ async def test_operations_endpoint_returns_recorded_operations(
     ]
 
 
-async def test_database_registry_endpoint_supports_create_list_and_delete(
+async def test_database_registry_endpoint_supports_create_and_list(
     clients: tuple[TestClient, TestClient, TestClient],
     users,
 ) -> None:
-    """Create, list, and delete one database registry."""
+    """Create and list one database registry without a delete path."""
 
     # Arrange
     client = clients[0]
@@ -91,6 +90,7 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
     list_response = client.get("/api/databases")
     registry_id = create_response.json()["id"]
     delete_response = client.delete(f"/api/databases/{registry_id}")
+    get_response = client.get(f"/api/databases/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
@@ -134,11 +134,9 @@ async def test_database_registry_endpoint_supports_create_list_and_delete(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 200
-    assert delete_response.json() == {"ok": True}
-
-    deleted_response = client.get(f"/api/databases/{registry_id}")
-    assert deleted_response.status_code == 404
+    assert delete_response.status_code == 405
+    assert get_response.status_code == 200
+    assert get_response.json()["id"] == registry_id
 
 
 async def test_database_usage_endpoint_returns_backend_capacity(
@@ -186,11 +184,11 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     assert response.json() == DatabaseUsageResponse(space_used=987654321).model_dump(mode="json")
 
 
-async def test_storage_registry_endpoint_supports_create_list_and_delete(
+async def test_storage_registry_endpoint_supports_create_and_list(
     clients: tuple[TestClient, TestClient, TestClient],
     users,
 ) -> None:
-    """Create, list, and delete one storage registry."""
+    """Create and list one storage registry without a delete path."""
 
     # Arrange
     client = clients[0]
@@ -206,14 +204,15 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
             "name": "object-store",
             "protocol": "s3",
             "endpoint_url": "https://storage.longlink.internal",
-                "access_key_id": "access-key",
-                "secret_access_key": "secret-key",
-                "location_id": str(location.id),
-            },
-        )
+            "access_key_id": "access-key",
+            "secret_access_key": "secret-key",
+            "location_id": str(location.id),
+        },
+    )
     list_response = client.get("/api/storages")
     registry_id = create_response.json()["id"]
     delete_response = client.delete(f"/api/storages/{registry_id}")
+    get_response = client.get(f"/api/storages/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
@@ -253,19 +252,17 @@ async def test_storage_registry_endpoint_supports_create_list_and_delete(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 200
-    assert delete_response.json() == {"ok": True}
-
-    deleted_response = client.get(f"/api/storages/{registry_id}")
-    assert deleted_response.status_code == 404
+    assert delete_response.status_code == 405
+    assert get_response.status_code == 200
+    assert get_response.json()["id"] == registry_id
 
 
-async def test_compute_registry_endpoint_supports_create_list_and_delete(
+async def test_compute_registry_endpoint_supports_create_and_list(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
     users,
 ) -> None:
-    """Create, list, and delete one compute registry."""
+    """Create and list one compute registry without a delete path."""
 
     # Arrange
     client = clients[0]
@@ -279,9 +276,6 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        async def cleanup(self) -> None:
-            captured["cleanup_calls"] = int(captured.get("cleanup_calls", 0)) + 1
-
         async def setup(self) -> None:
             captured["setup_calls"] = int(captured.get("setup_calls", 0)) + 1
 
@@ -291,16 +285,17 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
     create_response = client.post(
         "/api/computes",
         json={
-                "kind": "kubernetes",
-                "name": "primary",
-                "kubeconfig": "apiVersion: v1\nclusters: []\n",
-                "ingress_host": "apps.longlink.internal",
-                "location_id": str(location.id),
-            },
-        )
+            "kind": "kubernetes",
+            "name": "primary",
+            "kubeconfig": "apiVersion: v1\nclusters: []\n",
+            "ingress_host": "apps.longlink.internal",
+            "location_id": str(location.id),
+        },
+    )
     list_response = client.get("/api/computes")
     registry_id = create_response.json()["id"]
     delete_response = client.delete(f"/api/computes/{registry_id}")
+    get_response = client.get(f"/api/computes/{registry_id}")
 
     # Assert
     assert create_response.status_code == 200
@@ -336,11 +331,9 @@ async def test_compute_registry_endpoint_supports_create_list_and_delete(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 200
-    assert delete_response.json() == {"ok": True}
-    deleted_response = client.get(f"/api/computes/{registry_id}")
-    assert deleted_response.status_code == 404
+    assert delete_response.status_code == 405
+    assert get_response.status_code == 200
+    assert get_response.json()["id"] == registry_id
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
-    assert captured.get("cleanup_calls", 0) == 0
     assert captured["setup_calls"] == 1

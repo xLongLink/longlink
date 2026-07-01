@@ -5,8 +5,7 @@ from src.errors import (ConflictError, NotFoundError, ForbiddenError,
                         UnavailableError)
 from src.logger import logger
 from src.operations import provisioning
-from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.common import SuccessResponse
+from src.models.roles import OrganizationRoles
 from src.utils.namespace import dbname
 from src.models.databases import (OrganizationDatabaseResourceKind,
                                   OrganizationDatabaseTableResponse,
@@ -330,23 +329,3 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 
     return organization
 
-
-@router.delete("/api/organizations/{organization_id}", response_model=SuccessResponse)
-async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> SuccessResponse:
-    """Delete one organization by id."""
-
-    if user.role == PlatformRoles.administrator:
-        organization = await organizations.get(organization_id)
-    else:
-        organization = await organization_access(organization_id, user)
-        membership_role = await organizations.membership_role(organization_id, user.id)
-        if membership_role != OrganizationRoles.owner:
-            raise ForbiddenError("Organization owner permissions required")
-
-    if organization is None:
-        raise NotFoundError("Organization", organization_id)
-
-    await provisioning.delete_organization_namespace(organization)
-
-    await organizations.delete(organization_id, user.id)
-    return SuccessResponse()

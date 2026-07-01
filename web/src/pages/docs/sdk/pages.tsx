@@ -141,9 +141,9 @@ const conceptDocs: ConceptDoc[] = [
         example: `<Action
   action="/api/orders/${'${order.id}'}/complete"
   method="POST"
-  invalidate="['orders']"
+  invalidate="\${['orders']}"
 >
-  <P i18n="orders.complete" />
+  <Button i18n="orders.complete" />
 </Action>`,
     },
 ];

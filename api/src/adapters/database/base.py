@@ -65,16 +65,8 @@ class Database(ABC):
         """Create or replace the schema for one application and return a connection DSN."""
 
     @abstractmethod
-    async def remove(self, organization: str, application: str) -> None:
-        """Remove one application schema from the organization database."""
-
-    @abstractmethod
     async def setup(self) -> None:
         """Initialize the database backend used by the control plane."""
-
-    @abstractmethod
-    async def cleanup(self) -> None:
-        """Delete all databases managed by the control plane."""
 
     @abstractmethod
     async def databases(self) -> list[str]:
@@ -108,7 +100,3 @@ class Database(ABC):
     @abstractmethod
     async def usage(self) -> dict[str, int]:
         """Return database usage for the backend."""
-
-    @abstractmethod
-    async def delete(self, organization: str) -> None:
-        """Delete the organization database and all managed application schemas."""

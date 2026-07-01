@@ -27,8 +27,8 @@ db = SimpleNamespace(
 )
 
 
-async def test_users_and_organizations_services_create_membership_profile_and_delete(users: tuple) -> None:
-    """Create an organization, expose it in the profile, and delete it cleanly."""
+async def test_users_and_organizations_services_create_membership_profile(users: tuple) -> None:
+    """Create an organization and expose it in the user profile."""
 
     # Arrange
     owner = users[0]
@@ -37,19 +37,16 @@ async def test_users_and_organizations_services_create_membership_profile_and_de
     # Act
     organization = await db.organizations.create("acme", location.id, owner)
     profile = await db.users.profile(owner.id)
-    deleted = await db.organizations.delete(organization.id, deleted_id=owner.id)
 
     # Assert
     assert profile is not None
     assert profile.organizations[0].id == organization.id
     assert profile.organizations[0].role == OrganizationRoles.owner
-    assert deleted is not None
-    assert deleted.deleted_at is not None
-    assert await db.organizations.get(organization.id) is None
+    assert await db.organizations.get(organization.id) is not None
 
 
-async def test_locations_service_creates_lists_and_deletes_location(users: tuple) -> None:
-    """Create a location, list it, and remove it from future reads."""
+async def test_locations_service_creates_lists_and_reads_location(users: tuple) -> None:
+    """Create a location and return it from list and detail reads."""
 
     # Arrange
     owner = users[0]
@@ -57,17 +54,16 @@ async def test_locations_service_creates_lists_and_deletes_location(users: tuple
     # Act
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     listed = await db.locations.list()
-    deleted = await db.locations.delete(location.id, deleted_id=owner.id)
+    loaded = await db.locations.get(location.id)
 
     # Assert
     assert any(item.id == location.id for item in listed)
-    assert deleted is not None
-    assert deleted.deleted_at is not None
-    assert await db.locations.get(location.id) is None
+    assert loaded is not None
+    assert loaded.id == location.id
 
 
-async def test_applications_service_creates_reads_and_deletes_application(users: tuple) -> None:
-    """Create one application and verify the read and delete paths."""
+async def test_applications_service_creates_reads_and_lists_application(users: tuple) -> None:
+    """Create one application and verify read paths."""
 
     # Arrange
     owner = users[0]
@@ -84,17 +80,15 @@ async def test_applications_service_creates_reads_and_deletes_application(users:
     )
     loaded = await db.applications.get(organization.id, "dashboard")
     listed = await db.applications.list(organization.id, owner.id)
-    deleted = await db.applications.delete(organization.id, application.id, deleted_id=owner.id)
 
     # Assert
     assert loaded is not None
     assert loaded.id == application.id
     assert len(listed) == 1
-    assert deleted.deleted_at is not None
-    assert await db.applications.get(organization.id, "dashboard") is None
+    assert listed[0][0].id == application.id
 
 
-async def test_compute_service_generates_proxy_secret_and_deletes_registry(users: tuple) -> None:
+async def test_compute_service_generates_proxy_secret(users: tuple) -> None:
     """Create a compute registry with an internal proxy secret."""
 
     # Arrange
@@ -110,13 +104,11 @@ async def test_compute_service_generates_proxy_secret_and_deletes_registry(users
         location_id=location.id,
         user=owner,
     )
-    deleted = await db.compute.delete(registry.id, deleted_id=owner.id)
+    listed = await db.compute.list()
 
     # Assert
     assert registry.proxy_secret
-    assert deleted is not None
-    assert deleted.deleted_at is not None
-    assert await db.compute.list() == []
+    assert [item.id for item in listed] == [registry.id]
 
 
 async def test_database_service_rejects_duplicate_registry_names(users: tuple) -> None:

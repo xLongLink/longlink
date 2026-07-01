@@ -5,7 +5,6 @@ from src.auth import authuser, authadmin, organization_access
 from src.utils import names
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.operations import provisioning
-from src.models.common import SuccessResponse
 from src.models.statuses import ApplicationStatus
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.adapters.compute.k8s import K8s
@@ -52,21 +51,6 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         raise UnavailableError(str(exc)) from exc
 
     return ApplicationResponse.model_validate(application)
-
-
-@router.delete("/api/applications/{application_id}", response_model=SuccessResponse)
-async def delete_application(application_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
-    """Queue application deletion and return immediately."""
-
-    try:
-        application = await provisioning.queue_application_delete(application_id, user)
-    except RuntimeError as exc:
-        raise UnavailableError(str(exc)) from exc
-
-    if application is None:
-        raise NotFoundError("Application", application_id)
-
-    return SuccessResponse()
 
 
 @router.get("/api/applications/{application_id}/logs")

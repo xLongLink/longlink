@@ -1,5 +1,13 @@
-import { XMLParser } from 'fast-xml-parser';
+import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import type { ASTNode } from '../types';
+
+type XMLValidationFailure = {
+    err?: {
+        col?: number;
+        line?: number;
+        msg?: string;
+    };
+};
 
 const parser = new XMLParser({
     ignoreAttributes: false,
@@ -28,6 +36,18 @@ const parser = new XMLParser({
  *   ]
  */
 export function parseXML(xml: string): ASTNode[] {
+    // Validate first because the preserve-order parser can otherwise recover from malformed tags.
+    const validationResult = XMLValidator.validate(xml) as true | XMLValidationFailure;
+
+    if (validationResult !== true) {
+        const validationError = validationResult.err;
+        const location =
+            validationError?.line != null && validationError?.col != null
+                ? ` at line ${validationError.line}, column ${validationError.col}`
+                : '';
+        throw new Error(`XML is invalid${location}: ${validationError?.msg ?? 'Malformed XML'}`);
+    }
+
     return toNodes(parser.parse(xml));
 }
 

@@ -114,7 +114,21 @@ export default function View({
     const metadataLoading = error instanceof ApiError && error.status === 503;
     const shouldShowLogs =
         canViewLogs && applicationStatus === 'running' && (metadataLoading || pageState.status === 503);
-    const ast = useMemo(() => (pageState.content ? fromXml(pageState.content) : null), [pageState.content]);
+    /* Keep invalid application XML scoped to this page instead of crashing the route render. */
+    const { ast, parseError } = useMemo(() => {
+        if (!pageState.content) {
+            return { ast: null, parseError: null };
+        }
+
+        try {
+            return { ast: fromXml(pageState.content), parseError: null };
+        } catch (unknownError) {
+            return {
+                ast: null,
+                parseError: unknownError instanceof Error ? unknownError.message : 'Failed to parse page XML',
+            };
+        }
+    }, [pageState.content]);
 
     // Make the first tab explicit in the URL when the page loads without a tab selection.
     useEffect(() => {
@@ -280,6 +294,21 @@ export default function View({
                         actionHref={organization ? `/orgs/${organization}` : '/organizations'}
                         actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
                         message={pageState.error || 'This page could not be loaded.'}
+                        title="Unable to load this page"
+                    />
+                </section>
+            </XML>
+        );
+    }
+
+    if (parseError && pageState.path === activePage?.path) {
+        return (
+            <XML tabs={tabs}>
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    <ErrorState
+                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
+                        message={parseError}
                         title="Unable to load this page"
                     />
                 </section>

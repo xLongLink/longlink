@@ -39,7 +39,7 @@ export type ApiOrganizationApplication = {
     name: string;
     slug: string;
     image: string;
-    status: 'creating' | 'running' | 'deleting' | 'failed';
+    status: 'creating' | 'running' | 'failed';
     role: Role | null;
     description: string | null;
     icon: string | null;
@@ -126,7 +126,7 @@ export type ApiOrganizationDatabaseApplication = {
     id: string;
     name: string;
     slug: string;
-    status: 'creating' | 'running' | 'deleting' | 'failed';
+    status: 'creating' | 'running' | 'failed';
 };
 
 export type ApiOrganizationDatabaseResource = {
@@ -245,7 +245,7 @@ export type ApiApplicationResponse = {
     name: string;
     slug: string;
     image: string;
-    status: 'creating' | 'running' | 'deleting' | 'failed';
+    status: 'creating' | 'running' | 'failed';
     role: Role | null;
     description: string | null;
     icon: string | null;

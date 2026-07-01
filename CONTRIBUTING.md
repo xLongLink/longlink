@@ -20,6 +20,7 @@ make build          # Typecheck and build API and SDK web bundles
 make api:build      # Build the API web bundle
 make sdk:build      # Build the embedded SDK web bundle
 
+make sdl            # 
 make sdk:image      # Build and push the generated SDK app to the local registry
 
 make clean          # Remove generated build and test artifacts
@@ -44,22 +45,18 @@ make web:tests      # Run web tests, typecheck, and bundle builds
 make up             # Start the services, initialize the cluster
 make web            # Run the Vite web app
 make api            # Run the control plane
+
 make down           # Stop services and remove the cluster
 ```
 
 ## Test the SDK in development
 
-Use this flow when you need to verify the generated SDK app with the local SDK runtime, SQLite, local storage, and the embedded SDK web bundle.
 
 ```bash
 make sdk            # Build the SDK web bundle and run the generated SDK app
 ```
 
-Then open `http://127.0.0.1:1707` and test the generated app directly. Stop it with `q` or `Ctrl+C`.
-
 ## Test the SDK in production
-
-Use this flow when you need to verify the generated SDK app image in the Kubernetes-backed production runtime instead of `longlink dev`.
 
 ```bash
 make up             # Start local services, registry, and the k3d compute cluster
@@ -67,5 +64,3 @@ make sdk:image      # Build and push localhost:15000/longlink-app:dev
 make api            # Run migrations, seed data, and start the control plane API
 make web            # Start the Vite control-plane frontend
 ```
-
-Then open the control plane, create or refresh the sample app with `localhost:15000/longlink-app:dev`, and test it through the organization application route. When finished, run `make down` to stop services and remove the local cluster.

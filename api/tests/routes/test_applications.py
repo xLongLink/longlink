@@ -4,14 +4,12 @@ from typing import cast
 from datetime import UTC, datetime
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
-from src.models.common import SuccessResponse
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind
 from src.models.metadata import LongLinkMetadata
 from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
-from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
 from src.models.applications import ApplicationResponse as AppResponse
@@ -22,7 +20,6 @@ from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.services.locations import locations
-from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
 
@@ -31,7 +28,6 @@ db = SimpleNamespace(
     compute=compute,
     database=database,
     locations=locations,
-    operations=operations,
     organizations=organizations,
     storage=storage,
     users=users,
@@ -393,89 +389,6 @@ async def test_create_app_returns_app_response(
             "PORT": "8080",
         },
     }
-
-
-async def test_delete_app_removes_dependent_env_rows(
-    clients: tuple[TestClient, TestClient, TestClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Queue app deletion even when it still has env secrets."""
-
-    # Arrange
-    user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
-    organization = await db.organizations.create("acme", local_location.id, user)
-    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    await db.compute.create(
-        kind=ComputeKind.kubernetes,
-        name="primary",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        ingress_host="localhost:8443",
-        location_id=remote_location.id,
-        user=user,
-    )
-    await db.compute.create(
-        kind=ComputeKind.kubernetes,
-        name="secondary",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        ingress_host="localhost:8443",
-        location_id=local_location.id,
-        user=user,
-    )
-    client = clients[0]
-
-    # Act
-    response = client.delete(f"/api/applications/{app.id}")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == SuccessResponse().model_dump(mode="json")
-    refreshed_app = await db.applications.get(organization.id, "dashboard")
-    assert refreshed_app is not None
-    assert refreshed_app.status == "deleting"
-    recorded_operation = (await db.operations.list())[0]
-    assert recorded_operation.kind == OperationKind.application_delete
-    assert recorded_operation.application_id == app.id
-    assert recorded_operation.step == "remove_runtime"
 
 
 async def test_get_app_logs_returns_pod_logs(

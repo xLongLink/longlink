@@ -42,3 +42,12 @@ def test_longlink_layout_rejects_unknown_root_attributes() -> None:
 
     with pytest.raises(ValueError):
         element.validate()
+
+
+def test_longlink_layout_rejects_malformed_xml() -> None:
+    """Normalize malformed XML syntax failures as validation errors."""
+
+    element = Element.from_content('<longlink><P i18n="Dashboard"></longlink>', schema=SCHEMA)
+
+    with pytest.raises(ValueError, match="XML syntax is invalid"):
+        element.validate()

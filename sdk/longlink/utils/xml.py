@@ -37,9 +37,15 @@ class Element:
     def validate(self) -> None:
         """Validate the XML document against the configured XSD schema."""
 
-        schema_doc = etree.parse(str(self._schema_file_path()))
+        parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+        schema_doc = etree.parse(str(self._schema_file_path()), parser)
         schema = etree.XMLSchema(schema_doc)
-        xml_doc = etree.XML(self.content.encode("utf-8"))
+
+        try:
+            xml_doc = etree.XML(self.content.encode("utf-8"), parser)
+        except etree.XMLSyntaxError as error:
+            raise ValueError(f"XML syntax is invalid: {error}") from error
+
         if not schema.validate(xml_doc):
             error_log = cast(Any, schema.error_log)
             messages = [f"Line {error.line}: {error.message}" for error in error_log]
@@ -55,6 +61,7 @@ class Element:
             return self.schema_path
 
         return ROOT / self.schema_path
+
 
 class Longlink(Element):
     """Load and validate LongLink XML documents from disk.

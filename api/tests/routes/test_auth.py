@@ -90,6 +90,32 @@ def test_login_oidc_rejects_unsafe_next_path(monkeypatch: pytest.MonkeyPatch) ->
     ]
 
 
+@pytest.mark.parametrize("unsafe_next_path", ["%2F%5Cevil.example", "%2Fsafe%0ASet-Cookie%3Aevil"])
+def test_login_oidc_rejects_malformed_next_path(
+    monkeypatch: pytest.MonkeyPatch,
+    unsafe_next_path: str,
+) -> None:
+    """Fallback to the default page when the next path contains unsafe characters."""
+
+    # Arrange
+    oidc_client = OidcClientStub()
+    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
+    client = TestClient(app)
+
+    # Act
+    response = client.get(f"/auth/login/oidc?next={unsafe_next_path}")
+
+    # Assert
+    assert response.status_code == 204
+    assert oidc_client.calls == [
+        {
+            "kwargs": {},
+            "next_path": auth_routes.DEFAULT_POST_LOGIN_REDIRECT,
+            "redirect_uri": env.OIDC_REDIRECT_URI,
+        }
+    ]
+
+
 async def test_list_accounts_returns_current_active_account(
     users: tuple[User, User, User],
 ) -> None:

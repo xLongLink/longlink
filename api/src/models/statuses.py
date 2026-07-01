@@ -6,5 +6,4 @@ class ApplicationStatus(str, Enum):
 
     creating = "creating"
     running = "running"
-    deleting = "deleting"
     failed = "failed"

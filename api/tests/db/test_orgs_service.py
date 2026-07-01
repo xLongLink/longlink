@@ -87,30 +87,6 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
     assert {user.id for user in reloaded.users} == {owner.id, member.id}
 
 
-async def test_get_ignores_deleted_applications_without_mutating_relationship(users: tuple[User, User, User]) -> None:
-    """Return org details after an app delete without breaking the read path."""
-
-    # Arrange
-    owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
-    application = await db.applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
-
-    # Act
-    await db.applications.delete(organization.id, application.id, deleted_id=owner.id)
-    reloaded = await db.organizations.get(organization.id)
-
-    # Assert
-    assert reloaded is not None
-    assert reloaded.applications == []
-
-
 async def test_create_raises_value_error_when_org_already_exists(users: tuple[User, User, User]) -> None:
     """Reject duplicate organization names."""
 

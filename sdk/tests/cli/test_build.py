@@ -1,4 +1,6 @@
-from longlink.cli.build import render_dockerfile, resolve_image_tag
+from pathlib import Path
+from click.testing import CliRunner
+from longlink.cli.build import build_command, render_dockerfile, resolve_image_tag
 
 
 def test_render_dockerfile_copies_full_workspace_for_editable_sources() -> None:
@@ -40,3 +42,19 @@ def test_resolve_image_tag_adds_registry_prefix() -> None:
 
     # Assert
     assert image_tag == "localhost:15000/longlink-app:dev"
+
+
+def test_build_reports_missing_project_file_before_docker() -> None:
+    """Report a missing project file instead of blaming the Docker CLI."""
+
+    # Arrange
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        # Act
+        result = runner.invoke(build_command)
+
+        # Assert
+        assert result.exit_code == 1
+        assert f"Project file not found: {Path.cwd() / 'pyproject.toml'}" in result.output
+        assert "Docker CLI is not installed" not in result.output

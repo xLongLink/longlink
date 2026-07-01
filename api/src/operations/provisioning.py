@@ -6,7 +6,6 @@ from src.constants import APP_SERVICE_PORT
 from sqlalchemy.engine import make_url
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
-from src.adapters.storage import S3
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
@@ -203,11 +202,9 @@ async def create_application_runtime(
         runtime_port=database_registry.runtime_port,
     )
 
-    database_schema_attempted = False
     # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
     try:
         await k8s.namespace(organization.slug)
-        database_schema_attempted = True
         database_url = await db_client.schema(organization.slug, application_slug)
         runtime_envs = runtime_environment(application_slug, database_url, storage_registry)
         await k8s.application(
@@ -218,33 +215,12 @@ async def create_application_runtime(
             {**payload.envs, **runtime_envs},
         )
     except Exception as exc:
-        try:
-            await k8s.remove(organization.slug, application_slug)
-        except Exception:
-            logger.exception("Failed to clean application workload after provisioning error for %s/%s", organization.slug, application_slug)
-
-        if database_schema_attempted:
-            try:
-                await db_client.remove(organization.slug, application_slug)
-            except Exception:
-                logger.exception("Failed to clean application database after provisioning error for %s/%s", organization.slug, application_slug)
-
         await applications.set_status(application.id, ApplicationStatus.failed)
         raise RuntimeError("Failed to initialize the application") from exc
 
     try:
         operation = await operations.create(OperationKind.application_create, application_id=application.id, step="verify", user=user)
     except Exception as exc:
-        try:
-            await k8s.remove(organization.slug, application_slug)
-        except Exception:
-            logger.exception("Failed to clean application workload after queueing error for %s/%s", organization.slug, application_slug)
-
-        try:
-            await db_client.remove(organization.slug, application_slug)
-        except Exception:
-            logger.exception("Failed to clean application database after queueing error for %s/%s", organization.slug, application_slug)
-
         await applications.set_status(application.id, ApplicationStatus.failed)
         logger.exception("Failed to queue application verification for %s/%s", organization.slug, payload.name)
         raise RuntimeError("Failed to queue application verification") from exc
@@ -324,63 +300,6 @@ async def sync_application_runtime(
     return updated_application
 
 
-async def delete_application_runtime(application: Application, organization: OrganizationDetails) -> None:
-    """Remove the runtime resources owned by one application."""
-
-    compute_registry = await application_compute_registry(application, organization.location_id)
-    if compute_registry is None:
-        raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
-
-    database_registry = await application_database_registry(application, organization.location_id)
-    if database_registry is None:
-        raise RuntimeError(f"No database configured for location '{organization.location_id}'")
-
-    storage_registry = await application_storage_registry(application)
-    k8s = K8s(compute_registry.kubeconfig, compute_registry.proxy_secret)
-    db_client = Postgres(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-    )
-
-    try:
-        await k8s.remove(organization.slug, application.slug)
-        await db_client.remove(organization.slug, application.slug)
-        if storage_registry is not None:
-            storage_client = S3(
-                storage_registry.protocol,
-                storage_registry.endpoint_url,
-                storage_registry.access_key_id,
-                storage_registry.secret_access_key,
-            )
-            await storage_client.remove(organization.slug, application.slug)
-    except Exception as exc:
-        logger.exception("Failed to remove runtime for %s/%s", organization.slug, application.slug)
-        raise RuntimeError("Failed to remove the application runtime") from exc
-
-
-async def queue_application_delete(application_id: UUID, user: User) -> Application | None:
-    """Mark one application as deleting and queue runtime removal."""
-
-    application = await applications.get_by_id(application_id)
-    if application is None:
-        return None
-
-    if application.status == ApplicationStatus.deleting:
-        return application
-
-    await applications.set_status(application.id, ApplicationStatus.deleting)
-    try:
-        await operations.create(OperationKind.application_delete, application_id=application.id, step="remove_runtime", user=user)
-    except Exception as exc:
-        await applications.set_status(application.id, application.status)
-        logger.exception("Failed to queue application deletion for %s", application.name)
-        raise RuntimeError("Failed to queue application deletion") from exc
-
-    return application
-
-
 async def create_organization_namespace(organization: OrganizationSummary) -> None:
     """Best-effort create the organization namespace on the active compute registry."""
 
@@ -405,16 +324,3 @@ async def create_organization_database(organization: OrganizationSummary) -> Non
         await Postgres(registry.host, registry.port, registry.username, registry.password).database(organization.slug)
     except Exception:
         logger.exception("Failed to create database for organization '%s'", organization.slug)
-
-
-async def delete_organization_namespace(organization: OrganizationDetails) -> None:
-    """Best-effort delete the organization namespace on the active compute registry."""
-
-    registry = await latest_compute_registry(organization.location_id)
-    if registry is None:
-        return
-
-    try:
-        await K8s(registry.kubeconfig, registry.proxy_secret).delete(organization.slug)
-    except Exception:
-        logger.exception("Failed to delete namespace for organization '%s'", organization.slug)

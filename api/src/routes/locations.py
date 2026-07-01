@@ -3,7 +3,6 @@ from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.utils import names
 from src.errors import ConflictError, NotFoundError
-from src.models.common import SuccessResponse
 from src.models.locations import LocationCreate, LocationResponse
 from src.database.models.users import User
 from src.database.services.locations import locations
@@ -40,14 +39,3 @@ async def create_location(payload: LocationCreate, user: User = Depends(authadmi
         raise ConflictError(str(exc)) from exc
 
     return LocationResponse.model_validate(location)
-
-
-@router.delete("/api/locations/{location_id}", response_model=SuccessResponse)
-async def delete_location(location_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
-    """Delete one location."""
-
-    location = await locations.delete(location_id, user.id)
-    if location is None:
-        raise NotFoundError("Location", location_id)
-
-    return SuccessResponse()

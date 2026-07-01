@@ -1,6 +1,5 @@
 from uuid import UUID
 from typing import Any, cast
-from datetime import UTC, datetime
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -206,42 +205,6 @@ class ApplicationsService:
             application.icon = icon
             await session.commit()
             await session.refresh(application)
-            return application
-
-
-    async def delete(self, organization_id: UUID, application_id: UUID, deleted_id: UUID | None = None) -> Application:
-        """Delete an application by organization and id and return it."""
-
-        async with session_scope() as session:
-            # Load the application first so the delete path can raise a single not-found error.
-            statement = select(Application).where(Application.organization_id == organization_id, Application.id == application_id, Application.deleted_at.is_(None))
-            result = await session.execute(statement)
-            application = result.scalar_one_or_none()
-            if application is None:
-                raise ValueError('Application not found')
-
-            memberships_result = await session.execute(
-                select(UserApplication).where(
-                    UserApplication.organization_id == organization_id,
-                    UserApplication.application_id == application_id,
-                    UserApplication.deleted_at.is_(None),
-                )
-            )
-            for membership in memberships_result.scalars().all():
-                membership.deleted_at = datetime.now(UTC)
-                membership.deleted_id = deleted_id
-                membership.updated_id = deleted_id
-
-            application.deleted_at = datetime.now(UTC)
-            application.deleted_id = deleted_id
-            application.updated_id = deleted_id
-            try:
-                # Surface referential integrity failures as service-level validation errors.
-                await session.commit()
-            except IntegrityError as exc:
-                await session.rollback()
-                raise ValueError('Application has dependent resources') from exc
-
             return application
 
 

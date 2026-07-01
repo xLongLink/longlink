@@ -15,18 +15,6 @@ DEFAULT_POST_LOGIN_REDIRECT: Final[str] = "/organizations"
 OIDC_NEXT_SESSION_KEY: Final[str] = "oidc_next"
 
 
-def _sanitize_next_path(next_path: str | None) -> str:
-    """Keep only safe relative post-login paths."""
-
-    if next_path is None:
-        return DEFAULT_POST_LOGIN_REDIRECT
-
-    if not next_path.startswith("/") or next_path.startswith("//"):
-        return DEFAULT_POST_LOGIN_REDIRECT
-
-    return next_path
-
-
 class PasswordLoginRequest(BaseModel):
     """Payload for the password-based login flow."""
 
@@ -69,7 +57,18 @@ async def login_oidc(
 
     oidc = cast(Any, oauth).create_client("oidc")
 
-    request.session[OIDC_NEXT_SESSION_KEY] = _sanitize_next_path(next_path)
+    post_login_redirect = DEFAULT_POST_LOGIN_REDIRECT
+    # The API issues the final redirect, so direct calls must stay on local paths.
+    if (
+        next_path is not None
+        and next_path.startswith("/")
+        and not next_path.startswith("//")
+        and "\\" not in next_path
+        and not any(ord(character) < 32 or ord(character) == 127 for character in next_path)
+    ):
+        post_login_redirect = next_path
+
+    request.session[OIDC_NEXT_SESSION_KEY] = post_login_redirect
     authorize_kwargs: dict[str, Any] = {}
 
     if provider is not None:
@@ -183,7 +182,10 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     subject = await upsert_oidc_user(userinfo)
     SessionAccountsService(request).activate(subject)
     next_path = request.session.pop(OIDC_NEXT_SESSION_KEY, DEFAULT_POST_LOGIN_REDIRECT)
-    return RedirectResponse(_sanitize_next_path(next_path))
+    if not isinstance(next_path, str):
+        next_path = DEFAULT_POST_LOGIN_REDIRECT
+
+    return RedirectResponse(next_path)
 
 
 @router.get("/auth/logout", response_model=SuccessResponse, include_in_schema=False)

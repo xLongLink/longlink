@@ -324,7 +324,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                         type="button"
                                         variant="outline"
                                         onClick={() => {
-                                            setStep('image');
+                                            setStep('metadata');
                                             setError(null);
                                         }}
                                     >

@@ -74,3 +74,114 @@ async def test_application_applies_service_resources(monkeypatch) -> None:
         ("Deployment", "dashboard", "longlink-acme"),
         ("Service", "dashboard", "longlink-acme"),
     ]
+
+
+async def test_proxy_passes_json_body_as_decoded_value(monkeypatch) -> None:
+    """Pass JSON request bodies in the form expected by the Kubernetes client."""
+
+    # Arrange
+    captured: dict[str, object] = {}
+
+    class FakeApiClient:
+        def __init__(self, configuration) -> None:
+            self.configuration = configuration
+
+        def call_api(
+            self,
+            resource_path,
+            method,
+            query_params,
+            header_params,
+            body,
+            auth_settings,
+            _preload_content,
+            _return_http_data_only,
+        ):
+            captured["resource_path"] = resource_path
+            captured["method"] = method
+            captured["headers"] = header_params
+            captured["body"] = body
+            response = type("Response", (), {"data": b"created"})()
+            return response, 201, {"content-type": "application/json"}
+
+    class FakeLoader:
+        def __init__(self, kubeconfig) -> None:
+            self.kubeconfig = kubeconfig
+
+        def load_and_set(self, configuration) -> None:
+            return None
+
+    monkeypatch.setattr("src.adapters.compute.k8s.client.Configuration", lambda: object())
+    monkeypatch.setattr("src.adapters.compute.k8s.config.kube_config.KubeConfigLoader", FakeLoader)
+    monkeypatch.setattr("src.adapters.compute.k8s.client.ApiClient", FakeApiClient)
+    monkeypatch.setattr("src.adapters.compute.k8s.client.CoreV1Api", lambda api_client: object())
+    monkeypatch.setattr("src.adapters.compute.k8s.client.AppsV1Api", lambda api_client: object())
+    adapter = K8s("apiVersion: v1\nclusters: []\n", "shared-secret")
+
+    # Act
+    body, status_code, response_headers = adapter.proxy(
+        "acme",
+        "dashboard",
+        "inventory",
+        "POST",
+        [],
+        {"content-type": "application/json"},
+        b'{"sku":"sku-1","quantity":1}',
+    )
+
+    # Assert
+    assert body == b"created"
+    assert status_code == 201
+    assert response_headers == {"content-type": "application/json"}
+    assert captured["resource_path"] == "/api/v1/namespaces/longlink-acme/services/dashboard/proxy/inventory"
+    assert captured["method"] == "POST"
+    assert captured["headers"] == {"Content-Type": "application/json"}
+    assert captured["body"] == {"sku": "sku-1", "quantity": 1}
+
+
+async def test_proxy_sends_untyped_raw_body_as_octet_stream(monkeypatch) -> None:
+    """Send raw request bytes without triggering the Kubernetes JSON encoder."""
+
+    # Arrange
+    captured: dict[str, object] = {}
+
+    class FakeApiClient:
+        def __init__(self, configuration) -> None:
+            self.configuration = configuration
+
+        def call_api(
+            self,
+            resource_path,
+            method,
+            query_params,
+            header_params,
+            body,
+            auth_settings,
+            _preload_content,
+            _return_http_data_only,
+        ):
+            captured["headers"] = header_params
+            captured["body"] = body
+            response = type("Response", (), {"data": b"ok"})()
+            return response, 200, {"content-type": "text/plain"}
+
+    class FakeLoader:
+        def __init__(self, kubeconfig) -> None:
+            self.kubeconfig = kubeconfig
+
+        def load_and_set(self, configuration) -> None:
+            return None
+
+    monkeypatch.setattr("src.adapters.compute.k8s.client.Configuration", lambda: object())
+    monkeypatch.setattr("src.adapters.compute.k8s.config.kube_config.KubeConfigLoader", FakeLoader)
+    monkeypatch.setattr("src.adapters.compute.k8s.client.ApiClient", FakeApiClient)
+    monkeypatch.setattr("src.adapters.compute.k8s.client.CoreV1Api", lambda api_client: object())
+    monkeypatch.setattr("src.adapters.compute.k8s.client.AppsV1Api", lambda api_client: object())
+    adapter = K8s("apiVersion: v1\nclusters: []\n", "shared-secret")
+
+    # Act
+    adapter.proxy("acme", "dashboard", "upload", "POST", [], {}, b"raw-body")
+
+    # Assert
+    assert captured["headers"] == {"Content-Type": "application/octet-stream"}
+    assert captured["body"] == b"raw-body"

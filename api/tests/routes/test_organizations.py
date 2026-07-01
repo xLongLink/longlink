@@ -1,6 +1,6 @@
 from uuid import UUID
 from types import SimpleNamespace
-from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.database.session import get_session
@@ -672,28 +672,6 @@ async def test_get_organization_rejects_invalid_uuid(
     # Assert
     assert response.status_code == 422
     assert isinstance(response.json()["detail"], list)
-
-
-async def test_delete_organization_removes_its_apps(
-    clients: tuple[TestClient, TestClient, TestClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Delete an organization and remove all applications registered under it."""
-
-    # Arrange
-    user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
-    await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
-    client = clients[0]
-
-    # Act
-    response = client.delete(f"/api/organizations/{organization.id}")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"ok": True}
-    assert await db.applications.get(organization.id, "dashboard") is None
 
 
 async def test_create_organization_returns_409_for_duplicate_name(

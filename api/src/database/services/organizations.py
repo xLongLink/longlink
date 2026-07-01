@@ -1,5 +1,4 @@
 from uuid import UUID
-from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -13,7 +12,7 @@ from src.models.organizations import (OrganizationDetails,
                                       OrganizationInvitationResponse,
                                       OrganizationApplicationResponse)
 from src.database.models.users import User
-from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -153,41 +152,5 @@ class OrganizationsService:
             ).where(Organization.id == organization.id)
             result = await session.execute(statement)
             return result.scalar_one()
-
-    async def delete(self, organization_id: UUID, deleted_id: UUID | None = None) -> Organization | None:
-        """Mark one organization as deleted."""
-
-        async with session_scope() as session:
-            result = await session.execute(select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_(None)))
-            organization = result.scalar_one_or_none()
-            if organization is None:
-                return None
-
-            # Mark the organization tree as deleted instead of removing the audit trail.
-            memberships_result = await session.execute(select(UserOrganization).where(UserOrganization.organization_id == organization_id))
-            for membership in memberships_result.scalars().all():
-                membership.deleted_at = datetime.now(UTC)
-                membership.deleted_id = deleted_id
-                membership.updated_id = deleted_id
-
-            application_memberships_result = await session.execute(select(UserApplication).where(UserApplication.organization_id == organization_id))
-            for membership in application_memberships_result.scalars().all():
-                membership.deleted_at = datetime.now(UTC)
-                membership.deleted_id = deleted_id
-                membership.updated_id = deleted_id
-
-            applications_result = await session.execute(select(Application).where(Application.organization_id == organization_id, Application.deleted_at.is_(None)))
-            for application in applications_result.scalars().all():
-                application.deleted_at = datetime.now(UTC)
-                application.deleted_id = deleted_id
-                application.updated_id = deleted_id
-
-            organization.deleted_at = datetime.now(UTC)
-            organization.deleted_id = deleted_id
-            organization.updated_id = deleted_id
-            await session.commit()
-            await session.refresh(organization)
-            return organization
-
 
 organizations = OrganizationsService()

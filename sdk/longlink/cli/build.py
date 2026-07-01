@@ -12,6 +12,18 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 from longlink.utils.metadata import load_metadata
 
+BUILD_CONTEXT_IGNORE_PATTERNS = (
+    ".dockerignore",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "Dockerfile",
+    "__pycache__",
+    "*.pyc",
+)
+
 DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS builder
 
 COPY . /workspace
@@ -84,6 +96,19 @@ def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
         environments.append(env_entry)
 
     return {"environments": environments}
+
+
+def read_pyproject(root: Path) -> dict[str, Any]:
+    """Read and parse the application `pyproject.toml`."""
+
+    pyproject = root / "pyproject.toml"
+    if not pyproject.is_file():
+        raise click.ClickException(f"Project file not found: {pyproject}")
+
+    try:
+        return tomllib.loads(pyproject.read_text())
+    except tomllib.TOMLDecodeError as error:
+        raise click.ClickException(f"Invalid project file {pyproject}: {error}") from error
 
 
 def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
@@ -185,8 +210,7 @@ def resolve_docker_paths(root: Path) -> tuple[Path, str]:
     """Resolve Docker build context and in-container working directory."""
 
     # Read local uv source paths so Docker context includes editable dependencies.
-    pyproject = root / "pyproject.toml"
-    pyproject_data: dict[str, Any] = tomllib.loads(pyproject.read_text())
+    pyproject_data = read_pyproject(root)
     tool_data = cast(dict[str, Any], pyproject_data.get("tool", {}))
     uv_data = cast(dict[str, Any], tool_data.get("uv", {}))
     uv_sources = cast(dict[str, Any], uv_data.get("sources", {}))
@@ -237,17 +261,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         source_root,
         build_context,
         dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns(
-            ".dockerignore",
-            ".git",
-            ".mypy_cache",
-            ".pytest_cache",
-            ".ruff_cache",
-            ".venv",
-            "Dockerfile",
-            "__pycache__",
-            "*.pyc",
-        ),
+        ignore=shutil.ignore_patterns(*BUILD_CONTEXT_IGNORE_PATTERNS),
     )
 
     # Preserve VCS metadata so setuptools-scm can resolve package versions in Docker.
@@ -264,7 +278,7 @@ def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: st
     """Build the Docker image for the current app."""
 
     # Build from a context that includes local path dependencies referenced by uv.
-    subprocess.run(
+    run_docker_command(
         [
             "docker",
             "build",
@@ -275,22 +289,29 @@ def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: st
             "-t",
             image_tag,
             str(build_context),
-        ],
-        check=True,
+        ]
     )
 
 
 def push_docker_image(image_tag: str) -> None:
     """Push the Docker image tag to its configured registry."""
 
-    subprocess.run(
+    run_docker_command(
         [
             "docker",
             "push",
             image_tag,
-        ],
-        check=True,
+        ]
     )
+
+
+def run_docker_command(command: list[str]) -> None:
+    """Run a Docker command and report a missing Docker CLI accurately."""
+
+    try:
+        subprocess.run(command, check=True)
+    except FileNotFoundError as error:
+        raise click.ClickException("Docker CLI is not installed or not available on PATH") from error
 
 
 def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
@@ -347,5 +368,3 @@ def build_command(tag: str | None, registry: str | None, push: bool):
         click.echo(f"- Remove it with: docker rmi {image_tag}")
     except subprocess.CalledProcessError as error:
         raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
-    except FileNotFoundError as error:
-        raise click.ClickException("Docker CLI is not installed or not available on PATH") from error

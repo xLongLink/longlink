@@ -1,12 +1,14 @@
+import json
 import yaml
 from .base import Compute
-from typing import Any, Callable, cast
+from typing import Any, cast
 from decimal import Decimal, InvalidOperation
 from datetime import UTC, datetime
 from src.utils import names, templates
 from kubernetes import client, config
 from src.logger import logger
 from src.constants import TEMPLATES
+from collections.abc import Callable
 from src.utils.namespace import k8name
 from kubernetes.client.exceptions import ApiException
 
@@ -73,51 +75,6 @@ class K8s(Compute):
 
         return None
 
-    async def cleanup(self) -> None:
-        """Delete all Kubernetes resources managed by the control plane."""
-
-        # Remove namespaced resources before namespaces so namespace deletion is not blocked.
-        for item in self._core_api.list_secret_for_all_namespaces(label_selector="managed-by=longlink").items:
-            try:
-                self._core_api.delete_namespaced_secret(item.metadata.name, item.metadata.namespace)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(f"Failed deleting Secret '{item.metadata.namespace}/{item.metadata.name}'") from exc
-
-        for item in self._core_api.list_service_for_all_namespaces(label_selector="managed-by=longlink").items:
-            try:
-                self._core_api.delete_namespaced_service(item.metadata.name, item.metadata.namespace)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(f"Failed deleting Service '{item.metadata.namespace}/{item.metadata.name}'") from exc
-
-        for item in self._apps_api.list_deployment_for_all_namespaces(label_selector="managed-by=longlink").items:
-            try:
-                self._apps_api.delete_namespaced_deployment(item.metadata.name, item.metadata.namespace)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(f"Failed deleting Deployment '{item.metadata.namespace}/{item.metadata.name}'") from exc
-
-        networking_api = client.NetworkingV1Api(self._api_client)
-        for item in networking_api.list_ingress_for_all_namespaces(label_selector="managed-by=longlink").items:
-            metadata = item.metadata
-            if metadata is None or metadata.name is None or metadata.namespace is None:
-                continue
-
-            try:
-                networking_api.delete_namespaced_ingress(metadata.name, metadata.namespace)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(f"Failed deleting Ingress '{metadata.namespace}/{metadata.name}'") from exc
-
-        # Delete managed namespaces after their contents are gone.
-        for item in self._core_api.list_namespace(label_selector="managed-by=longlink").items:
-            try:
-                self._core_api.delete_namespace(item.metadata.name)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(f"Failed deleting namespace '{item.metadata.name}'") from exc
-
     def _upsert(
         self,
         create_call: Callable[..., Any],
@@ -166,12 +123,36 @@ class K8s(Compute):
         namespace = k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
         resource_path = f"/api/v1/namespaces/{namespace}/services/{name}/proxy/{path}"
+        proxy_headers = dict(headers)
+        content_type = next(
+            (value for key, value in proxy_headers.items() if key.lower() == "content-type"),
+            None,
+        )
+
+        # The Kubernetes client checks this header case-sensitively before choosing its encoder.
+        if content_type is not None:
+            proxy_headers = {
+                key: value
+                for key, value in proxy_headers.items()
+                if key.lower() != "content-type"
+            }
+            proxy_headers["Content-Type"] = content_type
+
+        proxy_body: object | None = body or None
+        if proxy_body is not None and content_type is not None and "json" in content_type.lower():
+            # The Kubernetes client JSON-encodes JSON requests, so pass a decoded value instead of raw bytes.
+            proxy_body = json.loads(body.decode("utf-8"))
+
+        if proxy_body is not None and content_type is None:
+            # Avoid the Kubernetes client's default JSON encoder for untyped raw request bodies.
+            proxy_headers["Content-Type"] = "application/octet-stream"
+
         response_body, status_code, response_headers = self._api_client.call_api(
             resource_path,
             method,
             query_params=query_params,
-            header_params=headers,
-            body=body,
+            header_params=proxy_headers,
+            body=proxy_body,
             auth_settings=["BearerToken"],
             _preload_content=False,
             _return_http_data_only=False,
@@ -264,36 +245,6 @@ class K8s(Compute):
                 )
 
         return f"/{namespace}/{name}/"
-
-
-    async def remove(self, organization: str, application: str) -> None:
-        """Remove one managed application."""
-
-        namespace = k8name(names.knames(organization, "Organization"))
-        name = names.knames(application, "Application name")
-
-        # Delete the workload resources first so namespace cleanup is not blocked.
-        for delete_call in (
-            self._apps_api.delete_namespaced_deployment,
-            self._core_api.delete_namespaced_service,
-            self._core_api.delete_namespaced_secret,
-        ):
-            try:
-                delete_call(name, namespace)
-            except ApiException as exc:
-                if exc.status != 404:
-                    raise ValueError(f"Failed deleting resource '{name}'") from exc
-
-
-    async def delete(self, organization: str) -> None:
-        """Delete the organization namespace and all managed resources."""
-
-        namespace = k8name(names.knames(organization, "Organization"))
-        try:
-            self._core_api.delete_namespace(namespace)
-        except ApiException as exc:
-            if exc.status != 404:
-                raise ValueError(f"Failed deleting namespace '{namespace}'") from exc
 
 
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:

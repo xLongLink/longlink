@@ -1,4 +1,4 @@
-from sqlalchemy.schema import DropSchema, CreateSchema
+from sqlalchemy.schema import CreateSchema
 from src.adapters.database.postgres import Postgres
 
 
@@ -190,36 +190,6 @@ async def test_database_creates_shared_users_table_with_write_restrictions(monke
     assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
     assert any("CREATE TABLE IF NOT EXISTS public.users" in str(entry[1]) for entry in log if entry[0] == "execute")
     assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
-
-
-async def test_remove_and_delete_use_managed_sqlalchemy_connections(monkeypatch) -> None:
-    """Drop app schemas and databases through the managed SQLAlchemy engine."""
-
-    # Arrange
-    log: list[tuple[str, object]] = []
-
-    def fake_create_async_engine(url, **kwargs):
-        log.append(("engine", (str(url), kwargs)))
-        return _FakeEngine(log)
-
-    monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
-
-    adapter = Postgres(
-        host="db.longlink.internal",
-        port=5432,
-        username="longlink",
-        password="secret",
-    )
-
-    # Act
-    await adapter.remove("acme", "dashboard")
-    await adapter.delete("acme")
-
-    # Assert
-    assert ("begin", None) in log
-    assert any(isinstance(entry[1], DropSchema) for entry in log if entry[0] == "execute")
-    assert any(entry == ("driver_sql", 'DROP DATABASE IF EXISTS "longlink_acme"') for entry in log)
-    assert any(entry == ("driver_sql", 'DROP ROLE IF EXISTS "longlink_acme_dashboard"') for entry in log)
 
 
 async def test_usage_reads_server_disk_capacity_through_managed_connection(monkeypatch) -> None:

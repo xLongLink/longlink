@@ -1,5 +1,4 @@
 from uuid import UUID
-from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +7,6 @@ from src.models.storages import StorageKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
-from src.database.models.applications import Application
 
 
 class StorageService:
@@ -91,36 +89,5 @@ class StorageService:
             ).where(StorageRegistry.id == storage.id)
             result = await session.execute(statement)
             return result.scalar_one()
-
-    async def delete(self, registry_id: UUID, deleted_id: UUID | None = None) -> StorageRegistry | None:
-        """Mark one storage backend registration as deleted."""
-
-        async with session_scope() as session:
-            result = await session.execute(
-                select(StorageRegistry).options(
-                    selectinload(StorageRegistry.created_by),
-                    selectinload(StorageRegistry.updated_by),
-                    selectinload(StorageRegistry.deleted_by),
-                ).where(StorageRegistry.id == registry_id, StorageRegistry.deleted_at.is_(None))
-            )
-            storage = result.scalar_one_or_none()
-            # Return early when the registration does not exist.
-            if storage is None:
-                return None
-
-            used_statement = select(Application.id).where(
-                Application.storage_registry_id == registry_id,
-                Application.deleted_at.is_(None),
-            ).limit(1)
-            if (await session.execute(used_statement)).scalar_one_or_none() is not None:
-                raise ValueError("Storage registry is used by active applications")
-
-            # Keep the row for audit history and hide it from future selections.
-            storage.deleted_at = datetime.now(UTC)
-            storage.deleted_id = deleted_id
-            storage.updated_id = deleted_id
-            await session.commit()
-            await session.refresh(storage)
-            return storage
 
 storage = StorageService()

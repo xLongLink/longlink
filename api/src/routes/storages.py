@@ -2,7 +2,6 @@ from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import ConflictError, NotFoundError
-from src.models.common import SuccessResponse
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.models.users import User
 from src.database.services.storage import storage
@@ -39,17 +38,3 @@ async def create_storage_registry(payload: StorageRegistryCreate, user: User = D
 
     return registry
 
-
-@router.delete("/api/storages/{registry_id}", response_model=SuccessResponse)
-async def delete_storage_registry(registry_id: UUID, user: User = Depends(authadmin)) -> SuccessResponse:
-    """Delete one storage backend registration."""
-
-    try:
-        registry = await storage.delete(registry_id, user.id)
-    except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
-
-    if registry is None:
-        raise NotFoundError("Storage registry", registry_id)
-
-    return SuccessResponse()

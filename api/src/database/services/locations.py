@@ -1,5 +1,4 @@
 from uuid import UUID
-from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from src.database.session import session_scope
@@ -52,22 +51,5 @@ class LocationsService:
 
             await session.refresh(location)
             return location
-
-    async def delete(self, location_id: UUID, deleted_id: UUID | None = None) -> Location | None:
-        """Mark one location as deleted."""
-
-        async with session_scope() as session:
-            result = await session.execute(select(Location).where(Location.id == location_id, Location.deleted_at.is_(None)))
-            location = result.scalar_one_or_none()
-            if location is None:
-                return None
-
-            location.deleted_at = datetime.now(UTC)
-            location.deleted_id = deleted_id
-            location.updated_id = deleted_id
-            await session.commit()
-            await session.refresh(location)
-            return location
-
 
 locations = LocationsService()

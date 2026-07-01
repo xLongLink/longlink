@@ -10,7 +10,7 @@ from sqlalchemy import text
 from collections.abc import AsyncIterator
 from src.environments import env
 from sqlalchemy.engine import URL
-from sqlalchemy.schema import DropSchema, CreateSchema
+from sqlalchemy.schema import CreateSchema
 from src.utils.namespace import dbname
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncConnection,
                                     create_async_engine)
@@ -224,15 +224,6 @@ class Postgres(Database):
         return self._runtime_url(database_name, role_name, role_password).render_as_string(hide_password=False)
 
 
-    async def remove(self, organization: str, application: str) -> None:
-        """Remove one application schema from the organization database."""
-
-        async with self._connection(dbname(organization)) as conn:
-            await conn.execute(DropSchema(quoted_name(application, True), cascade=True, if_exists=True))
-            role = conn.engine.sync_engine.dialect.identifier_preparer.quote(self._application_role(organization, application))
-            await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
-
-
     async def databases(self) -> list[str]:
         """List all databases on the server, excluding system databases."""
 
@@ -418,52 +409,8 @@ class Postgres(Database):
             return {"space_used": int(database_size)}
 
 
-    async def delete(self, organization: str) -> None:
-        """Delete the entire database for the given organization."""
-
-        database_name_value = dbname(organization)
-        async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            await conn.execute(
-                text(
-                    """
-                    SELECT pg_terminate_backend(pid)
-                    FROM pg_stat_activity
-                    WHERE datname = :organization AND pid <> pg_backend_pid()
-                    """
-                ),
-                {"organization": database_name_value},
-            )
-            database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database_name_value)
-            await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
-
-
     async def setup(self) -> None:
         """Initialize the PostgreSQL backend used by the control plane."""
 
         # The backend is provisioned externally; instantiating the adapter is enough here.
         return None
-
-
-    async def cleanup(self) -> None:
-        """Delete all managed PostgreSQL databases."""
-
-        # Drop every non-system database except the maintenance database used for admin operations.
-        async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            result = await conn.execute(text("SELECT datname FROM pg_database WHERE datname LIKE 'longlink\\_%' ESCAPE '\\'"))
-            for row in result.fetchall():
-                database = row[0]
-                if database == self._maintenance_database:
-                    continue
-
-                await conn.execute(
-                    text(
-                        """
-                        SELECT pg_terminate_backend(pid)
-                        FROM pg_stat_activity
-                        WHERE datname = :database AND pid <> pg_backend_pid()
-                        """
-                    ),
-                    {"database": database},
-                )
-                database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database)
-                await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
