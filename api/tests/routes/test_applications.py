@@ -1,3 +1,4 @@
+import json
 import pytest
 from types import SimpleNamespace
 from typing import cast
@@ -336,6 +337,12 @@ async def test_create_app_returns_app_response(
             }
             return "postgresql://fake"
 
+        async def sync_users(self, organization: str, users: list[dict[str, object]]) -> None:
+            captured["sync_users"] = {
+                "organization": organization,
+                "users": users,
+            }
+
     monkeypatch.setattr("src.operations.provisioning.K8s", FakeCompute)
     monkeypatch.setattr("src.operations.provisioning.Postgres", FakeDatabase)
     client = clients[0]
@@ -376,6 +383,22 @@ async def test_create_app_returns_app_response(
         "runtime_port": 15432,
     }
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
+    sync_payload = cast(dict[str, object], captured["sync_users"])
+    synced_users = cast(list[dict[str, object]], sync_payload["users"])
+    assert sync_payload == {
+        "organization": "acme",
+        "users": [
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "avatar": user.avatar,
+                "role_name": "owner",
+                "created_at": synced_users[0]["created_at"],
+                "updated_at": synced_users[0]["updated_at"],
+            }
+        ],
+    }
     assert captured["application"] == {
         "organization": "acme",
         "application": "dashboard",
@@ -576,7 +599,10 @@ async def test_proxy_app_forwards_request_to_internal_service(
     monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
 
     # Act
-    response = client.post(f"/api/applications/{app.id}/proxy/anything?answer=42", content=b"hello")
+    response = client.post(
+        f"/api/applications/{app.id}/proxy/anything?answer=42",
+        json={"sku": "SKU-001", "name": "Warehouse Widget", "quantity": 10},
+    )
 
     # Assert
     assert response.status_code == 200
@@ -586,8 +612,16 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert captured["path"] == "anything"
     assert captured["method"] == "POST"
     assert captured["query_params"] == [("answer", "42")]
-    assert captured["body"] == b"hello"
-    assert "cookie" not in {key.lower() for key in captured["headers"]}
+    assert json.loads(cast(bytes, captured["body"]).decode("utf-8")) == {
+        "sku": "SKU-001",
+        "name": "Warehouse Widget",
+        "quantity": 10,
+    }
+    forwarded_headers = {key.lower(): value for key, value in captured["headers"].items()}
+    assert forwarded_headers["content-type"] == "application/json"
+    assert "content-length" not in forwarded_headers
+    assert forwarded_headers["x-user-id"] == str(user.id)
+    assert "cookie" not in forwarded_headers
     assert "set-cookie" not in response.headers
 
 
@@ -661,6 +695,7 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
             "If-None-Match": '"abc"',
             "If-Modified-Since": "Tue, 01 Jun 2020 00:00:00 GMT",
             "X-Test": "present",
+            "X-User-Id": "00000000-0000-0000-0000-000000000000",
         },
     )
 
@@ -672,6 +707,7 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
     assert "if-modified-since" not in forwarded_headers
     assert "x-test" in forwarded_headers
     assert forwarded_values.get("x-test") == "present"
+    assert forwarded_values.get("x-user-id") == str(user.id)
     assert forwarded_values.get("accept") == "*/*"
 
 

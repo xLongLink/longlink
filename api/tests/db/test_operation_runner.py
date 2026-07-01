@@ -1,10 +1,12 @@
 from types import SimpleNamespace
+from datetime import UTC, datetime, timedelta
 from src.operations import execute
 from src.models.countries import Country
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
 from src.database.services.users import users
-from src.operations.applications import ApplicationStartupState
+from src.operations.applications import (ApplicationStartupState,
+                                         application_pods_startup_state)
 from src.database.services.compute import compute
 from src.database.services.database import database
 from src.database.services.locations import locations
@@ -21,6 +23,95 @@ db = SimpleNamespace(
     organizations=organizations,
     users=users,
 )
+
+
+def container_status(
+    ready: bool = False,
+    waiting_reason: str | None = None,
+    terminated_exit_code: int | None = None,
+) -> SimpleNamespace:
+    """Build a minimal Kubernetes container status double."""
+
+    state = SimpleNamespace(waiting=None, terminated=None)
+    if waiting_reason is not None:
+        state.waiting = SimpleNamespace(reason=waiting_reason)
+
+    if terminated_exit_code is not None:
+        state.terminated = SimpleNamespace(exit_code=terminated_exit_code)
+
+    return SimpleNamespace(ready=ready, state=state)
+
+
+def pod_status(
+    created_at: datetime,
+    phase: str,
+    containers: list[SimpleNamespace],
+) -> SimpleNamespace:
+    """Build a minimal Kubernetes pod double."""
+
+    return SimpleNamespace(
+        metadata=SimpleNamespace(creation_timestamp=created_at),
+        status=SimpleNamespace(phase=phase, container_statuses=containers),
+    )
+
+
+def test_application_pods_startup_state_ignores_stale_dead_pods() -> None:
+    """Keep a fresh rollout pending while old pods from a previous rollout are dead."""
+
+    # Arrange
+    operation_created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+    stale_pod = pod_status(
+        operation_created_at - timedelta(minutes=5),
+        "Running",
+        [container_status(waiting_reason="CrashLoopBackOff")],
+    )
+    current_pod = pod_status(
+        operation_created_at + timedelta(seconds=2),
+        "Pending",
+        [container_status()],
+    )
+
+    # Act
+    startup_state = application_pods_startup_state([stale_pod, current_pod], operation_created_at)
+
+    # Assert
+    assert startup_state == ApplicationStartupState.pending
+
+
+def test_application_pods_startup_state_treats_image_pull_backoff_as_pending() -> None:
+    """Keep verification pending while a current pod has a transient image pull backoff."""
+
+    # Arrange
+    operation_created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+    pod = pod_status(
+        operation_created_at + timedelta(seconds=2),
+        "Pending",
+        [container_status(waiting_reason="ImagePullBackOff")],
+    )
+
+    # Act
+    startup_state = application_pods_startup_state([pod], operation_created_at)
+
+    # Assert
+    assert startup_state == ApplicationStartupState.pending
+
+
+def test_application_pods_startup_state_marks_current_crashloop_dead() -> None:
+    """Fail verification when the current rollout pod is crashlooping."""
+
+    # Arrange
+    operation_created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+    pod = pod_status(
+        operation_created_at + timedelta(seconds=2),
+        "Running",
+        [container_status(waiting_reason="CrashLoopBackOff")],
+    )
+
+    # Act
+    startup_state = application_pods_startup_state([pod], operation_created_at)
+
+    # Assert
+    assert startup_state == ApplicationStartupState.dead
 
 
 async def test_execute_application_create_operation_completes_running_application(monkeypatch) -> None:

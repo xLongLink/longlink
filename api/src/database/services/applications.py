@@ -36,6 +36,20 @@ class ApplicationsService:
         return [_response_payload(application, None, user) for application in applications]
 
 
+    async def list_by_organization(self, organization_id: UUID) -> list[Application]:
+        """Return all active applications for one organization."""
+
+        async with session_scope() as session:
+            statement = (
+                select(Application)
+                .options(*_app_relation_options())
+                .where(Application.organization_id == organization_id, Application.deleted_at.is_(None))
+                .order_by(Application.created_at.asc())
+            )
+            result = await session.execute(statement)
+            return list(result.scalars().all())
+
+
     async def list(
         self,
         organization_id: UUID,

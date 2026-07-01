@@ -1,3 +1,5 @@
+from uuid import UUID
+from datetime import UTC, datetime
 from sqlalchemy.schema import CreateSchema
 from src.adapters.database.postgres import Postgres
 
@@ -79,7 +81,11 @@ class _FakeConnection:
         return False
 
     async def execute(self, statement, params=None):
-        self.log.append(("execute", statement))
+        if params is None:
+            self.log.append(("execute", statement))
+        else:
+            self.log.append(("execute", statement, params))
+
         text = str(statement)
         if "SELECT 1 FROM pg_database" in text:
             return _FakeResult(None)
@@ -157,6 +163,7 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
     assert ("begin", None) in log
     assert any(isinstance(entry[1], CreateSchema) for entry in log if entry[0] == "execute")
     assert any("CREATE TABLE IF NOT EXISTS public.users" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("id UUID PRIMARY KEY" in str(entry[1]) for entry in log if entry[0] == "execute")
     assert any("CREATE ROLE \"longlink_acme_dashboard\" LOGIN PASSWORD 'runtime-secret'" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT USAGE, CREATE ON SCHEMA \"dashboard\" TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT SELECT, REFERENCES ON TABLE public.users TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
@@ -189,6 +196,63 @@ async def test_database_creates_shared_users_table_with_write_restrictions(monke
     assert connection == "postgresql+psycopg://longlink:secret@db.longlink.internal:5432/longlink_acme?sslmode=disable"
     assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
     assert any("CREATE TABLE IF NOT EXISTS public.users" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("id UUID PRIMARY KEY" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+
+
+async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monkeypatch) -> None:
+    """Synchronize active organization users into the shared users table."""
+
+    # Arrange
+    log: list[tuple] = []
+    timestamp = datetime(2026, 7, 1, tzinfo=UTC)
+    user_id = UUID("11111111-1111-1111-1111-111111111111")
+
+    def fake_create_async_engine(url, **kwargs):
+        log.append(("engine", (str(url), kwargs)))
+        return _FakeEngine(log)
+
+    monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
+
+    adapter = Postgres(
+        host="db.longlink.internal",
+        port=5432,
+        username="longlink",
+        password="secret",
+    )
+
+    # Act
+    await adapter.sync_users(
+        "acme",
+        [
+            {
+                "id": user_id,
+                "name": "Owner User",
+                "email": "owner@example.com",
+                "avatar": "",
+                "role_name": "owner",
+                "created_at": timestamp,
+                "updated_at": timestamp,
+            }
+        ],
+    )
+
+    # Assert
+    insert_calls = [entry for entry in log if entry[0] == "execute" and "INSERT INTO public.users" in str(entry[1])]
+    assert len(insert_calls) == 1
+    assert insert_calls[0][2] == [
+        {
+            "id": user_id,
+            "name": "Owner User",
+            "email": "owner@example.com",
+            "avatar": "",
+            "role_name": "owner",
+            "created_at": timestamp,
+            "updated_at": timestamp,
+        }
+    ]
+    assert any("ON CONFLICT (id) DO UPDATE SET" in str(entry[1]) for entry in insert_calls)
+    assert any("AND id NOT IN" in str(entry[1]) for entry in log if entry[0] == "execute")
     assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 

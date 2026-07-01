@@ -23,8 +23,9 @@ HOP_BY_HOP_HEADERS = {
     "transfer-encoding",
     "upgrade",
 }
-FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "cookie"}
+FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "content-length", "cookie"}
 FORWARDED_REQUEST_BLOCKLIST |= {"if-modified-since", "if-none-match"}
+FORWARDED_REQUEST_BLOCKLIST |= {"x-user-id"}
 FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
 
 router = APIRouter()
@@ -118,6 +119,7 @@ async def proxy_application_request(
         for key, value in request.headers.items()
         if key.lower() not in FORWARDED_REQUEST_BLOCKLIST
     }
+    forward_headers["x-user-id"] = str(user.id)
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
 
     # Forward the request body and response stream directly through the Kubernetes API client.

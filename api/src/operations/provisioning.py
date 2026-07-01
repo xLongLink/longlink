@@ -19,8 +19,10 @@ from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 from src.database.services.operations import operations
 from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 PLATFORM_ENVIRONMENT_NAMES = {
     "LONGLINK_DATABASE_SCHEMA",
@@ -93,13 +95,19 @@ async def application_compute_registry(application: Application, location_id: UU
     return await latest_compute_registry(location_id)
 
 
-async def application_database_registry(application: Application, location_id: UUID) -> DatabaseRegistry | None:
-    """Return the database registry used by an application, falling back to the newest one."""
+async def organization_database_registry(organization: Organization | OrganizationDetails | OrganizationSummary) -> DatabaseRegistry | None:
+    """Return the single database registry used by an organization."""
 
-    if application.database_registry_id is not None:
-        return await database.get(application.database_registry_id, include_deleted=True)
+    for application in await applications.list_by_organization(organization.id):
+        if application.database_registry is not None:
+            return application.database_registry
 
-    return await latest_database_registry(location_id)
+        if application.database_registry_id is not None:
+            registry = await database.get(application.database_registry_id, include_deleted=True)
+            if registry is not None:
+                return registry
+
+    return await latest_database_registry(organization.location_id)
 
 
 async def application_storage_registry(application: Application) -> StorageRegistry | None:
@@ -154,6 +162,33 @@ def runtime_environment(
     return environment
 
 
+async def sync_organization_users(
+    organization: Organization | OrganizationDetails | OrganizationSummary,
+    registry: DatabaseRegistry | None = None,
+) -> None:
+    """Synchronize organization members into the shared users table."""
+
+    database_registry = registry or await organization_database_registry(organization)
+    if database_registry is None:
+        return
+
+    db_client = Postgres(
+        database_registry.host,
+        database_registry.port,
+        database_registry.username,
+        database_registry.password,
+    )
+    database_users = await organizations.database_users(organization.id)
+    await db_client.sync_users(organization.slug, database_users)
+
+
+async def sync_user_organizations(user: User) -> None:
+    """Synchronize every organization database affected by one user."""
+
+    for organization in await organizations.list_by_user(user.id):
+        await sync_organization_users(organization)
+
+
 async def create_application_runtime(
     organization: OrganizationDetails,
     payload: ApplicationCreate,
@@ -170,7 +205,7 @@ async def create_application_runtime(
     if compute_registry is None:
         raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
 
-    database_registry = await latest_database_registry(organization.location_id)
+    database_registry = await organization_database_registry(organization)
     if database_registry is None:
         raise RuntimeError(f"No database configured for location '{organization.location_id}'")
 
@@ -205,6 +240,7 @@ async def create_application_runtime(
     # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
     try:
         await k8s.namespace(organization.slug)
+        await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
         database_url = await db_client.schema(organization.slug, application_slug)
         runtime_envs = runtime_environment(application_slug, database_url, storage_registry)
         await k8s.application(
@@ -244,7 +280,7 @@ async def sync_application_runtime(
     if compute_registry is None:
         raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
 
-    database_registry = await application_database_registry(application, organization.location_id)
+    database_registry = await organization_database_registry(organization)
     if database_registry is None:
         raise RuntimeError(f"No database configured for location '{organization.location_id}'")
 
@@ -281,6 +317,7 @@ async def sync_application_runtime(
     # Reapply the workload with a fresh rollout token so fixed development tags pull the newest image.
     try:
         await k8s.namespace(organization.slug)
+        await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
         database_url = await db_client.schema(organization.slug, application.slug)
         runtime_envs = runtime_environment(application.slug, database_url, storage_registry)
         await k8s.application(
@@ -300,7 +337,7 @@ async def sync_application_runtime(
     return updated_application
 
 
-async def create_organization_namespace(organization: OrganizationSummary) -> None:
+async def create_organization_namespace(organization: Organization | OrganizationSummary) -> None:
     """Best-effort create the organization namespace on the active compute registry."""
 
     registry = await latest_compute_registry(organization.location_id)
@@ -313,7 +350,7 @@ async def create_organization_namespace(organization: OrganizationSummary) -> No
         logger.exception("Failed to create namespace for organization '%s'", organization.slug)
 
 
-async def create_organization_database(organization: OrganizationSummary) -> None:
+async def create_organization_database(organization: Organization | OrganizationSummary) -> None:
     """Best-effort create the organization database on the active database registry."""
 
     registry = await latest_database_registry(organization.location_id)
@@ -321,6 +358,8 @@ async def create_organization_database(organization: OrganizationSummary) -> Non
         return
 
     try:
-        await Postgres(registry.host, registry.port, registry.username, registry.password).database(organization.slug)
+        db_client = Postgres(registry.host, registry.port, registry.username, registry.password)
+        await db_client.database(organization.slug)
+        await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
     except Exception:
         logger.exception("Failed to create database for organization '%s'", organization.slug)

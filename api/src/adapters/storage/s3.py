@@ -1,5 +1,6 @@
 import boto3
-from .base import Storage
+from datetime import datetime
+from .base import Storage, StorageObjectData
 from src.utils.namespace import s3name
 
 
@@ -30,6 +31,52 @@ class S3(Storage):
         """List storage buckets."""
         response = self._client.list_buckets()
         return [bucket["Name"] for bucket in response.get("Buckets", [])]
+
+
+    async def buckets(self) -> list[str]:
+        """List storage buckets."""
+
+        return self.list()
+
+
+    async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
+        """List object metadata for one bucket."""
+
+        objects: list[StorageObjectData] = []
+        continuation_token: str | None = None
+
+        # S3 returns at most 1000 objects per page, so continue until the limit or response end.
+        while len(objects) < limit:
+            request: dict[str, object] = {
+                "Bucket": bucket_name,
+                "MaxKeys": min(1000, limit - len(objects)),
+            }
+            if continuation_token is not None:
+                request["ContinuationToken"] = continuation_token
+
+            response = self._client.list_objects_v2(**request)
+            for item in response.get("Contents", []):
+                key = item.get("Key")
+                if key is None:
+                    continue
+
+                etag = item.get("ETag")
+                last_modified = item.get("LastModified")
+                objects.append(
+                    {
+                        "key": str(key),
+                        "size": int(item.get("Size", 0)),
+                        "etag": str(etag) if etag is not None else None,
+                        "last_modified": last_modified if isinstance(last_modified, datetime) else None,
+                    }
+                )
+
+            next_continuation_token = response.get("NextContinuationToken")
+            continuation_token = str(next_continuation_token) if next_continuation_token is not None else None
+            if not response.get("IsTruncated") or continuation_token is None:
+                break
+
+        return objects
 
 
     async def tenant(self, organization: str) -> str:

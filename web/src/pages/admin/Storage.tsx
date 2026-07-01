@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
@@ -24,7 +25,7 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry & { location?: ApiL
             const storage = row.original;
 
             return (
-                <div className="flex items-center gap-3">
+                <Link to={`/admin/storage/${encodeURIComponent(storage.slug)}`} className="flex items-center gap-3">
                     <img
                         src="/images/S3.webp"
                         alt="S3 object storage"
@@ -34,7 +35,7 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry & { location?: ApiL
                         <div className="truncate font-medium text-foreground">{storage.name}</div>
                         <div className="truncate text-xs text-muted-foreground">{storage.endpoint_url}</div>
                     </div>
-                </div>
+                </Link>
             );
         },
         meta: { className: 'min-w-64' },

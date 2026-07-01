@@ -1,4 +1,15 @@
 from abc import ABC, abstractmethod
+from typing import TypedDict
+from datetime import datetime
+
+
+class StorageObjectData(TypedDict):
+    """Describe one object stored in a bucket."""
+
+    key: str
+    size: int
+    etag: str | None
+    last_modified: datetime | None
 
 
 class Storage(ABC):
@@ -24,3 +35,11 @@ class Storage(ABC):
     @abstractmethod
     async def setup(self) -> None:
         """Initialize the storage backend used by the control plane."""
+
+    @abstractmethod
+    async def buckets(self) -> list[str]:
+        """List buckets on the storage backend."""
+
+    @abstractmethod
+    async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
+        """List object metadata for one bucket."""

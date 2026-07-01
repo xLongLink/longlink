@@ -196,6 +196,17 @@ export type ApiStorageRegistry = {
     deleted_by: ApiUserSummary | null;
 };
 
+export type ApiStorageBucket = {
+    name: string;
+};
+
+export type ApiStorageObject = {
+    key: string;
+    size: number;
+    etag: string | null;
+    last_modified: string | null;
+};
+
 export type ApiComputeRegistry = {
     id: string;
     kind: string;

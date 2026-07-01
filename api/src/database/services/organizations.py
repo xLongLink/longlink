@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
+from src.adapters.database.base import DatabaseUser
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
 from src.models.organizations import (OrganizationDetails,
@@ -32,6 +33,56 @@ class OrganizationsService:
             ).where(Organization.deleted_at.is_(None))
             result = await session.execute(statement)
             return list(result.scalars().all())
+
+
+    async def list_by_user(self, user_id: UUID) -> list[Organization]:
+        """Return all active organizations for one active member."""
+
+        async with session_scope() as session:
+            statement = (
+                select(Organization)
+                .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+                .options(selectinload(Organization.location))
+                .where(
+                    UserOrganization.user_id == user_id,
+                    UserOrganization.deleted_at.is_(None),
+                    Organization.deleted_at.is_(None),
+                )
+            )
+            result = await session.execute(statement)
+            return list(result.scalars().all())
+
+
+    async def database_users(self, organization_id: UUID) -> list[DatabaseUser]:
+        """Return active organization members for the shared users table."""
+
+        async with session_scope() as session:
+            statement = (
+                select(User, UserOrganization.role_name, UserOrganization.created_at, UserOrganization.updated_at)
+                .join(UserOrganization, UserOrganization.user_id == User.id)
+                .where(
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.deleted_at.is_(None),
+                    User.deleted_at.is_(None),
+                )
+                .order_by(User.email)
+            )
+            result = await session.execute(statement)
+            rows = result.all()
+
+            return [
+                {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "avatar": user.avatar or "",
+                    "role_name": role_name.value,
+                    "created_at": created_at,
+                    "updated_at": max(user.updated_at, updated_at),
+                }
+                for user, role_name, created_at, updated_at in rows
+            ]
+
 
     async def get(self, organization_id: UUID) -> OrganizationDetails | None:
         """Return one organization by id."""

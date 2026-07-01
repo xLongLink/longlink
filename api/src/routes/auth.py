@@ -6,6 +6,7 @@ from src.auth import SessionAccountsService, oauth
 from src.errors import UnavailableError, UnauthorizedError
 from src.models.auth import OidcUserInfo, OidcTokenResponse
 from src.environments import env
+from src.operations import provisioning
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
 from src.database.services.users import users
@@ -38,12 +39,17 @@ async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
 
         name = f"{given_name} {family_name}"
 
-    await users.upsert(
+    user = await users.upsert(
         oidc=userinfo.sub,
         email=str(email),
         name=name,
         avatar=userinfo.picture,
     )
+    try:
+        await provisioning.sync_user_organizations(user)
+    except Exception as exc:
+        raise UnavailableError("Failed to synchronize user profile") from exc
+
     return userinfo.sub
 
 

@@ -26,6 +26,27 @@ class StorageRegistryCreate(BaseModel):
     location_id: UUID
 
 
+class StorageBucketResponse(BaseModel):
+    """Represent one bucket on a storage backend."""
+
+    # Metadata
+    name: str
+
+
+class StorageObjectResponse(BaseModel):
+    """Represent one object in a storage bucket."""
+
+    # Metadata
+    key: str
+    etag: str | None = None
+
+    # Usage
+    size: int
+
+    # Audit
+    last_modified: datetime | None = None
+
+
 class StorageRegistryResponse(BaseModel):
     """Represent one storage registry in API responses."""
 

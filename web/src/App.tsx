@@ -15,6 +15,8 @@ import AdminLocation from '@/pages/admin/Location';
 import AdminOperations from '@/pages/admin/Operations';
 import AdminOrganizations from '@/pages/admin/Organizations';
 import AdminStorage from '@/pages/admin/Storage';
+import StorageBuckets from '@/pages/admin/StorageBuckets';
+import StorageObjects from '@/pages/admin/StorageObjects';
 import AdminUsers from '@/pages/admin/Users';
 import { DOC_PAGES } from '@/pages/docs/catalog';
 import DocsPageRoute from '@/pages/docs/DocsPageRoute';
@@ -119,6 +121,14 @@ function getRoutes() {
                 {
                     path: 'storage',
                     element: <AdminStorage />,
+                },
+                {
+                    path: 'storage/:storage',
+                    element: <StorageBuckets />,
+                },
+                {
+                    path: 'storage/:storage/buckets/:bucket',
+                    element: <StorageObjects />,
                 },
                 {
                     path: 'compute',

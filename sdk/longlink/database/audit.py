@@ -1,4 +1,5 @@
 from .base import Table, utcnow
+from uuid import UUID
 from typing import Any
 from fastapi import FastAPI, Request
 from sqlmodel import Session as SyncSession
@@ -8,11 +9,11 @@ from contextvars import ContextVar
 from collections.abc import Callable, Awaitable, Generator
 from starlette.responses import Response
 
-_current_user_id: ContextVar[int | None] = ContextVar("current_user_id", default=None)
+_current_user_id: ContextVar[UUID | None] = ContextVar("current_user_id", default=None)
 
 
 @contextmanager
-def audit_user_scope(user_id: int | None) -> Generator[None, None, None]:
+def audit_user_scope(user_id: UUID | None) -> Generator[None, None, None]:
     """Bind an audit user ID for the current execution scope."""
 
     token = _current_user_id.set(user_id)
@@ -102,13 +103,13 @@ def install_audit_middleware(app: FastAPI) -> None:
     ) -> Response:
         """Bind the request user ID for the duration of the request."""
 
-        user_id: int | None = None
+        user_id: UUID | None = None
 
         raw_user_id = request.headers.get("x-user-id")
 
         if raw_user_id is not None:
             try:
-                user_id = int(raw_user_id)
+                user_id = UUID(raw_user_id)
             except ValueError:
                 user_id = None
 

@@ -1,3 +1,4 @@
+from uuid import UUID
 from typing import Any, ClassVar, TypedDict, cast
 from datetime import datetime, timezone
 from pydantic import ConfigDict
@@ -28,26 +29,72 @@ class User(Base, table=True):
 
     __tablename__: ClassVar[Any] = "users"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: UUID | None = Field(default=None, primary_key=True)
     name: str = Field(max_length=255)
     email: str = Field(max_length=254)
+    avatar: str = Field(default="", max_length=2048)
+    role_name: str = Field(default="read", max_length=32)
+    created_at: datetime | None = Field(
+        default_factory=utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    updated_at: datetime | None = Field(
+        default_factory=utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    deleted_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
 
 
 
 class LocalUser(TypedDict):
     """Describe a deterministic local development user."""
 
-    id: int
+    id: UUID
     name: str
     email: str
+    avatar: str
+    role_name: str
 
 
 LOCAL_USERS: tuple[LocalUser, ...] = (
-    {"id": 1, "name": "Read User", "email": "read@local.longlink.dev"},
-    {"id": 2, "name": "Write User", "email": "write@local.longlink.dev"},
-    {"id": 3, "name": "Maintain User", "email": "maintain@local.longlink.dev"},
-    {"id": 4, "name": "Admin User", "email": "admin@local.longlink.dev"},
-    {"id": 5, "name": "Owner User", "email": "owner@local.longlink.dev"},
+    {
+        "id": UUID("00000000-0000-0000-0000-000000000001"),
+        "name": "Read User",
+        "email": "read@local.longlink.dev",
+        "avatar": "",
+        "role_name": "read",
+    },
+    {
+        "id": UUID("00000000-0000-0000-0000-000000000002"),
+        "name": "Write User",
+        "email": "write@local.longlink.dev",
+        "avatar": "",
+        "role_name": "write",
+    },
+    {
+        "id": UUID("00000000-0000-0000-0000-000000000003"),
+        "name": "Maintain User",
+        "email": "maintain@local.longlink.dev",
+        "avatar": "",
+        "role_name": "maintain",
+    },
+    {
+        "id": UUID("00000000-0000-0000-0000-000000000004"),
+        "name": "Admin User",
+        "email": "admin@local.longlink.dev",
+        "avatar": "",
+        "role_name": "admin",
+    },
+    {
+        "id": UUID("00000000-0000-0000-0000-000000000005"),
+        "name": "Owner User",
+        "email": "owner@local.longlink.dev",
+        "avatar": "",
+        "role_name": "owner",
+    },
 )
 
 
@@ -86,6 +133,8 @@ async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> N
 
             user.name = payload["name"]
             user.email = payload["email"]
+            user.avatar = payload["avatar"]
+            user.role_name = payload["role_name"]
 
         await session.commit()
 
@@ -113,17 +162,17 @@ class Table(Base):
         default=None,
         sa_column=Column(DateTime(timezone=True), nullable=True),
     )
-    created_id: int | None = Field(
+    created_id: UUID | None = Field(
         default=None,
         foreign_key="users.id",
         nullable=True,
     )
-    updated_id: int | None = Field(
+    updated_id: UUID | None = Field(
         default=None,
         foreign_key="users.id",
         nullable=True,
     )
-    deleted_id: int | None = Field(
+    deleted_id: UUID | None = Field(
         default=None,
         foreign_key="users.id",
         nullable=True,

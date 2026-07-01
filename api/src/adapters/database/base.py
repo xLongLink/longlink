@@ -1,5 +1,19 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
 from typing import TypedDict
+from datetime import datetime
+
+
+class DatabaseUser(TypedDict):
+    """Describe one organization user projected into an application database."""
+
+    id: UUID
+    name: str
+    email: str
+    avatar: str
+    role_name: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class DatabaseSchemaUsage(TypedDict):
@@ -59,6 +73,12 @@ class Database(ABC):
     @abstractmethod
     async def database(self, organization: str) -> str:
         """Create the database for an organization if it does not exist and return a connection DSN."""
+
+
+    @abstractmethod
+    async def sync_users(self, organization: str, users: list[DatabaseUser]) -> None:
+        """Synchronize the shared organization users table."""
+
 
     @abstractmethod
     async def schema(self, organization: str, application: str) -> str:

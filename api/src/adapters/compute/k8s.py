@@ -123,7 +123,12 @@ class K8s(Compute):
         namespace = k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
         resource_path = f"/api/v1/namespaces/{namespace}/services/{name}/proxy/{path}"
-        proxy_headers = dict(headers)
+        # Let the HTTP client calculate the length after any body normalization.
+        proxy_headers = {
+            key: value
+            for key, value in headers.items()
+            if key.lower() != "content-length"
+        }
         content_type = next(
             (value for key, value in proxy_headers.items() if key.lower() == "content-type"),
             None,

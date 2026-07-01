@@ -7,6 +7,18 @@ from alembic.config import Config
 
 CURRENT_FILE = Path(__file__).resolve()
 MIGRATIONS_DIRECTORY = "migrations"
+INITIAL_INVENTORY_MIGRATION = "20260630_0001_initial_inventory.py"
+INTEGER_AUDIT_COLUMN_REPLACEMENTS = {
+    'sa.Column("created_id", sa.Integer(), nullable=True)': (
+        'sa.Column("created_id", sa.Uuid(), nullable=True)'
+    ),
+    'sa.Column("updated_id", sa.Integer(), nullable=True)': (
+        'sa.Column("updated_id", sa.Uuid(), nullable=True)'
+    ),
+    'sa.Column("deleted_id", sa.Integer(), nullable=True)': (
+        'sa.Column("deleted_id", sa.Uuid(), nullable=True)'
+    ),
+}
 
 
 def include_object(
@@ -75,6 +87,26 @@ def load_application_models() -> None:
         spec.loader.exec_module(module)
 
 
+def repair_stale_initial_inventory_migration(migrations_path: Path) -> None:
+    """Repair the generated initial inventory migration from older SDK scaffolds."""
+
+    migration_path = migrations_path / INITIAL_INVENTORY_MIGRATION
+    if not migration_path.exists():
+        return
+
+    migration_text = migration_path.read_text(encoding="utf-8")
+    repaired_text = migration_text
+
+    # Older SDK scaffolds wrote integer audit foreign keys, which fail against UUID users.id.
+    for old_column, new_column in INTEGER_AUDIT_COLUMN_REPLACEMENTS.items():
+        repaired_text = repaired_text.replace(old_column, new_column)
+
+    if repaired_text == migration_text:
+        return
+
+    migration_path.write_text(repaired_text, encoding="utf-8")
+
+
 def make_migrations() -> bool:
     """Generate new Alembic revision from metadata diff.
 
@@ -122,6 +154,7 @@ def apply_migrations() -> None:
 
     migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
     migrations_path.mkdir(exist_ok=True)
+    repair_stale_initial_inventory_migration(migrations_path)
 
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))

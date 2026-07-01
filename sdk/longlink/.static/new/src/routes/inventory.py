@@ -1,7 +1,6 @@
-from fastapi import Body
 from longlink import Router
 from src.database.services import inventory
-from src.schemas.inventory import InventoryItemRead
+from src.schemas.inventory import InventoryItemCreate, InventoryItemRead
 
 router = Router()
 
@@ -14,11 +13,11 @@ async def inventory_get_endpoint():
 
 
 @router.post("/inventory", response_model=InventoryItemRead)
-async def inventory_post_endpoint(
-    sku: str = Body(min_length=1, max_length=64),
-    name: str = Body(min_length=1, max_length=255),
-    quantity: int = Body(default=0, ge=0),
-):
+async def inventory_post_endpoint(payload: InventoryItemCreate):
     """Create an inventory item and return the platform user that created it."""
 
-    return await inventory.create(sku=sku, name=name, quantity=quantity)
+    return await inventory.create(
+        sku=payload.sku,
+        name=payload.name,
+        quantity=payload.quantity,
+    )

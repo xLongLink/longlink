@@ -1,5 +1,7 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authsupport
+from src.errors import UnavailableError
+from src.operations import provisioning
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
 from src.database.services.users import users
@@ -27,4 +29,9 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> UserP
 
     params = payload.model_dump(exclude_unset=True)
     updated_user = await users.upsert(oidc=user.oidc, **params)
+    try:
+        await provisioning.sync_user_organizations(updated_user)
+    except Exception as exc:
+        raise UnavailableError("Failed to synchronize user profile") from exc
+
     return await users.profile(updated_user.id)

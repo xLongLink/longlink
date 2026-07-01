@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import Any
+from datetime import UTC, datetime, timedelta
 from src.logger import logger
 from src.operations import provisioning
 from src.models.statuses import ApplicationStatus
@@ -18,6 +20,80 @@ class ApplicationStartupState(str, Enum):
     pending = "pending"
     ready = "ready"
     dead = "dead"
+
+
+POD_ROLLOUT_GRACE_SECONDS = 30
+CRASHED_CONTAINER_REASONS = {
+    "CrashLoopBackOff",
+    "CreateContainerConfigError",
+    "RunContainerError",
+}
+
+
+def application_pods_startup_state(pods: list[Any], operation_created_at: datetime) -> ApplicationStartupState:
+    """Return the startup state for pods relevant to one verification operation."""
+
+    if operation_created_at.tzinfo is None:
+        operation_created_at = operation_created_at.replace(tzinfo=UTC)
+
+    relevant_created_after = operation_created_at - timedelta(seconds=POD_ROLLOUT_GRACE_SECONDS)
+    relevant_pods = []
+
+    # Ignore stale pods from older rollouts so they cannot fail a fresh verification operation.
+    for pod in pods:
+        metadata = getattr(pod, "metadata", None)
+        pod_created_at = getattr(metadata, "creation_timestamp", None)
+        if pod_created_at is None:
+            relevant_pods.append(pod)
+            continue
+
+        if pod_created_at.tzinfo is None:
+            pod_created_at = pod_created_at.replace(tzinfo=UTC)
+
+        if pod_created_at >= relevant_created_after:
+            relevant_pods.append(pod)
+
+    if not relevant_pods:
+        return ApplicationStartupState.pending
+
+    for pod in relevant_pods:
+        status = getattr(pod, "status", None)
+        if status is None:
+            continue
+
+        container_statuses = getattr(status, "container_statuses", None) or []
+        if status.phase == "Running" and container_statuses and all(container.ready for container in container_statuses):
+            return ApplicationStartupState.ready
+
+    dead_pods = 0
+    for pod in relevant_pods:
+        status = getattr(pod, "status", None)
+        if status is None:
+            continue
+
+        if status.phase in {"Failed", "Unknown"}:
+            dead_pods += 1
+            continue
+
+        pod_dead = False
+        for container in getattr(status, "container_statuses", None) or []:
+            state = container.state
+            if state is None:
+                continue
+
+            if state.waiting is not None and state.waiting.reason in CRASHED_CONTAINER_REASONS:
+                pod_dead = True
+
+            if state.terminated is not None and state.terminated.exit_code != 0:
+                pod_dead = True
+
+        if pod_dead:
+            dead_pods += 1
+
+    if dead_pods == len(relevant_pods):
+        return ApplicationStartupState.dead
+
+    return ApplicationStartupState.pending
 
 
 async def inspect_application_startup(operation: Operation) -> ApplicationStartupState:
@@ -47,37 +123,7 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     except KubernetesApiException:
         return ApplicationStartupState.pending
 
-    crashed_reasons = {
-        "CrashLoopBackOff",
-        "CreateContainerConfigError",
-        "ErrImagePull",
-        "ImagePullBackOff",
-        "RunContainerError",
-    }
-
-    for pod in pods:
-        if pod.status is None:
-            continue
-
-        if pod.status.phase in {"Failed", "Unknown"}:
-            return ApplicationStartupState.dead
-
-        statuses = pod.status.container_statuses or []
-        if pod.status.phase == "Running" and statuses and all(container.ready for container in statuses):
-            return ApplicationStartupState.ready
-
-        for container in pod.status.container_statuses or []:
-            state = container.state
-            if state is None:
-                continue
-
-            if state.waiting is not None and state.waiting.reason in crashed_reasons:
-                return ApplicationStartupState.dead
-
-            if state.terminated is not None and state.terminated.exit_code != 0:
-                return ApplicationStartupState.dead
-
-    return ApplicationStartupState.pending
+    return application_pods_startup_state(pods, operation.created_at)
 
 
 @operation_handler(OperationKind.application_create, step="verify")

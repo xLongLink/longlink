@@ -30,43 +30,6 @@ LongLink provides that structure. The platform defines the shared infrastructure
 The result is a faster, clearer, and more maintainable way to build internal applications.
 
 <br />
-
-## Benefits
-
-- Faster delivery: teams build on a shared platform instead of starting from a blank stack.
-- Clearer requirements: business processes are modeled as data, validation, permissions, actions, and workflow states.
-- Consistent user experience: applications share the same web runtime, routing, authentication, and interface patterns.
-- Lower maintenance cost: common concerns such as auth, storage, deployment, and operations are handled once by the platform.
-- Better governance: users, organizations, memberships, infrastructure, and application status are managed centrally.
-- Local-first development: developers can build and test applications locally before adding them to the platform.
-- Portable applications: the same application model works across testing, development, and production environments.
-- Scalable operations: the control plane provisions compute, database, and storage resources through adapters.
-- Safer evolution: applications can change with the business process while keeping a stable runtime and deployment model.
-
-## Testing
-
-Run the full project verification from the repository root:
-
-```bash
-make tests
-```
-
-Run narrower checks while working in one area:
-
-```bash
-cd api && ENVIRONMENT=testing uv run pytest tests
-cd sdk && uv run pytest tests
-bun test tests --cwd web
-bun run --cwd web typecheck
-```
-
-## Features
-
-- User managements
-- Permissions
--
-
-<br />
 <br />
 
 ---

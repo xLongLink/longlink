@@ -85,7 +85,7 @@ async def test_create_organization_initializes_database(
     # Arrange
     owner = users[0]
     client = clients[0]
-    calls: list[str] = []
+    calls: list[tuple[str, str, list[dict[str, object]] | None]] = []
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
 
@@ -97,8 +97,11 @@ async def test_create_organization_initializes_database(
             self.password = password
 
         async def database(self, organization: str) -> str:
-            calls.append(organization)
+            calls.append(("database", organization, None))
             return f"postgresql://db/{organization}"
+
+        async def sync_users(self, organization: str, users: list[dict[str, object]]) -> None:
+            calls.append(("sync_users", organization, users))
 
     monkeypatch.setattr("src.operations.provisioning.Postgres", FakePostgres)
 
@@ -110,7 +113,26 @@ async def test_create_organization_initializes_database(
 
     # Assert
     assert response.status_code == 200
-    assert calls == ["acme"]
+    synced_users = calls[1][2]
+    assert synced_users is not None
+    assert calls == [
+        ("database", "acme", None),
+        (
+            "sync_users",
+            "acme",
+            [
+                {
+                    "id": owner.id,
+                    "name": owner.name,
+                    "email": owner.email,
+                    "avatar": owner.avatar,
+                    "role_name": "owner",
+                    "created_at": synced_users[0]["created_at"],
+                    "updated_at": synced_users[0]["updated_at"],
+                }
+            ],
+        ),
+    ]
 
 
 async def test_get_organization_returns_member_payload(
@@ -375,10 +397,10 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
                 "name": "users",
                 "schema_name": "public",
                 "columns": [
-                    {"name": "id", "type": "integer", "nullable": False, "position": 1},
+                    {"name": "id", "type": "uuid", "nullable": False, "position": 1},
                     {"name": "email", "type": "character varying", "nullable": False, "position": 2},
                 ],
-                "rows": [{"id": 1, "email": "owner@example.com"}],
+                "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
             }
 
         async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[dict[str, object]]:
@@ -410,10 +432,10 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
             "name": "users",
             "schema_name": "public",
             "columns": [
-                {"name": "id", "type": "integer", "nullable": False, "position": 1},
+                {"name": "id", "type": "uuid", "nullable": False, "position": 1},
                 {"name": "email", "type": "character varying", "nullable": False, "position": 2},
             ],
-            "rows": [{"id": 1, "email": "owner@example.com"}],
+            "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
         }
     ]
     assert schema_response.status_code == 200

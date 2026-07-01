@@ -48,9 +48,12 @@ def test_init_adds_sample_inventory_migration() -> None:
 
         # Assert
         migrations = list((Path.cwd() / "sample-app" / "migrations").glob("*.py"))
+        migration_text = migrations[0].read_text(encoding="utf-8")
+
         assert result.exit_code == 0
         assert len(migrations) == 1
-        assert "inventory_items" in migrations[0].read_text(encoding="utf-8")
+        assert "inventory_items" in migration_text
+        assert 'sa.Column("created_id", sa.Uuid(), nullable=True)' in migration_text
 
 
 def test_init_adds_github_workflows_when_requested() -> None:

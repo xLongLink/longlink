@@ -19,7 +19,6 @@ from src.models.organizations import (OrganizationCreate, OrganizationDetails,
                                       OrganizationInvitationCreate)
 from src.database.models.users import User
 from src.database.models.databases import DatabaseRegistry
-from src.database.services.database import database as database_service
 from src.database.models.applications import Application
 from src.database.services.invitations import invitations
 from src.database.services.applications import applications
@@ -59,42 +58,12 @@ async def list_organization_database_resources(
     """Return database schemas and shared tables for one organization."""
 
     organization = await organization_access(organization_id, user)
-    application_rows = await applications.list(organization_id, user.id)
-    active_applications = [application for application, _ in application_rows]
+    registry = await provisioning.organization_database_registry(organization)
+    if registry is None:
+        return []
 
-    registries: dict[UUID, DatabaseRegistry] = {}
-    registry_applications: dict[UUID, list[Application]] = {}
-    fallback_registry: DatabaseRegistry | None = None
-
-    for application in active_applications:
-        registry = application.database_registry
-        if registry is None and application.database_registry_id is not None:
-            registry = await database_service.get(application.database_registry_id)
-
-        if registry is None:
-            if fallback_registry is None:
-                fallback_registry = await provisioning.latest_database_registry(organization.location_id)
-            registry = fallback_registry
-
-        if registry is None:
-            continue
-
-        registries[registry.id] = registry
-        registry_applications.setdefault(registry.id, []).append(application)
-
-    if not registries:
-        registry = await provisioning.latest_database_registry(organization.location_id)
-        if registry is None:
-            return []
-
-        registries[registry.id] = registry
-        registry_applications[registry.id] = []
-
-    rows: list[OrganizationDatabaseResourceResponse] = []
-    for registry_id, registry in registries.items():
-        rows.extend(await _database_resource_rows(organization, registry, registry_applications.get(registry_id, [])))
-
-    return rows
+    active_applications = await applications.list_by_organization(organization_id)
+    return await _database_resource_rows(organization, registry, active_applications)
 
 
 @router.get(
@@ -110,7 +79,7 @@ async def list_organization_database_resource_tables(
     """Return tables, columns, and preview rows for one organization database resource."""
 
     organization = await organization_access(organization_id, user)
-    registry = await _database_resource_registry(organization, resource_kind, resource_name, user)
+    registry = await provisioning.organization_database_registry(organization)
     if registry is None:
         raise NotFoundError("Database resource", resource_name)
 
@@ -240,40 +209,6 @@ async def _database_resource_rows(
     return rows
 
 
-async def _database_resource_registry(
-    organization: OrganizationDetails,
-    resource_kind: OrganizationDatabaseResourceKind,
-    resource_name: str,
-    user: User,
-) -> DatabaseRegistry | None:
-    """Return the database registry that should contain one organization database resource."""
-
-    application_rows = await applications.list(organization.id, user.id)
-    active_applications = [application for application, _ in application_rows]
-
-    if resource_kind == OrganizationDatabaseResourceKind.schema:
-        application = next((item for item in active_applications if item.slug == resource_name), None)
-        if application is not None:
-            if application.database_registry is not None:
-                return application.database_registry
-
-            if application.database_registry_id is not None:
-                registry = await database_service.get(application.database_registry_id)
-                if registry is not None:
-                    return registry
-
-    for application in active_applications:
-        if application.database_registry is not None:
-            return application.database_registry
-
-        if application.database_registry_id is not None:
-            registry = await database_service.get(application.database_registry_id)
-            if registry is not None:
-                return registry
-
-    return await provisioning.latest_database_registry(organization.location_id)
-
-
 def _unavailable_database_resource_rows(
     database_name: str,
     registry: DatabaseRegistry,
@@ -328,4 +263,3 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     await provisioning.create_organization_database(organization)
 
     return organization
-

@@ -1,12 +1,12 @@
 import secrets
 from uuid import UUID
-from .base import (Database, DatabaseCellValue, DatabaseTableData,
+from .base import (Database, DatabaseUser, DatabaseCellValue, DatabaseTableData,
                    DatabaseTableUsage, DatabaseSchemaUsage)
 from decimal import Decimal
 from hashlib import sha1
 from datetime import date, datetime
 from contextlib import asynccontextmanager
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from collections.abc import AsyncIterator
 from src.environments import env
 from sqlalchemy.engine import URL
@@ -143,11 +143,14 @@ class Postgres(Database):
 
         await conn.execute(text("""
             CREATE TABLE IF NOT EXISTS public.users (
-                id SERIAL PRIMARY KEY,
+                id UUID PRIMARY KEY,
                 email VARCHAR(254) NOT NULL,
                 name VARCHAR(255) NOT NULL,
-                created_at TIMESTAMPTZ DEFAULT NOW(),
-                updated_at TIMESTAMPTZ DEFAULT NOW()
+                avatar VARCHAR(2048) NOT NULL DEFAULT '',
+                role_name VARCHAR(32) NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL,
+                updated_at TIMESTAMPTZ NOT NULL,
+                deleted_at TIMESTAMPTZ
             )
         """))
 
@@ -156,6 +159,61 @@ class Postgres(Database):
         """Restrict default write access to the shared organization users table."""
 
         await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC"))
+
+
+    async def _sync_shared_users_table(self, conn: AsyncConnection, users: list[DatabaseUser]) -> None:
+        """Upsert active organization users and soft-delete stale rows."""
+
+        if users:
+            await conn.execute(
+                text("""
+                    INSERT INTO public.users (
+                        id,
+                        email,
+                        name,
+                        avatar,
+                        role_name,
+                        created_at,
+                        updated_at,
+                        deleted_at
+                    )
+                    VALUES (
+                        :id,
+                        :email,
+                        :name,
+                        :avatar,
+                        :role_name,
+                        :created_at,
+                        :updated_at,
+                        NULL
+                    )
+                    ON CONFLICT (id) DO UPDATE SET
+                        email = EXCLUDED.email,
+                        name = EXCLUDED.name,
+                        avatar = EXCLUDED.avatar,
+                        role_name = EXCLUDED.role_name,
+                        created_at = EXCLUDED.created_at,
+                        updated_at = EXCLUDED.updated_at,
+                        deleted_at = NULL
+                """),
+                [dict(user) for user in users],
+            )
+
+            active_user_ids = [user["id"] for user in users]
+            stale_statement = text("""
+                UPDATE public.users
+                SET deleted_at = NOW(), updated_at = NOW()
+                WHERE deleted_at IS NULL
+                AND id NOT IN :active_user_ids
+            """).bindparams(bindparam("active_user_ids", expanding=True))
+            await conn.execute(stale_statement, {"active_user_ids": active_user_ids})
+            return
+
+        await conn.execute(text("""
+            UPDATE public.users
+            SET deleted_at = NOW(), updated_at = NOW()
+            WHERE deleted_at IS NULL
+        """))
 
 
     async def _ensure_application_role(self, conn: AsyncConnection, role_name: str, password: str) -> None:
@@ -205,6 +263,17 @@ class Postgres(Database):
             await self._restrict_shared_users_table(conn)
 
         return self._url(database_name).render_as_string(hide_password=False)
+
+
+    async def sync_users(self, organization: str, users: list[DatabaseUser]) -> None:
+        """Synchronize the shared organization users table for one organization."""
+        await self._ensure_organization_database(organization)
+        database_name = dbname(organization)
+
+        async with self._connection(database_name) as conn:
+            await self._ensure_shared_users_table(conn)
+            await self._sync_shared_users_table(conn, users)
+            await self._restrict_shared_users_table(conn)
 
 
     async def schema(self, organization: str, application: str) -> str:

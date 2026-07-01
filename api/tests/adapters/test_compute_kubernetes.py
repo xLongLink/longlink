@@ -125,7 +125,7 @@ async def test_proxy_passes_json_body_as_decoded_value(monkeypatch) -> None:
         "inventory",
         "POST",
         [],
-        {"content-type": "application/json"},
+        {"content-type": "application/json", "content-length": "32"},
         b'{"sku":"sku-1","quantity":1}',
     )
 
