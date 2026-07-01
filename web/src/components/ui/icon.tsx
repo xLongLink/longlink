@@ -47,6 +47,7 @@ type IconProps = LucideProps & {
 
 const remoteIconCache = new Map<string, string>();
 const remoteIconRequests = new Map<string, Promise<string>>();
+const lucideIconAssetPath = '/lucide-icons/';
 
 const staticIconRegistry = {
     activity: Activity,
@@ -97,7 +98,7 @@ export function normalizeIconName(name: string): string {
         .replace(/^-+|-+$/g, '');
 }
 
-/** Returns a lazy Lucide icon component for a normalized icon name. */
+/** Returns a Lucide-compatible icon component for one normalized icon name. */
 export function createLucideIconComponent(name: string): LucideIcon | null {
     const normalizedName = normalizeIconName(name);
 
@@ -108,11 +109,6 @@ export function createLucideIconComponent(name: string): LucideIcon | null {
     return function IconComponent({ className, ...props }: LucideProps) {
         return <Icon name={normalizedName} className={className} {...props} />;
     } as LucideIcon;
-}
-
-/** Returns the SVG asset URL for one normalized Lucide icon name. */
-function iconAssetUrl(name: string): string {
-    return `/lucide-icons/${encodeURIComponent(name)}.svg`;
 }
 
 /** Returns a cached SVG request for one Lucide icon asset. */
@@ -129,23 +125,22 @@ function loadRemoteIcon(name: string): Promise<string> {
         return pendingRequest;
     }
 
-    const request = fetch(iconAssetUrl(name))
-        .then((response) => {
+    const request = (async () => {
+        try {
+            const response = await fetch(`${lucideIconAssetPath}${encodeURIComponent(name)}.svg`);
+
             if (!response.ok) {
                 throw new Error(`Failed to load icon "${name}"`);
             }
 
-            return response.text();
-        })
-        .then((svg) => {
+            const svg = await response.text();
             remoteIconCache.set(name, svg);
-            remoteIconRequests.delete(name);
+
             return svg;
-        })
-        .catch((error) => {
+        } finally {
             remoteIconRequests.delete(name);
-            throw error;
-        });
+        }
+    })();
 
     remoteIconRequests.set(name, request);
 
@@ -162,11 +157,6 @@ function renderRemoteIconMarkup(svg: string, className: string): string {
     return svg.replace('<svg ', `<svg class="${escapeSvgAttribute(className)}" aria-hidden="true" `);
 }
 
-/** Renders a fallback while a less-common Lucide icon SVG is fetched. */
-function IconFallback({ className, ...props }: LucideProps) {
-    return <Box aria-hidden={true} className={className} {...props} />;
-}
-
 /** Fetches and renders one non-static Lucide SVG asset. */
 function RemoteIcon({ className, name, ...props }: IconProps) {
     const [svg, setSvg] = useState(() => remoteIconCache.get(name) ?? '');
@@ -175,12 +165,7 @@ function RemoteIcon({ className, name, ...props }: IconProps) {
     useEffect(() => {
         let cancelled = false;
 
-        if (remoteIconCache.has(name)) {
-            setSvg(remoteIconCache.get(name) ?? '');
-            return;
-        }
-
-        setSvg('');
+        setSvg(remoteIconCache.get(name) ?? '');
         void loadRemoteIcon(name)
             .then((loadedSvg) => {
                 if (!cancelled) {
@@ -199,7 +184,7 @@ function RemoteIcon({ className, name, ...props }: IconProps) {
     }, [name]);
 
     if (!svg) {
-        return <IconFallback className={className} {...props} />;
+        return <Box aria-hidden={true} className={className} {...props} />;
     }
 
     return (

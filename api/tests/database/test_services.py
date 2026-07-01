@@ -163,6 +163,7 @@ async def test_storage_service_rejects_duplicate_registry_names(users: tuple) ->
         name="object-store",
         protocol="https",
         endpoint_url="https://storage.local.longlink.internal",
+        runtime_endpoint_url="https://storage.runtime.longlink.internal",
         access_key_id="access-key",
         secret_access_key="secret-key",
         location_id=local_location.id,
@@ -184,6 +185,7 @@ async def test_storage_service_rejects_duplicate_registry_names(users: tuple) ->
     # Assert
     assert str(exc.value) == "Storage registry already exists"
     assert first_registry.protocol == "https"
+    assert first_registry.runtime_endpoint_url == "https://storage.runtime.longlink.internal"
     assert len(await db.storage.list()) == 1
 
 

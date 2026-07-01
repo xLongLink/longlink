@@ -17,8 +17,9 @@ export default function ConnectStorageDialog() {
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('s3');
     const [name, setName] = useState('');
-    const [protocol, setProtocol] = useState('s3');
+    const [protocol, setProtocol] = useState('https');
     const [endpointUrl, setEndpointUrl] = useState('');
+    const [runtimeEndpointUrl, setRuntimeEndpointUrl] = useState('');
     const [accessKeyId, setAccessKeyId] = useState('');
     const [secretAccessKey, setSecretAccessKey] = useState('');
     const [locationId, setLocationId] = useState('');
@@ -47,6 +48,7 @@ export default function ConnectStorageDialog() {
                     name: name.trim(),
                     protocol: protocol.trim(),
                     endpoint_url: endpointUrl.trim(),
+                    runtime_endpoint_url: runtimeEndpointUrl.trim() || undefined,
                     access_key_id: accessKeyId.trim(),
                     secret_access_key: secretAccessKey,
                     location_id: locationId,
@@ -58,8 +60,9 @@ export default function ConnectStorageDialog() {
             setOpen(false);
             setKind('s3');
             setName('');
-            setProtocol('s3');
+            setProtocol('https');
             setEndpointUrl('');
+            setRuntimeEndpointUrl('');
             setAccessKeyId('');
             setSecretAccessKey('');
             setLocationId('');
@@ -116,12 +119,12 @@ export default function ConnectStorageDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="storage-protocol">Protocol</Label>
+                <Label htmlFor="storage-protocol">Endpoint protocol</Label>
                 <Input
                     id="storage-protocol"
                     value={protocol}
                     onChange={(event) => setProtocol(event.target.value)}
-                    placeholder="s3"
+                    placeholder="https"
                     autoComplete="off"
                 />
             </div>
@@ -133,6 +136,17 @@ export default function ConnectStorageDialog() {
                     value={endpointUrl}
                     onChange={(event) => setEndpointUrl(event.target.value)}
                     placeholder="https://s3.example.com"
+                    autoComplete="off"
+                />
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="storage-runtime-endpoint">Runtime endpoint URL</Label>
+                <Input
+                    id="storage-runtime-endpoint"
+                    value={runtimeEndpointUrl}
+                    onChange={(event) => setRuntimeEndpointUrl(event.target.value)}
+                    placeholder={endpointUrl || 'https://s3.example.com'}
                     autoComplete="off"
                 />
             </div>

@@ -281,8 +281,13 @@ async def _storage_resource_rows(
     try:
         storage_client = S3(registry.protocol, registry.endpoint_url, registry.access_key_id, registry.secret_access_key)
         bucket_names = set(await storage_client.buckets())
-    except Exception:
-        logger.exception("Failed to inspect storage resources for organization '%s'", organization.slug)
+    except Exception as exc:
+        logger.warning(
+            "Storage resources unavailable for organization '%s' through registry '%s': %s",
+            organization.slug,
+            registry.name,
+            exc,
+        )
         return _unavailable_storage_resource_rows(organization, registry, active_applications)
 
     expected_bucket_names: set[str] = set()

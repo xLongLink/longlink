@@ -8,6 +8,9 @@ type LucideIconModule = { __iconNode: LucideIconNode };
 type LucideIconImport = () => Promise<LucideIconModule>;
 
 let lucideIconImports: Promise<Record<string, LucideIconImport>> | null = null;
+const lucideIconAssetDirectory = 'lucide-icons';
+const lucideIconAssetPath = `/${lucideIconAssetDirectory}/`;
+// Keep this path opaque to TypeScript because Lucide does not ship types for this build-only submodule.
 const lucideIconImportsModule: string = 'lucide-react/dynamicIconImports.mjs';
 
 /** Returns Lucide's generated icon import table. */
@@ -39,6 +42,20 @@ function renderLucideSvg(iconNode: LucideIconNode): string {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${children}</svg>`;
 }
 
+/** Returns one named Lucide icon rendered as an SVG asset. */
+async function loadLucideSvg(iconName: string): Promise<string | null> {
+    const iconImports = await loadLucideIconImports();
+    const importIcon = iconImports[iconName];
+
+    if (!importIcon) {
+        return null;
+    }
+
+    const iconModule = await importIcon();
+
+    return renderLucideSvg(iconModule.__iconNode);
+}
+
 /** Serves and emits Lucide SVG assets without adding every icon to the JS graph. */
 function lucideIconAssets(): Plugin {
     return {
@@ -47,38 +64,41 @@ function lucideIconAssets(): Plugin {
             server.middlewares.use(async (request, response, next) => {
                 const requestUrl = new URL(request.url ?? '/', 'http://localhost');
 
-                if (!requestUrl.pathname.startsWith('/lucide-icons/') || !requestUrl.pathname.endsWith('.svg')) {
+                if (!requestUrl.pathname.startsWith(lucideIconAssetPath) || !requestUrl.pathname.endsWith('.svg')) {
                     next();
                     return;
                 }
 
                 const iconName = decodeURIComponent(
-                    requestUrl.pathname.slice('/lucide-icons/'.length).replace(/\.svg$/, '')
+                    requestUrl.pathname.slice(lucideIconAssetPath.length).replace(/\.svg$/, '')
                 );
-                const iconImports = await loadLucideIconImports();
-                const importIcon = iconImports[iconName];
+                const svg = await loadLucideSvg(iconName);
 
-                if (!importIcon) {
+                if (svg === null) {
                     response.statusCode = 404;
                     response.end('Icon not found');
                     return;
                 }
 
-                const iconModule = await importIcon();
                 response.setHeader('content-type', 'image/svg+xml; charset=utf-8');
                 response.setHeader('cache-control', 'no-cache');
-                response.end(renderLucideSvg(iconModule.__iconNode));
+                response.end(svg);
             });
         },
         async generateBundle() {
             const iconImports = await loadLucideIconImports();
 
-            for (const [iconName, importIcon] of Object.entries(iconImports)) {
-                const iconModule = await importIcon();
+            for (const iconName of Object.keys(iconImports)) {
+                const svg = await loadLucideSvg(iconName);
+
+                if (svg === null) {
+                    continue;
+                }
+
                 this.emitFile({
                     type: 'asset',
-                    fileName: `lucide-icons/${iconName}.svg`,
-                    source: renderLucideSvg(iconModule.__iconNode),
+                    fileName: `${lucideIconAssetDirectory}/${iconName}.svg`,
+                    source: svg,
                 });
             }
         },

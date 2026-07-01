@@ -12,7 +12,6 @@ class Envs(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./dev.db"
     DATABASE_SCHEMA: str | None = None
 
-    STORAGE_PROTOCOL: str = "file"
-    STORAGE_ENDPOINT_URL: str | None = None
-    STORAGE_ACCESS_KEY_ID: str | None = None
-    STORAGE_SECRET_ACCESS_KEY: str | None = None
+    STORAGE_URL: str = "file://"
+    STORAGE_BUCKET: str | None = None
+    STORAGE_SHARED_BUCKET: str | None = None

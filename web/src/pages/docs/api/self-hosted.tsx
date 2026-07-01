@@ -56,7 +56,8 @@ export const content = (
             Storage
         </Heading>
         <p className="leading-7">
-            Register storage backends after startup. The API reads bucket connection details from the storage registry.
+            Register storage backends after startup. The API uses the control-plane endpoint for bucket provisioning and
+            passes the runtime endpoint to application pods through <code>LONGLINK_STORAGE_URL</code>.
         </p>
         <Heading id="compute" level="h3">
             Compute

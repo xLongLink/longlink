@@ -51,6 +51,7 @@ class StorageService:
         secret_access_key: str,
         location_id: UUID,
         user: User,
+        runtime_endpoint_url: str | None = None,
     ) -> StorageRegistry:
         """Create one storage backend registration."""
 
@@ -69,6 +70,7 @@ class StorageService:
                 endpoint_url=endpoint_url,
                 access_key_id=access_key_id,
                 secret_access_key=secret_access_key,
+                runtime_endpoint_url=runtime_endpoint_url or endpoint_url,
                 location_id=location_id,
             )
             storage.created_id = user.id

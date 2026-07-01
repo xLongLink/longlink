@@ -5,19 +5,19 @@ from enum import Enum
 class ISICDivisionCode(str, Enum):
     """ISIC Rev.4 Divisions (Section + 2-digit division code)."""
 
-    # A — Agriculture, forestry and fishing
+    # A - Agriculture, forestry and fishing
     A01 = "A01"
     A02 = "A02"
     A03 = "A03"
 
-    # B — Mining and quarrying
+    # B - Mining and quarrying
     B05 = "B05"
     B06 = "B06"
     B07 = "B07"
     B08 = "B08"
     B09 = "B09"
 
-    # C — Manufacturing
+    # C - Manufacturing
     C10 = "C10"
     C11 = "C11"
     C12 = "C12"
@@ -43,37 +43,37 @@ class ISICDivisionCode(str, Enum):
     C32 = "C32"
     C33 = "C33"
 
-    # D — Electricity, gas, steam and air conditioning supply
+    # D - Electricity, gas, steam and air conditioning supply
     D35 = "D35"
 
-    # E — Water supply; sewerage, waste management and remediation
+    # E - Water supply; sewerage, waste management and remediation
     E36 = "E36"
     E37 = "E37"
     E38 = "E38"
     E39 = "E39"
 
-    # F — Construction
+    # F - Construction
     F41 = "F41"
     F42 = "F42"
     F43 = "F43"
 
-    # G — Wholesale and retail trade; repair of motor vehicles
+    # G - Wholesale and retail trade; repair of motor vehicles
     G45 = "G45"
     G46 = "G46"
     G47 = "G47"
 
-    # H — Transportation and storage
+    # H - Transportation and storage
     H49 = "H49"
     H50 = "H50"
     H51 = "H51"
     H52 = "H52"
     H53 = "H53"
 
-    # I — Accommodation and food service
+    # I - Accommodation and food service
     I55 = "I55"
     I56 = "I56"
 
-    # J — Information and communication
+    # J - Information and communication
     J58 = "J58"
     J59 = "J59"
     J60 = "J60"
@@ -81,15 +81,15 @@ class ISICDivisionCode(str, Enum):
     J62 = "J62"
     J63 = "J63"
 
-    # K — Financial and insurance activities
+    # K - Financial and insurance activities
     K64 = "K64"
     K65 = "K65"
     K66 = "K66"
 
-    # L — Real estate activities
+    # L - Real estate activities
     L68 = "L68"
 
-    # M — Professional, scientific and technical
+    # M - Professional, scientific and technical
     M69 = "M69"
     M70 = "M70"
     M71 = "M71"
@@ -98,7 +98,7 @@ class ISICDivisionCode(str, Enum):
     M74 = "M74"
     M75 = "M75"
 
-    # N — Administrative and support service
+    # N - Administrative and support service
     N77 = "N77"
     N78 = "N78"
     N79 = "N79"
@@ -106,33 +106,33 @@ class ISICDivisionCode(str, Enum):
     N81 = "N81"
     N82 = "N82"
 
-    # O — Public administration
+    # O - Public administration
     O84 = "O84"
 
-    # P — Education
+    # P - Education
     P85 = "P85"
 
-    # Q — Human health and social work
+    # Q - Human health and social work
     Q86 = "Q86"
     Q87 = "Q87"
     Q88 = "Q88"
 
-    # R — Arts, entertainment and recreation
+    # R - Arts, entertainment and recreation
     R90 = "R90"
     R91 = "R91"
     R92 = "R92"
     R93 = "R93"
 
-    # S — Other service activities
+    # S - Other service activities
     S94 = "S94"
     S95 = "S95"
     S96 = "S96"
 
-    # T — Households
+    # T - Households
     T97 = "T97"
     T98 = "T98"
 
-    # U — Extraterritorial organizations
+    # U - Extraterritorial organizations
     U99 = "U99"
 
 

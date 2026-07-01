@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from pydantic import Field, BaseModel
+from pydantic import BaseModel
 
 ICON_WORD_BOUNDARY = re.compile(r"([a-z0-9])([A-Z])")
 ICON_NON_SLUG = re.compile(r"[^a-zA-Z0-9]+")
@@ -1926,14 +1926,13 @@ class Icon(str, Enum):
 
 
 ICON_SLUGS = tuple(icon.value for icon in Icon)
-ICON_SLUG_SET = frozenset(ICON_SLUGS)
 
 
 class IconCatalog(BaseModel):
     """Represent the icon slugs supported by the web runtime."""
 
     # Metadata
-    icons: list[Icon] = Field(default_factory=list)
+    icons: list[Icon]
 
 
 def normalize_icon_slug(icon: str | Icon) -> str:
@@ -1961,9 +1960,3 @@ def parse_icon(icon: str | Icon | None) -> Icon | None:
         return Icon(normalized_icon)
     except ValueError as exc:
         raise ValueError("Icon must be a valid Lucide icon slug") from exc
-
-
-def is_valid_icon_slug(icon: str | Icon) -> bool:
-    """Return whether an icon slug is supported by the web runtime."""
-
-    return normalize_icon_slug(icon) in ICON_SLUG_SET

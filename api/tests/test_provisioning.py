@@ -1,5 +1,6 @@
+from types import SimpleNamespace
 from urllib.parse import urlsplit, parse_qsl
-from src.operations.provisioning import runtime_database_url
+from src.operations.provisioning import runtime_database_url, runtime_storage_url
 
 
 def _query_dict(url: str) -> dict[str, list[str]]:
@@ -40,3 +41,18 @@ def test_runtime_database_url_case_insensitive_sslmode_filter() -> None:
     assert "SSLMODE" not in converted
     assert "sslmode" not in converted
     assert _query_dict(converted) == {"target_session_attrs": ["read-write"]}
+
+
+def test_runtime_storage_url_uses_runtime_endpoint_and_escaped_credentials() -> None:
+    """Build a storage URL from runtime endpoint and registry credentials."""
+
+    registry = SimpleNamespace(
+        endpoint_url="https://storage.control.longlink.internal",
+        runtime_endpoint_url="http://storage.runtime.longlink.internal:19000",
+        access_key_id="access/key",
+        secret_access_key="secret@key",
+    )
+
+    assert runtime_storage_url(registry) == (
+        "s3+http://access%2Fkey:secret%40key@storage.runtime.longlink.internal:19000"
+    )

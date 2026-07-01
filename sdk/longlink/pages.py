@@ -20,9 +20,6 @@ class PageDefinition:
     icon: str | None = None
 
 
-page_registry: list[PageDefinition] = []
-
-
 def _normalize_metadata_value(value: str | None) -> str | None:
     """Return a trimmed metadata value, or None when blank or missing."""
 
@@ -51,30 +48,6 @@ def extract_longlink_metadata(xml_content: str) -> tuple[str | None, str | None]
         _normalize_metadata_value(root.get("name")),
         _normalize_metadata_value(root.get("icon")),
     )
-
-
-def register_page(
-    path: str,
-    handler: Callable[..., Any],
-    *,
-    name: str | None = None,
-    icon: str | None = None,
-) -> str:
-    """Register one XML page for metadata and return its normalized path."""
-
-    normalized_path = normalize_page_path(path)
-
-    # Keep the latest handler for a path when tests or reloads create multiple app instances.
-    page_registry[:] = [page for page in page_registry if page.path != normalized_path]
-    page_registry.append(
-        PageDefinition(
-            path=normalized_path,
-            handler=handler,
-            name=_normalize_metadata_value(name),
-            icon=_normalize_metadata_value(icon),
-        )
-    )
-    return normalized_path
 
 
 def normalize_page_path(path: str) -> str:

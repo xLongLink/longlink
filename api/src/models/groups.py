@@ -5,7 +5,7 @@ from enum import Enum
 class ISICGroupCode(str, Enum):
     """ISIC Rev.4 Groups (Section + 3-digit group code)."""
 
-    # A — Agriculture, forestry and fishing
+    # A - Agriculture, forestry and fishing
     A011 = "A011"
     A012 = "A012"
     A013 = "A013"
@@ -20,7 +20,7 @@ class ISICGroupCode(str, Enum):
     A031 = "A031"
     A032 = "A032"
 
-    # B — Mining and quarrying
+    # B - Mining and quarrying
     B051 = "B051"
     B052 = "B052"
     B061 = "B061"
@@ -32,7 +32,7 @@ class ISICGroupCode(str, Enum):
     B091 = "B091"
     B099 = "B099"
 
-    # C — Manufacturing
+    # C - Manufacturing
     C101 = "C101"
     C102 = "C102"
     C103 = "C103"
@@ -293,7 +293,7 @@ class ISICGroupCode(str, Enum):
 class ISICGroupName(str, Enum):
     """ISIC Rev.4 Group names (3-digit level)."""
 
-    # A — Agriculture, forestry and fishing
+    # A - Agriculture, forestry and fishing
     A011 = "Growing of non-perennial crops"
     A012 = "Growing of perennial crops"
     A013 = "Plant propagation"
@@ -308,7 +308,7 @@ class ISICGroupName(str, Enum):
     A031 = "Fishing"
     A032 = "Aquaculture"
 
-    # B — Mining and quarrying
+    # B - Mining and quarrying
     B051 = "Mining of hard coal"
     B052 = "Mining of lignite"
     B061 = "Extraction of crude petroleum"
@@ -320,7 +320,7 @@ class ISICGroupName(str, Enum):
     B091 = "Support activities for petroleum and natural gas extraction"
     B099 = "Support activities for other mining and quarrying"
 
-    # C — Manufacturing
+    # C - Manufacturing
     C101 = "Processing and preserving of meat"
     C102 = "Processing and preserving of fish, crustaceans and molluscs"
     C103 = "Processing and preserving of fruit and vegetables"
@@ -395,12 +395,12 @@ class ISICGroupName(str, Enum):
     C331 = "Repair of fabricated metal products, machinery and equipment"
     C332 = "Installation of industrial machinery and equipment"
 
-    # D — Electricity, gas, steam and air conditioning supply
+    # D - Electricity, gas, steam and air conditioning supply
     D351 = "Electric power generation, transmission and distribution"
     D352 = "Manufacture of gas; distribution of gaseous fuels through mains"
     D353 = "Steam and air conditioning supply"
 
-    # E — Water supply; sewerage, waste management and remediation
+    # E - Water supply; sewerage, waste management and remediation
     E360 = "Water collection, treatment and supply"
     E370 = "Sewerage"
     E381 = "Waste collection"
@@ -408,7 +408,7 @@ class ISICGroupName(str, Enum):
     E383 = "Materials recovery"
     E390 = "Remediation activities and other waste management services"
 
-    # F — Construction
+    # F - Construction
     F410 = "Construction of buildings"
     F421 = "Construction of roads and railways"
     F422 = "Construction of utility projects"
@@ -418,7 +418,7 @@ class ISICGroupName(str, Enum):
     F433 = "Building completion and finishing"
     F439 = "Other specialized construction activities"
 
-    # G — Wholesale and retail trade; repair of motor vehicles
+    # G - Wholesale and retail trade; repair of motor vehicles
     G451 = "Sale of motor vehicles"
     G452 = "Maintenance and repair of motor vehicles"
     G453 = "Sale of motor vehicle parts and accessories"
@@ -440,7 +440,7 @@ class ISICGroupName(str, Enum):
     G478 = "Retail sale via stalls and markets"
     G479 = "Retail trade not in stores, stalls or markets"
 
-    # H — Transportation and storage
+    # H - Transportation and storage
     H491 = "Passenger rail transport, interurban"
     H492 = "Freight rail transport"
     H493 = "Other land transport"
@@ -453,7 +453,7 @@ class ISICGroupName(str, Enum):
     H531 = "Postal activities under universal service obligation"
     H532 = "Other postal and courier activities"
 
-    # I — Accommodation and food service activities
+    # I - Accommodation and food service activities
     I551 = "Short term accommodation activities"
     I552 = "Camping grounds, recreational vehicle parks and trailer parks"
     I559 = "Other accommodation"
@@ -461,7 +461,7 @@ class ISICGroupName(str, Enum):
     I562 = "Event catering and other food service activities"
     I563 = "Beverage serving activities"
 
-    # J — Information and communication
+    # J - Information and communication
     J581 = "Publishing of books, periodicals and other publishing activities"
     J582 = "Software publishing"
     J591 = "Motion picture, video and television programme activities"
@@ -476,7 +476,7 @@ class ISICGroupName(str, Enum):
     J631 = "Data processing, hosting and related activities; web portals"
     J639 = "Other information service activities"
 
-    # K — Financial and insurance activities
+    # K - Financial and insurance activities
     K641 = "Monetary intermediation"
     K642 = "Activities of holding companies"
     K643 = "Trusts, funds and similar financial entities"
@@ -488,11 +488,11 @@ class ISICGroupName(str, Enum):
     K662 = "Activities auxiliary to insurance and pension funding"
     K663 = "Fund management activities"
 
-    # L — Real estate activities
+    # L - Real estate activities
     L681 = "Buying and selling of own real estate"
     L682 = "Real estate activities on a fee or contract basis"
 
-    # M — Professional, scientific and technical activities
+    # M - Professional, scientific and technical activities
     M691 = "Legal activities"
     M692 = "Accounting, bookkeeping and auditing activities; tax consultancy"
     M701 = "Activities of head offices"
@@ -508,7 +508,7 @@ class ISICGroupName(str, Enum):
     M749 = "Other professional, scientific and technical activities n.e.c."
     M750 = "Veterinary activities"
 
-    # N — Administrative and support service activities
+    # N - Administrative and support service activities
     N771 = "Renting and leasing of motor vehicles"
     N772 = "Renting and leasing of personal and household goods"
     N773 = "Renting and leasing of other machinery, equipment and tangible goods"
@@ -529,12 +529,12 @@ class ISICGroupName(str, Enum):
     N823 = "Organization of conventions and trade shows"
     N829 = "Business support service activities n.e.c."
 
-    # O — Public administration and defence
+    # O - Public administration and defence
     O841 = "Administration of the State and the economic and social policy of the community"
     O842 = "Provision of services to the community as a whole"
     O843 = "Compulsory social security activities"
 
-    # P — Education
+    # P - Education
     P851 = "Pre-primary and primary education"
     P852 = "Secondary education"
     P853 = "Higher education"
@@ -543,7 +543,7 @@ class ISICGroupName(str, Enum):
     P856 = "Educational support activities (non-formal)"  # rare subdivision in practice
     P857 = "Other education n.e.c."  # used in some national mappings
 
-    # Q — Human health and social work activities
+    # Q - Human health and social work activities
     Q861 = "Hospital activities"
     Q862 = "Medical and dental practice activities"
     Q869 = "Other human health activities"
@@ -554,14 +554,14 @@ class ISICGroupName(str, Enum):
     Q881 = "Social work activities without accommodation for the elderly and disabled"
     Q889 = "Other social work activities without accommodation"
 
-    # R — Arts, entertainment and recreation
+    # R - Arts, entertainment and recreation
     R900 = "Creative, arts and entertainment activities"
     R910 = "Libraries, archives, museums and other cultural activities"
     R920 = "Gambling and betting activities"
     R931 = "Sports activities"
     R932 = "Other amusement and recreation activities"
 
-    # S — Other service activities
+    # S - Other service activities
     S941 = "Activities of business, employers and professional membership organizations"
     S942 = "Activities of trade unions"
     S949 = "Activities of other membership organizations"
@@ -569,10 +569,10 @@ class ISICGroupName(str, Enum):
     S952 = "Repair of personal and household goods"
     S960 = "Other personal service activities"
 
-    # T — Households
+    # T - Households
     T970 = "Activities of households as employers of domestic personnel"
     T981 = "Undifferentiated goods-producing activities of private households for own use"
     T982 = "Undifferentiated service-producing activities of private households for own use"
 
-    # U — Extraterritorial organizations
+    # U - Extraterritorial organizations
     U990 = "Activities of extraterritorial organizations and bodies"

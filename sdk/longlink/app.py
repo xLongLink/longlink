@@ -1,8 +1,7 @@
 from typing import Any
 from fastapi import FastAPI
 from pathlib import Path
-from longlink.pages import (XMLResponse, PageDefinition, page_registry,
-                            normalize_page_path, extract_longlink_metadata)
+from longlink.pages import XMLResponse, PageDefinition, normalize_page_path, extract_longlink_metadata
 from longlink.utils import Envs
 from longlink.routes import routes
 from fastapi.responses import FileResponse
@@ -46,7 +45,7 @@ class LongLink(FastAPI):
         super().__init__(**kwargs)
 
         environments = env if isinstance(env, Envs) else Envs()
-        self.state.page_registry = list(page_registry)
+        self.state.page_registry: list[PageDefinition] = []
 
         for router in routes:
             self.include_router(router)

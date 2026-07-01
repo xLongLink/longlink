@@ -13,6 +13,7 @@ dependencies = [
     "pydantic",
     "pydantic-settings",
     "fsspec",
+    "s3fs",
     "fastapi>=0.138.0",
     "aiosqlite",
     "asyncpg",

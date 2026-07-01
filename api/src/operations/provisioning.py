@@ -1,9 +1,11 @@
 from uuid import UUID
 from datetime import UTC, datetime
+from urllib.parse import quote, urlsplit, urlunsplit
 from src.utils import names, images
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from sqlalchemy.engine import make_url
+from src.utils.namespace import s3name
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
 from src.adapters.database import Postgres
@@ -29,10 +31,9 @@ PLATFORM_ENVIRONMENT_NAMES = {
     "LONGLINK_DATABASE_SCHEMA",
     "LONGLINK_DATABASE_URL",
     "LONGLINK_ENV",
-    "LONGLINK_STORAGE_ACCESS_KEY_ID",
-    "LONGLINK_STORAGE_ENDPOINT_URL",
-    "LONGLINK_STORAGE_PROTOCOL",
-    "LONGLINK_STORAGE_SECRET_ACCESS_KEY",
+    "LONGLINK_STORAGE_BUCKET",
+    "LONGLINK_STORAGE_SHARED_BUCKET",
+    "LONGLINK_STORAGE_URL",
 }
 
 
@@ -180,7 +181,23 @@ def runtime_database_url(database_url: str) -> str:
     return url.render_as_string(hide_password=False)
 
 
+def runtime_storage_url(storage_registry: StorageRegistry) -> str:
+    """Return a storage URL compatible with the SDK runtime."""
+
+    endpoint_url = storage_registry.runtime_endpoint_url or storage_registry.endpoint_url
+    endpoint = urlsplit(endpoint_url)
+    if not endpoint.scheme or not endpoint.netloc:
+        raise ValueError(f"Invalid storage runtime endpoint URL: {endpoint_url}")
+
+    # Store credentials in the runtime URL while preserving the endpoint URL shape for fsspec.
+    access_key_id = quote(storage_registry.access_key_id, safe="")
+    secret_access_key = quote(storage_registry.secret_access_key, safe="")
+    netloc = f"{access_key_id}:{secret_access_key}@{endpoint.netloc}"
+    return urlunsplit((f"s3+{endpoint.scheme}", netloc, endpoint.path, endpoint.query, endpoint.fragment))
+
+
 def runtime_environment(
+    organization_slug: str,
     application_slug: str,
     database_url: str,
     storage_registry: StorageRegistry | None,
@@ -196,10 +213,9 @@ def runtime_environment(
     if storage_registry is not None:
         environment.update(
             {
-                "LONGLINK_STORAGE_PROTOCOL": storage_registry.protocol,
-                "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.endpoint_url,
-                "LONGLINK_STORAGE_ACCESS_KEY_ID": storage_registry.access_key_id,
-                "LONGLINK_STORAGE_SECRET_ACCESS_KEY": storage_registry.secret_access_key,
+                "LONGLINK_STORAGE_URL": runtime_storage_url(storage_registry),
+                "LONGLINK_STORAGE_BUCKET": s3name(f"{organization_slug}-{application_slug}"),
+                "LONGLINK_STORAGE_SHARED_BUCKET": s3name(f"{organization_slug}-shared"),
             }
         )
 
@@ -306,7 +322,7 @@ async def create_application_runtime(
 
         database_url = await db_client.schema(organization.slug, application_slug)
         runtime_envs = runtime_environment(
-            application_slug, database_url, storage_registry
+            organization.slug, application_slug, database_url, storage_registry
         )
         await k8s.application(
             organization.slug,
@@ -425,7 +441,7 @@ async def sync_application_runtime(
 
         database_url = await db_client.schema(organization.slug, application.slug)
         runtime_envs = runtime_environment(
-            application.slug, database_url, storage_registry
+            organization.slug, application.slug, database_url, storage_registry
         )
         await k8s.application(
             organization.slug,

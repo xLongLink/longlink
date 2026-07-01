@@ -5,8 +5,18 @@ from pathlib import Path
 from contextlib import suppress, asynccontextmanager
 from src.errors import register_error_handlers
 from src.logger import logger
-from src.routes import (auth, image, icons, users, health, accounts, computes,
-                        storages, databases, locations)
+from src.routes import (
+    auth,
+    image,
+    icons,
+    users,
+    health,
+    accounts,
+    computes,
+    storages,
+    databases,
+    locations,
+)
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations import execute

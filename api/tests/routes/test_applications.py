@@ -291,7 +291,8 @@ async def test_create_app_returns_app_response(
         kind=StorageKind.s3,
         name="remote",
         protocol="http",
-        endpoint_url="http://storage.remote.longlink.internal",
+        endpoint_url="http://storage.control.longlink.internal",
+        runtime_endpoint_url="http://storage.runtime.longlink.internal:19000",
         access_key_id="storage-access",
         secret_access_key="storage-secret",
         location_id=remote_location.id,
@@ -431,7 +432,7 @@ async def test_create_app_returns_app_response(
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
     assert captured["storage"] == {
         "protocol": "http",
-        "endpoint_url": "http://storage.remote.longlink.internal",
+        "endpoint_url": "http://storage.control.longlink.internal",
         "access_key_id": "storage-access",
         "secret_access_key": "storage-secret",
     }
@@ -461,10 +462,9 @@ async def test_create_app_returns_app_response(
             "LONGLINK_DATABASE_SCHEMA": "dashboard",
             "LONGLINK_DATABASE_URL": "postgresql+asyncpg://fake",
             "LONGLINK_ENV": "production",
-            "LONGLINK_STORAGE_ACCESS_KEY_ID": "storage-access",
-            "LONGLINK_STORAGE_ENDPOINT_URL": "http://storage.remote.longlink.internal",
-            "LONGLINK_STORAGE_PROTOCOL": "http",
-            "LONGLINK_STORAGE_SECRET_ACCESS_KEY": "storage-secret",
+            "LONGLINK_STORAGE_BUCKET": "longlink-acme-dashboard",
+            "LONGLINK_STORAGE_SHARED_BUCKET": "longlink-acme-shared",
+            "LONGLINK_STORAGE_URL": "s3+http://storage-access:storage-secret@storage.runtime.longlink.internal:19000",
             "PORT": "8080",
         },
     }

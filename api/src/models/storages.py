@@ -49,9 +49,12 @@ class StorageRegistryCreate(BaseModel):
     kind: StorageKind
     name: str
     protocol: str
+
+    # Connection
     endpoint_url: str
     access_key_id: str
     secret_access_key: str
+    runtime_endpoint_url: str | None = None
 
     # Relationships
     location_id: UUID
@@ -108,8 +111,11 @@ class StorageRegistryResponse(BaseModel):
     name: str
     slug: str
     protocol: str
+
+    # Connection
     endpoint_url: str
     access_key_id: str
+    runtime_endpoint_url: str
 
     # Relationships
     location_id: UUID

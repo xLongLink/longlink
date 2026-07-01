@@ -1,4 +1,4 @@
-.PHONY: up down build api\:build sdk\:build sdk\:image seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests api\:tests sdk\:tests web\:tests pyright api\:pyright sdk\:pyright
+.PHONY: up down local-services build api\:build sdk\:build sdk\:image seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests api\:tests sdk\:tests web\:tests pyright api\:pyright sdk\:pyright
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
@@ -146,6 +146,33 @@ up:
 	@printf "Keycloak is ready.\n"
 
 
+# Start local services required by migrations and seeded app runtime resources.
+local-services:
+	docker compose -f dev/compose.yml up -d postgres minio
+	@printf "Waiting for Postgres...\n"
+	@attempt=1; \
+	while ! docker compose -f dev/compose.yml exec -T postgres pg_isready -U admin >/dev/null 2>&1; do \
+		if [ "$$attempt" -ge 60 ]; then \
+			printf "Postgres did not become ready after %s attempts.\n" "$$attempt"; \
+			exit 1; \
+		fi; \
+		attempt=$$((attempt + 1)); \
+		sleep 1; \
+	done
+	@printf "Postgres is ready.\n"
+	@printf "Waiting for MinIO...\n"
+	@attempt=1; \
+	while ! curl --fail --silent --output /dev/null http://localhost:19000/minio/health/ready; do \
+		if [ "$$attempt" -ge 60 ]; then \
+			printf "MinIO did not become ready after %s attempts.\n" "$$attempt"; \
+			exit 1; \
+		fi; \
+		attempt=$$((attempt + 1)); \
+		sleep 1; \
+	done
+	@printf "MinIO is ready.\n"
+
+
 # Stop local services, remove the cluster, and clean Python caches.
 down:
 	rm -f api/dev.db
@@ -157,7 +184,7 @@ down:
 
 
 # Run the local control plane API server.
-api: sdk\:image
+api: local-services sdk\:image
 	cd api && uv sync --extra dev
 	cd api && DEVELOPMENT=true uv run alembic upgrade head
 	cd api && DEVELOPMENT=true uv run python seed.py
@@ -165,7 +192,7 @@ api: sdk\:image
 
 
 # Build the local SDK app image, then run local control-plane migrations and seed data.
-seed: sdk\:image
+seed: local-services sdk\:image
 	cd api && uv sync --extra dev
 	cd api && DEVELOPMENT=true uv run alembic upgrade head
 	cd api && DEVELOPMENT=true uv run python seed.py

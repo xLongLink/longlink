@@ -135,7 +135,7 @@ LongLink applications are built locally first, then packaged and added to the pl
 
 The packaged image is the handoff between the SDK and the control plane. In local development, the application uses SQLite, local `fsspec` storage, seeded users, and local settings. In tests, it uses isolated in-memory services. In production, the platform provides runtime secrets, database access, storage configuration, routing, and deployment. The SDK storage layer uses `fsspec`, so application code can work with local, testing, and production filesystems through one interface.
 
-The SDK exposes application metadata through `/metadata.json`. Page routes registered with the SDK router are collected into that metadata, so the embedded web runtime can discover and render the application's pages. Page handlers return XML content, while normal FastAPI routes can still provide API behavior for the application.
+The SDK exposes application metadata through `/metadata.json`. XML files discovered from the SDK pages directory are collected into that metadata, so the embedded web runtime can discover and render the application's pages. Normal FastAPI routes can still provide API behavior for the application.
 
 | Area            | Testing                  | Development               | Production                               |
 | --------------- | ------------------------ | ------------------------- | ---------------------------------------- |

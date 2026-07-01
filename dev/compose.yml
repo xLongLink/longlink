@@ -15,7 +15,7 @@ services:
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: admin
+      MINIO_ROOT_PASSWORD: adminadmin
     ports:
       - "19000:9000"
       - "19001:9001"

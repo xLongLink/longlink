@@ -14,28 +14,3 @@ class Router(APIRouter):
         """Include a nested router."""
 
         return super().include_router(router, **kwargs)
-
-    def page(
-        self,
-        path: str,
-        *,
-        name: str | None = None,
-        icon: str | None = None,
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a GET route that serves an XML page."""
-
-        from longlink.pages import XMLResponse, register_page
-
-        normalized_path = path
-
-        def decorator(endpoint: Callable[..., Any]) -> Callable[..., Any]:
-            """Attach the endpoint to the router and page registry."""
-
-            # Keep page metadata available for `metadata.json`.
-            registered_path = register_page(normalized_path, endpoint, name=name, icon=icon)
-
-            # Register the XML page endpoint on this router.
-            self.add_api_route(registered_path, endpoint, methods=["GET"], response_class=XMLResponse)
-            return endpoint
-
-        return decorator

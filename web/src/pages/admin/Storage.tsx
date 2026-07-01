@@ -34,6 +34,11 @@ const storageColumnsBase: Array<ColumnDef<ApiStorageRegistry & { location?: ApiL
                     <div className="min-w-0">
                         <div className="truncate font-medium text-foreground">{storage.name}</div>
                         <div className="truncate text-xs text-muted-foreground">{storage.endpoint_url}</div>
+                        {storage.runtime_endpoint_url !== storage.endpoint_url ? (
+                            <div className="truncate text-xs text-muted-foreground">
+                                Runtime: {storage.runtime_endpoint_url}
+                            </div>
+                        ) : null}
                     </div>
                 </Link>
             );

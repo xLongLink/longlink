@@ -103,8 +103,9 @@ def main() -> None:
                 "name": "local",
                 "protocol": "http",
                 "endpoint_url": "http://localhost:19000",
+                "runtime_endpoint_url": "http://host.k3d.internal:19000",
                 "access_key_id": "admin",
-                "secret_access_key": "admin",
+                "secret_access_key": "adminadmin",
                 "location_id": location_id,
             },
         )

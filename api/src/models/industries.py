@@ -5,7 +5,7 @@ from enum import Enum
 class ISICClassCode(str, Enum):
     """ISIC Rev.4 Classes (Section + 4-digit code)."""
 
-    # A — Agriculture, forestry and fishing
+    # A - Agriculture, forestry and fishing
 
     A0111 = "A0111"
     A0112 = "A0112"
@@ -51,7 +51,7 @@ class ISICClassCode(str, Enum):
     A0321 = "A0321"
     A0322 = "A0322"
 
-    # B — Mining and quarrying
+    # B - Mining and quarrying
 
     B0510 = "B0510"
     B0520 = "B0520"
@@ -68,7 +68,7 @@ class ISICClassCode(str, Enum):
     B0910 = "B0910"
     B0990 = "B0990"
 
-    # C — Manufacturing
+    # C - Manufacturing
 
     C1010 = "C1010"
     C1020 = "C1020"
@@ -238,13 +238,13 @@ class ISICClassCode(str, Enum):
     C3319 = "C3319"
     C3320 = "C3320"
 
-    # D — Electricity, gas, steam and air conditioning supply
+    # D - Electricity, gas, steam and air conditioning supply
 
     D3510 = "D3510"
     D3520 = "D3520"
     D3530 = "D3530"
 
-    # E — Water supply; sewerage, waste management and remediation
+    # E - Water supply; sewerage, waste management and remediation
 
     E3600 = "E3600"
     E3700 = "E3700"
@@ -255,7 +255,7 @@ class ISICClassCode(str, Enum):
     E3830 = "E3830"
     E3900 = "E3900"
 
-    # F — Construction
+    # F - Construction
 
     F4100 = "F4100"
     F4210 = "F4210"
@@ -269,7 +269,7 @@ class ISICClassCode(str, Enum):
     F4330 = "F4330"
     F4390 = "F4390"
 
-    # G — Wholesale and retail trade; repair of motor vehicles
+    # G - Wholesale and retail trade; repair of motor vehicles
 
     G4510 = "G4510"
     G4520 = "G4520"
@@ -321,7 +321,7 @@ class ISICClassCode(str, Enum):
     G4791 = "G4791"
     G4799 = "G4799"
 
-    # H — Transportation and storage
+    # H - Transportation and storage
 
     H4911 = "H4911"
     H4912 = "H4912"
@@ -344,7 +344,7 @@ class ISICClassCode(str, Enum):
     H5310 = "H5310"
     H5320 = "H5320"
 
-    # I — Accommodation and food service activities
+    # I - Accommodation and food service activities
 
     I5510 = "I5510"
     I5520 = "I5520"
@@ -354,7 +354,7 @@ class ISICClassCode(str, Enum):
     I5629 = "I5629"
     I5630 = "I5630"
 
-    # J — Information and communication
+    # J - Information and communication
 
     J5811 = "J5811"
     J5812 = "J5812"
@@ -380,7 +380,7 @@ class ISICClassCode(str, Enum):
     J6391 = "J6391"
     J6399 = "J6399"
 
-    # K — Financial and insurance activities
+    # K - Financial and insurance activities
 
     K6411 = "K6411"
     K6419 = "K6419"
@@ -401,12 +401,12 @@ class ISICClassCode(str, Enum):
     K6629 = "K6629"
     K6630 = "K6630"
 
-    # L — Real estate activities
+    # L - Real estate activities
 
     L6810 = "L6810"
     L6820 = "L6820"
 
-    # M — Professional, scientific and technical activities
+    # M - Professional, scientific and technical activities
 
     M6910 = "M6910"
     M6920 = "M6920"
@@ -423,7 +423,7 @@ class ISICClassCode(str, Enum):
     M7490 = "M7490"
     M7500 = "M7500"
 
-    # N — Administrative and support service activities
+    # N - Administrative and support service activities
 
     N7710 = "N7710"
     N7721 = "N7721"
@@ -452,7 +452,7 @@ class ISICClassCode(str, Enum):
     N8292 = "N8292"
     N8299 = "N8299"
 
-    # O — Public administration and defence
+    # O - Public administration and defence
 
     O8411 = "O8411"
     O8412 = "O8412"
@@ -462,7 +462,7 @@ class ISICClassCode(str, Enum):
     O8423 = "O8423"
     O8430 = "O8430"
 
-    # P — Education
+    # P - Education
 
     P8510 = "P8510"
     P8521 = "P8521"
@@ -474,7 +474,7 @@ class ISICClassCode(str, Enum):
     P8550 = "P8550"
     P8560 = "P8560"
 
-    # Q — Human health and social work activities
+    # Q - Human health and social work activities
 
     Q8610 = "Q8610"
     Q8620 = "Q8620"
@@ -486,7 +486,7 @@ class ISICClassCode(str, Enum):
     Q8810 = "Q8810"
     Q8890 = "Q8890"
 
-    # R — Arts, entertainment and recreation
+    # R - Arts, entertainment and recreation
 
     R9000 = "R9000"
     R9101 = "R9101"
@@ -498,7 +498,7 @@ class ISICClassCode(str, Enum):
     R9321 = "R9321"
     R9329 = "R9329"
 
-    # S — Other service activities
+    # S - Other service activities
 
     S9411 = "S9411"
     S9412 = "S9412"
@@ -518,13 +518,13 @@ class ISICClassCode(str, Enum):
     S9603 = "S9603"
     S9609 = "S9609"
 
-    # T — Households
+    # T - Households
 
     T9700 = "T9700"
     T9810 = "T9810"
     T9820 = "T9820"
 
-    # U — Extraterritorial organizations
+    # U - Extraterritorial organizations
 
     U9900 = "U9900"
 
@@ -532,7 +532,7 @@ class ISICClassCode(str, Enum):
 class ISICClassName(str, Enum):
     """ISIC Rev.4 Class names (4-digit level)."""
 
-    # A — Agriculture, forestry and fishing
+    # A - Agriculture, forestry and fishing
 
     A0111 = "Growing of cereals (except rice), leguminous crops and oil seeds"
     A0112 = "Growing of rice"
@@ -581,7 +581,7 @@ class ISICClassName(str, Enum):
     A0321 = "Marine aquaculture"
     A0322 = "Freshwater aquaculture"
 
-    # B — Mining and quarrying
+    # B - Mining and quarrying
 
     B0510 = "Mining of hard coal"
     B0520 = "Mining of lignite"
@@ -603,7 +603,7 @@ class ISICClassName(str, Enum):
     B0910 = "Support activities for petroleum and natural gas extraction"
     B0990 = "Support activities for other mining and quarrying"
 
-    # C — Manufacturing
+    # C - Manufacturing
 
     C1010 = "Processing and preserving of meat"
     C1020 = "Processing and preserving of fish, crustaceans and molluscs"
@@ -782,13 +782,13 @@ class ISICClassName(str, Enum):
     C3319 = "Repair of other equipment"
     C3320 = "Installation of industrial machinery and equipment"
 
-    # D — Electricity, gas, steam and air conditioning supply
+    # D - Electricity, gas, steam and air conditioning supply
 
     D3510 = "Electric power generation, transmission and distribution"
     D3520 = "Manufacture of gas; distribution of gaseous fuels through mains"
     D3530 = "Steam and air conditioning supply"
 
-    # E — Water supply; sewerage, waste management and remediation activities
+    # E - Water supply; sewerage, waste management and remediation activities
 
     E3600 = "Water collection, treatment and supply"
     E3700 = "Sewerage"
@@ -802,7 +802,7 @@ class ISICClassName(str, Enum):
     E3830 = "Materials recovery"
     E3900 = "Remediation activities and other waste management services"
 
-    # F — Construction
+    # F - Construction
 
     F4100 = "Construction of buildings"
 
@@ -820,7 +820,7 @@ class ISICClassName(str, Enum):
     F4330 = "Building completion and finishing"
     F4390 = "Other specialized construction activities"
 
-    # G — Wholesale and retail trade; repair of motor vehicles and motorcycles
+    # G - Wholesale and retail trade; repair of motor vehicles and motorcycles
 
     G4510 = "Sale of motor vehicles"
     G4520 = "Maintenance and repair of motor vehicles"
@@ -886,7 +886,7 @@ class ISICClassName(str, Enum):
     G4791 = "Retail sale via mail order houses or via Internet"
     G4799 = "Other retail sale not in stores, stalls or markets"
 
-    # H — Transportation and storage
+    # H - Transportation and storage
 
     H4911 = "Passenger rail transport, interurban"
     H4912 = "Freight rail transport"
@@ -917,7 +917,7 @@ class ISICClassName(str, Enum):
     H5310 = "Postal activities under universal service obligation"
     H5320 = "Other postal and courier activities"
 
-    # I — Accommodation and food service activities
+    # I - Accommodation and food service activities
 
     I5510 = "Short term accommodation activities"
     I5520 = "Camping grounds, recreational vehicle parks and trailer parks"
@@ -928,7 +928,7 @@ class ISICClassName(str, Enum):
     I5629 = "Other food service activities"
     I5630 = "Beverage serving activities"
 
-    # J — Information and communication
+    # J - Information and communication
 
     J5811 = "Book publishing"
     J5812 = "Publishing of directories and mailing lists"
@@ -962,7 +962,7 @@ class ISICClassName(str, Enum):
     J6391 = "News agency activities"
     J6399 = "Other information service activities n.e.c."
 
-    # K — Financial and insurance activities
+    # K - Financial and insurance activities
 
     K6411 = "Central banking"
     K6419 = "Other monetary intermediation"
@@ -990,12 +990,12 @@ class ISICClassName(str, Enum):
 
     K6630 = "Fund management activities"
 
-    # L — Real estate activities
+    # L - Real estate activities
 
     L6810 = "Buying and selling of own real estate"
     L6820 = "Real estate activities on a fee or contract basis"
 
-    # M — Professional, scientific and technical activities
+    # M - Professional, scientific and technical activities
 
     M6910 = "Legal activities"
     M6920 = "Accounting, bookkeeping and auditing activities; tax consultancy"
@@ -1018,7 +1018,7 @@ class ISICClassName(str, Enum):
 
     M7500 = "Veterinary activities"
 
-    # N — Administrative and support service activities
+    # N - Administrative and support service activities
 
     N7710 = "Renting and leasing of motor vehicles"
 
@@ -1055,7 +1055,7 @@ class ISICClassName(str, Enum):
     N8292 = "Packaging activities"
     N8299 = "Other business support service activities n.e.c."
 
-    # O — Public administration and defence; compulsory social security
+    # O - Public administration and defence; compulsory social security
 
     O8411 = "General public administration activities"
     O8412 = "Regulation of the activities of providing health care, education, cultural services and other social services, excluding social security"
@@ -1067,7 +1067,7 @@ class ISICClassName(str, Enum):
 
     O8430 = "Compulsory social security activities"
 
-    # P — Education
+    # P - Education
 
     P8510 = "Pre-primary and primary education"
 
@@ -1083,7 +1083,7 @@ class ISICClassName(str, Enum):
     P8550 = "Educational support activities"
     P8560 = "Educational support services n.e.c."
 
-    # Q — Human health and social work activities
+    # Q - Human health and social work activities
 
     Q8610 = "Hospital activities"
     Q8620 = "Medical and dental practice activities"
@@ -1097,7 +1097,7 @@ class ISICClassName(str, Enum):
     Q8810 = "Social work activities without accommodation for the elderly and disabled"
     Q8890 = "Other social work activities without accommodation"
 
-    # R — Arts, entertainment and recreation
+    # R - Arts, entertainment and recreation
 
     R9000 = "Creative, arts and entertainment activities"
 
@@ -1113,7 +1113,7 @@ class ISICClassName(str, Enum):
     R9321 = "Activities of amusement parks and theme parks"
     R9329 = "Other amusement and recreation activities n.e.c."
 
-    # S — Other service activities
+    # S - Other service activities
 
     S9411 = "Activities of business and employers membership organizations"
     S9412 = "Activities of professional membership organizations"
@@ -1137,12 +1137,12 @@ class ISICClassName(str, Enum):
     S9603 = "Funeral and related activities"
     S9609 = "Other personal service activities n.e.c."
 
-    # T — Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+    # T - Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
 
     T9700 = "Activities of households as employers of domestic personnel"
     T9810 = "Undifferentiated goods-producing activities of private households for own use"
     T9820 = "Undifferentiated service-producing activities of private households for own use"
 
-    # U — Activities of extraterritorial organizations and bodies
+    # U - Activities of extraterritorial organizations and bodies
 
     U9900 = "Activities of extraterritorial organizations and bodies"

@@ -209,6 +209,7 @@ export type ApiStorageRegistry = {
     protocol: string;
     endpoint_url: string;
     access_key_id: string;
+    runtime_endpoint_url: string;
     location_id: string;
     created_at: string;
     created_by: ApiUserSummary | null;

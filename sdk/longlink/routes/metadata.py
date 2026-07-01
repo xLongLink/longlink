@@ -1,5 +1,4 @@
 from fastapi import Request, APIRouter
-from longlink.pages import page_registry
 from longlink.utils.metadata import load_metadata
 
 router = APIRouter()
@@ -17,9 +16,9 @@ async def get_metadata(request: Request) -> dict[str, object]:
 
     metadata = load_metadata()
     pages: list[dict[str, object]] = []
-    registered_pages = getattr(request.app.state, "page_registry", page_registry)
+    registered_pages = getattr(request.app.state, "page_registry", [])
 
-    # Page handlers are registered through the router.page decorator or auto discovery.
+    # Page handlers are registered from the SDK pages directory during app startup.
     for page in registered_pages:
         entry = {
             "tab": page_tab_value(page.path),

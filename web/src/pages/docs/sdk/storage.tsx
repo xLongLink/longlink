@@ -18,6 +18,21 @@ export const content = (
             can use it like a standard <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec</A>{' '}
             filesystem.
         </p>
+        <p className="leading-7">
+            In production, the platform injects{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                LONGLINK_STORAGE_URL
+            </code>
+            ,{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                LONGLINK_STORAGE_BUCKET
+            </code>
+            , and{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
+                LONGLINK_STORAGE_SHARED_BUCKET
+            </code>{' '}
+            for the backend connection, app bucket, and organization shared bucket.
+        </p>
         <Heading id="usage" level="h2">
             Usage
         </Heading>

@@ -498,6 +498,72 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
     ]
 
 
+async def test_organization_storage_endpoint_returns_unavailable_rows_when_backend_fails(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Return unavailable storage rows when the storage backend cannot be inspected."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    registry = await db.storage.create(StorageKind.s3, "primary", "http", "http://storage.local", "access", "secret", location.id, owner)
+    application = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        storage_registry_id=registry.id,
+        user=owner,
+    )
+
+    class FakeStorage:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            self.protocol = protocol
+            self.endpoint_url = endpoint_url
+            self.access_key_id = access_key_id
+            self.secret_access_key = secret_access_key
+
+        async def buckets(self) -> list[str]:
+            raise RuntimeError("storage offline")
+
+    monkeypatch.setattr("src.routes.organizations.S3", FakeStorage)
+
+    # Act
+    response = client.get(f"/api/organizations/{organization.id}/storage")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "kind": "shared_bucket",
+            "name": "shared",
+            "bucket_name": "longlink-acme-shared",
+            "application": None,
+            "storage_registry_id": str(registry.id),
+            "storage_registry_name": "primary",
+            "status": "unavailable",
+        },
+        {
+            "kind": "application_bucket",
+            "name": "dashboard",
+            "bucket_name": "longlink-acme-dashboard",
+            "application": {
+                "id": str(application.id),
+                "name": "dashboard",
+                "slug": "dashboard",
+                "status": "creating",
+            },
+            "storage_registry_id": str(registry.id),
+            "storage_registry_name": "primary",
+            "status": "unavailable",
+        },
+    ]
+
+
 async def test_organization_database_resource_tables_endpoint_returns_table_previews(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
