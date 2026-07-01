@@ -29,6 +29,9 @@ type UseOrganizationActionsResult = {
     inviteMember: (payload: { email: string; role: Role }) => Promise<void>;
     isInviting: boolean;
     canInviteMembers: boolean;
+    changeMemberRole: (payload: { memberId: string; role: Role }) => Promise<void>;
+    isChangingMemberRole: boolean;
+    canManageMembers: boolean;
     createApplication: (payload: {
         name: string;
         image: string;
@@ -94,6 +97,9 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
     const canInviteMembers = organizationMembership?.role
         ? ['admin', 'maintain', 'owner'].includes(organizationMembership.role)
         : false;
+    const canManageMembers = organizationMembership?.role
+        ? ['admin', 'owner'].includes(organizationMembership.role)
+        : false;
 
     const inviteMemberMutation = useMutation({
         mutationFn: async ({ email, role }: { email: string; role: Role }) => {
@@ -155,6 +161,33 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
         },
     });
 
+    const changeMemberRoleMutation = useMutation({
+        mutationFn: async ({ memberId, role }: { memberId: string; role: Role }) => {
+            if (organizationPath === null) {
+                throw new Error('Organization not found');
+            }
+
+            if (!canManageMembers) {
+                throw new Error('Member management permissions required');
+            }
+
+            return fetchApiVoid(`/api/organizations/${organizationId}/members/${memberId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role }),
+            });
+        },
+        onSuccess: async () => {
+            if (organizationPath === null) {
+                return;
+            }
+
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
+            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
+        },
+    });
+
     const deleteApplicationMutation = useMutation({
         mutationFn: async (applicationId: string) => {
             if (organizationPath === null) {
@@ -174,6 +207,9 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
         inviteMember: inviteMemberMutation.mutateAsync,
         isInviting: inviteMemberMutation.isPending,
         canInviteMembers,
+        changeMemberRole: changeMemberRoleMutation.mutateAsync,
+        isChangingMemberRole: changeMemberRoleMutation.isPending,
+        canManageMembers,
         createApplication: createApplicationMutation.mutateAsync,
         isCreatingApplication: createApplicationMutation.isPending,
         deleteApplication: deleteApplicationMutation.mutateAsync,

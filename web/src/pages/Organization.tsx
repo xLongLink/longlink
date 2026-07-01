@@ -6,10 +6,12 @@ import { LayoutGrid, Settings2, Users } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
+import OrganizationDatabase from './org/Database';
 import People from './org/People';
 import OrganizationSettings from './org/Settings';
+import OrganizationStorage from './org/Storage';
 
-type OrganizationSection = 'applications' | 'people' | 'settings';
+type OrganizationSection = 'applications' | 'people' | 'database' | 'settings' | 'storage';
 
 type OrganizationProps = {
     sectionName?: OrganizationSection;
@@ -22,8 +24,15 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const { organizations } = useUser();
     const organization = routeOrganization || organizations[0]?.slug || '';
     const pathSection = pathname.split('/')[3] ?? '';
+    const pathSectionIsOrganizationSection =
+        pathSection === 'people' ||
+        pathSection === 'database' ||
+        pathSection === 'storage' ||
+        pathSection === 'settings';
+
+    // Direct organization routes infer the active section from the path when one was not passed explicitly.
     const section =
-        sectionName ?? (pathSection === 'people' || pathSection === 'settings' ? pathSection : 'applications');
+        sectionName ?? (pathSectionIsOrganizationSection ? (pathSection as OrganizationSection) : 'applications');
     const {
         organization: organizationDetails,
         people,
@@ -47,16 +56,17 @@ export default function Organization({ sectionName }: OrganizationProps) {
         return <NotFound />;
     }
 
-    let content = (
-        <Hero icon="layout-grid" className="w-full">
-            <div className="flex w-full items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                    <HeroTitle>Applications</HeroTitle>
-                    <HeroDescription>Manage the applications attached to this organization.</HeroDescription>
+    let content =
+        section === 'database' || section === 'storage' ? null : (
+            <Hero icon="layout-grid" className="w-full">
+                <div className="flex w-full items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                        <HeroTitle>Applications</HeroTitle>
+                        <HeroDescription>Manage the applications attached to this organization.</HeroDescription>
+                    </div>
                 </div>
-            </div>
-        </Hero>
-    );
+            </Hero>
+        );
 
     // Swap the hero based on the active path segment.
     if (section === 'people') {
@@ -109,6 +119,20 @@ export default function Organization({ sectionName }: OrganizationProps) {
                         applications={applications}
                         isLoading={isLoading}
                         error={error}
+                    />
+                ) : null}
+                {section === 'database' ? (
+                    <OrganizationDatabase
+                        organization={organization}
+                        organizationDetails={organizationDetails}
+                        isLoading={isLoading}
+                    />
+                ) : null}
+                {section === 'storage' ? (
+                    <OrganizationStorage
+                        organization={organization}
+                        organizationDetails={organizationDetails}
+                        isLoading={isLoading}
                     />
                 ) : null}
                 {section === 'settings' ? (

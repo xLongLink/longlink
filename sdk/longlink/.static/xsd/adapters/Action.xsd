@@ -13,6 +13,7 @@
     <xsd:complexContent>
       <xsd:extension base="ActionChildrenOnlyType">
         <xsd:attribute name="action" type="xsd:string" use="optional" />
+        <xsd:attribute name="form" type="xsd:string" use="optional" />
         <xsd:attribute name="json" type="xsd:string" use="optional" />
         <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
         <xsd:attribute name="method" type="xsd:string" use="optional" />

@@ -16,8 +16,9 @@ from src.adapters.database import Postgres
 from src.adapters.storage import S3
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails,
-                                      OrganizationSummary,
-                                      OrganizationInvitationCreate)
+                                       OrganizationSummary,
+                                       OrganizationMemberUpdate,
+                                       OrganizationInvitationCreate)
 from src.models.storages import (OrganizationStorageResourceKind,
                                  OrganizationStorageResourceStatus,
                                  OrganizationStorageResourceResponse,
@@ -149,6 +150,32 @@ async def create_organization_invitation(
         await invitations.create(organization_id, payload.email, payload.role, user)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
+
+    return Response(status_code=204)
+
+
+@router.patch("/api/organizations/{organization_id}/members/{member_id}", status_code=204)
+async def update_organization_member(
+    organization_id: UUID,
+    member_id: UUID,
+    payload: OrganizationMemberUpdate,
+    user: User = Depends(authuser),
+) -> Response:
+    """Update one organization member role."""
+
+    organization = await organization_access(organization_id, user)
+    membership_role = await organizations.membership_role(organization_id, user.id)
+    if membership_role not in {OrganizationRoles.admin, OrganizationRoles.owner}:
+        raise ForbiddenError("Member management permissions required")
+
+    updated = await organizations.update_member_role(organization_id, member_id, payload.role, user)
+    if not updated:
+        raise NotFoundError("Organization member", member_id)
+
+    try:
+        await provisioning.sync_organization_users(organization)
+    except Exception as exc:
+        raise UnavailableError("Failed to synchronize organization members") from exc
 
     return Response(status_code=204)
 
@@ -331,7 +358,7 @@ async def _storage_resource_rows(
         )
 
     # Keep stale managed buckets visible as orphaned resources.
-    organization_bucket_prefix = s3name(f"{organization.slug}-")
+    organization_bucket_prefix = f"longlink-{organization.slug}-"
     for bucket_name in sorted(bucket_names):
         if bucket_name in expected_bucket_names or not bucket_name.startswith(organization_bucket_prefix):
             continue

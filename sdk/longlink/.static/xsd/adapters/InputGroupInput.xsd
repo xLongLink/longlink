@@ -12,12 +12,14 @@
   <xsd:complexType name="InputGroupInputType">
     <xsd:complexContent>
       <xsd:extension base="InputGroupInputChildrenOnlyType">
+        <xsd:attribute name="accept" type="xsd:string" use="optional" />
         <xsd:attribute name="aria-invalid" type="xsd:string" use="optional" />
         <xsd:attribute name="autoComplete" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
         <xsd:attribute name="id" type="xsd:string" use="optional" />
         <xsd:attribute name="i18n" type="xsd:string" use="optional" />
         <xsd:attribute name="label" type="xsd:string" use="optional" />
+        <xsd:attribute name="multiple" type="xsd:string" use="optional" />
         <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
         <xsd:attribute name="type" type="xsd:string" use="optional" />
         <xsd:attribute name="value" type="xsd:string" use="optional" />

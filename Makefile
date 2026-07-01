@@ -128,8 +128,8 @@ web\:clean:
 	rm -rf web/dist web/dist-ssr web/node_modules/.tmp web/node_modules/.vite
 
 
-# Start local services and cluster, then wait for Keycloak.
-up:
+# Start local services and cluster, then wait for service readiness.
+up: local-services
 	docker compose -f dev/compose.yml up -d
 	k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer" --registry-config dev/registries.yml
 	k3d kubeconfig get compute > api/kubeconfig.yaml
@@ -183,8 +183,8 @@ down:
 	find . -type f -name '*.py[co]' -delete
 
 
-# Run the local control plane API server.
-api: local-services sdk\:image
+# Run the local control plane API server after `make up` and `make sdk:image`.
+api:
 	cd api && uv sync --extra dev
 	cd api && DEVELOPMENT=true uv run alembic upgrade head
 	cd api && DEVELOPMENT=true uv run python seed.py

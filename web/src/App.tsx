@@ -25,7 +25,6 @@ import { content as impressumContent, metadata as impressumMetadata } from '@/pa
 import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
 import NotFound from '@/pages/NotFound';
-import Person from '@/pages/org/Person';
 import Organization from '@/pages/Organization';
 import Organizations from '@/pages/Organizations';
 import Pricing from '@/pages/Pricing';
@@ -173,10 +172,42 @@ function getRoutes() {
             ),
         },
         {
-            path: 'orgs/:organization/people/:person',
+            path: 'orgs/:organization/database',
             element: (
                 <Auth requiredRole="user">
-                    <Person />
+                    <Organization sectionName="database" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/database/:databaseResourceType/:databaseResource',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="database" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/database/:databaseResourceType/:databaseResource/tables/:databaseTable',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="database" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/storage',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="storage" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/storage/buckets/:bucket',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="storage" />
                 </Auth>
             ),
         },

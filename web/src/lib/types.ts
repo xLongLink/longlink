@@ -58,7 +58,6 @@ export type ApiOrganizationMemberSummary = {
     email: string;
     avatar: string;
     role: Role;
-    last_access_at: string | null;
 };
 
 export type ApiEnvironmentMetadata = {

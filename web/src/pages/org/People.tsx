@@ -1,4 +1,14 @@
 import { DataTable } from '@/components/DataTable';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -10,10 +20,11 @@ import { ROLE_NAMES } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Menu, MenuSection } from '@ui/menu';
 import { Mail, MoreVertical, Users } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { toast } from 'sonner';
 
 type PeopleProps = {
     organization: string;
@@ -21,6 +32,14 @@ type PeopleProps = {
     invitations: ApiInvitation[];
     isLoading: boolean;
     error: Error | null;
+};
+
+const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
+    read: 'read',
+    write: 'write',
+    maintain: 'maintainer',
+    admin: 'admin',
+    owner: 'owner',
 };
 
 const invitationColumns: Array<ColumnDef<ApiInvitation>> = [
@@ -49,7 +68,20 @@ export default function People({ organization, people, invitations, isLoading, e
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<Role>('write');
     const [inviteError, setInviteError] = useState<string | null>(null);
-    const { inviteMember, isInviting, canInviteMembers } = useOrganizationActions(organization);
+    const [roleChangeTarget, setRoleChangeTarget] = useState<{
+        user: ApiOrganizationMemberSummary;
+        role: Role;
+    } | null>(null);
+    const [roleChangeError, setRoleChangeError] = useState<string | null>(null);
+    const {
+        inviteMember,
+        isInviting,
+        canInviteMembers,
+        changeMemberRole,
+        isChangingMemberRole,
+        canManageMembers,
+    } = useOrganizationActions(organization);
+    const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
     const peopleColumns: Array<ColumnDef<ApiOrganizationMemberSummary>> = [
         {
@@ -65,12 +97,7 @@ export default function People({ organization, people, invitations, isLoading, e
                             <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 space-y-0.5">
-                            <Link
-                                to={`/orgs/${organization}/people/${user.id}`}
-                                className="text-sm font-medium text-foreground hover:underline"
-                            >
-                                {user.name}
-                            </Link>
+                            <div className="text-sm font-medium text-foreground">{user.name}</div>
                             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                         </div>
                     </div>
@@ -85,12 +112,9 @@ export default function People({ organization, people, invitations, isLoading, e
                 const user = row.original;
 
                 return (
-                    <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center justify-start">
                         <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">
                             {user.role}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                            Last access {user.last_access_at ? new Date(user.last_access_at).toLocaleString() : '—'}
                         </span>
                     </div>
                 );
@@ -101,19 +125,44 @@ export default function People({ organization, people, invitations, isLoading, e
             id: 'actions',
             header: 'Action',
             meta: { className: 'w-px pl-1 whitespace-nowrap text-right' },
-            cell: () => (
-                <div className="flex justify-end">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="cursor-pointer"
-                        aria-label="More actions"
-                    >
-                        <MoreVertical className="size-4" />
-                    </Button>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const user = row.original;
+
+                return (
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="cursor-pointer"
+                                        disabled={!canManageMembers}
+                                        aria-label={`Open actions for ${user.name}`}
+                                    />
+                                }
+                            >
+                                <MoreVertical className="size-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                                {ROLE_NAMES.filter((role) => role !== user.role).map((role) => (
+                                    <DropdownMenuItem
+                                        key={role}
+                                        className="cursor-pointer"
+                                        onClick={() => {
+                                            setRoleChangeTarget({ user, role });
+                                            setRoleChangeError(null);
+                                        }}
+                                    >
+                                        Grant {ORGANIZATION_ROLE_LABELS[role]} permission
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+            },
         },
     ];
 
@@ -181,6 +230,67 @@ export default function People({ organization, people, invitations, isLoading, e
                     </div>
                 </MenuSection>
             </Menu>
+
+            <AlertDialog
+                open={roleChangeTarget !== null}
+                onOpenChange={(nextOpen) => {
+                    if (!nextOpen) {
+                        setRoleChangeTarget(null);
+                        setRoleChangeError(null);
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Change member role</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {roleChangeTarget
+                                ? `Grant ${roleChangeTargetLabel} permission to ${roleChangeTarget.user.name} in this organization?`
+                                : 'Change this member role?'}
+                        </AlertDialogDescription>
+                        {roleChangeError ? <p className="text-sm text-destructive">{roleChangeError}</p> : null}
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setRoleChangeTarget(null);
+                                setRoleChangeError(null);
+                            }}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            type="button"
+                            disabled={isChangingMemberRole || roleChangeTarget === null}
+                            onClick={async () => {
+                                if (roleChangeTarget === null) {
+                                    return;
+                                }
+
+                                try {
+                                    await changeMemberRole({
+                                        memberId: roleChangeTarget.user.id,
+                                        role: roleChangeTarget.role,
+                                    });
+                                    toast.success(
+                                        `${roleChangeTarget.user.name} now has ${roleChangeTargetLabel} permission`
+                                    );
+                                    setRoleChangeTarget(null);
+                                    setRoleChangeError(null);
+                                } catch (mutationError) {
+                                    setRoleChangeError(
+                                        mutationError instanceof Error
+                                            ? mutationError.message
+                                            : 'Failed to change member role'
+                                    );
+                                }
+                            }}
+                        >
+                            {isChangingMemberRole ? 'Saving...' : 'Change role'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <Dialog
                 open={inviteOpen}

@@ -143,4 +143,4 @@ class UserProfile(UserSummary):
     oidc: str
 
     # Relationships
-    organizations: list[UserOrganizationMembership] = Field(default_factory=list[UserOrganizationMembership])
+    organizations: list[UserOrganizationMembership] = Field(default_factory=list)

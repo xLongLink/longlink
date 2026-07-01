@@ -13,7 +13,7 @@ from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 async def metadata(image: str) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
-    registry, repository, tag = _parse_image_ref(image)
+    registry, repository, reference = _parse_image_ref(image)
     registry_url = _registry_url(registry)
     verify_tls = registry_url.startswith("https://")
 
@@ -22,7 +22,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             if verify_tls:
                 await _validate_public_host(_registry_hostname(registry))
 
-            manifest = await _fetch_manifest(client, registry_url, repository, tag)
+            manifest = await _fetch_manifest(client, registry_url, repository, reference)
             if manifest is None:
                 return None
 
@@ -77,15 +77,22 @@ async def metadata(image: str) -> LongLinkMetadata | None:
 
 
 def _parse_image_ref(image: str) -> tuple[str, str, str]:
-    """Parse an image reference into registry, repository, and tag."""
+    """Parse an image reference into registry, repository, and tag or digest."""
 
-    tag = "latest"
-    tag_separator = image.rfind(":")
-    path_separator = image.rfind("/")
+    reference = "latest"
+    digest_separator = image.rfind("@")
 
-    if tag_separator > path_separator:
-        tag = image[tag_separator + 1:]
-        image = image[:tag_separator]
+    # Digest references include a colon that must not be treated as a tag separator.
+    if digest_separator != -1:
+        reference = image[digest_separator + 1:]
+        image = image[:digest_separator]
+    else:
+        tag_separator = image.rfind(":")
+        path_separator = image.rfind("/")
+
+        if tag_separator > path_separator:
+            reference = image[tag_separator + 1:]
+            image = image[:tag_separator]
 
     if "/" in image:
         parts = image.split("/", 1)
@@ -99,7 +106,7 @@ def _parse_image_ref(image: str) -> tuple[str, str, str]:
         registry = "registry-1.docker.io"
         repository = f"library/{image}"
 
-    return registry, repository, tag
+    return registry, repository, reference
 
 
 def _registry_hostname(registry: str) -> str:

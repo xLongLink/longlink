@@ -1,21 +1,6 @@
-from longlink import Router, fs
-from src.envs import env
+from longlink import Router
 
 router = Router()
-
-
-@router.get("/sample")
-async def sample_get_endpoint():
-    """Handle sample GET request."""
-
-    filesystem = fs
-    return {
-        "message": "Sample GET endpoint received data",
-        "required": env.REQUIRED,
-        "optional": env.OPTIONAL,
-        "filesystem_protocol": filesystem.protocol,
-        "filesystem_type": type(filesystem).__name__,
-    }
 
 
 @router.post("/form")

@@ -182,3 +182,56 @@ async def test_metadata_allows_configured_development_local_registry(monkeypatch
         "repository": "longlink/dashboard",
         "digest": "sha256:config",
     }
+
+
+async def test_metadata_fetches_digest_image_references(monkeypatch) -> None:
+    """Inspect image metadata when the image reference is pinned by digest."""
+
+    # Arrange
+    captured: dict[str, object] = {}
+
+    async def fake_validate_public_host(hostname: str) -> None:
+        """Capture public host validation without resolving DNS in the unit test."""
+
+        captured["hostname"] = hostname
+
+    async def fake_fetch_manifest(client: object, registry_url: str, repository: str, tag: str) -> dict[str, object]:
+        """Capture the manifest reference and return a minimal OCI manifest."""
+
+        captured["manifest"] = {
+            "registry_url": registry_url,
+            "repository": repository,
+            "tag": tag,
+        }
+        return {"config": {"digest": "sha256:config"}}
+
+    async def fake_fetch_blob(client: object, registry_url: str, repository: str, digest: str) -> dict[str, object]:
+        """Return LongLink labels for the digest-pinned image config."""
+
+        return {
+            "config": {
+                "Labels": {
+                    "longlink.name": "dashboard",
+                    "longlink.sdk": "0.1.0",
+                    "longlink.version": "sha256-deadbeef",
+                    "longlink.description": "Demo app",
+                }
+            }
+        }
+
+    monkeypatch.setattr(images, "_validate_public_host", fake_validate_public_host)
+    monkeypatch.setattr(images, "_fetch_manifest", fake_fetch_manifest)
+    monkeypatch.setattr(images, "_fetch_blob", fake_fetch_blob)
+
+    # Act
+    image_metadata = await images.metadata("ghcr.io/longlink/dashboard@sha256:deadbeef")
+
+    # Assert
+    assert image_metadata is not None
+    assert image_metadata.version == "sha256-deadbeef"
+    assert captured["hostname"] == "ghcr.io"
+    assert captured["manifest"] == {
+        "registry_url": "https://ghcr.io",
+        "repository": "longlink/dashboard",
+        "tag": "sha256:deadbeef",
+    }

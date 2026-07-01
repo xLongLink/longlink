@@ -13,15 +13,35 @@ from importlib.metadata import version as package_version
 from longlink.utils.metadata import load_metadata
 
 BUILD_CONTEXT_IGNORE_PATTERNS = (
+    ".cache",
+    ".coverage",
     ".dockerignore",
+    ".env",
+    ".env.*",
+    ".envrc",
     ".git",
     ".mypy_cache",
+    ".nox",
     ".pytest_cache",
     ".ruff_cache",
+    ".tox",
+    ".uv-cache",
     ".venv",
     "Dockerfile",
     "__pycache__",
+    "*.db",
+    "*.db-*",
+    "*.egg-info",
     "*.pyc",
+    "*.sqlite",
+    "*.sqlite-*",
+    "*.sqlite3",
+    "*.sqlite3-*",
+    "build",
+    "coverage.xml",
+    "dist",
+    "htmlcov",
+    "node_modules",
 )
 
 DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS builder
@@ -32,7 +52,7 @@ WORKDIR {workdir}
 
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 
-RUN uv sync && rm -rf /workspace/.git
+RUN uv sync --no-dev && find /workspace -name .git -type d -prune -exec rm -rf {{}} +
 
 FROM python:3.14-slim-bookworm
 
@@ -44,7 +64,7 @@ COPY --from=builder /workspace /workspace
 
 ENV PATH="{workdir}/.venv/bin:$PATH"
 
-CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:app --host 0.0.0.0 --port 80 --log-level debug"]
+CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:app --host 0.0.0.0 --port 80 --log-level info"]
 """
 
 
@@ -130,10 +150,6 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
                 if isinstance(alias, str):
                     info["env_name"] = alias
             elif keyword.arg == "default":
-                try:
-                    info["default"] = ast.literal_eval(keyword.value)
-                except (ValueError, SyntaxError):
-                    pass
                 info["required"] = False
             elif keyword.arg == "description":
                 try:
@@ -143,26 +159,12 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
 
                 if isinstance(description, str):
                     info["description"] = description
-            elif keyword.arg == "secret":
-                try:
-                    secret = ast.literal_eval(keyword.value)
-                except (ValueError, SyntaxError):
-                    secret = None
-
-                if isinstance(secret, bool):
-                    info["secret"] = secret
             elif keyword.arg == "default_factory":
                 info["required"] = False
 
         return info
 
-    info: dict[str, object] = {"required": False, "env_name": None}
-    try:
-        info["default"] = ast.literal_eval(value)
-    except (ValueError, SyntaxError):
-        pass
-
-    return info
+    return {"required": False, "env_name": None}
 
 
 def encode_label_value(value: object) -> str:
@@ -248,7 +250,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
 
     root = (base_path or Path.cwd()).resolve()
     source_root, workdir = resolve_docker_paths(root)
-    repo_root = next((parent for parent in root.parents if (parent / ".git").exists()), None)
+    repo_root = next((candidate for candidate in (root, *root.parents) if (candidate / ".git").exists()), None)
     env_spec = read_env_spec(root)
     project_metadata = load_metadata(root / "pyproject.toml")
     metadata: dict[str, object] = project_metadata.model_dump()
@@ -264,9 +266,14 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         ignore=shutil.ignore_patterns(*BUILD_CONTEXT_IGNORE_PATTERNS),
     )
 
-    # Preserve VCS metadata so setuptools-scm can resolve package versions in Docker.
     if repo_root is not None:
-        shutil.copytree(repo_root / ".git", build_context / ".git", dirs_exist_ok=True)
+        # Preserve VCS metadata at its copied tree location so setuptools-scm can resolve versions in Docker.
+        try:
+            git_target = build_context / repo_root.relative_to(source_root) / ".git"
+        except ValueError:
+            git_target = build_context / ".git"
+
+        shutil.copytree(repo_root / ".git", git_target, dirs_exist_ok=True)
 
     dockerfile_path = build_context / "Dockerfile"
     dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])))

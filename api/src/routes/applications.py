@@ -3,14 +3,16 @@ from typing import Any, cast
 from fastapi import Depends, Request, Response, APIRouter
 from src.auth import authuser, authadmin, organization_access
 from src.utils import names
-from src.errors import ConflictError, NotFoundError, UnavailableError
+from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.operations import provisioning
+from src.models.roles import OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from kubernetes.client.exceptions import ApiException as KubernetesApiException
 from src.database.services.applications import applications
+from src.database.services.organizations import organizations
 
 HOP_BY_HOP_HEADERS = {
     "connection",
@@ -43,6 +45,10 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     """Register a new application in the database and deploy it on the compute cluster."""
 
     organization_record = await organization_access(organization_id, user)
+    # Application creation provisions runtime resources, so it requires elevated organization permissions.
+    membership_role = await organizations.membership_role(organization_id, user.id)
+    if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+        raise ForbiddenError("Application creation permissions required")
 
     try:
         application = await provisioning.create_application_runtime(organization_record, payload, user)

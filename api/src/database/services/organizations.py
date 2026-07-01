@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -8,6 +9,7 @@ from src.models.users import UserSummary
 from src.adapters.database.shared import SharedUser
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
+from src.utils.namespace import dbname, k8name, s3name
 from src.models.organizations import (OrganizationDetails,
                                       OrganizationMemberSummary,
                                       OrganizationInvitationResponse,
@@ -168,11 +170,47 @@ class OrganizationsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
+
+    async def update_member_role(
+        self,
+        organization_id: UUID,
+        member_id: UUID,
+        role: OrganizationRoles,
+        user: User,
+    ) -> bool:
+        """Update one active organization member role."""
+
+        async with session_scope() as session:
+            statement = (
+                select(UserOrganization)
+                .join(User, User.id == UserOrganization.user_id)
+                .where(
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.user_id == member_id,
+                    UserOrganization.deleted_at.is_(None),
+                    User.deleted_at.is_(None),
+                )
+            )
+            result = await session.execute(statement)
+            membership = result.scalar_one_or_none()
+            if membership is None:
+                return False
+
+            membership.updated_at = datetime.now(UTC)
+            membership.updated_id = user.id
+            membership.role_name = role
+            await session.commit()
+            return True
+
     async def create(self, name: str, location_id: UUID, user: User, avatar: str | None = None) -> Organization:
         """Create an organization."""
 
         async with session_scope() as session:
-            organization = Organization(name=name, slug=names.slugify(name), avatar=avatar or "", location_id=location_id)
+            slug = names.slugify(name, "Organization")
+            k8name(slug)
+            dbname(slug)
+            s3name(f"{slug}-shared")
+            organization = Organization(name=name, slug=slug, avatar=avatar or "", location_id=location_id)
             # Attach the creator as the initial owner for every organization.
             organization.created_id = user.id
             organization.updated_id = user.id

@@ -11,6 +11,8 @@ describe('resolveUrl', () => {
 
     it('returns absolute urls unchanged', () => {
         expect(resolveUrl('/api', 'https://example.com')).toBe('https://example.com');
+        expect(resolveUrl('/api', 'mailto:help@example.com')).toBe('mailto:help@example.com');
+        expect(resolveUrl('/api', '//example.com/assets/app.js')).toBe('//example.com/assets/app.js');
     });
 
     it('resolves dot segments', () => {

@@ -62,6 +62,50 @@ describe('Action', () => {
         expect(invalidateCalls).toBe(1);
     });
 
+    /* The action shell should send multipart form data without a JSON content type. */
+    it('sends multipart form data', async () => {
+        const file = new File(['supplier sheet'], 'supplier.txt', { type: 'text/plain' });
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {
+                document: {
+                    file,
+                    label: 'Supplier sheet',
+                },
+            },
+        };
+
+        let requestInit: RequestInit | undefined;
+
+        const fetchImpl = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+            requestInit = init;
+
+            return new Response('', { status: 201 });
+        }) as unknown as typeof fetch;
+
+        await executeAction(
+            {
+                action: '/files',
+                form: '${{ file: document.file, label: document.label }}',
+            },
+            ctx,
+            '/files',
+            fetchImpl,
+            { success: () => {}, error: () => {} }
+        );
+
+        const body = requestInit?.body as FormData;
+        const uploadedFile = body.get('file') as File;
+
+        expect(requestInit?.method).toBe('POST');
+        expect(Object.fromEntries(new Headers(requestInit?.headers))).toEqual({ accept: 'application/json' });
+        expect(body).toBeInstanceOf(FormData);
+        expect(uploadedFile.name).toBe('supplier.txt');
+        expect(await uploadedFile.text()).toBe('supplier sheet');
+        expect(body.get('label')).toBe('Supplier sheet');
+    });
+
     /* Button children should become the clickable action trigger. */
     it('renders a wrapped button trigger in static markup', () => {
         const output = renderXmlToMarkup(

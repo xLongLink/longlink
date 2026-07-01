@@ -4,14 +4,12 @@ import LogsDialog from '@/components/dialogs/LogsDialog';
 import { Icon } from '@/components/ui/icon';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useOrganizationActions } from '@/hooks/use-organization';
-import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
 import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
 import { useOrganizationStorageResources } from '@/hooks/use-organization-storage-resources';
 import { useUser } from '@/hooks/use-user';
 import type {
     ApiOrganizationApplication,
     ApiOrganizationDatabaseResource,
-    ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
     ApiOrganizationStorageResource,
 } from '@/lib/types';
@@ -33,7 +31,6 @@ import {
     HardDrive,
     MoreVertical,
     PenLine,
-    Plug,
     Settings2,
     ShieldCheck,
 } from 'lucide-react';
@@ -88,12 +85,6 @@ export default function Settings({ organization, organizationDetails, applicatio
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
-    const [databaseResourceTarget, setDatabaseResourceTarget] = useState<ApiOrganizationDatabaseResource | null>(null);
-    const {
-        items: databaseResourceTables,
-        error: databaseResourceTablesError,
-        isLoading: databaseResourceTablesIsLoading,
-    } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseResourceTarget);
     const {
         items: storageResources,
         error: storageResourcesError,
@@ -193,19 +184,18 @@ export default function Settings({ organization, organizationDetails, applicatio
 
                 return (
                     <div className="min-w-0 space-y-1">
-                        <Button
-                            type="button"
-                            variant="link"
-                            className="h-auto max-w-full justify-start p-0 text-left font-medium"
-                            disabled={!isBrowsable}
-                            onClick={() => {
-                                if (isBrowsable) {
-                                    setDatabaseResourceTarget(row.original);
-                                }
-                            }}
-                        >
-                            <span className="truncate">{row.original.name}</span>
-                        </Button>
+                        {isBrowsable ? (
+                            <Link
+                                to={`/orgs/${organization}/database/${row.original.kind === 'shared_table' ? 'tables' : 'schemas'}/${encodeURIComponent(row.original.name)}`}
+                                className="block truncate font-medium text-primary underline-offset-4 hover:underline"
+                            >
+                                {row.original.name}
+                            </Link>
+                        ) : (
+                            <span className="block truncate font-medium text-muted-foreground">
+                                {row.original.name}
+                            </span>
+                        )}
                         <div className="truncate text-xs text-muted-foreground">{row.original.database_name}</div>
                     </div>
                 );
@@ -287,7 +277,12 @@ export default function Settings({ organization, organizationDetails, applicatio
                 if (row.original.kind === 'shared_bucket') {
                     return (
                         <div className="min-w-0 space-y-1">
-                            <div className="font-medium text-foreground">shared</div>
+                            <Link
+                                to={`/orgs/${organization}/storage/buckets/${encodeURIComponent(row.original.bucket_name)}`}
+                                className="block truncate font-medium text-primary underline-offset-4 hover:underline"
+                            >
+                                shared
+                            </Link>
                             <div className="truncate text-xs text-muted-foreground">
                                 All applications · {row.original.bucket_name}
                             </div>
@@ -299,13 +294,18 @@ export default function Settings({ organization, organizationDetails, applicatio
                     <div className="min-w-0 space-y-1">
                         {application ? (
                             <Link
-                                to={`/orgs/${organization}/apps/${application.slug}`}
-                                className="font-medium text-foreground underline-offset-4 hover:underline"
+                                to={`/orgs/${organization}/storage/buckets/${encodeURIComponent(row.original.bucket_name)}`}
+                                className="font-medium text-primary underline-offset-4 hover:underline"
                             >
                                 {application.name}
                             </Link>
                         ) : (
-                            <div className="font-medium text-foreground">{row.original.name}</div>
+                            <Link
+                                to={`/orgs/${organization}/storage/buckets/${encodeURIComponent(row.original.bucket_name)}`}
+                                className="font-medium text-primary underline-offset-4 hover:underline"
+                            >
+                                {row.original.name}
+                            </Link>
                         )}
                         <div className="truncate text-xs text-muted-foreground">{row.original.bucket_name}</div>
                     </div>
@@ -466,26 +466,6 @@ export default function Settings({ organization, organizationDetails, applicatio
                         />
                     </div>
                 </MenuSection>
-
-                <MenuSection value="logging" label="Logging" icon={Settings2}>
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Logging</h2>
-                            <p className="text-sm text-muted-foreground">Configure event and audit logging outputs.</p>
-                        </div>
-                    </div>
-                </MenuSection>
-
-                <MenuSection value="integrations" label="Integrations" icon={Plug}>
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Integrations</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Connect external services and workflow tools.
-                            </p>
-                        </div>
-                    </div>
-                </MenuSection>
             </Menu>
 
             {canViewLogs && logsTarget ? (
@@ -501,40 +481,6 @@ export default function Settings({ organization, organizationDetails, applicatio
                     trigger={null}
                 />
             ) : null}
-
-            <Dialog
-                open={databaseResourceTarget !== null}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDatabaseResourceTarget(null);
-                    }
-                }}
-            >
-                <DialogContent className="max-h-[85vh] grid-rows-[auto_minmax(0,1fr)] sm:max-w-5xl">
-                    <div className="space-y-1 pr-8">
-                        <DialogTitle>{databaseResourceTarget?.name ?? 'Database resource'}</DialogTitle>
-                        <DialogDescription>
-                            Previewing columns and up to 100 rows per table from this database resource.
-                        </DialogDescription>
-                    </div>
-
-                    <div className="min-h-0 space-y-4 overflow-auto pr-1">
-                        {databaseResourceTablesIsLoading ? null : databaseResourceTablesError ? (
-                            <div className="rounded-md border p-4 text-sm text-destructive">
-                                {databaseResourceTablesError.message}
-                            </div>
-                        ) : databaseResourceTables.length ? (
-                            databaseResourceTables.map((table) => (
-                                <DatabasePreviewTable key={`${table.schema_name}.${table.name}`} table={table} />
-                            ))
-                        ) : (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                No tables found in this database resource.
-                            </div>
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             <Dialog
                 open={deleteTargetId !== null}
@@ -600,82 +546,5 @@ export default function Settings({ organization, organizationDetails, applicatio
                 </DialogContent>
             </Dialog>
         </>
-    );
-}
-
-type DatabasePreviewTableProps = {
-    table: ApiOrganizationDatabaseTable;
-};
-
-/** Renders one database table preview with dynamic columns and rows. */
-function DatabasePreviewTable({ table }: DatabasePreviewTableProps) {
-    return (
-        <div className="space-y-3">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                <div className="min-w-0">
-                    <h3 className="truncate font-medium text-foreground">
-                        {table.schema_name}.{table.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                        {table.columns.length.toLocaleString()} columns · {table.rows.length.toLocaleString()} preview
-                        rows
-                    </p>
-                </div>
-            </div>
-
-            <div className="overflow-auto rounded-md border">
-                <Table>
-                    <TableHeader className="bg-muted/50">
-                        <TableRow>
-                            {table.columns.length ? (
-                                table.columns.map((column) => (
-                                    <TableHead key={column.name} className="min-w-40 bg-muted/50 align-top">
-                                        <div className="space-y-0.5">
-                                            <div className="font-medium text-foreground">{column.name}</div>
-                                            <div className="text-xs font-normal text-muted-foreground">
-                                                {column.type}
-                                                {column.nullable ? '' : ' · required'}
-                                            </div>
-                                        </div>
-                                    </TableHead>
-                                ))
-                            ) : (
-                                <TableHead className="bg-muted/50">No columns</TableHead>
-                            )}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {table.rows.length && table.columns.length ? (
-                            table.rows.map((row, rowIndex) => (
-                                <TableRow key={rowIndex}>
-                                    {table.columns.map((column) => {
-                                        const value = row[column.name];
-
-                                        return (
-                                            <TableCell
-                                                key={column.name}
-                                                className="max-w-72 truncate font-mono text-xs"
-                                            >
-                                                {value === null || value === undefined ? (
-                                                    <span className="text-muted-foreground">NULL</span>
-                                                ) : (
-                                                    String(value)
-                                                )}
-                                            </TableCell>
-                                        );
-                                    })}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={Math.max(table.columns.length, 1)} className="h-20 text-center">
-                                    No rows found.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
     );
 }

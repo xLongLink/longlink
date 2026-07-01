@@ -470,6 +470,105 @@ async def test_create_app_returns_app_response(
     }
 
 
+async def test_create_app_returns_409_when_image_metadata_is_missing(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Reject app creation when the image cannot be inspected."""
+
+    # Arrange
+    owner = users[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+
+    async def fake_metadata(image: str) -> None:
+        """Pretend the registry inspection failed or returned invalid metadata."""
+
+        return None
+
+    monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
+    client = clients[0]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/applications",
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
+    )
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Image metadata could not be inspected"}
+    assert await db.applications.list_by_organization(organization.id) == []
+
+
+async def test_create_app_returns_409_for_overlong_runtime_bucket_name(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject app creation when combined runtime resource names exceed backend limits."""
+
+    # Arrange
+    owner = users[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    client = clients[0]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/applications",
+        json={"name": "a" * 50, "image": "ghcr.io/longlink/dashboard:latest"},
+    )
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "S3 bucket name must be at most 63 characters"}
+    assert await db.applications.list_by_organization(organization.id) == []
+
+
+async def test_create_app_returns_403_for_regular_member(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Reject application creation when the organization member lacks deployment permissions."""
+
+    # Arrange
+    owner = users[0]
+    regular_member = users[1]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=regular_member.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.write,
+            )
+        )
+        await session.commit()
+
+    async def fail_create_application_runtime(*args, **kwargs):
+        """Fail if the authorization check lets provisioning start."""
+
+        raise AssertionError("Regular organization members must not start provisioning")
+
+    monkeypatch.setattr("src.routes.applications.provisioning.create_application_runtime", fail_create_application_runtime)
+    client = clients[1]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/applications",
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
+    )
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Application creation permissions required"}
+
+
 async def test_get_app_logs_returns_pod_logs(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],

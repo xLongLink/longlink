@@ -21,4 +21,4 @@ class LongLinkMetadata(BaseModel):
     description: str | None = None
 
     # Relationships
-    environments: list[EnvironmentMetadata] = Field(default_factory=list[EnvironmentMetadata])
+    environments: list[EnvironmentMetadata] = Field(default_factory=list)

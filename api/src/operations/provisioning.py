@@ -5,7 +5,7 @@ from src.utils import names, images
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from sqlalchemy.engine import make_url
-from src.utils.namespace import s3name
+from src.utils.namespace import dbname, k8name, s3name
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
 from src.adapters.database import Postgres
@@ -81,12 +81,12 @@ async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
 
 async def application_image_metadata(
     payload: ApplicationCreate,
-) -> LongLinkMetadata | None:
+) -> LongLinkMetadata:
     """Inspect image metadata and validate required environment values."""
 
     image_metadata = await images.metadata(payload.image)
     if image_metadata is None:
-        return None
+        raise ValueError("Image metadata could not be inspected")
 
     # Reject images that require app-managed values the creation payload does not provide.
     missing_envs = sorted(
@@ -256,7 +256,13 @@ async def create_application_runtime(
 ) -> Application:
     """Create the application row, provision runtime resources, and queue verification."""
 
-    application_slug = names.slugify(payload.name)
+    application_slug = names.slugify(payload.name, "Application name")
+    names.knames(organization.slug, "Organization")
+    names.knames(application_slug, "Application name")
+    k8name(organization.slug)
+    dbname(organization.slug)
+    s3name(f"{organization.slug}-shared")
+    s3name(f"{organization.slug}-{application_slug}")
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await application_image_metadata(payload)
@@ -285,8 +291,8 @@ async def create_application_runtime(
         storage_registry_id=storage_registry.id
         if storage_registry is not None
         else None,
-        version=image_metadata.version if image_metadata is not None else None,
-        sdk_version=image_metadata.sdk if image_metadata is not None else None,
+        version=image_metadata.version,
+        sdk_version=image_metadata.sdk,
         status=ApplicationStatus.creating,
         description=payload.description,
         icon=payload.icon.value if payload.icon is not None else None,
@@ -374,6 +380,12 @@ async def sync_application_runtime(
         application.slug,
         payload.image,
     )
+    names.knames(organization.slug, "Organization")
+    names.knames(application.slug, "Application name")
+    k8name(organization.slug)
+    dbname(organization.slug)
+    s3name(f"{organization.slug}-shared")
+    s3name(f"{organization.slug}-{application.slug}")
     image_metadata = await application_image_metadata(payload)
 
     compute_registry = await application_compute_registry(
@@ -402,8 +414,8 @@ async def sync_application_runtime(
         storage_registry_id=storage_registry.id
         if storage_registry is not None
         else None,
-        version=image_metadata.version if image_metadata is not None else None,
-        sdk_version=image_metadata.sdk if image_metadata is not None else None,
+        version=image_metadata.version,
+        sdk_version=image_metadata.sdk,
         status=ApplicationStatus.creating,
         description=payload.description,
         icon=payload.icon.value if payload.icon is not None else None,

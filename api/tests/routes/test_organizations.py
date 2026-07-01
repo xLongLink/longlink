@@ -396,6 +396,78 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     ]
 
 
+async def test_organization_database_endpoint_returns_unavailable_rows_when_backend_fails(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Return unavailable database rows when the database backend cannot be inspected."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    registry = await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
+    application = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        database_registry_id=registry.id,
+        user=owner,
+    )
+
+    class FakePostgres:
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            self.host = host
+            self.port = port
+            self.username = username
+            self.password = password
+
+        async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
+            raise RuntimeError("database offline")
+
+    monkeypatch.setattr("src.routes.organizations.Postgres", FakePostgres)
+
+    # Act
+    response = client.get(f"/api/organizations/{organization.id}/database")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "kind": "shared_table",
+            "name": "users",
+            "database_name": "longlink_acme",
+            "database_registry_id": str(registry.id),
+            "database_registry_name": "primary",
+            "application": None,
+            "status": "unavailable",
+            "space_used": None,
+            "table_count": None,
+            "row_estimate": None,
+        },
+        {
+            "kind": "schema",
+            "name": "dashboard",
+            "database_name": "longlink_acme",
+            "database_registry_id": str(registry.id),
+            "database_registry_name": "primary",
+            "application": {
+                "id": str(application.id),
+                "name": "dashboard",
+                "slug": "dashboard",
+                "status": "creating",
+            },
+            "status": "unavailable",
+            "space_used": None,
+            "table_count": None,
+            "row_estimate": None,
+        },
+    ]
+
+
 async def test_organization_storage_endpoint_returns_managed_buckets(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
@@ -801,6 +873,86 @@ async def test_create_organization_invitation_returns_204_for_maintainer(
     assert response.status_code == 204
     invitations_list = await db.invitations.list_by_organization(organization.id)
     assert [item.email for item in invitations_list] == [invitee.email]
+
+
+async def test_update_organization_member_changes_role(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Allow organization owners to change member roles."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=member.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.write,
+            )
+        )
+        await session.commit()
+
+    client = clients[0]
+
+    # Act
+    response = client.patch(
+        f"/api/organizations/{organization.id}/members/{member.id}",
+        json={"role": "admin"},
+    )
+
+    # Assert
+    assert response.status_code == 204
+    updated_organization = await db.organizations.get(organization.id)
+    assert updated_organization is not None
+    updated_member = next(item for item in updated_organization.users if item.id == member.id)
+    assert updated_member.role == OrganizationRoles.admin
+
+
+async def test_update_organization_member_returns_403_for_regular_member(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject member role changes from users without management permissions."""
+
+    # Arrange
+    owner, regular_member, target_member = users[0], users[1], users[2]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=regular_member.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.write,
+            )
+        )
+        session.add(
+            UserOrganization(
+                user_id=target_member.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.read,
+            )
+        )
+        await session.commit()
+
+    client = clients[1]
+
+    # Act
+    response = client.patch(
+        f"/api/organizations/{organization.id}/members/{target_member.id}",
+        json={"role": "admin"},
+    )
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Member management permissions required"}
 
 
 async def test_create_organization_invitation_returns_409_for_duplicate_email(

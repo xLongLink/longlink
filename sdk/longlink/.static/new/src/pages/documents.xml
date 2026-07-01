@@ -1,0 +1,71 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Documents" icon="folder-up">
+    <Query id="files" path="/files" />
+    <State id="document" file="${null}" />
+
+    <Hero icon="folder-up">
+        <HeroTitle i18n="Product documents" />
+        <HeroDescription i18n="Upload supplier sheets, product photos, and inspection reports into the application-dedicated LongLink storage bucket." />
+        <HeroAction>
+            <Dialog>
+                <DialogTrigger>
+                    <Button>
+                        <P i18n="Upload document" />
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <Stack>
+                        <DialogTitle>
+                            <P i18n="Upload product document" />
+                        </DialogTitle>
+                        <DialogDescription>
+                            <P i18n="The API route stores this file through longlink.fs, which maps to memory, local disk, or the app bucket depending on the environment." />
+                        </DialogDescription>
+
+                        <Field>
+                            <FieldLabel htmlFor="document-file" i18n="File" />
+                            <Input
+                                id="document-file"
+                                type="file"
+                                accept=".pdf,.png,.jpg,.jpeg,.txt"
+                                value="$document.file"
+                            />
+                            <FieldDescription i18n="Use product images, supplier PDFs, or inspection notes." />
+                        </Field>
+
+                        <Field orientation="horizontal">
+                            <FieldLabel></FieldLabel>
+                            <Action
+                                action="/files"
+                                method="POST"
+                                invalidate='${["files"]}'
+                                form="${{ file: document.file }}"
+                            >
+                                <Button disabled="${document.file in [null]}" i18n="Upload file" />
+                            </Action>
+                        </Field>
+                    </Stack>
+                </DialogContent>
+            </Dialog>
+        </HeroAction>
+    </Hero>
+
+    <DataTable data="$files" as="file" empty="No documents uploaded yet.">
+        <DataColumn field="name" header="File" />
+        <DataColumn field="size" header="Bytes" />
+
+        <DataColumn>
+            <DataHeader i18n="Actions" />
+            <DataCell>
+                <Stack>
+                    <A href="$file.download_url" i18n="Download">
+                        <Icon name="download" />
+                    </A>
+                    <Action action="$file.download_url" method="DELETE" invalidate='${["files"]}'>
+                        <Button variant="outline" size="sm" i18n="Delete" />
+                    </Action>
+                </Stack>
+            </DataCell>
+        </DataColumn>
+    </DataTable>
+</longlink>

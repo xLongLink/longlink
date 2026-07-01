@@ -103,6 +103,21 @@ async def test_create_raises_value_error_when_org_already_exists(users: tuple[Us
     assert str(exc.value) == "Organization already exists"
 
 
+async def test_create_rejects_organization_with_overlong_runtime_name(users: tuple[User, User, User]) -> None:
+    """Reject organizations whose managed runtime resource names would exceed backend limits."""
+
+    # Arrange
+    owner = users[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+
+    # Act
+    with pytest.raises(ValueError, match="S3 bucket name must be at most 63 characters"):
+        await db.organizations.create("a" * 48, location.id, owner)
+
+    # Assert
+    assert await db.organizations.list() == []
+
+
 async def test_create_invitation_persists_pending_invitation(users: tuple[User, User, User]) -> None:
     """Persist one invitation for a user email."""
 

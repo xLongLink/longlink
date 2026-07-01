@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from src.database import session
 from src.environments import env
 from sqlalchemy.engine import make_url
@@ -6,12 +7,29 @@ from sqlalchemy.engine import make_url
 class _FakeConnection:
     """Minimal async context manager for engine connection tests."""
 
+    def __init__(self, log: list[tuple[str, object]]) -> None:
+        """Store the shared call log."""
+
+        self.log = log
+
     async def __aenter__(self):
+        """Enter the fake async connection context."""
+
         return self
 
 
     async def __aexit__(self, exc_type, exc, tb):
+        """Exit the fake async connection context."""
+
         return False
+
+
+    async def run_sync(self, fn: Callable[[object], object]) -> object:
+        """Run a synchronous callback against the fake connection."""
+
+        result = fn(object())
+        self.log.append(("run_sync", result))
+        return result
 
 
 class _FakeEngine:
@@ -22,7 +40,7 @@ class _FakeEngine:
 
     def connect(self):
         self.log.append(("connect", None))
-        return _FakeConnection()
+        return _FakeConnection(self.log)
 
 
 async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> None:
@@ -49,3 +67,4 @@ async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> Non
     assert log[0][0] == "engine"
     assert log[0][1][0] == str(make_url("mysql+aiomysql://longlink:secret@db.longlink.internal:3306/longlink"))
     assert log[0][1][1] == {"pool_pre_ping": True, "pool_recycle": 20, "pool_use_lifo": True}
+    assert log[1:] == [("connect", None), ("run_sync", None)]

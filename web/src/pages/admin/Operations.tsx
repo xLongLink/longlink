@@ -60,10 +60,37 @@ const operationColumns: Array<ColumnDef<ApiOperation>> = [
         meta: { className: 'w-52' },
     },
     {
-        accessorKey: 'payload',
-        header: 'Payload',
-        cell: ({ getValue }) => JSON.stringify(getValue<Record<string, unknown>>()),
-        meta: { className: 'min-w-72' },
+        id: 'metadata',
+        header: 'Metadata',
+        cell: ({ row }) => {
+            const operation = row.original;
+
+            return (
+                <div className="min-w-0 space-y-1 text-sm">
+                    <div className="truncate">
+                        <span className="text-xs text-muted-foreground">ID</span>{' '}
+                        <span className="font-mono text-xs">{operation.id}</span>
+                    </div>
+                    <div>
+                        <span className="text-xs text-muted-foreground">Step</span> {operation.step}
+                    </div>
+                    <div className="truncate">
+                        <span className="text-xs text-muted-foreground">Application</span>{' '}
+                        {operation.application_id ? (
+                            <span className="font-mono text-xs">{operation.application_id}</span>
+                        ) : (
+                            '—'
+                        )}
+                    </div>
+                    {operation.error ? (
+                        <div className="truncate text-destructive">
+                            <span className="text-xs">Error</span> {operation.error}
+                        </div>
+                    ) : null}
+                </div>
+            );
+        },
+        meta: { className: 'min-w-80' },
     },
 ];
 

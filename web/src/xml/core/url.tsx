@@ -1,11 +1,12 @@
 import { createContext as createReactContext, useContext as useReactContext } from 'react';
 
 export const BaseUrlContext = createReactContext<string>('');
+const ABSOLUTE_URL_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 
 /** Resolves a request URL against a base URL string. */
 export function resolveUrl(baseUrl: string, path: string): string {
     if (!path) return baseUrl;
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (ABSOLUTE_URL_PATTERN.test(path) || path.startsWith('//')) return path;
 
     const [pathPart, suffix = ''] = path.split(/([?#].*)/, 2);
     const basePart = baseUrl.split(/[?#]/, 1)[0];

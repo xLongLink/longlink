@@ -16,6 +16,15 @@ type CreateApplicationDialogProps = {
     organization: string;
 };
 
+const platformEnvironmentNames = new Set([
+    'LONGLINK_DATABASE_SCHEMA',
+    'LONGLINK_DATABASE_URL',
+    'LONGLINK_ENV',
+    'LONGLINK_STORAGE_BUCKET',
+    'LONGLINK_STORAGE_SHARED_BUCKET',
+    'LONGLINK_STORAGE_URL',
+]);
+
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplicationDialog({ organization }: CreateApplicationDialogProps) {
     const { role } = useUser();
@@ -32,6 +41,8 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     const { data: iconCatalog } = useApiQuery<ApiIconCatalog>(open ? '/api/icons' : null, { staleTime: Infinity });
     const iconOptions: string[] = iconCatalog?.icons ?? [];
     const visibleIconOptions = icon && !iconOptions.includes(icon) ? [icon, ...iconOptions] : iconOptions;
+    const configurableEnvironments =
+        imageMetadata?.environments.filter((env) => !platformEnvironmentNames.has(env.name)) ?? [];
 
     if (role === 'support') {
         return null;
@@ -268,10 +279,10 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                             </form>
                         ) : (
                             <form className="space-y-4" onSubmit={handleCreateApp}>
-                                {imageMetadata?.environments.length ? (
+                                {configurableEnvironments.length ? (
                                     <ScrollArea className="max-h-80 pr-3">
                                         <div className="space-y-4">
-                                            {imageMetadata.environments.map((env) => (
+                                            {configurableEnvironments.map((env) => (
                                                 <div key={env.name} className="space-y-2">
                                                     <Label htmlFor={`env-${env.name}`}>
                                                         {env.name}{' '}

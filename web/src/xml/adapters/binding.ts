@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getVersion, proxy, useSnapshot } from 'valtio';
+import { getVersion, proxy, ref, useSnapshot } from 'valtio';
 import { isReference, resolvePath } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
 import { resolveXmlValue } from './props';
@@ -10,7 +10,7 @@ type BindingResult = {
     bound: boolean;
     initialValue: string;
     currentValue: string;
-    setValue: (value: string) => void;
+    setValue: (value: unknown) => void;
 };
 
 type BindingTarget = {
@@ -40,7 +40,7 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
         setValue: (nextValue) => {
             if (!target) return;
 
-            const normalizedValue = type === 'number' ? Number(nextValue) : nextValue;
+            const normalizedValue = normalizeBindableValue(type, nextValue);
 
             if (target.key) {
                 target.state[target.key] = normalizedValue;
@@ -52,6 +52,18 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
             }
         },
     };
+}
+
+
+/** Normalizes control values before writing them into XML state. */
+function normalizeBindableValue(type: string, value: unknown): unknown {
+    if (type === 'number') return Number(value);
+
+    if (type === 'file' && value !== null && typeof value === 'object') {
+        return ref(value);
+    }
+
+    return value;
 }
 
 /** Resolves a writable state target from a raw XML binding expression. */

@@ -36,9 +36,9 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
 
     _engine = create_async_engine(url, **engine_kwargs)
 
-    # Verify connection once
-    async with _engine.connect():
-        pass
+    # Verify connection once before exposing the session factory.
+    async with _engine.connect() as connection:
+        await connection.run_sync(lambda _: None)
 
     Session = async_sessionmaker(_engine, expire_on_commit=False)
 

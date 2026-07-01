@@ -29,6 +29,13 @@ class OrganizationInvitationCreate(BaseModel):
     role: OrganizationRoles
 
 
+class OrganizationMemberUpdate(BaseModel):
+    """Validate organization member update payloads."""
+
+    # State
+    role: OrganizationRoles
+
+
 class OrganizationInvitationResponse(BaseModel):
     """Represent one organization invitation in API responses."""
 
@@ -155,8 +162,8 @@ class OrganizationDetails(BaseModel):
     # Relationships
     users: list[OrganizationMemberSummary]
     invitations: list[OrganizationInvitationResponse] = Field(
-        default_factory=list[OrganizationInvitationResponse]
+        default_factory=list
     )
     applications: list[OrganizationApplicationResponse] = Field(
-        default_factory=list[OrganizationApplicationResponse]
+        default_factory=list
     )

@@ -1,19 +1,18 @@
 from asyncio import run
 
 
-def test_sample_endpoint_returns_initial_payload() -> None:
-    """Load the scaffolded application and run its starter sample endpoint."""
+def test_form_endpoint_returns_submitted_payload() -> None:
+    """Load the scaffolded application and run its starter form endpoint."""
 
     # Arrange
     from main import app
-    from src.routes.sample import sample_get_endpoint
+    from src.routes.submissions import form_post_endpoint
+
+    submitted_payload = {"name": "Ada", "team": "ops"}
 
     # Act
-    payload = run(sample_get_endpoint())
+    payload = run(form_post_endpoint(submitted_payload))
 
     # Assert
     assert app is not None
-    assert payload["message"] == "Sample GET endpoint received data"
-    assert payload["required"] == "required"
-    assert payload["optional"] == "optional"
-    assert payload["filesystem_type"] == "Storage"
+    assert payload == {"message": "Form submission received", "payload": submitted_payload}

@@ -1,5 +1,4 @@
 import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Link } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
@@ -42,33 +41,6 @@ export default function Applications({ organization, applications, isLoading, er
                     </div>
                 );
             },
-        },
-        {
-            id: 'created_by',
-            header: 'Created by',
-            cell: ({ row }) => {
-                const createdBy = row.original.created_by;
-
-                if (!createdBy) {
-                    return '—';
-                }
-
-                return (
-                    <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                            <AvatarImage src={createdBy.avatar} alt={createdBy.name} />
-                            <AvatarFallback>{createdBy.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                            <div className="truncate font-medium text-foreground">{createdBy.name}</div>
-                            <div className="truncate text-xs text-muted-foreground">
-                                {new Date(row.original.created_at).toLocaleString()}
-                            </div>
-                        </div>
-                    </div>
-                );
-            },
-            meta: { className: 'w-64' },
         },
     ] satisfies Array<ColumnDef<ApiOrganizationApplication>>;
 
