@@ -1,5 +1,6 @@
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 from datetime import UTC, datetime
+from botocore.exceptions import ClientError
 from src.adapters.storage.s3 import S3
 
 
@@ -41,22 +42,84 @@ async def test_storage_buckets_returns_bucket_names(monkeypatch) -> None:
     client.list_buckets.assert_called_once_with()
 
 
+async def test_storage_shared_bucket_creates_managed_bucket(monkeypatch) -> None:
+    """Create a shared organization bucket with the managed naming convention."""
+
+    client = Mock()
+
+    monkeypatch.setattr("src.adapters.storage.s3.boto3.client", Mock(return_value=client))
+
+    storage = S3(
+        protocol="https",
+        endpoint_url="https://storage.longlink.internal",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
+    )
+
+    assert await storage.shared_bucket("acme") == "longlink-acme-shared"
+    client.create_bucket.assert_called_once_with(Bucket="longlink-acme-shared")
+
+
+async def test_storage_bucket_creates_managed_application_bucket(monkeypatch) -> None:
+    """Create an application bucket with the managed naming convention."""
+
+    client = Mock()
+
+    monkeypatch.setattr("src.adapters.storage.s3.boto3.client", Mock(return_value=client))
+
+    storage = S3(
+        protocol="https",
+        endpoint_url="https://storage.longlink.internal",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
+    )
+
+    assert await storage.bucket("acme", "dashboard") == "longlink-acme-dashboard"
+    client.create_bucket.assert_called_once_with(Bucket="longlink-acme-dashboard")
+
+
+async def test_storage_bucket_reuses_existing_accessible_bucket(monkeypatch) -> None:
+    """Reuse an existing accessible bucket when a repeated create reports a conflict."""
+
+    client = Mock()
+    client.create_bucket.side_effect = ClientError(
+        {"Error": {"Code": "BucketAlreadyOwnedByYou", "Message": "Bucket already exists"}},
+        "CreateBucket",
+    )
+
+    monkeypatch.setattr("src.adapters.storage.s3.boto3.client", Mock(return_value=client))
+
+    storage = S3(
+        protocol="https",
+        endpoint_url="https://storage.longlink.internal",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
+    )
+
+    assert await storage.shared_bucket("acme") == "longlink-acme-shared"
+    client.create_bucket.assert_called_once_with(Bucket="longlink-acme-shared")
+    client.head_bucket.assert_called_once_with(Bucket="longlink-acme-shared")
+
+
 async def test_storage_objects_returns_bucket_object_metadata(monkeypatch) -> None:
     """List object metadata from the S3 client response."""
 
     last_modified = datetime(2026, 7, 1, tzinfo=UTC)
+    paginator = Mock()
+    paginator.paginate.return_value = [
+        {
+            "Contents": [
+                {
+                    "Key": "reports/july.csv",
+                    "Size": 123,
+                    "ETag": '"abc123"',
+                    "LastModified": last_modified,
+                }
+            ]
+        }
+    ]
     client = Mock()
-    client.list_objects_v2.return_value = {
-        "Contents": [
-            {
-                "Key": "reports/july.csv",
-                "Size": 123,
-                "ETag": '"abc123"',
-                "LastModified": last_modified,
-            }
-        ],
-        "IsTruncated": False,
-    }
+    client.get_paginator.return_value = paginator
 
     monkeypatch.setattr("src.adapters.storage.s3.boto3.client", Mock(return_value=client))
 
@@ -75,24 +138,31 @@ async def test_storage_objects_returns_bucket_object_metadata(monkeypatch) -> No
             "last_modified": last_modified,
         }
     ]
-    client.list_objects_v2.assert_called_once_with(Bucket="alpha", MaxKeys=1000)
-
-
-async def test_storage_objects_paginates_until_limit(monkeypatch) -> None:
-    """Continue listing objects until the requested limit is reached."""
-
-    client = Mock()
-    client.list_objects_v2.side_effect = [
-        {
-            "Contents": [{"Key": "one.txt", "Size": 1}],
-            "IsTruncated": True,
-            "NextContinuationToken": "next-page",
+    client.get_paginator.assert_called_once_with("list_objects_v2")
+    paginator.paginate.assert_called_once_with(
+        Bucket="alpha",
+        PaginationConfig={
+            "MaxItems": 1000,
+            "PageSize": 1000,
         },
+    )
+
+
+async def test_storage_objects_limits_paginator_results(monkeypatch) -> None:
+    """Stop returning object metadata once the requested limit is reached."""
+
+    paginator = Mock()
+    paginator.paginate.return_value = [
         {
-            "Contents": [{"Key": "two.txt", "Size": 2}],
-            "IsTruncated": False,
-        },
+            "Contents": [
+                {"Key": "one.txt", "Size": 1},
+                {"Key": "two.txt", "Size": 2},
+                {"Key": "three.txt", "Size": 3},
+            ]
+        }
     ]
+    client = Mock()
+    client.get_paginator.return_value = paginator
 
     monkeypatch.setattr("src.adapters.storage.s3.boto3.client", Mock(return_value=client))
 
@@ -107,7 +177,10 @@ async def test_storage_objects_paginates_until_limit(monkeypatch) -> None:
         {"key": "one.txt", "size": 1, "etag": None, "last_modified": None},
         {"key": "two.txt", "size": 2, "etag": None, "last_modified": None},
     ]
-    assert client.list_objects_v2.call_args_list == [
-        call(Bucket="alpha", MaxKeys=2),
-        call(Bucket="alpha", MaxKeys=1, ContinuationToken="next-page"),
-    ]
+    paginator.paginate.assert_called_once_with(
+        Bucket="alpha",
+        PaginationConfig={
+            "MaxItems": 2,
+            "PageSize": 2,
+        },
+    )

@@ -6,11 +6,13 @@ from fastapi.testclient import TestClient
 from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
+from src.models.storages import StorageKind
 from src.models.locations import LocationResponse
 from src.models.organizations import OrganizationDetails as OrgDetails
 from src.models.organizations import OrganizationSummary as OrgSummary
 from src.models.organizations import (OrganizationMemberSummary,
                                       OrganizationInvitationResponse)
+from src.adapters.database.shared import SharedUser
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute
@@ -85,7 +87,7 @@ async def test_create_organization_initializes_database(
     # Arrange
     owner = users[0]
     client = clients[0]
-    calls: list[tuple[str, str, list[dict[str, object]] | None]] = []
+    calls: list[tuple[str, str, list[SharedUser] | None]] = []
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
 
@@ -100,7 +102,7 @@ async def test_create_organization_initializes_database(
             calls.append(("database", organization, None))
             return f"postgresql://db/{organization}"
 
-        async def sync_users(self, organization: str, users: list[dict[str, object]]) -> None:
+        async def sync_users(self, organization: str, users: list[SharedUser]) -> None:
             calls.append(("sync_users", organization, users))
 
     monkeypatch.setattr("src.operations.provisioning.Postgres", FakePostgres)
@@ -115,24 +117,59 @@ async def test_create_organization_initializes_database(
     assert response.status_code == 200
     synced_users = calls[1][2]
     assert synced_users is not None
-    assert calls == [
-        ("database", "acme", None),
-        (
-            "sync_users",
-            "acme",
-            [
-                {
-                    "id": owner.id,
-                    "name": owner.name,
-                    "email": owner.email,
-                    "avatar": owner.avatar,
-                    "role_name": "owner",
-                    "created_at": synced_users[0]["created_at"],
-                    "updated_at": synced_users[0]["updated_at"],
-                }
-            ],
-        ),
+    assert calls[0] == ("database", "acme", None)
+    assert calls[1][0] == "sync_users"
+    assert calls[1][1] == "acme"
+    assert [user.model_dump() for user in synced_users] == [
+        {
+            "id": owner.id,
+            "name": owner.name,
+            "email": owner.email,
+            "avatar": owner.avatar,
+            "role_name": "owner",
+            "created_at": synced_users[0].created_at,
+            "updated_at": synced_users[0].updated_at,
+            "deleted_at": None,
+        }
     ]
+
+
+async def test_create_organization_initializes_storage(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Create the organization shared bucket during organization creation."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    calls: list[tuple[str, str]] = []
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    await db.storage.create(StorageKind.s3, "primary", "http", "http://storage.local", "access", "secret", location.id, owner)
+
+    class FakeStorage:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            self.protocol = protocol
+            self.endpoint_url = endpoint_url
+            self.access_key_id = access_key_id
+            self.secret_access_key = secret_access_key
+
+        async def shared_bucket(self, organization: str) -> str:
+            calls.append(("shared_bucket", organization))
+            return f"longlink-{organization}-shared"
+
+    monkeypatch.setattr("src.operations.provisioning.S3", FakeStorage)
+
+    # Act
+    response = client.post(
+        "/api/organizations",
+        json={"name": "acme", "location_id": str(location.id)},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert calls == [("shared_bucket", "acme")]
 
 
 async def test_get_organization_returns_member_payload(
@@ -355,6 +392,108 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
             "space_used": 512,
             "table_count": 1,
             "row_estimate": 3,
+        },
+    ]
+
+
+async def test_organization_storage_endpoint_returns_managed_buckets(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Return shared, application, missing, and orphaned storage buckets for one organization."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    registry = await db.storage.create(StorageKind.s3, "primary", "http", "http://storage.local", "access", "secret", location.id, owner)
+    dashboard = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        storage_registry_id=registry.id,
+        user=owner,
+    )
+    reports = await db.applications.create(
+        organization.id,
+        "reports",
+        slug="reports",
+        image="ghcr.io/longlink/reports:latest",
+        storage_registry_id=registry.id,
+        user=owner,
+    )
+
+    class FakeStorage:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            self.protocol = protocol
+            self.endpoint_url = endpoint_url
+            self.access_key_id = access_key_id
+            self.secret_access_key = secret_access_key
+
+        async def buckets(self) -> list[str]:
+            return [
+                "longlink-acme-shared",
+                "longlink-acme-dashboard",
+                "longlink-acme-stale",
+                "longlink-other-shared",
+            ]
+
+    monkeypatch.setattr("src.routes.organizations.S3", FakeStorage)
+
+    # Act
+    response = client.get(f"/api/organizations/{organization.id}/storage")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "kind": "shared_bucket",
+            "name": "shared",
+            "bucket_name": "longlink-acme-shared",
+            "application": None,
+            "storage_registry_id": str(registry.id),
+            "storage_registry_name": "primary",
+            "status": "available",
+        },
+        {
+            "kind": "application_bucket",
+            "name": "dashboard",
+            "bucket_name": "longlink-acme-dashboard",
+            "application": {
+                "id": str(dashboard.id),
+                "name": "dashboard",
+                "slug": "dashboard",
+                "status": "creating",
+            },
+            "storage_registry_id": str(registry.id),
+            "storage_registry_name": "primary",
+            "status": "available",
+        },
+        {
+            "kind": "application_bucket",
+            "name": "reports",
+            "bucket_name": "longlink-acme-reports",
+            "application": {
+                "id": str(reports.id),
+                "name": "reports",
+                "slug": "reports",
+                "status": "creating",
+            },
+            "storage_registry_id": str(registry.id),
+            "storage_registry_name": "primary",
+            "status": "missing",
+        },
+        {
+            "kind": "application_bucket",
+            "name": "stale",
+            "bucket_name": "longlink-acme-stale",
+            "application": None,
+            "storage_registry_id": str(registry.id),
+            "storage_registry_name": "primary",
+            "status": "orphaned",
         },
     ]
 

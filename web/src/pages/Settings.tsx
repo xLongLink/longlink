@@ -128,7 +128,7 @@ export default function Settings() {
                     </div>
                 </Hero>
 
-                <Menu defaultValue="account" className="items-start">
+                <Menu defaultValue="account" hashNavigation className="items-start">
                     <MenuSection value="account" label="Account" icon={UserRound}>
                         <div className="space-y-4">
                             <div>

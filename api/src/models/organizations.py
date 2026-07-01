@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import datetime
-from pydantic import Field, EmailStr, BaseModel, ConfigDict
+from pydantic import Field, EmailStr, BaseModel, ConfigDict, field_validator
+from src.models.icons import Icon, parse_icon
 from src.models.roles import OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.statuses import ApplicationStatus
@@ -82,7 +83,7 @@ class OrganizationApplicationResponse(BaseModel):
     # Metadata
     name: str
     slug: str
-    icon: str | None = None
+    icon: Icon | None = None
     version: str | None = None
     sdk_version: str | None = None
     description: str | None = None
@@ -97,6 +98,13 @@ class OrganizationApplicationResponse(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
+
+    @field_validator("icon", mode="before")
+    @classmethod
+    def validate_icon(cls, icon: str | Icon | None) -> Icon | None:
+        """Normalize and validate persisted application icon slugs."""
+
+        return parse_icon(icon)
 
 
 class OrganizationMemberSummary(BaseModel):
@@ -146,5 +154,9 @@ class OrganizationDetails(BaseModel):
 
     # Relationships
     users: list[OrganizationMemberSummary]
-    invitations: list[OrganizationInvitationResponse] = Field(default_factory=list[OrganizationInvitationResponse])
-    applications: list[OrganizationApplicationResponse] = Field(default_factory=list[OrganizationApplicationResponse])
+    invitations: list[OrganizationInvitationResponse] = Field(
+        default_factory=list[OrganizationInvitationResponse]
+    )
+    applications: list[OrganizationApplicationResponse] = Field(
+        default_factory=list[OrganizationApplicationResponse]
+    )

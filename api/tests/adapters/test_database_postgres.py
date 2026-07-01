@@ -1,7 +1,9 @@
 from uuid import UUID
 from datetime import UTC, datetime
-from sqlalchemy.schema import CreateSchema
+from sqlalchemy.schema import CreateTable, CreateSchema
+from sqlalchemy.dialects import postgresql
 from src.adapters.database.postgres import Postgres
+from src.adapters.database.shared import SharedUser
 
 
 class _FakeResult:
@@ -120,8 +122,43 @@ class _FakeConnection:
 
         return _FakeResult(None)
 
+    async def run_sync(self, callback):
+        self.log.append(("run_sync", callback))
+        return callback(self)
+
     async def exec_driver_sql(self, statement: str):
         self.log.append(("driver_sql", statement))
+
+
+class _FakeInspector:
+    """Minimal SQLAlchemy inspector stub for adapter tests."""
+
+    def get_schema_names(self) -> list[str]:
+        """Return schema names including system schemas."""
+
+        return ["information_schema", "dashboard", "pg_catalog", "public"]
+
+    def get_table_names(self, schema: str | None = None) -> list[str]:
+        """Return regular table names for one schema."""
+
+        assert schema == "dashboard"
+        return ["orders"]
+
+    def get_materialized_view_names(self, schema: str | None = None) -> list[str]:
+        """Return materialized view names for one schema."""
+
+        assert schema == "dashboard"
+        return []
+
+    def get_columns(self, table_name: str, schema: str | None = None) -> list[dict[str, object]]:
+        """Return column metadata for one table."""
+
+        assert schema == "dashboard"
+        assert table_name == "orders"
+        return [
+            {"name": "id", "type": "integer", "nullable": False},
+            {"name": "name", "type": "character varying", "nullable": True},
+        ]
 
 
 async def test_schema_creates_database_and_schema_with_managed_connection(monkeypatch) -> None:
@@ -162,8 +199,11 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
     assert log[4][1][1] == {"pool_pre_ping": True}
     assert ("begin", None) in log
     assert any(isinstance(entry[1], CreateSchema) for entry in log if entry[0] == "execute")
-    assert any("CREATE TABLE IF NOT EXISTS public.users" in str(entry[1]) for entry in log if entry[0] == "execute")
-    assert any("id UUID PRIMARY KEY" in str(entry[1]) for entry in log if entry[0] == "execute")
+    create_table_calls = [entry for entry in log if entry[0] == "execute" and isinstance(entry[1], CreateTable)]
+    assert len(create_table_calls) == 1
+    create_table_sql = str(create_table_calls[0][1].compile(dialect=postgresql.dialect()))
+    assert "CREATE TABLE IF NOT EXISTS public.users" in create_table_sql
+    assert "PRIMARY KEY (id)" in create_table_sql
     assert any("CREATE ROLE \"longlink_acme_dashboard\" LOGIN PASSWORD 'runtime-secret'" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT USAGE, CREATE ON SCHEMA \"dashboard\" TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT SELECT, REFERENCES ON TABLE public.users TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
@@ -195,8 +235,11 @@ async def test_database_creates_shared_users_table_with_write_restrictions(monke
     # Assert
     assert connection == "postgresql+psycopg://longlink:secret@db.longlink.internal:5432/longlink_acme?sslmode=disable"
     assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
-    assert any("CREATE TABLE IF NOT EXISTS public.users" in str(entry[1]) for entry in log if entry[0] == "execute")
-    assert any("id UUID PRIMARY KEY" in str(entry[1]) for entry in log if entry[0] == "execute")
+    create_table_calls = [entry for entry in log if entry[0] == "execute" and isinstance(entry[1], CreateTable)]
+    assert len(create_table_calls) == 1
+    create_table_sql = str(create_table_calls[0][1].compile(dialect=postgresql.dialect()))
+    assert "CREATE TABLE IF NOT EXISTS public.users" in create_table_sql
+    assert "PRIMARY KEY (id)" in create_table_sql
     assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 
@@ -225,21 +268,23 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
     await adapter.sync_users(
         "acme",
         [
-            {
-                "id": user_id,
-                "name": "Owner User",
-                "email": "owner@example.com",
-                "avatar": "",
-                "role_name": "owner",
-                "created_at": timestamp,
-                "updated_at": timestamp,
-            }
+            SharedUser(
+                id=user_id,
+                name="Owner User",
+                email="owner@example.com",
+                avatar="",
+                role_name="owner",
+                created_at=timestamp,
+                updated_at=timestamp,
+            )
         ],
     )
 
     # Assert
     insert_calls = [entry for entry in log if entry[0] == "execute" and "INSERT INTO public.users" in str(entry[1])]
     assert len(insert_calls) == 1
+    insert = insert_calls[0][1].compile(dialect=postgresql.dialect())
+    assert "ON CONFLICT (id) DO UPDATE SET" in str(insert)
     assert insert_calls[0][2] == [
         {
             "id": user_id,
@@ -249,11 +294,45 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
             "role_name": "owner",
             "created_at": timestamp,
             "updated_at": timestamp,
+            "deleted_at": None,
         }
     ]
-    assert any("ON CONFLICT (id) DO UPDATE SET" in str(entry[1]) for entry in insert_calls)
-    assert any("AND id NOT IN" in str(entry[1]) for entry in log if entry[0] == "execute")
+    update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE public.users")]
+    assert len(update_calls) == 1
+    update_sql = str(update_calls[0][1].compile(dialect=postgresql.dialect()))
+    assert "public.users.deleted_at IS NULL" in update_sql
+    assert "NOT IN" in update_sql
     assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+
+
+async def test_sync_users_soft_deletes_every_active_user_when_input_is_empty(monkeypatch) -> None:
+    """Soft-delete every active shared user when no active users remain."""
+
+    # Arrange
+    log: list[tuple] = []
+
+    def fake_create_async_engine(url, **kwargs):
+        log.append(("engine", (str(url), kwargs)))
+        return _FakeEngine(log)
+
+    monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
+
+    adapter = Postgres(
+        host="db.longlink.internal",
+        port=5432,
+        username="longlink",
+        password="secret",
+    )
+
+    # Act
+    await adapter.sync_users("acme", [])
+
+    # Assert
+    update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE public.users")]
+    assert len(update_calls) == 1
+    update_sql = str(update_calls[0][1].compile(dialect=postgresql.dialect()))
+    assert "public.users.deleted_at IS NULL" in update_sql
+    assert "NOT IN" not in update_sql
 
 
 async def test_usage_reads_server_disk_capacity_through_managed_connection(monkeypatch) -> None:
@@ -327,6 +406,7 @@ async def test_tables_return_columns_and_preview_rows(monkeypatch) -> None:
         return _FakeEngine(log)
 
     monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.inspect", lambda _: _FakeInspector())
 
     adapter = Postgres(
         host="db.longlink.internal",
@@ -350,6 +430,33 @@ async def test_tables_return_columns_and_preview_rows(monkeypatch) -> None:
             "rows": [{"id": 1, "name": "first"}],
         }
     ]
-    assert any("SELECT c.relname AS name" in str(entry[1]) for entry in log if entry[0] == "execute")
-    assert any("FROM information_schema.columns" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert len([entry for entry in log if entry[0] == "run_sync"]) == 2
     assert any('SELECT * FROM "dashboard"."orders" LIMIT :limit' in str(entry[1]) for entry in log if entry[0] == "execute")
+
+
+async def test_schemas_return_inspected_non_system_schemas(monkeypatch) -> None:
+    """Read schema names through SQLAlchemy inspection."""
+
+    # Arrange
+    log: list[tuple[str, object]] = []
+
+    def fake_create_async_engine(url, **kwargs):
+        log.append(("engine", (str(url), kwargs)))
+        return _FakeEngine(log)
+
+    monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.inspect", lambda _: _FakeInspector())
+
+    adapter = Postgres(
+        host="db.longlink.internal",
+        port=5432,
+        username="longlink",
+        password="secret",
+    )
+
+    # Act
+    schemas = await adapter.schemas("longlink_acme")
+
+    # Assert
+    assert schemas == ["dashboard", "public"]
+    assert len([entry for entry in log if entry[0] == "run_sync"]) == 1

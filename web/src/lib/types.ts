@@ -1,5 +1,6 @@
 import type { PlatformRole, Role } from '@/lib/roles';
 import type { Accent, Radius, Theme } from '@/lib/theme';
+import type { IconName } from 'lucide-react/dynamic';
 
 export type ApiInvitation = {
     id: string;
@@ -42,7 +43,7 @@ export type ApiOrganizationApplication = {
     status: 'creating' | 'running' | 'failed';
     role: Role | null;
     description: string | null;
-    icon: string | null;
+    icon: IconName | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary | null;
@@ -73,6 +74,10 @@ export type ApiImageMetadata = {
     version: string | null;
     sdk: string | null;
     environments: ApiEnvironmentMetadata[];
+};
+
+export type ApiIconCatalog = {
+    icons: IconName[];
 };
 
 export type ApiOrganizationSummary = {
@@ -154,6 +159,23 @@ export type ApiOrganizationDatabaseTable = {
     schema_name: string;
     columns: ApiOrganizationDatabaseTableColumn[];
     rows: Array<Record<string, string | number | boolean | null>>;
+};
+
+export type ApiOrganizationStorageApplication = {
+    id: string;
+    name: string;
+    slug: string;
+    status: 'creating' | 'running' | 'failed';
+};
+
+export type ApiOrganizationStorageResource = {
+    kind: 'shared_bucket' | 'application_bucket';
+    name: string;
+    bucket_name: string;
+    application: ApiOrganizationStorageApplication | null;
+    storage_registry_id: string;
+    storage_registry_name: string;
+    status: 'available' | 'missing' | 'orphaned' | 'unavailable';
 };
 
 export type ApiDatabaseUsage = {
@@ -259,7 +281,7 @@ export type ApiApplicationResponse = {
     status: 'creating' | 'running' | 'failed';
     role: Role | null;
     description: string | null;
-    icon: string | null;
+    icon: IconName | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary;

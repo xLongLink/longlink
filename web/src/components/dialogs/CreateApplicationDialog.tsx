@@ -1,22 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useApiQuery } from '@/hooks/use-api';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
-import type { ApiImageMetadata } from '@/lib/types';
-import { DynamicIcon, iconNames } from 'lucide-react/dynamic';
+import type { ApiIconCatalog, ApiImageMetadata } from '@/lib/types';
 import { type SyntheticEvent, useState } from 'react';
-
-const ICON_OPTIONS = [...iconNames].sort((left, right) => left.localeCompare(right));
-
-const ICON_OPTION_BATCH_SIZE = 80;
-const ICON_OPTION_SCROLL_THRESHOLD = 48;
-
-type IconName = (typeof ICON_OPTIONS)[number];
 
 type CreateApplicationDialogProps = {
     organization: string;
@@ -34,16 +28,13 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     const [image, setImage] = useState('');
     const [imageMetadata, setImageMetadata] = useState<ApiImageMetadata | null>(null);
     const [isInspecting, setIsInspecting] = useState(false);
-    const [visibleIconCount, setVisibleIconCount] = useState(ICON_OPTION_BATCH_SIZE);
     const [error, setError] = useState<string | null>(null);
-    const visibleIconOptions = ICON_OPTIONS.slice(0, visibleIconCount);
+    const { data: iconCatalog } = useApiQuery<ApiIconCatalog>(open ? '/api/icons' : null, { staleTime: Infinity });
+    const iconOptions: string[] = iconCatalog?.icons ?? [];
+    const visibleIconOptions = icon && !iconOptions.includes(icon) ? [icon, ...iconOptions] : iconOptions;
 
     if (role === 'support') {
         return null;
-    }
-
-    if (icon.length > 0 && !visibleIconOptions.includes(icon as IconName)) {
-        visibleIconOptions.push(icon as IconName);
     }
 
     /** Reset the dialog state when the flow closes or completes. */
@@ -55,19 +46,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
         setImage('');
         setImageMetadata(null);
         setIsInspecting(false);
-        setVisibleIconCount(ICON_OPTION_BATCH_SIZE);
         setError(null);
-    }
-
-    /** Load more icon choices as the icon select scroll reaches the bottom. */
-    function handleIconOptionsScroll(event: React.UIEvent<HTMLElement>) {
-        const target = event.currentTarget;
-
-        if (target.scrollTop + target.clientHeight < target.scrollHeight - ICON_OPTION_SCROLL_THRESHOLD) {
-            return;
-        }
-
-        setVisibleIconCount((count) => Math.min(count + ICON_OPTION_BATCH_SIZE, ICON_OPTIONS.length));
     }
 
     /** Inspect the image and advance to the app details step. */
@@ -238,15 +217,11 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                     >
                                         <SelectTrigger id="application-icon" className="w-full">
                                             {icon ? (
-                                                <DynamicIcon
-                                                    name={icon as Parameters<typeof DynamicIcon>[0]['name']}
-                                                    className="size-4 text-muted-foreground"
-                                                    aria-hidden="true"
-                                                />
+                                                <Icon name={icon} className="size-4 text-muted-foreground" />
                                             ) : null}
                                             <SelectValue placeholder="Choose an icon" />
                                         </SelectTrigger>
-                                        <SelectContent onScroll={handleIconOptionsScroll}>
+                                        <SelectContent>
                                             <SelectItem value="__none__">None</SelectItem>
                                             {visibleIconOptions.map((name) => (
                                                 <SelectItem key={name} value={name}>

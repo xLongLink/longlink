@@ -2,6 +2,7 @@ from enum import Enum
 from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
+from src.models.statuses import ApplicationStatus
 from src.models.users import UserSummary
 
 
@@ -9,6 +10,36 @@ class StorageKind(str, Enum):
     """Supported storage registry kinds."""
 
     s3 = "s3"
+
+
+class OrganizationStorageResourceKind(str, Enum):
+    """Supported organization storage resource kinds."""
+
+    shared_bucket = "shared_bucket"
+    application_bucket = "application_bucket"
+
+
+class OrganizationStorageResourceStatus(str, Enum):
+    """Supported organization storage resource statuses."""
+
+    available = "available"
+    missing = "missing"
+    orphaned = "orphaned"
+    unavailable = "unavailable"
+
+
+class OrganizationStorageApplicationResponse(BaseModel):
+    """Represent an application associated with a storage resource."""
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str
+    slug: str
+
+    # State
+    status: ApplicationStatus
 
 
 class StorageRegistryCreate(BaseModel):
@@ -31,6 +62,23 @@ class StorageBucketResponse(BaseModel):
 
     # Metadata
     name: str
+
+
+class OrganizationStorageResourceResponse(BaseModel):
+    """Represent one managed organization storage resource."""
+
+    # Metadata
+    kind: OrganizationStorageResourceKind
+    name: str
+    bucket_name: str
+
+    # Relationships
+    application: OrganizationStorageApplicationResponse | None
+    storage_registry_id: UUID
+    storage_registry_name: str
+
+    # State
+    status: OrganizationStorageResourceStatus
 
 
 class StorageObjectResponse(BaseModel):

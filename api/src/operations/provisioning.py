@@ -10,6 +10,7 @@ from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.adapters.compute.k8s import K8s
+from src.adapters.storage import S3
 from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -39,7 +40,11 @@ async def latest_compute_registry(location_id: UUID) -> ComputeRegistry | None:
     """Return the newest compute registry for one location."""
 
     return max(
-        (registry for registry in await compute.list() if registry.location_id == location_id),
+        (
+            registry
+            for registry in await compute.list()
+            if registry.location_id == location_id
+        ),
         key=lambda item: item.created_at,
         default=None,
     )
@@ -49,7 +54,11 @@ async def latest_database_registry(location_id: UUID) -> DatabaseRegistry | None
     """Return the newest database registry for one location."""
 
     return max(
-        (registry for registry in await database.list() if registry.location_id == location_id),
+        (
+            registry
+            for registry in await database.list()
+            if registry.location_id == location_id
+        ),
         key=lambda item: item.created_at,
         default=None,
     )
@@ -59,13 +68,19 @@ async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
     """Return the newest storage registry for one location."""
 
     return max(
-        (registry for registry in await storage.list() if registry.location_id == location_id),
+        (
+            registry
+            for registry in await storage.list()
+            if registry.location_id == location_id
+        ),
         key=lambda item: item.created_at,
         default=None,
     )
 
 
-async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMetadata | None:
+async def application_image_metadata(
+    payload: ApplicationCreate,
+) -> LongLinkMetadata | None:
     """Inspect image metadata and validate required environment values."""
 
     image_metadata = await images.metadata(payload.image)
@@ -81,12 +96,16 @@ async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMeta
         and not payload.envs.get(environment.name, "").strip()
     )
     if missing_envs:
-        raise ValueError(f"Missing required environment variables: {', '.join(missing_envs)}")
+        raise ValueError(
+            f"Missing required environment variables: {', '.join(missing_envs)}"
+        )
 
     return image_metadata
 
 
-async def application_compute_registry(application: Application, location_id: UUID) -> ComputeRegistry | None:
+async def application_compute_registry(
+    application: Application, location_id: UUID
+) -> ComputeRegistry | None:
     """Return the compute registry used by an application, falling back to the newest one."""
 
     if application.compute_registry_id is not None:
@@ -95,7 +114,9 @@ async def application_compute_registry(application: Application, location_id: UU
     return await latest_compute_registry(location_id)
 
 
-async def organization_database_registry(organization: Organization | OrganizationDetails | OrganizationSummary) -> DatabaseRegistry | None:
+async def organization_database_registry(
+    organization: Organization | OrganizationDetails | OrganizationSummary,
+) -> DatabaseRegistry | None:
     """Return the single database registry used by an organization."""
 
     for application in await applications.list_by_organization(organization.id):
@@ -103,14 +124,37 @@ async def organization_database_registry(organization: Organization | Organizati
             return application.database_registry
 
         if application.database_registry_id is not None:
-            registry = await database.get(application.database_registry_id, include_deleted=True)
+            registry = await database.get(
+                application.database_registry_id, include_deleted=True
+            )
             if registry is not None:
                 return registry
 
     return await latest_database_registry(organization.location_id)
 
 
-async def application_storage_registry(application: Application) -> StorageRegistry | None:
+async def organization_storage_registry(
+    organization: Organization | OrganizationDetails | OrganizationSummary,
+) -> StorageRegistry | None:
+    """Return the single storage registry used by an organization."""
+
+    for application in await applications.list_by_organization(organization.id):
+        if application.storage_registry is not None:
+            return application.storage_registry
+
+        if application.storage_registry_id is not None:
+            registry = await storage.get(
+                application.storage_registry_id, include_deleted=True
+            )
+            if registry is not None:
+                return registry
+
+    return await latest_storage_registry(organization.location_id)
+
+
+async def application_storage_registry(
+    application: Application,
+) -> StorageRegistry | None:
     """Return the storage registry used by an application."""
 
     if application.storage_registry_id is not None:
@@ -203,11 +247,15 @@ async def create_application_runtime(
 
     compute_registry = await latest_compute_registry(organization.location_id)
     if compute_registry is None:
-        raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
+        raise RuntimeError(
+            f"No compute cluster configured for location '{organization.location_id}'"
+        )
 
     database_registry = await organization_database_registry(organization)
     if database_registry is None:
-        raise RuntimeError(f"No database configured for location '{organization.location_id}'")
+        raise RuntimeError(
+            f"No database configured for location '{organization.location_id}'"
+        )
 
     storage_registry = await latest_storage_registry(organization.location_id)
 
@@ -218,12 +266,14 @@ async def create_application_runtime(
         image=payload.image,
         compute_registry_id=compute_registry.id,
         database_registry_id=database_registry.id,
-        storage_registry_id=storage_registry.id if storage_registry is not None else None,
+        storage_registry_id=storage_registry.id
+        if storage_registry is not None
+        else None,
         version=image_metadata.version if image_metadata is not None else None,
         sdk_version=image_metadata.sdk if image_metadata is not None else None,
         status=ApplicationStatus.creating,
         description=payload.description,
-        icon=payload.icon,
+        icon=payload.icon.value if payload.icon is not None else None,
         user=user,
     )
 
@@ -240,9 +290,24 @@ async def create_application_runtime(
     # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
     try:
         await k8s.namespace(organization.slug)
-        await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
+        await db_client.sync_users(
+            organization.slug, await organizations.database_users(organization.id)
+        )
+        if storage_registry is not None:
+            # Ensure object storage exists before the workload receives backend credentials.
+            storage_client = S3(
+                storage_registry.protocol,
+                storage_registry.endpoint_url,
+                storage_registry.access_key_id,
+                storage_registry.secret_access_key,
+            )
+            await storage_client.shared_bucket(organization.slug)
+            await storage_client.bucket(organization.slug, application_slug)
+
         database_url = await db_client.schema(organization.slug, application_slug)
-        runtime_envs = runtime_environment(application_slug, database_url, storage_registry)
+        runtime_envs = runtime_environment(
+            application_slug, database_url, storage_registry
+        )
         await k8s.application(
             organization.slug,
             application_slug,
@@ -255,13 +320,27 @@ async def create_application_runtime(
         raise RuntimeError("Failed to initialize the application") from exc
 
     try:
-        operation = await operations.create(OperationKind.application_create, application_id=application.id, step="verify", user=user)
+        operation = await operations.create(
+            OperationKind.application_create,
+            application_id=application.id,
+            step="verify",
+            user=user,
+        )
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        logger.exception("Failed to queue application verification for %s/%s", organization.slug, payload.name)
+        logger.exception(
+            "Failed to queue application verification for %s/%s",
+            organization.slug,
+            payload.name,
+        )
         raise RuntimeError("Failed to queue application verification") from exc
 
-    logger.info("Queued application creation verification %s for %s/%s", operation.id, organization.slug, payload.name)
+    logger.info(
+        "Queued application creation verification %s for %s/%s",
+        operation.id,
+        organization.slug,
+        payload.name,
+    )
     return application
 
 
@@ -273,16 +352,27 @@ async def sync_application_runtime(
 ) -> Application:
     """Update an existing application row and refresh its runtime workload."""
 
-    logger.info("Syncing application %s/%s from image %s", organization.slug, application.slug, payload.image)
+    logger.info(
+        "Syncing application %s/%s from image %s",
+        organization.slug,
+        application.slug,
+        payload.image,
+    )
     image_metadata = await application_image_metadata(payload)
 
-    compute_registry = await application_compute_registry(application, organization.location_id)
+    compute_registry = await application_compute_registry(
+        application, organization.location_id
+    )
     if compute_registry is None:
-        raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
+        raise RuntimeError(
+            f"No compute cluster configured for location '{organization.location_id}'"
+        )
 
     database_registry = await organization_database_registry(organization)
     if database_registry is None:
-        raise RuntimeError(f"No database configured for location '{organization.location_id}'")
+        raise RuntimeError(
+            f"No database configured for location '{organization.location_id}'"
+        )
 
     storage_registry = await application_storage_registry(application)
     if storage_registry is None:
@@ -293,12 +383,14 @@ async def sync_application_runtime(
         image=payload.image,
         compute_registry_id=compute_registry.id,
         database_registry_id=database_registry.id,
-        storage_registry_id=storage_registry.id if storage_registry is not None else None,
+        storage_registry_id=storage_registry.id
+        if storage_registry is not None
+        else None,
         version=image_metadata.version if image_metadata is not None else None,
         sdk_version=image_metadata.sdk if image_metadata is not None else None,
         status=ApplicationStatus.creating,
         description=payload.description,
-        icon=payload.icon,
+        icon=payload.icon.value if payload.icon is not None else None,
         user=user,
     )
     if updated_application is None:
@@ -317,9 +409,24 @@ async def sync_application_runtime(
     # Reapply the workload with a fresh rollout token so fixed development tags pull the newest image.
     try:
         await k8s.namespace(organization.slug)
-        await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
+        await db_client.sync_users(
+            organization.slug, await organizations.database_users(organization.id)
+        )
+        if storage_registry is not None:
+            # Ensure object storage exists before the workload receives backend credentials.
+            storage_client = S3(
+                storage_registry.protocol,
+                storage_registry.endpoint_url,
+                storage_registry.access_key_id,
+                storage_registry.secret_access_key,
+            )
+            await storage_client.shared_bucket(organization.slug)
+            await storage_client.bucket(organization.slug, application.slug)
+
         database_url = await db_client.schema(organization.slug, application.slug)
-        runtime_envs = runtime_environment(application.slug, database_url, storage_registry)
+        runtime_envs = runtime_environment(
+            application.slug, database_url, storage_registry
+        )
         await k8s.application(
             organization.slug,
             application.slug,
@@ -332,12 +439,24 @@ async def sync_application_runtime(
         await applications.set_status(application.id, ApplicationStatus.failed)
         raise RuntimeError("Failed to refresh the application runtime") from exc
 
-    operation = await operations.create(OperationKind.application_create, application_id=application.id, step="verify", user=user)
-    logger.info("Queued application sync verification %s for %s/%s", operation.id, organization.slug, payload.name)
+    operation = await operations.create(
+        OperationKind.application_create,
+        application_id=application.id,
+        step="verify",
+        user=user,
+    )
+    logger.info(
+        "Queued application sync verification %s for %s/%s",
+        operation.id,
+        organization.slug,
+        payload.name,
+    )
     return updated_application
 
 
-async def create_organization_namespace(organization: Organization | OrganizationSummary) -> None:
+async def create_organization_namespace(
+    organization: Organization | OrganizationSummary,
+) -> None:
     """Best-effort create the organization namespace on the active compute registry."""
 
     registry = await latest_compute_registry(organization.location_id)
@@ -345,12 +464,18 @@ async def create_organization_namespace(organization: Organization | Organizatio
         return
 
     try:
-        await K8s(registry.kubeconfig, registry.proxy_secret).namespace(organization.slug)
+        await K8s(registry.kubeconfig, registry.proxy_secret).namespace(
+            organization.slug
+        )
     except Exception:
-        logger.exception("Failed to create namespace for organization '%s'", organization.slug)
+        logger.exception(
+            "Failed to create namespace for organization '%s'", organization.slug
+        )
 
 
-async def create_organization_database(organization: Organization | OrganizationSummary) -> None:
+async def create_organization_database(
+    organization: Organization | OrganizationSummary,
+) -> None:
     """Best-effort create the organization database on the active database registry."""
 
     registry = await latest_database_registry(organization.location_id)
@@ -358,8 +483,36 @@ async def create_organization_database(organization: Organization | Organization
         return
 
     try:
-        db_client = Postgres(registry.host, registry.port, registry.username, registry.password)
+        db_client = Postgres(
+            registry.host, registry.port, registry.username, registry.password
+        )
         await db_client.database(organization.slug)
-        await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
+        await db_client.sync_users(
+            organization.slug, await organizations.database_users(organization.id)
+        )
     except Exception:
-        logger.exception("Failed to create database for organization '%s'", organization.slug)
+        logger.exception(
+            "Failed to create database for organization '%s'", organization.slug
+        )
+
+
+async def create_organization_storage(
+    organization: Organization | OrganizationSummary,
+) -> None:
+    """Best-effort create the shared bucket on the active storage registry."""
+
+    registry = await latest_storage_registry(organization.location_id)
+    if registry is None:
+        return
+
+    try:
+        await S3(
+            registry.protocol,
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        ).shared_bucket(organization.slug)
+    except Exception:
+        logger.exception(
+            "Failed to create storage for organization '%s'", organization.slug
+        )

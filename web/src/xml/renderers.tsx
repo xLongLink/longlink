@@ -9,6 +9,7 @@ import type { ASTNode, ExecutionContext } from './types';
 
 type RenderXMLProps = {
     ast: ASTNode[];
+    active?: boolean;
     ctx?: ExecutionContext;
     baseUrl?: string;
 };
@@ -16,7 +17,7 @@ type RenderXMLProps = {
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
+export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
     const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
     const requiresSetup = hasSetupNodes(ast);
     const requiresTranslations = hasTranslationNodes(ast);
@@ -25,8 +26,10 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
     const [setupError, setSetupError] = useState<unknown>(null);
     const [version, setVersion] = useState(0);
 
+    runtimeCtx.hashNavigation = active;
+
     useEffect(() => {
-        let active = true;
+        let mounted = true;
         let unsubscribers: Array<() => void> = [];
 
         /** Subscribes the renderer to every Valtio-backed state slot in the current page context. */
@@ -42,7 +45,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
 
                 unsubscribers.push(
                     subscribe(value, () => {
-                        if (active) setVersion((current) => current + 1);
+                        if (mounted) setVersion((current) => current + 1);
                     })
                 );
             }
@@ -58,13 +61,13 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
 
             void fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, `/i18n/${locale}.json`))
                 .then((translations) => {
-                    if (!active) return;
+                    if (!mounted) return;
 
                     runtimeCtx.translations = translations;
                     setVersion((current) => current + 1);
                 })
                 .catch(() => {
-                    if (!active) return;
+                    if (!mounted) return;
 
                     runtimeCtx.translations = {};
                     setVersion((current) => current + 1);
@@ -92,16 +95,16 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             await setupContext(ast, runtimeCtx, baseUrl);
             subscribeToStateValues();
 
-            if (active) {
+            if (mounted) {
                 setInitializedAst(ast);
                 setVersion((current) => current + 1);
             }
         })().catch((error) => {
-            if (active) setSetupError(error);
+            if (mounted) setSetupError(error);
         });
 
         return () => {
-            active = false;
+            mounted = false;
 
             for (const unsubscribe of unsubscribers) {
                 unsubscribe();

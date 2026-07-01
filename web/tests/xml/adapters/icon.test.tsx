@@ -17,7 +17,7 @@ describe('Icon', () => {
         ]);
     });
 
-    /* The runtime should accept Icon XML without breaking server rendering. */
+    /* Common platform icons should render directly without loading the full Lucide dynamic map. */
     it('renders icon xml end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<Icon name="layout-grid" />');
@@ -25,6 +25,6 @@ describe('Icon', () => {
 
         const output = renderToStaticMarkup(createElement('div', null, renderedTree));
 
-        expect(output).toBe('<div></div>');
+        expect(output).toContain('class="lucide lucide-layout-grid size-4 shrink-0"');
     });
 });

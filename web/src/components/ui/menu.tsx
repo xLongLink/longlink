@@ -8,6 +8,7 @@ type MenuProps = {
     value?: string;
     defaultValue?: string;
     onValueChange?: (value: string) => void;
+    hashNavigation?: boolean;
     className?: string;
     ariaLabel?: string;
     children?: React.ReactNode;
@@ -146,6 +147,81 @@ function getInitialValue(sections: ResolvedMenuSection[]): string | undefined {
     return firstSubSection?.value ?? firstSection.value;
 }
 
+
+/** Reads the current browser hash without the leading marker. */
+function getCurrentHashValue(): string | undefined {
+    if (typeof window === 'undefined') {
+        return undefined;
+    }
+
+    const hash = window.location.hash.replace(/^#/, '');
+
+    if (!hash) {
+        return undefined;
+    }
+
+    try {
+        return decodeURIComponent(hash);
+    } catch {
+        return hash;
+    }
+}
+
+
+/** Returns a selectable section or subsection value matching the candidate. */
+function getSelectableMenuValue(sections: ResolvedMenuSection[], candidate?: string): string | undefined {
+    if (!candidate) {
+        return undefined;
+    }
+
+    for (const section of sections) {
+        if (section.value === candidate) {
+            return section.disabled ? undefined : section.value;
+        }
+
+        const subSection = section.subSections.find((item) => item.value === candidate);
+
+        if (subSection) {
+            return section.disabled || subSection.disabled ? undefined : subSection.value;
+        }
+    }
+
+    return undefined;
+}
+
+
+/** Resolves the initial active value, preferring a valid URL hash when enabled. */
+function getInitialActiveValue(
+    sections: ResolvedMenuSection[],
+    defaultValue: string | undefined,
+    hashNavigation: boolean
+): string | undefined {
+    const hashValue = hashNavigation ? getSelectableMenuValue(sections, getCurrentHashValue()) : undefined;
+
+    return hashValue ?? getSelectableMenuValue(sections, defaultValue) ?? getInitialValue(sections);
+}
+
+
+/** Replaces the current browser hash without adding a history entry. */
+function replaceLocationHash(value: string) {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    const nextHash = `#${encodeURIComponent(value)}`;
+
+    if (window.location.hash === nextHash) {
+        return;
+    }
+
+    window.history.replaceState(
+        window.history.state,
+        '',
+        `${window.location.pathname}${window.location.search}${nextHash}`
+    );
+}
+
+
 /** Finds the section that owns the active value. */
 function findActiveSection(sections: ResolvedMenuSection[], value: string): ResolvedMenuSection | undefined {
     return sections.find(
@@ -185,6 +261,7 @@ export function Menu({
     value,
     defaultValue,
     onValueChange,
+    hashNavigation = false,
     className,
     ariaLabel = 'Section menu',
     children,
@@ -192,8 +269,8 @@ export function Menu({
     const sections = React.useMemo(() => parseMenuSections(children), [children]);
 
     const isControlled = value !== undefined;
-    const [internalValue, setInternalValue] = React.useState<string | undefined>(
-        defaultValue ?? getInitialValue(sections)
+    const [internalValue, setInternalValue] = React.useState<string | undefined>(() =>
+        getInitialActiveValue(sections, defaultValue, hashNavigation)
     );
 
     const activeValue = isControlled ? value : internalValue;
@@ -216,20 +293,47 @@ export function Menu({
         }
 
         if (!internalValue) {
-            setInternalValue(getInitialValue(sections));
+            setInternalValue(getInitialActiveValue(sections, defaultValue, hashNavigation));
             return;
         }
 
-        const hasValue = sections.some(
-            (section) =>
-                section.value === internalValue ||
-                section.subSections.some((subSection) => subSection.value === internalValue)
-        );
-
-        if (!hasValue) {
-            setInternalValue(getInitialValue(sections));
+        if (!getSelectableMenuValue(sections, internalValue)) {
+            setInternalValue(getInitialActiveValue(sections, defaultValue, hashNavigation));
         }
-    }, [internalValue, isControlled, sections]);
+    }, [defaultValue, hashNavigation, internalValue, isControlled, sections]);
+
+    React.useEffect(() => {
+        if (!hashNavigation || typeof window === 'undefined') {
+            return;
+        }
+
+        /** Selects the hashed menu item or writes the active value to the URL. */
+        function syncValueFromHash() {
+            const nextValue = getSelectableMenuValue(sections, getCurrentHashValue());
+
+            if (nextValue) {
+                if (nextValue === activeValue) {
+                    return;
+                }
+
+                if (!isControlled) {
+                    setInternalValue(nextValue);
+                }
+
+                onValueChange?.(nextValue);
+                return;
+            }
+
+            if (activeValue) {
+                replaceLocationHash(activeValue);
+            }
+        }
+
+        syncValueFromHash();
+        window.addEventListener('hashchange', syncValueFromHash);
+
+        return () => window.removeEventListener('hashchange', syncValueFromHash);
+    }, [activeValue, hashNavigation, isControlled, onValueChange, sections]);
 
     React.useEffect(() => {
         if (!activeValue) {
@@ -257,6 +361,10 @@ export function Menu({
     function commitValue(nextValue: string) {
         if (!isControlled) {
             setInternalValue(nextValue);
+        }
+
+        if (hashNavigation) {
+            replaceLocationHash(nextValue);
         }
 
         onValueChange?.(nextValue);
@@ -396,7 +504,9 @@ export function Menu({
                 </ul>
             </nav>
 
-            <section className="min-w-0 space-y-4">{activeContent}</section>
+            <section id={hashNavigation ? activeValue : undefined} className="min-w-0 space-y-4">
+                {activeContent}
+            </section>
         </div>
     );
 }

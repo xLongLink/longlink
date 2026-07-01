@@ -1,20 +1,28 @@
 import secrets
 from uuid import UUID
-from .base import (Database, DatabaseUser, DatabaseCellValue, DatabaseTableData,
-                   DatabaseTableUsage, DatabaseSchemaUsage)
+from .base import Database
+from .shared import SharedUser
+from .types import (DatabaseCellValue, DatabaseTableData, DatabaseTableUsage,
+                   DatabaseTableColumn, DatabaseSchemaUsage)
 from decimal import Decimal
 from hashlib import sha1
+from typing import cast
 from datetime import date, datetime
+from functools import partial
 from contextlib import asynccontextmanager
-from sqlalchemy import text, bindparam
+from sqlalchemy import func, text, Table, inspect, update
 from collections.abc import AsyncIterator
 from src.environments import env
 from sqlalchemy.engine import URL
-from sqlalchemy.schema import CreateSchema
+from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.schema import CreateTable, CreateSchema
 from src.utils.namespace import dbname
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncConnection,
                                     create_async_engine)
 from sqlalchemy.sql.elements import quoted_name
+
+shared_users_table = cast(Table, getattr(SharedUser, "__table__"))
 
 
 class Postgres(Database):
@@ -141,18 +149,7 @@ class Postgres(Database):
     async def _ensure_shared_users_table(self, conn: AsyncConnection) -> None:
         """Create the shared organization users table when it is missing."""
 
-        await conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS public.users (
-                id UUID PRIMARY KEY,
-                email VARCHAR(254) NOT NULL,
-                name VARCHAR(255) NOT NULL,
-                avatar VARCHAR(2048) NOT NULL DEFAULT '',
-                role_name VARCHAR(32) NOT NULL,
-                created_at TIMESTAMPTZ NOT NULL,
-                updated_at TIMESTAMPTZ NOT NULL,
-                deleted_at TIMESTAMPTZ
-            )
-        """))
+        await conn.execute(CreateTable(shared_users_table, if_not_exists=True))
 
 
     async def _restrict_shared_users_table(self, conn: AsyncConnection) -> None:
@@ -161,59 +158,44 @@ class Postgres(Database):
         await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC"))
 
 
-    async def _sync_shared_users_table(self, conn: AsyncConnection, users: list[DatabaseUser]) -> None:
+    async def _sync_shared_users_table(self, conn: AsyncConnection, users: list[SharedUser]) -> None:
         """Upsert active organization users and soft-delete stale rows."""
 
         if users:
+            rows = [user.model_dump() for user in users]
+            insert_statement = postgres_insert(shared_users_table)
+            excluded = insert_statement.excluded
             await conn.execute(
-                text("""
-                    INSERT INTO public.users (
-                        id,
-                        email,
-                        name,
-                        avatar,
-                        role_name,
-                        created_at,
-                        updated_at,
-                        deleted_at
-                    )
-                    VALUES (
-                        :id,
-                        :email,
-                        :name,
-                        :avatar,
-                        :role_name,
-                        :created_at,
-                        :updated_at,
-                        NULL
-                    )
-                    ON CONFLICT (id) DO UPDATE SET
-                        email = EXCLUDED.email,
-                        name = EXCLUDED.name,
-                        avatar = EXCLUDED.avatar,
-                        role_name = EXCLUDED.role_name,
-                        created_at = EXCLUDED.created_at,
-                        updated_at = EXCLUDED.updated_at,
-                        deleted_at = NULL
-                """),
-                [dict(user) for user in users],
+                insert_statement.on_conflict_do_update(
+                    index_elements=[shared_users_table.c.id],
+                    set_={
+                        "name": excluded.name,
+                        "email": excluded.email,
+                        "avatar": excluded.avatar,
+                        "role_name": excluded.role_name,
+                        "created_at": excluded.created_at,
+                        "updated_at": excluded.updated_at,
+                        "deleted_at": None,
+                    },
+                ),
+                rows,
             )
 
-            active_user_ids = [user["id"] for user in users]
-            stale_statement = text("""
-                UPDATE public.users
-                SET deleted_at = NOW(), updated_at = NOW()
-                WHERE deleted_at IS NULL
-                AND id NOT IN :active_user_ids
-            """).bindparams(bindparam("active_user_ids", expanding=True))
-            await conn.execute(stale_statement, {"active_user_ids": active_user_ids})
+            active_user_ids = [user.id for user in users]
+            await self._soft_delete_stale_users(conn, active_user_ids)
             return
 
-        await conn.execute(text("""
-            UPDATE public.users
-            SET deleted_at = NOW(), updated_at = NOW()
-            WHERE deleted_at IS NULL
-        """))
+        await self._soft_delete_stale_users(conn)
+
+
+    async def _soft_delete_stale_users(self, conn: AsyncConnection, active_user_ids: list[UUID] | None = None) -> None:
+        """Soft-delete shared users that are no longer active."""
+
+        statement = update(shared_users_table).where(shared_users_table.c.deleted_at.is_(None))
+        if active_user_ids is not None:
+            statement = statement.where(~shared_users_table.c.id.in_(active_user_ids))
+
+        await conn.execute(statement.values(deleted_at=func.now(), updated_at=func.now()))
 
 
     async def _ensure_application_role(self, conn: AsyncConnection, role_name: str, password: str) -> None:
@@ -265,7 +247,7 @@ class Postgres(Database):
         return self._url(database_name).render_as_string(hide_password=False)
 
 
-    async def sync_users(self, organization: str, users: list[DatabaseUser]) -> None:
+    async def sync_users(self, organization: str, users: list[SharedUser]) -> None:
         """Synchronize the shared organization users table for one organization."""
         await self._ensure_organization_database(organization)
         database_name = dbname(organization)
@@ -307,10 +289,15 @@ class Postgres(Database):
         """List all schemas in a database, excluding system schemas."""
 
         async with self._connection(database_name) as conn:
-            result = await conn.execute(
-                text("SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast') ORDER BY schema_name")
-            )
-            return [row[0] for row in result.fetchall()]
+            return await conn.run_sync(self._inspected_schema_names)
+
+
+    def _inspected_schema_names(self, sync_conn: object) -> list[str]:
+        """Return user-visible schema names through SQLAlchemy inspection."""
+
+        system_schemas = {"information_schema", "pg_catalog", "pg_toast"}
+        inspector = cast(Inspector, inspect(sync_conn))
+        return sorted(name for name in inspector.get_schema_names() if name not in system_schemas)
 
 
     async def schema_usage(self, database_name: str) -> list[DatabaseSchemaUsage]:
@@ -379,20 +366,37 @@ class Postgres(Database):
     async def _table_names(self, conn: AsyncConnection, schema_name: str) -> list[str]:
         """Return queryable table names for one schema."""
 
-        result = await conn.execute(
-            text(
-                """
-                SELECT c.relname AS name
-                FROM pg_class c
-                JOIN pg_namespace n ON n.oid = c.relnamespace
-                WHERE n.nspname = :schema_name
-                AND c.relkind IN ('r', 'p', 'm')
-                ORDER BY c.relname
-                """
-            ),
-            {"schema_name": schema_name},
-        )
-        return [row[0] for row in result.fetchall()]
+        return await conn.run_sync(partial(self._inspected_table_names, schema_name=schema_name))
+
+
+    def _inspected_table_names(self, sync_conn: object, *, schema_name: str) -> list[str]:
+        """Return queryable table and materialized view names through SQLAlchemy inspection."""
+
+        inspector = cast(Inspector, inspect(sync_conn))
+        names = set(inspector.get_table_names(schema=schema_name))
+        names.update(inspector.get_materialized_view_names(schema=schema_name))
+        return sorted(names)
+
+
+    def _inspected_table_columns(
+        self,
+        sync_conn: object,
+        *,
+        schema_name: str,
+        table_name: str,
+    ) -> list[DatabaseTableColumn]:
+        """Return table column metadata through SQLAlchemy inspection."""
+
+        inspector = cast(Inspector, inspect(sync_conn))
+        return [
+            {
+                "name": str(column["name"]),
+                "type": str(column["type"]).lower(),
+                "nullable": bool(column.get("nullable", True)),
+                "position": position,
+            }
+            for position, column in enumerate(inspector.get_columns(table_name, schema=schema_name), start=1)
+        ]
 
 
     async def _table_data(
@@ -404,27 +408,9 @@ class Postgres(Database):
     ) -> DatabaseTableData:
         """Return columns and preview rows for one table."""
 
-        columns_result = await conn.execute(
-            text(
-                """
-                SELECT column_name, data_type, is_nullable, ordinal_position
-                FROM information_schema.columns
-                WHERE table_schema = :schema_name
-                AND table_name = :table_name
-                ORDER BY ordinal_position
-                """
-            ),
-            {"schema_name": schema_name, "table_name": table_name},
+        columns = await conn.run_sync(
+            partial(self._inspected_table_columns, schema_name=schema_name, table_name=table_name)
         )
-        columns = [
-            {
-                "name": row["column_name"],
-                "type": row["data_type"],
-                "nullable": row["is_nullable"] == "YES",
-                "position": int(row["ordinal_position"]),
-            }
-            for row in columns_result.mappings().all()
-        ]
 
         preparer = conn.engine.sync_engine.dialect.identifier_preparer
         schema = preparer.quote(schema_name)

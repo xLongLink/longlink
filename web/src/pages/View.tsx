@@ -3,11 +3,18 @@ import { useMetadata } from '@/hooks/use-metadata';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
 import type { ApiOrganizationApplication } from '@/lib/types';
-import { fromXml, RenderXML, resolveUrl, type ExecutionContext } from '@/xml';
+import {
+    createContext as createXmlContext,
+    fromXml,
+    RenderXML,
+    resolveUrl,
+    type ASTNode,
+    type ExecutionContext,
+} from '@/xml';
 import { buttonVariants } from '@ui/button';
 import { ScrollArea } from '@ui/scroll-area';
 import startCase from 'lodash/startCase';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import NotFound from './NotFound';
 
@@ -38,25 +45,25 @@ type LogsStateProps = {
 };
 
 type PageState = {
-    path: string | null;
-    content: string | null;
+    cacheKey: string;
+    path: string;
+    ast: ASTNode[] | null;
+    parseError: string | null;
     error: string | null;
     status: number | null;
     loading: boolean;
+    runtimeContext: ExecutionContext;
+};
+
+type PageParseResult = {
+    ast: ASTNode[] | null;
+    parseError: string | null;
 };
 
 type LogsState = {
     content: string;
     error: string | null;
     loading: boolean;
-};
-
-const emptyPageState: PageState = {
-    path: null,
-    content: null,
-    error: null,
-    status: null,
-    loading: false,
 };
 
 const emptyLogsState: LogsState = {
@@ -79,6 +86,54 @@ function resolveTemplate(template: string, params: Record<string, string | undef
         .replace(/\{([A-Za-z0-9_]+)\}/g, (_, key: string) => params[key] ?? `{${key}}`);
 }
 
+
+/** Creates an isolated page runtime context while preserving shared runtime values like the user. */
+function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionContext {
+    const pageRuntimeContext = createXmlContext();
+
+    if (!runtimeContext) {
+        return pageRuntimeContext;
+    }
+
+    for (const [key, value] of Object.entries(runtimeContext)) {
+        if (key === 'invalidate' || key === 'setups' || key === 'values') {
+            continue;
+        }
+
+        pageRuntimeContext[key] = value;
+    }
+
+    return pageRuntimeContext;
+}
+
+
+/** Creates the cached state holder for one XML page. */
+function createPageState(key: string, path: string, runtimeContext?: ExecutionContext): PageState {
+    return {
+        cacheKey: key,
+        path,
+        ast: null,
+        error: null,
+        loading: false,
+        parseError: null,
+        status: null,
+        runtimeContext: createPageRuntimeContext(runtimeContext),
+    };
+}
+
+
+/** Parses page XML once so route rendering does not throw on malformed application XML. */
+function parsePageContent(content: string): PageParseResult {
+    try {
+        return { ast: fromXml(content), parseError: null };
+    } catch (unknownError) {
+        return {
+            ast: null,
+            parseError: unknownError instanceof Error ? unknownError.message : 'Failed to parse page XML',
+        };
+    }
+}
+
 /**
  * Renders metadata-backed XML pages for control-plane and application routes.
  */
@@ -94,11 +149,15 @@ export default function View({
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const [pageState, setPageState] = useState<PageState>(emptyPageState);
+    const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
     const [logsState, setLogsState] = useState<LogsState>(emptyLogsState);
+    const pageStatesRef = useRef<Record<string, PageState>>({});
+    const inFlightPageKeysRef = useRef<Set<string>>(new Set());
+    const runtimeContextRef = useRef<ExecutionContext | undefined>(runtimeContext);
     const routeParams = { organization, application } as Record<string, string | undefined>;
     const resolvedMetadata = resolveTemplate(metadata, routeParams);
     const resolvedMetadataBaseUrl = resolvedMetadata.replace(/metadata\.json(?:[?#].*)?$/i, '');
+    const pageCacheKey = `${resolvedMetadata}\u0000${runtimeKey ?? ''}`;
     const applicationIsLoading = applicationStatus !== undefined && applicationStatus !== 'running';
     const { data: metadataDocument, isLoading, error } = useMetadata(resolvedMetadata, !applicationIsLoading);
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
@@ -110,25 +169,25 @@ export default function View({
             (page) => normalizePath(page.path.replace(/\.xml$/i, '')) === normalizedRoutePath
         ) ??
         metadataDocument?.pages?.[0];
+    const activePagePath = activePage?.path;
+    const activePageTab = activePage?.tab;
+    const activePageState = activePageTab ? pageStates[activePageTab] : undefined;
+    const activePageStateIsCurrent =
+        activePageState?.cacheKey === pageCacheKey && activePageState.path === activePagePath;
     const isNotFound = metadataDocument === null;
     const metadataLoading = error instanceof ApiError && error.status === 503;
     const shouldShowLogs =
-        canViewLogs && applicationStatus === 'running' && (metadataLoading || pageState.status === 503);
-    /* Keep invalid application XML scoped to this page instead of crashing the route render. */
-    const { ast, parseError } = useMemo(() => {
-        if (!pageState.content) {
-            return { ast: null, parseError: null };
-        }
+        canViewLogs &&
+        applicationStatus === 'running' &&
+        (metadataLoading || (activePageStateIsCurrent && activePageState.status === 503));
 
-        try {
-            return { ast: fromXml(pageState.content), parseError: null };
-        } catch (unknownError) {
-            return {
-                ast: null,
-                parseError: unknownError instanceof Error ? unknownError.message : 'Failed to parse page XML',
-            };
-        }
-    }, [pageState.content]);
+    runtimeContextRef.current = runtimeContext;
+
+    useEffect(() => {
+        pageStatesRef.current = {};
+        inFlightPageKeysRef.current.clear();
+        setPageStates({});
+    }, [pageCacheKey]);
 
     // Make the first tab explicit in the URL when the page loads without a tab selection.
     useEffect(() => {
@@ -159,21 +218,52 @@ export default function View({
         [application, metadataDocument?.pages, organization]
     );
 
-    /* Load the active page XML from its path. */
+    /* Load each XML page once when the user first visits its tab. */
     useEffect(() => {
-        if (shouldShowLogs || applicationIsLoading || !activePage) {
-            setPageState(emptyPageState);
+        if (shouldShowLogs || applicationIsLoading || !activePageTab || activePagePath === undefined) {
+            return;
+        }
+
+        const pageKey = `${pageCacheKey}\u0000${activePageTab}\u0000${activePagePath}`;
+        const existingPageState = pageStatesRef.current[activePageTab];
+
+        if (
+            existingPageState?.cacheKey === pageCacheKey &&
+            existingPageState.path === activePagePath &&
+            (existingPageState.ast !== null ||
+                existingPageState.error !== null ||
+                existingPageState.parseError !== null)
+        ) {
+            return;
+        }
+
+        if (
+            existingPageState?.cacheKey === pageCacheKey &&
+            existingPageState.path === activePagePath &&
+            inFlightPageKeysRef.current.has(pageKey)
+        ) {
             return;
         }
 
         const controller = new AbortController();
-        const pagePath = activePage.path.startsWith('/') ? activePage.path : `/${activePage.path}`;
+        const pagePath = activePagePath.startsWith('/') ? activePagePath : `/${activePagePath}`;
         const pageUrl =
-            activePage.path.startsWith('http://') || activePage.path.startsWith('https://')
-                ? activePage.path
+            activePagePath.startsWith('http://') || activePagePath.startsWith('https://')
+                ? activePagePath
                 : resolveUrl(resolvedMetadataBaseUrl, pagePath);
+        const loadingPageState = {
+            ...createPageState(pageCacheKey, activePagePath, runtimeContextRef.current),
+            loading: true,
+        };
 
-        setPageState({ ...emptyPageState, path: activePage.path, loading: true });
+        inFlightPageKeysRef.current.add(pageKey);
+        setPageStates((current) => {
+            const next = { ...current, [activePageTab]: loadingPageState };
+
+            pageStatesRef.current = next;
+
+            return next;
+        });
 
         void fetchApiText(pageUrl, {
             headers: { Accept: 'application/xml' },
@@ -181,7 +271,31 @@ export default function View({
         })
             .then((content) => {
                 if (!controller.signal.aborted) {
-                    setPageState({ ...emptyPageState, path: activePage.path, content });
+                    const { ast, parseError } = parsePageContent(content);
+
+                    setPageStates((current) => {
+                        const currentPageState = current[activePageTab];
+
+                        if (currentPageState?.cacheKey !== pageCacheKey || currentPageState.path !== activePagePath) {
+                            return current;
+                        }
+
+                        const next = {
+                            ...current,
+                            [activePageTab]: {
+                                ...currentPageState,
+                                ast,
+                                error: null,
+                                loading: false,
+                                parseError,
+                                status: null,
+                            },
+                        };
+
+                        pageStatesRef.current = next;
+
+                        return next;
+                    });
                 }
             })
             .catch((fetchError: unknown) => {
@@ -189,16 +303,44 @@ export default function View({
                     return;
                 }
 
-                setPageState({
-                    ...emptyPageState,
-                    path: activePage.path,
-                    error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
-                    status: fetchError instanceof ApiError ? fetchError.status : null,
+                setPageStates((current) => {
+                    const currentPageState = current[activePageTab];
+
+                    if (currentPageState?.cacheKey !== pageCacheKey || currentPageState.path !== activePagePath) {
+                        return current;
+                    }
+
+                    const next = {
+                        ...current,
+                        [activePageTab]: {
+                            ...currentPageState,
+                            error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
+                            loading: false,
+                            status: fetchError instanceof ApiError ? fetchError.status : null,
+                        },
+                    };
+
+                    pageStatesRef.current = next;
+
+                    return next;
                 });
+            })
+            .finally(() => {
+                inFlightPageKeysRef.current.delete(pageKey);
             });
 
-        return () => controller.abort();
-    }, [activePage?.path, applicationIsLoading, resolvedMetadataBaseUrl, shouldShowLogs]);
+        return () => {
+            controller.abort();
+            inFlightPageKeysRef.current.delete(pageKey);
+        };
+    }, [
+        activePagePath,
+        activePageTab,
+        applicationIsLoading,
+        pageCacheKey,
+        resolvedMetadataBaseUrl,
+        shouldShowLogs,
+    ]);
 
     // Fetch logs only when the current user is allowed to inspect a running application.
     useEffect(() => {
@@ -276,91 +418,87 @@ export default function View({
         return <NotFound />;
     }
 
-    if (pageState.error && pageState.path === activePage?.path && pageState.status === 503) {
-        return (
-            <XML tabs={tabs}>
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
-                    <LoadingState status={applicationStatus ?? 'loading'} />
-                </section>
-            </XML>
-        );
-    }
+    const renderedPagePanels =
+        metadataDocument?.pages?.map((page) => {
+            const pageState = pageStates[page.tab];
 
-    if (pageState.error && pageState.path === activePage?.path) {
-        return (
-            <XML tabs={tabs}>
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
-                    <ErrorState
-                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                        message={pageState.error || 'This page could not be loaded.'}
-                        title="Unable to load this page"
+            if (
+                !pageState?.ast ||
+                pageState.cacheKey !== pageCacheKey ||
+                pageState.path !== page.path ||
+                pageState.error ||
+                pageState.parseError
+            ) {
+                return null;
+            }
+
+            const pageIsActive = page.tab === activePageTab;
+
+            return (
+                <section key={page.tab} hidden={!pageIsActive} aria-hidden={!pageIsActive} className="space-y-6">
+                    <RenderXML
+                        key={`${runtimeKey ?? 'runtime'}-${page.tab}`}
+                        active={pageIsActive}
+                        ast={pageState.ast}
+                        baseUrl={resolvedMetadataBaseUrl}
+                        ctx={pageState.runtimeContext}
                     />
                 </section>
-            </XML>
-        );
-    }
+            );
+        }) ?? [];
 
-    if (parseError && pageState.path === activePage?.path) {
-        return (
-            <XML tabs={tabs}>
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
-                    <ErrorState
-                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                        message={parseError}
-                        title="Unable to load this page"
-                    />
-                </section>
-            </XML>
-        );
-    }
-
-    if (isLoading || pageState.loading || (activePage && pageState.path !== activePage.path)) {
-        return (
-            <XML tabs={tabs}>
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
-                    <LoadingState status="loading" />
-                </section>
-            </XML>
-        );
-    }
+    let activeFallback: ReactNode = null;
 
     if (!activePage) {
-        return (
-            <XML tabs={tabs}>
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
-                    <ErrorState
-                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                        message="The application did not expose any pages to render."
-                        title="Unexpected application response"
-                    />
-                </section>
-            </XML>
+        activeFallback = (
+            <ErrorState
+                actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
+                message="The application did not expose any pages to render."
+                title="Unexpected application response"
+            />
         );
-    }
-
-    if (!ast) {
-        return (
-            <XML tabs={tabs}>
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
-                    <ErrorState
-                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                        message="The application returned an empty response."
-                        title="Unexpected application response"
-                    />
-                </section>
-            </XML>
+    } else if (activePageStateIsCurrent && activePageState.error && activePageState.status === 503) {
+        activeFallback = <LoadingState status={applicationStatus ?? 'loading'} />;
+    } else if (activePageStateIsCurrent && activePageState.error) {
+        activeFallback = (
+            <ErrorState
+                actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
+                message={activePageState.error || 'This page could not be loaded.'}
+                title="Unable to load this page"
+            />
+        );
+    } else if (activePageStateIsCurrent && activePageState.parseError) {
+        activeFallback = (
+            <ErrorState
+                actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
+                message={activePageState.parseError}
+                title="Unable to load this page"
+            />
+        );
+    } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
+        activeFallback = <LoadingState status="loading" />;
+    } else if (!activePageState.ast) {
+        activeFallback = (
+            <ErrorState
+                actionHref={organization ? `/orgs/${organization}` : '/organizations'}
+                actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
+                message="The application returned an empty response."
+                title="Unexpected application response"
+            />
         );
     }
 
     return (
         <XML tabs={tabs}>
-            <section className="space-y-6">
-                <RenderXML key={runtimeKey} ast={ast} ctx={runtimeContext} baseUrl={resolvedMetadataBaseUrl} />
-            </section>
+            {renderedPagePanels}
+            {activeFallback ? (
+                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                    {activeFallback}
+                </section>
+            ) : null}
         </XML>
     );
 }

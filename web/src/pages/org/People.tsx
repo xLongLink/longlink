@@ -123,6 +123,7 @@ export default function People({ organization, people, invitations, isLoading, e
                 value={peopleSection}
                 onValueChange={(value) => setPeopleSection(value as 'members' | 'invitations')}
                 defaultValue="members"
+                hashNavigation
                 className="items-start"
                 ariaLabel="People menu"
             >

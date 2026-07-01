@@ -11,9 +11,11 @@ from src.models.metadata import LongLinkMetadata
 from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
+from src.models.storages import StorageKind
 from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
 from src.models.applications import ApplicationResponse as AppResponse
+from src.adapters.database.shared import SharedUser
 from src.database.models.users import User
 from src.database.services.users import users
 from src.database.services.compute import compute
@@ -214,7 +216,13 @@ async def test_list_organization_apps_returns_404_for_non_member(
     user = users[1]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
-    await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=owner)
+    await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
     client = clients[1]
 
     # Act
@@ -234,8 +242,12 @@ async def test_create_app_returns_app_response(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
+    local_location = await db.locations.create(
+        "local", "Local testing", user, Country.CH
+    )
+    remote_location = await db.locations.create(
+        "remote", "Remote testing", user, Country.CH
+    )
     organization = await db.organizations.create("acme", remote_location.id, user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -272,6 +284,16 @@ async def test_create_app_returns_app_response(
         password="secret",
         runtime_host="db.runtime.longlink.internal",
         runtime_port=15432,
+        location_id=remote_location.id,
+        user=user,
+    )
+    await db.storage.create(
+        kind=StorageKind.s3,
+        name="remote",
+        protocol="http",
+        endpoint_url="http://storage.remote.longlink.internal",
+        access_key_id="storage-access",
+        secret_access_key="storage-secret",
         location_id=remote_location.id,
         user=user,
     )
@@ -337,14 +359,38 @@ async def test_create_app_returns_app_response(
             }
             return "postgresql://fake"
 
-        async def sync_users(self, organization: str, users: list[dict[str, object]]) -> None:
+        async def sync_users(
+            self, organization: str, users: list[SharedUser]
+        ) -> None:
             captured["sync_users"] = {
                 "organization": organization,
                 "users": users,
             }
 
+    class FakeStorage:
+        """Fake storage adapter for app creation tests."""
+
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            captured["storage"] = {
+                "protocol": protocol,
+                "endpoint_url": endpoint_url,
+                "access_key_id": access_key_id,
+                "secret_access_key": secret_access_key,
+            }
+
+        async def shared_bucket(self, organization: str) -> str:
+            buckets = cast(list[tuple[str, ...]], captured.setdefault("buckets", []))
+            buckets.append(("shared", organization))
+            return f"longlink-{organization}-shared"
+
+        async def bucket(self, organization: str, application: str) -> str:
+            buckets = cast(list[tuple[str, ...]], captured.setdefault("buckets", []))
+            buckets.append(("application", organization, application))
+            return f"longlink-{organization}-{application}"
+
     monkeypatch.setattr("src.operations.provisioning.K8s", FakeCompute)
     monkeypatch.setattr("src.operations.provisioning.Postgres", FakeDatabase)
+    monkeypatch.setattr("src.operations.provisioning.S3", FakeStorage)
     client = clients[0]
 
     # Act
@@ -383,22 +429,28 @@ async def test_create_app_returns_app_response(
         "runtime_port": 15432,
     }
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
-    sync_payload = cast(dict[str, object], captured["sync_users"])
-    synced_users = cast(list[dict[str, object]], sync_payload["users"])
-    assert sync_payload == {
-        "organization": "acme",
-        "users": [
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "avatar": user.avatar,
-                "role_name": "owner",
-                "created_at": synced_users[0]["created_at"],
-                "updated_at": synced_users[0]["updated_at"],
-            }
-        ],
+    assert captured["storage"] == {
+        "protocol": "http",
+        "endpoint_url": "http://storage.remote.longlink.internal",
+        "access_key_id": "storage-access",
+        "secret_access_key": "storage-secret",
     }
+    assert captured["buckets"] == [("shared", "acme"), ("application", "acme", "dashboard")]
+    sync_payload = cast(dict[str, object], captured["sync_users"])
+    synced_users = cast(list[SharedUser], sync_payload["users"])
+    assert sync_payload["organization"] == "acme"
+    assert [synced_user.model_dump() for synced_user in synced_users] == [
+        {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "avatar": user.avatar,
+            "role_name": "owner",
+            "created_at": synced_users[0].created_at,
+            "updated_at": synced_users[0].updated_at,
+            "deleted_at": None,
+        }
+    ]
     assert captured["application"] == {
         "organization": "acme",
         "application": "dashboard",
@@ -409,6 +461,10 @@ async def test_create_app_returns_app_response(
             "LONGLINK_DATABASE_SCHEMA": "dashboard",
             "LONGLINK_DATABASE_URL": "postgresql+asyncpg://fake",
             "LONGLINK_ENV": "production",
+            "LONGLINK_STORAGE_ACCESS_KEY_ID": "storage-access",
+            "LONGLINK_STORAGE_ENDPOINT_URL": "http://storage.remote.longlink.internal",
+            "LONGLINK_STORAGE_PROTOCOL": "http",
+            "LONGLINK_STORAGE_SECRET_ACCESS_KEY": "storage-secret",
             "PORT": "8080",
         },
     }
@@ -425,7 +481,13 @@ async def test_get_app_logs_returns_pod_logs(
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
-    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    app = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=user,
+    )
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
@@ -462,7 +524,9 @@ async def test_get_app_logs_returns_pod_logs(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        async def logs(self, organization: str, application: str, lines: int = 200) -> str:
+        async def logs(
+            self, organization: str, application: str, lines: int = 200
+        ) -> str:
             captured["logs"] = {
                 "organization": organization,
                 "application": application,
@@ -480,7 +544,11 @@ async def test_get_app_logs_returns_pod_logs(
     assert response.status_code == 200
     assert response.text == "line 1\nline 2"
     assert response.headers["content-type"].startswith("text/plain")
-    assert captured["logs"] == {"organization": "acme", "application": "dashboard", "lines": 200}
+    assert captured["logs"] == {
+        "organization": "acme",
+        "application": "dashboard",
+        "lines": 200,
+    }
 
 
 async def test_proxy_app_forwards_request_to_internal_service(
@@ -492,10 +560,20 @@ async def test_proxy_app_forwards_request_to_internal_service(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
+    local_location = await db.locations.create(
+        "local", "Local testing", user, Country.CH
+    )
+    remote_location = await db.locations.create(
+        "remote", "Remote testing", user, Country.CH
+    )
     organization = await db.organizations.create("acme", remote_location.id, user)
-    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    app = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/xlonglink/sample:latest",
+        user=user,
+    )
     await db.applications.set_status(app.id, ApplicationStatus.running)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -586,7 +664,16 @@ async def test_proxy_app_forwards_request_to_internal_service(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        def proxy(self, organization: str, application: str, path: str, method: str, query_params, headers, body):
+        def proxy(
+            self,
+            organization: str,
+            application: str,
+            path: str,
+            method: str,
+            query_params,
+            headers,
+            body,
+        ):
             captured["organization"] = organization
             captured["application"] = application
             captured["path"] = path
@@ -594,7 +681,11 @@ async def test_proxy_app_forwards_request_to_internal_service(
             captured["query_params"] = query_params
             captured["headers"] = headers
             captured["body"] = body
-            return b"proxied", 200, {"content-type": "text/plain", "set-cookie": "tenant=owned"}
+            return (
+                b"proxied",
+                200,
+                {"content-type": "text/plain", "set-cookie": "tenant=owned"},
+            )
 
     monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
 
@@ -617,7 +708,9 @@ async def test_proxy_app_forwards_request_to_internal_service(
         "name": "Warehouse Widget",
         "quantity": 10,
     }
-    forwarded_headers = {key.lower(): value for key, value in captured["headers"].items()}
+    forwarded_headers = {
+        key.lower(): value for key, value in captured["headers"].items()
+    }
     assert forwarded_headers["content-type"] == "application/json"
     assert "content-length" not in forwarded_headers
     assert forwarded_headers["x-user-id"] == str(user.id)
@@ -634,10 +727,20 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
+    local_location = await db.locations.create(
+        "local", "Local testing", user, Country.CH
+    )
+    remote_location = await db.locations.create(
+        "remote", "Remote testing", user, Country.CH
+    )
     organization = await db.organizations.create("acme", remote_location.id, user)
-    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    app = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/xlonglink/sample:latest",
+        user=user,
+    )
     await db.applications.set_status(app.id, ApplicationStatus.running)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -701,7 +804,9 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
 
     # Assert
     assert response.status_code == 200
-    forwarded_headers = {key.lower() for key in cast(dict[str, str], captured["headers"]).keys()}
+    forwarded_headers = {
+        key.lower() for key in cast(dict[str, str], captured["headers"]).keys()
+    }
     forwarded_values = cast(dict[str, str], captured["headers"])
     assert "if-none-match" not in forwarded_headers
     assert "if-modified-since" not in forwarded_headers
@@ -720,10 +825,20 @@ async def test_proxy_app_returns_not_modified_from_upstream(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
+    local_location = await db.locations.create(
+        "local", "Local testing", user, Country.CH
+    )
+    remote_location = await db.locations.create(
+        "remote", "Remote testing", user, Country.CH
+    )
     organization = await db.organizations.create("acme", remote_location.id, user)
-    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    app = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/xlonglink/sample:latest",
+        user=user,
+    )
     await db.applications.set_status(app.id, ApplicationStatus.running)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -758,7 +873,16 @@ async def test_proxy_app_returns_not_modified_from_upstream(
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             pass
 
-        def proxy(self, organization: str, application: str, path: str, method: str, query_params, headers, body):
+        def proxy(
+            self,
+            organization: str,
+            application: str,
+            path: str,
+            method: str,
+            query_params,
+            headers,
+            body,
+        ):
             exception = ApiException(status=304, reason="Not Modified")
             exception.headers = {"Etag": '"etag-123"', "set-cookie": "tenant=owned"}
             raise exception
@@ -786,7 +910,13 @@ async def test_proxy_app_returns_upstream_error_body(
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, Country.CH)
     organization = await db.organizations.create("acme", location.id, user)
-    app = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/xlonglink/sample:latest", user=user)
+    app = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/xlonglink/sample:latest",
+        user=user,
+    )
     await db.applications.set_status(app.id, ApplicationStatus.running)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -821,7 +951,16 @@ async def test_proxy_app_returns_upstream_error_body(
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             pass
 
-        def proxy(self, organization: str, application: str, path: str, method: str, query_params, headers, body):
+        def proxy(
+            self,
+            organization: str,
+            application: str,
+            path: str,
+            method: str,
+            query_params,
+            headers,
+            body,
+        ):
             exception = ApiException(status=500, reason="Internal Server Error")
             exception.body = "backend-failed"
             exception.headers = {"Etag": '"etag-500"', "set-cookie": "tenant=owned"}
@@ -850,7 +989,13 @@ async def test_organization_access_rejects_soft_deleted_membership(
     user = users[1]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
-    await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=owner)
+    await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
 
     Session = await get_session()
     async with Session() as session:

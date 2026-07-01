@@ -1,9 +1,9 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
-import { DynamicIcon } from 'lucide-react/dynamic';
 import { Link } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
+import { Icon } from '@/components/ui/icon';
 import type { ApiOrganizationApplication } from '@/lib/types';
 
 type ApplicationsProps = {
@@ -26,11 +26,7 @@ export default function Applications({ organization, applications, isLoading, er
                 return (
                     <div className="flex items-start gap-3">
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                            <DynamicIcon
-                                name={iconName as Parameters<typeof DynamicIcon>[0]['name']}
-                                aria-hidden={true}
-                                className="size-4"
-                            />
+                            <Icon name={iconName} className="size-4" />
                         </div>
                         <div className="min-w-0 space-y-1">
                             <Link

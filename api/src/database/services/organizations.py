@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
-from src.adapters.database.base import DatabaseUser
+from src.adapters.database.shared import SharedUser
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
 from src.models.organizations import (OrganizationDetails,
@@ -53,7 +53,7 @@ class OrganizationsService:
             return list(result.scalars().all())
 
 
-    async def database_users(self, organization_id: UUID) -> list[DatabaseUser]:
+    async def database_users(self, organization_id: UUID) -> list[SharedUser]:
         """Return active organization members for the shared users table."""
 
         async with session_scope() as session:
@@ -71,15 +71,15 @@ class OrganizationsService:
             rows = result.all()
 
             return [
-                {
-                    "id": user.id,
-                    "name": user.name,
-                    "email": user.email,
-                    "avatar": user.avatar or "",
-                    "role_name": role_name.value,
-                    "created_at": created_at,
-                    "updated_at": max(user.updated_at, updated_at),
-                }
+                SharedUser(
+                    id=user.id,
+                    name=user.name,
+                    email=user.email,
+                    avatar=user.avatar or "",
+                    role_name=role_name.value,
+                    created_at=created_at,
+                    updated_at=max(user.updated_at, updated_at),
+                )
                 for user, role_name, created_at, updated_at in rows
             ]
 

@@ -1,6 +1,8 @@
 import boto3
+from asyncio import to_thread
 from datetime import datetime
 from .base import Storage, StorageObjectData
+from botocore.exceptions import ClientError
 from src.utils.namespace import s3name
 
 
@@ -33,29 +35,54 @@ class S3(Storage):
         return [bucket["Name"] for bucket in response.get("Buckets", [])]
 
 
+    def _create_bucket(self, bucket_name: str) -> None:
+        """Create a bucket and tolerate existing accessible buckets."""
+
+        # S3-compatible services disagree on repeated creates, so verify access when a bucket exists.
+        try:
+            self._client.create_bucket(Bucket=bucket_name)
+        except ClientError as exc:
+            error_code = str(exc.response.get("Error", {}).get("Code", ""))
+            if error_code not in {"BucketAlreadyExists", "BucketAlreadyOwnedByYou"}:
+                raise
+
+            self._client.head_bucket(Bucket=bucket_name)
+
+
     async def buckets(self) -> list[str]:
         """List storage buckets."""
 
-        return self.list()
+        return await to_thread(self.list)
 
 
     async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
         """List object metadata for one bucket."""
 
+        return await to_thread(self._objects, bucket_name, limit=limit)
+
+
+    def _objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
+        """List object metadata for one bucket through the synchronous S3 client."""
+
+        if limit <= 0:
+            return []
+
         objects: list[StorageObjectData] = []
-        continuation_token: str | None = None
+        paginator = self._client.get_paginator("list_objects_v2")
+        pages = paginator.paginate(
+            Bucket=bucket_name,
+            PaginationConfig={
+                "MaxItems": limit,
+                "PageSize": min(1000, limit),
+            },
+        )
 
-        # S3 returns at most 1000 objects per page, so continue until the limit or response end.
-        while len(objects) < limit:
-            request: dict[str, object] = {
-                "Bucket": bucket_name,
-                "MaxKeys": min(1000, limit - len(objects)),
-            }
-            if continuation_token is not None:
-                request["ContinuationToken"] = continuation_token
+        # Boto3 owns continuation tokens; keep only the response normalization here.
+        for page in pages:
+            for item in page.get("Contents", []):
+                if len(objects) >= limit:
+                    return objects
 
-            response = self._client.list_objects_v2(**request)
-            for item in response.get("Contents", []):
                 key = item.get("Key")
                 if key is None:
                     continue
@@ -71,11 +98,6 @@ class S3(Storage):
                     }
                 )
 
-            next_continuation_token = response.get("NextContinuationToken")
-            continuation_token = str(next_continuation_token) if next_continuation_token is not None else None
-            if not response.get("IsTruncated") or continuation_token is None:
-                break
-
         return objects
 
 
@@ -85,11 +107,19 @@ class S3(Storage):
         return organization
 
 
+    async def shared_bucket(self, organization: str) -> str:
+        """Create the shared organization bucket and return its name."""
+
+        bucket_name = s3name(f"{organization}-shared")
+        await to_thread(self._create_bucket, bucket_name)
+        return bucket_name
+
+
     async def bucket(self, organization: str, application: str) -> str:
         """Create the application bucket and return its name."""
 
         bucket_name = s3name(f"{organization}-{application}")
-        self._client.create_bucket(Bucket=bucket_name)
+        await to_thread(self._create_bucket, bucket_name)
         return bucket_name
 
 

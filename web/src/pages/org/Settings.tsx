@@ -1,16 +1,19 @@
 import { DataTable } from '@/components/DataTable';
 import CreateApplicationDialog from '@/components/dialogs/CreateApplicationDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
+import { Icon } from '@/components/ui/icon';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
 import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
+import { useOrganizationStorageResources } from '@/hooks/use-organization-storage-resources';
 import { useUser } from '@/hooks/use-user';
 import type {
     ApiOrganizationApplication,
     ApiOrganizationDatabaseResource,
     ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
+    ApiOrganizationStorageResource,
 } from '@/lib/types';
 import { formatBytes } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -34,7 +37,6 @@ import {
     Settings2,
     ShieldCheck,
 } from 'lucide-react';
-import { DynamicIcon } from 'lucide-react/dynamic';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -92,6 +94,11 @@ export default function Settings({ organization, organizationDetails, applicatio
         error: databaseResourceTablesError,
         isLoading: databaseResourceTablesIsLoading,
     } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseResourceTarget);
+    const {
+        items: storageResources,
+        error: storageResourcesError,
+        isLoading: storageResourcesIsLoading,
+    } = useOrganizationStorageResources(organizationDetails?.id ?? '');
 
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const canViewLogs =
@@ -111,11 +118,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                 return (
                     <div className="flex items-start gap-3">
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                            <DynamicIcon
-                                name={iconName as Parameters<typeof DynamicIcon>[0]['name']}
-                                aria-hidden={true}
-                                className="size-4"
-                            />
+                            <Icon name={iconName} className="size-4" />
                         </div>
                         <div className="min-w-0 space-y-1">
                             <Link
@@ -274,9 +277,68 @@ export default function Settings({ organization, organizationDetails, applicatio
         },
     ];
 
+    const storageResourceColumns: Array<ColumnDef<ApiOrganizationStorageResource>> = [
+        {
+            id: 'resource',
+            header: 'Name',
+            cell: ({ row }) => {
+                const application = row.original.application;
+
+                if (row.original.kind === 'shared_bucket') {
+                    return (
+                        <div className="min-w-0 space-y-1">
+                            <div className="font-medium text-foreground">shared</div>
+                            <div className="truncate text-xs text-muted-foreground">
+                                All applications · {row.original.bucket_name}
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="min-w-0 space-y-1">
+                        {application ? (
+                            <Link
+                                to={`/orgs/${organization}/apps/${application.slug}`}
+                                className="font-medium text-foreground underline-offset-4 hover:underline"
+                            >
+                                {application.name}
+                            </Link>
+                        ) : (
+                            <div className="font-medium text-foreground">{row.original.name}</div>
+                        )}
+                        <div className="truncate text-xs text-muted-foreground">{row.original.bucket_name}</div>
+                    </div>
+                );
+            },
+            meta: { className: 'min-w-52' },
+        },
+        {
+            accessorKey: 'kind',
+            header: 'Type',
+            cell: ({ getValue }) => {
+                const kind = getValue<ApiOrganizationStorageResource['kind']>();
+
+                return kind === 'shared_bucket' ? 'Shared bucket' : 'Application bucket';
+            },
+            meta: { className: 'w-44' },
+        },
+        {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ getValue }) => {
+                const status = getValue<ApiOrganizationStorageResource['status']>();
+                const variant = status === 'available' ? 'default' : status === 'orphaned' ? 'outline' : 'destructive';
+
+                return <Badge variant={variant}>{status}</Badge>;
+            },
+            meta: { className: 'w-32' },
+        },
+    ];
+
     return (
         <>
-            <Menu defaultValue="organization" className="items-start">
+            <Menu defaultValue="organization" hashNavigation className="items-start">
                 <MenuSection value="organization" label="Organization" icon={Building2}>
                     <div className="space-y-4">
                         <div className="space-y-1">
@@ -395,18 +457,13 @@ export default function Settings({ organization, organizationDetails, applicatio
                                 Manage files, buckets, and persisted assets.
                             </p>
                         </div>
-                        <div className="overflow-hidden rounded-md border">
-                            <Table>
-                                <TableHeader className="bg-muted/50">
-                                    <TableRow>
-                                        <TableHead className="bg-muted/50">Name</TableHead>
-                                        <TableHead className="bg-muted/50">Type</TableHead>
-                                        <TableHead className="bg-muted/50">Status</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody />
-                            </Table>
-                        </div>
+                        <DataTable
+                            columns={storageResourceColumns}
+                            data={storageResources}
+                            emptyMessage="No storage resources found."
+                            error={storageResourcesError}
+                            isLoading={isLoading || storageResourcesIsLoading}
+                        />
                     </div>
                 </MenuSection>
 

@@ -29,6 +29,10 @@ class Storage(ABC):
         """Create the storage tenant for an organization if it does not exist and return a tenant identifier."""
 
     @abstractmethod
+    async def shared_bucket(self, organization: str) -> str:
+        """Create or return the shared organization bucket and return its name."""
+
+    @abstractmethod
     async def bucket(self, organization: str, application: str) -> str:
         """Create or replace the isolated storage bucket for one application and return a storage URI."""
 

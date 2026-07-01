@@ -1,57 +1,6 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
-from typing import TypedDict
-from datetime import datetime
-
-
-class DatabaseUser(TypedDict):
-    """Describe one organization user projected into an application database."""
-
-    id: UUID
-    name: str
-    email: str
-    avatar: str
-    role_name: str
-    created_at: datetime
-    updated_at: datetime
-
-
-class DatabaseSchemaUsage(TypedDict):
-    """Describe storage usage for one database schema."""
-
-    name: str
-    space_used: int
-    table_count: int
-    row_estimate: int
-
-
-class DatabaseTableUsage(TypedDict):
-    """Describe storage usage for one database table."""
-
-    name: str
-    space_used: int
-    row_estimate: int
-
-
-DatabaseCellValue = str | int | float | bool | None
-
-
-class DatabaseTableColumn(TypedDict):
-    """Describe one database table column."""
-
-    name: str
-    type: str
-    nullable: bool
-    position: int
-
-
-class DatabaseTableData(TypedDict):
-    """Describe one database table with preview rows."""
-
-    name: str
-    schema_name: str
-    columns: list[DatabaseTableColumn]
-    rows: list[dict[str, DatabaseCellValue]]
+from .shared import SharedUser
+from .types import DatabaseTableData, DatabaseTableUsage, DatabaseSchemaUsage
 
 
 class Database(ABC):
@@ -67,7 +16,7 @@ class Database(ABC):
     ├── (app a) Schema
     └── (app ...) Schema
 
-    Each application has read/write access to it's own schema, and read-only access to shared tables.
+    Each application has read/write access to its own schema, and read-only access to shared tables.
     """
 
     @abstractmethod
@@ -76,7 +25,7 @@ class Database(ABC):
 
 
     @abstractmethod
-    async def sync_users(self, organization: str, users: list[DatabaseUser]) -> None:
+    async def sync_users(self, organization: str, users: list[SharedUser]) -> None:
         """Synchronize the shared organization users table."""
 
 
@@ -84,13 +33,16 @@ class Database(ABC):
     async def schema(self, organization: str, application: str) -> str:
         """Create or replace the schema for one application and return a connection DSN."""
 
+
     @abstractmethod
     async def setup(self) -> None:
         """Initialize the database backend used by the control plane."""
 
+
     @abstractmethod
     async def databases(self) -> list[str]:
         """List all databases on the server."""
+
 
     @abstractmethod
     async def schemas(self, database_name: str) -> list[str]:
